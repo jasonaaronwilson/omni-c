@@ -33,10 +33,11 @@ default runtime safety, and a new take on a standard library.
 27. defer and block_defer for easier interaction with exceptions and code
     organization
 28. utf8 immutable zero strings (convertible at not cost to C char* style strings)
+29. interpolated strings remove the need for printf
 
 Importantly mising from this feature list is inheritance and therefore most of these
 features are straightforward to describe and most constructs appear in some other C
-like other language. Most of the benefits of OOP are provided by runtime introspection
+like language. Most of the benefits of OOP are provided by runtime introspection
 and some syntactic sugar.
 
 The biggest change from C is probably generic structures and functions. Without
@@ -44,19 +45,20 @@ inheritance these become simpler than one might expect (simpler than C++ templat
 
 Omni C also aims to replace the aging C standard library with one that is more readable,
 organized, and powerful though when using the transpiler, the C standard library and
-other C libraries are easily utilized.
+other C libraries are easily utilized. (Additionally, non generic Omni C is callable from C
+allowing a graceful conversion from Standard C to Omni C.)
 
 ## Features Removed from Standard C
 
 1. many types of silent conversions
 2. switch fall through
 3. special syntax for array declarations (since we have multiple types of arrays)
-4. many obsolete keywords
+4. many obsolete keywords like register and the auto storage specifier (static still
+   present)
 
 ## Using Omni C
 
-Omni C will have at least one transpiler targeting C23. C23 can be compiled to
-wasm which in theory may be enough to support interop with other languages.
+Omni C by default is a transpiler targeting C and wasm via C to wasm translation.
 
 Eventually we may add multiple native compilation targets such as:
 
@@ -67,7 +69,7 @@ Eventually we may add multiple native compilation targets such as:
 ## Omni C Syntax
 
 The general rule is that the familar C syntax should be used except where it interferes
-with other goals. Especially important are C expressions - we can deviate much more at
+with other goals. Especially important are C expressions - we deviate somewhat more at
 namespace level constructs like typedef.
 
 The full syntax with examples will be provided in another file.
@@ -122,3 +124,32 @@ byte_array* pretty_print(byte_array*, iterator(any) iterator) {
    return byte_array, no_error()
 }
 ```
+# Purpose
+
+Most C language successors, with the exception of Go, deviate significantly from C's
+simplity usually with the introduction of inheritance. C is a painful language to write
+large programs in but a few tweaks and this changes dramatically.
+
+Omni C might be closest to Java or C# without classes but still with a nod to low-level
+programming use cases and of course AOT (ahead-of-time compilation) being the default
+model.
+
+Targeting C means that Omni C can run just about everywhere (including the browser via wasm).
+wasm also allows Omni C code to be used from other programming languages that have wasm interop.
+
+The features I've included in Omni C have been vetted by 25+ years of professional
+software engineering including many large projects across the entire stack (I've written
+"microcode" level code, backend server code, command line utilities, web frontends, etc.) I've
+had an interest in programming languages design and implementation even longer than that.
+
+Most importantly Omni C is the language that I personally want to write my code in. I want the
+code to look exactly the way I expect, I want the feature set that I think will make me most
+productive even if this means giving up some overall performance. I want my code to run anywhere
+I need it and be as easy to debug as possible. I want to be able to print out code like a
+book and I want the code to be readable and writable without a fancy
+IDE. I want a efficient target for code generation.
+
+I think there are some dynamic languages which are easy to read and write but static type
+checking is essential to me because I tend to introduce numerous small errors in programs
+as I write them and the static type checking system finds many of these immediately without
+even running tests. (And again, many of these dynamic languages still employ inheritance.)
