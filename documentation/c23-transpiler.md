@@ -67,5 +67,24 @@ by introducing a bunch of temporaries at which point the call/return site is a s
 we can place code after (or before if we end up needing that). This transformation would also
 enables us to essentially make things like blocks inside of expressions work.
 
+### Temporary Name Generation
+
+The full name (which includes the type signature and must be unique) is appended with a local temporary count number (in ascii) which is then hashed to produce a 64bit integer. I suppose as a backend we could do 128 bit hashes if we detect a collision.
+
+## Generic Structure Members
+
+The slow way to do this is to replace variably size fields with a pointer that points to a heap allocated space for the field and automatically manipulate it (we can also use stack allocated little arrays for locals). A similar trick could be used for (tagged) unions. We have to make copies of these when a structure is assigned to a variable.
+
+A more sophisticated approach would still use a pointer but initialize it to space allocated adjacent to the object itself. Again when copying, we need to copy more bytes than just the structure and
+rewrite all such pointers relative to the address of the new target.
+
+In theory all structures with generically typed fields must remember their shape so we will have
+something akin to a vtable at the start of such structures?
+
+## Strucuture Layout
+
+
+
+
 
 
