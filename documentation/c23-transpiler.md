@@ -7,31 +7,33 @@ and gcc.
 
 ## High Level Overview
 
-1. the command line is parsed to determine a set of libraries and source files to compile
-2. in parallel, all of the source files are parsed. this will require at least as much space
+1. the command line is parsed to determine compiler options and all source files
+   are loaded into memory
+3. all of the source files are parsed. this will require at least as much space
    as the source files and libraries themselves
-3. we assemble namespaces by collecting each of the name space fragments
-4. for each namespace we create the private and public top-level definitions
-5. type checking and annotation - every expression is given a type
-6. we move closures to the namespace level by having them take a struct pointer for
-   captured variables, aka, an environment and replace with appropriate code at the
-   lambda site
-7. for each namespace in parallel, we output a C source file via an inorder treewalk
-    of all functions in the namespace sorted by function name (for reproduceability)
-8. for each namespace in parallel, collect all of the function prototype fragments, enum fragments,
+4. we assemble namespaces by collecting each of the namespace fragments
+5. for each namespace we create the private and public top-level definitions
+6. type checking, inference and annotation - every expression is given a type
+7. closure conversion - (removes nested functions)
+11. for each namespace, we output a C source file via an inorder treewalk
+    of all functions in the namespace sorted by function name
+12. for each namespace collect all of the function prototype fragments, enum fragments,
     etc.
-9. we typologically sort the header file. enumerations come first, structures (including environments)
-   come next then prototypes  
-10. invoke the C compiler (in parallel?) on all of the generated source files
+13. typologically sort the elements for the header file. enumerations come first, structures (including environments) come next then prototypes  
+14. invoke the C compiler on all of the generated source files
+
+Most of these steps are inherently parallel so eventually the compiler will
+utilize as many compute threads as possible while still producing determenistic
+results.
 
 ## Function Code Generation
 
-Essentially we have statements and expressions inside some of those statements.
+Essentially we have statements and expressions.
 
 The two most interesting deviations from C that cause problems are exceptions and
 (self) tail calls (when not using gcc or clang).
 
-Self tail calls require that we add a label as the first statement of the function and then the self call must instead of doing the call, perform a bunch of assignments then do a goto which obviously is not itself a C expression.
+Self tail calls requires that we add a label as the first statement of the function and then the self call must instead of doing the call, perform a bunch of assignments, execute deferred expressions, then do a goto which obviously is not itself a C expression.
 
 Exceptions also require a fair amount of code at the call/return site in order to short circuit.
 This code is also not itself a C expression. In fact exceptions require that we do something like this for each call (source line directives have been removed):
@@ -65,11 +67,19 @@ return { oc_return_result, oc_exception };
 In order to support both of these, we simply linearize expressions into trivial statements
 by introducing a bunch of temporaries at which point the call/return site is a single statement
 we can place code after (or before if we end up needing that). This transformation would also
-enables us to essentially make things like blocks inside of expressions work.
+enables us to essentially make things like blocks inside of expressions work (whereas in C
+you would only be able to do this with function inlining which can't interact with local
+variables in the normal way).
 
 ### Temporary Name Generation
 
-The full name (which includes the type signature and must be unique) is appended with a local temporary count number (in ascii) which is then hashed to produce a 64bit integer. I suppose as a backend we could do 128 bit hashes if we detect a collision.
+The full name (which includes the namespace and the type signature) is appended with a local temporary count number string which is then hashed to produce a 64bit integer which is converted to a 16 digit hexidecimal string. Collisions that matter would be rare since a single function only
+has on the order of thousands of temporaries. With a cost, we can detect temporary name collions
+and use either a different hash function (same size or larger) or a different seed for the same hash function.
+
+## Strucuture Layout
+
+We will examine the C rules for structure packng. In any event, an attribute is provided to force us to use the platforms ABI structure layout (which is not possible with generic structures).
 
 ## Generic Structure Members
 
@@ -79,29 +89,23 @@ A more sophisticated approach would still use a pointer but initialize it to spa
 rewrite all such pointers relative to the address of the new target.
 
 In theory all structures with generically typed fields must remember their shape so we will have
-something akin to a vtable at the start of such structures?
-
-## Strucuture Layout
-
-We will examine the C rules for structure packng. In any event, an attribute is provided to force us to use the platforms ABI structure layout.
+something akin to a type pointer at the start of such structures.
 
 ## Library Format
 
-We output a series of items describing each file (aka, metadata) and then the content of the file as it existed when the library was created. (Hmmm, how to encode binary files for embed statements?)
+We output a series of items describing each file (aka, metadata) and then the content of the file as it existed when the library was created.
 
-A header looks like this:
+A library item looks like this:
 
 ```
 type=<embed-data or source-file or ...>
 file-name=foo/bar/file.oc
-file-hash=<algorithm>-hashcode-hex-string
-file-size=<number-of-bytes>
 data-length=<number-of-bytes>
 data=.........
 ```
 data always comes last in a library item (which necessarily means that data-length precides it).
 
-When making libraries the tool should ideally parse the sources files to catch the stupidest
-errors first.
+When making libraries the tool should ideally parse the sources files to catch some errors early.
+
 
 
