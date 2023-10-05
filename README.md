@@ -8,21 +8,21 @@ and default runtime safety. The things added to C are:
 3. Garbage collection (possibly precise)
 4. Overloaded functions (like C++)
 5. Overloadable semantics for [] operator
-6. Improved Syntax and safer semantics for typedef
-7. Improved enums
-8. More powerful structs (which can be turned off to be pure C structs mathcing the platform)
-9. generically typed functions
-10. generically typed structures (possible inlined)
-11. consistent naming of types
-12. readable style conventions
-13. multiple array types (byte_array, array, fixed_unsized_array, fixed_sized_array, raw_array)
-14. hashtree, hashtable, unsorted_set, sorted_set, sorted_map
-15. Guaranteed self tail calls
-16. Improved Macros (not yet specified)
-17. dynamic references and match by type
-18. switch statements don't have fallthrough
-19. C23 style attributes, embed, etc.
-20. Multiple return results
+6. Improved syntax and safer semantics for typedef
+7. Improved enums (can be converted to strings, etc.)
+8. More powerful structs (which can be turned off to be pure C structs for low-level
+   compatibility when required)
+10. generically typed functions and structures
+12. consistent naming of types
+13. readable style conventions
+14. multiple array types (byte_array, array, fixed_unsized_array, fixed_sized_array, raw_array)
+15. hashtree, hashtable, unsorted_set, sorted_set, sorted_map
+16. Guaranteed self tail calls
+17. Improved Macros (not yet specified)
+18. dynamic references and match by type
+19. switch statements don't have fallthrough
+20. C23 style attributes, embed, etc.
+21. Multiple return results
 
 Omni C will have at least one transpiler target namely C23. C23 can be compiled to
 wasm which in theory may be enough to support interop with other languages.
