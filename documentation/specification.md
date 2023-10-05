@@ -22,6 +22,10 @@ noreturn, inline, tailcall, etc.
 All of the operators defined by C23 with the same precedence rules (except
 "->" for which "." is used).
 
+## Namespace Statements
+
+typedefs, structs, functions, enumerations, variables,
+
 ## Full Grammar
 
 The reference grammer for this version is in tree-sitter grammar.
@@ -41,7 +45,6 @@ fixed_array(N, x),
 sorted_set(T),
 source(T) (aka iterable)
 sink(T),
-
 unsorted_set,
 
 
