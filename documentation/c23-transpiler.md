@@ -106,5 +106,11 @@ data always comes last in a library item (which necessarily means that data-leng
 
 When making libraries the tool should ideally parse the sources files to catch some errors early.
 
+## Omni C Implementation
 
+The Omni C transpiler is written in C23. The parser is actually a standard tree-sitter implementation and it's reference grammar will be a tree-sitter grammar.
 
+Excluding the tree-sitter grammar and generated parser, we expect expect the transpiler to be on
+the order of 10K lines of code.
+
+Any additional backends will be written in Omni C of course.
