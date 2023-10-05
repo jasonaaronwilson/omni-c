@@ -4,3 +4,5 @@
 2. Standard Library Specification
 3. Implementation Overview
 4. Language Interop Facilities
+5. Compiler Manual
+
