@@ -9,18 +9,17 @@ and gcc.
 
 1. the command line is parsed to determine compiler options and all source files
    are loaded into memory
-3. all of the source files are parsed. this will require at least as much space
-   as the source files and libraries themselves
-4. we assemble namespaces by collecting each of the namespace fragments
+3. all of the source files are parsed
+4. namespaces are assembled by collecting each of the namespace fragments
 5. for each namespace we create the private and public top-level definitions
 6. type checking, inference and annotation - every expression is given a type
-7. closure conversion - (removes nested functions)
+7. closure conversion removes nested functions which C doesn't support
 11. for each namespace, we output a C source file via an inorder treewalk
     of all functions in the namespace sorted by function name
 12. for each namespace collect all of the function prototype fragments, enum fragments,
     etc.
 13. typologically sort the elements for the header file. enumerations come first, structures (including environments) come next then prototypes  
-14. invoke the C compiler on all of the generated source files
+14. invoke the C compiler on all of the generated source files (at least one per namespace)
 
 Most of these steps are inherently parallel so eventually the compiler will
 utilize as many compute threads as possible while still producing determenistic
@@ -83,7 +82,7 @@ We will examine the C rules for structure packng. In any event, an attribute is 
 
 ## Generic Structure Members
 
-The slow way to do this is to replace variably size fields with a pointer that points to a heap allocated space for the field and automatically manipulate it (we can also use stack allocated little arrays for locals). A similar trick could be used for (tagged) unions. We have to make copies of these when a structure is assigned to a variable.
+The slow way to do this is to replace variably size fields with a pointer that points to a heap allocated space for the field and automatically manipulate it (we can also use stack allocated little arrays for locals). A similar trick could be used for (tagged) unions. We have to make copies of these when a structure is assigned to a variable rather than have the C compiler do it for us.
 
 A more sophisticated approach would still use a pointer but initialize it to space allocated adjacent to the object itself. Again when copying, we need to copy more bytes than just the structure and
 rewrite all such pointers relative to the address of the new target.
