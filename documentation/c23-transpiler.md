@@ -83,8 +83,25 @@ something akin to a vtable at the start of such structures?
 
 ## Strucuture Layout
 
+We will examine the C rules for structure packng. In any event, an attribute is provided to force us to use the platforms ABI structure layout.
 
+## Library Format
 
+We output a series of items describing each file (aka, metadata) and then the content of the file as it existed when the library was created. (Hmmm, how to encode binary files for embed statements?)
 
+A header looks like this:
+
+```
+type=<embed-data or source-file or ...>
+file-name=foo/bar/file.oc
+file-hash=<algorithm>-hashcode-hex-string
+file-size=<number-of-bytes>
+data-length=<number-of-bytes>
+data=.........
+```
+data always comes last in a library item (which necessarily means that data-length precides it).
+
+When making libraries the tool should ideally parse the sources files to catch the stupidest
+errors first.
 
 
