@@ -1,45 +1,57 @@
 # Omni-C
 
-A C like programming language strongly resembling C with modern conveniences,
+A C like programming language very strongly resembling C with modern conveniences,
 default runtime safety, and a new take on a standard library.
 
 ## Additions to C23
 
 1. namespaces, imports, and libraries (no header files!)
 2. closures
-3. garbage collection (possibly precise)
+3. garbage collection (possibly precise, manual management still possible)
 4. overloaded functions (like C++)
-5. overloadable semantics for [] operator
+5. overloadable semantics for [] operator, properties, and method/chaining syntax
 6. improved syntax and safer semantics for typedef
 7. improved enums (can be converted to strings, etc.)
-8. more powerful structs (which can be turned off to be pure C structs for low-level
-   compatibility when required)
-10. generically typed functions and structures
-12. consistent naming of types
-13. readable style conventions
-14. multiple array types (byte_array, array, fixed_unsized_array, fixed_sized_array, raw_array)
-15. hashtree, hashtable, unsorted_set, sorted_set, sorted_map
-16. guaranteed self tail calls
-17. non-textual macros
-18. dynamic references and match by type
-19. switch statements don't have fallthrough
-20. C23 style attributes, embed, etc.
-21. multiple return results
-22. exceptions
-23. language level threads
+8. more powerful structs (which can be turned off so pure C structs are still
+   available for low-level compatibility when required)
+10. generically typed functions and structures (not as complex as you think!)
+12. updated and consistent naming of types (like Rust perhaps) and other style
+    conventions focused on readability instead of number of characters
+15. multiple array types (byte_array, array, fixed_array, unsafe_array) and bounds
+    checking
+17. hashtree, hashmap, hashset, tree, immutable_tree
+18. guaranteed self tail calls
+19. non-textual macros (I have no idea what this looks like yet)
+20. dynamic references and match by type (like any in Go)
+21. switch statements don't have fallthrough
+22. C23 style attributes, embed, etc.
+23. multiple return results
+24. exceptions
+25. language level threads
+26. scheme like "let" expressions allows statements to be executed in expression
+    contexts
+27. defer and block_defer for easier interaction with exceptions and code
+    organization
+28. utf8 immutable zero strings (convertible at not cost to C char* style strings)
 
-Most of these features are straightforward to describe and operate like other languages.
-The biggest departure from C is generic structures and functions. Without inheritance
-these become simpler than one might expect (simpler than C++ templates).
+Importantly mising from this feature list is inheritance and therefore most of these
+features are straightforward to describe and most constructs appear in some other C
+like other language. Most of the benefits of OOP are provided by runtime introspection
+and some syntactic sugar.
 
-Omni C aims to replace the aging C standard library with one that is more readable,
-organized, and powerful.
+The biggest change from C is probably generic structures and functions. Without
+inheritance these become simpler than one might expect (simpler than C++ templates).
+
+Omni C also aims to replace the aging C standard library with one that is more readable,
+organized, and powerful though when using the transpiler, the C standard library and
+other C libraries are easily utilized.
 
 ## Features Removed from Standard C
 
 1. many types of silent conversions
 2. switch fall through
 3. special syntax for array declarations (since we have multiple types of arrays)
+4. many obsolete keywords
 
 ## Using Omni C
 
