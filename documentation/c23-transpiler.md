@@ -25,3 +25,36 @@ and gcc.
 10. invoke the C compiler (in parallel?) on all of the generated source files
 
 ## Function Code Generation
+
+Essentially we have statements and expressions inside some of those statements.
+
+The two most interesting deviations from C that cause problems are exceptions and
+(self) tail calls (when not using gcc or clang).
+
+Self tail calls require that we add a label as the first statement of the function and then the self call must instead of doing the call, perform a bunch of assignments then do a goto which obviously is not itself a C expression.
+
+Exceptions require that we do something like this for each call:
+
+```
+struct oc_struct__oc_return_result__199 oc__tmp_675 = oc__function_functionname_signature(tmp99);
+if (oc_tmp__675.exception) {
+  if (oc_tmp__675.exception.type == OC__EXCEPTION_TYPE) {
+     goto oc_label__777;
+  } else {
+     oc_exception = oc_tmp__675.exception;
+     goto oc_label_defer_and_return;
+  }
+}
+
+oc_label_defer_and_rturn:
+for (int i = 0; oc_num_deferred; i++) {
+   int oc_defer_code = oc_deffered_codes[i];
+   switch (oc_defer_code) {
+      case 1: {
+        // TODO(jawilson): how to handle variables that go out of scope?
+        // the code generation for the deferred statement goes here.
+        // what to do with additional exceptions?
+      }
+   }
+}
+```
