@@ -34,6 +34,9 @@ default runtime safety, and a new take on a standard library.
     organization
 28. utf8 immutable zero strings (convertible at not cost to C char* style strings)
 29. interpolated strings remove the need for printf
+30. fluid_let global variables don't have to be bad?
+31. block scope for case constructs so variables can be defined without resorting to
+    an additional block which makes the code uglier
 
 Importantly mising from this feature list is inheritance and therefore most of these
 features are straightforward to describe and most constructs appear in some other C
@@ -44,15 +47,15 @@ The biggest change from C is probably generic structures and functions. Without
 inheritance these become simpler than one might expect (simpler than C++ templates).
 
 Omni C also aims to replace the aging C standard library with one that is more readable,
-organized, and powerful though when using the transpiler, the C standard library and
-other C libraries are easily utilized. (Additionally, non generic Omni C is callable from C
-allowing a graceful conversion from Standard C to Omni C.)
+organized, less error prone and powerful. When using the transpiler, the C standard library and
+other C libraries are still easily utilized. (Additionally, non generic Omni C is trivial callable
+from C allowing a graceful conversion of a code base from Standard C to Omni C.)
 
 ## Features Removed from Standard C
 
 1. many types of silent conversions
 2. switch fall through
-3. special syntax for array declarations (since we have multiple types of arrays)
+3. special syntax for array types (since we have multiple types of arrays)
 4. many obsolete keywords like register and the auto storage specifier (static still
    present)
 
@@ -63,7 +66,7 @@ Omni C by default is a transpiler targeting C and wasm via C to wasm translation
 Eventually we may add multiple native compilation targets such as:
 
 1. LLVM
-2. Comet-VM (RISC-V64, ARM64 - full tail recursion and amazing debugging)
+2. Comet-VM (interpreter, RISC-V64, ARM64 - full tail recursion and amazing debugging)
 3. wasm
 
 ## Omni C Syntax
@@ -72,7 +75,8 @@ The general rule is that the familar C syntax should be used except where it int
 with other goals. Especially important are C expressions - we deviate somewhat more at
 namespace level constructs like typedef.
 
-The full syntax with examples will be provided in another file.
+The full syntax with examples will be provided in another file but a motivating example
+is shown below.
 
 ### Samples
 
@@ -85,7 +89,7 @@ import std::collections::iterator;
 
 byte_array* pretty_print(reference object) {
    // switch is able to switch on the type contained in an object reference.
-   switch(object.type) {
+   switch (object.type) {
       case int64 | uint64 | float64 | float32:
         return pretty_print_number(ref);
       case string:
