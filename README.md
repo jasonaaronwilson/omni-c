@@ -21,11 +21,11 @@ such as:
 16. Improved Macros
 17. dynamic references and match by type
 18. switch statements don't have fallthrough
+19. C23 style attributes, embed, etc.
 
 Omni C is meant to have multiple transpiled (mostly readable) targets:
 
 1. C23
-3. Go
 
 C23, and Go can all be compiled to wasm though we may add multiple native compilation targets:
 
@@ -39,6 +39,53 @@ The general rule is that the familar C syntax should be used except where it int
 Especially important are C expressions - we can deviate much more at program level constructs like typedef.
 
 The full syntax with examples will be provided in another file.
+
+### Samples
+
+```
+namespace std::collections {
+
+byte_array*, error pretty_print(object object) {
+   switch(ovject.type) {
+      case int64 | uint64 | float64 | float32:
+        return pretty_print_number(ref);
+      case string:
+        return print_print_string(ref);
+   }
+   itertor(any)* iterator = object.type.iterator(object);
+   if (iterator) {
+      return pretty_print(byte_array, iterator), no_error();
+   }
+   auto stream = object.type.code_point_stream(object);
+   if (append_source) {
+     return byte_array.append(stream), no_error();
+   }
+   return null, error("object is not printable by normal means")
+}
+
+///
+/// Appends a human readable textual representation of the elements from an
+/// iterator.
+///
+[[public]]
+byte_array* pretty_print(byte_array*, iterator(any) iterator) {
+   byte_array = byte_array.append("{\n");
+   boolean is_first = true;
+   // The more concise syntax for (ref item : iterator) {} could also be used
+   while (iterator.has_next()) {
+      ref item = iterator.next();
+      if (!is_first) {
+        byte_array = byte_array.append(",\n");
+        byte_array, error err = pretty_print(item);
+        if (err) {
+          return null, err
+        }
+      }
+   }
+} 
+
+}
+```
 
 ## Omni C Implementation
 
