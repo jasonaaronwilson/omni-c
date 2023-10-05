@@ -1,30 +1,49 @@
 # Omni-C
 
-A C like programming language strongly resembling C with modern conveniences
-and default runtime safety. The things added to C are:
+A C like programming language strongly resembling C with modern conveniences,
+default runtime safety, and a new take on a standard library.
 
-1. Namespaces, imports, and libraries (no header files!)
-2. Closures
-3. Garbage collection (possibly precise)
-4. Overloaded functions (like C++)
-5. Overloadable semantics for [] operator
-6. Improved syntax and safer semantics for typedef
-7. Improved enums (can be converted to strings, etc.)
-8. More powerful structs (which can be turned off to be pure C structs for low-level
+## Additions to C23
+
+1. namespaces, imports, and libraries (no header files!)
+2. closures
+3. garbage collection (possibly precise)
+4. overloaded functions (like C++)
+5. overloadable semantics for [] operator
+6. improved syntax and safer semantics for typedef
+7. improved enums (can be converted to strings, etc.)
+8. more powerful structs (which can be turned off to be pure C structs for low-level
    compatibility when required)
 10. generically typed functions and structures
 12. consistent naming of types
 13. readable style conventions
 14. multiple array types (byte_array, array, fixed_unsized_array, fixed_sized_array, raw_array)
 15. hashtree, hashtable, unsorted_set, sorted_set, sorted_map
-16. Guaranteed self tail calls
-17. Improved Macros (not yet specified)
+16. guaranteed self tail calls
+17. non-textual macros
 18. dynamic references and match by type
 19. switch statements don't have fallthrough
 20. C23 style attributes, embed, etc.
-21. Multiple return results
+21. multiple return results
+22. exceptions
+23. language level threads
 
-Omni C will have at least one transpiler target namely C23. C23 can be compiled to
+Most of these features are straightforward to describe and operate like other languages.
+The biggest departure from C is generic structures and functions. Without inheritance
+these become simpler than one might expect (simpler than C++ templates).
+
+Omni C aims to replace the aging C standard library with one that is more readable,
+organized, and powerful.
+
+## Features Removed from Standard C
+
+1. many types of silent conversions
+2. switch fall through
+3. special syntax for array declarations (since we have multiple types of arrays)
+
+## Using Omni C
+
+Omni C will have at least one transpiler targeting C23. C23 can be compiled to
 wasm which in theory may be enough to support interop with other languages.
 
 Eventually we may add multiple native compilation targets such as:
@@ -48,7 +67,7 @@ The full syntax with examples will be provided in another file.
 // extend to the end of file or the next namespace declaration.
 namespace std::collections::printer;
 
-import std:collections::iterator;
+import std::collections::iterator;
 
 byte_array* pretty_print(reference object) {
    // switch is able to switch on the type contained in an object reference.
@@ -58,7 +77,7 @@ byte_array* pretty_print(reference object) {
       case string:
         return print_print_string(ref);
    }
-   itertor(any)* iterator = object.type.iterator(object);
+   itertor(reference)* iterator = object.type.iterator(object);
    if (iterator) {
       return pretty_print(byte_array, iterator), no_error();
    }
@@ -66,7 +85,7 @@ byte_array* pretty_print(reference object) {
    if (append_source) {
      return byte_array.append(stream), no_error();
    }
-   return null, error("object is not printable by normal means")
+   throw std::exception::unimplemented("The given reference can not be pretty-printed.");
 }
 
 ///
@@ -91,11 +110,3 @@ byte_array* pretty_print(byte_array*, iterator(any) iterator) {
    return byte_array, no_error()
 }
 ```
-
-## Omni C Implementation
-
-Omni C will utilize the tree-sitter parse framework and it's reference grammar will be a tree-sitter grammar.
-
-The Omni C transpiler will be written in C23. Excluding the tree-sitter grammar and generated parser, we expect expect the transpiler to be about 5K lines of code with an additional 3K of library code.
-
-Any additional backends will be written in Omni C of course.
