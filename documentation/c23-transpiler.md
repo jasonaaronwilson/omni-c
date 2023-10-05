@@ -33,20 +33,23 @@ The two most interesting deviations from C that cause problems are exceptions an
 
 Self tail calls require that we add a label as the first statement of the function and then the self call must instead of doing the call, perform a bunch of assignments then do a goto which obviously is not itself a C expression.
 
-Exceptions require that we do something like this for each call:
+Exceptions also require a fair amount of code at the call/return site in order to short circuit.
+This code is also not itself a C expression. In fact exceptions require that we do something like this for each call (source line directives have been removed):
 
 ```
 struct oc_struct__oc_return_result__199 oc__tmp_675 = oc__function_functionname_signature(tmp99);
 if (oc_tmp__675.exception) {
+  // For each exception we catch, or maybe this is a switch?
   if (oc_tmp__675.exception.type == OC__EXCEPTION_TYPE) {
      goto oc_label__777;
   } else {
+     // this is the re-throw case
      oc_exception = oc_tmp__675.exception;
      goto oc_label_defer_and_return;
   }
 }
 
-oc_label_defer_and_rturn:
+oc_label_defer_and_return:
 for (int i = 0; oc_num_deferred; i++) {
    int oc_defer_code = oc_deffered_codes[i];
    switch (oc_defer_code) {
@@ -57,4 +60,12 @@ for (int i = 0; oc_num_deferred; i++) {
       }
    }
 }
+return { oc_return_result, oc_exception };
 ```
+In order to support both of these, we simply linearize expressions into trivial statements
+by introducing a bunch of temporaries at which point the call/return site is a single statement
+we can place code after (or before if we end up needing that). This transformation would also
+enables us to essentially make things like blocks inside of expressions work.
+
+
+
