@@ -3,7 +3,7 @@
 A C like programming language strongly resembling C with modern conveniences
 such as:
 
-1. Namespace/Modules (no header files!)
+1. Namespace, imports, and libraries (no header files!)
 2. ML style closures
 3. Garbage collection (possibly precise)
 4. Overloaded functions like C++
@@ -35,18 +35,24 @@ C23, and Go can all be compiled to wasm though we may add multiple native compil
 
 ## Omni C Syntax
 
-The general rule is that the familar C syntax should be used except where it interferes with other goals. 
-Especially important are C expressions - we can deviate much more at program level constructs like typedef.
+The general rule is that the familar C syntax should be used except where it interferes
+with other goals. Especially important are C expressions - we can deviate much more at
+program level constructs like typedef.
 
 The full syntax with examples will be provided in another file.
 
 ### Samples
 
 ```
-namespace std::collections {
+// Files can contains code to place in multiple name spaces. namespace headers
+// extend to the end of file or the next namespace declaration.
+namespace std::collections::printer;
 
-byte_array*, error pretty_print(object object) {
-   switch(ovject.type) {
+import std:collections::iterator;
+
+byte_array*, error pretty_print(reference object) {
+   // switch is able to switch on the type contained in an object reference.
+   switch(object.type) {
       case int64 | uint64 | float64 | float32:
         return pretty_print_number(ref);
       case string:
@@ -82,8 +88,7 @@ byte_array* pretty_print(byte_array*, iterator(any) iterator) {
         }
       }
    }
-} 
-
+   return byte_array, no_error()
 }
 ```
 
