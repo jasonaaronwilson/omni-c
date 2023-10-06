@@ -7,10 +7,10 @@ must have the same) type being selected.
 
 ```
 void example(boolean b) {
-  uint32 x = (cond (b 10) (else 5));
+  uint32 x = if b then 5 else 100
 }
 
 void example_1(boolean b, boolean c) {
-  uint32 x = (cond (b 5) (c 10) (else 20));
+  uint32 x = if b then 5 else if c then 10 else 20;
 }
 ```

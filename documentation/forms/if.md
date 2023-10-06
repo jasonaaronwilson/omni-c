@@ -56,3 +56,11 @@ Non simple statements include variable declarations, while/do-while
 loops, other if statements, switch statements, etc. Simple statements
 are thus return, continue, break, assignments/increments/decrements,
 or calls.
+
+## if expressions
+
+The if keyword can also be used to create conditional expressions
+(like ? : in standard C).
+
+See conditional-expressions.md
+
