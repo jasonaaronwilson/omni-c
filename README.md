@@ -1,13 +1,15 @@
 # Omni-C
 
-A C derived programming language very strongly resembling C with
-modern conveniences, runtime safety, and a pleasant standard library.
+A C derived programming language very strongly resembling C in look
+and semantics with modern conveniences, runtime safety, and a revamped
+standard library.
 
 ## Features
 
 These are probably the less controversial features (either because
 they are widely desired, are already in C++ (or another popular C
-derived language), or you don't need to use if you don't want to):
+derived language), or you don't need to use the feature if you don't
+want to):
 
 1. namespaces, imports, and libraries (no header files!)
 1. overloaded functions (I think exactly like C++ modulo type
@@ -19,42 +21,47 @@ derived language), or you don't need to use if you don't want to):
    can create opaque zero cost abstractions
 1. improved enums (which can be converted to strings, etc.,
    essentially automatic code generation that can be turned off if you
-   don't need it via an annotation)
-1. updated and consistent naming of types uint64, int64, uint8, int8,
-   float64, float32, float16, etc. (Does anyone actually like size_t?)
+   don't need it on a per enum basis)
+1. consistent naming of types uint64, int64, uint8, int8, float64,
+   float32, float16, etc. (Does anyone actually like size_t?)
 1. switch statements don't have fallthrough behavior by default and
    statements after a switch case are automatically a block so that
    variables can be defined there, defer_block can be used, etc.
-1. C23 style attributes (aka [[ xyz ]]) though the set of standard
-   annotations is a bit different.
-1. multiple return results (modern C compilers already efficiently
+1. C23 style attributes (aka [[xyz]]) though the set of standard
+   annotations is a bit different deom C23.
+1. multiple return values (modern C compilers already efficiently
    support returning structures so this is actually just syntactic
    sugar).
 1. C# style exceptions + defer and defer_block (essentially allows
-   some aspects of Resource Acquisition Is Initialization)
+   some aspects of Resource Acquisition Is Initialization which I
+   think may be badly named actually because it seems to have more to
+   do with resource deallocation)
 1. utf8 strings by default (convertible at no cost to C char\* style
-   strings for C and OS inter-operation).
+   strings for C and OS inter-op).
 1. language level threads (not necessarily Go lang level cheap though)
 1. guaranteed self tail calls with the aim of getting tail calls
    supported in all cases without any performance hit.
+1. "_" can be used in numeric constants (like ' in C23)
 
 Next are some features that really change the feel of the language and
 thus the standard library:
 
 1. closures (simpler and prettier than C++, more like Java or ML)
-1. garbage collection (manual management still an option for embedded
-   systems)
+1. garbage collection (manual management will still be an option for
+   embedded systems but Go and the JVM has certainly showed that GC
+   doesn't have to be problematic).
 1. generically typed functions and structures (not as complex as you
-   think!)
+   think because we don't have inheritance!)
 1. multiple array types (byte_array, array, fixed_size_array,
    unsafe_array) and bounds checking (dynamic if necessary) for all
    but unsafe_array (which only exists for C interop) ; the
    controversial part may be that [] is no longer allowed in types
-   since it is now ambiguous and we'd have to choose a default).
+   since it is now ambiguous given multiple array types and we'd have
+   to choose a default (which is obviously just array it I *had* to
+   choose).
 1. dynamic references and switch by type (like any in Go)
 1. interpolated strings remove the need for (unsafe) printf type
-   functions ; this may turn out to be the biggest code upgrading
-   issues since printf is very invasive.
+   functions
 1. scheme like "let" *expressions* allows statements to be executed in
    expression contexts (which was already somewhat possible in C via
    inline functions though this allows these statements to side-effect
@@ -67,11 +74,13 @@ thus the standard library:
 The Omni C standard library will provide collections including at
 least:
 
+1. byte_array
+1. array
 1. hashmap
 1. hashset
 1. treemap
 1. immutable_treemap (aka a "persistent" tree data-structure, a nod to
-   Clojure though these predate Clojure).
+   clojure though the concept predates clojure).
 
 ### No Inheritance
 
@@ -82,53 +91,58 @@ some domains such as UI "widgets" where that style fits well, but it
 often misses. If you can't define all of the behavior of some piece of
 code, that is fine, explicitly pass in behavior via closures.
 
+## Features Removed from Standard C
+
+1. many types of silent type conversions
+1. switch fall through (and Duff's device)
+1. special syntax for array types (since we have multiple types of
+   arrays which are basically necessary to avoid an entire class of
+   safety problems but still allow C interop)
+1. many obsolete keywords like register and the auto storage specifier
+   (static is still present though I tend to not use it that much)
+1. octal - still supported but requires the "0o" prefix ; this is ugly
+   enough that people will not use it unless it is helpful.
+
 ## Rationale
 
 The biggest change from C is probably generic structures and functions
 and that's what I am experimenting with here the most despite these
 being available in most C derived languages (which always add
-inheritance making reasonging much more diffuclt). Without inheritance
+inheritance making reasoning much more difficult). Without inheritance
 these become much simpler than one might expect (probably simpler than
-C++ templates though the C++ guys are highly focuses on this and I
-might not have stolen enough yet).
+C++ templates though the C++ guys are highly focused on this and I
+might not have "stolen" enough yet - there is definitely an overlap
+with macros).
 
 In my mind, the weakest part of C is actually the aging C standard
 library. Namespaces and modules immediately confer code organization
 benefits to Omni C and we should apply the same to the library and
-also not pretend that a readable identifier like string_compare is
-worse than strcmp because it is shorter.
+also not pretend that a readable identifier like compare is worse than
+strcmp because it is shorter.
 
 Unlike Java, there isn't a 1:1 correspondance between a file and
 namespaces and that feels right (some other modern languages also
 follow this path). This makes it easier to add or remove things from a
-namepsace to accomodate deltas in a platform level at the "build"
-level rather than using the C preprocessor, a very wide hammer.
+namepsace to accomodate deltas for a platform level at the "build"
+level rather than using the C preprocessor.
 
 While Omni C will initially focus the standard library on
 algorithms/collections because that is where the C library is very
 weak, POSIX for all it's benefits of allowing C code to run across
 different platforms is also an aging interface. For example, the
 io_uring interface being introduced to the Linux kernel is radically
-changing how user programs should interact with the kernel and we want
-to jump on that model (which is similar to CSP, aka Erlang, which is a
+changing how user programs interact with the kernel and we want to
+jump on that model (which is similar to CSP, aka Erlang, which is a
 succesful model and seems to scale better to many core
 computing). (io_uring itself is so complicated that you are supposed
-to interact with it via a library which is unusual though - I think
-there is a different "process" to "kernel" architecture brewing...)
+to interact with it via a library which is unusual for the
+kernel/process abstraction layer - I think there is a different
+"process" to "kernel" architecture brewing and it will be async
+messages all the way down).
 
 Omni C can easily call (aka interop) with C so nothing is lost by
-focusing on the C libraries weakpoints and fleshing those parts out
-later.
-
-## Features Removed from Standard C
-
-1. many types of silent type conversions
-1. switch fall through
-1. special syntax for array types (since we have multiple types of
-   arrays which are basically necessary to avoid an entire class of
-   safety problems)
-1. many obsolete keywords like register and the auto storage specifier
-   (static is still present though I tend to not use it that much)
+focusing on the standard C libraries weakpoints and fleshing out the
+standard library later.
 
 ## Using Omni C
 
@@ -138,19 +152,21 @@ wasm translation).
 To produce a native binary, simply invoke the Omni C compler like so:
 
 ```
-  omni-c --output=my_program *.oc my-lib/*.oc
+  omni-c --output=my_program *.oc my-lib-1/*.oc my-lib-2/*.oc
 ```
 
 This assumes either clang or gcc are available in PATH and whichever
 is found first will be used but obviously you can force a particular C
-compiler with flags. Both are high quality C compilers. Hopefully we
-can also target "tcc" for lightning fast debug builds though tcc
-doesn't support RISCV-64 an up and coming architecture.
+compiler with flags. Both are high quality C compilers and overall
+seem to perform similarly.
+
+Hopefully we can also target "tcc" for lightning fast debug builds
+though tcc doesn't support RISCV-64.
 
 Like many compilers, omni-c can be told to stop at a certain
 points. omni-c can simply be used to generate the C source files (and
-a header file) which you can compile into your program via higher
-level means.
+a header file for interop) which you can compile into your C program
+via higher level means.
 
 Eventually we may add multiple native compilation targets such as:
 
@@ -165,9 +181,9 @@ The general rule is that the familar C syntax should be used except
 where it interferes with other goals. Especially important are C
 function statements and expressions - we deviate somewhat more at
 namespace level constructs like typedef. We hope to produce a tool
-that will automatically convert C23 and prior versions of C to Omni C,
-but this is much harder to achieve in many code bases because of
-prevasive use of the C pre-processor and macros (which are used so
+that will automatically convert 90% of C23 and prior versions of C to
+Omni C, but this is much harder to achieve in many code bases because
+of prevasive use of the C pre-processor and macros (which are used so
 much because standard C is lacking).
 
 The full syntax with examples will be provided in another file but a
@@ -233,9 +249,9 @@ significantly from C's simplity usually with the introduction of
 inheritance. (Go went with Javascript esque "duck typing' which
 apparently creates it's own problems.)
 
-C is a painful language to write large programs in for many reasons,
-but a few tweaks changes this dramatically. Overloaded function alone
-even without namespaces already resolve many naming collisions.
+C is a  painful language to write large programs  in for many reasons,
+but a few tweaks changes this dramatically. Overloaded functions alone
+(even without namespaces already resolve many naming collisions.
 
 Omni C might be closest to Java or C# (without classes) but still with
 a nod to low-level programming use cases and of course AOT
@@ -253,8 +269,8 @@ The features I've included in Omni C have been vetted by 25+ years of
 professional software engineering including many large projects across
 the entire software stack (I've written "microcode" level code,
 backend server code, command line utilities (many of which are bash
-scripts), web frontends, etc.). I've had an interest in programming
-languages design and implementation even longer than that.
+scripts though), web frontends, etc.). I've had an interest in
+programming languages design and implementation even longer than that.
 
 Most importantly Omni C is the language that I personally want to
 write my code in and feel like that code I write will last.
