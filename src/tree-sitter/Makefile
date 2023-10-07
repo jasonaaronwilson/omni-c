@@ -8,6 +8,9 @@ build:
 	  ~/src/tree-sitter/libtree-sitter.a    \
 	  -o c-to-sexpression
 
+diff:
+	git difftool HEAD
+
 clean:
 	rm -f c-to-sexpression *~
 
