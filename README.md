@@ -28,7 +28,7 @@ want to):
    statements after a switch case are automatically a block so that
    variables can be defined there, defer_block can be used, etc.
 1. C23 style attributes (aka [[xyz]]) though the set of standard
-   annotations is a bit different deom C23.
+   annotations is a bit different from C23.
 1. multiple return values (modern C compilers already efficiently
    support returning structures so this is actually just syntactic
    sugar).
@@ -52,13 +52,12 @@ thus the standard library:
    doesn't have to be problematic).
 1. generically typed functions and structures (not as complex as you
    think because we don't have inheritance!)
-1. multiple array types (byte_array, array, fixed_size_array,
-   unsafe_array) and bounds checking (dynamic if necessary) for all
-   but unsafe_array (which only exists for C interop) ; the
-   controversial part may be that [] is no longer allowed in types
-   since it is now ambiguous given multiple array types and we'd have
-   to choose a default (which is obviously just array it I *had* to
-   choose).
+1. multiple array types (array, fixed_size_array, unsafe_array) and
+   bounds checking (dynamic if necessary) for all but unsafe_array
+   (which only exists for C interop) ; the controversial part may be
+   that [] is no longer allowed in types since it is now ambiguous
+   given multiple array types and we'd have to choose a default (which
+   is obviously just array it I *had* to choose).
 1. dynamic references and switch by type (like any in Go)
 1. interpolated strings remove the need for (unsafe) printf type
    functions
@@ -67,20 +66,26 @@ thus the standard library:
    inline functions though this allows these statements to side-effect
    variables and even "loop").
 1. fluid_let - this makes thread local variables "cool" again and
-   inverts dependency injection back to just having dependencies.
+   inverts dependency injection back to just having
+   dependencies. (global variables that are fluid must have the
+   `fluid` anntoation applied to them).
 1. non-textual macros (honestly I have no idea what this looks like
    yet meaning this is the hardest part to design)
 
 The Omni C standard library will provide collections including at
 least:
 
-1. byte_array
-1. array
-1. hashmap
-1. hashset
-1. treemap
-1. immutable_treemap (aka a "persistent" tree data-structure, a nod to
-   clojure though the concept predates clojure).
+1. `array`
+1. `hashmap`
+1. `hashset`
+1. `treemap`
+1. `immutable_treemap` (aka a "persistent" tree data-structure, a nod
+   to clojure though the concept predates clojure).
+
+Although not a collection in the traditional since, `buffer`, which is
+similar to an array of bytes, is used for a variety of purposes such
+as building strings (so like stringbuiler in Java) as well as a buffer
+for two way communication with another thread (so like pipes).
 
 ### No Inheritance
 
@@ -94,37 +99,40 @@ code, that is fine, explicitly pass in behavior via closures.
 ## Features Removed from Standard C
 
 1. many types of silent type conversions
-1. switch fall through (and Duff's device)
-1. special syntax for array types (since we have multiple types of
-   arrays which are basically necessary to avoid an entire class of
-   safety problems but still allow C interop)
-1. many obsolete keywords like register and the auto storage specifier
-   (static is still present though I tend to not use it that much)
-1. octal - still supported but requires the "0o" prefix ; this is ugly
-   enough that people will not use it unless it is helpful.
+1. switch fall through (and Duff's device is therefore certainly not
+   pretty but may still work efficiently...)
+1. the special `[]` syntax for array types (since we have multiple
+   types of arrays which are basically necessary to avoid an entire
+   class of safety problems but still allow C interop). `[]` are still
+   useable to access an element of an array as well (as they are
+   available with other collections like hashtable).
+1. many obsolete keywords like `register` and the `auto` storage
+   specifier (`static` is now specified as an attribute allowed on local
+   variables).
+1. octal - still supported but requires the "0o" prefix. Octal bugs
+   are not that common overall but it is worth making things more
+   consistent anyways.
 
 ## Rationale
 
 The biggest change from C is probably generic structures and functions
 and that's what I am experimenting with here the most despite these
-being available in most C derived languages (which always add
-inheritance making reasoning much more difficult). Without inheritance
-these become much simpler than one might expect (probably simpler than
-C++ templates though the C++ guys are highly focused on this and I
-might not have "stolen" enough yet - there is definitely an overlap
-with macros).
+being available in most C derived languages. Without inheritance these
+become much simpler than one might expect.
 
 In my mind, the weakest part of C is actually the aging C standard
-library. Namespaces and modules immediately confer code organization
-benefits to Omni C and we should apply the same to the library and
-also not pretend that a readable identifier like compare is worse than
-strcmp because it is shorter.
+library. Namespaces and libraries immediately confer code organization
+benefits to Omni C and we should apply the same to the standard
+library by organizing it as well as keeping it out of the default
+namespace as much as possible. Additionally we can use more readable
+identifiers (unless the abbreviation is very widespread like stdout
+instead of standard_output).
 
 Unlike Java, there isn't a 1:1 correspondance between a file and
-namespaces and that feels right (some other modern languages also
-follow this path). This makes it easier to add or remove things from a
-namepsace to accomodate deltas for a platform level at the "build"
-level rather than using the C preprocessor.
+namespaces (some other modern languages also follow this path). This
+makes it easier to add or remove things from a namepsace to accomodate
+deltas for a platform level at the "build" level rather than using the
+C preprocessor.
 
 While Omni C will initially focus the standard library on
 algorithms/collections because that is where the C library is very
@@ -152,7 +160,7 @@ wasm translation).
 To produce a native binary, simply invoke the Omni C compler like so:
 
 ```
-  omni-c --output=my_program *.oc my-lib-1/*.oc my-lib-2/*.oc
+  omni-c --executable=my_program *.oc sub-directory/*.oc
 ```
 
 This assumes either clang or gcc are available in PATH and whichever
@@ -160,13 +168,20 @@ is found first will be used but obviously you can force a particular C
 compiler with flags. Both are high quality C compilers and overall
 seem to perform similarly.
 
-Hopefully we can also target "tcc" for lightning fast debug builds
-though tcc doesn't support RISCV-64.
+Rather than `--executable` flag, you can use `--library=foo.ocl` to produce a
+library. Libraries are not actually compiled at all, the source files
+and metadata such as name are simply concatentated.
 
 Like many compilers, omni-c can be told to stop at a certain
 points. omni-c can simply be used to generate the C source files (and
 a header file for interop) which you can compile into your C program
 via higher level means.
+
+For the full list of flags, see the documentation for the to C
+transpiler.
+
+Hopefully we can also target "tcc" for lightning fast debug builds
+though tcc doesn't support RISCV-64.
 
 Eventually we may add multiple native compilation targets such as:
 
@@ -249,7 +264,7 @@ significantly from C's simplity usually with the introduction of
 inheritance. (Go went with Javascript esque "duck typing' which
 apparently creates it's own problems.)
 
-C is a  painful language to write large programs  in for many reasons,
+C is a painful language to write large programs in for many reasons,
 but a few tweaks changes this dramatically. Overloaded functions alone
 (even without namespaces already resolve many naming collisions.
 

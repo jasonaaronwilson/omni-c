@@ -18,6 +18,7 @@
 1. [identifiers](forms/identifiers.md)
 1. [if](forms/if.md)
 1. [let](forms/let.md)
+1. [numeric constants](forms/numeric-contants.md)
 1. [strucutures](forms/strucutures.md)
 1. [switch](forms/switch.md)
 1. [try-catch-throw](forms/try-catch-throw.md)
