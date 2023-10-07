@@ -1,6 +1,6 @@
 # Documentation Overview
 
-1. Language Specification
+1. [Language Specification](specification.md)
 2. Standard Library Specification
 3. Implementation Overview
 4. Language Interop Facilities
