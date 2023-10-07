@@ -14,7 +14,7 @@ want to):
 1. namespaces, imports, and libraries (no header files!)
 1. overloaded functions (I think exactly like C++ modulo type
    conversion rules)
-1. syntacitic sugar - method call/chaining syntax (so code might look
+1. syntactic sugar - method call/chaining syntax (so code might look
    like it is OOP even though it isn't), overloadable semantics for
    \[\] operator, and automatic C# style "properties"
 1. improved syntax and safer "casting" behavior for typedef so that it
