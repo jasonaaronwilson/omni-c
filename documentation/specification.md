@@ -7,10 +7,48 @@ The current version is "OC.2023.0".
 ## Reserved Words
 
 ```
-auto, void, boolean, int64, int32, int16, int8, uint64, uint32, uint16, uint8,
-utf8_code_point, float32, float64, complex32, complex64, if, do, while, switch, case, break,
-for, typdef, enum, struct, string, try, catch, throw, defer, goto, else,
-continue, default, nullptr, true, false, static_assert, typedef_lower, try, catch,
+auto
+boolean
+break
+case
+catch
+catch
+complex32
+complex64
+continue
+default
+defer
+do
+else,
+enum
+false
+float32
+float64
+for
+goto
+if
+int16
+int32
+int64
+int8
+nullptr
+static_assert
+string
+struct
+switch
+throw
+true
+try
+try
+typedef
+typedef_lower
+uint16
+uint32
+uint64
+uint8
+utf8_code_point
+void
+while
 ```
 
 ## Standard annotations
