@@ -2,21 +2,23 @@
 
 ## Version
 
-The current version is "OMNI-C2023.0".
+The current version is "OMNI-C-2023.0".
 
 ## Reserved Words
 
 ```
-auto		do		int32		try
-boolean		else		int64		typedef
-break		enum		int8		typedef_lower
-case		false		nullptr		uint16
-catch		float32		static_assert	uint32
-complex32	float64		string		uint64
-complex64	for		struct		uint8
-continue	goto    	switch		utf8_code_point
-default		if		throw		void
-defer		int16		true		while
+auto            do              int32           try
+boolean         else            int64           typedef
+break           enum            int8            typedef_lower
+case            false           nullptr         uint16
+catch           float32         static_assert   uint32
+complex32       float64         string          uint64
+complex64       for             struct          uint8
+continue        goto            switch          utf8_code_point
+default         if              throw           void
+defer           int16           true            while
+
+foreach
 ```
 
 ## Standard annotations
