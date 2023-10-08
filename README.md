@@ -126,19 +126,31 @@ and that's what I am experimenting with here the most despite these
 being available in most C derived languages. Without inheritance these
 become much simpler than one might expect.
 
-In my mind, the weakest part of C is actually the aging C standard
-library. Namespaces and libraries immediately confer code organization
-benefits to Omni C and we should apply the same to the standard
-library by organizing it as well as keeping it out of the default
-namespace as much as possible. Additionally we will use more readable
-identifiers (unless the abbreviation is very widespread like stdout
-instead of standard_output).
+The aging C standard library seems bloated and seems insufficient for
+modern programming. One of the largest C programs, the Linux kernel,
+doesn't even use the C standard library! One reason may be that large
+parts of the C standard library is just a wrapper around calling into
+the kernel and the kernel probably wouldn't want to call into itself
+in the exact same way (though there is something a bit interesting
+about the kernel being able to call itself via a standard library that
+has the same interface as user code even though it would run different
+code). If the C standard library was better organized (aka modular)
+and more powerful, the Linux kernel would *want* to use that library.
+
+Namespaces and libraries immediately confer code organization benefits
+to Omni C and we should apply the same to the standard library by
+organizing it as well as keeping it out of the default namespace as
+much as possible. Additionally we will use more readable identifiers
+(unless the abbreviation is very widespread like stdout instead of
+standard_output).
 
 Unlike Java, there isn't a 1:1 correspondance between a file and
 namespaces (some other modern languages also follow this path). This
 makes it easier to add or remove things from a namepsace to accomodate
 deltas for a platform level at the "build" level rather than using the
-C preprocessor.
+C preprocessor for this task. The Java style makes it slightly easier
+to find the exact definition, grep and other tools will be able to
+help.
 
 While Omni C will initially focus the standard library on
 algorithms/collections because that is where the C library is very
@@ -172,12 +184,18 @@ like so:
 
 This assumes either clang or gcc are available in PATH and whichever
 is found first will be used but obviously you can force a particular C
-compiler with flags. Both are high quality C compilers and overall
-optimized code seem to perform similarly.
+compiler to be used with flags. Both are high quality C compilers and
+overall optimized code seem to perform similarly.
 
-Rather than `--executable` flag, you can use `--library=foo.ocl` to produce a
-library. Libraries are not actually compiled at all, the source files
-and metadata such as name are simply concatentated.
+We actually want to target the generated code to something like "tcc"
+if easily achievable. By using less of the C standard (especially the
+newest standards) then you can use alternatate compilers with Omni C.
+
+Rather than `--executable` flag, you can use `--library=foo.ocl` to
+produce a distributable source library that could contain everything
+necessary to use the "compiled" code (since compilation is pushed back
+as much as possible). Libraries are not actually compiled at all, the
+source files and metadata are simply concatentated.
 
 Like many compilers, omni-c can be told to stop at a certain
 points. omni-c can simply be used to generate the C source files (and
