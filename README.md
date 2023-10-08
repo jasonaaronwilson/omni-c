@@ -48,23 +48,25 @@ thus the standard library:
 
 1. closures (simpler and prettier than C++, more like Java or ML)
 1. garbage collection (manual management will still be an option for
-   embedded systems but Go and the JVM has certainly showed that GC
-   doesn't have to be problematic).
+   embedded systems or other low-level programming. Go and the JVM
+   have shown that GC doesn't have to be problematic. While there are
+   alternatives to garbage collection such as reference counting,
+   garbage collection provides one of the simpler models.
 1. generically typed functions and structures (not as complex as you
    think because we don't have inheritance!)
-1. multiple array types (array, fixed_size_array, unsafe_array) and
-   bounds checking (dynamic if necessary) for all but unsafe_array
-   (which only exists for C interop) ; the controversial part may be
-   that [] is no longer allowed in types since it is now ambiguous
-   given multiple array types and we'd have to choose a default (which
-   is obviously just array it I *had* to choose).
+1. multiple array types (array, fixed_array, unsafe_array) and bounds
+   checking (dynamic if necessary) for all but unsafe_array (which
+   only exists for C interop) ; the controversial part may be that []
+   is no longer allowed in types since it is now ambiguous given
+   multiple array types and we'd have to choose a default (which is
+   obviously just array it I *had* to choose).
 1. dynamic references and switch by type (like any in Go)
 1. interpolated strings remove the need for (unsafe) printf type
-   functions
+   functions being easier to read in many cases.
 1. scheme like "let" *expressions* allows statements to be executed in
    expression contexts (which was already somewhat possible in C via
    inline functions though this allows these statements to side-effect
-   variables and even "loop").
+   variables and even "loop" or otherwise change control flow).
 1. fluid_let - this makes thread local variables "cool" again and
    inverts dependency injection back to just having
    dependencies. (global variables that are fluid must have the
@@ -82,7 +84,7 @@ least:
 1. `immutable_treemap` (aka a "persistent" tree data-structure, a nod
    to clojure though the concept predates clojure).
 
-Although not a collection in the traditional since, `buffer`, which is
+Although not a collection in the traditional sense, `buffer`, which is
 similar to an array of bytes, is used for a variety of purposes such
 as building strings (so like stringbuiler in Java) as well as a buffer
 for two way communication with another thread (so like pipes).
@@ -91,10 +93,11 @@ for two way communication with another thread (so like pipes).
 
 Missing from this feature list is *inheritance* a hallmark of OOP. Not
 only is that space already fully occupied by Java, C#, C++, Crystal,
-etc., I personally don't like that style of abstraction. There are
-some domains such as UI "widgets" where that style fits well, but it
-often misses. If you can't define all of the behavior of some piece of
-code, that is fine, explicitly pass in behavior via closures.
+etc., I personally don't like that style of abstraction and I'd like
+to provide (another) alternative. There are some domains such as UI
+"widgets" where that style fits well, but it often misses. If you
+can't define all of the behavior of some piece of code, that is fine,
+explicitly pass in behavior via closures.
 
 ## Features Removed from Standard C
 
@@ -112,6 +115,9 @@ code, that is fine, explicitly pass in behavior via closures.
 1. octal - still supported but requires the "0o" prefix. Octal bugs
    are not that common overall but it is worth making things more
    consistent anyways.
+1. VLA - since we don't have default arrays, VLA arrays kind of don't
+   make sense. This doesn't mean that VLA will not be utilized in
+   certain contexts by generated code.
 
 ## Rationale
 
@@ -124,7 +130,7 @@ In my mind, the weakest part of C is actually the aging C standard
 library. Namespaces and libraries immediately confer code organization
 benefits to Omni C and we should apply the same to the standard
 library by organizing it as well as keeping it out of the default
-namespace as much as possible. Additionally we can use more readable
+namespace as much as possible. Additionally we will use more readable
 identifiers (unless the abbreviation is very widespread like stdout
 instead of standard_output).
 
@@ -148,25 +154,26 @@ kernel/process abstraction layer - I think there is a different
 "process" to "kernel" architecture brewing and it will be async
 messages all the way down).
 
-Omni C can easily call (aka interop) with C so nothing is lost by
-focusing on the standard C libraries weakpoints and fleshing out the
-standard library later.
+Omni C can easily call (aka interop) with C (and to a degree
+vice-versa) so nothing is lost by focusing on the standard C libraries
+weakpoints and fleshing out the standard library later.
 
 ## Using Omni C
 
 Omni C by default is a transpiler targeting C (and thus wasm via C to
 wasm translation).
 
-To produce a native binary, simply invoke the Omni C compler like so:
+To produce a native binary, simply invoke the Omni C compler something
+like so:
 
 ```
-  omni-c --executable=my_program *.oc sub-directory/*.oc
+  omni-c build --executable=my_program *.oc sub-directory/*.oc
 ```
 
 This assumes either clang or gcc are available in PATH and whichever
 is found first will be used but obviously you can force a particular C
 compiler with flags. Both are high quality C compilers and overall
-seem to perform similarly.
+optimized code seem to perform similarly.
 
 Rather than `--executable` flag, you can use `--library=foo.ocl` to produce a
 library. Libraries are not actually compiled at all, the source files

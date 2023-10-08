@@ -43,11 +43,27 @@ more readable and easier to Google search on.
 
 ## build flags
 
- but also install it to standard
-locations. This may require  so something interesting
-may be done.
+### --executable=<file-path>
 
-### --target-file-name=<file-path>
+Produce a standalone executable file by default.
+
+### --omni-c-library=<file-path>
+
+Produce an Omni C library. This is similar to what can be achieved by
+using the archive command except that some basic analysis may be
+performed to ensure that the library passes basic checks.
+
+### --static-library=<file-path>
+
+Produce a platform dependent ".a" file and a header file that will
+allow this library to be used by C (or Omni C which could require some
+extra stuff).
+
+### --dynamic-library=<file-path>
+
+Produce a platform dependent ".so" or ".dynlib: file and a header file
+that will allow this library to be used by C (or Omni C which could
+require some extra stuff).
 
 ### --debug=<LEVEL>
 
@@ -77,8 +93,8 @@ Initially supported "levels" are:
 ### --backend=<>
 
 This flag will be used in the future to use a custom code generation
-strategy for example to compile directly to RISC-V, ARM64, or my
-comet-vm virtual machine.
+strategy for example to compile directly to "wasm" (so probably
+clang), RISC-V, ARM64, or my comet-vm virtual machine.
 
 ### --additional-cc-flags=-O3 -lfoo
 
@@ -86,15 +102,22 @@ This flag will typically need to be "quoted" when you use it if there
 are spaces in the flags list which may be common:
 
 ```bash
-  omni-c build "--additional-cc-flags=-O3 -lfoo" file1.oc file2.c
+  omni-c build '--additional-cc-flags=-O3 -lfoo' file1.oc file2.c
 ```
 
 ## install
 
-Install will *not* build the target as install typically requires
-"sudo" prelidges and we don't want the rest of the compliation process
-to run with enhanced priledges.
+Install will *not* build a target as install typically requires "sudo"
+prelidges and we don't want the rest of the compliation process to run
+with enhanced priledges.
 
+If you are distributing a library on github and want it to be
+installed for common use, then you should try to make this work:
+
+```
+    omni-c build
+    sudo omni-c install <binary-or-library-name>*
+```
 
 ## translate
 
@@ -102,11 +125,10 @@ This performs all of the build steps except invoking the C compiler to
 produce C binaries. This is normally used for debugging but can also
 be used so that the final build process is under more control.
 
-
 ## archive
 
 While there are safer ways to create an archive than this command,
-this command provides a way to create, inspect, and extract library
+this command provides a way to create, inspect, or extract library
 archives.
 
 ## debug
@@ -114,4 +136,3 @@ archives.
 debug invokes a debugger but also sets break-points at important
 locations to stop the debugger when an error occurs before the program
 terminates abnoramally.
-
