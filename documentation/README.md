@@ -4,7 +4,8 @@
 2. Standard Library Specification
 3. Implementation Overview
 4. Language Interop Facilities
-5. Compiler Manual
+5. [C Transpiler Compiler Manual](c-transpiler-manual.md)
+5. [Library Format](library-format.md)
 
 ## Forms
 
