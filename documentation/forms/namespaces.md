@@ -15,16 +15,17 @@ std::stdout
 googgle::common::logger
 ```
 
-An identifier in a namespace may not be truly unique. For example a
-type may have the same name as a function or a global variable. The
-compiler always takes this into account when resolving identifiers and
-the confusion to human readers is typically not problematic.
+An identifier in a namespace may not be truly unique by name. For
+example a type may have the same name as a function or a global
+variable. The compiler always takes this into account when resolving
+identifiers and the confusion to human readers is typically not
+problematic.
 
 In some sense, the "::" could be replaced with "__" to form longer but
 legal identifiers to achieve some of the same qualification propreties
 (and this is exactly how identifers are exported to C) but the Omni C
-compiler allows non qualified identifers which improves readability by
-allowing much shorter names to be used.
+compiler allows non qualified identifers to be written which improves
+readability by allowing much shorter names.
 
 To place new definitions inside a namespace, use the following syntax:
 
@@ -40,9 +41,6 @@ namespace some_prefix::namespace_name;
 namespace these_namespaces::can_have::many_prefixes;
 ```
 
-See the section on security below. (Essentially in the present form,
-namespaces provide very little actual security. (Stay tuned though.))
-
 Once a namespace is declared, all identifiers until the end of file or
 until a new namespace is declared, are defined in that namespace and
 hence have longer fully qualified names than what is written.
@@ -57,13 +55,13 @@ my_namespace::my_other_namespace::bar();
 ```
 
 Identifiers in other namespaces can be used without fully qualify them
-via the "use" keyword (similar to using, import, etc. from other
-languages). The use keyword accepts the "*" qualifier to allow all
-"publically" defined identifiers in an entire namespace to become
-visible for the duration of the the definitions in the current
-namespace. Items in the namespace that are not annotated with public
-are typically referred to as "private" or "namespace private" or
-"package private".
+via the `use` keyword (similar to using, import, etc. from other
+languages). The `use` keyword accepts the "*" qualifier as the last
+component to allow all "publically" defined identifiers in an entire
+namespace to become visible for the duration of the the definitions in
+the current namespace. Items in the namespace that are not annotated
+with public are sometimes referred to as "private" or "namespace
+private" (or "package private" if you've worked in Java long enough).
 
 ```
 namespace foo;
@@ -88,11 +86,12 @@ void example() {
 }
 ```
 
-Only symbols marked with the "public" annotation are visible outside
-of the namespace. This further prevents naming collisions but more
-importantly clearly indicates intent so that an implementation detail
-is not treated equivalently as part of a libraries API. This
-furthermore makes it much more palatable to include ALL of the
+As in the above example, only definitions marked with the "public"
+annotation are visible outside of the namespace either via a fully
+qualified name or from the `use` keyword. This further prevents naming
+collisions but more importantly clearly indicates intent so that an
+implementation detail is not treated equivalently as part of an
+API. This makes it much more palatable to include ALL of the
 identifiers from a namespace using the wildcard "*" with a use
 statement.
 
@@ -146,4 +145,5 @@ namespaces, aka, sandboxing.
 
 The order of definitions in a namespace never matters and namespaces
 are allowed to have mutual dependencies.
+
 

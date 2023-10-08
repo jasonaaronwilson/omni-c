@@ -16,30 +16,37 @@ should be taken.
 1. debug -- invokes gdb or clang for a Omni C executable setting
    useful break-points such as on fatal-error and other conveniences
    allowed by known debuggers.
+1. xreference -- provides a variety of ways to examine the
+   inter-relationships between namespaces for example graphical
+   outputs or definitions and uses or display information about a
+   particular identifier.
 
 Next come GNU long style flags that should always have one of these
 formats:
 
 ```
---flag-name=flag-value
 --flag-name
+
+  or
+
+--flag-name=flag-value
 ```
 
 Finally come "file" arguments which are any command line argument that
 don't start with a "--".
 
 Like other tools before the Omni C transpiler, "--" turns off flag
-parsing for the remainder of the command line arguments. This seems
-unnecessary right now but could become useful later and it is pretty
-standard.
+parsing for the remainder of the command line arguments though this is
+usually uncessary since source filenames typically do not start with
+"-" or "--" since that would be kind of ugly.
 
 ## No Short Flag Names
 
 There are currently no short options defined for the Omni C
 transpiler. While it is true this is mostly out of laziness, we also
-expect most users to automate compilation via either `make` or another
-build tool. Long flag names provide the same functionality but are
-more readable and easier to Google search on.
+expect most users to automate compilation via an IDE, `make`, or
+another build tool. Long flag names provide the same functionality but
+are more readable and easier to Google search on.
 
 ## build flags
 

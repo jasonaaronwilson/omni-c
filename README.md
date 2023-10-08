@@ -42,16 +42,16 @@ want to):
 1. guaranteed self tail calls with the aim of getting tail calls
    supported in all cases without any performance hit.
 1. "_" can be used in numeric constants (like ' in C23)
+1. empty arguments lists mean that the function takes zero arguments
+   (like C++ etc.) instead of taking arbitrary arguments, like having
+   an argument list simply be "(void)" in standard C.
 
 Next are some features that really change the feel of the language and
 thus the standard library:
 
 1. closures (simpler and prettier than C++, more like Java or ML)
 1. garbage collection (manual management will still be an option for
-   embedded systems or other low-level programming. Go and the JVM
-   have shown that GC doesn't have to be problematic. While there are
-   alternatives to garbage collection such as reference counting,
-   garbage collection provides one of the simpler models.
+   embedded systems or other low-level programming [^1]
 1. generically typed functions and structures (not as complex as you
    think because we don't have inheritance!)
 1. multiple array types (array, fixed_array, unsafe_array) and bounds
@@ -74,8 +74,8 @@ thus the standard library:
 1. non-textual macros (honestly I have no idea what this looks like
    yet meaning this is the hardest part to design)
 
-The Omni C standard library will provide collections including at
-least:
+The Omni C standard library provides a minimal set of collections
+including at least:
 
 1. `array`
 1. `hashmap`
@@ -86,17 +86,18 @@ least:
 
 Although not a collection in the traditional sense, `buffer`, which is
 similar to an array of bytes, is used for a variety of purposes such
-as building strings (so like stringbuiler in Java) as well as a buffer
-for two way communication with another thread (so like pipes).
+as building strings (so like StringBuilder in Java) as well as a
+buffer for two way communication with another thread (so to Unix pipes
+or channels in Go).
 
 ### No Inheritance
 
 Missing from this feature list is *inheritance* a hallmark of OOP. Not
 only is that space already fully occupied by Java, C#, C++, Crystal,
 etc., I personally don't like that style of abstraction and I'd like
-to provide (another) alternative. There are some domains such as UI
+to provide a compelling alternative. There are some domains such as UI
 "widgets" where that style fits well, but it often misses. If you
-can't define all of the behavior of some piece of code, that is fine,
+can't define all of the behavior in a piece of code, that is fine,
 explicitly pass in behavior via closures.
 
 ## Features Removed from Standard C
@@ -123,19 +124,20 @@ explicitly pass in behavior via closures.
 
 The biggest change from C is probably generic structures and functions
 and that's what I am experimenting with here the most despite these
-being available in most C derived languages. Without inheritance these
-become much simpler than one might expect.
+being readily available in most C derived languages. Without
+inheritance these become much simpler than one might expect and hence
+we are keeping with the simplicity aspect of the C language.
 
-The aging C standard library seems bloated and seems insufficient for
-modern programming. One of the largest C programs, the Linux kernel,
-doesn't even use the C standard library! One reason may be that large
-parts of the C standard library is just a wrapper around calling into
-the kernel and the kernel probably wouldn't want to call into itself
-in the exact same way (though there is something a bit interesting
-about the kernel being able to call itself via a standard library that
-has the same interface as user code even though it would run different
-code). If the C standard library was better organized (aka modular)
-and more powerful, the Linux kernel would *want* to use that library.
+The aging C standard library can feel bloated while still being
+insufficient for modern programming. One of the largest C programs,
+the Linux kernel, doesn't even use the C standard library! One reason
+may be that large parts of the C standard library is just a wrapper
+around calling into the kernel and the kernel probably wouldn't want
+to call into itself in the exact same way (though there is something
+interesting about the kernel being able to call itself via a standard
+library that has the same interface as user code). If the C standard
+library was better organized (aka modular) and more powerful, the
+Linux kernel would *want* to use *parts* of that library.
 
 Namespaces and libraries immediately confer code organization benefits
 to Omni C and we should apply the same to the standard library by
@@ -331,3 +333,10 @@ numerous small errors in programs as I write them and the static type
 checking system finds many of these immediately without even running
 tests. (And again, many of these dynamic languages still employ
 inheritance.)
+
+[^1] Go, C# and the CLR, Java and the JVM, and other languages have
+shown that GC doesn't have to be problematic though garbage collection
+is still a difficult problem. Swift and Rust have other mechanisms
+though these mechanisms are harder to explain and hence puts more
+burden on the programmer.
+
