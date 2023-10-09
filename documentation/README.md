@@ -5,7 +5,8 @@
 3. Implementation Overview
 4. Language Interop Facilities
 5. [C Transpiler Compiler Manual](c-transpiler-manual.md)
-5. [Library Format](library-format.md)
+6. [Library Format](library-format.md)
+7. [Package Management](package-management.md)
 
 ## Forms
 
