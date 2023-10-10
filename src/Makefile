@@ -1,9 +1,14 @@
 all: omni-c
 
-SRC_C = common/oc-compiler-state.c \
+FOO_SRC_C = common/oc-compiler-state.c \
 	common/oc-namespace.c \
 	common/oc-node.c \
 	armyknife-lib-impl.c \
+	main.c
+
+CC_FLAGS=-g -rdynamic
+
+SRC_C = armyknife-lib-impl.c \
 	main.c
 
 generate-header-files: ${SRC_C}
@@ -11,11 +16,22 @@ generate-header-files: ${SRC_C}
 	find . -name '*.h' | xargs -n 1 chmod u-w
 
 omni-c: ${SRC_C} generate-header-files
-	gcc -g -o omni-c ${SRC_C}
+	gcc ${CC_FLAGS} -o omni-c ${SRC_C}
+
+format:
+	clang-format -i ${SRC_C}
 
 clean:
 	rm -f omni-c
 	find . -name '*.h' | xargs -n 1 rm -f
 	find . -name '*~' | xargs -n 1 rm -f
+
+diff: clean
+	git difftool HEAD
+
+how-big: clean
+	cat ${SRC_C} | wc --lines
+
+cf: format clean
 
 

@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <tree_sitter/api.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
 #include "../../../c-armyknife-lib/c-armyknife-lib.h"
 
 TSLanguage *tree_sitter_json();
