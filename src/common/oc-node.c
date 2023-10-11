@@ -13,20 +13,37 @@ typedef enum {
   OC_NODE_UNKNOWN,
   OC_NODE_ERROR,
 
+  OC_NODE_ABSTRACT_ARRAY_DECLARATOR,
+  OC_NODE_ABSTRACT_FUNCTION_DECLARATOR,
+  OC_NODE_ABSTRACT_PARENTHESIZED_DECLARATOR,
   OC_NODE_ABSTRACT_POINTER_DECLARATOR,
+  OC_NODE_ALIGNOF_EXPRESSION,
   OC_NODE_ARGUMENT_LIST,
+  OC_NODE_ARRAY_DECLARATOR,
   OC_NODE_ASSIGNMENT_EXPRESSION,
+  OC_NODE_ATTRIBUTE,
+  OC_NODE_ATTRIBUTED_DECLARATOR,
+  OC_NODE_ATTRIBUTED_STATEMENT,
+  OC_NODE_ATTRIBUTE_DECLARATION,
+  OC_NODE_ATTRIBUTE_SPECIFIER,
   OC_NODE_BINARY_EXPRESSION,
+  OC_NODE_BITFIELD_CLAUSE,
   OC_NODE_BREAK_STATEMENT,
   OC_NODE_CALL_EXPRESSION,
   OC_NODE_CASE_STATEMENT,
   OC_NODE_CAST_EXPRESSION,
   OC_NODE_CHARACTER,
   OC_NODE_CHAR_LITERAL,
+  OC_NODE_COMMA_EXPRESSION,
   OC_NODE_COMMENT,
+  OC_NODE_COMPOUND_LITERAL_EXPRESSION,
   OC_NODE_COMPOUND_STATEMENT,
+  OC_NODE_CONCATENATED_STRING,
   OC_NODE_CONDITIONAL_EXPRESSION,
+  OC_NODE_CONTINUE_STATEMENT,
   OC_NODE_DECLARATION,
+  OC_NODE_DECLARATION_LIST,
+  OC_NODE_DO_STATEMENT,
   OC_NODE_ELSE_CLAUSE,
   OC_NODE_ENUMERATOR,
   OC_NODE_ENUMERATOR_LIST,
@@ -36,32 +53,56 @@ typedef enum {
   OC_NODE_FALSE,
   OC_NODE_FIELD_DECLARATION,
   OC_NODE_FIELD_DECLARATION_LIST,
+  OC_NODE_FIELD_DESIGNATOR,
   OC_NODE_FIELD_EXPRESSION,
   OC_NODE_FIELD_IDENTIFIER,
   OC_NODE_FOR_STATEMENT,
   OC_NODE_FUNCTION_DECLARATOR,
   OC_NODE_FUNCTION_DEFINITION,
+  OC_NODE_GENERIC_EXPRESSION,
+  OC_NODE_GOTO_STATEMENT,
   OC_NODE_IDENTIFIER,
   OC_NODE_IF_STATEMENT,
+  OC_NODE_INITIALIZER_LIST,
+  OC_NODE_INITIALIZER_PAIR,
   OC_NODE_INIT_DECLARATOR,
+  OC_NODE_LABELED_STATEMENT,
+  OC_NODE_LINKAGE_SPECIFICATION,
+  OC_NODE_MACRO_TYPE_SPECIFIER,
+  OC_NODE_MS_DECLSPEC_MODIFIER,
+  OC_NODE_MS_POINTER_MODIFIER,
+  OC_NODE_MS_RESTRICT_MODIFIER,
   OC_NODE_NULL,
   OC_NODE_NUMBER_LITERAL,
+  OC_NODE_OFFSETOF_EXPRESSION,
   OC_NODE_PARAMETER_DECLARATION,
   OC_NODE_PARAMETER_LIST,
+  OC_NODE_PARENTHESIZED_DECLARATOR,
   OC_NODE_PARENTHESIZED_EXPRESSION,
   OC_NODE_POINTER_DECLARATOR,
+  OC_NODE_POINTER_EXPRESSION,
   OC_NODE_PREPROC_ARG,
   OC_NODE_PREPROC_CALL,
   OC_NODE_PREPROC_DEF,
+  OC_NODE_PREPROC_DEFINED,
   OC_NODE_PREPROC_DIRECTIVE,
+  OC_NODE_PREPROC_ELIF,
+  OC_NODE_PREPROC_ELSE,
+  OC_NODE_PREPROC_FUNCTION_DEF,
+  OC_NODE_PREPROC_IF,
   OC_NODE_PREPROC_IFDEF,
   OC_NODE_PREPROC_INCLUDE,
+  OC_NODE_PREPROC_PARAMS,
   OC_NODE_PRIMITIVE_TYPE,
   OC_NODE_RETURN_STATEMENT,
+  OC_NODE_SIZED_TYPE_SPECIFIER,
+  OC_NODE_SIZEOF_EXPRESSION,
+  OC_NODE_STATEMENT_IDENTIFIER,
   OC_NODE_STORAGE_CLASS_SPECIFIER,
   OC_NODE_STRING_CONTENT,
   OC_NODE_STRING_LITERAL,
   OC_NODE_STRUCT_SPECIFIER,
+  OC_NODE_SUBSCRIPT_DESIGNATOR,
   OC_NODE_SUBSCRIPT_EXPRESSION,
   OC_NODE_SWITCH_STATEMENT,
   OC_NODE_SYSTEM_LIB_STRING,
@@ -71,32 +112,11 @@ typedef enum {
   OC_NODE_TYPE_DESCRIPTOR,
   OC_NODE_TYPE_IDENTIFIER,
   OC_NODE_TYPE_QUALIFIER,
-  OC_NODE_UPDATE_EXPRESSION,
-  OC_NODE_POINTER_EXPRESSION,
-  OC_NODE_WHILE_STATEMENT,
-  OC_NODE_SIZEOF_EXPRESSION,
   OC_NODE_UNARY_EXPRESSION,
-  OC_NODE_PREPROC_DEFINED,
-  OC_NODE_PREPROC_IF,
-  OC_NODE_ARRAY_DECLARATOR,
-  OC_NODE_PREPROC_ELIF,
-  OC_NODE_PREPROC_ELSE,
-  OC_NODE_PREPROC_FUNCTION_DEF,
-  OC_NODE_PREPROC_PARAMS,
-  OC_NODE_SIZED_TYPE_SPECIFIER,
   OC_NODE_UNION_SPECIFIER,
-  OC_NODE_ABSTRACT_ARRAY_DECLARATOR,
-  OC_NODE_BITFIELD_CLAUSE,
-  OC_NODE_COMMA_EXPRESSION,
-  OC_NODE_COMPOUND_LITERAL_EXPRESSION,
-  OC_NODE_CONCATENATED_STRING,
-  OC_NODE_FIELD_DESIGNATOR,
-  OC_NODE_GOTO_STATEMENT,
-  OC_NODE_INITIALIZER_LIST,
-  OC_NODE_LABELED_STATEMENT,
-  OC_NODE_STATEMENT_IDENTIFIER,
-  OC_NODE_SUBSCRIPT_DESIGNATOR,
-  OC_NODE_INITIALIZER_PAIR,
+  OC_NODE_UPDATE_EXPRESSION,
+  OC_NODE_VARIADIC_PARAMETER,
+  OC_NODE_WHILE_STATEMENT,
 
   // gnu_asm_expression
   // gnu_asm_output_operand_list
@@ -163,7 +183,30 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("array_declarator", name)) {
       return OC_NODE_ARRAY_DECLARATOR;
     }
-
+    if (string_equal("abstract_function_declarator", name)) {
+      return OC_NODE_ABSTRACT_FUNCTION_DECLARATOR;
+    }
+    if (string_equal("abstract_parenthesized_declarator", name)) {
+      return OC_NODE_ABSTRACT_FUNCTION_DECLARATOR;
+    }
+    if (string_equal("alignof_expression", name)) {
+      return OC_NODE_ALIGNOF_EXPRESSION;
+    }
+    if (string_equal("attribute_specifier", name)) {
+      return OC_NODE_ATTRIBUTE_SPECIFIER;
+    }
+    if (string_equal("attribute", name)) {
+      return OC_NODE_ATTRIBUTE;
+    }
+    if (string_equal("attribute_declaration", name)) {
+      return OC_NODE_ATTRIBUTE_DECLARATION;
+    }
+    if (string_equal("attributed_declarator", name)) {
+      return OC_NODE_ATTRIBUTED_DECLARATOR;
+    }
+    if (string_equal("attributed_statement", name)) {
+      return OC_NODE_ATTRIBUTED_STATEMENT;
+    }
     break;
 
   case 'b':
@@ -200,6 +243,9 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("compound_statement", name)) {
       return OC_NODE_COMPOUND_STATEMENT;
     }
+    if (string_equal("compound_literal_expression", name)) {
+      return OC_NODE_COMPOUND_LITERAL_EXPRESSION;
+    }
     if (string_equal("conditional_expression", name)) {
       return OC_NODE_CONDITIONAL_EXPRESSION;
     }
@@ -212,11 +258,20 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("concatenated_string", name)) {
       return OC_NODE_CONCATENATED_STRING;
     }
+    if (string_equal("continue_statement", name)) {
+      return OC_NODE_CONTINUE_STATEMENT;
+    }
     break;
 
   case 'd':
     if (string_equal("declaration", name)) {
       return OC_NODE_DECLARATION;
+    }
+    if (string_equal("declaration_list", name)) {
+      return OC_NODE_DECLARATION_LIST;
+    }
+    if (string_equal("do_statement", name)) {
+      return OC_NODE_DO_STATEMENT;
     }
     break;
 
@@ -275,6 +330,10 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("goto_statement", name)) {
       return OC_NODE_GOTO_STATEMENT;
     }
+    if (string_equal("generic_expression", name)) {
+      return OC_NODE_GENERIC_EXPRESSION;
+    }
+
     break;
 
   case 'i':
@@ -299,6 +358,24 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("labeled_statement", name)) {
       return OC_NODE_LABELED_STATEMENT;
     }
+    if (string_equal("linkage_specification", name)) {
+      return OC_NODE_LINKAGE_SPECIFICATION;
+    }
+    break;
+
+  case 'm':
+    if (string_equal("macro_type_specifier", name)) {
+      return OC_NODE_MACRO_TYPE_SPECIFIER;
+    }
+    if (string_equal("ms_pointer_modifier", name)) {
+      return OC_NODE_MS_POINTER_MODIFIER;
+    }
+    if (string_equal("ms_restrict_modifier", name)) {
+      return OC_NODE_MS_RESTRICT_MODIFIER;
+    }
+    if (string_equal("ms_declspec_modifier", name)) {
+      return OC_NODE_MS_DECLSPEC_MODIFIER;
+    }
     break;
 
   case 'n':
@@ -307,6 +384,12 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     }
     if (string_equal("number_literal", name)) {
       return OC_NODE_NUMBER_LITERAL;
+    }
+    break;
+
+  case 'o':
+    if (string_equal("offsetof_expression", name)) {
+      return OC_NODE_OFFSETOF_EXPRESSION;
     }
     break;
 
@@ -368,6 +451,10 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("pointer_expression", name)) {
       return OC_NODE_POINTER_EXPRESSION;
     }
+    if (string_equal("parenthesized_declarator", name)) {
+      return OC_NODE_PARENTHESIZED_DECLARATOR;
+    }
+
     break;
 
   case 'r':
@@ -445,6 +532,12 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     }
     break;
 
+  case 'v':
+    if (string_equal("variadic_parameter", name)) {
+      return OC_NODE_VARIADIC_PARAMETER;
+    }
+    break;
+
   case 'w':
     if (string_equal("while_statement", name)) {
       return OC_NODE_WHILE_STATEMENT;
@@ -453,7 +546,7 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
   }
 
   if (!string_starts_with(name, "gnu_asm")) {
-    fprintf(stderr, "WARNING: unknown node named %s\n", name);
+    fprintf(stdout, "WARNING: unknown node named %s\n", name);
   }
 
   return OC_NODE_UNKNOWN;

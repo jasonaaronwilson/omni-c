@@ -1,5 +1,6 @@
 all: omni-c
 
+# make && (cd / ; find ~/src/ -name '*.h' ) | xargs -n 5 ./omni-c build | grep WARNING 1>/tmp/foo
 # (cd / ; find ~/src/ -name '*.c' ) | xargs -n 5 ./omni-c build | grep WARNING
 
 FOO_SRC_C =  \
