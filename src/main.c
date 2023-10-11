@@ -5,6 +5,8 @@
 #include <stdio.h>
 
 #include "../../c-armyknife-lib/c-armyknife-lib.h"
+#include "common/oc-compiler-state.h"
+#include "parser/parse-files.h"
 
 void show_help() {
   fprintf(stdout, "Usage: omni-c <command> <flags*> <files*>\n");
@@ -21,7 +23,8 @@ void show_help() {
 }
 
 void translate_and_build(command_line_parse_result_t args_and_files) {
-  
+  oc_compiler_state_t* compiler_state = make_oc_compiler_state();
+  ptr_array_t* files = parse_files(args_and_files.files);
 }
 
 int main(int argc, char** argv) {
@@ -37,6 +40,8 @@ int main(int argc, char** argv) {
   if (string_equal("build", args_and_files.command)) {
     translate_and_build(args_and_files);
     exit(0);
+  } else {
+    fprintf(stderr, "Uknown command: %s\n", args_and_files.command);
   }
 
   exit(0);

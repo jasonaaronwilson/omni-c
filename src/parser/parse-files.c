@@ -1,3 +1,8 @@
+// #line 2 "parse-files.c"
+
+#ifndef _PARSE_FILES_H_
+#define _PARSE_FILES_H_
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -6,17 +11,25 @@
 #include "../../../c-armyknife-lib/c-armyknife-lib.h"
 #include "../common/oc-file.h"
 
+extern ptr_array_t* parse_files(ptr_array_t* files);
+
+#endif /* _PARSE_FILES_H_ */
+
 TSLanguage *tree_sitter_c();
 
 oc_file_t* read_and_parse_file(TSParser *parser, char* file);
 
 ptr_array_t* parse_files(ptr_array_t* files) {
+  fprintf(stderr, "Parsing %d files...\n", files->length);
+
   TSParser *parser = ts_parser_new();
   ts_parser_set_language(parser, tree_sitter_c());
 
   ptr_array_t* result = make_ptr_array(files->length);
   for (int i = 0; i < files->length; i++) {
-    ptr_array_add(result, read_and_parse_file(parser, ptr_array_get(files, i)));
+    char* file_name = (char*) ptr_array_get(files, i);
+    fprintf(stderr, "Parsing %s\n", file_name);
+    ptr_array_add(result, read_and_parse_file(parser, file_name));
   }
 
   ts_parser_delete(parser);

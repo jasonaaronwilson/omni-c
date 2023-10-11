@@ -1,6 +1,6 @@
 all: omni-c
 
-FOO_SRC_C = common/oc-compiler-state.c \
+FOO_SRC_C =  \
 	common/oc-namespace.c \
 	common/oc-node.c \
 	armyknife-lib-impl.c \
@@ -10,6 +10,7 @@ CC_FLAGS=-g -rdynamic -I ~/src/tree-sitter/lib/include
 
 SRC_C = armyknife-lib-impl.c \
 	common/oc-file.c \
+	common/oc-compiler-state.c \
 	parser/parse-files.c \
 	main.c
 
