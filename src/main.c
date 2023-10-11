@@ -30,15 +30,19 @@ void translate_and_build(command_line_parse_result_t args_and_files) {
     oc_file_t* file = ptr_array_get(files, i);
     TSNode root_node = ts_tree_root_node(file->tree);
     oc_node_t* node = ts_node_to_oc_node(root_node, file->data);
+    buffer_t* output = make_buffer(1024);
+    output = append_oc_node_text(output, node);
+    fprintf(stdout, "%s\n", buffer_to_c_string(output));
   }
 }
 
 int main(int argc, char** argv) {
 
   command_line_parse_result_t args_and_files
-    = parse_command_line(argc, argv, true);
+      = parse_command_line(argc, argv, true);
 
-  if (args_and_files.command == NULL || string_equal("help", args_and_files.command)) {
+  if (args_and_files.command == NULL
+      || string_equal("help", args_and_files.command)) {
     show_help();
     exit(0);
   }

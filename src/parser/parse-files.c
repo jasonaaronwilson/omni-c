@@ -4,8 +4,8 @@
 #define _PARSE_FILES_H_
 
 #include <assert.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 #include <tree_sitter/api.h>
 
 #include "../../../c-armyknife-lib/c-armyknife-lib.h"
@@ -15,14 +15,14 @@ extern ptr_array_t* parse_files(ptr_array_t* files);
 
 #endif /* _PARSE_FILES_H_ */
 
-TSLanguage *tree_sitter_c();
+TSLanguage* tree_sitter_c();
 
-oc_file_t* read_and_parse_file(TSParser *parser, char* file);
+oc_file_t* read_and_parse_file(TSParser* parser, char* file);
 
 ptr_array_t* parse_files(ptr_array_t* files) {
   fprintf(stderr, "Parsing %d files...\n", files->length);
 
-  TSParser *parser = ts_parser_new();
+  TSParser* parser = ts_parser_new();
   ts_parser_set_language(parser, tree_sitter_c());
 
   ptr_array_t* result = make_ptr_array(files->length);
@@ -33,23 +33,18 @@ ptr_array_t* parse_files(ptr_array_t* files) {
   }
 
   ts_parser_delete(parser);
-  
+
   return result;
 }
 
-oc_file_t* read_and_parse_file(TSParser *parser, char* file_name) {
+oc_file_t* read_and_parse_file(TSParser* parser, char* file_name) {
 
   buffer_t* buffer = make_buffer(1024);
   buffer = buffer_append_file_contents(buffer, file_name);
   char* str = buffer_to_c_string(buffer);
 
   // Build a syntax tree based on source code stored in a string.
-  TSTree *tree = ts_parser_parse_string(
-    parser,
-    NULL,
-    str,
-    buffer->length
-  );
+  TSTree* tree = ts_parser_parse_string(parser, NULL, str, buffer->length);
 
   free(str);
 
