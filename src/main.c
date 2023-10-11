@@ -6,6 +6,7 @@
 
 #include "../../c-armyknife-lib/c-armyknife-lib.h"
 #include "common/oc-compiler-state.h"
+#include "common/oc-node.h"
 #include "parser/parse-files.h"
 
 void show_help() {
@@ -25,6 +26,11 @@ void show_help() {
 void translate_and_build(command_line_parse_result_t args_and_files) {
   oc_compiler_state_t* compiler_state = make_oc_compiler_state();
   ptr_array_t* files = parse_files(args_and_files.files);
+  for (int i = 0; i < files->length; i++) {
+    oc_file_t* file = ptr_array_get(files, i);
+    TSNode root_node = ts_tree_root_node(file->tree);
+    oc_node_t* node = ts_node_to_oc_node(root_node, file->data);
+  }
 }
 
 int main(int argc, char** argv) {

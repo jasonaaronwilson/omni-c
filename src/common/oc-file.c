@@ -1,5 +1,3 @@
-#line 2 "oc-file.c"
-
 /**
  * An oc_file_t contains either an Omni C source file, a standard C
  * source file, uninterpreted data (for embed), or at times perhaps

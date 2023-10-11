@@ -1,5 +1,3 @@
-#line 2 "oc-namespace.c"
-
 #ifndef _OC_NAMESPACE_H_
 #define _OC_NAMESPACE_H_
 

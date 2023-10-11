@@ -1,5 +1,3 @@
-#line 2 "oc-compiler-state.c"
-
 #ifndef _OC_COMPILER_STATE_H_
 #define _OC_COMPILER_STATE_H_
 

@@ -2,7 +2,6 @@ all: omni-c
 
 FOO_SRC_C =  \
 	common/oc-namespace.c \
-	common/oc-node.c \
 	armyknife-lib-impl.c \
 	main.c
 
@@ -12,6 +11,7 @@ SRC_C = armyknife-lib-impl.c \
 	common/oc-file.c \
 	common/oc-compiler-state.c \
 	parser/parse-files.c \
+	common/oc-node.c \
 	main.c
 
 TREE_SITTER_FILES = ~/src/tree-sitter-c/src/parser.c ~/src/tree-sitter/libtree-sitter.a
