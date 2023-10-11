@@ -1,5 +1,7 @@
 all: omni-c
 
+# (cd / ; find ~/src/ -name '*.c' ) | xargs -n 5 ./omni-c build | grep WARNING
+
 FOO_SRC_C =  \
 	common/oc-namespace.c \
 	armyknife-lib-impl.c \

@@ -12,17 +12,29 @@
 typedef enum {
   OC_NODE_UNKNOWN,
 
+  OC_NODE_ABSTRACT_POINTER_DECLARATOR,
   OC_NODE_ARGUMENT_LIST,
   OC_NODE_ASSIGNMENT_EXPRESSION,
   OC_NODE_BINARY_EXPRESSION,
+  OC_NODE_BREAK_STATEMENT,
   OC_NODE_CALL_EXPRESSION,
+  OC_NODE_CASE_STATEMENT,
+  OC_NODE_CAST_EXPRESSION,
+  OC_NODE_CHARACTER,
+  OC_NODE_CHAR_LITERAL,
   OC_NODE_COMMENT,
   OC_NODE_COMPOUND_STATEMENT,
+  OC_NODE_CONDITIONAL_EXPRESSION,
   OC_NODE_DECLARATION,
   OC_NODE_ELSE_CLAUSE,
+  OC_NODE_ENUMERATOR,
+  OC_NODE_ENUMERATOR_LIST,
+  OC_NODE_ENUM_SPECIFIER,
   OC_NODE_ESCAPE_SEQUENCE,
   OC_NODE_EXPRESSION_STATEMENT,
   OC_NODE_FALSE,
+  OC_NODE_FIELD_DECLARATION,
+  OC_NODE_FIELD_DECLARATION_LIST,
   OC_NODE_FIELD_EXPRESSION,
   OC_NODE_FIELD_IDENTIFIER,
   OC_NODE_FOR_STATEMENT,
@@ -37,14 +49,27 @@ typedef enum {
   OC_NODE_PARAMETER_LIST,
   OC_NODE_PARENTHESIZED_EXPRESSION,
   OC_NODE_POINTER_DECLARATOR,
+  OC_NODE_PREPROC_ARG,
+  OC_NODE_PREPROC_CALL,
+  OC_NODE_PREPROC_DEF,
+  OC_NODE_PREPROC_DIRECTIVE,
+  OC_NODE_PREPROC_IFDEF,
   OC_NODE_PREPROC_INCLUDE,
   OC_NODE_PRIMITIVE_TYPE,
+  OC_NODE_RETURN_STATEMENT,
+  OC_NODE_STORAGE_CLASS_SPECIFIER,
   OC_NODE_STRING_CONTENT,
   OC_NODE_STRING_LITERAL,
+  OC_NODE_STRUCT_SPECIFIER,
+  OC_NODE_SUBSCRIPT_EXPRESSION,
+  OC_NODE_SWITCH_STATEMENT,
   OC_NODE_SYSTEM_LIB_STRING,
   OC_NODE_TRANSLATION_UNIT,
   OC_NODE_TRUE,
+  OC_NODE_TYPE_DEFINITION,
+  OC_NODE_TYPE_DESCRIPTOR,
   OC_NODE_TYPE_IDENTIFIER,
+  OC_NODE_TYPE_QUALIFIER,
   OC_NODE_UPDATE_EXPRESSION,
 
   OC_NODE__LAST__
@@ -85,23 +110,44 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("assignment_expression", name)) {
       return OC_NODE_ASSIGNMENT_EXPRESSION;
     }
+    if (string_equal("abstract_pointer_declarator", name)) {
+      return OC_NODE_ABSTRACT_POINTER_DECLARATOR;
+    }
     break;
 
   case 'b':
     if (string_equal("binary_expression", name)) {
       return OC_NODE_BINARY_EXPRESSION;
     }
+    if (string_equal("break_statement", name)) {
+      return OC_NODE_BREAK_STATEMENT;
+    }
     break;
 
   case 'c':
+    if (string_equal("call_expression", name)) {
+      return OC_NODE_CALL_EXPRESSION;
+    }
+    if (string_equal("case_statement", name)) {
+      return OC_NODE_CASE_STATEMENT;
+    }
+    if (string_equal("cast_expression", name)) {
+      return OC_NODE_CAST_EXPRESSION;
+    }
+    if (string_equal("char_literal", name)) {
+      return OC_NODE_CHAR_LITERAL;
+    }
+    if (string_equal("character", name)) {
+      return OC_NODE_CHARACTER;
+    }
     if (string_equal("comment", name)) {
       return OC_NODE_COMMENT;
     }
     if (string_equal("compound_statement", name)) {
       return OC_NODE_COMPOUND_STATEMENT;
     }
-    if (string_equal("call_expression", name)) {
-      return OC_NODE_CALL_EXPRESSION;
+    if (string_equal("conditional_expression", name)) {
+      return OC_NODE_CONDITIONAL_EXPRESSION;
     }
     break;
 
@@ -121,6 +167,15 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("else_clause", name)) {
       return OC_NODE_ELSE_CLAUSE;
     }
+    if (string_equal("enum_specifier", name)) {
+      return OC_NODE_ENUM_SPECIFIER;
+    }
+    if (string_equal("enumerator", name)) {
+      return OC_NODE_ENUMERATOR;
+    }
+    if (string_equal("enumerator_list", name)) {
+      return OC_NODE_ENUMERATOR_LIST;
+    }
     break;
 
   case 'f':
@@ -135,6 +190,12 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     }
     if (string_equal("field_identifier", name)) {
       return OC_NODE_FIELD_IDENTIFIER;
+    }
+    if (string_equal("field_declaration", name)) {
+      return OC_NODE_FIELD_DECLARATION;
+    }
+    if (string_equal("field_declaration_list", name)) {
+      return OC_NODE_FIELD_DECLARATION_LIST;
     }
     if (string_equal("for_statement", name)) {
       return OC_NODE_FOR_STATEMENT;
@@ -175,6 +236,21 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     if (string_equal("preproc_include", name)) {
       return OC_NODE_PREPROC_INCLUDE;
     }
+    if (string_equal("preproc_arg", name)) {
+      return OC_NODE_PREPROC_ARG;
+    }
+    if (string_equal("preproc_call", name)) {
+      return OC_NODE_PREPROC_CALL;
+    }
+    if (string_equal("preproc_def", name)) {
+      return OC_NODE_PREPROC_DEF;
+    }
+    if (string_equal("preproc_directive", name)) {
+      return OC_NODE_PREPROC_DIRECTIVE;
+    }
+    if (string_equal("preproc_ifdef", name)) {
+      return OC_NODE_PREPROC_IFDEF;
+    }
     if (string_equal("primitive_type", name)) {
       return OC_NODE_PRIMITIVE_TYPE;
     }
@@ -186,7 +262,25 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     }
     break;
 
+  case 'r':
+    if (string_equal("return_statement", name)) {
+      return OC_NODE_RETURN_STATEMENT;
+    }
+    break;
+
   case 's':
+    if (string_equal("subscript_expression", name)) {
+      return OC_NODE_SUBSCRIPT_EXPRESSION;
+    }
+    if (string_equal("switch_statement", name)) {
+      return OC_NODE_SWITCH_STATEMENT;
+    }
+    if (string_equal("struct_specifier", name)) {
+      return OC_NODE_STRUCT_SPECIFIER;
+    }
+    if (string_equal("storage_class_specifier", name)) {
+      return OC_NODE_STORAGE_CLASS_SPECIFIER;
+    }
     if (string_equal("string_literal", name)) {
       return OC_NODE_STRING_LITERAL;
     }
@@ -207,6 +301,15 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
     }
     if (string_equal("type_identifier", name)) {
       return OC_NODE_TYPE_IDENTIFIER;
+    }
+    if (string_equal("type_definition", name)) {
+      return OC_NODE_TYPE_DEFINITION;
+    }
+    if (string_equal("type_descriptor", name)) {
+      return OC_NODE_TYPE_DESCRIPTOR;
+    }
+    if (string_equal("type_qualifier", name)) {
+      return OC_NODE_TYPE_QUALIFIER;
     }
     break;
 
