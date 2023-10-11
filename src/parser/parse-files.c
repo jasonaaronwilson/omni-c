@@ -14,7 +14,7 @@ ptr_array_t* parse_files(ptr_array_t* files) {
   TSParser *parser = ts_parser_new();
   ts_parser_set_language(parser, tree_sitter_c());
 
-  ptr_array_t* result = make_array(files->length);
+  ptr_array_t* result = make_ptr_array(files->length);
   for (int i = 0; i < files->length; i++) {
     ptr_array_add(result, read_and_parse_file(parser, ptr_array_get(files, i)));
   }
@@ -49,7 +49,7 @@ oc_file_t* read_and_parse_file(TSParser *parser, char* file_name) {
 
   oc_file_t* result = malloc_struct(oc_file_t);
   result->tag = STD_C_SOURCE_FILE;
-  result->file_name = file;
+  result->file_name = file_name;
   result->data = buffer;
   result->tree = tree;
 
