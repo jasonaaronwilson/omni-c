@@ -21,5 +21,10 @@ than what can be delivered to get 90% of the way there.
 7. namespaces
 8. closures
 
+# Step 3 (generic features)
 
+1. one option is to simply implement templates and not flipping care
 
+# Step 4 (C backend, exceptions, gc, etc.)
+
+1. 
