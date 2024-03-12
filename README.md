@@ -4,6 +4,10 @@ A C derived programming language very strongly resembling C in look
 and semantics with modern conveniences, runtime safety, and a revamped
 standard library.
 
+## Status
+
+We are still in the design phase and there is no compiler or translator available yet.
+
 ## Features
 
 These are probably the less controversial features (either because
@@ -77,7 +81,7 @@ thus the standard library:
 The Omni C standard library provides a minimal set of collections
 including at least:
 
-1. `array`
+1. `vector`
 1. `hashmap`
 1. `hashset`
 1. `treemap`
@@ -173,6 +177,8 @@ vice-versa) so nothing is lost by focusing on the standard C libraries
 weakpoints and fleshing out the standard library later.
 
 ## Using Omni C
+
+Note: the first version of Omni-C will probably output C++ instead of C as that means we can use templates and inline functions without lowering them to C code.
 
 Omni C by default is a transpiler targeting C (and thus wasm via C to
 wasm translation).
