@@ -4,30 +4,21 @@
 
 #include <stdio.h>
 
-#include "../../c-armyknife-lib/c-armyknife-lib.h"
+#include <c-armyknife-lib.h>
 #include "common/oc-compiler-state.h"
 #include "common/oc-node.h"
 #include "parser/parse-files.h"
 
-void show_help() {
-  fprintf(stdout, "Usage: omni-c <command> <flags*> <files*>\n");
-  fprintf(stdout, "  help\n");
-  fprintf(stdout, "  build\n");
-  fprintf(stdout, "  install\n");
-  fprintf(stdout, "  translate\n");
-  fprintf(stdout, "  archive\n");
-  fprintf(stdout, "  debug\n");
-  fprintf(stdout, "  xreference\n");
-  fprintf(stdout, "  version\n");
-  fprintf(stdout, "\n");
-  fprintf(stdout, "See c-transpiler-manual.md\n");
-}
+value_array_t* FLAG_files = NULL;
+char* FLAG_command = NULL;
 
-void translate_and_build(command_line_parse_result_t args_and_files) {
+void translate_and_build() {
+  log_info("translate_and_build()");
+
   oc_compiler_state_t* compiler_state = make_oc_compiler_state();
-  ptr_array_t* files = parse_files(args_and_files.files);
-  for (int i = 0; i < files->length; i++) {
-    oc_file_t* file = ptr_array_get(files, i);
+  value_array_t* parsed_files = parse_files(FLAG_files);
+  for (int i = 0; i < FLAG_files->length; i++) {
+    oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
     TSNode root_node = ts_tree_root_node(file->tree);
     oc_node_t* node = ts_node_to_oc_node(root_node, file->data);
     buffer_t* output = make_buffer(1024);
@@ -36,22 +27,44 @@ void translate_and_build(command_line_parse_result_t args_and_files) {
   }
 }
 
+void configure_build_command(void);
+
+void configure_flags() {
+  flag_program_name("omni-c");
+  flag_description("omni-c is a transpiler for the omni-c language.");
+
+  configure_build_command();
+}
+
+void configure_build_command(void) {
+  flag_command("build", &FLAG_command);
+  flag_file_args(&FLAG_files);
+}
+
 int main(int argc, char** argv) {
+  configure_fatal_errors((fatal_error_config_t){
+      .catch_sigsegv = true,
+  });
+  logger_init();
 
-  command_line_parse_result_t args_and_files
-      = parse_command_line(argc, argv, true);
+  configure_flags();
 
-  if (args_and_files.command == NULL
-      || string_equal("help", args_and_files.command)) {
-    show_help();
-    exit(0);
+  char* error = flag_parse_command_line(argc, argv);
+  if (error) {
+    flag_print_help(stderr, error);
+    exit(1);
   }
 
-  if (string_equal("build", args_and_files.command)) {
-    translate_and_build(args_and_files);
-    exit(0);
+  if (FLAG_command == NULL) {
+    // Technically this should not be reached because once a command
+    // is defined, a missing or wrong command should trigger an error
+    // and caught above. Note sure why this is still happening but
+    // paranoid code can be easier to debug.
+    fatal_error(ERROR_BAD_COMMAND_LINE);
+  } else if (string_equal("build", FLAG_command)) {
+    translate_and_build();
   } else {
-    fprintf(stderr, "Uknown command: %s\n", args_and_files.command);
+    fprintf(stderr, "Uknown command: %s\n", FLAG_command);
   }
 
   exit(0);
