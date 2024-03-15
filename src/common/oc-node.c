@@ -693,28 +693,126 @@ oc_node_t* ts_node_to_oc_node(TSNode ts_node, buffer_t* source_code) {
   return result;
 }
 
+char* oc_tag_prefix_text(oc_node_t* node) {
+  switch (node->tag) {
+  case OC_NODE_PREPROC_INCLUDE:
+    return "#include";
+    break;
+
+  case OC_NODE_ELSE_CLAUSE:
+    return "else";
+    break;
+
+  case OC_NODE_IF_STATEMENT:
+    return "if";
+    break;
+
+  case OC_NODE_PARENTHESIZED_EXPRESSION:
+  case OC_NODE_ARGUMENT_LIST:
+  case OC_NODE_PARAMETER_LIST:
+    return "(";
+    break;
+
+  case OC_NODE_COMPOUND_STATEMENT:
+    return "{";
+    break;
+
+  case OC_NODE_NULL:
+    return "NULL";
+    break;
+
+  case OC_NODE_STRING_CONTENT:
+    return "\"";
+
+  case OC_NODE_POINTER_EXPRESSION:
+    return "(*";
+
+  case OC_NODE_COMMENT:
+  case OC_NODE_EXPRESSION_STATEMENT:
+    return "\n";
+
+  case OC_NODE_SYSTEM_LIB_STRING:
+    return "<";
+
+  case OC_NODE_TRANSLATION_UNIT:
+  case OC_NODE_PARAMETER_DECLARATION:
+  case OC_NODE_NUMBER_LITERAL:
+  case OC_NODE_TYPE_IDENTIFIER:
+  case OC_NODE_DECLARATION:
+  case OC_NODE_STRING_LITERAL:
+  case OC_NODE_FUNCTION_DECLARATOR:
+  case OC_NODE_TYPE_DESCRIPTOR:
+  case OC_NODE_CALL_EXPRESSION:
+  case OC_NODE_INIT_DECLARATOR:
+  case OC_NODE_POINTER_DECLARATOR:
+  case OC_NODE_IDENTIFIER:
+  case OC_NODE_PRIMITIVE_TYPE:
+  case OC_NODE_TRUE:
+    return "";
+    break;
+  }
+  return string_printf("<%s>", oc_node_tag_to_string(node->tag));
+}
+
+char* oc_tag_suffix_text(oc_node_t* node) {
+  switch (node->tag) {
+
+  case OC_NODE_POINTER_DECLARATOR:
+    return "*";
+
+  case OC_NODE_PARENTHESIZED_EXPRESSION:
+  case OC_NODE_ARGUMENT_LIST:
+  case OC_NODE_PARAMETER_LIST:
+  case OC_NODE_POINTER_EXPRESSION:
+    return ")";
+    break;
+
+  case OC_NODE_COMPOUND_STATEMENT:
+    return "}\n";
+    break;
+
+  case OC_NODE_EXPRESSION_STATEMENT:
+    return ";\n";
+    break;
+
+  case OC_NODE_STRING_CONTENT:
+    return "\"";
+
+  case OC_NODE_SYSTEM_LIB_STRING:
+    return ">";
+
+  case OC_NODE_PREPROC_INCLUDE:
+    return "\n";
+
+  default:
+    break;
+  }
+
+  return "";
+}
+
 /**
  * Append a textual representation of an oc_node_t* to the buffer.
  */
 __attribute__((warn_unused_result)) buffer_t*
     append_oc_node_text(buffer_t* buffer, oc_node_t* node) {
-  // buffer = buffer_append_string(buffer, "(");
-  // buffer = buffer_append_string(buffer, oc_node_tag_to_string(node->tag));
+
+  buffer = buffer_append_string(buffer, oc_tag_prefix_text(node));
+
+  if (node->text != NULL) {
+    buffer = buffer_append_string(buffer, "\u00AB");
+    buffer = buffer_append_string(buffer, node->text);
+    buffer = buffer_append_string(buffer, "\u00BB");
+  }
 
   if (node->children) {
     for (int i = 0; i < node->children->length; i++) {
       buffer = buffer_append_string(buffer, " ");
       oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
-      // if (child->children == NULL || child->children->length == 0) {
-      if (child->text != NULL) {
-        buffer = buffer_append_string(buffer, "\"");
-        buffer = buffer_append_string(buffer, child->text);
-        buffer = buffer_append_string(buffer, "\" ");
-      } else {
-        buffer = append_oc_node_text(buffer, child);
-      }
+      buffer = append_oc_node_text(buffer, child);
     }
   }
 
+  buffer = buffer_append_string(buffer, oc_tag_suffix_text(node));
   return buffer;
 }
