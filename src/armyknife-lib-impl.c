@@ -2,4 +2,3 @@
 
 #define C_ARMYKNIFE_LIB_IMPL
 #include <c-armyknife-lib.h>
-

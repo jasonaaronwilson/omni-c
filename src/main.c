@@ -4,10 +4,10 @@
 
 #include <stdio.h>
 
-#include <c-armyknife-lib.h>
 #include "common/oc-compiler-state.h"
 #include "common/oc-node.h"
 #include "parser/parse-files.h"
+#include <c-armyknife-lib.h>
 
 value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;

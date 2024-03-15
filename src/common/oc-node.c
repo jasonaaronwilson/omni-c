@@ -149,7 +149,9 @@ struct oc_node_S {
 typedef struct oc_node_S oc_node_t;
 
 extern oc_node_t* ts_node_to_oc_node(TSNode ts_node, buffer_t* source_code);
-extern buffer_t* append_oc_node_text(buffer_t* buffer, oc_node_t* node);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    append_oc_node_text(buffer_t* buffer, oc_node_t* node);
 
 #endif /* _OC_NODE_H_ */
 
@@ -551,113 +553,111 @@ oc_node_tag_t ts_node_name_to_tag(const char* name) {
 
 
 char* oc_node_tag_to_string(oc_node_tag_t value) {
-  static char* array[] = {
-    "OC_NODE_ERROR",
-    "OC_NODE_ABSTRACT_ARRAY_DECLARATOR",
-    "OC_NODE_ABSTRACT_FUNCTION_DECLARATOR",
-    "OC_NODE_ABSTRACT_PARENTHESIZED_DECLARATOR",
-    "OC_NODE_ABSTRACT_POINTER_DECLARATOR",
-    "OC_NODE_ALIGNOF_EXPRESSION",
-    "OC_NODE_ARGUMENT_LIST",
-    "OC_NODE_ARRAY_DECLARATOR",
-    "OC_NODE_ASSIGNMENT_EXPRESSION",
-    "OC_NODE_ATTRIBUTE",
-    "OC_NODE_ATTRIBUTED_DECLARATOR",
-    "OC_NODE_ATTRIBUTED_STATEMENT",
-    "OC_NODE_ATTRIBUTE_DECLARATION",
-    "OC_NODE_ATTRIBUTE_SPECIFIER",
-    "OC_NODE_BINARY_EXPRESSION",
-    "OC_NODE_BITFIELD_CLAUSE",
-    "OC_NODE_BREAK_STATEMENT",
-    "OC_NODE_CALL_EXPRESSION",
-    "OC_NODE_CASE_STATEMENT",
-    "OC_NODE_CAST_EXPRESSION",
-    "OC_NODE_CHARACTER",
-    "OC_NODE_CHAR_LITERAL",
-    "OC_NODE_COMMA_EXPRESSION",
-    "OC_NODE_COMMENT",
-    "OC_NODE_COMPOUND_LITERAL_EXPRESSION",
-    "OC_NODE_COMPOUND_STATEMENT",
-    "OC_NODE_CONCATENATED_STRING",
-    "OC_NODE_CONDITIONAL_EXPRESSION",
-    "OC_NODE_CONTINUE_STATEMENT",
-    "OC_NODE_DECLARATION",
-    "OC_NODE_DECLARATION_LIST",
-    "OC_NODE_DO_STATEMENT",
-    "OC_NODE_ELSE_CLAUSE",
-    "OC_NODE_ENUMERATOR",
-    "OC_NODE_ENUMERATOR_LIST",
-    "OC_NODE_ENUM_SPECIFIER",
-    "OC_NODE_ESCAPE_SEQUENCE",
-    "OC_NODE_EXPRESSION_STATEMENT",
-    "OC_NODE_FALSE",
-    "OC_NODE_FIELD_DECLARATION",
-    "OC_NODE_FIELD_DECLARATION_LIST",
-    "OC_NODE_FIELD_DESIGNATOR",
-    "OC_NODE_FIELD_EXPRESSION",
-    "OC_NODE_FIELD_IDENTIFIER",
-    "OC_NODE_FOR_STATEMENT",
-    "OC_NODE_FUNCTION_DECLARATOR",
-    "OC_NODE_FUNCTION_DEFINITION",
-    "OC_NODE_GENERIC_EXPRESSION",
-    "OC_NODE_GOTO_STATEMENT",
-    "OC_NODE_IDENTIFIER",
-    "OC_NODE_IF_STATEMENT",
-    "OC_NODE_INITIALIZER_LIST",
-    "OC_NODE_INITIALIZER_PAIR",
-    "OC_NODE_INIT_DECLARATOR",
-    "OC_NODE_LABELED_STATEMENT",
-    "OC_NODE_LINKAGE_SPECIFICATION",
-    "OC_NODE_MACRO_TYPE_SPECIFIER",
-    "OC_NODE_MS_DECLSPEC_MODIFIER",
-    "OC_NODE_MS_POINTER_MODIFIER",
-    "OC_NODE_MS_RESTRICT_MODIFIER",
-    "OC_NODE_NULL",
-    "OC_NODE_NUMBER_LITERAL",
-    "OC_NODE_OFFSETOF_EXPRESSION",
-    "OC_NODE_PARAMETER_DECLARATION",
-    "OC_NODE_PARAMETER_LIST",
-    "OC_NODE_PARENTHESIZED_DECLARATOR",
-    "OC_NODE_PARENTHESIZED_EXPRESSION",
-    "OC_NODE_POINTER_DECLARATOR",
-    "OC_NODE_POINTER_EXPRESSION",
-    "OC_NODE_PREPROC_ARG",
-    "OC_NODE_PREPROC_CALL",
-    "OC_NODE_PREPROC_DEF",
-    "OC_NODE_PREPROC_DEFINED",
-    "OC_NODE_PREPROC_DIRECTIVE",
-    "OC_NODE_PREPROC_ELIF",
-    "OC_NODE_PREPROC_ELSE",
-    "OC_NODE_PREPROC_FUNCTION_DEF",
-    "OC_NODE_PREPROC_IF",
-    "OC_NODE_PREPROC_IFDEF",
-    "OC_NODE_PREPROC_INCLUDE",
-    "OC_NODE_PREPROC_PARAMS",
-    "OC_NODE_PRIMITIVE_TYPE",
-    "OC_NODE_RETURN_STATEMENT",
-    "OC_NODE_SIZED_TYPE_SPECIFIER",
-    "OC_NODE_SIZEOF_EXPRESSION",
-    "OC_NODE_STATEMENT_IDENTIFIER",
-    "OC_NODE_STORAGE_CLASS_SPECIFIER",
-    "OC_NODE_STRING_CONTENT",
-    "OC_NODE_STRING_LITERAL",
-    "OC_NODE_STRUCT_SPECIFIER",
-    "OC_NODE_SUBSCRIPT_DESIGNATOR",
-    "OC_NODE_SUBSCRIPT_EXPRESSION",
-    "OC_NODE_SWITCH_STATEMENT",
-    "OC_NODE_SYSTEM_LIB_STRING",
-    "OC_NODE_TRANSLATION_UNIT",
-    "OC_NODE_TRUE",
-    "OC_NODE_TYPE_DEFINITION",
-    "OC_NODE_TYPE_DESCRIPTOR",
-    "OC_NODE_TYPE_IDENTIFIER",
-    "OC_NODE_TYPE_QUALIFIER",
-    "OC_NODE_UNARY_EXPRESSION",
-    "OC_NODE_UNION_SPECIFIER",
-    "OC_NODE_UPDATE_EXPRESSION",
-    "OC_NODE_VARIADIC_PARAMETER",
-    "OC_NODE_WHILE_STATEMENT"
-  };
+  static char* array[] = {"OC_NODE_ERROR",
+                          "OC_NODE_ABSTRACT_ARRAY_DECLARATOR",
+                          "OC_NODE_ABSTRACT_FUNCTION_DECLARATOR",
+                          "OC_NODE_ABSTRACT_PARENTHESIZED_DECLARATOR",
+                          "OC_NODE_ABSTRACT_POINTER_DECLARATOR",
+                          "OC_NODE_ALIGNOF_EXPRESSION",
+                          "OC_NODE_ARGUMENT_LIST",
+                          "OC_NODE_ARRAY_DECLARATOR",
+                          "OC_NODE_ASSIGNMENT_EXPRESSION",
+                          "OC_NODE_ATTRIBUTE",
+                          "OC_NODE_ATTRIBUTED_DECLARATOR",
+                          "OC_NODE_ATTRIBUTED_STATEMENT",
+                          "OC_NODE_ATTRIBUTE_DECLARATION",
+                          "OC_NODE_ATTRIBUTE_SPECIFIER",
+                          "OC_NODE_BINARY_EXPRESSION",
+                          "OC_NODE_BITFIELD_CLAUSE",
+                          "OC_NODE_BREAK_STATEMENT",
+                          "OC_NODE_CALL_EXPRESSION",
+                          "OC_NODE_CASE_STATEMENT",
+                          "OC_NODE_CAST_EXPRESSION",
+                          "OC_NODE_CHARACTER",
+                          "OC_NODE_CHAR_LITERAL",
+                          "OC_NODE_COMMA_EXPRESSION",
+                          "OC_NODE_COMMENT",
+                          "OC_NODE_COMPOUND_LITERAL_EXPRESSION",
+                          "OC_NODE_COMPOUND_STATEMENT",
+                          "OC_NODE_CONCATENATED_STRING",
+                          "OC_NODE_CONDITIONAL_EXPRESSION",
+                          "OC_NODE_CONTINUE_STATEMENT",
+                          "OC_NODE_DECLARATION",
+                          "OC_NODE_DECLARATION_LIST",
+                          "OC_NODE_DO_STATEMENT",
+                          "OC_NODE_ELSE_CLAUSE",
+                          "OC_NODE_ENUMERATOR",
+                          "OC_NODE_ENUMERATOR_LIST",
+                          "OC_NODE_ENUM_SPECIFIER",
+                          "OC_NODE_ESCAPE_SEQUENCE",
+                          "OC_NODE_EXPRESSION_STATEMENT",
+                          "OC_NODE_FALSE",
+                          "OC_NODE_FIELD_DECLARATION",
+                          "OC_NODE_FIELD_DECLARATION_LIST",
+                          "OC_NODE_FIELD_DESIGNATOR",
+                          "OC_NODE_FIELD_EXPRESSION",
+                          "OC_NODE_FIELD_IDENTIFIER",
+                          "OC_NODE_FOR_STATEMENT",
+                          "OC_NODE_FUNCTION_DECLARATOR",
+                          "OC_NODE_FUNCTION_DEFINITION",
+                          "OC_NODE_GENERIC_EXPRESSION",
+                          "OC_NODE_GOTO_STATEMENT",
+                          "OC_NODE_IDENTIFIER",
+                          "OC_NODE_IF_STATEMENT",
+                          "OC_NODE_INITIALIZER_LIST",
+                          "OC_NODE_INITIALIZER_PAIR",
+                          "OC_NODE_INIT_DECLARATOR",
+                          "OC_NODE_LABELED_STATEMENT",
+                          "OC_NODE_LINKAGE_SPECIFICATION",
+                          "OC_NODE_MACRO_TYPE_SPECIFIER",
+                          "OC_NODE_MS_DECLSPEC_MODIFIER",
+                          "OC_NODE_MS_POINTER_MODIFIER",
+                          "OC_NODE_MS_RESTRICT_MODIFIER",
+                          "OC_NODE_NULL",
+                          "OC_NODE_NUMBER_LITERAL",
+                          "OC_NODE_OFFSETOF_EXPRESSION",
+                          "OC_NODE_PARAMETER_DECLARATION",
+                          "OC_NODE_PARAMETER_LIST",
+                          "OC_NODE_PARENTHESIZED_DECLARATOR",
+                          "OC_NODE_PARENTHESIZED_EXPRESSION",
+                          "OC_NODE_POINTER_DECLARATOR",
+                          "OC_NODE_POINTER_EXPRESSION",
+                          "OC_NODE_PREPROC_ARG",
+                          "OC_NODE_PREPROC_CALL",
+                          "OC_NODE_PREPROC_DEF",
+                          "OC_NODE_PREPROC_DEFINED",
+                          "OC_NODE_PREPROC_DIRECTIVE",
+                          "OC_NODE_PREPROC_ELIF",
+                          "OC_NODE_PREPROC_ELSE",
+                          "OC_NODE_PREPROC_FUNCTION_DEF",
+                          "OC_NODE_PREPROC_IF",
+                          "OC_NODE_PREPROC_IFDEF",
+                          "OC_NODE_PREPROC_INCLUDE",
+                          "OC_NODE_PREPROC_PARAMS",
+                          "OC_NODE_PRIMITIVE_TYPE",
+                          "OC_NODE_RETURN_STATEMENT",
+                          "OC_NODE_SIZED_TYPE_SPECIFIER",
+                          "OC_NODE_SIZEOF_EXPRESSION",
+                          "OC_NODE_STATEMENT_IDENTIFIER",
+                          "OC_NODE_STORAGE_CLASS_SPECIFIER",
+                          "OC_NODE_STRING_CONTENT",
+                          "OC_NODE_STRING_LITERAL",
+                          "OC_NODE_STRUCT_SPECIFIER",
+                          "OC_NODE_SUBSCRIPT_DESIGNATOR",
+                          "OC_NODE_SUBSCRIPT_EXPRESSION",
+                          "OC_NODE_SWITCH_STATEMENT",
+                          "OC_NODE_SYSTEM_LIB_STRING",
+                          "OC_NODE_TRANSLATION_UNIT",
+                          "OC_NODE_TRUE",
+                          "OC_NODE_TYPE_DEFINITION",
+                          "OC_NODE_TYPE_DESCRIPTOR",
+                          "OC_NODE_TYPE_IDENTIFIER",
+                          "OC_NODE_TYPE_QUALIFIER",
+                          "OC_NODE_UNARY_EXPRESSION",
+                          "OC_NODE_UNION_SPECIFIER",
+                          "OC_NODE_UPDATE_EXPRESSION",
+                          "OC_NODE_VARIADIC_PARAMETER",
+                          "OC_NODE_WHILE_STATEMENT"};
 
   if (value >= 0 && value < 105) {
     return array[value];
@@ -687,8 +687,8 @@ oc_node_t* ts_node_to_oc_node(TSNode ts_node, buffer_t* source_code) {
   result->children = n_children > 0 ? make_value_array(n_children) : NULL;
   for (int i = 0; i < n_children; i++) {
     value_array_add(result->children,
-		    ptr_to_value(ts_node_to_oc_node(ts_node_named_child(ts_node, i), 
-						    source_code)));
+                    ptr_to_value(ts_node_to_oc_node(
+                        ts_node_named_child(ts_node, i), source_code)));
   }
   return result;
 }
@@ -696,17 +696,25 @@ oc_node_t* ts_node_to_oc_node(TSNode ts_node, buffer_t* source_code) {
 /**
  * Append a textual representation of an oc_node_t* to the buffer.
  */
-buffer_t* append_oc_node_text(buffer_t* buffer, oc_node_t* node) {
-  buffer = buffer_append_string(buffer, "(");
-  buffer = buffer_append_string(buffer, oc_node_tag_to_string(node->tag));
+__attribute__((warn_unused_result)) buffer_t*
+    append_oc_node_text(buffer_t* buffer, oc_node_t* node) {
+  // buffer = buffer_append_string(buffer, "(");
+  // buffer = buffer_append_string(buffer, oc_node_tag_to_string(node->tag));
 
   if (node->children) {
     for (int i = 0; i < node->children->length; i++) {
       buffer = buffer_append_string(buffer, " ");
       oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
-      buffer = append_oc_node_text(buffer, child);
+      // if (child->children == NULL || child->children->length == 0) {
+      if (child->text != NULL) {
+        buffer = buffer_append_string(buffer, "\"");
+        buffer = buffer_append_string(buffer, child->text);
+        buffer = buffer_append_string(buffer, "\" ");
+      } else {
+        buffer = append_oc_node_text(buffer, child);
+      }
     }
   }
 
-  buffer = buffer_append_string(buffer, ")");
+  return buffer;
 }

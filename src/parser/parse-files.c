@@ -14,8 +14,8 @@
 #include <string.h>
 #include <tree_sitter/api.h>
 
-#include <c-armyknife-lib.h>
 #include "../common/oc-file.h"
+#include <c-armyknife-lib.h>
 
 extern value_array_t* parse_files(value_array_t* files);
 
@@ -35,7 +35,8 @@ value_array_t* parse_files(value_array_t* files) {
   for (int i = 0; i < files->length; i++) {
     char* file_name = value_array_get(files, i).str;
     fprintf(stderr, "Parsing %s\n", file_name);
-    value_array_add(result, ptr_to_value(read_and_parse_file(parser, file_name)));
+    value_array_add(result,
+                    ptr_to_value(read_and_parse_file(parser, file_name)));
   }
 
   ts_parser_delete(parser);
@@ -52,7 +53,6 @@ oc_file_t* read_and_parse_file(TSParser* parser, char* file_name) {
   // buffer which avoids an entire copy.
   char* str = buffer_to_c_string(buffer);
   int length = buffer->length;
-  // free(buffer);
 
   // Build a syntax tree based on source code stored in a string.
   TSTree* tree = ts_parser_parse_string(parser, NULL, str, length);
