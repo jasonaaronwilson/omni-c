@@ -131,7 +131,14 @@ typedef enum {
 struct oc_node_S {
   oc_node_tag_t tag;
 
-  char* text; // only for leaf nodes like constants and identifiers
+  char* text; // only for leaf nodes (for example constants and
+              // identifiers).
+
+  // TODO(jawilson): src_file...
+  uint64_t src_start_offset;
+  uint64_t src_end_offset;
+  uint64_t src_start_line;
+  uint64_t src_start_column;
 
   value_array_t* children;
 
@@ -680,9 +687,16 @@ char* oc_node_tag_to_string(oc_node_tag_t value) {
  */
 void extract_oc_node_text(oc_node_t* oc_node, TSNode ts_node,
                           buffer_t* source_code) {
+  oc_node->src_start_offset = ts_node_start_byte(ts_node);
+  oc_node->src_end_offset = ts_node_end_byte(ts_node);
+  TSPoint start_point = ts_node_start_point(ts_node);
+  oc_node->src_start_line = start_point.row;
+  oc_node->src_start_column = start_point.column;
+  // This doesn't seem to really help yet.
+  //  || oc_node->tag == OC_NODE_BINARY_EXPRESSION
   if (ts_node_child_count(ts_node) == 0) {
-    oc_node->text = buffer_c_substring(source_code, ts_node_start_byte(ts_node),
-                                       ts_node_end_byte(ts_node));
+    oc_node->text = buffer_c_substring(source_code, oc_node->src_start_offset,
+                                       oc_node->src_end_offset);
   }
 }
 
@@ -717,6 +731,8 @@ __attribute__((warn_unused_result)) buffer_t*
     append_oc_node_tree_impl(buffer_t* buffer, oc_node_t* node, int level) {
   buffer = buffer_append_repeated_byte(buffer, ' ', level * 4);
   buffer = buffer_append_string(buffer, oc_node_tag_to_string(node->tag));
+  buffer = buffer_printf(buffer, " line=%d col=%d", node->src_start_line,
+                         node->src_start_column);
   // TODO(jawilson): line numbers
   if (node->text) {
     buffer = buffer_append_string(buffer, "   ");
