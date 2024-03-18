@@ -714,7 +714,7 @@ char* oc_tag_prefix_text(oc_node_t* node) {
     break;
 
   case OC_NODE_COMPOUND_STATEMENT:
-    return "{";
+    return "\n{";
     break;
 
   case OC_NODE_NULL:
@@ -733,6 +733,9 @@ char* oc_tag_prefix_text(oc_node_t* node) {
 
   case OC_NODE_SYSTEM_LIB_STRING:
     return "<";
+
+  case OC_NODE_FOR_STATEMENT:
+    return "for (";
 
   case OC_NODE_TRANSLATION_UNIT:
   case OC_NODE_PARAMETER_DECLARATION:
@@ -783,6 +786,10 @@ char* oc_tag_suffix_text(oc_node_t* node) {
 
   case OC_NODE_PREPROC_INCLUDE:
     return "\n";
+
+    // maybe?
+  case OC_NODE_FOR_STATEMENT:
+    return ")";
 
   default:
     break;
