@@ -1,0 +1,13 @@
+void precedence_64() {
+  uint64_t x = 1 + 2 * 3;
+  uint64_t y = 1 + (2 * 3);
+  uint64_t z = (1 + 2) * 3;
+  while (0) {}
+}
+
+void precedence() {
+  auto x = 1 + 2 * 3;
+  auto y = 1 + (2 * 3);
+  auto z = (1 + 2) * 3;
+  while (0) {}
+}

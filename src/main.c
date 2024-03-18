@@ -11,6 +11,7 @@
 
 value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
+boolean_t FLAG_include_unnamed_nodes = false;
 
 void translate_and_build() {
   log_info("translate_and_build()");
@@ -20,7 +21,7 @@ void translate_and_build() {
   for (int i = 0; i < FLAG_files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
     TSNode root_node = ts_tree_root_node(file->tree);
-    oc_node_t* node = ts_node_to_oc_node(root_node, file->data);
+    oc_node_t* node = ts_node_to_oc_node(root_node, file->data, false);
     buffer_t* output = make_buffer(1024);
     output = append_oc_node_text(output, node);
     fprintf(stdout, "%s\n", buffer_to_c_string(output));
@@ -35,7 +36,8 @@ void print_parse_trees() {
   for (int i = 0; i < FLAG_files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
     TSNode root_node = ts_tree_root_node(file->tree);
-    oc_node_t* node = ts_node_to_oc_node(root_node, file->data);
+    oc_node_t* node
+        = ts_node_to_oc_node(root_node, file->data, FLAG_include_unnamed_nodes);
     buffer_t* output = make_buffer(1024);
     output = append_oc_node_tree(output, node);
     fprintf(stdout, "%s\n", buffer_to_c_string(output));
@@ -60,6 +62,7 @@ void configure_build_command(void) {
 
 void configure_print_parse_tree_command(void) {
   flag_command("print-parse-trees", &FLAG_command);
+  flag_boolean("--show-unnamed-nodes", &FLAG_include_unnamed_nodes);
   flag_file_args(&FLAG_files);
 }
 
