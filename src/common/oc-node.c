@@ -692,11 +692,17 @@ void extract_oc_node_text(oc_node_t* oc_node, TSNode ts_node,
   TSPoint start_point = ts_node_start_point(ts_node);
   oc_node->src_start_line = start_point.row;
   oc_node->src_start_column = start_point.column;
-  // This doesn't seem to really help yet.
-  //  || oc_node->tag == OC_NODE_BINARY_EXPRESSION
-  if (ts_node_child_count(ts_node) == 0) {
+  int child_count = ts_node_child_count(ts_node);
+  if (child_count == 0) {
     oc_node->text = buffer_c_substring(source_code, oc_node->src_start_offset,
                                        oc_node->src_end_offset);
+  } else if (oc_node->tag == OC_NODE_BINARY_EXPRESSION) {
+    if (child_count != 3) {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    TSNode operator= ts_node_child(ts_node, 1);
+    oc_node->text = buffer_c_substring(
+        source_code, ts_node_start_byte(operator), ts_node_end_byte(operator));
   }
 }
 
