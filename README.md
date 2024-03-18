@@ -340,6 +340,25 @@ checking system finds many of these immediately without even running
 tests. (And again, many of these dynamic languages still employ
 inheritance.)
 
+# Possible Features
+
+While most of this document is a bit more thought out (even if I roll
+back those decisions to be more compatible with the C/C++ lineage
+(after all, many will simply prefer Go if you want a better C and
+aren't keen on C++, Java, C#, etc. for various reasons), this is a
+little more freeform:
+
+1. there should eventually be some form of reflection on types (but
+   not values themselves)
+1. can we extend enumerations / aka define pieces in multiple places?
+
+1. and if that's a good idea, would it make sense to treat structs the
+   same way, functions the same way (we kind of do sort of, it's a bit
+   like apples and oranges for example advise in Lisp might be
+   something that could be done statically...)
+1. line numbers for things like log_info
+
+
 [^1] Go, C# and the CLR, Java and the JVM, and other languages have
 shown that GC doesn't have to be problematic though garbage collection
 is still a difficult problem. Swift and Rust have other mechanisms
