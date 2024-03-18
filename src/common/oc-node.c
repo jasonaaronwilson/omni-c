@@ -153,6 +153,9 @@ extern oc_node_t* ts_node_to_oc_node(TSNode ts_node, buffer_t* source_code);
 __attribute__((warn_unused_result)) extern buffer_t*
     append_oc_node_text(buffer_t* buffer, oc_node_t* node);
 
+__attribute__((warn_unused_result)) extern buffer_t*
+    append_oc_node_tree(buffer_t* buffer, oc_node_t* node);
+
 #endif /* _OC_NODE_H_ */
 
 oc_node_tag_t ts_node_name_to_tag(const char* name) {
@@ -666,6 +669,15 @@ char* oc_node_tag_to_string(oc_node_tag_t value) {
   }
 }
 
+/**
+ * @function extract_oc_node_text
+ *
+ * This function decides when to extract the file contents
+ * representing this node (according to ts_node_start_byte and
+ * ts_node_end_byte). Generally we only do this for leaf nodes since
+ * we intend to modify the tree (at least for the initial C++ and C
+ * backends).
+ */
 void extract_oc_node_text(oc_node_t* oc_node, TSNode ts_node,
                           buffer_t* source_code) {
   if (ts_node_child_count(ts_node) == 0) {
@@ -673,6 +685,60 @@ void extract_oc_node_text(oc_node_t* oc_node, TSNode ts_node,
                                        ts_node_end_byte(ts_node));
   }
 }
+
+/* ============================================================ */
+
+__attribute__((warn_unused_result)) buffer_t*
+    append_oc_node_tree_impl(buffer_t* buffer, oc_node_t* node, int level);
+
+/**
+ * Append the tree representation of an oc_node_t* to the buffer.
+ *
+ * This will look something like this:
+ *
+ * OC_NODE_TRANSLATION_UNIT
+ *     OC_NODE_PREPROC_INCLUDE
+ *         OC_NODE_SYSTEM_LIB_STRING   «<stdio.h>»
+ * (etc.)
+ *
+ * I think I got rid of the s-expression version too quickly but this
+ * version is frankly easier to read in part because it (mostly) keeps
+ * all parents to a single line, etc.
+ *
+ * I definitely want to add back in s-expressions and maybe even have
+ * a fancy output HTML that is semi-interactive.
+ */
+__attribute__((warn_unused_result)) buffer_t*
+    append_oc_node_tree(buffer_t* buffer, oc_node_t* node) {
+  return append_oc_node_tree_impl(buffer, node, 0);
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    append_oc_node_tree_impl(buffer_t* buffer, oc_node_t* node, int level) {
+  buffer = buffer_append_repeated_byte(buffer, ' ', level * 4);
+  buffer = buffer_append_string(buffer, oc_node_tag_to_string(node->tag));
+  // TODO(jawilson): line numbers
+  if (node->text) {
+    buffer = buffer_append_string(buffer, "   ");
+    buffer = buffer_append_string(buffer, "\u00AB");
+    char* str = string_truncate(node->text, 40, "...");
+    buffer = buffer_append_string(buffer, node->text);
+    free_bytes(str);
+    buffer = buffer_append_string(buffer, "\u00BB");
+  }
+  buffer = buffer_append_string(buffer, "\n");
+
+  if (node->children) {
+    for (int i = 0; i < node->children->length; i++) {
+      oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
+      buffer = append_oc_node_tree_impl(buffer, child, level + 1);
+    }
+  }
+
+  return buffer;
+}
+
+/* ============================================================ */
 
 /**
  * Recursively walks a ts_node and it's children and produces a

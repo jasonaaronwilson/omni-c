@@ -27,17 +27,39 @@ void translate_and_build() {
   }
 }
 
+void print_parse_trees() {
+  log_info("translate_and_build()");
+
+  oc_compiler_state_t* compiler_state = make_oc_compiler_state();
+  value_array_t* parsed_files = parse_files(FLAG_files);
+  for (int i = 0; i < FLAG_files->length; i++) {
+    oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
+    TSNode root_node = ts_tree_root_node(file->tree);
+    oc_node_t* node = ts_node_to_oc_node(root_node, file->data);
+    buffer_t* output = make_buffer(1024);
+    output = append_oc_node_tree(output, node);
+    fprintf(stdout, "%s\n", buffer_to_c_string(output));
+  }
+}
+
 void configure_build_command(void);
+void configure_print_parse_tree_command(void);
 
 void configure_flags() {
   flag_program_name("omni-c");
   flag_description("omni-c is a transpiler for the omni-c language.");
 
   configure_build_command();
+  configure_print_parse_tree_command();
 }
 
 void configure_build_command(void) {
   flag_command("build", &FLAG_command);
+  flag_file_args(&FLAG_files);
+}
+
+void configure_print_parse_tree_command(void) {
+  flag_command("print-parse-trees", &FLAG_command);
   flag_file_args(&FLAG_files);
 }
 
@@ -63,6 +85,8 @@ int main(int argc, char** argv) {
     fatal_error(ERROR_BAD_COMMAND_LINE);
   } else if (string_equal("build", FLAG_command)) {
     translate_and_build();
+  } else if (string_equal("print-parse-trees", FLAG_command)) {
+    print_parse_trees();
   } else {
     fprintf(stderr, "Uknown command: %s\n", FLAG_command);
   }
