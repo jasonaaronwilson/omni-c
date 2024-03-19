@@ -880,6 +880,29 @@ char* oc_tag_prefix_text(oc_node_t* node) {
   return string_printf("<%s>", oc_node_tag_to_string(node->tag));
 }
 
+char* oc_tag_child_prefix(oc_node_t* node, int position) {
+  switch (node->tag) {
+  case OC_NODE_BINARY_EXPRESSION:
+    if (position == 1) {
+      return node->text;
+    }
+    break;
+
+  case OC_NODE_INIT_DECLARATOR:
+    if (position == 1) {
+      return " = ";
+    }
+    break;
+
+  case OC_NODE_PARAMETER_LIST:
+    if (position > 0) {
+      return " , ";
+    }
+    break;
+  }
+  return "";
+}
+
 char* oc_tag_suffix_text(oc_node_t* node) {
   switch (node->tag) {
 
@@ -933,7 +956,7 @@ __attribute__((warn_unused_result)) buffer_t*
 
   buffer = buffer_append_string(buffer, oc_tag_prefix_text(node));
 
-  if (node->text != NULL) {
+  if (node->text != NULL & node->tag != OC_NODE_BINARY_EXPRESSION) {
     // buffer = buffer_append_string(buffer, "\u00AB");
     buffer = buffer_append_string(buffer, node->text);
     // buffer = buffer_append_string(buffer, "\u00BB");
@@ -941,6 +964,8 @@ __attribute__((warn_unused_result)) buffer_t*
 
   if (node->children) {
     for (int i = 0; i < node->children->length; i++) {
+      buffer = buffer_append_string(buffer, " ");
+      buffer = buffer_append_string(buffer, oc_tag_child_prefix(node, i));
       buffer = buffer_append_string(buffer, " ");
       oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
       buffer = append_oc_node_text(buffer, child);

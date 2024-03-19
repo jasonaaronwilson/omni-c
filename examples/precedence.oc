@@ -5,7 +5,7 @@ void precedence_64() {
   while (0) {}
 }
 
-void precedence() {
+void precedence(uint64_t a, uint64_t b) {
   auto x = 1 + 2 * 3;
   auto y = 1 + (2 * 3);
   auto z = (1 + 2) * 3;
