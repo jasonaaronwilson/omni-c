@@ -79,5 +79,62 @@ int main() {
   // Accessing value through pointer
   printf("Value pointed to by ptr: %d\n", *ptr);
 
+int grade = 85;
+char letterGrade;
+
+if (grade >= 90) {
+  letterGrade = 'A';
+} else if (grade >= 80) {
+  letterGrade = 'B';
+} else if (grade >= 70) {
+  letterGrade = 'C';
+} else {
+  letterGrade = 'F';
+}
+
+printf("Your grade is %d, which translates to a letter grade of %c.\n", grade, letterGrade);
+
+int age = 20;
+bool canVote = (age >= 18) ? true : false;
+
+printf((canVote) ? "You are eligible to vote.\n" : "You are not eligible to vote yet.\n");
+
+char choice = 'B';
+
+switch (choice) {
+  case 'A':
+    printf("You chose option A.\n");
+    break;
+  case 'B':
+    printf("You chose option B.\n");
+    break;
+  case 'C':
+    printf("You chose option C.\n");
+    break;
+  default:
+    printf("Invalid choice.\n");
+}
+
+int sum = 0;
+for (int i = 1; i <= 5; i++) {
+  sum += i;
+}
+
+printf("The sum of the first 5 numbers is %d.\n", sum);
+
+int num = 10;
+while (num > 0) {
+  printf("%d ", num);
+  num--;
+}
+
+printf("\n");  // Print a newline after the loop finishes
+
+int count = 0;
+do {
+  printf("Count: %d\n", count);
+  count++;
+} while (count < 3);
+
   return 0;
 }
