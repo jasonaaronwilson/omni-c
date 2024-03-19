@@ -1,0 +1,27 @@
+void if_example() {
+  if (true) {
+    fprintf(stderr, "true");
+  } else {
+    fprintf(stderr, "false");
+  }
+  uint64_t i = 0;
+  if (true) i++;
+  if (true) ; else fprintf(stderr, "false");
+  if (true) {} else ;
+}
+
+void switch_example() {
+  uint64_t i = 100;
+  switch (i) {
+    case 0:
+      fprintf(stderr, "0");
+      break;
+    default:
+      fprintf(stderr, "%d", i);
+      break;
+  }
+}
+
+char* ternary_example(boolean_t b) {
+  return b ? "Hello" : "World";
+}
