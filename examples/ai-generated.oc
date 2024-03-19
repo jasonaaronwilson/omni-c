@@ -1,0 +1,83 @@
+#include <stdio.h>  // Required for input/output functions
+
+// Define a custom data type (typedef) for point coordinates
+typedef struct {
+  int x;
+  float y;
+} Point;
+
+struct foo_struct {
+  int x : 2;
+  int y : 1;
+};
+
+void greet(char* foo) {
+  fprintf(stdout, "%s", foo);
+}
+
+int main() {
+
+  // Declare variables of different types
+  int age = 30;
+  char initial = 'B';
+  float pi = 3.14159;
+
+  // Array of characters (string)
+  char name[] = "Alice";
+
+  // Pointer to an integer
+  int num = 10;
+  int *ptr = &num;  // ptr stores the memory address of num
+
+  // Structure variable to store point coordinates
+  Point p1 = {2, 5.3f}; // Initialize using a designated initializer list
+
+  // Union (not used here, but demonstrates the concept)
+  union Data {
+    int value;
+    float fval;
+  };
+
+  // Static variable (only accessible within main)
+  static int count = 0;  // Initialized to 0 only once
+
+  // Function to demonstrate function calls
+  void greet(char *name) {
+    printf("Hello, %s!\n", name);
+  }
+
+  // Control flow statements
+  if (age > 25) {
+    printf("You are eligible.\n");
+  } else {
+    printf("Not eligible yet.\n");
+  }
+
+  for (int i = 0; i < 3; i++) {
+    printf("Iteration: %d\n", i);
+  }
+
+  while (count < 2) {
+    printf("Count: %d\n", count);
+    count++;
+  }
+
+  // Bitwise operation (example: check if least significant bit is set)
+  if (num & 1) {
+    printf("%d is odd.\n", num);
+  } else {
+    printf("%d is even.\n", num);
+  }
+
+  // Function call
+  greet(name);
+
+  // Accessing elements of an array and structure
+  printf("Name: %s\n", name);
+  printf("Point coordinates: (%d, %.2f)\n", p1.x, p1.y);
+
+  // Accessing value through pointer
+  printf("Value pointed to by ptr: %d\n", *ptr);
+
+  return 0;
+}
