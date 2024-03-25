@@ -15,6 +15,6 @@ extern oc_compiler_state_t* make_oc_compiler_state(void);
 
 oc_compiler_state_t* make_oc_compiler_state(void) {
   oc_compiler_state_t* result = malloc_struct(oc_compiler_state_t);
-  result->namespaces = make_string_hashtable(100);
+  result->namespaces = make_string_hashtable(5);
   return result;
 }
