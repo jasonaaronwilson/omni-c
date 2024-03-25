@@ -1,0 +1,10 @@
+struct pairs_t {
+  uint64_t a;
+  uint64_t b;
+}
+
+union either_t {
+  uint64_t a;
+  double b;
+  void* c;
+}

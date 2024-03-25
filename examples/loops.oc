@@ -1,0 +1,32 @@
+void while_loops() {
+   while(1);
+   while(1){}
+   while(true) {
+     int64_t x = 100;
+     break;
+   }
+   int_t i = 5;
+   while (i--)
+     fprintf(stderr, "%d\n", i);
+}
+
+void for_loops() {
+  for(;;);
+  for(;;){}
+  for(int i = 0; i < 100; i++) {
+    fprintf(stderr, "%d\n", i);
+  }
+  for(int i = 0; i < 100; i++)
+    fprintf(stderr, "%d\n", i);
+  for(int i = 0; i < 100;) {
+     fprintf(stderr, "%d\n", i);
+     i += 1;
+  }
+}
+
+void do_loops() {
+  int64_t i = 0;
+  do {
+    i++;
+  } while (0);
+}
