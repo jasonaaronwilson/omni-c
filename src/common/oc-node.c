@@ -132,6 +132,13 @@ typedef enum {
 
 } oc_node_tag_t;
 
+/**
+ * @struct oc_node_t
+ *
+ * Represents an editable parse node. These are generally created from
+ * TSNode's though these could be generated programatically to add new
+ * routines, etc.
+ */
 struct oc_node_S {
   oc_node_tag_t tag;
 
@@ -883,7 +890,8 @@ char* oc_tag_prefix_text(oc_node_t* node, int indention_level) {
     return oc_newline(indention_level);
 
   case OC_NODE_SYSTEM_LIB_STRING:
-    return "<";
+    // return "<";
+    return "";
 
   case OC_NODE_FOR_STATEMENT:
     return "for (";
@@ -961,10 +969,11 @@ char* oc_tag_suffix_text(oc_node_t* node, int indention_level) {
     return "\"";
 
   case OC_NODE_SYSTEM_LIB_STRING:
-    return ">";
+    // return ">";
+    return "";
 
   case OC_NODE_PREPROC_INCLUDE:
-    return "\n";
+    return oc_newline(indention_level);
 
     // maybe?
   case OC_NODE_FOR_STATEMENT:

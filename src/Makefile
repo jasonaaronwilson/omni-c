@@ -37,6 +37,9 @@ clean:
 diff: clean
 	git difftool HEAD
 
+cfd: clean format diff
+	echo "nop"
+
 how-big: clean
 	cat ${SRC_C} | wc --lines
 
