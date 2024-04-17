@@ -23,7 +23,7 @@ void translate_and_build(void) {
     TSNode root_node = ts_tree_root_node(file->tree);
     oc_node_t* node = ts_node_to_oc_node(root_node, file->data, false);
     buffer_t* output = make_buffer(1024);
-    output = append_oc_node_text(output, node);
+    output = append_oc_node_text(output, node, 0);
     fprintf(stdout, "%s\n", buffer_to_c_string(output));
   }
 }

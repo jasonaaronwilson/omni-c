@@ -163,7 +163,7 @@ extern oc_node_t* ts_node_to_oc_node(TSNode ts_node, buffer_t* source_code,
                                      boolean_t include_unnamed_nodes);
 
 __attribute__((warn_unused_result)) extern buffer_t*
-    append_oc_node_text(buffer_t* buffer, oc_node_t* node);
+    append_oc_node_text(buffer_t* buffer, oc_node_t* node, int indention_level);
 
 __attribute__((warn_unused_result)) extern buffer_t*
     append_oc_node_tree(buffer_t* buffer, oc_node_t* node);
@@ -812,10 +812,41 @@ oc_node_t* ts_node_to_oc_node(TSNode ts_node, buffer_t* source_code,
   return result;
 }
 
-char* oc_tag_prefix_text(oc_node_t* node) {
+/**
+ * @function oc_newline
+ *
+ * Output a newline plus enough spaces to indent by the indention level.
+ */
+char* oc_newline(int indention_level) {
+  buffer_t* buffer = make_buffer(1);
+  buffer = buffer_append_string(buffer, "\n");
+  for (int i = 0; i < indention_level * 4; i++) {
+    buffer = buffer_append_string(buffer, " ");
+  }
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+
+/**
+ * @function oc_get_child_indention_level
+ *
+ * Determines if we should indent for children of this node.
+ */
+int oc_get_child_indention_level(oc_node_t* node, int current_indention_level) {
+  switch (node->tag) {
+  case OC_NODE_IF_STATEMENT:
+  case OC_NODE_FOR_STATEMENT:
+  case OC_NODE_WHILE_STATEMENT:
+    return current_indention_level + 1;
+  }
+  return current_indention_level;
+}
+
+char* oc_tag_prefix_text(oc_node_t* node, int indention_level) {
   switch (node->tag) {
   case OC_NODE_PREPROC_INCLUDE:
-    return "#include";
+    return string_append(oc_newline(indention_level), "#include");
     break;
 
   case OC_NODE_ELSE_CLAUSE:
@@ -834,7 +865,7 @@ char* oc_tag_prefix_text(oc_node_t* node) {
     break;
 
   case OC_NODE_COMPOUND_STATEMENT:
-    return "\n{";
+    return string_append(oc_newline(indention_level), "{");
     break;
 
   case OC_NODE_NULL:
@@ -849,7 +880,7 @@ char* oc_tag_prefix_text(oc_node_t* node) {
 
   case OC_NODE_COMMENT:
   case OC_NODE_EXPRESSION_STATEMENT:
-    return "\n";
+    return oc_newline(indention_level);
 
   case OC_NODE_SYSTEM_LIB_STRING:
     return "<";
@@ -880,7 +911,7 @@ char* oc_tag_prefix_text(oc_node_t* node) {
   return string_printf("<%s>", oc_node_tag_to_string(node->tag));
 }
 
-char* oc_tag_child_prefix(oc_node_t* node, int position) {
+char* oc_tag_child_prefix(oc_node_t* node, int position, int indention_level) {
   switch (node->tag) {
   case OC_NODE_BINARY_EXPRESSION:
     if (position == 1) {
@@ -903,7 +934,7 @@ char* oc_tag_child_prefix(oc_node_t* node, int position) {
   return "";
 }
 
-char* oc_tag_suffix_text(oc_node_t* node) {
+char* oc_tag_suffix_text(oc_node_t* node, int indention_level) {
   switch (node->tag) {
 
   case OC_NODE_POINTER_DECLARATOR:
@@ -918,11 +949,12 @@ char* oc_tag_suffix_text(oc_node_t* node) {
     break;
 
   case OC_NODE_COMPOUND_STATEMENT:
-    return "}\n";
+    return string_append("}", oc_newline(indention_level));
     break;
 
   case OC_NODE_EXPRESSION_STATEMENT:
-    return ";\n";
+  case OC_NODE_DECLARATION:
+    return string_append(";", oc_newline(indention_level));
     break;
 
   case OC_NODE_STRING_CONTENT:
@@ -938,9 +970,6 @@ char* oc_tag_suffix_text(oc_node_t* node) {
   case OC_NODE_FOR_STATEMENT:
     return ")";
 
-  case OC_NODE_DECLARATION:
-    return ";\n";
-
   default:
     break;
   }
@@ -952,9 +981,11 @@ char* oc_tag_suffix_text(oc_node_t* node) {
  * Append a textual representation of an oc_node_t* to the buffer.
  */
 __attribute__((warn_unused_result)) buffer_t*
-    append_oc_node_text(buffer_t* buffer, oc_node_t* node) {
+    append_oc_node_text(buffer_t* buffer, oc_node_t* node,
+                        int indention_level) {
 
-  buffer = buffer_append_string(buffer, oc_tag_prefix_text(node));
+  buffer
+      = buffer_append_string(buffer, oc_tag_prefix_text(node, indention_level));
 
   if (node->text != NULL & node->tag != OC_NODE_BINARY_EXPRESSION) {
     // buffer = buffer_append_string(buffer, "\u00AB");
@@ -962,16 +993,21 @@ __attribute__((warn_unused_result)) buffer_t*
     // buffer = buffer_append_string(buffer, "\u00BB");
   }
 
+  int child_indention_level
+      = oc_get_child_indention_level(node, indention_level);
+
   if (node->children) {
     for (int i = 0; i < node->children->length; i++) {
       buffer = buffer_append_string(buffer, " ");
-      buffer = buffer_append_string(buffer, oc_tag_child_prefix(node, i));
+      buffer = buffer_append_string(
+          buffer, oc_tag_child_prefix(node, i, child_indention_level));
       buffer = buffer_append_string(buffer, " ");
       oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
-      buffer = append_oc_node_text(buffer, child);
+      buffer = append_oc_node_text(buffer, child, child_indention_level);
     }
   }
 
-  buffer = buffer_append_string(buffer, oc_tag_suffix_text(node));
+  buffer
+      = buffer_append_string(buffer, oc_tag_suffix_text(node, indention_level));
   return buffer;
 }
