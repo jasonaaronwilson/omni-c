@@ -166,6 +166,8 @@ struct oc_node_S {
 
 typedef struct oc_node_S oc_node_t;
 
+extern char* oc_node_tag_to_string(oc_node_tag_t value);
+
 extern oc_node_t* ts_node_to_oc_node(TSNode ts_node, buffer_t* source_code,
                                      boolean_t include_unnamed_nodes);
 

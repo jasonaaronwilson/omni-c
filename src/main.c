@@ -45,13 +45,13 @@ void print_parse_trees(void) {
 }
 
 void extract_header_file(void) {
-  log_info("extract_header_file()");
+  log_warn("extract_header_file()");
 
   oc_compiler_state_t* compiler_state = make_oc_compiler_state();
   value_array_t* parsed_files = parse_files(FLAG_files);
 
-#if 0
   buffer_t* includes = make_buffer(1024);
+#if 0
   buffer_t* defines = make_buffer(1024);
   buffer_t* typedefs = make_buffer(1024);
   buffer_t* enums = make_buffer(1024);
@@ -65,15 +65,28 @@ void extract_header_file(void) {
   for (int i = 0; i < FLAG_files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
     TSNode root_node = ts_tree_root_node(file->tree);
-    oc_node_t* node
+    oc_node_t* root_oc_node
         = ts_node_to_oc_node(root_node, file->data, FLAG_include_unnamed_nodes);
-
+    for (int i = 0; i < root_oc_node->children->length; i++) {
+      oc_node_t* node
+          = (oc_node_t*) value_array_get(root_oc_node->children, i).ptr;
+      log_warn("Node tag is %s\n", oc_node_tag_to_string(node->tag));
+      switch (node->tag) {
+      case OC_NODE_PREPROC_INCLUDE:
+        includes = append_oc_node_text(includes, node, 0);
+        break;
+      default:
+        break;
+      }
+    }
     /*
     output = append_prototypes(output, node)
     output = append_oc_node_tree(output, node);
     // fprintf(stdout, "%s\n", buffer_to_c_string(output));
     */
   }
+
+  fprintf(stderr, "/* Includes ...*/%s\n", buffer_to_c_string(includes));
 }
 
 void configure_build_command(void);
@@ -86,6 +99,7 @@ void configure_flags() {
 
   configure_build_command();
   configure_print_parse_tree_command();
+  configure_extract_header_file_command();
 }
 
 void configure_build_command(void) {
