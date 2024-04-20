@@ -852,19 +852,25 @@ int oc_get_child_indention_level(oc_node_t* node, int current_indention_level) {
   return current_indention_level;
 }
 
+/**
+ * @function oc_tag_prefix_text
+ *
+ * A helper function to produce the C representation of the node by
+ * outputting what it looks like at the start.
+ */
 char* oc_tag_prefix_text(oc_node_t* node, int indention_level) {
   switch (node->tag) {
+  case OC_NODE_FUNCTION_DECLARATOR:
+    return oc_newline(indention_level);
+
   case OC_NODE_PREPROC_INCLUDE:
     return string_append(oc_newline(indention_level), "#include");
-    break;
 
   case OC_NODE_ELSE_CLAUSE:
     return "else";
-    break;
 
   case OC_NODE_IF_STATEMENT:
     return "if";
-    break;
 
   case OC_NODE_PARENTHESIZED_EXPRESSION:
   case OC_NODE_ARGUMENT_LIST:
@@ -904,7 +910,6 @@ char* oc_tag_prefix_text(oc_node_t* node, int indention_level) {
   case OC_NODE_TYPE_IDENTIFIER:
   case OC_NODE_DECLARATION:
   case OC_NODE_STRING_LITERAL:
-  case OC_NODE_FUNCTION_DECLARATOR:
   case OC_NODE_TYPE_DESCRIPTOR:
   case OC_NODE_CALL_EXPRESSION:
   case OC_NODE_INIT_DECLARATOR:
@@ -921,6 +926,12 @@ char* oc_tag_prefix_text(oc_node_t* node, int indention_level) {
   return string_printf("<%s>", oc_node_tag_to_string(node->tag));
 }
 
+/**
+ * @function oc_tag_child_prefix
+ *
+ * A helper function to produce C like output which is strangely
+ * short.
+ */
 char* oc_tag_child_prefix(oc_node_t* node, int position, int indention_level) {
   switch (node->tag) {
   case OC_NODE_BINARY_EXPRESSION:
@@ -944,6 +955,11 @@ char* oc_tag_child_prefix(oc_node_t* node, int position, int indention_level) {
   return "";
 }
 
+/**
+ * @function oc_tag_suffix_text
+ *
+ * Provide the suffix text for a node so it will look like C code.
+ */
 char* oc_tag_suffix_text(oc_node_t* node, int indention_level) {
   switch (node->tag) {
 
@@ -989,6 +1005,8 @@ char* oc_tag_suffix_text(oc_node_t* node, int indention_level) {
 }
 
 /**
+ * @function append_oc_node_text
+ *
  * Append a textual representation of an oc_node_t* to the buffer.
  */
 __attribute__((warn_unused_result)) buffer_t*

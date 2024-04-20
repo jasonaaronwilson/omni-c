@@ -44,6 +44,26 @@ void print_parse_trees(void) {
   }
 }
 
+/**
+ * @function append_function_prototype
+ *
+ * Given an OC_NODE_FUNCTION_DECLARATOR, format this as a simple
+ * prototype (i.e., ignore the OC_NODE_COMPOUND_STATEMENT (aka
+ * "block")) at the end of it.
+ */
+buffer_t* append_function_prototype(buffer_t* buffer, oc_node_t* node) {
+  buffer = buffer_append_string(buffer, "\n");
+  for (int i = 0; i < node->children->length; i++) {
+    oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
+    if (child->tag != OC_NODE_COMPOUND_STATEMENT) {
+      buffer = buffer_append_string(buffer, " ");
+      buffer = append_oc_node_text(buffer, child, 1);
+    }
+  }
+  buffer = buffer_append_string(buffer, ";\n");
+  return buffer;
+}
+
 void extract_header_file(void) {
   log_warn("extract_header_file()");
 
@@ -57,7 +77,9 @@ void extract_header_file(void) {
   buffer_t* enums = make_buffer(1024);
   buffer_t* structure_forward_declarations = make_buffer(1024);
   buffer_t* structures = make_buffer(1024);
+#endif /* 0 */
   buffer_t* prototypes = make_buffer(1024);
+#if 0
   buffer_t* inlines = make_buffer(1024);
   buffer_t* globals = make_buffer(1024);
 #endif /* 0 */
@@ -72,9 +94,15 @@ void extract_header_file(void) {
           = (oc_node_t*) value_array_get(root_oc_node->children, i).ptr;
       log_warn("Node tag is %s\n", oc_node_tag_to_string(node->tag));
       switch (node->tag) {
+
       case OC_NODE_PREPROC_INCLUDE:
         includes = append_oc_node_text(includes, node, 0);
         break;
+
+      case OC_NODE_FUNCTION_DECLARATOR:
+        prototypes = append_function_prototype(prototypes, node);
+        break;
+
       default:
         break;
       }
@@ -87,6 +115,9 @@ void extract_header_file(void) {
   }
 
   fprintf(stderr, "/* Includes ...*/%s\n", buffer_to_c_string(includes));
+
+  fprintf(stderr, "/* Function Declarations ...*/%s\n",
+          buffer_to_c_string(prototypes));
 }
 
 void configure_build_command(void);

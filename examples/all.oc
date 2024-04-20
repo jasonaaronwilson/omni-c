@@ -1,0 +1,19 @@
+#include <stdio.h>
+
+// Forward declaration. We shouldn't actually need these as part of a
+// header file...
+int foo(int bar);
+
+int main(int argc, char** argc) {
+     return 0;
+}
+
+void bar(int argc, char** argc) {
+     return;
+}
+
+void asdf(void) {
+}
+
+void asdfjkl() {
+}
