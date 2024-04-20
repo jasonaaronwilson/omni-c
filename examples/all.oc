@@ -1,5 +1,15 @@
 #include <stdio.h>
 
+struct foo {
+  int abc;
+  char* jkl;
+};
+
+struct ddd {
+  int abc;
+  char* jkl;
+};
+
 // Forward declaration. We shouldn't actually need these as part of a
 // header file...
 int foo(int bar);

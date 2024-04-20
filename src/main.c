@@ -64,21 +64,44 @@ buffer_t* append_function_prototype(buffer_t* buffer, oc_node_t* node) {
   return buffer;
 }
 
+buffer_t* append_structure_forward_declarations(buffer_t* buffer,
+                                                oc_node_t* node) {
+  for (int i = 0; i < node->children->length; i++) {
+    oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
+    if (child->tag == OC_NODE_TYPE_IDENTIFIER) {
+      buffer = buffer_append_string(buffer, "\nstruct ");
+      buffer = buffer_append_string(buffer, child->text);
+      buffer = buffer_append_string(buffer, "_S;");
+    }
+  }
+
+  return buffer;
+}
+
 void extract_header_file(void) {
   log_warn("extract_header_file()");
+
+  if (1) {
+    print_parse_trees();
+  }
 
   oc_compiler_state_t* compiler_state = make_oc_compiler_state();
   value_array_t* parsed_files = parse_files(FLAG_files);
 
+  // TODO(jawilson): add a manifest at the begining
+
   buffer_t* includes = make_buffer(1024);
+
 #if 0
   buffer_t* defines = make_buffer(1024);
   buffer_t* typedefs = make_buffer(1024);
   buffer_t* enums = make_buffer(1024);
+#endif /* 0 */
+
   buffer_t* structure_forward_declarations = make_buffer(1024);
   buffer_t* structures = make_buffer(1024);
-#endif /* 0 */
   buffer_t* prototypes = make_buffer(1024);
+
 #if 0
   buffer_t* inlines = make_buffer(1024);
   buffer_t* globals = make_buffer(1024);
@@ -103,6 +126,12 @@ void extract_header_file(void) {
         prototypes = append_function_prototype(prototypes, node);
         break;
 
+      case OC_NODE_STRUCT_SPECIFIER:
+        structure_forward_declarations = append_structure_forward_declarations(
+            structure_forward_declarations, node);
+        // HERE
+        break;
+
       default:
         break;
       }
@@ -114,9 +143,12 @@ void extract_header_file(void) {
     */
   }
 
-  fprintf(stderr, "/* Includes ...*/%s\n", buffer_to_c_string(includes));
+  fprintf(stderr, "\n/* Includes ... */\n%s\n", buffer_to_c_string(includes));
 
-  fprintf(stderr, "/* Function Declarations ...*/%s\n",
+  fprintf(stderr, "\n/* Structure Forward Declarations ... */\n%s\n",
+          buffer_to_c_string(structure_forward_declarations));
+
+  fprintf(stderr, "\n/* Function Declarations ... */\n%s\n",
           buffer_to_c_string(prototypes));
 }
 
