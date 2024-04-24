@@ -57,7 +57,7 @@ buffer_t* append_function_prototype(buffer_t* buffer, oc_node_t* node) {
     oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
     if (child->tag != OC_NODE_COMPOUND_STATEMENT) {
       buffer = buffer_append_string(buffer, " ");
-      buffer = append_oc_node_text(buffer, child, 1);
+      buffer = append_oc_node_text(buffer, child, 0);
     }
   }
   buffer = buffer_append_string(buffer, ";\n");
