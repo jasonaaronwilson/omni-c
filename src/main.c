@@ -64,19 +64,91 @@ buffer_t* append_function_prototype(buffer_t* buffer, oc_node_t* node) {
   return buffer;
 }
 
-buffer_t* append_structure_forward_declarations(buffer_t* buffer,
-                                                oc_node_t* node) {
+char* struct_node_to_struct_name(oc_node_t* node) {
   for (int i = 0; i < node->children->length; i++) {
     oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;
     if (child->tag == OC_NODE_TYPE_IDENTIFIER) {
-      buffer = buffer_append_string(buffer, "\nstruct ");
-      buffer = buffer_append_string(buffer, child->text);
-      buffer = buffer_append_string(buffer, "_S;");
+      return child->text;
     }
   }
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
 
+buffer_t* append_structure_forward_declarations(buffer_t* buffer,
+                                                oc_node_t* node) {
+  buffer = buffer_append_string(buffer, "\nstruct ");
+  buffer = buffer_append_string(buffer, struct_node_to_struct_name(node));
+  buffer = buffer_append_string(buffer, "_S;");
   return buffer;
 }
+
+#define structure_for_each_field(node, field_type_node_var,                    \
+                                 field_name_node_var, statements)              \
+  do {                                                                         \
+    for (int i = 0; i < node->children->length; i++) {                         \
+      oc_node_t* child = (oc_node_t*) value_array_get(node->children, i).ptr;  \
+      if (child->tag == OC_NODE_FIELD_DECLARATION_LIST) {                      \
+        for (int j = 0; j < child->children->length; j++) {                    \
+          oc_node_t* field_node                                                \
+              = (oc_node_t*) value_array_get(child->children, j).ptr;          \
+          if (field_node->tag == OC_NODE_FIELD_DECLARATION) {                  \
+            do {                                                               \
+              oc_node_t* field_type_node_var                                   \
+                  = (oc_node_t*) value_array_get(field_node->children, 0).ptr; \
+              oc_node_t* field_name_node_var                                   \
+                  = (oc_node_t*) value_array_get(field_node->children, 1).ptr; \
+              statements;                                                      \
+            } while (0);                                                       \
+          }                                                                    \
+        }                                                                      \
+        break;                                                                 \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
+
+char* type_node_to_string(oc_node_t* field_type_node) {
+  // OC_NODE_PRIMITIVE_TYPE
+  return field_type_node->text;
+}
+
+buffer_t* structure_dfs(oc_node_t* node, string_hashtable_t* struct_nodes,
+                        string_hashtable_t* struct_visit_status,
+                        buffer_t* structures) {
+
+  char* struct_name = struct_node_to_struct_name(node);
+
+  if (is_ok(string_ht_find(struct_visit_status, struct_name))) {
+    return structures;
+  }
+
+  struct_visit_status
+      = string_ht_insert(struct_visit_status, struct_name, u64_to_value(1));
+
+  // clang-format off
+  structure_for_each_field(node, field_type_node, field_name_node, {
+      char* name = type_node_to_string(field_type_node);
+      value_result_t result = string_ht_find(struct_nodes, name);
+      if (is_ok(result)) {
+	structures = structure_dfs(cast(oc_node_t*, result.ptr), struct_nodes, struct_visit_status, structures);
+      }
+    });
+  // clang-format on
+
+  structures = append_oc_node_text(structures, node, 0);
+
+  return structures;
+}
+
+buffer_t* structures_do_dfs(string_hashtable_t* struct_nodes,
+                            string_hashtable_t* struct_visit_status,
+                            buffer_t* structures) {
+  string_ht_foreach(struct_nodes, node_name, node, {
+    structures = structure_dfs(cast(oc_node_t*, node.ptr), struct_nodes,
+                               struct_visit_status, structures);
+  });
+  return structures;
+}
+
 
 void extract_header_file(void) {
   log_warn("extract_header_file()");
@@ -107,6 +179,10 @@ void extract_header_file(void) {
   buffer_t* globals = make_buffer(1024);
 #endif /* 0 */
 
+  // struct-name to node. This will allow us to do a DFS so that we
+  // output structures in the proper order.
+  string_hashtable_t* struct_nodes = make_string_hashtable(32);
+
   for (int i = 0; i < FLAG_files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
     TSNode root_node = ts_tree_root_node(file->tree);
@@ -127,9 +203,10 @@ void extract_header_file(void) {
         break;
 
       case OC_NODE_STRUCT_SPECIFIER:
+        struct_nodes = string_ht_insert(
+            struct_nodes, struct_node_to_struct_name(node), ptr_to_value(node));
         structure_forward_declarations = append_structure_forward_declarations(
             structure_forward_declarations, node);
-        // HERE
         break;
 
       default:
@@ -143,10 +220,16 @@ void extract_header_file(void) {
     */
   }
 
+  string_hashtable_t* struct_visit_status = make_string_hashtable(32);
+  structures = structures_do_dfs(struct_nodes, struct_visit_status, structures);
+
   fprintf(stderr, "\n/* Includes ... */\n%s\n", buffer_to_c_string(includes));
 
   fprintf(stderr, "\n/* Structure Forward Declarations ... */\n%s\n",
           buffer_to_c_string(structure_forward_declarations));
+
+  fprintf(stderr, "\n/* Structure Declarations ... */\n%s\n",
+          buffer_to_c_string(structures));
 
   fprintf(stderr, "\n/* Function Declarations ... */\n%s\n",
           buffer_to_c_string(prototypes));

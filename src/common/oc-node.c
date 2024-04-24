@@ -847,6 +847,7 @@ int oc_get_child_indention_level(oc_node_t* node, int current_indention_level) {
   case OC_NODE_IF_STATEMENT:
   case OC_NODE_FOR_STATEMENT:
   case OC_NODE_WHILE_STATEMENT:
+  case OC_NODE_STRUCT_SPECIFIER:
     return current_indention_level + 1;
   }
   return current_indention_level;
@@ -880,6 +881,7 @@ char* oc_tag_prefix_text(oc_node_t* node, int indention_level) {
     break;
 
   case OC_NODE_COMPOUND_STATEMENT:
+  case OC_NODE_FIELD_DECLARATION_LIST:
     return string_append(oc_newline(indention_level), "{");
     break;
 
@@ -917,11 +919,15 @@ char* oc_tag_prefix_text(oc_node_t* node, int indention_level) {
   case OC_NODE_IDENTIFIER:
   case OC_NODE_PRIMITIVE_TYPE:
   case OC_NODE_TRUE:
+  case OC_NODE_FIELD_DECLARATION:
+  case OC_NODE_FIELD_IDENTIFIER:
     return "";
-    break;
 
   case OC_NODE_WHILE_STATEMENT:
     return "while";
+
+  case OC_NODE_STRUCT_SPECIFIER:
+    return "struct";
   }
   return string_printf("<%s>", oc_node_tag_to_string(node->tag));
 }
@@ -974,6 +980,9 @@ char* oc_tag_suffix_text(oc_node_t* node, int indention_level) {
     return ")";
     break;
 
+  case OC_NODE_FIELD_DECLARATION:
+    return "\n";
+
   case OC_NODE_COMPOUND_STATEMENT:
     return string_append("}", oc_newline(indention_level));
     break;
@@ -996,6 +1005,9 @@ char* oc_tag_suffix_text(oc_node_t* node, int indention_level) {
     // maybe?
   case OC_NODE_FOR_STATEMENT:
     return ")";
+
+  case OC_NODE_FIELD_IDENTIFIER:
+    return ";";
 
   default:
     break;
