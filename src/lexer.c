@@ -119,6 +119,20 @@ buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
   return buffer;
 }
 
+/* ========================================================================= */
+// Everything after here supports the "tokenize" function which I'm
+// ordering like this to avoid having to write prototypes (though
+// technically either token_or_error_t shouldn't exist or we should
+// have some kind of file_private annotation on it... Or
+// namespaces...)
+/* ========================================================================= */
+
+/**
+ * @struct token_or_error_t
+ *
+ * Allow each "sub-tokenizer" to return either a token (or an error)
+ * for each token.
+ */
 struct token_or_error_S {
   oc_token_t token;
   tokenizer_error_t error_code;
@@ -126,6 +140,16 @@ struct token_or_error_S {
 
 typedef struct token_or_error_S token_or_error_t;
 
+/* ========================================================================= */
+// Tokenize whitespace
+/* ========================================================================= */
+
+/**
+ * @function tokenize_whitespace
+ *
+ * Read until the buffer is exhausted or a non-whitespace UTF-8 code
+ * point is read.
+ */
 token_or_error_t tokenize_whitespace(buffer_t* buffer,
                                      uint64_t start_position) {
   uint64_t pos = start_position;
@@ -147,7 +171,32 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer,
                                                   .end = pos}};
 }
 
-token_or_error_t tokenize_alphabetic(buffer_t* buffer, uint64_t pos) {
+/* ========================================================================= */
+// Tokenize identifiers, keywords, etc.
+/* ========================================================================= */
+
+boolean_t is_identifier_start(uint32_t code_point) {
+  // TODO(jawilson): it would be very cool to be able to try
+  // converting this into different forms and see how different C
+  // compilers perform in a benchmark. We could include different
+  // standard libraries...
+  switch (code_point) {
+  case '$':
+    return true;
+  case '_':
+    return true;
+  default:
+    return isalpha(code_point);
+  }
+}
+
+/**
+ * @function tokenize_identifier
+ *
+ * Read the next C identifier/keyword or return an error.
+ */
+token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t pos) {
+  // Make sure to handle _ and $ in a C identifier
   // HERE
   return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
 }
@@ -182,6 +231,10 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
 
     uint32_t code_point = decode_result.code_point;
 
+    // This looks kind of gross because we don't have exceptions
+    // (though I think we can use macros (or optional or
+    // whatever))
+
     if (isspace(code_point)) {
       token_or_error_t token_or_error = tokenize_whitespace(buffer, pos);
       if (token_or_error.error_code) {
@@ -190,8 +243,14 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
       }
       // TODO(jawilson): heap allocate the token and append it to a
       // value_array_t*.
-    } else if (isalpha(code_point)) {
-      /* NOP-FOR-NOW ... */;
+    } else if (is_identifier_start(code_point)) {
+      token_or_error_t token_or_error = tokenize_identifier(buffer, pos);
+      if (token_or_error.error_code) {
+        return (oc_tokenizer_result_t){.tokenizer_error_code
+                                       = token_or_error.error_code};
+      }
+      // TODO(jawilson): heap allocate the token and append it to a
+      // value_array_t*.
     } else if (isdigit(code_point)) {
       /* NOP-FOR-NOW ... */;
     } else {
