@@ -110,8 +110,8 @@ buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
 /**
  * @function tokenize
  *
- * Hopefully return a value array of the tokens but may also return an
- * error (such as when a character or string literal is unterminated).
+ * Return a value array of the tokens OR return an error (such as when
+ * a character or string literal is unterminated).
  */
 oc_tokenizer_result_t tokenize(buffer_t* buffer) {
   oc_tokenizer_result_t result = {0};
