@@ -115,5 +115,8 @@ buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
  */
 oc_tokenizer_result_t tokenize(buffer_t* buffer) {
   oc_tokenizer_result_t result = {0};
+  uint32_t start = 0;
+  while (start < buffer_length(buffer)) {
+  }
   return result;
 }
