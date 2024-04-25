@@ -17,6 +17,7 @@
  * Represents a broad classification of a Omni C tokens.
  */
 typedef enum {
+  TOKEN_TYPE_UNKNOWN,
   TOKEN_TYPE_WHITESPACE,
   TOKEN_TYPE_COMMENT,
   TOKEN_TYPE_IDENTIFIER,
@@ -26,6 +27,16 @@ typedef enum {
   TOKEN_TYPE_STRING_LITERAL,
   TOKEN_TYPE_CHARACTER_LITERAL
 } token_type_t;
+
+/**
+ * @enum tokenizer_error
+ *
+ * Represents
+ */
+typedef enum {
+  TOKENIZER_ERROR_UNKNOWN,
+  TOKENIZER_ERROR_UTF_DECODE_ERROR
+} tokenizer_error_t;
 
 struct oc_token_S {
   buffer_t* buffer;
@@ -38,8 +49,8 @@ typedef struct oc_token_S oc_token_t;
 
 struct oc_tokenizer_result_S {
   value_array_t* tokens;
-  int32_t tokenizer_error_code;
-  int32_t tokenizer_error_position;
+  uint64_t tokenizer_error_position;
+  tokenizer_error_t tokenizer_error_code;
 };
 
 typedef struct oc_tokenizer_result_S oc_tokenizer_result_t;
@@ -115,8 +126,14 @@ buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
  */
 oc_tokenizer_result_t tokenize(buffer_t* buffer) {
   oc_tokenizer_result_t result = {0};
-  uint32_t start = 0;
-  while (start < buffer_length(buffer)) {
+  uint32_t pos = 0;
+  while (pos < buffer_length(buffer)) {
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+    if (decode_result.error) {
+      return (oc_tokenizer_result_t){.tokenizer_error_code
+                                     = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+    }
+    pos += decode_result.num_bytes;
   }
   return result;
 }
