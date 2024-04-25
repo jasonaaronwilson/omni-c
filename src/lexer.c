@@ -3,6 +3,7 @@
 #define _LEXER_H_
 
 #include <c-armyknife-lib.h>
+#include <ctype.h>
 
 /**
  * @file lexer
@@ -118,6 +119,49 @@ buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
   return buffer;
 }
 
+struct token_or_error_S {
+  oc_token_t token;
+  tokenizer_error_t error_code;
+};
+
+typedef struct token_or_error_S token_or_error_t;
+
+token_or_error_t tokenize_whitespace(buffer_t* buffer,
+                                     uint64_t start_position) {
+  uint64_t pos = start_position;
+  while (pos < buffer_length(buffer)) {
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+    if (decode_result.error) {
+      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+    }
+    uint32_t code_point = decode_result.code_point;
+    if (!isspace(code_point)) {
+      break;
+    }
+    pos += decode_result.num_bytes;
+  }
+
+  return (token_or_error_t){.token = (oc_token_t){.buffer = buffer,
+                                                  .type = TOKEN_TYPE_WHITESPACE,
+                                                  .start = start_position,
+                                                  .end = pos}};
+}
+
+token_or_error_t tokenize_alphabetic(buffer_t* buffer, uint64_t pos) {
+  // HERE
+  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+}
+
+token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t pos) {
+  // HERE
+  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+}
+
+token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t pos) {
+  // HERE
+  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+}
+
 /**
  * @function tokenize
  *
@@ -126,13 +170,34 @@ buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
  */
 oc_tokenizer_result_t tokenize(buffer_t* buffer) {
   oc_tokenizer_result_t result = {0};
+
   uint32_t pos = 0;
   while (pos < buffer_length(buffer)) {
+
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
       return (oc_tokenizer_result_t){.tokenizer_error_code
                                      = TOKENIZER_ERROR_UTF_DECODE_ERROR};
     }
+
+    uint32_t code_point = decode_result.code_point;
+
+    if (isspace(code_point)) {
+      token_or_error_t token_or_error = tokenize_whitespace(buffer, pos);
+      if (token_or_error.error_code) {
+        return (oc_tokenizer_result_t){.tokenizer_error_code
+                                       = token_or_error.error_code};
+      }
+      // TODO(jawilson): heap allocate the token and append it to a
+      // value_array_t*.
+    } else if (isalpha(code_point)) {
+      /* NOP-FOR-NOW ... */;
+    } else if (isdigit(code_point)) {
+      /* NOP-FOR-NOW ... */;
+    } else {
+      /* NOP-FOR-NOW ... */;
+    }
+
     pos += decode_result.num_bytes;
   }
   return result;
