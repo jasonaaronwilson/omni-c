@@ -15,15 +15,19 @@ char* FLAG_command = NULL;
 boolean_t FLAG_include_unnamed_nodes = false;
 
 boolean_t FLAG_print_tokens_show_tokens = true;
+boolean_t FLAG_print_tokens_include_whitespace = false;
+boolean_t FLAG_print_tokens_include_comments = true;
 
 void print_tokens(void) {
-  log_info("translate_and_build()");
+  log_info("print_tokens()");
 
   oc_compiler_state_t* compiler_state = make_oc_compiler_state();
   value_array_t* parsed_files = parse_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
-    oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
+    oc_tokenizer_result_t tokenizer_result
+        = tokenize(file->data, FLAG_print_tokens_include_whitespace,
+                   FLAG_print_tokens_include_comments);
     if (tokenizer_result.tokenizer_error_code) {
       log_warn("Tokenizer error: \"%s\"::%d -- %d",
                value_array_get(FLAG_files, i).str,
@@ -43,8 +47,6 @@ void print_tokens(void) {
     }
   }
 }
-
-oc_tokenizer_result_t tokenize(buffer_t* buffer);
 
 void translate_and_build(void) {
   log_info("translate_and_build()");
@@ -302,6 +304,8 @@ void configure_extract_header_file_command(void) {
 void configure_print_tokens_command(void) {
   flag_command("print-tokens", &FLAG_command);
   flag_boolean("--show-tokens", &FLAG_print_tokens_show_tokens);
+  flag_boolean("--include-whitespace", &FLAG_print_tokens_include_whitespace);
+  flag_boolean("--include-comments", &FLAG_print_tokens_include_comments);
   flag_file_args(&FLAG_files);
 }
 

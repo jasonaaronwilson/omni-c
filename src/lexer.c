@@ -66,7 +66,8 @@ char* token_type_to_string(token_type_t type);
 
 buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token);
 
-oc_tokenizer_result_t tokenize(buffer_t* buffer);
+oc_tokenizer_result_t tokenize(buffer_t* buffer, boolean_t include_whitespace,
+                               boolean_t include_comments);
 
 #endif /* _LEXER_H_ */
 
@@ -428,7 +429,7 @@ static inline oc_token_t* heap_allocate_token(oc_token_t token) {
   return result;
 }
 
-#define read_token(token_reader_function_name)                                 \
+#define read_or_skip_token(token_reader_function_name, include)                \
   do {                                                                         \
     token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
     if (token_or_error.error_code) {                                           \
@@ -436,10 +437,15 @@ static inline oc_token_t* heap_allocate_token(oc_token_t token) {
           .tokenizer_error_code = token_or_error.error_code,                   \
           .tokenizer_error_position = token_or_error.error_position};          \
     }                                                                          \
-    value_array_add(result_tokens,                                             \
-                    ptr_to_value(heap_allocate_token(token_or_error.token)));  \
+    if (include) {                                                             \
+      value_array_add(result_tokens, ptr_to_value(heap_allocate_token(         \
+                                         token_or_error.token)));              \
+    }                                                                          \
     pos = token_or_error.token.end;                                            \
   } while (0)
+
+#define read_token(token_reader_function_name)                                 \
+  read_or_skip_token(token_reader_function_name, true)
 
 /**
  * @function tokenize
@@ -447,7 +453,8 @@ static inline oc_token_t* heap_allocate_token(oc_token_t token) {
  * Return a value array of the tokens OR return an error (such as when
  * a character or string literal is unterminated).
  */
-oc_tokenizer_result_t tokenize(buffer_t* buffer) {
+oc_tokenizer_result_t tokenize(buffer_t* buffer, boolean_t include_whitespace,
+                               boolean_t include_comments) {
   oc_tokenizer_result_t result = {0};
 
   // Sizing this array initially can avoid some copying but for now
@@ -466,13 +473,13 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
     uint32_t code_point = decode_result.code_point;
 
     if (isspace(code_point)) {
-      read_token(tokenize_whitespace);
+      read_or_skip_token(tokenize_whitespace, include_whitespace);
     } else if (is_identifier_start(code_point)) {
       read_token(tokenize_identifier);
     } else if (isdigit(code_point)) {
       read_token(tokenize_numeric);
     } else if (is_comment_start(buffer, pos)) {
-      read_token(tokenize_comment);
+      read_or_skip_token(tokenize_comment, include_comments);
     } else if (is_string_literal_start(buffer, pos)) {
       read_token(tokenize_string_literal);
     } else if (is_character_literal_start(buffer, pos)) {
