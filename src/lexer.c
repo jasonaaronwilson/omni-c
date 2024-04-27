@@ -13,7 +13,7 @@
  */
 
 /**
- * @enum token_type
+ * @enum token_type_t
  *
  * Represents a broad classification of a Omni C tokens.
  */
@@ -37,7 +37,8 @@ typedef enum {
 typedef enum {
   TOKENIZER_ERROR_UNKNOWN,
   TOKENIZER_ERROR_UTF_DECODE_ERROR,
-  TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION
+  TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
+  TOKENIZER_ERROR_UNTERMINATED_COMMENT
 } tokenizer_error_t;
 
 struct oc_token_S {
@@ -218,6 +219,7 @@ token_or_error_t tokenize_identifier(buffer_t* buffer,
 }
 
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
+  token_type_t token_type = TOKEN_TYPE_INTEGER_LITERAL;
   uint64_t pos = start_position;
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
@@ -226,17 +228,19 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
     }
     uint32_t code_point = decode_result.code_point;
     // FIXME: hexidecimal plus, "e", plus suffixes
+    if (code_point == '.') {
+      token_type = TOKEN_TYPE_FLOAT_LITERAL;
+    }
     if (!(isdigit(code_point) || code_point == '.')) {
       break;
     }
     pos += decode_result.num_bytes;
   }
 
-  return (token_or_error_t){.token
-                            = (oc_token_t){.buffer = buffer,
-                                           .type = TOKEN_TYPE_INTEGER_LITERAL,
-                                           .start = start_position,
-                                           .end = pos}};
+  return (token_or_error_t){.token = (oc_token_t){.buffer = buffer,
+                                                  .type = token_type,
+                                                  .start = start_position,
+                                                  .end = pos}};
 }
 
 static char* c_punctuation[] = {
@@ -307,6 +311,39 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer,
                             = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION};
 }
 
+boolean_t is_comment_start(buffer_t* buffer, uint64_t position) {
+  return buffer_match_string_at(buffer, position, "//")
+         || buffer_match_string_at(buffer, position, "/*");
+}
+
+token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position) {
+  if (buffer_match_string_at(buffer, start_position, "//")) {
+    for (uint64_t position = start_position + 2; position < buffer->length;
+         position++) {
+      if (buffer_match_string_at(buffer, position, "\n")) {
+        return (token_or_error_t){.token
+                                  = (oc_token_t){.buffer = buffer,
+                                                 .type = TOKEN_TYPE_COMMENT,
+                                                 .start = start_position,
+                                                 .end = position + 1}};
+      }
+    }
+  } else {
+    for (uint64_t position = start_position + 2; position < buffer->length;
+         position++) {
+      if (buffer_match_string_at(buffer, position, "*/")) {
+        return (token_or_error_t){.token
+                                  = (oc_token_t){.buffer = buffer,
+                                                 .type = TOKEN_TYPE_COMMENT,
+                                                 .start = start_position,
+                                                 .end = position + 2}};
+      }
+    }
+  }
+
+  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UNTERMINATED_COMMENT};
+}
+
 static inline oc_token_t* heap_allocate_token(oc_token_t token) {
   oc_token_t* result = malloc_struct(oc_token_t);
   *result = token;
@@ -355,6 +392,8 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
       read_token(tokenize_identifier);
     } else if (isdigit(code_point)) {
       read_token(tokenize_numeric);
+    } else if (is_comment_start(buffer, pos)) {
+      read_token(tokenize_comment);
     } else {
       read_token(tokenize_punctuation);
     }
