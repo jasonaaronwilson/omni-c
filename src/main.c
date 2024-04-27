@@ -6,12 +6,38 @@
 
 #include "common/oc-compiler-state.h"
 #include "common/oc-node.h"
+#include "lexer.h"
 #include "parser/parse-files.h"
 #include <c-armyknife-lib.h>
 
 value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
 boolean_t FLAG_include_unnamed_nodes = false;
+
+void print_tokens(void) {
+  log_info("translate_and_build()");
+
+  oc_compiler_state_t* compiler_state = make_oc_compiler_state();
+  value_array_t* parsed_files = parse_files(FLAG_files);
+  for (int i = 0; i < FLAG_files->length; i++) {
+    oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
+    oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
+    if (tokenizer_result.tokenizer_error_code) {
+      log_warn("Tokenizer error: %d", tokenizer_result.tokenizer_error_code);
+      continue;
+    }
+    buffer_t* buffer = make_buffer(tokenizer_result.tokens->length);
+    for (int j = 0; j < tokenizer_result.tokens->length; j++) {
+      oc_token_t* token
+          = cast(oc_token_t*, value_array_get(tokenizer_result.tokens, j).ptr);
+      buffer = append_token_debug_string(buffer, *token);
+      buffer = buffer_append_string(buffer, "\n");
+    }
+    fprintf(stdout, "** Tokens **\n%s", buffer_to_c_string(buffer));
+  }
+}
+
+oc_tokenizer_result_t tokenize(buffer_t* buffer);
 
 void translate_and_build(void) {
   log_info("translate_and_build()");
@@ -238,6 +264,7 @@ void extract_header_file(void) {
 void configure_build_command(void);
 void configure_print_parse_tree_command(void);
 void configure_extract_header_file_command(void);
+void configure_print_tokens_command(void);
 
 void configure_flags() {
   flag_program_name("omni-c");
@@ -246,6 +273,7 @@ void configure_flags() {
   configure_build_command();
   configure_print_parse_tree_command();
   configure_extract_header_file_command();
+  configure_print_tokens_command();
 }
 
 void configure_build_command(void) {
@@ -261,6 +289,11 @@ void configure_print_parse_tree_command(void) {
 
 void configure_extract_header_file_command(void) {
   flag_command("extract-header-file", &FLAG_command);
+  flag_file_args(&FLAG_files);
+}
+
+void configure_print_tokens_command(void) {
+  flag_command("print-tokens", &FLAG_command);
   flag_file_args(&FLAG_files);
 }
 
@@ -290,6 +323,8 @@ int main(int argc, char** argv) {
     extract_header_file();
   } else if (string_equal("print-parse-trees", FLAG_command)) {
     print_parse_trees();
+  } else if (string_equal("print-tokens", FLAG_command)) {
+    print_tokens();
   } else {
     fprintf(stderr, "Uknown command: %s\n", FLAG_command);
   }

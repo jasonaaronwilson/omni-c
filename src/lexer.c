@@ -36,7 +36,8 @@ typedef enum {
  */
 typedef enum {
   TOKENIZER_ERROR_UNKNOWN,
-  TOKENIZER_ERROR_UTF_DECODE_ERROR
+  TOKENIZER_ERROR_UTF_DECODE_ERROR,
+  TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION
 } tokenizer_error_t;
 
 struct oc_token_S {
@@ -147,8 +148,8 @@ typedef struct token_or_error_S token_or_error_t;
 /**
  * @function tokenize_whitespace
  *
- * Read until the buffer is exhausted or a non-whitespace UTF-8 code
- * point is read.
+ * Read white-space until the buffer is exhausted or a non-whitespace
+ * UTF-8 code point is read.
  */
 token_or_error_t tokenize_whitespace(buffer_t* buffer,
                                      uint64_t start_position) {
@@ -195,21 +196,134 @@ boolean_t is_identifier_start(uint32_t code_point) {
  *
  * Read the next C identifier/keyword or return an error.
  */
-token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t pos) {
-  // Make sure to handle _ and $ in a C identifier
-  // HERE
-  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+token_or_error_t tokenize_identifier(buffer_t* buffer,
+                                     uint64_t start_position) {
+  uint64_t pos = start_position;
+  while (pos < buffer_length(buffer)) {
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+    if (decode_result.error) {
+      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+    }
+    uint32_t code_point = decode_result.code_point;
+    if (!(is_identifier_start(code_point) || isdigit(code_point))) {
+      break;
+    }
+    pos += decode_result.num_bytes;
+  }
+
+  return (token_or_error_t){.token = (oc_token_t){.buffer = buffer,
+                                                  .type = TOKEN_TYPE_IDENTIFIER,
+                                                  .start = start_position,
+                                                  .end = pos}};
 }
 
-token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t pos) {
-  // HERE
-  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
+  uint64_t pos = start_position;
+  while (pos < buffer_length(buffer)) {
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+    if (decode_result.error) {
+      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+    }
+    uint32_t code_point = decode_result.code_point;
+    // FIXME: hexidecimal plus, "e", plus suffixes
+    if (!(isdigit(code_point) || code_point == '.')) {
+      break;
+    }
+    pos += decode_result.num_bytes;
+  }
+
+  return (token_or_error_t){.token
+                            = (oc_token_t){.buffer = buffer,
+                                           .type = TOKEN_TYPE_INTEGER_LITERAL,
+                                           .start = start_position,
+                                           .end = pos}};
 }
 
-token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t pos) {
-  // HERE
-  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+static char* c_punctuation[] = {
+    "!=",
+    "%=",
+    "&&",
+    "&=",
+    "*=",
+    "++",
+    "+=",
+    "--",
+    "-=",
+    "->",
+    "...",
+    "/=",
+    "::",
+    "<<=",
+    "<=",
+    "==",
+    ">=",
+    ">>=",
+    "^=",
+    "|=",
+    "||",
+
+    // Single character tokens should come after any two character
+    // token that starts with the same character.
+
+    "!",
+    "%",
+    "&",
+    "(",
+    ")",
+    "*",
+    "+",
+    ",",
+    "-",
+    ".",
+    "/",
+    ":",
+    ";",
+    "<",
+    ">",
+    "?",
+    "[",
+    "]",
+    "^",
+    "{",
+    "|",
+    "}",
+    "~",
+};
+
+token_or_error_t tokenize_punctuation(buffer_t* buffer,
+                                      uint64_t start_position) {
+  int num_elements = sizeof(c_punctuation) / sizeof(c_punctuation[0]);
+  for (int i = 0; i < num_elements; i++) {
+    if (buffer_match_string_at(buffer, start_position, c_punctuation[i])) {
+      return (token_or_error_t){
+          .token
+          = (oc_token_t){.buffer = buffer,
+                         .type = TOKEN_TYPE_PUNCTUATION,
+                         .start = start_position,
+                         .end = start_position + strlen(c_punctuation[i])}};
+    }
+  }
+  return (token_or_error_t){.error_code
+                            = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION};
 }
+
+static inline oc_token_t* heap_allocate_token(oc_token_t token) {
+  oc_token_t* result = malloc_struct(oc_token_t);
+  *result = token;
+  return result;
+}
+
+#define read_token(token_reader_function_name)                                 \
+  do {                                                                         \
+    token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
+    if (token_or_error.error_code) {                                           \
+      return (oc_tokenizer_result_t){.tokenizer_error_code                     \
+                                     = token_or_error.error_code};             \
+    }                                                                          \
+    value_array_add(result_tokens,                                             \
+                    ptr_to_value(heap_allocate_token(token_or_error.token)));  \
+    pos = token_or_error.token.end;                                            \
+  } while (0)
 
 /**
  * @function tokenize
@@ -219,6 +333,10 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t pos) {
  */
 oc_tokenizer_result_t tokenize(buffer_t* buffer) {
   oc_tokenizer_result_t result = {0};
+
+  // Sizing this array initially can avoid some copying but for now
+  // let's just be dumb and optimize for smallish input sizes.
+  value_array_t* result_tokens = make_value_array(1024);
 
   uint32_t pos = 0;
   while (pos < buffer_length(buffer)) {
@@ -231,33 +349,17 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
 
     uint32_t code_point = decode_result.code_point;
 
-    // This looks kind of gross because we don't have exceptions
-    // (though I think we can use macros (or optional or
-    // whatever))
-
     if (isspace(code_point)) {
-      token_or_error_t token_or_error = tokenize_whitespace(buffer, pos);
-      if (token_or_error.error_code) {
-        return (oc_tokenizer_result_t){.tokenizer_error_code
-                                       = token_or_error.error_code};
-      }
-      // TODO(jawilson): heap allocate the token and append it to a
-      // value_array_t*.
+      read_token(tokenize_whitespace);
     } else if (is_identifier_start(code_point)) {
-      token_or_error_t token_or_error = tokenize_identifier(buffer, pos);
-      if (token_or_error.error_code) {
-        return (oc_tokenizer_result_t){.tokenizer_error_code
-                                       = token_or_error.error_code};
-      }
-      // TODO(jawilson): heap allocate the token and append it to a
-      // value_array_t*.
+      read_token(tokenize_identifier);
     } else if (isdigit(code_point)) {
-      /* NOP-FOR-NOW ... */;
+      read_token(tokenize_numeric);
     } else {
-      /* NOP-FOR-NOW ... */;
+      read_token(tokenize_punctuation);
     }
-
-    pos += decode_result.num_bytes;
   }
+
+  result.tokens = result_tokens;
   return result;
 }
