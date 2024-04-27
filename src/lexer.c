@@ -362,23 +362,48 @@ boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position) {
   return buffer_match_string_at(buffer, position, "\"");
 }
 
-token_or_error_t tokenize_string_literal(buffer_t* buffer,
-                                         uint64_t start_position) {
-  for (uint64_t position = start_position + 1; position < buffer->length;
-       position++) {
-    if (buffer_match_string_at(buffer, position, "\\")) {
-      position++;
-    } else if (buffer_match_string_at(buffer, position, "\"")) {
+token_or_error_t tokenize_quoted_literal_common(
+    buffer_t* buffer, uint64_t start_position, char* opening_sequence,
+    char* quoted_closing_sequence, char* closing_sequence,
+    token_type_t token_type, tokenizer_error_t unterminated_error_code) {
+  // We don't try to fully understand or verify the string or
+  // character literal (even to see if it is written in valid UTF-8),
+  // only find the closing sequence. Of course we have to skip over
+  // any instance of the closing sequence when it is escaped with
+  // backslash.
+
+  if (!buffer_match_string_at(buffer, start_position, opening_sequence)) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+  for (uint64_t position = start_position + strlen(opening_sequence);
+       position < buffer->length;) {
+    if (buffer_match_string_at(buffer, position, quoted_closing_sequence)) {
+      position += strlen(quoted_closing_sequence);
+    } else if (buffer_match_string_at(buffer, position, closing_sequence)) {
       return (token_or_error_t){
           .token = (oc_token_t){.buffer = buffer,
-                                .type = TOKEN_TYPE_STRING_LITERAL,
+                                .type = token_type,
                                 .start = start_position,
-                                .end = position + 1}};
+                                .end = position + strlen(closing_sequence)}};
+    } else {
+      // TODO(jawilson): add an option to iterate "properly" over
+      // utf-8 code-points one by one. This is not necessary since no
+      // bytes of a single or multi-byte code-point will match either
+      // double quote or backslash so matching in the middle of a
+      // code-point like is then potentially
+      position += 1;
     }
   }
-  return (token_or_error_t){.error_code
-                            = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
+  return (token_or_error_t){.error_code = unterminated_error_code,
                             .error_position = start_position};
+}
+
+token_or_error_t tokenize_string_literal(buffer_t* buffer,
+                                         uint64_t start_position) {
+  return tokenize_quoted_literal_common(
+      buffer, start_position, "\"", "\\\"", "\"", TOKEN_TYPE_STRING_LITERAL,
+      TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
 }
 
 boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position) {
@@ -387,21 +412,13 @@ boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position) {
 
 token_or_error_t tokenize_character_literal(buffer_t* buffer,
                                             uint64_t start_position) {
-  uint64_t position = start_position + 1;
-  if (buffer_match_string_at(buffer, position, "\\")) {
-    position++;
-  }
-  position++;
-  if (buffer_match_string_at(buffer, position, "'")) {
-    return (token_or_error_t){
-        .token = (oc_token_t){.buffer = buffer,
-                              .type = TOKEN_TYPE_CHARACTER_LITERAL,
-                              .start = start_position,
-                              .end = position + 1}};
-  }
-  return (token_or_error_t){.error_code
-                            = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
-                            .error_position = start_position};
+  // Treat character literals exactly like string literals. If the
+  // character literal ends up containing more than one character
+  // (which apparently is legal in some C compilers BTW), the backend
+  // C or C++ compiler will determine if this is legal or not.
+  return tokenize_quoted_literal_common(
+      buffer, start_position, "'", "\\'", "'", TOKEN_TYPE_CHARACTER_LITERAL,
+      TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL);
 }
 
 

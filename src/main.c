@@ -14,6 +14,8 @@ value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
 boolean_t FLAG_include_unnamed_nodes = false;
 
+boolean_t FLAG_print_tokens_show_tokens = true;
+
 void print_tokens(void) {
   log_info("translate_and_build()");
 
@@ -29,14 +31,16 @@ void print_tokens(void) {
                tokenizer_result.tokenizer_error_code);
       continue;
     }
-    buffer_t* buffer = make_buffer(tokenizer_result.tokens->length);
-    for (int j = 0; j < tokenizer_result.tokens->length; j++) {
-      oc_token_t* token
-          = cast(oc_token_t*, value_array_get(tokenizer_result.tokens, j).ptr);
-      buffer = append_token_debug_string(buffer, *token);
-      buffer = buffer_append_string(buffer, "\n");
+    if (FLAG_print_tokens_show_tokens) {
+      buffer_t* buffer = make_buffer(tokenizer_result.tokens->length);
+      for (int j = 0; j < tokenizer_result.tokens->length; j++) {
+        oc_token_t* token = cast(
+            oc_token_t*, value_array_get(tokenizer_result.tokens, j).ptr);
+        buffer = append_token_debug_string(buffer, *token);
+        buffer = buffer_append_string(buffer, "\n");
+      }
+      fprintf(stdout, "** Tokens **\n%s", buffer_to_c_string(buffer));
     }
-    fprintf(stdout, "** Tokens **\n%s", buffer_to_c_string(buffer));
   }
 }
 
@@ -297,6 +301,7 @@ void configure_extract_header_file_command(void) {
 
 void configure_print_tokens_command(void) {
   flag_command("print-tokens", &FLAG_command);
+  flag_boolean("--show-tokens", &FLAG_print_tokens_show_tokens);
   flag_file_args(&FLAG_files);
 }
 
