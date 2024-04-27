@@ -357,12 +357,34 @@ token_or_error_t tokenize_string_literal(buffer_t* buffer,
     if (buffer_match_string_at(buffer, position, "\\")) {
       position++;
     } else if (buffer_match_string_at(buffer, position, "\"")) {
-      return (token_or_error_t){.token
-                                = (oc_token_t){.buffer = buffer,
-                                               .type = TOKEN_TYPE_COMMENT,
-                                               .start = start_position,
-                                               .end = position + 1}};
+      return (token_or_error_t){
+          .token = (oc_token_t){.buffer = buffer,
+                                .type = TOKEN_TYPE_STRING_LITERAL,
+                                .start = start_position,
+                                .end = position + 1}};
     }
+  }
+  return (token_or_error_t){.error_code
+                            = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL};
+}
+
+boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position) {
+  return buffer_match_string_at(buffer, position, "'");
+}
+
+token_or_error_t tokenize_character_literal(buffer_t* buffer,
+                                            uint64_t start_position) {
+  uint64_t position = start_position + 1;
+  if (buffer_match_string_at(buffer, position, "\\")) {
+    position++;
+  }
+  position++;
+  if (buffer_match_string_at(buffer, position, "'")) {
+    return (token_or_error_t){
+        .token = (oc_token_t){.buffer = buffer,
+                              .type = TOKEN_TYPE_CHARACTER_LITERAL,
+                              .start = start_position,
+                              .end = position + 1}};
   }
   return (token_or_error_t){.error_code
                             = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL};
@@ -421,6 +443,8 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
       read_token(tokenize_comment);
     } else if (is_string_literal_start(buffer, pos)) {
       read_token(tokenize_string_literal);
+    } else if (is_character_literal_start(buffer, pos)) {
+      read_token(tokenize_character_literal);
     } else {
       read_token(tokenize_punctuation);
     }
