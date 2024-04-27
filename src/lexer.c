@@ -140,6 +140,7 @@ buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
 struct token_or_error_S {
   oc_token_t token;
   tokenizer_error_t error_code;
+  uint64_t error_position;
 };
 
 typedef struct token_or_error_S token_or_error_t;
@@ -160,7 +161,8 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer,
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
-      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                                .error_position = pos};
     }
     uint32_t code_point = decode_result.code_point;
     if (!isspace(code_point)) {
@@ -205,7 +207,8 @@ token_or_error_t tokenize_identifier(buffer_t* buffer,
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
-      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                                .error_position = pos};
     }
     uint32_t code_point = decode_result.code_point;
     if (!(is_identifier_start(code_point) || isdigit(code_point))) {
@@ -226,7 +229,8 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
-      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                                .error_position = pos};
     }
     uint32_t code_point = decode_result.code_point;
     // FIXME: hexidecimal plus, "e", plus suffixes
@@ -284,7 +288,9 @@ static char* c_punctuation[] = {
     "/",
     ":",
     ";",
+    ";",
     "<",
+    "=",
     ">",
     "?",
     "[",
@@ -294,6 +300,10 @@ static char* c_punctuation[] = {
     "|",
     "}",
     "~",
+
+    // Hopefully enough to parse C preprocessor stuff
+    "#",
+    "\\",
 };
 
 token_or_error_t tokenize_punctuation(buffer_t* buffer,
@@ -310,7 +320,8 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer,
     }
   }
   return (token_or_error_t){.error_code
-                            = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION};
+                            = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
+                            .error_position = start_position};
 }
 
 boolean_t is_comment_start(buffer_t* buffer, uint64_t position) {
@@ -343,7 +354,8 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position) {
     }
   }
 
-  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UNTERMINATED_COMMENT};
+  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UNTERMINATED_COMMENT,
+                            .error_position = start_position};
 }
 
 boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position) {
@@ -365,7 +377,8 @@ token_or_error_t tokenize_string_literal(buffer_t* buffer,
     }
   }
   return (token_or_error_t){.error_code
-                            = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL};
+                            = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
+                            .error_position = start_position};
 }
 
 boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position) {
@@ -387,7 +400,8 @@ token_or_error_t tokenize_character_literal(buffer_t* buffer,
                               .end = position + 1}};
   }
   return (token_or_error_t){.error_code
-                            = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL};
+                            = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
+                            .error_position = start_position};
 }
 
 
@@ -401,8 +415,9 @@ static inline oc_token_t* heap_allocate_token(oc_token_t token) {
   do {                                                                         \
     token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
     if (token_or_error.error_code) {                                           \
-      return (oc_tokenizer_result_t){.tokenizer_error_code                     \
-                                     = token_or_error.error_code};             \
+      return (oc_tokenizer_result_t){                                          \
+          .tokenizer_error_code = token_or_error.error_code,                   \
+          .tokenizer_error_position = token_or_error.error_position};          \
     }                                                                          \
     value_array_add(result_tokens,                                             \
                     ptr_to_value(heap_allocate_token(token_or_error.token)));  \

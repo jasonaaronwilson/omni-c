@@ -23,7 +23,10 @@ void print_tokens(void) {
     oc_file_t* file = (oc_file_t*) value_array_get(parsed_files, i).ptr;
     oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
     if (tokenizer_result.tokenizer_error_code) {
-      log_warn("Tokenizer error: %d", tokenizer_result.tokenizer_error_code);
+      log_warn("Tokenizer error: \"%s\"::%d -- %d",
+               value_array_get(FLAG_files, i).str,
+               tokenizer_result.tokenizer_error_position,
+               tokenizer_result.tokenizer_error_code);
       continue;
     }
     buffer_t* buffer = make_buffer(tokenizer_result.tokens->length);
