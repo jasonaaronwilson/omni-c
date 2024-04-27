@@ -2,6 +2,8 @@ hello 12345 1.0 + & &&
  // This is a comment
 /* This is also a comment */
 /** This is also a javadoc style comment */
+"String with no escapes in it"
+"String with some escapes in it\"\n\\"
 
 
 

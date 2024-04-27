@@ -38,7 +38,9 @@ typedef enum {
   TOKENIZER_ERROR_UNKNOWN,
   TOKENIZER_ERROR_UTF_DECODE_ERROR,
   TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
-  TOKENIZER_ERROR_UNTERMINATED_COMMENT
+  TOKENIZER_ERROR_UNTERMINATED_COMMENT,
+  TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
+  TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL
 } tokenizer_error_t;
 
 struct oc_token_S {
@@ -344,6 +346,29 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position) {
   return (token_or_error_t){.error_code = TOKENIZER_ERROR_UNTERMINATED_COMMENT};
 }
 
+boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position) {
+  return buffer_match_string_at(buffer, position, "\"");
+}
+
+token_or_error_t tokenize_string_literal(buffer_t* buffer,
+                                         uint64_t start_position) {
+  for (uint64_t position = start_position + 1; position < buffer->length;
+       position++) {
+    if (buffer_match_string_at(buffer, position, "\\")) {
+      position++;
+    } else if (buffer_match_string_at(buffer, position, "\"")) {
+      return (token_or_error_t){.token
+                                = (oc_token_t){.buffer = buffer,
+                                               .type = TOKEN_TYPE_COMMENT,
+                                               .start = start_position,
+                                               .end = position + 1}};
+    }
+  }
+  return (token_or_error_t){.error_code
+                            = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL};
+}
+
+
 static inline oc_token_t* heap_allocate_token(oc_token_t token) {
   oc_token_t* result = malloc_struct(oc_token_t);
   *result = token;
@@ -394,6 +419,8 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
       read_token(tokenize_numeric);
     } else if (is_comment_start(buffer, pos)) {
       read_token(tokenize_comment);
+    } else if (is_string_literal_start(buffer, pos)) {
+      read_token(tokenize_string_literal);
     } else {
       read_token(tokenize_punctuation);
     }
