@@ -8,8 +8,7 @@
 /**
  * @file lexer
  *
- * This is hand-written tokenizer for Omni C (so should work fine for
- * C and C++).
+ * Break up a UTF-8 byte sequence into an array C tokens.
  */
 
 /**
