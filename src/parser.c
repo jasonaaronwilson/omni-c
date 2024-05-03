@@ -1,4 +1,4 @@
-#line 2 "parser.c"
+ #line 2 "parser.c"
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
@@ -20,10 +20,17 @@
  * automatically generate code (such as the parsing and printing
  * enumerations).
  */
+
+/**
+ * @enum parse_node_type_t
+ *
+ * We will have at least one node per major kind of C construct.
+ */
 typedef enum {
   OC_NODE_UNKNOWN,
   OC_NODE_LIST_OF_NODES,
   OC_NODE_STRUCT,
+  OC_NODE_FIELD,
   OC_NODE_UNION,
   OC_NODE_GLOBAL_VARIABLE,
   OC_NODE_GLOBAL_FUNCTION,
@@ -32,33 +39,68 @@ typedef enum {
 /**
  * @structure oc_node_list_t
  *
- * We will implement lists of nodes by wrapping value_array_t to have
- * an interface that is simpler to use (as long as a structure begins
- * it's life zeroed out which using alloc_struct does nicely and there
- * are patterns for when not using pointers).
+ * A list of "child" parse nodes. (Currently implemented by wrapping
+ * value_array_t*).
  */
 typedef struct node_list_S {
-  // I'm not sure we need a tag since I'm not sure we need this to be
-  // a direct child of union in oc_node_t.
-  //
-  // parse_node_type_t tag;
-  //
   value_array_t* list;
-} node_list_t;
+} oc_node_list_t;
 
 /**
- * @structure oc_node_list_t
+ * @structure type_node_t
  *
+ * Represents a parsed "type", for example "uint64_t", "uint64_t*",
+ * "uint64_t[]", etc.
+ */
+typedef struct type_node_S {
+  parse_node_type_t tag;
+
+  // Only one of the next three fields will be set. When
+  // is_pointer_type or is_array_type are set, there is expected to be
+  // a type_arg child node (even if it is just the void type). This
+  // allows us to cleanly build up complex types like
+  // "uint64_t**". Coincidentally, if we want to have generic types,
+  // then the list of type_args becomes even more useful.
+  oc_token_t* type_name;
+  boolean_t is_pointer_type;
+  boolean_t is_array_type;
+
+  // Generic types (which C doesn't have but C++ kind of has) or even
+  // just pointer and array types will have at least one child.
+  oc_node_list_t type_args;
+} type_node_t;
+
+
+/**
+ * @structure struct_node_t
+ *
+ * Represents a partial or full structure declaration.
  */
 typedef struct struct_node_S {
   parse_node_type_t tag;
-  char *name; // this will be null for anonymous structs...
+  oc_token_t* name;
   node_list_t fields; 
+  boolean_t partial_definition;
+} struct_node_t;
+
+/**
+ * @structure field_node_t
+ *
+ * Represents a field in a structure or union definition.
+ *
+ * When bit_field_width is non-zero, the field is a bit field.
+ */
+typedef struct field_node_S {
+  parse_node_type_t tag;
+  type_node_t* type;
+  oc_token_t* name;
+  oc_token_t* bit_field_width;
 } struct_node_t;
 
 /**
  * @structure oc_node_list_t
  *
+ * Represents a partial or full structure declaration.
  */
 typedef struct union_node_S {
   parse_node_type_t tag;
@@ -69,36 +111,12 @@ typedef struct union_node_S {
 /**
  * @structure oc_node_t
  *
- * This represents an Omni C parse node.
- *
- * In a dynamically typed language (i.e. Scheme) without inheritance,
- * you wouldn't even have this this type (Scheme would typically just
- * use an s-expression based format and then provide getters and
- * setters if it is felt that is needed and might end up with some
- * routines with a case expression or cond expression if
- * necessary).
- *
- * In languages with algebraic types (i.e. Haskell), you might have
- * this type but not really need to deal with it too much.
- *
- * In OOP languages (i.e. C++, Java or even dynamically typed
- * languages with inheritance like Ruby), you would probably have a
- * base class and then extend from it.
- *
- * We are slightly like OOP because each member of the union begins
- * with a tag which is similar to how OOP always (?) has a vtable at
- * the begining of an object. From experience, we already know the
- * compiler will do an insufficient job at type-checking so our backup
- * plan is lot's of dynamic type-checking based on that tag field. In
- * particular, even if cast_oc_node() can't be written in every C
- * compiler, we can still do lot's of dynamic type checks and catch
- * certain errors before they become hard to debug or lead to
- * questionable binaries (which of course should always be unit
- * tested...).
- *
- * Because each node is tagged, we can also implement a limited amount
- * of OOP-like functionality such as appending a node to a buffer for
- * debugging.
+ * A generic parse node. Parse nodes can be freely cast to a generic
+ * node via the function to_oc_node() or to a particular type via
+ * to_struct_node(), etc. When casting to a more particular type, the
+ * tag will be dynamically checked. If you are uncertain of the type
+ * of a node, then is_struct_node(), etc. can be used to make sure the
+ * operation is legal.
  */
 typedef struct oc_node_s {
   union {
@@ -109,6 +127,34 @@ typedef struct oc_node_s {
 } oc_node_t;
 
 /**
+ * Cast a particular type of node pointer to a "generic" node.
+ *
+ * This isn't particularly type safe though if we had over-loading in
+ * C we could make a safer version.
+ */
+static inline oc_node_t* to_oc_node(void* ptr) {
+  return cast(oc_node_t*, ptr);
+}
+
+/**
+ * Determine if a node is a struct node before trying to cast it.
+ */
+static inline boolean_t is_struct_node(oc_node_t* ptr) {
+  return (ptr != NULL) && (ptr.tag == OC_NODE_STRUCT;
+}
+
+/**
+ * Safely cast a generic node to a particular type by examining it's
+ * tag.
+ */
+static inline struct_node_t* to_struct_node(oc_node_t* ptr) {
+  if (ptr == NULL || ptr.tag != OC_NODE_STRUCT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(struct_node_t*, ptr);
+}
+
+/**
  * @function node_list_add_node
  *
  * Append a node to a list (typically a field of a particular kind of
@@ -116,9 +162,9 @@ typedef struct oc_node_s {
  * reading is done without the extra address.
  */
 static inline void node_list_add_node(node_list_t* node_list, oc_node_t* oc_node) {
-  // TODO(jawilson): should be check for NULL oc_nodes here? One will
-  // eventually show up during debugging and then I will add the
-  // check. Maybe we need a debug assertion?
+  if (oc_node == NULL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
   if (node_list->list == NULL) {
     node_list->list = make_value_array(2);
   }
@@ -157,5 +203,69 @@ static inline oc_node_t* node_list_get(node_list_t node_list, uint64_t index) {
   return cast(oc_node_t*, value_array_get(node_list.list, index).ptr);
 }
 
+typedef oc_node_result_S {
+  oc_node_t* node;
+  uint64_t last_token_position;
+  // TODO(jawilson): parse error information here!
+} oc_node_result_t;
+
+ static inline oc_node_result_t oc_node_empty_result() {
+   return (oc_node_result_t) { 0 };
+ }
+
+ static inline boolean_t is_error_result(oc_node_result_t result) {
+   // TODO(jawilson): use some indication to determine if this is a
+   // parse error (vs simply not matching, aka,
+   // oc_node_empty)result().
+   return false;
+ }
+
+ static inline boolean_t is_empty_result(oc_node_result_t result) {
+   return result == NULL;
+ }
+
+ static inline oc_node_result_t* oc_node_result(oc_node_t* node, uint64_t last_token_position) {
+   if (node == NULL) {
+     fatal_error(ERROR_ILLEGAL_STATE);
+   }
+   return (oc_node_result_t*) { node, last_token_position };
+ }
+
+oc_node_result_t* parse_structure(value_array_t* tokens, uint64_t position);
+
 #endif /* _PARSER_H_ */
 
+static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
+  // TODO(jawilson): maybe return a sentinel token of some sort when
+  // position is greater than the end of the array.
+  return cast(oc_token_t*, value_array_get(tokens, position).ptr);
+}
+
+oc_node_result_t* parse_structure(value_array_t* tokens, uint64_t position) {
+  oc_token_t* token = token_at(tokens, position++);
+  if (!token_matches(token, "struct")) {
+    return oc_node_empty_result();
+  }
+  struct_node_t result = malloc_struct(struct_node_t);
+ 
+  token = token_at(tokens, position++);
+  if (token->type == TOKEN_TYPE_IDENTIFIER) {
+    result->name = token;
+    token = token_at(tokens, position++);
+  }
+
+  if (token_matches(token, ";")) {
+    result->partial_definition = true;
+    return oc_node_result(result, position);
+  }
+
+  if (token_matches(token, "{")) {
+    
+    while (true) {
+    }
+  }
+
+  // ...HERE...
+  
+  return oc_node_result(result);
+}
