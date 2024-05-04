@@ -2,9 +2,9 @@
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
+#include "lexer.h"
 #include <c-armyknife-lib.h>
 #include <ctype.h>
-#include "lexer.h"
 
 /**
  * @file parser
@@ -91,7 +91,8 @@ typedef enum {
 typedef parse_error_S {
   parse_error_code_t error_code;
   token_t* error_token;
-} parse_error_t;
+}
+parse_error_t;
 
 /**
  * @struct parse_node_t
@@ -103,7 +104,8 @@ typedef parse_result_S {
   parse_node_t* node;
   uint64_t last_token_position;
   parse_error_t parse_error;
-} parse_result_t;
+}
+parse_result_t;
 
 /* ====================================================================== */
 /* One node type per parse_node_type_t */
@@ -154,7 +156,7 @@ typedef struct type_node_S {
 typedef struct struct_node_S {
   parse_node_type_t tag;
   oc_token_t* name;
-  node_list_t fields; 
+  node_list_t fields;
   boolean_t partial_definition;
 } struct_node_t;
 
@@ -165,8 +167,8 @@ typedef struct struct_node_S {
  */
 typedef struct union_node_S {
   parse_node_type_t tag;
-  char *name; // this will be null for anonymous unions...
-  node_list_t members; 
+  char* name; // this will be null for anonymous unions...
+  node_list_t members;
 } struct_node_t;
 
 /**
@@ -228,7 +230,8 @@ static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
  * node). In this case we need the address of that field though
  * reading is done without the extra address.
  */
-static inline void node_list_add_node(node_list_t* node_list, parse_node_t* oc_node) {
+static inline void node_list_add_node(node_list_t* node_list,
+                                      parse_node_t* oc_node) {
   if (oc_node == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -264,7 +267,8 @@ static inline parse_node_t node_list_is_empty(node_list_t node_list) {
  *
  * Return the n-th element of the node list.
  */
-static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index) {
+static inline parse_node_t* node_list_get(node_list_t node_list,
+                                          uint64_t index) {
   if (node_list.list == NULL) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
@@ -276,26 +280,27 @@ static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index)
 /* ====================================================================== */
 
 static inline parse_result_t parse_result_empty() {
-  return (parse_result_t) { 0 };
+  return (parse_result_t){0};
 }
 
 static inline boolean_t is_empty_result(parse_result_t result) {
   return result == NULL;
 }
 
-static inline parse_result_t parse_result(parse_node_t* node, uint64_t last_token_position) {
+static inline parse_result_t parse_result(parse_node_t* node,
+                                          uint64_t last_token_position) {
   if (node == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  return (parse_result_t) { node, last_token_position };
+  return (parse_result_t){node, last_token_position};
 }
 
-static inline parse_result_t parse_result_error(parse_error_code_t error_code, token_t* error_token) {
-  return (parse_result_t) { .parse_error = (parse_error_t) {
-      .error_code = error_code,
-      .error_token = error_token,
-    }
-  };
+static inline parse_result_t parse_result_error(parse_error_code_t error_code,
+                                                token_t* error_token) {
+  return (parse_result_t){.parse_error = (parse_error_t){
+                              .error_code = error_code,
+                              .error_token = error_token,
+                          }};
 }
 
 static inline boolean_t is_error_result(parse_result_t result) {
@@ -304,7 +309,6 @@ static inline boolean_t is_error_result(parse_result_t result) {
   // parse_node_empty)result().
   return false;
 }
-
 
 
 /* ====================================================================== */
@@ -331,7 +335,7 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
     return parse_node_empty_result();
   }
   struct_node_t result = malloc_struct(struct_node_t);
- 
+
   token = token_at(tokens, position++);
   if (token->type == TOKEN_TYPE_IDENTIFIER) {
     result->name = token;
@@ -346,18 +350,18 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
   if (token_matches(token, "{")) {
     while (true) {
       if (token_matches(token, "}")) {
-	break;
+        break;
       }
       parse_result_t field = parse_field_node(tokens, position);
       if (is_error_result(field)) {
-	return field;
+        return field;
       }
       node_list_add_node(&result->fields, field.
     }
   }
 
   // ...HERE...
-  
+
   return parse_result(result);
 }
 
@@ -377,8 +381,7 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
     position += 2;
   }
   if (!token_matches(token_at(tokens, position), ";")) {
-    return parse_result_error(PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON, token_at(tokens, position));
-  } 
+    return parse_result_error(PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON,
+                              token_at(tokens, position));
+  }
 }
-
-

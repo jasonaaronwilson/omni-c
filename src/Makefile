@@ -16,6 +16,7 @@ SRC_C = armyknife-lib-impl.c \
 	parser/parse-files.c \
 	common/oc-node.c \
 	lexer.c \
+	parser.c \
 	main.c
 
 TREE_SITTER_FILES = ~/src/tree-sitter-c/src/parser.c ~/src/tree-sitter/libtree-sitter.a
