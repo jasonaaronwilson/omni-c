@@ -19,6 +19,15 @@
  * constructs like structs to automatically generate header files and
  * automatically generate code (such as the parsing and printing
  * enumerations).
+ *
+ * Unlike TSNode (from the tree sitter project), we have explicit
+ * structures for many different types of parse nodes (similar to what
+ * is done in certain languages like Haskell or a bit like what might
+ * done in an OOP language even though everything is written in
+ * C). Node pointers can be cast and dynamically type checked though
+ * static type checking isn't as strong it would be if written in
+ * Haskell. I prefer this style since you don't need to understand the
+ * parser language definition to use the parse tree.
  */
 
 /**
@@ -37,6 +46,23 @@ typedef enum {
 } parse_node_type_t;
 
 /**
+ * @structure oc_node_t
+ *
+ * A generic parse node. Parse nodes can be freely cast to a generic
+ * node via the function to_oc_node() or to a particular type via
+ * to_struct_node(), etc. When casting to a more particular type, the
+ * tag will be dynamically checked. If you are uncertain of the type
+ * of a node, then is_struct_node(), etc. can be used to make sure the
+ * operation is legal.
+ *
+ * oc_node_t is most used as a pointer, i.e., oc_node_t*, so the fact
+ * that some nodes are much bigger than other nodes is irrelevant.
+ */
+typedef struct oc_node_s {
+  parse_node_type_t tag;
+} oc_node_t;
+
+/**
  * @structure oc_node_list_t
  *
  * A list of "child" parse nodes. (Currently implemented by wrapping
@@ -47,29 +73,80 @@ typedef struct node_list_S {
 } oc_node_list_t;
 
 /**
+ * @enum parse_error_code_t
+ *
+ * Represents a particular type of parse error so that a particular
+ * error template can be used to present these errors to the user.
+ */
+typedef enum {
+  PARSE_ERROR_UNKNOWN,
+} parse_error_code_t;
+
+/**
+ * @struct oc_node_result_t
+ *
+ * This is the common return result for the various node parse
+ * functions.
+ */
+typedef parse_error_S {
+  parse_error_code_t parse_error_code;
+  token_t* parse_error_token;
+} parse_error_t;
+
+
+/**
+ * @struct oc_node_result_t
+ *
+ * This is the common return result for the various node parse
+ * functions.
+ */
+typedef oc_node_result_S {
+  oc_node_t* result_node;
+  uint64_t last_token_position;
+  parse_error_t parse_error;
+} oc_node_result_t;
+
+
+/* ====================================================================== */
+/* One node type per parse_node_type_t */
+/* ====================================================================== */
+
+/**
+ * @enum type_node_kind_t
+ *
+ * Sub-categorizes the various kinds of type nodes.
+ */
+typedef enum {
+  TYPE_NODE_KIND_UNKNOWN,
+  TYPE_NODE_KIND_POINTER,
+  TYPE_NODE_KIND_ARRAY,
+  TYPE_NODE_KIND_SIZED_ARRAY,
+  // TODO(jawilson): anonymous structures and unions?
+  TYPE_NODE_KIND_STRUCT_PREFIXED_TYPENAME,
+  TYPE_NODE_KIND_UNION_PREFIXED_TYPENAME,
+  TYPE_NODE_KIND_ENUM_PREFIXED_TYPENAME,
+  TYPE_NODE_KIND_PRIMITIVE_TYPENAME,
+  TYPE_NODE_KIND_TYPENAME,
+} type_node_kind_t;
+
+/**
  * @structure type_node_t
  *
  * Represents a parsed "type", for example "uint64_t", "uint64_t*",
- * "uint64_t[]", etc.
+ * "uint64_t[]", etc. In the future these will be used to represent
+ * generic types such as map<int, char*>, etc.
  */
 typedef struct type_node_S {
   parse_node_type_t tag;
-
-  // Only one of the next three fields will be set. When
-  // is_pointer_type or is_array_type are set, there is expected to be
-  // a type_arg child node (even if it is just the void type). This
-  // allows us to cleanly build up complex types like
-  // "uint64_t**". Coincidentally, if we want to have generic types,
-  // then the list of type_args becomes even more useful.
+  type_node_kind_t type_node_kind;
+  // This isn't set for pointer and array types since they modify
+  // their first child in type_args. Think of these as being like the
+  // generic types: array<T> or pointer<T>.
   oc_token_t* type_name;
-  boolean_t is_pointer_type;
-  boolean_t is_array_type;
-
   // Generic types (which C doesn't have but C++ kind of has) or even
   // just pointer and array types will have at least one child.
   oc_node_list_t type_args;
 } type_node_t;
-
 
 /**
  * @structure struct_node_t
@@ -84,23 +161,9 @@ typedef struct struct_node_S {
 } struct_node_t;
 
 /**
- * @structure field_node_t
+ * @structure oc_union_node_t
  *
- * Represents a field in a structure or union definition.
- *
- * When bit_field_width is non-zero, the field is a bit field.
- */
-typedef struct field_node_S {
-  parse_node_type_t tag;
-  type_node_t* type;
-  oc_token_t* name;
-  oc_token_t* bit_field_width;
-} struct_node_t;
-
-/**
- * @structure oc_node_list_t
- *
- * Represents a partial or full structure declaration.
+ * Represents a partial or full union declaration.
  */
 typedef struct union_node_S {
   parse_node_type_t tag;
@@ -109,22 +172,23 @@ typedef struct union_node_S {
 } struct_node_t;
 
 /**
- * @structure oc_node_t
+ * @structure field_node_t
  *
- * A generic parse node. Parse nodes can be freely cast to a generic
- * node via the function to_oc_node() or to a particular type via
- * to_struct_node(), etc. When casting to a more particular type, the
- * tag will be dynamically checked. If you are uncertain of the type
- * of a node, then is_struct_node(), etc. can be used to make sure the
- * operation is legal.
+ * Represents a field in a structure or union definition.
+ *
+ * When bit_field_width is non-zero, the field is a bit field (this is
+ * not legal with a union nodes).
  */
-typedef struct oc_node_s {
-  union {
-    parse_node_type_t tag;
-    struct_node_t struct_node;
-    struct_node_t union_node;
-  };
-} oc_node_t;
+typedef struct field_node_S {
+  parse_node_type_t tag;
+  type_node_t* type;
+  oc_token_t* name;
+  oc_token_t* bit_field_width;
+} struct_node_t;
+
+/* ====================================================================== */
+/* General inlined accessors, helpers, and macros */
+/* ====================================================================== */
 
 /**
  * Cast a particular type of node pointer to a "generic" node.
@@ -137,10 +201,11 @@ static inline oc_node_t* to_oc_node(void* ptr) {
 }
 
 /**
- * Determine if a node is a struct node before trying to cast it.
+ * Helper to determine if a node is a struct node before trying to
+ * cast it.
  */
 static inline boolean_t is_struct_node(oc_node_t* ptr) {
-  return (ptr != NULL) && (ptr.tag == OC_NODE_STRUCT;
+  return (ptr != NULL) && (ptr.tag == OC_NODE_STRUCT);
 }
 
 /**
@@ -153,6 +218,10 @@ static inline struct_node_t* to_struct_node(oc_node_t* ptr) {
   }
   return cast(struct_node_t*, ptr);
 }
+
+/* ====================================================================== */
+/* The inlined node_list implementation */
+/* ====================================================================== */
 
 /**
  * @function node_list_add_node
@@ -176,10 +245,11 @@ static inline void node_list_add_node(node_list_t* node_list, oc_node_t* oc_node
  *
  * Determine the length of the node list.
  */
-static inline oc_node_t node_list_length(node_list_t node_list) {
+static inline uint64_t node_list_length(node_list_t node_list) {
   if (node_list.list == NULL) {
     return 0;
   }
+  return node_list.list->length;
 }
 
 /**
@@ -203,45 +273,51 @@ static inline oc_node_t* node_list_get(node_list_t node_list, uint64_t index) {
   return cast(oc_node_t*, value_array_get(node_list.list, index).ptr);
 }
 
-typedef oc_node_result_S {
-  oc_node_t* node;
-  uint64_t last_token_position;
-  // TODO(jawilson): parse error information here!
-} oc_node_result_t;
+/* ====================================================================== */
+/* Inlined helpers for oc_node_result_t implementation */
+/* ====================================================================== */
 
- static inline oc_node_result_t oc_node_empty_result() {
-   return (oc_node_result_t) { 0 };
- }
+static inline oc_node_result_t oc_node_empty_result() {
+  return (oc_node_result_t) { 0 };
+}
 
- static inline boolean_t is_error_result(oc_node_result_t result) {
-   // TODO(jawilson): use some indication to determine if this is a
-   // parse error (vs simply not matching, aka,
-   // oc_node_empty)result().
-   return false;
- }
+static inline boolean_t is_error_result(oc_node_result_t result) {
+  // TODO(jawilson): use some indication to determine if this is a
+  // parse error (vs simply not matching, aka,
+  // oc_node_empty)result().
+  return false;
+}
 
- static inline boolean_t is_empty_result(oc_node_result_t result) {
-   return result == NULL;
- }
+static inline boolean_t is_empty_result(oc_node_result_t result) {
+  return result == NULL;
+}
 
- static inline oc_node_result_t* oc_node_result(oc_node_t* node, uint64_t last_token_position) {
-   if (node == NULL) {
-     fatal_error(ERROR_ILLEGAL_STATE);
-   }
-   return (oc_node_result_t*) { node, last_token_position };
- }
+static inline oc_node_result_t* oc_node_result(oc_node_t* node, uint64_t last_token_position) {
+  if (node == NULL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return (oc_node_result_t*) { node, last_token_position };
+}
 
-oc_node_result_t* parse_structure(value_array_t* tokens, uint64_t position);
+/* ====================================================================== */
+/* Forward declarations for all the invidual construct parsers */
+/* ====================================================================== */
+
+oc_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position);
 
 #endif /* _PARSER_H_ */
 
+/* ====================================================================== */
+/* Implementation of non-inlined functions */
+/* ====================================================================== */
+
 static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
   // TODO(jawilson): maybe return a sentinel token of some sort when
-  // position is greater than the end of the array.
+  // position is greater than the end of the array?
   return cast(oc_token_t*, value_array_get(tokens, position).ptr);
 }
 
-oc_node_result_t* parse_structure(value_array_t* tokens, uint64_t position) {
+oc_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
   oc_token_t* token = token_at(tokens, position++);
   if (!token_matches(token, "struct")) {
     return oc_node_empty_result();
@@ -262,6 +338,10 @@ oc_node_result_t* parse_structure(value_array_t* tokens, uint64_t position) {
   if (token_matches(token, "{")) {
     
     while (true) {
+      oc_node_result_t field_type = parse_type_node(tokens, position);
+      if (is_error_result(field_type)) {
+	return oc_node_result_error(
+      }
     }
   }
 
@@ -269,3 +349,4 @@ oc_node_result_t* parse_structure(value_array_t* tokens, uint64_t position) {
   
   return oc_node_result(result);
 }
+
