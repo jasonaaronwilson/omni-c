@@ -83,14 +83,14 @@ typedef enum {
 } parse_error_code_t;
 
 /**
- * @struct parse_node_t
+ * @struct parse_error_t
  *
  * This is the common return result for the various node parse
  * functions.
  */
 typedef parse_error_S {
-  parse_error_code_t parse_error_code;
-  token_t* parse_error_token;
+  parse_error_code_t error_code;
+  token_t* error_token;
 } parse_error_t;
 
 /**
@@ -99,11 +99,11 @@ typedef parse_error_S {
  * This is the common return result for the various node parse
  * functions.
  */
-typedef parse_node_S {
-  parse_node_t* result_node;
+typedef parse_result_S {
+  parse_node_t* node;
   uint64_t last_token_position;
   parse_error_t parse_error;
-} parse_node_t;
+} parse_result_t;
 
 /* ====================================================================== */
 /* One node type per parse_node_type_t */
@@ -272,36 +272,46 @@ static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index)
 }
 
 /* ====================================================================== */
-/* Inlined helpers for parse_node_result_t implementation */
+/* Inlined helpers for parse_result_t implementation */
 /* ====================================================================== */
 
-static inline parse_node_result_t parse_node_empty_result() {
-  return (parse_node_result_t) { 0 };
+static inline parse_result_t parse_result_empty() {
+  return (parse_result_t) { 0 };
 }
 
-static inline boolean_t is_error_result(parse_node_result_t result) {
+static inline boolean_t is_empty_result(parse_result_t result) {
+  return result == NULL;
+}
+
+static inline parse_result_t parse_result(parse_node_t* node, uint64_t last_token_position) {
+  if (node == NULL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return (parse_result_t) { node, last_token_position };
+}
+
+static inline parse_result_t parse_result_error(parse_error_code_t error_code, token_t* error_token) {
+  return (parse_result_t) { .parse_error = (parse_error_t) {
+      .error_code = error_code,
+      .error_token = error_token,
+    }
+  };
+}
+
+static inline boolean_t is_error_result(parse_result_t result) {
   // TODO(jawilson): use some indication to determine if this is a
   // parse error (vs simply not matching, aka,
   // parse_node_empty)result().
   return false;
 }
 
-static inline boolean_t is_empty_result(parse_node_result_t result) {
-  return result == NULL;
-}
 
-static inline parse_node_result_t* parse_node_result(parse_node_t* node, uint64_t last_token_position) {
-  if (node == NULL) {
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-  return (parse_node_result_t*) { node, last_token_position };
-}
 
 /* ====================================================================== */
 /* Forward declarations for all the invidual construct parsers */
 /* ====================================================================== */
 
-parse_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position);
+parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position);
 
 #endif /* _PARSER_H_ */
 
@@ -315,7 +325,7 @@ static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
   return cast(oc_token_t*, value_array_get(tokens, position).ptr);
 }
 
-parse_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
+parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
   oc_token_t* token = token_at(tokens, position++);
   if (!token_matches(token, "struct")) {
     return parse_node_empty_result();
@@ -330,7 +340,7 @@ parse_node_result_t parse_structure_node(value_array_t* tokens, uint64_t positio
 
   if (token_matches(token, ";")) {
     result->partial_definition = true;
-    return parse_node_result(result, position);
+    return parse_result(result, position);
   }
 
   if (token_matches(token, "{")) {
@@ -338,7 +348,7 @@ parse_node_result_t parse_structure_node(value_array_t* tokens, uint64_t positio
       if (token_matches(token, "}")) {
 	break;
       }
-      parse_node_result_t field = parse_field_node(tokens, position);
+      parse_result_t field = parse_field_node(tokens, position);
       if (is_error_result(field)) {
 	return field;
       }
@@ -348,16 +358,16 @@ parse_node_result_t parse_structure_node(value_array_t* tokens, uint64_t positio
 
   // ...HERE...
   
-  return parse_node_result(result);
+  return parse_result(result);
 }
 
 parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
-  parse_node_result_t field_type = parse_type_node(tokens, position);
+  parse_result_t field_type = parse_type_node(tokens, position);
   if (is_error_result(field_type)) {
     return field_type;
   }
   position = field_type.last_token_position;
-  parse_node_result_t field_name = parse_type_node(tokens, position);
+  parse_result_t field_name = parse_type_node(tokens, position);
   if (is_error_result(field_name)) {
     return field_name;
   }
@@ -367,7 +377,7 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
     position += 2;
   }
   if (!token_matches(token_at(tokens, position), ";")) {
-    return parse_error_result(HERE);
+    return parse_result_error(PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON, token_at(tokens, position));
   } 
 }
 
