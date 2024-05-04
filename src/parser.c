@@ -1,4 +1,4 @@
- #line 2 "parser.c"
+#line 2 "parser.c"
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
@@ -36,17 +36,17 @@
  * We will have at least one node per major kind of C construct.
  */
 typedef enum {
-  OC_NODE_UNKNOWN,
-  OC_NODE_LIST_OF_NODES,
-  OC_NODE_STRUCT,
-  OC_NODE_FIELD,
-  OC_NODE_UNION,
-  OC_NODE_GLOBAL_VARIABLE,
-  OC_NODE_GLOBAL_FUNCTION,
+  PARSE_NODE_UNKNOWN,
+  PARSE_NODE_LIST_OF_NODES,
+  PARSE_NODE_STRUCT,
+  PARSE_NODE_FIELD,
+  PARSE_NODE_UNION,
+  PARSE_NODE_GLOBAL_VARIABLE,
+  PARSE_NODE_GLOBAL_FUNCTION,
 } parse_node_type_t;
 
 /**
- * @structure oc_node_t
+ * @structure parse_node_t
  *
  * A generic parse node. Parse nodes can be freely cast to a generic
  * node via the function to_oc_node() or to a particular type via
@@ -55,22 +55,22 @@ typedef enum {
  * of a node, then is_struct_node(), etc. can be used to make sure the
  * operation is legal.
  *
- * oc_node_t is most used as a pointer, i.e., oc_node_t*, so the fact
+ * parse_node_t is most used as a pointer, i.e., parse_node_t*, so the fact
  * that some nodes are much bigger than other nodes is irrelevant.
  */
-typedef struct oc_node_s {
+typedef struct parse_node_s {
   parse_node_type_t tag;
-} oc_node_t;
+} parse_node_t;
 
 /**
- * @structure oc_node_list_t
+ * @structure parse_node_list_t
  *
  * A list of "child" parse nodes. (Currently implemented by wrapping
  * value_array_t*).
  */
 typedef struct node_list_S {
   value_array_t* list;
-} oc_node_list_t;
+} parse_node_list_t;
 
 /**
  * @enum parse_error_code_t
@@ -83,7 +83,7 @@ typedef enum {
 } parse_error_code_t;
 
 /**
- * @struct oc_node_result_t
+ * @struct parse_node_t
  *
  * This is the common return result for the various node parse
  * functions.
@@ -93,19 +93,17 @@ typedef parse_error_S {
   token_t* parse_error_token;
 } parse_error_t;
 
-
 /**
- * @struct oc_node_result_t
+ * @struct parse_node_t
  *
  * This is the common return result for the various node parse
  * functions.
  */
-typedef oc_node_result_S {
-  oc_node_t* result_node;
+typedef parse_node_S {
+  parse_node_t* result_node;
   uint64_t last_token_position;
   parse_error_t parse_error;
-} oc_node_result_t;
-
+} parse_node_t;
 
 /* ====================================================================== */
 /* One node type per parse_node_type_t */
@@ -145,7 +143,7 @@ typedef struct type_node_S {
   oc_token_t* type_name;
   // Generic types (which C doesn't have but C++ kind of has) or even
   // just pointer and array types will have at least one child.
-  oc_node_list_t type_args;
+  parse_node_list_t type_args;
 } type_node_t;
 
 /**
@@ -196,24 +194,24 @@ typedef struct field_node_S {
  * This isn't particularly type safe though if we had over-loading in
  * C we could make a safer version.
  */
-static inline oc_node_t* to_oc_node(void* ptr) {
-  return cast(oc_node_t*, ptr);
+static inline parse_node_t* to_oc_node(void* ptr) {
+  return cast(parse_node_t*, ptr);
 }
 
 /**
  * Helper to determine if a node is a struct node before trying to
  * cast it.
  */
-static inline boolean_t is_struct_node(oc_node_t* ptr) {
-  return (ptr != NULL) && (ptr.tag == OC_NODE_STRUCT);
+static inline boolean_t is_struct_node(parse_node_t* ptr) {
+  return (ptr != NULL) && (ptr.tag == PARSE_NODE_STRUCT);
 }
 
 /**
  * Safely cast a generic node to a particular type by examining it's
  * tag.
  */
-static inline struct_node_t* to_struct_node(oc_node_t* ptr) {
-  if (ptr == NULL || ptr.tag != OC_NODE_STRUCT) {
+static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr.tag != PARSE_NODE_STRUCT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(struct_node_t*, ptr);
@@ -230,7 +228,7 @@ static inline struct_node_t* to_struct_node(oc_node_t* ptr) {
  * node). In this case we need the address of that field though
  * reading is done without the extra address.
  */
-static inline void node_list_add_node(node_list_t* node_list, oc_node_t* oc_node) {
+static inline void node_list_add_node(node_list_t* node_list, parse_node_t* oc_node) {
   if (oc_node == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -257,7 +255,7 @@ static inline uint64_t node_list_length(node_list_t node_list) {
  *
  * Return true is the node list is empty.
  */
-static inline oc_node_t node_list_is_empty(node_list_t node_list) {
+static inline parse_node_t node_list_is_empty(node_list_t node_list) {
   return node_list_length(node_list) == 0;
 }
 
@@ -266,44 +264,44 @@ static inline oc_node_t node_list_is_empty(node_list_t node_list) {
  *
  * Return the n-th element of the node list.
  */
-static inline oc_node_t* node_list_get(node_list_t node_list, uint64_t index) {
+static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index) {
   if (node_list.list == NULL) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
-  return cast(oc_node_t*, value_array_get(node_list.list, index).ptr);
+  return cast(parse_node_t*, value_array_get(node_list.list, index).ptr);
 }
 
 /* ====================================================================== */
-/* Inlined helpers for oc_node_result_t implementation */
+/* Inlined helpers for parse_node_result_t implementation */
 /* ====================================================================== */
 
-static inline oc_node_result_t oc_node_empty_result() {
-  return (oc_node_result_t) { 0 };
+static inline parse_node_result_t parse_node_empty_result() {
+  return (parse_node_result_t) { 0 };
 }
 
-static inline boolean_t is_error_result(oc_node_result_t result) {
+static inline boolean_t is_error_result(parse_node_result_t result) {
   // TODO(jawilson): use some indication to determine if this is a
   // parse error (vs simply not matching, aka,
-  // oc_node_empty)result().
+  // parse_node_empty)result().
   return false;
 }
 
-static inline boolean_t is_empty_result(oc_node_result_t result) {
+static inline boolean_t is_empty_result(parse_node_result_t result) {
   return result == NULL;
 }
 
-static inline oc_node_result_t* oc_node_result(oc_node_t* node, uint64_t last_token_position) {
+static inline parse_node_result_t* parse_node_result(parse_node_t* node, uint64_t last_token_position) {
   if (node == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  return (oc_node_result_t*) { node, last_token_position };
+  return (parse_node_result_t*) { node, last_token_position };
 }
 
 /* ====================================================================== */
 /* Forward declarations for all the invidual construct parsers */
 /* ====================================================================== */
 
-oc_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position);
+parse_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position);
 
 #endif /* _PARSER_H_ */
 
@@ -317,10 +315,10 @@ static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
   return cast(oc_token_t*, value_array_get(tokens, position).ptr);
 }
 
-oc_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
+parse_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
   oc_token_t* token = token_at(tokens, position++);
   if (!token_matches(token, "struct")) {
-    return oc_node_empty_result();
+    return parse_node_empty_result();
   }
   struct_node_t result = malloc_struct(struct_node_t);
  
@@ -332,21 +330,45 @@ oc_node_result_t parse_structure_node(value_array_t* tokens, uint64_t position) 
 
   if (token_matches(token, ";")) {
     result->partial_definition = true;
-    return oc_node_result(result, position);
+    return parse_node_result(result, position);
   }
 
   if (token_matches(token, "{")) {
-    
     while (true) {
-      oc_node_result_t field_type = parse_type_node(tokens, position);
-      if (is_error_result(field_type)) {
-	return oc_node_result_error(
+      if (token_matches(token, "}")) {
+	break;
       }
+      parse_node_result_t field = parse_field_node(tokens, position);
+      if (is_error_result(field)) {
+	return field;
+      }
+      node_list_add_node(&result->fields, field.
     }
   }
 
   // ...HERE...
   
-  return oc_node_result(result);
+  return parse_node_result(result);
 }
+
+parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
+  parse_node_result_t field_type = parse_type_node(tokens, position);
+  if (is_error_result(field_type)) {
+    return field_type;
+  }
+  position = field_type.last_token_position;
+  parse_node_result_t field_name = parse_type_node(tokens, position);
+  if (is_error_result(field_name)) {
+    return field_name;
+  }
+  position = field_type.last_token_position;
+  if (token_matches(token_at(tokens, position), ":")) {
+    // Capture field width here.
+    position += 2;
+  }
+  if (!token_matches(token_at(tokens, position), ";")) {
+    return parse_error_result(HERE);
+  } 
+}
+
 
