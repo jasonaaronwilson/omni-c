@@ -89,6 +89,7 @@ typedef enum {
   PARSE_ERROR_IDENTIFIER_EXPECTED,
   PARSE_ERROR_INTEGER_LITERAL_EXPECTED,
   PARSE_ERROR_OPEN_BRACE_EXPECTED,
+  PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
 } parse_error_code_t;
 
 /**
@@ -264,7 +265,7 @@ static inline boolean_t is_struct_node(parse_node_t* ptr) {
 }
 
 /**
- * Safely cast a generic node to a particular type by examining it's
+ * Safely cast a generic node to a struct node after examining it's
  * tag.
  */
 static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
@@ -272,6 +273,17 @@ static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(struct_node_t*, ptr);
+}
+
+/**
+ * Safely cast a generic node to a declarations node after examining
+ * it's tag.
+ */
+static inline declarations_t* to_declarations(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_DECLARATIONS) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(declarations_t*, ptr);
 }
 
 /* ====================================================================== */
@@ -393,8 +405,12 @@ static inline enum_element_t* malloc_enum_element() {
 }
 
 /* ====================================================================== */
-/* Forward declarations for all the invidual construct parsers */
+/* Forward declarations all the other routines. */
 /* ====================================================================== */
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_parse_node(buffer_t* buffer, parse_node_t* node,
+                             int indention_level);
 
 parse_result_t parse_declarations(value_array_t* tokens, uint64_t position);
 parse_result_t parse_declaration(value_array_t* tokens, uint64_t position);
@@ -431,6 +447,9 @@ parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
   } else if (token_matches(token_at(tokens, decl.last_token_position + 1),
                            ";")) {
     return parse_result(decl.node, decl.last_token_position + 1);
+  } else {
+    return parse_error_result(PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
+                              token_at(tokens, position));
   }
 }
 
@@ -558,4 +577,61 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
   } else {
     return parse_error_result(PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED, next);
   }
+}
+
+/* ====================================================================== */
+/* Debug "Print" Code */
+/* ====================================================================== */
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_declarations(buffer_t* buffer, declarations_t* node,
+                               int indention_level);
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_node_list(buffer_t* buffer, node_list_t list,
+                            int indention_level);
+
+/**
+ * @function buffer_append_parse_node
+ *
+ * Append the debugging version of a parse node to a buffer.
+ */
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_parse_node(buffer_t* buffer, parse_node_t* node,
+                             int indention_level) {
+  switch (node->tag) {
+  case PARSE_NODE_DECLARATIONS:
+    return buffer_append_declarations(buffer, to_declarations(node),
+                                      indention_level);
+  default:
+    break;
+  }
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+/**
+ * @function buffer_append_node_list
+ *
+ * Append the debugging version of a list of parse nodes to a buffer.
+ */
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_node_list(buffer_t* buffer, node_list_t list,
+                            int indention_level) {
+  uint64_t length = node_list_length(list);
+  if (length > 0) {
+    buffer = buffer_printf(buffer, "\n");
+  }
+  for (uint64_t i = 0; i < length; i++) {
+    parse_node_t* node = node_list_get(list, i);
+    buffer = buffer_append_repeated_byte(buffer, ' ', indention_level * 4);
+    buffer = buffer_printf(buffer, "%d:", i & 0xffffffff);
+    buffer = buffer_append_parse_node(buffer, node, indention_level + 1);
+  }
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_declarations(buffer_t* buffer, declarations_t* node,
+                               int indention_level) {
+  return buffer_append_node_list(buffer, node->declarations, indention_level);
 }
