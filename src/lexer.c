@@ -63,7 +63,11 @@ char* token_to_string(oc_token_t token);
 
 char* token_type_to_string(token_type_t type);
 
-buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token);
+__attribute__((warn_unused_result)) buffer_t*
+    append_token_debug_string(buffer_t* buffer, oc_token_t token);
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_token_string(buffer_t* buffer, oc_token_t token);
 
 oc_tokenizer_result_t tokenize(buffer_t* buffer, boolean_t include_whitespace,
                                boolean_t include_comments);
@@ -114,7 +118,8 @@ char* token_type_to_string(token_type_t type) {
  *
  * type: TOKEN_TYPE_IDENTIFIER start: 10 end: 15 str: asdf
  */
-buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
+__attribute__((warn_unused_result)) buffer_t*
+    append_token_debug_string(buffer_t* buffer, oc_token_t token) {
   char* str = token_to_string(token);
   buffer = buffer_printf(buffer, "type: %s start: %d end: %d str: %s",
                          token_type_to_string(token.type), token.start,
@@ -122,6 +127,24 @@ buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token) {
   free_bytes(str);
   return buffer;
 }
+
+/**
+ * @function buffer_append_token_string
+ *
+ * Append the UTF-8 for a token to the buffer. This is generally only
+ * used for tokens that don't contain a newline or else we will need
+ * to start quoting tokens.
+ */
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_token_string(buffer_t* buffer, oc_token_t token) {
+  // TODO(jawilson): don't rely on token_to_string so we don't have to
+  // allocate and deallocate something.
+  char* str = token_to_string(token);
+  buffer = buffer_printf(buffer, "%s", str);
+  free_bytes(str);
+  return buffer;
+}
+
 
 /* ========================================================================= */
 // Everything after here supports the "tokenize" function which I'm
