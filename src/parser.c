@@ -37,12 +37,15 @@
  */
 typedef enum {
   PARSE_NODE_UNKNOWN,
+  PARSE_NODE_DECLARATIONS,
+  PARSE_NODE_ENUM,
+  PARSE_NODE_ENUM_ELEMENT,
+  PARSE_NODE_FIELD,
+  PARSE_NODE_GLOBAL_FUNCTION,
+  PARSE_NODE_GLOBAL_VARIABLE,
   PARSE_NODE_LIST_OF_NODES,
   PARSE_NODE_STRUCT,
-  PARSE_NODE_FIELD,
   PARSE_NODE_UNION,
-  PARSE_NODE_GLOBAL_VARIABLE,
-  PARSE_NODE_GLOBAL_FUNCTION,
 } parse_node_type_t;
 
 /**
@@ -80,7 +83,12 @@ typedef struct node_list_S {
  */
 typedef enum {
   PARSE_ERROR_UNKNOWN,
+  PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED,
   PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON,
+  PARSE_ERROR_EXPECTED_SEMICOLON,
+  PARSE_ERROR_IDENTIFIER_EXPECTED,
+  PARSE_ERROR_INTEGER_LITERAL_EXPECTED,
+  PARSE_ERROR_OPEN_BRACE_EXPECTED,
 } parse_error_code_t;
 
 /**
@@ -109,6 +117,17 @@ typedef struct parse_result_S {
 /* ====================================================================== */
 /* One node type per parse_node_type_t */
 /* ====================================================================== */
+
+/**
+ * @structure declarations_t
+ *
+ * Represents all of the top-level declarations in a file (or later a
+ * namespace).
+ */
+typedef struct declarations_S {
+  parse_node_type_t tag;
+  node_list_t declarations;
+} declarations_t;
 
 /**
  * @enum type_node_kind_t
@@ -185,9 +204,38 @@ typedef struct field_node_S {
   oc_token_t* bit_field_width;
 } field_node_t;
 
+/**
+ * @structure enum_node_t
+ *
+ * Represents an enum reference or definition.
+ */
+typedef struct enum_node_S {
+  parse_node_type_t tag;
+  oc_token_t* name;
+  node_list_t elements;
+} enum_node_t;
+
+/**
+ * @structure enum_element_t
+ *
+ * Represents one "enumerator", enum constant, enum member, etc. Name
+ * is not optional but value is.
+ */
+typedef struct enum_element_S {
+  parse_node_type_t tag;
+  oc_token_t* name;
+  oc_token_t* value;
+} enum_element_t;
+
 /* ====================================================================== */
 /* General inlined accessors, helpers, and macros */
 /* ====================================================================== */
+
+static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
+  // TODO(jawilson): maybe return a sentinel token of some sort when
+  // position is greater than the end of the array?
+  return cast(oc_token_t*, value_array_get(tokens, position).ptr);
+}
 
 static inline boolean_t token_matches(oc_token_t* token, char* str) {
   int str_len = strlen(str);
@@ -303,7 +351,7 @@ static inline parse_result_t parse_result(parse_node_t* node,
   return (parse_result_t){node, last_token_position};
 }
 
-static inline parse_result_t parse_result_error(parse_error_code_t error_code,
+static inline parse_result_t parse_error_result(parse_error_code_t error_code,
                                                 oc_token_t* error_token) {
   return (parse_result_t){.parse_error = (parse_error_t){
                               .error_code = error_code,
@@ -318,14 +366,44 @@ static inline boolean_t is_error_result(parse_result_t result) {
   return false;
 }
 
+static inline boolean_t is_valid_result(parse_result_t result) {
+  return result.node != NULL;
+}
+
+/* ====================================================================== */
+/* Node allocation and initialization (makes sure we have the right tag). */
+/* ====================================================================== */
+
+static inline declarations_t* malloc_declarations() {
+  declarations_t* result = malloc_struct(declarations_t);
+  result->tag = PARSE_NODE_DECLARATIONS;
+  return result;
+}
+
+static inline enum_node_t* malloc_enum_node() {
+  enum_node_t* result = malloc_struct(enum_node_t);
+  result->tag = PARSE_NODE_ENUM;
+  return result;
+}
+
+static inline enum_element_t* malloc_enum_element() {
+  enum_element_t* result = malloc_struct(enum_element_t);
+  result->tag = PARSE_NODE_ENUM_ELEMENT;
+  return result;
+}
 
 /* ====================================================================== */
 /* Forward declarations for all the invidual construct parsers */
 /* ====================================================================== */
 
+parse_result_t parse_declarations(value_array_t* tokens, uint64_t position);
+parse_result_t parse_declaration(value_array_t* tokens, uint64_t position);
 parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position);
 parse_result_t parse_field_node(value_array_t* tokens, uint64_t position);
 parse_result_t parse_type_node(value_array_t* tokens, uint64_t position);
+parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position);
+parse_result_t parse_enum_element_node(value_array_t* tokens,
+                                       uint64_t position);
 
 #endif /* _PARSER_H_ */
 
@@ -333,10 +411,27 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position);
 /* Implementation of non-inlined functions */
 /* ====================================================================== */
 
-static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
-  // TODO(jawilson): maybe return a sentinel token of some sort when
-  // position is greater than the end of the array?
-  return cast(oc_token_t*, value_array_get(tokens, position).ptr);
+parse_result_t parse_declarations(value_array_t* tokens, uint64_t position) {
+  declarations_t* result = malloc_declarations();
+  while (position < tokens->length) {
+    parse_result_t declaration = parse_declaration(tokens, position);
+    if (is_error_result(declaration)) {
+      return declaration;
+    }
+    node_list_add_node(&result->declarations, declaration.node);
+    position = declaration.last_token_position;
+  }
+  return parse_result(to_node(result), position);
+}
+
+parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
+  parse_result_t decl = parse_enum_node(tokens, position);
+  if (is_error_result(decl)) {
+    return decl;
+  } else if (token_matches(token_at(tokens, decl.last_token_position + 1),
+                           ";")) {
+    return parse_result(decl.node, decl.last_token_position + 1);
+  }
 }
 
 parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
@@ -360,6 +455,7 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
   if (token_matches(token, "{")) {
     while (true) {
       if (token_matches(token, "}")) {
+        position++;
         break;
       }
       parse_result_t field = parse_field_node(tokens, position);
@@ -370,7 +466,11 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
     }
   }
 
-  // ...HERE... (look for closing ";")...
+  token = token_at(tokens, position);
+  if (!token_matches(token, ";")) {
+    return parse_error_result(PARSE_ERROR_EXPECTED_SEMICOLON,
+                              token_at(tokens, position));
+  }
 
   return parse_result(to_node(result), position);
 }
@@ -391,11 +491,71 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
     position += 2;
   }
   if (!token_matches(token_at(tokens, position), ";")) {
-    return parse_result_error(PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON,
+    return parse_error_result(PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON,
                               token_at(tokens, position));
   }
 }
 
 parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
   return parse_result_empty();
+}
+
+/**
+ * Parse a node representing something that starts with the "enum"
+ * keyword. This can be used as part of a type or else part of an enum
+ * declaration.
+ */
+parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position) {
+  oc_token_t* keyword_token = token_at(tokens, position++);
+  if (!token_matches(keyword_token, "enum")) {
+    return parse_result_empty();
+  }
+  enum_node_t* result = malloc_enum_node();
+  oc_token_t* token = token_at(tokens, position++);
+  if (token->type == TOKEN_TYPE_IDENTIFIER) {
+    result->name = token;
+    token = token_at(tokens, position++);
+  }
+  if (!token_matches(token, "{")) {
+    // TODO(jawilson): brace or identifier in some cases...
+    parse_error_result(PARSE_ERROR_OPEN_BRACE_EXPECTED, token);
+  }
+  while (true) {
+    token = token_at(tokens, position);
+    if (token_matches(token, "}")) {
+      break;
+    }
+    parse_result_t element_result = parse_enum_element_node(tokens, position);
+    if (is_error_result(element_result)) {
+      return element_result;
+    } else {
+      node_list_add_node(&result->elements, element_result.node);
+      position = element_result.last_token_position;
+    }
+  }
+  return parse_result(to_node(result), position);
+}
+
+parse_result_t parse_enum_element_node(value_array_t* tokens,
+                                       uint64_t position) {
+  enum_element_t* result = malloc_enum_element();
+  oc_token_t* name = token_at(tokens, position++);
+  if (name->type != TOKEN_TYPE_IDENTIFIER) {
+    return parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
+  }
+  result->tag = PARSE_NODE_ENUM_ELEMENT;
+  oc_token_t* next = token_at(tokens, position);
+  if (token_matches(next, ",")) {
+    return parse_result(to_node(result), position);
+  } else if (token_matches(next, "=")) {
+    position++;
+    oc_token_t* value = token_at(tokens, position);
+    if (value->type != TOKEN_TYPE_INTEGER_LITERAL) {
+      return parse_error_result(PARSE_ERROR_INTEGER_LITERAL_EXPECTED, value);
+    }
+    result->value = value;
+    return parse_result(to_node(result), position);
+  } else {
+    return parse_error_result(PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED, next);
+  }
 }
