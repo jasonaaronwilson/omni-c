@@ -277,6 +277,17 @@ static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
 }
 
 /**
+ * Safely cast a generic node to a struct node after examining it's
+ * tag.
+ */
+static inline field_node_t* to_field_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_STRUCT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(field_node_t*, ptr);
+}
+
+/**
  * Safely cast a generic node to a declarations node after examining
  * it's tag.
  */
@@ -534,7 +545,7 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
   if (is_error_result(field_name)) {
     return field_name;
   }
-  position = field_type.next_token_position;
+  position = field_name.next_token_position;
   if (token_matches(token_at(tokens, position), ":")) {
     // Capture field width here.
     position += 2;
@@ -561,6 +572,8 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
       ptr_result->type_node_kind = TYPE_NODE_KIND_POINTER;
       node_list_add_node(&ptr_result->type_args, to_node(result));
       result = ptr_result;
+    } else {
+      break;
     }
   }
   return parse_result(to_node(result), position);

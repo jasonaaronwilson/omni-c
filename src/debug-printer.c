@@ -50,6 +50,10 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_struct_node(buffer_t* buffer, struct_node_t* node,
                               int indention_level);
 
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_field_node(buffer_t* buffer, field_node_t* node,
+                             int indention_level);
+
 /**
  * @function buffer_append_parse_node
  *
@@ -73,6 +77,10 @@ __attribute__((warn_unused_result)) buffer_t*
   case PARSE_NODE_STRUCT:
     return buffer_append_struct_node(buffer, to_struct_node(node),
                                      indention_level);
+
+  case PARSE_NODE_FIELD:
+    return buffer_append_field_node(buffer, to_field_node(node),
+                                    indention_level);
 
   default:
     break;
@@ -148,6 +156,30 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer = buffer_append_token_string(buffer, *(node->value));
     buffer = buffer_printf(buffer, "\n");
   }
+
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_field_node(buffer_t* buffer, field_node_t* node,
+                             int indention_level) {
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FIELD\n");
+  if (node->name != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_append_string(buffer, "name: ");
+    buffer = buffer_append_token_string(buffer, *(node->name));
+    buffer = buffer_printf(buffer, "\n");
+  }
+
+  /*
+  if (node->value != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_append_string(buffer, "value: ");
+    buffer = buffer_append_token_string(buffer, *(node->value));
+    buffer = buffer_printf(buffer, "\n");
+  }
+  */
 
   return buffer;
 }
