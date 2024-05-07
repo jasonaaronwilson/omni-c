@@ -46,6 +46,7 @@ typedef enum {
   PARSE_NODE_LIST_OF_NODES,
   PARSE_NODE_STRUCT,
   PARSE_NODE_UNION,
+  PARSE_NODE_TYPE,
 } parse_node_type_t;
 
 /**
@@ -424,6 +425,18 @@ static inline enum_element_t* malloc_enum_element() {
   return result;
 }
 
+static inline type_node_t* malloc_type_node() {
+  type_node_t* result = malloc_struct(type_node_t);
+  result->tag = PARSE_NODE_TYPE;
+  return result;
+}
+
+static inline struct_node_t* malloc_struct_node() {
+  struct_node_t* result = malloc_struct(struct_node_t);
+  result->tag = PARSE_NODE_STRUCT;
+  return result;
+}
+
 /* ====================================================================== */
 /* Forward declarations all the other routines. */
 /* ====================================================================== */
@@ -457,15 +470,27 @@ parse_result_t parse_declarations(value_array_t* tokens, uint64_t position) {
 }
 
 parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
+
   parse_result_t decl = parse_enum_node(tokens, position);
-  if (is_error_result(decl)) {
-    return decl;
-  } else if (token_matches(token_at(tokens, decl.next_token_position), ";")) {
-    return parse_result(decl.node, decl.next_token_position + 1);
-  } else {
-    return parse_error_result(PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
-                              token_at(tokens, position));
+  if (!is_empty_result(decl)) {
+    if (is_error_result(decl)) {
+      return decl;
+    } else if (token_matches(token_at(tokens, decl.next_token_position), ";")) {
+      return parse_result(decl.node, decl.next_token_position + 1);
+    }
   }
+
+  decl = parse_structure_node(tokens, position);
+  if (!is_empty_result(decl)) {
+    if (is_error_result(decl)) {
+      return decl;
+    } else if (token_matches(token_at(tokens, decl.next_token_position), ";")) {
+      return parse_result(decl.node, decl.next_token_position + 1);
+    }
+  }
+
+  return parse_error_result(PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
+                            token_at(tokens, position));
 }
 
 parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
@@ -473,7 +498,7 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
   if (!token_matches(token, "struct")) {
     return parse_result_empty();
   }
-  struct_node_t* result = malloc_struct(struct_node_t);
+  struct_node_t* result = malloc_struct_node();
 
   token = token_at(tokens, position++);
   if (token->type == TOKEN_TYPE_IDENTIFIER) {
@@ -481,13 +506,9 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
     token = token_at(tokens, position++);
   }
 
-  if (token_matches(token, ";")) {
-    result->partial_definition = true;
-    return parse_result(to_node(result), position);
-  }
-
   if (token_matches(token, "{")) {
     while (true) {
+      token = token_at(tokens, position);
       if (token_matches(token, "}")) {
         position++;
         break;
@@ -498,12 +519,6 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
       }
       node_list_add_node(&result->fields, field.node);
     }
-  }
-
-  token = token_at(tokens, position);
-  if (!token_matches(token, ";")) {
-    return parse_error_result(PARSE_ERROR_EXPECTED_SEMICOLON,
-                              token_at(tokens, position));
   }
 
   return parse_result(to_node(result), position);
@@ -531,8 +546,26 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
 }
 
 parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
-  return parse_result_empty();
+  // TODO(jawilson): allow parens for more complicated types...
+  type_node_t* result = malloc_type_node();
+  oc_token_t* type_name = token_at(tokens, position++);
+  if (type_name->type != TOKEN_TYPE_IDENTIFIER) {
+    return parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, type_name);
+  }
+  result->type_name = type_name;
+  while (true) {
+    oc_token_t* next = token_at(tokens, position);
+    if (token_matches(next, "*")) {
+      position++;
+      type_node_t* ptr_result = malloc_type_node();
+      ptr_result->type_node_kind = TYPE_NODE_KIND_POINTER;
+      node_list_add_node(&ptr_result->type_args, to_node(result));
+      result = ptr_result;
+    }
+  }
+  return parse_result(to_node(result), position);
 }
+
 
 /**
  * Parse a node representing something that starts with the "enum"
