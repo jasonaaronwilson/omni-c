@@ -205,6 +205,7 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer = buffer_append_token_string(buffer, *(node->type_name));
     buffer = buffer_printf(buffer, "\n");
   }
-  // TODO(jawilson): child nodes.
+  buffer = buffer_append_node_list(buffer, node->type_args, "type_arg",
+                                   indention_level);
   return buffer;
 }

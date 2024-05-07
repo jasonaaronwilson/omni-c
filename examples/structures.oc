@@ -3,3 +3,11 @@ struct empty_struct_t {};
 struct simple_struct_t {
   uint64_t number_field;
 };
+
+struct simple_struct_with_pointer_t {
+  uint64_t* number_field;
+};
+
+struct simple_bit_field_t {
+  uint64_t number_field : 3;
+};
