@@ -102,7 +102,7 @@ __attribute__((warn_unused_result)) buffer_t*
                        int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_ENUM\n");
-  buffer = buffer_append_node_list(buffer, node->elements, "field",
+  buffer = buffer_append_node_list(buffer, node->elements, "element",
                                    indention_level);
   return buffer;
 }

@@ -2,3 +2,11 @@ enum weekday_t {
      MONDAY,
      TUESDAY
 };
+
+enum month_t {
+     JANUARY = 1,
+     FEBRUARY,
+};
+
+enum no_elements_t {
+};
