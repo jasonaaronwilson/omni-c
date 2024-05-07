@@ -6,7 +6,9 @@
 
 #include "common/oc-compiler-state.h"
 #include "common/oc-node.h"
+#include "debug-printer.h"
 #include "lexer.h"
+#include "parser.h"
 #include "parser/parse-files.h"
 #include <c-armyknife-lib.h>
 
@@ -16,7 +18,8 @@ boolean_t FLAG_include_unnamed_nodes = false;
 
 boolean_t FLAG_print_tokens_show_tokens = true;
 boolean_t FLAG_print_tokens_include_whitespace = false;
-boolean_t FLAG_print_tokens_include_comments = true;
+boolean_t FLAG_print_tokens_include_comments = false;
+boolean_t FLAG_print_tokens_parse_and_print = true;
 
 void print_tokens(void) {
   log_info("print_tokens()");
@@ -43,7 +46,20 @@ void print_tokens(void) {
         buffer = append_token_debug_string(buffer, *token);
         buffer = buffer_append_string(buffer, "\n");
       }
-      fprintf(stdout, "** Tokens **\n%s", buffer_to_c_string(buffer));
+      fprintf(stdout, "** Tokens **\n%s\n", buffer_to_c_string(buffer));
+    }
+    if (FLAG_print_tokens_parse_and_print) {
+      parse_result_t declarations
+          = parse_declarations(tokenizer_result.tokens, 0);
+      if (is_error_result(declarations)) {
+        log_fatal("Parse error (error_code=%d)",
+                  declarations.parse_error.error_code);
+        fatal_error(ERROR_ILLEGAL_STATE);
+      } else {
+        buffer_t* buffer = make_buffer(1024);
+        buffer = buffer_append_parse_node(buffer, declarations.node, 0);
+        fprintf(stdout, "** Parse Nodes **\n%s\n", buffer_to_c_string(buffer));
+      }
     }
   }
 }
@@ -306,6 +322,7 @@ void configure_print_tokens_command(void) {
   flag_boolean("--show-tokens", &FLAG_print_tokens_show_tokens);
   flag_boolean("--include-whitespace", &FLAG_print_tokens_include_whitespace);
   flag_boolean("--include-comments", &FLAG_print_tokens_include_comments);
+  flag_boolean("--parse-and-print", &FLAG_print_tokens_parse_and_print);
   flag_file_args(&FLAG_files);
 }
 

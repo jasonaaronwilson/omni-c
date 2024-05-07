@@ -111,7 +111,7 @@ typedef struct parse_error_S {
  */
 typedef struct parse_result_S {
   parse_node_t* node;
-  uint64_t last_token_position;
+  uint64_t next_token_position;
   parse_error_t parse_error;
 } parse_result_t;
 
@@ -395,10 +395,7 @@ static inline parse_result_t parse_error_result(parse_error_code_t error_code,
 }
 
 static inline boolean_t is_error_result(parse_result_t result) {
-  // TODO(jawilson): use some indication to determine if this is a
-  // parse error (vs simply not matching, aka,
-  // parse_node_empty)result().
-  return false;
+  return result.parse_error.error_code != 0;
 }
 
 static inline boolean_t is_valid_result(parse_result_t result) {
@@ -454,7 +451,7 @@ parse_result_t parse_declarations(value_array_t* tokens, uint64_t position) {
       return declaration;
     }
     node_list_add_node(&result->declarations, declaration.node);
-    position = declaration.last_token_position;
+    position = declaration.next_token_position;
   }
   return parse_result(to_node(result), position);
 }
@@ -463,9 +460,8 @@ parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
   parse_result_t decl = parse_enum_node(tokens, position);
   if (is_error_result(decl)) {
     return decl;
-  } else if (token_matches(token_at(tokens, decl.last_token_position + 1),
-                           ";")) {
-    return parse_result(decl.node, decl.last_token_position + 1);
+  } else if (token_matches(token_at(tokens, decl.next_token_position), ";")) {
+    return parse_result(decl.node, decl.next_token_position + 1);
   } else {
     return parse_error_result(PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
                               token_at(tokens, position));
@@ -518,12 +514,12 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
   if (is_error_result(field_type)) {
     return field_type;
   }
-  position = field_type.last_token_position;
+  position = field_type.next_token_position;
   parse_result_t field_name = parse_type_node(tokens, position);
   if (is_error_result(field_name)) {
     return field_name;
   }
-  position = field_type.last_token_position;
+  position = field_type.next_token_position;
   if (token_matches(token_at(tokens, position), ":")) {
     // Capture field width here.
     position += 2;
@@ -568,10 +564,10 @@ parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position) {
       return element_result;
     } else {
       node_list_add_node(&result->elements, element_result.node);
-      position = element_result.last_token_position;
+      position = element_result.next_token_position;
     }
   }
-  return parse_result(to_node(result), position);
+  return parse_result(to_node(result), position + 1);
 }
 
 parse_result_t parse_enum_element_node(value_array_t* tokens,
@@ -581,17 +577,23 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
   if (name->type != TOKEN_TYPE_IDENTIFIER) {
     return parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
   }
-  result->tag = PARSE_NODE_ENUM_ELEMENT;
+  // result->tag = PARSE_NODE_ENUM_ELEMENT;
+
   oc_token_t* next = token_at(tokens, position);
-  if (token_matches(next, ",")) {
-    return parse_result(to_node(result), position);
-  } else if (token_matches(next, "=")) {
+  if (token_matches(next, "=")) {
     position++;
     oc_token_t* value = token_at(tokens, position);
     if (value->type != TOKEN_TYPE_INTEGER_LITERAL) {
       return parse_error_result(PARSE_ERROR_INTEGER_LITERAL_EXPECTED, value);
     }
     result->value = value;
+    position++;
+    next = token_at(tokens, position);
+  }
+
+  if (token_matches(next, ",")) {
+    return parse_result(to_node(result), position + 1);
+  } else if (token_matches(next, "}")) {
     return parse_result(to_node(result), position);
   } else {
     return parse_error_result(PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED, next);

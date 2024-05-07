@@ -79,7 +79,7 @@ __attribute__((warn_unused_result)) buffer_t*
  */
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_node_list(buffer_t* buffer, node_list_t list,
-                            int indention_level) {
+                            char* field_name, int indention_level) {
   uint64_t length = node_list_length(list);
   if (length > 0) {
     buffer = buffer_printf(buffer, "\n");
@@ -87,7 +87,7 @@ __attribute__((warn_unused_result)) buffer_t*
   for (uint64_t i = 0; i < length; i++) {
     parse_node_t* node = node_list_get(list, i);
     buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "%d:", i & 0xffffffff);
+    buffer = buffer_printf(buffer, "%s[%d]:", field_name, i & 0xffffffff);
     buffer = buffer_append_parse_node(buffer, node, indention_level + 1);
   }
   return buffer;
@@ -96,7 +96,8 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_declarations(buffer_t* buffer, declarations_t* node,
                                int indention_level) {
-  return buffer_append_node_list(buffer, node->declarations, indention_level);
+  return buffer_append_node_list(buffer, node->declarations, "declaration",
+                                 indention_level);
 }
 
 __attribute__((warn_unused_result)) buffer_t*
@@ -104,7 +105,8 @@ __attribute__((warn_unused_result)) buffer_t*
                        int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "PARSE_NODE_ENUM\n");
-  buffer = buffer_append_node_list(buffer, node->elements, indention_level + 1);
+  buffer = buffer_append_node_list(buffer, node->elements, "field",
+                                   indention_level + 1);
   return buffer;
 }
 

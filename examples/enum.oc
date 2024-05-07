@@ -1,0 +1,4 @@
+enum weekday_t {
+     MONDAY,
+     TUESDAY
+};
