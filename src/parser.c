@@ -574,10 +574,10 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
                                        uint64_t position) {
   enum_element_t* result = malloc_enum_element();
   oc_token_t* name = token_at(tokens, position++);
+  result->name = name;
   if (name->type != TOKEN_TYPE_IDENTIFIER) {
     return parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
   }
-  // result->tag = PARSE_NODE_ENUM_ELEMENT;
 
   oc_token_t* next = token_at(tokens, position);
   if (token_matches(next, "=")) {

@@ -81,13 +81,10 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_node_list(buffer_t* buffer, node_list_t list,
                             char* field_name, int indention_level) {
   uint64_t length = node_list_length(list);
-  if (length > 0) {
-    buffer = buffer_printf(buffer, "\n");
-  }
   for (uint64_t i = 0; i < length; i++) {
     parse_node_t* node = node_list_get(list, i);
     buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "%s[%d]:", field_name, i & 0xffffffff);
+    buffer = buffer_printf(buffer, "%s[%d]:\n", field_name, i & 0xffffffff);
     buffer = buffer_append_parse_node(buffer, node, indention_level + 1);
   }
   return buffer;
@@ -104,9 +101,9 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_enum(buffer_t* buffer, enum_node_t* node,
                        int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "PARSE_NODE_ENUM\n");
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_ENUM\n");
   buffer = buffer_append_node_list(buffer, node->elements, "field",
-                                   indention_level + 1);
+                                   indention_level);
   return buffer;
 }
 
@@ -114,22 +111,21 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_enum_element(buffer_t* buffer, enum_element_t* node,
                                int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "PARSE_NODE_ENUM_ELEMENT\n");
-  buffer = buffer_indent(buffer, indention_level + 1);
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_ENUM_ELEMENT\n");
 
-  if (node->name) {
+  if (node->name != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "name: ");
     buffer = buffer_append_token_string(buffer, *(node->name));
     buffer = buffer_printf(buffer, "\n");
   }
 
-  if (node->value) {
+  if (node->value != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "value: ");
     buffer = buffer_append_token_string(buffer, *(node->value));
     buffer = buffer_printf(buffer, "\n");
   }
-
-  buffer = buffer_printf(buffer, "\n");
 
   return buffer;
 }
