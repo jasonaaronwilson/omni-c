@@ -54,6 +54,10 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_field_node(buffer_t* buffer, field_node_t* node,
                              int indention_level);
 
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_type_node(buffer_t* buffer, type_node_t* node,
+                            int indention_level);
+
 /**
  * @function buffer_append_parse_node
  *
@@ -81,6 +85,9 @@ __attribute__((warn_unused_result)) buffer_t*
   case PARSE_NODE_FIELD:
     return buffer_append_field_node(buffer, to_field_node(node),
                                     indention_level);
+
+  case PARSE_NODE_TYPE:
+    return buffer_append_type_node(buffer, to_type_node(node), indention_level);
 
   default:
     break;
@@ -171,15 +178,33 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer = buffer_append_token_string(buffer, *(node->name));
     buffer = buffer_printf(buffer, "\n");
   }
-
-  /*
-  if (node->value != NULL) {
+  if (node->type != NULL) {
     buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "value: ");
-    buffer = buffer_append_token_string(buffer, *(node->value));
+    buffer = buffer_append_string(buffer, "type:\n");
+    buffer = buffer_append_type_node(buffer, node->type, indention_level + 1);
+  }
+
+  // TODO(jawilson): bit_field_width
+
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_type_node(buffer_t* buffer, type_node_t* node,
+                            int indention_level) {
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_TYPE\n");
+
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "type_node_kind: %s\n",
+                         type_node_kind_to_string(node->type_node_kind));
+
+  if (node->type_name != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_append_string(buffer, "type_name: ");
+    buffer = buffer_append_token_string(buffer, *(node->type_name));
     buffer = buffer_printf(buffer, "\n");
   }
-  */
-
+  // TODO(jawilson): child nodes.
   return buffer;
 }

@@ -281,7 +281,7 @@ static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
  * tag.
  */
 static inline field_node_t* to_field_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_STRUCT) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_FIELD) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(field_node_t*, ptr);
@@ -320,6 +320,16 @@ static inline enum_element_t* to_enum_element(parse_node_t* ptr) {
   return cast(enum_element_t*, ptr);
 }
 
+/**
+ * Safely cast a generic node to a type node after examining it's
+ * tag.
+ */
+static inline type_node_t* to_type_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_TYPE) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(type_node_t*, ptr);
+}
 
 /* ====================================================================== */
 /* The inlined node_list implementation */
@@ -448,6 +458,20 @@ static inline struct_node_t* malloc_struct_node() {
   return result;
 }
 
+static inline field_node_t* malloc_field_node() {
+  field_node_t* result = malloc_struct(field_node_t);
+  result->tag = PARSE_NODE_FIELD;
+  return result;
+}
+
+/* ====================================================================== */
+/* Enumeration to string */
+/* ====================================================================== */
+
+char* parse_node_type_to_string(parse_node_type_t type);
+char* parse_error_code_to_string(parse_error_code_t error_code);
+char* type_node_kind_to_string(type_node_kind_t kind);
+
 /* ====================================================================== */
 /* Forward declarations all the other routines. */
 /* ====================================================================== */
@@ -468,6 +492,7 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
 /* ====================================================================== */
 
 parse_result_t parse_declarations(value_array_t* tokens, uint64_t position) {
+  log_info("parse_declarations(_, %d)", position & 0xffffffff);
   declarations_t* result = malloc_declarations();
   while (position < tokens->length) {
     parse_result_t declaration = parse_declaration(tokens, position);
@@ -481,7 +506,7 @@ parse_result_t parse_declarations(value_array_t* tokens, uint64_t position) {
 }
 
 parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
-
+  log_info("parse_declaration(_, %d)", position & 0xffffffff);
   parse_result_t decl = parse_enum_node(tokens, position);
   if (!is_empty_result(decl)) {
     if (is_error_result(decl)) {
@@ -505,6 +530,7 @@ parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
 }
 
 parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
+  log_info("parse_structure_node(_, %d)", position & 0xffffffff);
   oc_token_t* token = token_at(tokens, position++);
   if (!token_matches(token, "struct")) {
     return parse_result_empty();
@@ -529,6 +555,7 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
         return field;
       }
       node_list_add_node(&result->fields, field.node);
+      position = field.next_token_position;
     }
   }
 
@@ -536,16 +563,14 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
 }
 
 parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
+  log_info("parse_field_node(_, %d)", position & 0xffffffff);
   parse_result_t field_type = parse_type_node(tokens, position);
   if (is_error_result(field_type)) {
     return field_type;
   }
   position = field_type.next_token_position;
-  parse_result_t field_name = parse_type_node(tokens, position);
-  if (is_error_result(field_name)) {
-    return field_name;
-  }
-  position = field_name.next_token_position;
+  oc_token_t* field_name = token_at(tokens, position++);
+  // make sure it's an identifier!
   if (token_matches(token_at(tokens, position), ":")) {
     // Capture field width here.
     position += 2;
@@ -554,9 +579,15 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
     return parse_error_result(PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON,
                               token_at(tokens, position));
   }
+  position++;
+  field_node_t* result = malloc_field_node();
+  result->type = to_type_node(field_type.node);
+  result->name = field_name;
+  return parse_result(to_node(result), position);
 }
 
 parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
+  log_info("parse_type_node(_, %d)", position & 0xffffffff);
   // TODO(jawilson): allow parens for more complicated types...
   type_node_t* result = malloc_type_node();
   oc_token_t* type_name = token_at(tokens, position++);
@@ -586,6 +617,7 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
  * declaration.
  */
 parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position) {
+  log_info("parse_enum_node(_, %d)", position & 0xffffffff);
   oc_token_t* keyword_token = token_at(tokens, position++);
   if (!token_matches(keyword_token, "enum")) {
     return parse_result_empty();
@@ -618,6 +650,7 @@ parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position) {
 
 parse_result_t parse_enum_element_node(value_array_t* tokens,
                                        uint64_t position) {
+  log_info("parse_enum_element_node(_, %d)", position & 0xffffffff);
   enum_element_t* result = malloc_enum_element();
   oc_token_t* name = token_at(tokens, position++);
   result->name = name;
@@ -644,4 +677,81 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
   } else {
     return parse_error_result(PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED, next);
   }
+}
+
+char* parse_node_type_to_string(parse_node_type_t type) {
+  switch (type) {
+  default:
+  case PARSE_NODE_UNKNOWN:
+    return "PARSE_NODE_UNKNOWN";
+  case PARSE_NODE_DECLARATIONS:
+    return "PARSE_NODE_DECLARATIONS";
+  case PARSE_NODE_ENUM:
+    return "PARSE_NODE_ENUM";
+  case PARSE_NODE_ENUM_ELEMENT:
+    return "PARSE_NODE_ENUM_ELEMENT";
+  case PARSE_NODE_FIELD:
+    return "PARSE_NODE_FIELD";
+  case PARSE_NODE_GLOBAL_FUNCTION:
+    return "PARSE_NODE_GLOBAL_FUNCTION";
+  case PARSE_NODE_GLOBAL_VARIABLE:
+    return "PARSE_NODE_GLOBAL_VARIABLE";
+  case PARSE_NODE_LIST_OF_NODES:
+    return "PARSE_NODE_LIST_OF_NODES";
+  case PARSE_NODE_STRUCT:
+    return "PARSE_NODE_STRUCT";
+  case PARSE_NODE_UNION:
+    return "PARSE_NODE_UNION";
+  case PARSE_NODE_TYPE:
+    return "PARSE_NODE_TYPE";
+  }
+  return "**NOT REACHED**";
+}
+
+char* parse_error_code_to_string(parse_error_code_t error_code) {
+  switch (error_code) {
+  default:
+  case PARSE_ERROR_UNKNOWN:
+    return "PARSE_ERROR_UNKNOWN";
+  case PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED:
+    return "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED";
+  case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
+    return "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON";
+  case PARSE_ERROR_EXPECTED_SEMICOLON:
+    return "PARSE_ERROR_EXPECTED_SEMICOLON";
+  case PARSE_ERROR_IDENTIFIER_EXPECTED:
+    return "PARSE_ERROR_IDENTIFIER_EXPECTED";
+  case PARSE_ERROR_INTEGER_LITERAL_EXPECTED:
+    return "PARSE_ERROR_INTEGER_LITERAL_EXPECTED";
+  case PARSE_ERROR_OPEN_BRACE_EXPECTED:
+    return "PARSE_ERROR_OPEN_BRACE_EXPECTED";
+  case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
+    return "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION";
+  }
+  return "**NOT REACHED**";
+}
+
+char* type_node_kind_to_string(type_node_kind_t kind) {
+  switch (kind) {
+  default:
+  case TYPE_NODE_KIND_UNKNOWN:
+    return "TYPE_NODE_KIND_UNKNOWN";
+  case TYPE_NODE_KIND_POINTER:
+    return "TYPE_NODE_KIND_POINTER";
+  case TYPE_NODE_KIND_ARRAY:
+    return "TYPE_NODE_KIND_ARRAY";
+  case TYPE_NODE_KIND_SIZED_ARRAY:
+    return "TYPE_NODE_KIND_SIZED_ARRAY";
+  case TYPE_NODE_KIND_STRUCT_PREFIXED_TYPENAME:
+    return "TYPE_NODE_KIND_STRUCT_PREFIXED_TYPENAME";
+  case TYPE_NODE_KIND_UNION_PREFIXED_TYPENAME:
+    return "TYPE_NODE_KIND_UNION_PREFIXED_TYPENAME";
+  case TYPE_NODE_KIND_ENUM_PREFIXED_TYPENAME:
+    return "TYPE_NODE_KIND_ENUM_PREFIXED_TYPENAME";
+  case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
+    return "TYPE_NODE_KIND_PRIMITIVE_TYPENAME";
+  case TYPE_NODE_KIND_TYPENAME:
+    return "TYPE_NODE_KIND_TYPENAME";
+  }
+  return "**NOT REACHED**";
 }
