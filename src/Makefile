@@ -19,6 +19,7 @@ SRC_C = armyknife-lib-impl.c \
 	common/oc-node.c \
 	lexer.c \
 	parser.c \
+	node-list.c \
 	debug-printer.c \
 	main.c
 

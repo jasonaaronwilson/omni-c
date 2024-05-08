@@ -8,7 +8,7 @@
 /**
  * @file lexer
  *
- * Break up a UTF-8 byte sequence into an array C tokens.
+ * Break up a UTF-8 byte sequence into an array C or C++ tokens.
  */
 
 /**
