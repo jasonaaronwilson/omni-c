@@ -46,51 +46,54 @@ char* c_builtin_types_array[] = {
     "_Imaginary" // Imaginary number representation
 };
 
+char* cpp_keywords_array[] = {
+    // C++98 Keywords (includes most C keywords)
+    "asm",      // Inline assembly
+    "class",    // Define a class
+    "new",      // Dynamic memory allocation
+    "delete",   // Dynamic memory deallocation
+    "template", // Templates (generic programming)
+    "typename", // Used in templates
+    "this",     // Pointer to current object
+    "try",      // Start of try block (exception handling)
+    "catch",    // Start of catch block (exception handling)
+    "throw",    // Throw an exception
+
+    // C++11 Keywords
+    "nullptr",   // Null pointer literal
+    "constexpr", // Constant expressions
+    "decltype",  // Deduce type
+    "noexcept",  // Function doesn't throw exceptions
+    "override",  // Explicitly override virtual function
+    "final",     // Prevent virtual function overriding/class inheritance
+    "default",   // Used in switch, or to request default constructor/destructor
+    "auto",      // Automatic type deduction
+
+    // C++14 Keywords
+    "declval", // Used in SFINAE (complicated, advanced usage)
+
+    // C++17 Keywords
+    "static_assert", // Compile-time assertions
+    "inline",        // Can now be used for variables
+
+    // C++20 Keywords
+    "char8_t",   // Type for UTF-8 characters
+    "concept",   // Define constraints for templates
+    "requires",  // Specify requirements for template parameters
+    "coroutine", // Keyword related to coroutines (advanced)
+    "co_await",  // Used with coroutines
+    "co_yield",  // Used with coroutines
+    "co_return", // Used with coroutines
+};
+
 string_hashtable_t* c_keywords_ht = NULL;
 string_hashtable_t* c_builtin_types_ht = NULL;
 
-/*
-cpp_keywords = {
-    // C++98 Keywords (includes most C keywords)
-    'asm': None,           // Inline assembly
-    'class': None,         // Define a class
-    'new': None,           // Dynamic memory allocation
-    'delete': None,        // Dynamic memory deallocation
-    'template': None,      // Templates (generic programming)
-    'typename': None,      // Used in templates
-    'this': None,          // Pointer to current object
-    'try': None,           // Start of try block (exception handling)
-    'catch': None,         // Start of catch block (exception handling)
-    'throw': None,         // Throw an exception
+string_hashtable_t* cpp_keywords_ht = NULL;
+string_hashtable_t* cpp_builtin_types_ht = NULL;
 
-    // C++11 Keywords
-    'nullptr': None,       // Null pointer literal
-    'constexpr': None,     // Constant expressions
-    'decltype': None,      // Deduce type
-    'noexcept': None,      // Function doesn't throw exceptions
-    'override': None,      // Explicitly override virtual function
-    'final': None,         // Prevent virtual function overriding/class
-inheritance 'default': None,       // Used in switch, or to request default
-constructor/destructor 'auto': None,          // Automatic type deduction
-
-    // C++14 Keywords
-    'declval': None,       // Used in SFINAE (complicated, advanced usage)
-
-    // C++17 Keywords
-    'static_assert': None, // Compile-time assertions
-    'inline': None,        // Can now be used for variables
-
-    // C++20 Keywords
-    'char8_t': None,       // Type for UTF-8 characters
-    'concept': None,       // Define constraints for templates
-    'requires': None,      // Specify requirements for template parameters
-    'coroutine': None,     // Keyword related to coroutines (advanced)
-    'co_await': None,      // Used with coroutines
-    'co_yield': None,      // Used with coroutines
-    'co_return': None,     // Used with coroutines
-};
-
-*/
+string_hashtable_t* oc_keywords_ht = NULL;
+string_hashtable_t* oc_builtin_types_ht = NULL;
 
 void initialize_keyword_maps(void) {
   // Put the keywords into a hashtable. A binary search would work as
@@ -100,18 +103,38 @@ void initialize_keyword_maps(void) {
   // C).
   int num_keywords = sizeof(c_keywords_array) / sizeof(c_keywords_array[0]);
   c_keywords_ht = make_string_hashtable(2 * num_keywords);
+  cpp_keywords_ht = make_string_hashtable(2 * num_keywords);
   for (int i = 0; i < num_keywords; i++) {
     c_keywords_ht
         = string_ht_insert(c_keywords_ht, c_keywords_array[i], u64_to_value(1));
+    oc_keywords_ht
+        = string_ht_insert(c_keywords_ht, c_keywords_array[i], u64_to_value(1));
+    cpp_keywords_ht = string_ht_insert(cpp_keywords_ht, c_keywords_array[i],
+                                       u64_to_value(1));
   }
 
   int num_types
       = sizeof(c_builtin_types_array) / sizeof(c_builtin_types_array[0]);
   c_builtin_types_ht = make_string_hashtable(2 * num_types);
+  cpp_builtin_types_ht = make_string_hashtable(2 * num_types);
 
   for (int i = 0; i < num_types; i++) {
     c_builtin_types_ht = string_ht_insert(
         c_builtin_types_ht, c_builtin_types_array[i], u64_to_value(1));
+    oc_builtin_types_ht = string_ht_insert(
+        c_builtin_types_ht, c_builtin_types_array[i], u64_to_value(1));
+    cpp_builtin_types_ht = string_ht_insert(
+        cpp_builtin_types_ht, c_builtin_types_array[i], u64_to_value(1));
+  }
+
+  // What about char8_t and char16_t?
+  cpp_builtin_types_ht
+      = string_ht_insert(cpp_builtin_types_ht, "char8_t", u64_to_value(1));
+}
+
+static inline void maybe_initialize_keyword_maps(void) {
+  if (c_keywords_ht == NULL) {
+    initialize_keyword_maps();
   }
 }
 
@@ -122,10 +145,18 @@ void initialize_keyword_maps(void) {
  * according to the input mode.
  */
 boolean_t is_reserved_word(input_mode_t mode, char* str) {
-  if (c_keywords_ht == NULL) {
-    initialize_keyword_maps();
+  maybe_initialize_keyword_maps();
+  switch (mode) {
+  case INPUT_MODE_OMNI_C:
+    return is_ok(string_ht_find(oc_keywords_ht, str));
+  case INPUT_MODE_STANDARD_C:
+    return is_ok(string_ht_find(c_keywords_ht, str));
+  case INPUT_MODE_C_PLUS_PLUS:
+    return is_ok(string_ht_find(cpp_keywords_ht, str));
+  default:
+    break;
   }
-  return is_ok(string_ht_find(c_keywords_ht, str));
+  fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 /**
@@ -135,8 +166,16 @@ boolean_t is_reserved_word(input_mode_t mode, char* str) {
  * according to the input mode.
  */
 boolean_t is_builtin_type_name(input_mode_t mode, char* str) {
-  if (c_builtin_types_ht == NULL) {
-    initialize_keyword_maps();
+  maybe_initialize_keyword_maps();
+  switch (mode) {
+  case INPUT_MODE_OMNI_C:
+    return is_ok(string_ht_find(oc_builtin_types_ht, str));
+  case INPUT_MODE_STANDARD_C:
+    return is_ok(string_ht_find(c_builtin_types_ht, str));
+  case INPUT_MODE_C_PLUS_PLUS:
+    return is_ok(string_ht_find(cpp_builtin_types_ht, str));
+  default:
+    break;
   }
-  return is_ok(string_ht_find(c_builtin_types_ht, str));
+  fatal_error(ERROR_ILLEGAL_STATE);
 }
