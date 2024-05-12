@@ -34,3 +34,9 @@ struct unsigned_fields_t {
   unsigned int unsigned_int;
   unsigned long int unsigned_long_int;
 };
+
+struct char__fields_t {
+  char ch;
+  signed char signed_char;
+  unsigned char unsigned_char;
+};
