@@ -38,18 +38,18 @@ typedef enum {
 struct oc_token_S;
 
 /**
- * @struct parse_error_t
+ * @struct compiler_error_t
  *
  * Represents errors in many phases of the compiler.
  */
-typedef struct parse_error_S {
+typedef struct compiler_error_S {
   tokenizer_error_t tokenizer_error_code;
   parse_error_code_t parser_error_code;
   struct oc_token_S* error_token;
-} parse_error_t;
+} compiler_error_t;
 
 buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
-                                             parse_error_t* error);
+                                             compiler_error_t* error);
 
 #endif /* _COMPILER_ERRORS_H_ */
 
@@ -59,6 +59,6 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
  * Append a human readable version of the error to the buffer.
  */
 buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
-                                             parse_error_t* error) {
+                                             compiler_error_t* error) {
   return buffer;
 }

@@ -77,7 +77,7 @@ typedef struct parse_node_s {
 typedef struct parse_result_S {
   parse_node_t* node;
   uint64_t next_token_position;
-  parse_error_t parse_error;
+  compiler_error_t parse_error;
 } parse_result_t;
 
 /* ====================================================================== */
@@ -322,7 +322,7 @@ static inline parse_result_t parse_result(parse_node_t* node,
 
 static inline parse_result_t parse_error_result(parse_error_code_t error_code,
                                                 oc_token_t* error_token) {
-  return (parse_result_t){.parse_error = (parse_error_t){
+  return (parse_result_t){.parse_error = (compiler_error_t){
                               .parser_error_code = error_code,
                               .error_token = error_token,
                           }};
