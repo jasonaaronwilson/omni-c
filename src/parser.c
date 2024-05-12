@@ -564,6 +564,10 @@ canonical_type_result_t parse_canonical_type(value_array_t* tokens,
     return make_type_token_result("long", 2);
   }
 
+  if (token_matches(a, "long") && token_matches(b, "long")) {
+    return make_type_token_result("long long", 2);
+  }
+
   if (token_matches(a, "long") && token_matches(b, "double")) {
     return make_type_token_result("long double", 2);
   }

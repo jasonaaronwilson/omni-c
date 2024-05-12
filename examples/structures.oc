@@ -89,3 +89,24 @@ struct floating_point_pointer_fields_t {
   // numbers.
   long double* long_double_field;
 };
+
+struct c99_fields_t {
+  _Bool boolean_field;
+  _Complex complex_field;
+  _Imaginary imaginary_field;
+  long long extend_integer_field;
+  // TODO(jawilson): VLA
+  // TODO(jawilson): designated initializers?
+};
+
+struct c11_fields_t {
+  // TODO(jawilson): _Atomic
+  // TODO(jawilson): _Generic
+  // TODO(jawilson): _Alignas
+  // TODO(jawilson): _Alignof
+};
+
+struct c23_fields_t {
+  // TODO(jawilson): _DecimalN
+  // TODO(jawilson): _BitInt(N)
+};
