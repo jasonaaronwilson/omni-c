@@ -2,6 +2,7 @@
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
+#include "compiler-errors.h"
 #include "lexer.h"
 #include "node-list.h"
 #include <c-armyknife-lib.h>
@@ -68,34 +69,6 @@ typedef struct parse_node_s {
 } parse_node_t;
 
 /**
- * @enum parse_error_code_t
- *
- * Represents a particular type of parse error so that a particular
- * error template can be used to present these errors to the user.
- */
-typedef enum {
-  PARSE_ERROR_UNKNOWN,
-  PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED,
-  PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON,
-  PARSE_ERROR_EXPECTED_SEMICOLON,
-  PARSE_ERROR_IDENTIFIER_EXPECTED,
-  PARSE_ERROR_INTEGER_LITERAL_EXPECTED,
-  PARSE_ERROR_OPEN_BRACE_EXPECTED,
-  PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
-} parse_error_code_t;
-
-/**
- * @struct parse_error_t
- *
- * This is the common return result for the various node parse
- * functions.
- */
-typedef struct parse_error_S {
-  parse_error_code_t error_code;
-  oc_token_t* error_token;
-} parse_error_t;
-
-/**
  * @struct parse_node_t
  *
  * This is the common return result for the various node parse
@@ -153,6 +126,10 @@ typedef struct type_node_S {
   // This isn't set for pointer and array types since they modify
   // their first child in type_args. Think of these as being like the
   // generic types: array<T> or pointer<T>.
+  //
+  // To simplify handling of signed and unsigned types, we use a
+  // canonical name by combining multiple tokens or just remapping a
+  // token if necessary.
   oc_token_t* type_name;
   // Generic types (which C doesn't have but C++ kind of has) or even
   // just pointer and array types will have at least one child.
@@ -521,14 +498,137 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
   return parse_result(to_node(result), position);
 }
 
+typedef struct canonical_type_result_s {
+  oc_token_t* canonical_type;
+  int consumed_tokens;
+} canonical_type_result_t;
+
+canonical_type_result_t make_type_token_result(char* str, int consumed_tokens) {
+  oc_token_t* canonical_token = malloc_struct(oc_token_t);
+  canonical_token->type = TOKEN_TYPE_IDENTIFIER;
+  canonical_token->buffer = buffer_from_string(str);
+  canonical_token->start = 0;
+  canonical_token->end = strlen(str);
+  return (canonical_type_result_t){.canonical_type = NULL,
+                                   .consumed_tokens = consumed_tokens};
+}
+
+/**
+ * @function parse_canonical_type
+ *
+ * Certain types in C comprise more than one natural C token so we
+ * combine multiple tokens and simultaneously convert to a canonical
+ * form.
+ */
+canonical_type_result_t parse_canonical_type(value_array_t* tokens,
+                                             uint64_t position) {
+  oc_token_t* a = token_at(tokens, position);
+  oc_token_t* b = token_at(tokens, position + 1);
+  oc_token_t* c = token_at(tokens, position + 2);
+
+  if (token_matches(a, "signed") && token_matches(b, "short")
+      && token_matches(c, "int")) {
+    return make_type_token_result("short", 3);
+  }
+
+  if (token_matches(a, "unsigned") && token_matches(b, "short")
+      && token_matches(c, "int")) {
+    return make_type_token_result("unsigned short int", 3);
+  }
+
+  if (token_matches(a, "signed") && token_matches(b, "long")
+      && token_matches(c, "int")) {
+    return make_type_token_result("long", 3);
+  }
+
+  if (token_matches(a, "short") && token_matches(b, "int")) {
+    return make_type_token_result("short", 2);
+  }
+
+  if (token_matches(a, "signed") && token_matches(b, "short")) {
+    return make_type_token_result("short", 2);
+  }
+
+  if (token_matches(a, "signed") && token_matches(b, "int")) {
+    return make_type_token_result("int", 2);
+  }
+
+  if (token_matches(a, "long") && token_matches(b, "int")) {
+    return make_type_token_result("long", 2);
+  }
+
+  if (token_matches(a, "long") && token_matches(b, "double")) {
+    return make_type_token_result("long double", 2);
+  }
+
+  if (token_matches(a, "signed") && token_matches(b, "long")) {
+    return make_type_token_result("long", 2);
+  }
+
+  if (token_matches(a, "unsigned") && token_matches(b, "int")) {
+    return make_type_token_result("unsigned int", 2);
+  }
+
+  if (token_matches(a, "unsigned") && token_matches(b, "long")) {
+    return make_type_token_result("unsigned long", 2);
+  }
+
+  if (token_matches(a, "unsigned") && token_matches(b, "char")) {
+    return make_type_token_result("unsigned char", 2);
+  }
+
+  if (token_matches(a, "signed") && token_matches(b, "char")) {
+    return make_type_token_result("char", 2);
+  }
+
+  if (token_matches(a, "signed")) {
+    return make_type_token_result("int", 1);
+  }
+
+  if (token_matches(a, "char")) {
+    return make_type_token_result("char", 1);
+  }
+
+  if (token_matches(a, "int")) {
+    return make_type_token_result("int", 1);
+  }
+
+  if (token_matches(a, "long")) {
+    return make_type_token_result("long", 1);
+  }
+
+  if (token_matches(a, "float")) {
+    return make_type_token_result("float", 1);
+  }
+
+  if (token_matches(a, "double")) {
+    return make_type_token_result("double", 1);
+  }
+
+  return (canonical_type_result_t){.canonical_type = NULL,
+                                   .consumed_tokens = 0};
+}
+
 parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_type_node(_, %d)", position & 0xffffffff);
-  // TODO(jawilson): allow parens for more complicated types...
   type_node_t* result = malloc_type_node();
-  oc_token_t* type_name = token_at(tokens, position++);
+
+  // First see if we have a canonical type result...
+  canonical_type_result_t canonical_type_result
+      = parse_canonical_type(tokens, position);
+  oc_token_t* type_name = canonical_type_result.canonical_type;
+  position += canonical_type_result.consumed_tokens;
+
+  // If it's not canonical, then the first token should be a type name.
+  if (type_name == NULL) {
+    type_name = token_at(tokens, position++);
+  }
+
+  // TODO(jawilson): allow parens for more complicated types...
   if (type_name->type != TOKEN_TYPE_IDENTIFIER) {
     return parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, type_name);
   }
+
   result->type_name = type_name;
   while (true) {
     oc_token_t* next = token_at(tokens, position);

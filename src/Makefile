@@ -17,6 +17,7 @@ SRC_C = armyknife-lib-impl.c \
 	common/oc-compiler-state.c \
 	parser/parse-files.c \
 	common/oc-node.c \
+	compiler-errors.c \
 	lexer.c \
 	parser.c \
 	node-list.c \
