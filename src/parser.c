@@ -588,6 +588,11 @@ canonical_type_result_t parse_canonical_type(value_array_t* tokens,
     return make_type_token_result("char", 2);
   }
 
+  if (token_matches(a, "long") && token_matches(b, "float")) {
+    // TODO(jawilson): make using this a warning or something
+    return make_type_token_result("double", 2);
+  }
+
   if (token_matches(a, "signed")) {
     return make_type_token_result("int", 1);
   }
