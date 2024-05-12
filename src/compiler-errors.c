@@ -53,6 +53,8 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
 
 #endif /* _COMPILER_ERRORS_H_ */
 
+#include "lexer.h"
+
 buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
                                                        compiler_error_t* error);
 buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
@@ -76,8 +78,21 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
 
 char* do_common_replacements(char* template, compiler_error_t* error) {
   buffer_t* buffer = make_buffer(256);
+
+  if (error->error_token) {
+    line_and_column_t position_info = buffer_position_to_line_and_column(
+        error->error_token->buffer, error->error_token->start);
+    // TODO(jawilson): figure out filename and format as a GNU error
+    // string.
+    buffer = buffer_printf(buffer, "COMPILER ERROR: line=%d, column=%d\n",
+                           position_info.line & 0xffffffff,
+                           position_info.column & 0xffffffff);
+  }
+
   buffer = buffer_append_string(buffer, template);
+
   // TODO(jawilson): do replacements here!
+
   return buffer_to_c_string(buffer);
 }
 

@@ -482,7 +482,9 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
   }
   position = field_type.next_token_position;
   oc_token_t* field_name = token_at(tokens, position++);
-  // make sure it's an identifier!
+  // TODO(jawilson): make field_name is an identifier.
+  log_info("parse_field_node(_, %d)", position & 0xffffffff);
+
   if (token_matches(token_at(tokens, position), ":")) {
     // Capture field width here.
     position += 2;
@@ -509,7 +511,7 @@ canonical_type_result_t make_type_token_result(char* str, int consumed_tokens) {
   canonical_token->buffer = buffer_from_string(str);
   canonical_token->start = 0;
   canonical_token->end = strlen(str);
-  return (canonical_type_result_t){.canonical_type = NULL,
+  return (canonical_type_result_t){.canonical_type = canonical_token,
                                    .consumed_tokens = consumed_tokens};
 }
 
@@ -539,6 +541,11 @@ canonical_type_result_t parse_canonical_type(value_array_t* tokens,
   if (token_matches(a, "signed") && token_matches(b, "long")
       && token_matches(c, "int")) {
     return make_type_token_result("long", 3);
+  }
+
+  if (token_matches(a, "unsigned") && token_matches(b, "long")
+      && token_matches(c, "int")) {
+    return make_type_token_result("unsigned long", 3);
   }
 
   if (token_matches(a, "short") && token_matches(b, "int")) {

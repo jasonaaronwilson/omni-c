@@ -1,4 +1,3 @@
-/*
 struct empty_struct_t {};
 
 struct simple_struct_t {
@@ -12,20 +11,26 @@ struct simple_struct_with_pointer_t {
 struct simple_bit_field_t {
   uint64_t number_field : 3;
 };
-*/
 
 struct signed_fields_t {
   short short_field;
   short int short_int_field;
-  // signed short signed_short_field;
-  // signed short int signed_short_int_field;
+  signed short signed_short_field;
+  signed short int signed_short_int_field;
   
-  // int int_field;
-  // signed int signed_int_field;
-  // signed signed_field;
+  int int_field;
+  signed int signed_int_field;
+  signed signed_field;
   
-  // long long_field;
-  // long int long_int_field;
-  // signed long signed_long_field;
-  // signed long int signed_long_int_field;
+  long long_field;
+  long int long_int_field;
+  signed long signed_long_field;
+  signed long int signed_long_int_field;
+};
+
+
+struct unsigned_fields_t {
+  unsigned short int unsigned_short_int;
+  unsigned int unsigned_int;
+  unsigned long int unsigned_long_int;
 };
