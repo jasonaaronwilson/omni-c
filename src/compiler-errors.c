@@ -53,6 +53,11 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
 
 #endif /* _COMPILER_ERRORS_H_ */
 
+buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
+                                                       compiler_error_t* error);
+buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
+                                                    compiler_error_t* error);
+
 /**
  * @function buffer_append_human_readable_error
  *
@@ -60,5 +65,26 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
  */
 buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
                                              compiler_error_t* error) {
+  if (error->tokenizer_error_code != TOKENIZER_ERROR_UNKNOWN) {
+    buffer = buffer_append_human_readable_tokenizer_error(buffer, error);
+  }
+  if (error->parser_error_code != PARSE_ERROR_UNKNOWN) {
+    buffer = buffer_append_human_readable_parser_error(buffer, error);
+  }
+  return buffer;
+}
+
+buffer_t*
+    buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
+                                                 compiler_error_t* error) {
+  buffer = buffer_printf(buffer, "\nlexer error code = %d\n",
+                         error->tokenizer_error_code);
+  return buffer;
+}
+
+buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
+                                                    compiler_error_t* error) {
+  buffer = buffer_printf(buffer, "\nparser error code = %d\n",
+                         error->parser_error_code);
   return buffer;
 }

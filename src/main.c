@@ -52,9 +52,10 @@ void print_tokens(void) {
       parse_result_t declarations
           = parse_declarations(tokenizer_result.tokens, 0);
       if (is_error_result(declarations)) {
-        // TODO(jawilson): replace with buffer_append_human_readable_error.
-        log_fatal("Parse error (error_code=%d)",
-                  declarations.parse_error.parser_error_code);
+        buffer_t* buffer = make_buffer(1);
+        buffer = buffer_append_human_readable_error(
+            buffer, &(declarations.parse_error));
+        log_fatal("%s", buffer_to_c_string(buffer));
         fatal_error(ERROR_ILLEGAL_STATE);
       } else {
         buffer_t* buffer = make_buffer(1024);
