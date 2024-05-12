@@ -1,6 +1,22 @@
 #line 2 "compiler-errors.c"
-#ifndef _PARSER_ERRORS_H_
-#define _PARSER_ERRORS_H_
+#ifndef _COMPILER_ERRORS_H_
+#define _COMPILER_ERRORS_H_
+
+#include <c-armyknife-lib.h>
+
+/**
+ * @enum tokenizer_error_t
+ *
+ * Represents
+ */
+typedef enum {
+  TOKENIZER_ERROR_UNKNOWN,
+  TOKENIZER_ERROR_UTF_DECODE_ERROR,
+  TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
+  TOKENIZER_ERROR_UNTERMINATED_COMMENT,
+  TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
+  TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL
+} tokenizer_error_t;
 
 /**
  * @enum parse_error_code_t
@@ -24,12 +40,20 @@ struct oc_token_S;
 /**
  * @struct parse_error_t
  *
- * This is the common return result for the various node parse
- * functions.
+ * Represents errors in many phases of the compiler.
  */
 typedef struct parse_error_S {
+  tokenizer_error_t tokenizer_error_code;
   parse_error_code_t error_code;
   struct oc_token_S* error_token;
 } parse_error_t;
 
-#endif /* _PARSER_ERRORS_H_ */
+buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
+                                             parse_error_t* error);
+
+#endif /* _COMPILER_ERRORS_H_ */
+
+buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
+                                             parse_error_t* error) {
+  return buffer;
+}

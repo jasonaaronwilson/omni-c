@@ -2,6 +2,7 @@
 #ifndef _LEXER_H_
 #define _LEXER_H_
 
+#include "compiler-errors.h"
 #include <c-armyknife-lib.h>
 #include <ctype.h>
 
@@ -27,20 +28,6 @@ typedef enum {
   TOKEN_TYPE_STRING_LITERAL,
   TOKEN_TYPE_CHARACTER_LITERAL
 } token_type_t;
-
-/**
- * @enum tokenizer_error
- *
- * Represents
- */
-typedef enum {
-  TOKENIZER_ERROR_UNKNOWN,
-  TOKENIZER_ERROR_UTF_DECODE_ERROR,
-  TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
-  TOKENIZER_ERROR_UNTERMINATED_COMMENT,
-  TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
-  TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL
-} tokenizer_error_t;
 
 struct oc_token_S {
   buffer_t* buffer;
