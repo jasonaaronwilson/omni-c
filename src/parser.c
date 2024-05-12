@@ -308,7 +308,7 @@ static inline parse_result_t parse_result_empty() {
 }
 
 static inline boolean_t is_empty_result(parse_result_t result) {
-  return (result.parse_error.error_code == PARSE_ERROR_UNKNOWN)
+  return (result.parse_error.parser_error_code == PARSE_ERROR_UNKNOWN)
          && (result.node == NULL);
 }
 
@@ -323,13 +323,13 @@ static inline parse_result_t parse_result(parse_node_t* node,
 static inline parse_result_t parse_error_result(parse_error_code_t error_code,
                                                 oc_token_t* error_token) {
   return (parse_result_t){.parse_error = (parse_error_t){
-                              .error_code = error_code,
+                              .parser_error_code = error_code,
                               .error_token = error_token,
                           }};
 }
 
 static inline boolean_t is_error_result(parse_result_t result) {
-  return result.parse_error.error_code != 0;
+  return result.parse_error.parser_error_code != 0;
 }
 
 static inline boolean_t is_valid_result(parse_result_t result) {
