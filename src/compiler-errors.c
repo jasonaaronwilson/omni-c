@@ -74,6 +74,21 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
   return buffer;
 }
 
+char* do_common_replacements(char* template, compiler_error_t* error) {
+  buffer_t* buffer = make_buffer(256);
+  buffer = buffer_append_string(buffer, template);
+  // TODO(jawilson): do replacements here!
+  return buffer_to_c_string(buffer);
+}
+
+char* parse_error_unknown
+    = "A parse error has occurred but the error message is unavailable.";
+
+char* error_field_width_or_semicolon
+    = "A parse error has occurred while trying to read a structure or union "
+      "field.\n\n"
+      "Expected a field width or a semi-colon.";
+
 buffer_t*
     buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
                                                  compiler_error_t* error) {
@@ -86,5 +101,16 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
                                                     compiler_error_t* error) {
   buffer = buffer_printf(buffer, "\nparser error code = %d\n",
                          error->parser_error_code);
-  return buffer;
+  char* template = NULL;
+  switch (error->parser_error_code) {
+  case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
+    template = error_field_width_or_semicolon;
+    break;
+
+  default:
+    template = parse_error_unknown;
+  }
+
+  char* template_string = do_common_replacements(template, error);
+  return buffer_append_string(buffer, template_string);
 }
