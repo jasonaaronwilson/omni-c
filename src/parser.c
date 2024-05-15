@@ -706,7 +706,6 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
         return parse_error_result(PARSE_ERROR_CLOSE_BRACKET_EXPECTED, next);
       }
       result = array_result;
-      break;
     } else {
       break;
     }

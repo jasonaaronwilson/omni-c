@@ -5,7 +5,11 @@ struct simple_struct_t {
 };
 
 struct simple_struct_with_pointer_t {
-  uint64_t* number_field;
+  uint64_t* number_pointer_field;
+};
+
+struct simple_struct_with_pointer_pointer_t {
+  uint64_t** number_pointer_pointer_field;
 };
 
 struct simple_bit_field_t {
@@ -115,6 +119,8 @@ struct array_fields_t {
   int[] unsized_int_array;
   int[0] zero_length_array;
   int[5] fixed_size_array;
+  int*[] unsized_int_pointer_array;
+  int[][] unsized_int_array_array;
   // TODO(jawilson): make sure negative integers are illegal.
 };
 
