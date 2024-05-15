@@ -58,6 +58,10 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_type_node(buffer_t* buffer, type_node_t* node,
                             int indention_level);
 
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_literal(buffer_t* buffer, literal_t* node,
+                          int indention_level);
+
 /**
  * @function buffer_append_parse_node
  *
@@ -88,6 +92,9 @@ __attribute__((warn_unused_result)) buffer_t*
 
   case PARSE_NODE_TYPE:
     return buffer_append_type_node(buffer, to_type_node(node), indention_level);
+
+  case PARSE_NODE_LITERAL:
+    return buffer_append_literal(buffer, to_literal(node), indention_level);
 
   default:
     break;
@@ -207,5 +214,16 @@ __attribute__((warn_unused_result)) buffer_t*
   }
   buffer = buffer_append_node_list(buffer, node->type_args, "type_arg",
                                    indention_level);
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_literal(buffer_t* buffer, literal_t* node,
+                          int indention_level) {
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_LITERAL\n");
+  buffer = buffer_indent(buffer, indention_level);
+  buffer
+      = buffer_printf(buffer, "value: %s\n", token_to_string(*(node->value)));
   return buffer;
 }

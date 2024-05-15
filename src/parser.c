@@ -49,6 +49,7 @@ typedef enum {
   PARSE_NODE_STRUCT,
   PARSE_NODE_UNION,
   PARSE_NODE_TYPE,
+  PARSE_NODE_LITERAL,
 } parse_node_type_t;
 
 /**
@@ -105,6 +106,7 @@ typedef enum {
   TYPE_NODE_KIND_POINTER,
   TYPE_NODE_KIND_ARRAY,
   TYPE_NODE_KIND_SIZED_ARRAY,
+  TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY,
   // TODO(jawilson): anonymous structures and unions?
   TYPE_NODE_KIND_STRUCT_PREFIXED_TYPENAME,
   TYPE_NODE_KIND_UNION_PREFIXED_TYPENAME,
@@ -196,6 +198,17 @@ typedef struct enum_element_S {
   oc_token_t* name;
   oc_token_t* value;
 } enum_element_t;
+
+/**
+ * @structure enum_element_t
+ *
+ * Represents a source code literal such as an integer/floating-point
+ * number, character constant, or a string literal.
+ */
+typedef struct literal_S {
+  parse_node_type_t tag;
+  oc_token_t* value;
+} literal_t;
 
 /* ====================================================================== */
 /* General inlined accessors, helpers, and macros */
@@ -299,6 +312,17 @@ static inline type_node_t* to_type_node(parse_node_t* ptr) {
   return cast(type_node_t*, ptr);
 }
 
+/**
+ * Safely cast a generic node to a literal node after examining it's
+ * tag.
+ */
+static inline literal_t* to_literal(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_LITERAL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(literal_t*, ptr);
+}
+
 /* ====================================================================== */
 /* Inlined helpers for parse_result_t implementation */
 /* ====================================================================== */
@@ -373,6 +397,12 @@ static inline struct_node_t* malloc_struct_node() {
 static inline field_node_t* malloc_field_node() {
   field_node_t* result = malloc_struct(field_node_t);
   result->tag = PARSE_NODE_FIELD;
+  return result;
+}
+
+static inline literal_t* malloc_literal_node() {
+  literal_t* result = malloc_struct(literal_t);
+  result->tag = PARSE_NODE_LITERAL;
   return result;
 }
 
@@ -637,7 +667,10 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
 
   // If it's not canonical, then the first token should be a type name.
   if (type_name == NULL) {
+    result->type_node_kind = TYPE_NODE_KIND_TYPENAME;
     type_name = token_at(tokens, position++);
+  } else {
+    result->type_node_kind = TYPE_NODE_KIND_PRIMITIVE_TYPENAME;
   }
 
   // TODO(jawilson): allow parens for more complicated types...
@@ -654,6 +687,26 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
       ptr_result->type_node_kind = TYPE_NODE_KIND_POINTER;
       node_list_add_node(&ptr_result->type_args, to_node(result));
       result = ptr_result;
+    } else if (token_matches(next, "[")) {
+      position++;
+      oc_token_t* open = next;
+      next = token_at(tokens, position++);
+      type_node_t* array_result = malloc_type_node();
+      array_result->type_node_kind = TYPE_NODE_KIND_ARRAY;
+      node_list_add_node(&array_result->type_args, to_node(result));
+      if (next->type == TOKEN_TYPE_INTEGER_LITERAL) {
+        literal_t* literal = malloc_literal_node();
+        literal->value = next;
+        array_result->type_node_kind = TYPE_NODE_KIND_SIZED_ARRAY;
+        next = token_at(tokens, position++);
+        node_list_add_node(&array_result->type_args, to_node(literal));
+      }
+      // TODO(jawilson): parse VLA
+      if (!token_matches(next, "]")) {
+        return parse_error_result(PARSE_ERROR_CLOSE_BRACKET_EXPECTED, next);
+      }
+      result = array_result;
+      break;
     } else {
       break;
     }
@@ -793,6 +846,8 @@ char* type_node_kind_to_string(type_node_kind_t kind) {
     return "TYPE_NODE_KIND_ARRAY";
   case TYPE_NODE_KIND_SIZED_ARRAY:
     return "TYPE_NODE_KIND_SIZED_ARRAY";
+  case TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY:
+    return "TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY";
   case TYPE_NODE_KIND_STRUCT_PREFIXED_TYPENAME:
     return "TYPE_NODE_KIND_STRUCT_PREFIXED_TYPENAME";
   case TYPE_NODE_KIND_UNION_PREFIXED_TYPENAME:

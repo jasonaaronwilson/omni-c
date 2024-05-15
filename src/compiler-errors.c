@@ -32,6 +32,7 @@ typedef enum {
   PARSE_ERROR_IDENTIFIER_EXPECTED,
   PARSE_ERROR_INTEGER_LITERAL_EXPECTED,
   PARSE_ERROR_OPEN_BRACE_EXPECTED,
+  PARSE_ERROR_CLOSE_BRACKET_EXPECTED,
   PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
 } parse_error_code_t;
 
@@ -104,6 +105,11 @@ char* error_field_width_or_semicolon
       "field.\n\n"
       "Expected a field width or a semi-colon.";
 
+char* error_open_brace_expected
+    = "A parse error has occurred while trying to parse after an opending '[' "
+      "character.\n\n"
+      "Expected a closing ']'.";
+
 buffer_t*
     buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
                                                  compiler_error_t* error) {
@@ -120,6 +126,10 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
   switch (error->parser_error_code) {
   case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
     template = error_field_width_or_semicolon;
+    break;
+
+  case PARSE_ERROR_CLOSE_BRACKET_EXPECTED:
+    template = error_open_brace_expected;
     break;
 
   default:

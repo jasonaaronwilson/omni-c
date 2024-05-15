@@ -1,0 +1,4 @@
+struct array_fields_t {
+  int[0] zero_length_array;
+};
+

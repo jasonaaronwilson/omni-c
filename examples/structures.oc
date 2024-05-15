@@ -110,3 +110,14 @@ struct c23_fields_t {
   // TODO(jawilson): _DecimalN
   // TODO(jawilson): _BitInt(N)
 };
+
+struct array_fields_t {
+  int[] unsized_int_array;
+  int[0] zero_length_array;
+  int[5] fixed_size_array;
+  // TODO(jawilson): make sure negative integers are illegal.
+};
+
+struct unseen_fields_t {
+  some_unseen_type_t unseed_type_field;
+};
