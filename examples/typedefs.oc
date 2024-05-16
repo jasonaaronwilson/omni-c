@@ -1,0 +1,6 @@
+// Functions should be the only difficult ones (now that we have
+// decent support for parser types now.
+
+typedef int my_int;
+
+typedef int**[] my_compile_type;

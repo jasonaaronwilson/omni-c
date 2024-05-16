@@ -34,6 +34,7 @@ typedef enum {
   PARSE_ERROR_OPEN_BRACE_EXPECTED,
   PARSE_ERROR_CLOSE_BRACKET_EXPECTED,
   PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
+  PARSE_ERROR_SEMICOLON_EXPECTED,
 } parse_error_code_t;
 
 struct oc_token_S;
@@ -106,12 +107,16 @@ char* error_field_width_or_semicolon
       "Expected a field width or a semi-colon.";
 
 char* error_open_brace_expected
-    = "A parse error has occurred while trying to parse after an opending '[' "
+    = "A parse error has occurred while trying to parse after an opening '[' "
       "character.\n\n"
       "Expected a closing ']'.";
 
+char* error_open_semicolon_expected
+    = "A parse error has occurred since a semicolon was expected";
+
 char* error_unrecognized_top_level_declaration
-    = "A top-level form could not be parsed.";
+    = "Unable to parse a top-level declaration (struct, union, function, "
+      "typedef currently supported).";
 
 buffer_t*
     buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
@@ -139,8 +144,13 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
     template = error_unrecognized_top_level_declaration;
     break;
 
+  case PARSE_ERROR_SEMICOLON_EXPECTED:
+    template = error_open_semicolon_expected;
+    break;
+
   default:
     template = parse_error_unknown;
+    break;
   }
 
   char* template_string = do_common_replacements(template, error);

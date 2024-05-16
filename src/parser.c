@@ -53,6 +53,7 @@ typedef enum {
   PARSE_NODE_FUNCTION,
   PARSE_NODE_FUNCTION_ARGUMENT,
   PARSE_NODE_FUNCTION_BODY,
+  PARSE_NODE_TYPEDEF,
 } parse_node_type_t;
 
 /**
@@ -140,6 +141,17 @@ typedef struct type_node_S {
   // just pointer and array types will have at least one child.
   node_list_t type_args;
 } type_node_t;
+
+/**
+ * @structure type_node_t
+ *
+ * Represents a typedef in C or C++.
+ */
+typedef struct typedef_node_S {
+  parse_node_type_t tag;
+  oc_token_t* name;
+  type_node_t* type_node;
+} typedef_node_t;
 
 /**
  * @structure struct_node_t
@@ -398,6 +410,17 @@ static inline function_body_node_t* to_function_body_node(parse_node_t* ptr) {
   return cast(function_body_node_t*, ptr);
 }
 
+/**
+ * Safely cast a generic node to a tyedef node after examining it's
+ * tag.
+ */
+static inline typedef_node_t* to_typedef_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_TYPEDEF) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(typedef_node_t*, ptr);
+}
+
 /* ====================================================================== */
 /* Inlined helpers for parse_result_t implementation */
 /* ====================================================================== */
@@ -418,6 +441,7 @@ static inline parse_result_t parse_result(parse_node_t* node,
   }
   return (parse_result_t){node, last_token_position};
 }
+
 
 static inline parse_result_t parse_error_result(parse_error_code_t error_code,
                                                 oc_token_t* error_token) {
@@ -499,6 +523,12 @@ static inline function_body_node_t* malloc_function_body_node() {
   return result;
 }
 
+static inline typedef_node_t* malloc_typedef_node() {
+  typedef_node_t* result = malloc_struct(typedef_node_t);
+  result->tag = PARSE_NODE_TYPEDEF;
+  return result;
+}
+
 /* ====================================================================== */
 /* Enumeration to string */
 /* ====================================================================== */
@@ -526,6 +556,8 @@ parse_result_t parse_function_argument_node(value_array_t* tokens,
 parse_result_t parse_function_body_node(value_array_t* tokens,
                                         uint64_t position);
 
+parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position);
+
 #endif /* _PARSER_H_ */
 
 /* ====================================================================== */
@@ -552,6 +584,11 @@ parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
   parse_result_t fn_result = parse_function_node(tokens, position);
   if (is_valid_result(fn_result)) {
     return parse_result(fn_result.node, fn_result.next_token_position);
+  }
+
+  parse_result_t tdef_result = parse_typedef_node(tokens, position);
+  if (is_valid_result(tdef_result)) {
+    return parse_result(tdef_result.node, tdef_result.next_token_position);
   }
 
   parse_result_t decl = parse_enum_node(tokens, position);
@@ -1007,6 +1044,44 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
   } else {
     return parse_error_result(PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED, next);
   }
+}
+
+/**
+ * @function parse_typedef_node
+ *
+ * Parses a C/C++ typedef node.
+ *
+ * typedef TYPE NAME;
+ * TODO(jawilson): typedef int (*StringToInt)(const char*);
+ */
+parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
+  oc_token_t* typedef_token = token_at(tokens, position++);
+  if (!token_matches(typedef_token, "typedef")) {
+    return parse_result_empty();
+  }
+
+  parse_result_t type = parse_type_node(tokens, position);
+  if (!is_valid_result(type)) {
+    // ERROR
+    return parse_result_empty();
+  }
+  position = type.next_token_position;
+  oc_token_t* name = token_at(tokens, position++);
+  if (name->type != TOKEN_TYPE_IDENTIFIER) {
+    parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
+  }
+
+  typedef_node_t* result = malloc_typedef_node();
+  result->type_node = to_type_node(type.node);
+  result->name = name;
+
+  oc_token_t* semi = token_at(tokens, position++);
+  if (!token_matches(semi, ";")) {
+    return parse_error_result(PARSE_ERROR_SEMICOLON_EXPECTED, name);
+  }
+
+
+  return parse_result(to_node(result), position);
 }
 
 char* parse_node_type_to_string(parse_node_type_t type) {
