@@ -267,7 +267,10 @@ __attribute__((warn_unused_result)) buffer_t*
                                      indention_level + 1);
   }
 
-  // TODO(jawilson): body
+  if (node->body != NULL) {
+    buffer
+        = buffer_append_function_body_node(buffer, node->body, indention_level);
+  }
 
   return buffer;
 }
@@ -294,6 +297,17 @@ __attribute__((warn_unused_result)) buffer_t*
 
 __attribute__((warn_unused_result)) buffer_t* buffer_append_function_body_node(
     buffer_t* buffer, function_body_node_t* node, int indention_level) {
-  buffer = buffer_printf(buffer, "FIXME2\n");
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION_BODY\n");
+  if (node->open_brace_token != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "open_brace_token: %s\n",
+                           token_to_string(*(node->open_brace_token)));
+  }
+  if (node->close_brace_token != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "close_brace_token: %s\n",
+                           token_to_string(*(node->close_brace_token)));
+  }
   return buffer;
 }

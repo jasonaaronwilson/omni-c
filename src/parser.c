@@ -220,8 +220,8 @@ typedef struct literal_S {
  */
 typedef struct function_body_node_S {
   parse_node_type_t tag;
-  oc_token_t* open_brace_node;
-  oc_token_t* close_brace_node;
+  oc_token_t* open_brace_token;
+  oc_token_t* close_brace_token;
 } function_body_node_t;
 
 /**
@@ -392,7 +392,7 @@ static inline function_argument_node_t*
  * it's tag.
  */
 static inline function_body_node_t* to_function_body_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_FUNCTION) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_FUNCTION_BODY) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(function_body_node_t*, ptr);
@@ -734,8 +734,27 @@ parse_result_t parse_function_argument_node(value_array_t* tokens,
  */
 parse_result_t parse_function_body_node(value_array_t* tokens,
                                         uint64_t position) {
-  // HERE
-  return parse_result_empty();
+  function_body_node_t* result = malloc_function_body_node();
+
+  // TODO(jawilson): use a stack instead so we can match up different
+  // delimiters.
+  int count = 0;
+  do {
+    oc_token_t* token = token_at(tokens, position++);
+    if (count == 0) {
+      result->open_brace_token = token;
+    } else {
+      result->close_brace_token = token;
+    }
+    // TODO(jawilson): ERROR if NULL
+    if (token_matches(token, "{")) {
+      count++;
+    } else if (token_matches(token, "}")) {
+      count--;
+    }
+  } while (count > 0);
+
+  return parse_result(to_node(result), position);
 }
 
 typedef struct canonical_type_result_s {

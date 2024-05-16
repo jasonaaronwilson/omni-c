@@ -1,3 +1,8 @@
+// ======================================================================
+// Prototypes Are Not Necessary To Write but can be written anyways or
+// parsed from C...
+// ======================================================================
+
 // prototype with just a singe arg
 int foo(int);
 
@@ -6,6 +11,27 @@ int foo(int arg0);
 
 /* Stuff that should work already unless a regression. */
 
-// Simple function with no argument types
+// prototype with no argument types
 int foo();
 
+// ======================================================================
+// At this time any function body that are legal tokens and properly
+// match up it's delimiters can be parsed correctly but eventually we
+// will need to fully parse them.
+// ======================================================================
+
+// The simplest function?
+int one() {
+  return 1;
+}
+
+// A slightly more complicated function
+int two(int a, int b) {
+  if (a > b) {
+    return a + 1;
+  }
+  do {
+    b += 1;
+  } while (2);
+  return a + b;
+}
