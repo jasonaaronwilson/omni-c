@@ -59,8 +59,20 @@ __attribute__((warn_unused_result)) buffer_t*
                             int indention_level);
 
 __attribute__((warn_unused_result)) buffer_t*
-    buffer_append_literal(buffer_t* buffer, literal_t* node,
-                          int indention_level);
+    buffer_append_literal_node(buffer_t* buffer, literal_t* node,
+                               int indention_level);
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_function_node(buffer_t* buffer, function_node_t* node,
+                                int indention_level);
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_function_argument_node(buffer_t* buffer,
+                                         function_argument_node_t* node,
+                                         int indention_level);
+
+__attribute__((warn_unused_result)) buffer_t* buffer_append_function_body_node(
+    buffer_t* buffer, function_body_node_t* node, int indention_level);
 
 /**
  * @function buffer_append_parse_node
@@ -94,7 +106,20 @@ __attribute__((warn_unused_result)) buffer_t*
     return buffer_append_type_node(buffer, to_type_node(node), indention_level);
 
   case PARSE_NODE_LITERAL:
-    return buffer_append_literal(buffer, to_literal(node), indention_level);
+    return buffer_append_literal_node(buffer, to_literal(node),
+                                      indention_level);
+
+  case PARSE_NODE_FUNCTION:
+    return buffer_append_function_node(buffer, to_function_node(node),
+                                       indention_level);
+
+  case PARSE_NODE_FUNCTION_ARGUMENT:
+    return buffer_append_function_argument_node(
+        buffer, to_function_argument_node(node), indention_level);
+
+  case PARSE_NODE_FUNCTION_BODY:
+    return buffer_append_function_body_node(buffer, to_function_body_node(node),
+                                            indention_level);
 
   default:
     break;
@@ -218,12 +243,57 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 __attribute__((warn_unused_result)) buffer_t*
-    buffer_append_literal(buffer_t* buffer, literal_t* node,
-                          int indention_level) {
+    buffer_append_literal_node(buffer_t* buffer, literal_t* node,
+                               int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_LITERAL\n");
   buffer = buffer_indent(buffer, indention_level);
   buffer
       = buffer_printf(buffer, "value: %s\n", token_to_string(*(node->value)));
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_function_node(buffer_t* buffer, function_node_t* node,
+                                int indention_level) {
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
+  buffer = buffer_append_node_list(buffer, node->function_args, "function_args",
+                                   indention_level);
+  if (node->return_type != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_append_string(buffer, "return_type:\n");
+    buffer = buffer_append_type_node(buffer, node->return_type,
+                                     indention_level + 1);
+  }
+
+  // TODO(jawilson): body
+
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_function_argument_node(buffer_t* buffer,
+                                         function_argument_node_t* node,
+                                         int indention_level) {
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
+  if (node->arg_type != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_append_string(buffer, "arg_type:\n");
+    buffer
+        = buffer_append_type_node(buffer, node->arg_type, indention_level + 1);
+  }
+  if (node->arg_name != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "arg_name: %s\n",
+                           token_to_string(*(node->arg_name)));
+  }
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t* buffer_append_function_body_node(
+    buffer_t* buffer, function_body_node_t* node, int indention_level) {
+  buffer = buffer_printf(buffer, "FIXME2\n");
   return buffer;
 }

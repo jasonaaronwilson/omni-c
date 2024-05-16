@@ -1,0 +1,11 @@
+// prototype with just a singe arg
+int foo(int);
+
+// prototype with just a singe arg and name
+int foo(int arg0);
+
+/* Stuff that should work already unless a regression. */
+
+// Simple function with no argument types
+int foo();
+

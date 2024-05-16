@@ -110,6 +110,9 @@ char* error_open_brace_expected
       "character.\n\n"
       "Expected a closing ']'.";
 
+char* error_unrecognized_top_level_declaration
+    = "A top-level form could not be parsed.";
+
 buffer_t*
     buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
                                                  compiler_error_t* error) {
@@ -130,6 +133,10 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
 
   case PARSE_ERROR_CLOSE_BRACKET_EXPECTED:
     template = error_open_brace_expected;
+    break;
+
+  case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
+    template = error_unrecognized_top_level_declaration;
     break;
 
   default:

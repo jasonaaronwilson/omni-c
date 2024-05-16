@@ -50,6 +50,9 @@ typedef enum {
   PARSE_NODE_UNION,
   PARSE_NODE_TYPE,
   PARSE_NODE_LITERAL,
+  PARSE_NODE_FUNCTION,
+  PARSE_NODE_FUNCTION_ARGUMENT,
+  PARSE_NODE_FUNCTION_BODY,
 } parse_node_type_t;
 
 /**
@@ -210,13 +213,51 @@ typedef struct literal_S {
   oc_token_t* value;
 } literal_t;
 
+/**
+ * @structure function_body_node_t
+ *
+ * Represents an (unparsed) function body.
+ */
+typedef struct function_body_node_S {
+  parse_node_type_t tag;
+  oc_token_t* open_brace_node;
+  oc_token_t* close_brace_node;
+} function_body_node_t;
+
+/**
+ * @structure function_node_t
+ *
+ * Represents either a prototype or a full function definition.
+ */
+typedef struct function_node_S {
+  parse_node_type_t tag;
+  oc_token_t* function_name;
+  type_node_t* return_type;
+  node_list_t function_args;
+  // Until we learn how to fully parse expressions, this contains all
+  // of the tokens between "{" and "}" (and also those tokens).
+  function_body_node_t* body;
+} function_node_t;
+
+/**
+ * @structure function_argument_node_t
+ *
+ * Represents an argument in a function declaration.
+ */
+typedef struct function_argument_node_S {
+  parse_node_type_t tag;
+  type_node_t* arg_type;
+  oc_token_t* arg_name;
+} function_argument_node_t;
+
 /* ====================================================================== */
 /* General inlined accessors, helpers, and macros */
 /* ====================================================================== */
 
 static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
-  // TODO(jawilson): maybe return a sentinel token of some sort when
-  // position is greater than the end of the array?
+  if (position >= tokens->length) {
+    return NULL;
+  }
   return cast(oc_token_t*, value_array_get(tokens, position).ptr);
 }
 
@@ -323,6 +364,40 @@ static inline literal_t* to_literal(parse_node_t* ptr) {
   return cast(literal_t*, ptr);
 }
 
+/**
+ * Safely cast a generic node to a function node after examining it's
+ * tag.
+ */
+static inline function_node_t* to_function_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_FUNCTION) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(function_node_t*, ptr);
+}
+
+/**
+ * Safely cast a generic node to a function argument node after
+ * examining it's tag.
+ */
+static inline function_argument_node_t*
+    to_function_argument_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_FUNCTION_ARGUMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(function_argument_node_t*, ptr);
+}
+
+/**
+ * Safely cast a generic node to a function body node after examining
+ * it's tag.
+ */
+static inline function_body_node_t* to_function_body_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_FUNCTION) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(function_body_node_t*, ptr);
+}
+
 /* ====================================================================== */
 /* Inlined helpers for parse_result_t implementation */
 /* ====================================================================== */
@@ -406,6 +481,24 @@ static inline literal_t* malloc_literal_node() {
   return result;
 }
 
+static inline function_node_t* malloc_function_node() {
+  function_node_t* result = malloc_struct(function_node_t);
+  result->tag = PARSE_NODE_FUNCTION;
+  return result;
+}
+
+static inline function_argument_node_t* malloc_function_argument_node() {
+  function_argument_node_t* result = malloc_struct(function_argument_node_t);
+  result->tag = PARSE_NODE_FUNCTION_ARGUMENT;
+  return result;
+}
+
+static inline function_body_node_t* malloc_function_body_node() {
+  function_body_node_t* result = malloc_struct(function_body_node_t);
+  result->tag = PARSE_NODE_FUNCTION_BODY;
+  return result;
+}
+
 /* ====================================================================== */
 /* Enumeration to string */
 /* ====================================================================== */
@@ -426,6 +519,12 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position);
 parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position);
 parse_result_t parse_enum_element_node(value_array_t* tokens,
                                        uint64_t position);
+
+parse_result_t parse_function_node(value_array_t* tokens, uint64_t position);
+parse_result_t parse_function_argument_node(value_array_t* tokens,
+                                            uint64_t position);
+parse_result_t parse_function_body_node(value_array_t* tokens,
+                                        uint64_t position);
 
 #endif /* _PARSER_H_ */
 
@@ -449,6 +548,12 @@ parse_result_t parse_declarations(value_array_t* tokens, uint64_t position) {
 
 parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
   log_info("parse_declaration(_, %d)", position & 0xffffffff);
+
+  parse_result_t fn_result = parse_function_node(tokens, position);
+  if (is_valid_result(fn_result)) {
+    return parse_result(fn_result.node, fn_result.next_token_position);
+  }
+
   parse_result_t decl = parse_enum_node(tokens, position);
   if (!is_empty_result(decl)) {
     if (is_error_result(decl)) {
@@ -528,6 +633,109 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
   result->type = to_type_node(field_type.node);
   result->name = field_name;
   return parse_result(to_node(result), position);
+}
+
+/**
+ * @function parse_function_node
+ *
+ * Parses a function node (either a prototype or full function definition).
+ */
+parse_result_t parse_function_node(value_array_t* tokens, uint64_t position) {
+  parse_result_t return_type = parse_type_node(tokens, position);
+  if (is_empty_result(return_type)) {
+    return parse_result_empty();
+  }
+  position = return_type.next_token_position;
+  oc_token_t* fn_name = token_at(tokens, position++);
+  if (fn_name->type != TOKEN_TYPE_IDENTIFIER) {
+    return parse_result_empty();
+  }
+  oc_token_t* open_paren = token_at(tokens, position++);
+  if (!token_matches(open_paren, "(")) {
+    return parse_result_empty();
+  }
+
+  function_node_t* fn_node = malloc_function_node();
+  fn_node->function_name = fn_name;
+  fn_node->return_type = to_type_node(return_type.node);
+
+  oc_token_t* next = token_at(tokens, position);
+  if (token_matches(next, ")")) {
+    position++;
+  } else {
+    while (1) {
+      parse_result_t arg = parse_function_argument_node(tokens, position);
+      if (!is_valid_result(arg)) {
+        return parse_result_empty();
+      }
+      node_list_add_node(&fn_node->function_args, arg.node);
+      position = arg.next_token_position;
+      next = token_at(tokens, position++);
+      if (token_matches(next, ")")) {
+        break;
+      } else if (!token_matches(next, ",")) {
+        // ERROR instead?
+        return parse_result_empty();
+      }
+      position++;
+    }
+  }
+
+  next = token_at(tokens, position);
+  if (token_matches(next, "{")) {
+    parse_result_t body_result = parse_function_body_node(tokens, position);
+    if (!is_valid_result(body_result)) {
+      return body_result;
+    }
+    fn_node->body = to_function_body_node(body_result.node);
+    position = body_result.next_token_position;
+  } else if (token_matches(next, ";")) {
+    position++;
+  } else {
+    // ERROR?
+    return parse_result_empty();
+  }
+
+  return parse_result(to_node(fn_node), position);
+}
+
+/**
+ * @function parse_function_argument_node
+ *
+ * Parses either just a type, or a type plus an identifier.
+ */
+parse_result_t parse_function_argument_node(value_array_t* tokens,
+                                            uint64_t position) {
+  parse_result_t type = parse_type_node(tokens, position);
+  if (!is_valid_result(type)) {
+    // ERROR
+    return parse_result_empty();
+  }
+  position = type.next_token_position;
+  function_argument_node_t* result = malloc_function_argument_node();
+  result->arg_type = to_type_node(type.node);
+  oc_token_t* next = token_at(tokens, position);
+  if (next->type == TOKEN_TYPE_IDENTIFIER) {
+    result->arg_name = next;
+    position++;
+  } else if (token_matches(next, ",") || token_matches(next, ")")) {
+    // ERROR
+  }
+
+  return parse_result(to_node(result), position);
+}
+
+/**
+ * @function parse_function_body_node
+ *
+ * "Parses" the body of a function by treating it as simply a token
+ * list that must balance all of it's delimiters (except "<>" since
+ * they appear as non-delimiters in other contexts).
+ */
+parse_result_t parse_function_body_node(value_array_t* tokens,
+                                        uint64_t position) {
+  // HERE
+  return parse_result_empty();
 }
 
 typedef struct canonical_type_result_s {
