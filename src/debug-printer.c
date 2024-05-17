@@ -59,7 +59,7 @@ __attribute__((warn_unused_result)) buffer_t*
                             int indention_level);
 
 __attribute__((warn_unused_result)) buffer_t*
-    buffer_append_literal_node(buffer_t* buffer, literal_t* node,
+    buffer_append_literal_node(buffer_t* buffer, literal_node_t* node,
                                int indention_level);
 
 __attribute__((warn_unused_result)) buffer_t*
@@ -251,7 +251,7 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 __attribute__((warn_unused_result)) buffer_t*
-    buffer_append_literal_node(buffer_t* buffer, literal_t* node,
+    buffer_append_literal_node(buffer_t* buffer, literal_node_t* node,
                                int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_LITERAL\n");

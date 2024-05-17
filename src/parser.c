@@ -54,6 +54,7 @@ typedef enum {
   PARSE_NODE_FUNCTION_ARGUMENT,
   PARSE_NODE_FUNCTION_BODY,
   PARSE_NODE_TYPEDEF,
+  PARSE_NODE_GLOBAL_VARIABLE_DEFINITION,
 } parse_node_type_t;
 
 /**
@@ -220,10 +221,10 @@ typedef struct enum_element_S {
  * Represents a source code literal such as an integer/floating-point
  * number, character constant, or a string literal.
  */
-typedef struct literal_S {
+typedef struct literal_node_S {
   parse_node_type_t tag;
   oc_token_t* value;
-} literal_t;
+} literal_node_t;
 
 /**
  * @structure function_body_node_t
@@ -369,11 +370,11 @@ static inline type_node_t* to_type_node(parse_node_t* ptr) {
  * Safely cast a generic node to a literal node after examining it's
  * tag.
  */
-static inline literal_t* to_literal(parse_node_t* ptr) {
+static inline literal_node_t* to_literal(parse_node_t* ptr) {
   if (ptr == NULL || ptr->tag != PARSE_NODE_LITERAL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  return cast(literal_t*, ptr);
+  return cast(literal_node_t*, ptr);
 }
 
 /**
@@ -499,8 +500,8 @@ static inline field_node_t* malloc_field_node() {
   return result;
 }
 
-static inline literal_t* malloc_literal_node() {
-  literal_t* result = malloc_struct(literal_t);
+static inline literal_node_t* malloc_literal_node() {
+  literal_node_t* result = malloc_struct(literal_node_t);
   result->tag = PARSE_NODE_LITERAL;
   return result;
 }
@@ -959,7 +960,7 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
       array_result->type_node_kind = TYPE_NODE_KIND_ARRAY;
       node_list_add_node(&array_result->type_args, to_node(result));
       if (next->type == TOKEN_TYPE_INTEGER_LITERAL) {
-        literal_t* literal = malloc_literal_node();
+        literal_node_t* literal = malloc_literal_node();
         literal->value = next;
         array_result->type_node_kind = TYPE_NODE_KIND_SIZED_ARRAY;
         next = token_at(tokens, position++);
