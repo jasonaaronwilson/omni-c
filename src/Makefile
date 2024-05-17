@@ -20,6 +20,7 @@ SRC_C = armyknife-lib-impl.c \
 	compiler-errors.c \
 	lexer.c \
 	parser.c \
+	to-string-helpers.c \
 	node-list.c \
 	debug-printer.c \
 	main.c

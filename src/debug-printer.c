@@ -88,14 +88,14 @@ __attribute__((warn_unused_result)) buffer_t*
                              int indention_level) {
   switch (node->tag) {
   case PARSE_NODE_DECLARATIONS:
-    return buffer_append_declarations(buffer, to_declarations(node),
+    return buffer_append_declarations(buffer, to_declarations_node(node),
                                       indention_level);
 
   case PARSE_NODE_ENUM:
     return buffer_append_enum(buffer, to_enum_node(node), indention_level);
 
   case PARSE_NODE_ENUM_ELEMENT:
-    return buffer_append_enum_element(buffer, to_enum_element(node),
+    return buffer_append_enum_element(buffer, to_enum_element_node(node),
                                       indention_level);
 
   case PARSE_NODE_STRUCT:
@@ -110,7 +110,7 @@ __attribute__((warn_unused_result)) buffer_t*
     return buffer_append_type_node(buffer, to_type_node(node), indention_level);
 
   case PARSE_NODE_LITERAL:
-    return buffer_append_literal_node(buffer, to_literal(node),
+    return buffer_append_literal_node(buffer, to_literal_node(node),
                                       indention_level);
 
   case PARSE_NODE_FUNCTION:

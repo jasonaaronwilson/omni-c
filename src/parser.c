@@ -55,6 +55,7 @@ typedef enum {
   PARSE_NODE_FUNCTION_BODY,
   PARSE_NODE_TYPEDEF,
   PARSE_NODE_GLOBAL_VARIABLE_DEFINITION,
+  PARSE_NODE_UNPARSED_EXPRESSION,
 } parse_node_type_t;
 
 /**
@@ -263,6 +264,39 @@ typedef struct function_argument_node_S {
   oc_token_t* arg_name;
 } function_argument_node_t;
 
+/**
+ * @structure global_variable_node_t
+ *
+ * Represents a top-level variable definition/declaration.
+ */
+typedef struct global_variable_node_S {
+  parse_node_type_t tag;
+  oc_token_t* name;
+  type_node_t* type;
+  parse_node_t* value;
+} global_variable_node_t;
+
+/**
+ * @structure unparsed_expression_t
+ *
+ * Represents what might be a valid C or C++ expression but which we
+ * used a simpler strategy. These nodes would presumably not exist
+ * once the parser is complete but allows us to make temporary forward
+ * progress.
+ *
+ * (Currently function_body_node_t is almost exactly like this node
+ * but presumably that one will remain (or simply become a
+ * statement_block_node_t once that exists).
+ */
+typedef struct unparsed_expression_S {
+  parse_node_type_t tag;
+  oc_token_t* first_token;
+  oc_token_t* last_token;
+} unparsed_expression_t;
+
+
+// PARSE_NODE_UNPARSED_EXPRESSION
+
 /* ====================================================================== */
 /* General inlined accessors, helpers, and macros */
 /* ====================================================================== */
@@ -292,7 +326,15 @@ static inline parse_node_t* to_node(void* ptr) {
   return cast(parse_node_t*, ptr);
 }
 
+/* ====================================================================== */
+/* These feel like they can be automatically generated or become a C
+   preprocessor macro - but that wouldn't work with our "javadoc"
+   tool. Hmmm. */
+/* ====================================================================== */
+
 /**
+ * @function is_struct_node
+ *
  * Helper to determine if a node is a struct node before trying to
  * cast it.
  */
@@ -301,6 +343,8 @@ static inline boolean_t is_struct_node(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_struct_node
+ *
  * Safely cast a generic node to a struct node after examining it's
  * tag.
  */
@@ -312,6 +356,8 @@ static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_field_node
+ *
  * Safely cast a generic node to a struct node after examining it's
  * tag.
  */
@@ -323,10 +369,12 @@ static inline field_node_t* to_field_node(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_declarations_node
+ *
  * Safely cast a generic node to a declarations node after examining
  * it's tag.
  */
-static inline declarations_t* to_declarations(parse_node_t* ptr) {
+static inline declarations_t* to_declarations_node(parse_node_t* ptr) {
   if (ptr == NULL || ptr->tag != PARSE_NODE_DECLARATIONS) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -334,6 +382,8 @@ static inline declarations_t* to_declarations(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_enum_node
+ *
  * Safely cast a generic node to an enum_node_t* node after examining
  * it's tag.
  */
@@ -345,10 +395,12 @@ static inline enum_node_t* to_enum_node(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_enum_element_node
+ *
  * Safely cast a generic node to an enum_element_t* after examining
  * it's tag.
  */
-static inline enum_element_t* to_enum_element(parse_node_t* ptr) {
+static inline enum_element_t* to_enum_element_node(parse_node_t* ptr) {
   if (ptr == NULL || ptr->tag != PARSE_NODE_ENUM_ELEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -356,6 +408,8 @@ static inline enum_element_t* to_enum_element(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_type_node
+ *
  * Safely cast a generic node to a type node after examining it's
  * tag.
  */
@@ -367,10 +421,12 @@ static inline type_node_t* to_type_node(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_literal_node
+ *
  * Safely cast a generic node to a literal node after examining it's
  * tag.
  */
-static inline literal_node_t* to_literal(parse_node_t* ptr) {
+static inline literal_node_t* to_literal_node(parse_node_t* ptr) {
   if (ptr == NULL || ptr->tag != PARSE_NODE_LITERAL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -378,6 +434,8 @@ static inline literal_node_t* to_literal(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_function_node
+ *
  * Safely cast a generic node to a function node after examining it's
  * tag.
  */
@@ -389,6 +447,8 @@ static inline function_node_t* to_function_node(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_function_argument_node
+ *
  * Safely cast a generic node to a function argument node after
  * examining it's tag.
  */
@@ -401,6 +461,8 @@ static inline function_argument_node_t*
 }
 
 /**
+ * @function to_function_body_node
+ *
  * Safely cast a generic node to a function body node after examining
  * it's tag.
  */
@@ -412,6 +474,8 @@ static inline function_body_node_t* to_function_body_node(parse_node_t* ptr) {
 }
 
 /**
+ * @function to_typedef_node
+ *
  * Safely cast a generic node to a tyedef node after examining it's
  * tag.
  */
@@ -421,6 +485,34 @@ static inline typedef_node_t* to_typedef_node(parse_node_t* ptr) {
   }
   return cast(typedef_node_t*, ptr);
 }
+
+/**
+ * @function to_global_variable_node
+ *
+ * Safely cast a generic node to a tyedef node after examining it's
+ * tag.
+ */
+static inline global_variable_node_t*
+    to_global_variable_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_GLOBAL_VARIABLE_DEFINITION) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(global_variable_node_t*, ptr);
+}
+
+/**
+ * @function to_unparsed_expression
+ *
+ * Safely cast a generic node to a tyedef node after examining it's
+ * tag.
+ */
+static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_UNPARSED_EXPRESSION) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(unparsed_expression_t*, ptr);
+}
+
 
 /* ====================================================================== */
 /* Inlined helpers for parse_result_t implementation */
@@ -1083,83 +1175,4 @@ parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
 
 
   return parse_result(to_node(result), position);
-}
-
-char* parse_node_type_to_string(parse_node_type_t type) {
-  switch (type) {
-  default:
-  case PARSE_NODE_UNKNOWN:
-    return "PARSE_NODE_UNKNOWN";
-  case PARSE_NODE_DECLARATIONS:
-    return "PARSE_NODE_DECLARATIONS";
-  case PARSE_NODE_ENUM:
-    return "PARSE_NODE_ENUM";
-  case PARSE_NODE_ENUM_ELEMENT:
-    return "PARSE_NODE_ENUM_ELEMENT";
-  case PARSE_NODE_FIELD:
-    return "PARSE_NODE_FIELD";
-  case PARSE_NODE_GLOBAL_FUNCTION:
-    return "PARSE_NODE_GLOBAL_FUNCTION";
-  case PARSE_NODE_GLOBAL_VARIABLE:
-    return "PARSE_NODE_GLOBAL_VARIABLE";
-  case PARSE_NODE_LIST_OF_NODES:
-    return "PARSE_NODE_LIST_OF_NODES";
-  case PARSE_NODE_STRUCT:
-    return "PARSE_NODE_STRUCT";
-  case PARSE_NODE_UNION:
-    return "PARSE_NODE_UNION";
-  case PARSE_NODE_TYPE:
-    return "PARSE_NODE_TYPE";
-  }
-  return "**NOT REACHED**";
-}
-
-char* parse_error_code_to_string(parse_error_code_t error_code) {
-  switch (error_code) {
-  default:
-  case PARSE_ERROR_UNKNOWN:
-    return "PARSE_ERROR_UNKNOWN";
-  case PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED:
-    return "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED";
-  case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
-    return "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON";
-  case PARSE_ERROR_EXPECTED_SEMICOLON:
-    return "PARSE_ERROR_EXPECTED_SEMICOLON";
-  case PARSE_ERROR_IDENTIFIER_EXPECTED:
-    return "PARSE_ERROR_IDENTIFIER_EXPECTED";
-  case PARSE_ERROR_INTEGER_LITERAL_EXPECTED:
-    return "PARSE_ERROR_INTEGER_LITERAL_EXPECTED";
-  case PARSE_ERROR_OPEN_BRACE_EXPECTED:
-    return "PARSE_ERROR_OPEN_BRACE_EXPECTED";
-  case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
-    return "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION";
-  }
-  return "**NOT REACHED**";
-}
-
-char* type_node_kind_to_string(type_node_kind_t kind) {
-  switch (kind) {
-  default:
-  case TYPE_NODE_KIND_UNKNOWN:
-    return "TYPE_NODE_KIND_UNKNOWN";
-  case TYPE_NODE_KIND_POINTER:
-    return "TYPE_NODE_KIND_POINTER";
-  case TYPE_NODE_KIND_ARRAY:
-    return "TYPE_NODE_KIND_ARRAY";
-  case TYPE_NODE_KIND_SIZED_ARRAY:
-    return "TYPE_NODE_KIND_SIZED_ARRAY";
-  case TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY:
-    return "TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY";
-  case TYPE_NODE_KIND_STRUCT_PREFIXED_TYPENAME:
-    return "TYPE_NODE_KIND_STRUCT_PREFIXED_TYPENAME";
-  case TYPE_NODE_KIND_UNION_PREFIXED_TYPENAME:
-    return "TYPE_NODE_KIND_UNION_PREFIXED_TYPENAME";
-  case TYPE_NODE_KIND_ENUM_PREFIXED_TYPENAME:
-    return "TYPE_NODE_KIND_ENUM_PREFIXED_TYPENAME";
-  case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
-    return "TYPE_NODE_KIND_PRIMITIVE_TYPENAME";
-  case TYPE_NODE_KIND_TYPENAME:
-    return "TYPE_NODE_KIND_TYPENAME";
-  }
-  return "**NOT REACHED**";
 }
