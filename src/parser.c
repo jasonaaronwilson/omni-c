@@ -1176,3 +1176,37 @@ parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
 
   return parse_result(to_node(result), position);
 }
+
+/**
+ * @function parse_typedef_node
+ *
+ * Parses a C/C++ typedef node.
+ *
+ * typedef TYPE NAME;
+ * TODO(jawilson): typedef int (*StringToInt)(const char*);
+ */
+parse_result_t parse_global_variable_node(value_array_t* tokens,
+                                          uint64_t position) {
+  parse_result_t type = parse_type_node(tokens, position);
+  if (!is_valid_result(type)) {
+    // ERROR?
+    return parse_result_empty();
+  }
+  position = type.next_token_position;
+  oc_token_t* name = token_at(tokens, position++);
+  if (name->type != TOKEN_TYPE_IDENTIFIER) {
+    parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
+  }
+
+  typedef_node_t* result = malloc_typedef_node();
+  result->type_node = to_type_node(type.node);
+  result->name = name;
+
+  oc_token_t* semi = token_at(tokens, position++);
+  if (!token_matches(semi, ";")) {
+    return parse_error_result(PARSE_ERROR_SEMICOLON_EXPECTED, name);
+  }
+
+
+  return parse_result(to_node(result), position);
+}

@@ -13,10 +13,8 @@ CC_FLAGS=-g -rdynamic -I ~/src/tree-sitter/lib/include
 SRC_C = armyknife-lib-impl.c \
 	mode.c \
 	keywords.c \
-	common/oc-file.c \
-	common/oc-compiler-state.c \
-	parser/parse-files.c \
-	common/oc-node.c \
+	oc-file.c \
+	file-reader.c \
 	compiler-errors.c \
 	lexer.c \
 	parser.c \
