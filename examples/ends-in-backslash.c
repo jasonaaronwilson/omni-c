@@ -1,3 +1,16 @@
+//// TODO (jawilson):
+
+/**
+ *
+ * I can't make this make sense since generate-ends-in-backslash.c
+ * when compiled and run is only warned about with clang using
+ * -pedantic. Obviously I didn't make up the stuff below but it's
+ * pretty hard to keep either emacs or nano from adding the extra
+ * newline...
+ *
+ *
+ */
+
 //// *** DO NOT EDIT THE LAST LINE OF THIS FILE WITHOUT FULL
 //// *** UNDERSTANDING OF WHAT IT IS TESTING.
 
@@ -55,7 +68,8 @@
 //// Most text editors are so helpful they will automatically add a
 //// newline at the end of this file but we don't want that here so
 //// *don't edit this file please* unless you know what you are doing!
-//// nano 7.2 doesn't appear to add the extra newline but Emacs and I
-//// suspect most "text" editors will add a newline.
+//// nano 7.2 doesn't appear to add the extra newline (update, I got
+//// lucky?) but Emacs and I suspect most "text" editors will add a
+//// newline.
 
 #define foo() bar \
