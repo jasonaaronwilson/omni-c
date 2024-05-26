@@ -313,9 +313,14 @@ static char* c_punctuation[] = {
     "}",
     "~",
 
-    // Hopefully enough to parse C preprocessor stuff
+    // *****************************************************************
+    // Hopefully enough to parse C preprocessor stuff (after going
+    // through the token-transformer...)
+    // *****************************************************************
     "#",
-    "\\",
+    // This won't work forever... We special case this in
+    // transform_tokens()...
+    "\\\n",
 };
 
 token_or_error_t tokenize_punctuation(buffer_t* buffer,

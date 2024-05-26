@@ -17,6 +17,7 @@ SRC_C = armyknife-lib-impl.c \
 	file-reader.c \
 	compiler-errors.c \
 	lexer.c \
+	token-transformer.c \
 	parser.c \
 	to-string-helpers.c \
 	node-list.c \
@@ -31,6 +32,9 @@ generate-header-files: ${SRC_C}
 
 omni-c: ${SRC_C} generate-header-files
 	gcc ${CC_FLAGS} -o omni-c ${SRC_C} ${TREE_SITTER_FILES}
+
+test: omni-c
+	./omni-c print-tokens --parse-and-print=true ../examples/structures.oc ../examples/functions.oc ../examples/typedefs.oc
 
 format:
 	clang-format -i ${SRC_C}

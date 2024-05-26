@@ -106,7 +106,7 @@ void print_tokens(void) {
 ////   do { \
 ////     for (int i = 0; i < node->children->length; i++) { \
 ////       oc_node_t* child = (oc_node_t*) value_array_get(node->children,
-///i).ptr;  \
+/// i).ptr;  \
 ////       if (child->tag == OC_NODE_FIELD_DECLARATION_LIST) { \
 ////         for (int j = 0; j < child->children->length; j++) { \
 ////           oc_node_t* field_node \
@@ -115,10 +115,10 @@ void print_tokens(void) {
 ////             do { \
 ////               oc_node_t* field_type_node_var \
 ////                   = (oc_node_t*) value_array_get(field_node->children,
-///0).ptr; \
+/// 0).ptr; \
 ////               oc_node_t* field_name_node_var \
 ////                   = (oc_node_t*) value_array_get(field_node->children,
-///1).ptr; \
+/// 1).ptr; \
 ////               statements; \
 ////             } while (0); \
 ////           } \
@@ -145,7 +145,7 @@ void print_tokens(void) {
 ////
 ////   struct_visit_status
 ////       = string_ht_insert(struct_visit_status, struct_name,
-///u64_to_value(1));
+/// u64_to_value(1));
 ////
 ////   // clang-format off
 ////   structure_for_each_field(node, field_type_node, field_name_node, {
@@ -153,7 +153,7 @@ void print_tokens(void) {
 ////       value_result_t result = string_ht_find(struct_nodes, name);
 ////       if (is_ok(result)) {
 //// 	structures = structure_dfs(cast(oc_node_t*, result.ptr), struct_nodes,
-///struct_visit_status, structures); /       } /     }); /   // clang-format on
+/// struct_visit_status, structures); /       } /     }); /   // clang-format on
 ////
 ////   structures = append_oc_node_text(structures, node, 0);
 ////
@@ -208,10 +208,11 @@ void print_tokens(void) {
 ////     TSNode root_node = ts_tree_root_node(file->tree);
 ////     oc_node_t* root_oc_node
 ////         = ts_node_to_oc_node(root_node, file->data,
-///FLAG_include_unnamed_nodes); /     for (int i = 0; i <
-///root_oc_node->children->length; i++) { /       oc_node_t* node /           =
+/// FLAG_include_unnamed_nodes); /     for (int i = 0; i <
+/// root_oc_node->children->length; i++) { /       oc_node_t* node /           =
 ///(oc_node_t*) value_array_get(root_oc_node->children, i).ptr; / log_warn("Node
-///tag is %s\n", oc_node_tag_to_string(node->tag)); /       switch (node->tag) {
+/// tag is %s\n", oc_node_tag_to_string(node->tag)); /       switch (node->tag)
+/// {
 ////
 ////       case OC_NODE_PREPROC_INCLUDE:
 ////         includes = append_oc_node_text(includes, node, 0);
@@ -224,9 +225,9 @@ void print_tokens(void) {
 ////       case OC_NODE_STRUCT_SPECIFIER:
 ////         struct_nodes = string_ht_insert(
 ////             struct_nodes, struct_node_to_struct_name(node),
-///ptr_to_value(node)); /         structure_forward_declarations =
-///append_structure_forward_declarations( / structure_forward_declarations,
-///node); /         break;
+/// ptr_to_value(node)); /         structure_forward_declarations =
+/// append_structure_forward_declarations( / structure_forward_declarations,
+/// node); /         break;
 ////
 ////       default:
 ////         break;
@@ -241,10 +242,10 @@ void print_tokens(void) {
 ////
 ////   string_hashtable_t* struct_visit_status = make_string_hashtable(32);
 ////   structures = structures_do_dfs(struct_nodes, struct_visit_status,
-///structures);
+/// structures);
 ////
 ////   fprintf(stderr, "\n/* Includes ... */\n%s\n",
-///buffer_to_c_string(includes));
+/// buffer_to_c_string(includes));
 ////
 ////   fprintf(stderr, "\n/* Structure Forward Declarations ... */\n%s\n",
 ////           buffer_to_c_string(structure_forward_declarations));
