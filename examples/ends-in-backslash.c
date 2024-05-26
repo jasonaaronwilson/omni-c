@@ -30,7 +30,7 @@
 ////
 //// ends-in-backslash.c:32: warning: foo redefined
 ////
-//// This stuff has a tendendancy especially if posted to
+//// This stuff has a tendendancy to change perhaps if posted to
 //// Reddit... Here are the compiler versions I'm using (Debian
 //// Bookworm if that matters...)
 ////
