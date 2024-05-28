@@ -75,13 +75,15 @@ value_array_t* transform_tokens(value_array_t* tokens,
   // and FLAG_print_tokens_include_comments so refactor that into
   // xform_options.
 
-  // TODO(jawilson): add line and column to every token.
+  uint64_t line_number = 1;
+  uint64_t column_number = 1;
 
   for (int position = 0; position < tokens->length; position++) {
-    boolean_t keep_token = false;
-    oc_token_t* token
-        = cast(oc_token_t*, value_array_get(tokens, position).ptr);
+    oc_token_t* token = token_at(tokens, position);
+    token->line_number = line_number;
+    token->column_number = column_number;
 
+    boolean_t keep_token = false;
     switch (token->type) {
     case TOKEN_TYPE_WHITESPACE:
       keep_token = xform_options.keep_whitespace;
@@ -98,8 +100,16 @@ value_array_t* transform_tokens(value_array_t* tokens,
       break;
     }
 
-    // HERE: march through each code-point from the start of the token
-    // to the end of the token.
+    // TODO(jawilson): use code-points instead of bytes...
+    for (int i = token->start; i < token->end; i++) {
+      uint8_t ch = buffer_get(token->buffer, i);
+      if (ch == '\n') {
+        line_number++;
+        column_number = 1;
+      } else {
+        column_number++;
+      }
+    }
 
     if (keep_token) {
       value_array_add(result, ptr_to_value(token));

@@ -34,6 +34,8 @@ struct oc_token_S {
   token_type_t type;
   int32_t start;
   int32_t end;
+  int32_t line_number;
+  int32_t column_number;
 };
 
 typedef struct oc_token_S oc_token_t;
@@ -125,9 +127,10 @@ char* token_type_to_string(token_type_t type) {
 __attribute__((warn_unused_result)) buffer_t*
     append_token_debug_string(buffer_t* buffer, oc_token_t token) {
   char* str = token_to_string(token);
-  buffer = buffer_printf(buffer, "type: %s start: %d end: %d str: %s",
-                         token_type_to_string(token.type), token.start,
-                         token.end, str);
+  buffer = buffer_printf(
+      buffer, "type: %s start: %d end: %d str: %s line=%d column=%d",
+      token_type_to_string(token.type), token.start, token.end, str,
+      token.line_number, token.column_number);
   free_bytes(str);
   return buffer;
 }
