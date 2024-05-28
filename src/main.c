@@ -20,13 +20,25 @@ boolean_t FLAG_print_tokens_include_whitespace = false;
 boolean_t FLAG_print_tokens_include_comments = false;
 boolean_t FLAG_print_tokens_parse_and_print = true;
 
+void do_print_tokens(value_array_t* tokens, char* message) {
+  if (FLAG_print_tokens_show_tokens) {
+    buffer_t* buffer = make_buffer(tokens->length);
+    for (int j = 0; j < tokens->length; j++) {
+      oc_token_t* token = token_at(tokens, j);
+      buffer = append_token_debug_string(buffer, *token);
+      buffer = buffer_append_string(buffer, "\n");
+    }
+    fprintf(stdout, "** %s **\n%s\n", message, buffer_to_c_string(buffer));
+  }
+}
+
 void print_tokens(void) {
   log_info("print_tokens()");
 
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
-    oc_tokenizer_result_t tokenizer_result = tokenize(file->data, true, true);
+    oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
 
     if (tokenizer_result.tokenizer_error_code) {
       log_warn("Tokenizer error: \"%s\"::%d -- %d",
@@ -37,6 +49,8 @@ void print_tokens(void) {
     }
 
     value_array_t* tokens = tokenizer_result.tokens;
+    do_print_tokens(tokens, "before xform tokens");
+
     tokens = transform_tokens(
         tokens, (token_transformer_options_t){
                     .keep_whitespace = FLAG_print_tokens_include_whitespace,
@@ -44,15 +58,7 @@ void print_tokens(void) {
                     .keep_javadoc_comments = FLAG_print_tokens_include_comments,
                 });
 
-    if (FLAG_print_tokens_show_tokens) {
-      buffer_t* buffer = make_buffer(tokens->length);
-      for (int j = 0; j < tokens->length; j++) {
-        oc_token_t* token = token_at(tokens, j);
-        buffer = append_token_debug_string(buffer, *token);
-        buffer = buffer_append_string(buffer, "\n");
-      }
-      fprintf(stdout, "** Tokens **\n%s\n", buffer_to_c_string(buffer));
-    }
+    do_print_tokens(tokens, "after xform tokens");
 
     if (FLAG_print_tokens_parse_and_print) {
       parse_result_t declarations = parse_declarations(tokens, 0);

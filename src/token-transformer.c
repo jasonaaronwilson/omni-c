@@ -75,13 +75,8 @@ value_array_t* transform_tokens(value_array_t* tokens,
   // and FLAG_print_tokens_include_comments so refactor that into
   // xform_options.
 
-  uint64_t line_number = 1;
-  uint64_t column_number = 1;
-
   for (int position = 0; position < tokens->length; position++) {
     oc_token_t* token = token_at(tokens, position);
-    token->line_number = line_number;
-    token->column_number = column_number;
 
     boolean_t keep_token = false;
     switch (token->type) {
@@ -98,17 +93,6 @@ value_array_t* transform_tokens(value_array_t* tokens,
     default:
       keep_token = true;
       break;
-    }
-
-    // TODO(jawilson): use code-points instead of bytes...
-    for (int i = token->start; i < token->end; i++) {
-      uint8_t ch = buffer_get(token->buffer, i);
-      if (ch == '\n') {
-        line_number++;
-        column_number = 1;
-      } else {
-        column_number++;
-      }
     }
 
     if (keep_token) {

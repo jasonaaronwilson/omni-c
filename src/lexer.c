@@ -58,8 +58,7 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_token_string(buffer_t* buffer, oc_token_t token);
 
-oc_tokenizer_result_t tokenize(buffer_t* buffer, boolean_t include_whitespace,
-                               boolean_t include_comments);
+oc_tokenizer_result_t tokenize(buffer_t* buffer);
 
 static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
@@ -477,7 +476,7 @@ static inline oc_token_t* heap_allocate_token(oc_token_t token) {
   return result;
 }
 
-#define read_or_skip_token(token_reader_function_name, include)                \
+#define read_token(token_reader_function_name)                                 \
   do {                                                                         \
     token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
     if (token_or_error.error_code) {                                           \
@@ -485,15 +484,10 @@ static inline oc_token_t* heap_allocate_token(oc_token_t token) {
           .tokenizer_error_code = token_or_error.error_code,                   \
           .tokenizer_error_position = token_or_error.error_position};          \
     }                                                                          \
-    if (include) {                                                             \
-      value_array_add(result_tokens, ptr_to_value(heap_allocate_token(         \
-                                         token_or_error.token)));              \
-    }                                                                          \
+    token = heap_allocate_token(token_or_error.token);                         \
+    value_array_add(result_tokens, ptr_to_value(token));                       \
     pos = token_or_error.token.end;                                            \
   } while (0)
-
-#define read_token(token_reader_function_name)                                 \
-  read_or_skip_token(token_reader_function_name, true)
 
 /**
  * @function tokenize
@@ -501,17 +495,18 @@ static inline oc_token_t* heap_allocate_token(oc_token_t token) {
  * Return a value array of the tokens OR return an error (such as when
  * a character or string literal is unterminated).
  */
-oc_tokenizer_result_t tokenize(buffer_t* buffer, boolean_t include_whitespace,
-                               boolean_t include_comments) {
+oc_tokenizer_result_t tokenize(buffer_t* buffer) {
   oc_tokenizer_result_t result = {0};
 
   // Sizing this array initially can avoid some copying but for now
   // let's just be dumb and optimize for smallish input sizes.
   value_array_t* result_tokens = make_value_array(1024);
 
+  uint64_t line_number = 1;
+  uint64_t column_number = 1;
+
   uint32_t pos = 0;
   while (pos < buffer_length(buffer)) {
-
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
       return (oc_tokenizer_result_t){.tokenizer_error_code
@@ -519,21 +514,38 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer, boolean_t include_whitespace,
     }
 
     uint32_t code_point = decode_result.code_point;
+    oc_token_t* token = NULL;
 
     if (isspace(code_point)) {
-      read_or_skip_token(tokenize_whitespace, include_whitespace);
+      read_token(tokenize_whitespace);
     } else if (is_identifier_start(code_point)) {
       read_token(tokenize_identifier);
     } else if (isdigit(code_point)) {
       read_token(tokenize_numeric);
     } else if (is_comment_start(buffer, pos)) {
-      read_or_skip_token(tokenize_comment, include_comments);
+      read_token(tokenize_comment);
     } else if (is_string_literal_start(buffer, pos)) {
       read_token(tokenize_string_literal);
     } else if (is_character_literal_start(buffer, pos)) {
       read_token(tokenize_character_literal);
     } else {
       read_token(tokenize_punctuation);
+    }
+
+    // If token is null we have a problem...
+
+    if (token != NULL) {
+      token->line_number = line_number;
+      token->column_number = column_number;
+      for (int i = token->start; i < token->end; i++) {
+        uint8_t ch = buffer_get(token->buffer, i);
+        if (ch == '\n') {
+          line_number++;
+          column_number = 1;
+        } else {
+          column_number++;
+        }
+      }
     }
   }
 
