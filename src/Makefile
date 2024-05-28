@@ -34,7 +34,11 @@ omni-c: ${SRC_C} generate-header-files
 	gcc ${CC_FLAGS} -o omni-c ${SRC_C} ${TREE_SITTER_FILES}
 
 test: omni-c
-	./omni-c print-tokens --parse-and-print=true ../examples/structures.oc ../examples/functions.oc ../examples/typedefs.oc
+	./omni-c print-tokens --parse-and-print=true \
+		../examples/structures.oc \
+		../examples/functions.oc \
+		../examples/typedefs.oc \
+		../examples/global-variables.oc
 
 format:
 	clang-format -i ${SRC_C}

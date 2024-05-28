@@ -609,6 +609,12 @@ static inline typedef_node_t* malloc_typedef_node() {
   return result;
 }
 
+static inline global_variable_node_t* malloc_global_variable_node() {
+  global_variable_node_t* result = malloc_struct(global_variable_node_t);
+  result->tag = PARSE_NODE_GLOBAL_VARIABLE_DEFINITION;
+  return result;
+}
+
 /* ====================================================================== */
 /* Enumeration to string */
 /* ====================================================================== */
@@ -637,6 +643,9 @@ parse_result_t parse_function_body_node(value_array_t* tokens,
                                         uint64_t position);
 
 parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position);
+
+parse_result_t parse_global_variable_node(value_array_t* tokens,
+                                          uint64_t position);
 
 #endif /* _PARSER_H_ */
 
@@ -687,6 +696,11 @@ parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
     } else if (token_matches(token_at(tokens, decl.next_token_position), ";")) {
       return parse_result(decl.node, decl.next_token_position + 1);
     }
+  }
+
+  parse_result_t glb_var_result = parse_global_variable_node(tokens, position);
+  if (is_valid_result(glb_var_result)) {
+    return glb_var_result;
   }
 
   return parse_error_result(PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
@@ -1165,12 +1179,9 @@ parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
 }
 
 /**
- * @function parse_typedef_node
+ * @function parse_global_variable_node
  *
- * Parses a C/C++ typedef node.
- *
- * typedef TYPE NAME;
- * TODO(jawilson): typedef int (*StringToInt)(const char*);
+ * Parses a C/C++ global variable.
  */
 parse_result_t parse_global_variable_node(value_array_t* tokens,
                                           uint64_t position) {
@@ -1185,15 +1196,14 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
     parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
   }
 
-  typedef_node_t* result = malloc_typedef_node();
-  result->type_node = to_type_node(type.node);
+  global_variable_node_t* result = malloc_global_variable_node();
+  result->type = to_type_node(type.node);
   result->name = name;
 
   oc_token_t* semi = token_at(tokens, position++);
   if (!token_matches(semi, ";")) {
     return parse_error_result(PARSE_ERROR_SEMICOLON_EXPECTED, name);
   }
-
 
   return parse_result(to_node(result), position);
 }

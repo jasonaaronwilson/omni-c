@@ -78,6 +78,11 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_typedef_node(buffer_t* buffer, typedef_node_t* node,
                                int indention_level);
 
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_global_variable_node(buffer_t* buffer,
+                                       global_variable_node_t* node,
+                                       int indention_level);
+
 /**
  * @function buffer_append_parse_node
  *
@@ -128,6 +133,10 @@ __attribute__((warn_unused_result)) buffer_t*
   case PARSE_NODE_TYPEDEF:
     return buffer_append_typedef_node(buffer, to_typedef_node(node),
                                       indention_level);
+
+  case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
+    return buffer_append_global_variable_node(
+        buffer, to_global_variable_node(node), indention_level);
 
   default:
     break;
@@ -335,6 +344,26 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer = buffer_append_string(buffer, "type_node:\n");
     buffer
         = buffer_append_type_node(buffer, node->type_node, indention_level + 1);
+  }
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_global_variable_node(buffer_t* buffer,
+                                       global_variable_node_t* node,
+                                       int indention_level) {
+  buffer = buffer_indent(buffer, indention_level);
+  buffer
+      = buffer_printf(buffer, "tag: PARSE_NODE_GLOBAL_VARIABLE_DEFINITION\n");
+  if (node->name != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer
+        = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
+  }
+  if (node->type != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_append_string(buffer, "type:\n");
+    buffer = buffer_append_type_node(buffer, node->type, indention_level + 1);
   }
   return buffer;
 }
