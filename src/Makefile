@@ -38,7 +38,8 @@ test: omni-c
 		../examples/structures.oc \
 		../examples/functions.oc \
 		../examples/typedefs.oc \
-		../examples/global-variables.oc
+		../examples/global-variables.oc \
+		../examples/simple-c-proprocess.oc
 
 format:
 	clang-format -i ${SRC_C}

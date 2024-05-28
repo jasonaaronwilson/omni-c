@@ -38,6 +38,11 @@ void print_tokens(void) {
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
+
+    fprintf(stdout, "====================================================\n");
+    fprintf(stdout, "====> Processing %s\n", file->file_name);
+    fprintf(stdout, "====================================================\n");
+
     oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
 
     if (tokenizer_result.tokenizer_error_code) {
@@ -56,6 +61,7 @@ void print_tokens(void) {
                     .keep_whitespace = FLAG_print_tokens_include_whitespace,
                     .keep_comments = FLAG_print_tokens_include_comments,
                     .keep_javadoc_comments = FLAG_print_tokens_include_comments,
+                    .keep_c_preprocessor_lines = false,
                 });
 
     do_print_tokens(tokens, "after xform tokens");

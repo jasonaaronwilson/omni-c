@@ -77,6 +77,10 @@ static inline boolean_t token_starts_with(oc_token_t* token, char* str) {
   return buffer_match_string_at(token->buffer, token->start, str);
 }
 
+static inline boolean_t token_contains(oc_token_t* token, char* str) {
+  return buffer_region_contains(token->buffer, token->start, token->end, str);
+}
+
 #endif /* _LEXER_H_ */
 
 /**

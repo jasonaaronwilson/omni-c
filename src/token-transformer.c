@@ -43,6 +43,7 @@ typedef struct token_transformer_options_S {
   boolean_t keep_whitespace;
   boolean_t keep_javadoc_comments;
   boolean_t keep_comments;
+  boolean_t keep_c_preprocessor_lines;
 } token_transformer_options_t;
 
 value_array_t* transform_tokens(value_array_t* tokens,
@@ -56,25 +57,14 @@ value_array_t* transform_tokens(value_array_t* tokens,
  * Given an array of tokens, for example from tokenize(), return an
  * easier sequence of tokens to parse by eliminating comments and
  * whitespace.
- *
- * Also put line and column numbers on these tokens.
- *
- * These tokens MUST share the same buffer (so the same input file or
- * generated code string) or else column and line number information
- * will be inaccurate.
  */
 value_array_t* transform_tokens(value_array_t* tokens,
                                 token_transformer_options_t xform_options) {
-  // Depending on xform_options, we will usually end up with fewer,
-  // tokens though in theory it is possible to increase the token
-  // count (though value arrays grow in length when necessary).
+  // This is just a guess at the capacity needed and usually the
+  // initial capacity must be at least one so add 1.
   value_array_t* result = make_value_array(tokens->length + 1);
 
-  // TODO(jawilson): whitespace is currently getting skipped by the
-  // lexer itself according to FLAG_print_tokens_include_whitespace
-  // and FLAG_print_tokens_include_comments so refactor that into
-  // xform_options.
-
+  boolean_t is_c_preprocessor_line = false;
   for (int position = 0; position < tokens->length; position++) {
     oc_token_t* token = token_at(tokens, position);
 
@@ -82,6 +72,9 @@ value_array_t* transform_tokens(value_array_t* tokens,
     switch (token->type) {
     case TOKEN_TYPE_WHITESPACE:
       keep_token = xform_options.keep_whitespace;
+      if (token_contains(token, "\n")) {
+        is_c_preprocessor_line = false;
+      }
       break;
     case TOKEN_TYPE_COMMENT:
       if (token_starts_with(token, "/**")) {
@@ -89,10 +82,25 @@ value_array_t* transform_tokens(value_array_t* tokens,
       } else {
         keep_token = xform_options.keep_comments;
       }
+      // This is super confusing and is why you should only use non
+      // line comments in C macros...
+      // if (is_c_preprocessor_line && token_starts_with(token, "//")) {
+      // is_c_preprocessor_line = false;
+      // }
       break;
     default:
       keep_token = true;
       break;
+    }
+
+    if (token->type == TOKEN_TYPE_PUNCTUATION) {
+      if (!is_c_preprocessor_line && token_matches(token, "#")) {
+        is_c_preprocessor_line = true;
+      }
+    }
+
+    if (!xform_options.keep_c_preprocessor_lines) {
+      keep_token = keep_token && !is_c_preprocessor_line;
     }
 
     if (keep_token) {
