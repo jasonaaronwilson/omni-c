@@ -183,7 +183,11 @@ typedef struct token_or_error_S token_or_error_t;
  * @function tokenize_whitespace
  *
  * Read white-space until the buffer is exhausted or a non-whitespace
- * UTF-8 code point is read.
+ * UTF-8 code point is read. Additionally, break after seeing a
+ * newline so that a white-space token will never include more than
+ * one newline and also if a newline is present in a white-space
+ * token, it will always appear as the last code-point of a
+ * white-space token.
  */
 token_or_error_t tokenize_whitespace(buffer_t* buffer,
                                      uint64_t start_position) {
@@ -199,6 +203,14 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer,
       break;
     }
     pos += decode_result.num_bytes;
+    // Always terminate a white-space token after seeing a
+    // newline. This helps us a tiny bit with dealing with C
+    // preprocessor "lines" (as they are sometimes called - C is
+    // otherwise not really line oriented which makes the C
+    // pre-processor a bit weird...)
+    if (code_point == '\n') {
+      break;
+    }
   }
 
   return (token_or_error_t){.token = (oc_token_t){.buffer = buffer,
