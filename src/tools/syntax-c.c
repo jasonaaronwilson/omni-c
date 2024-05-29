@@ -10,7 +10,17 @@
 #include <string.h>
 #include <unistd.h>
 
+// jawilson: this is being used as a fixed sized buffer to READ
+// everything in. 1K seems awfully small, and yet give the purpose
+// maybe no one would notice for a while.
+//
+// There is also an assumption that we won't wrap the incoming
+// fragement with more than 100 bytes.
+//
 #define MAX_SRC_CODE_SIZE 1024
+
+// jawilson: this appears to be used to construct a command line
+// string. buffer_t* should be pretty good at handling that.
 #define MAX_COMMAND_LINE_SIZE 256
 
 int main() {
