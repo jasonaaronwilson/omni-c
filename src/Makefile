@@ -41,6 +41,10 @@ test: omni-c
 		../examples/global-variables.oc \
 		../examples/simple-c-proprocess.oc
 
+self-test: omni-c
+	./omni-c print-tokens --parse-and-print=true ${SRC_C}
+
+
 format:
 	clang-format -i ${SRC_C}
 

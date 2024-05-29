@@ -22,7 +22,7 @@ boolean_t FLAG_print_tokens_parse_and_print = true;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
-    buffer_t* buffer = make_buffer(tokens->length);
+    buffer_t* buffer = make_buffer((tokens->length + 1) * 20);
     for (int j = 0; j < tokens->length; j++) {
       oc_token_t* token = token_at(tokens, j);
       buffer = append_token_debug_string(buffer, *token);
