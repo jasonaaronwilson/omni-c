@@ -22,7 +22,10 @@ boolean_t FLAG_print_tokens_parse_and_print = true;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
-    buffer_t* buffer = make_buffer((tokens->length + 1) * 20);
+    // Experimentally, tokens when debug printed are pretty big no
+    // matter the size of the actual token and some tokens like
+    // comments can be quite large.
+    buffer_t* buffer = make_buffer(tokens->length * 60);
     for (int j = 0; j < tokens->length; j++) {
       oc_token_t* token = token_at(tokens, j);
       buffer = append_token_debug_string(buffer, *token);

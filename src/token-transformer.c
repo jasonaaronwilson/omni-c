@@ -60,10 +60,7 @@ value_array_t* transform_tokens(value_array_t* tokens,
  */
 value_array_t* transform_tokens(value_array_t* tokens,
                                 token_transformer_options_t xform_options) {
-  // This is just a guess at the capacity needed and usually the
-  // initial capacity must be at least one so add 1.
-  value_array_t* result = make_value_array(tokens->length + 1);
-
+  value_array_t* result = make_value_array(tokens->length);
   boolean_t is_c_preprocessor_line = false;
   for (int position = 0; position < tokens->length; position++) {
     oc_token_t* token = token_at(tokens, position);
