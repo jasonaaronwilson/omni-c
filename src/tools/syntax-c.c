@@ -1,46 +1,34 @@
 /**
+ * @file syntax-c.c
  *
- * This code seems to compiles It's simpply a smoothed out version of
- * the previous code.
- *
+ * A tool that reads stdin and compiles it using gcc, clang and tcc to
+ * understand if it is valid as a "top-level" form.
  */
 
+#define C_ARMYKNIFE_LIB_IMPL
+#include <c-armyknife-lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-// jawilson: this is being used as a fixed sized buffer to READ
-// everything in. 1K seems awfully small, and yet give the purpose
-// maybe no one would notice for a while.
-//
-// There is also an assumption that we won't wrap the incoming
-// fragement with more than 100 bytes.
-//
-#define MAX_SRC_CODE_SIZE 1024
 
 // jawilson: this appears to be used to construct a command line
 // string. buffer_t* should be pretty good at handling that.
 #define MAX_COMMAND_LINE_SIZE 256
 
 int main() {
-    char src_code[MAX_SRC_CODE_SIZE];
-    char wrapped_src_code[MAX_SRC_CODE_SIZE + 100];
-    char command_line[MAX_COMMAND_LINE_SIZE];
     char filename[] = "temp_src_code.c";
-    FILE *fp;
 
-    // Read src_code from stdin
-    fgets(src_code, MAX_SRC_CODE_SIZE, stdin);
+    // Slurp stdin
+    buffer_t* input_buffer = buffer_append_all(make_buffer(0), stdin);
 
-    // Wrap src_code in a simple C program
-    snprintf(wrapped_src_code, sizeof(wrapped_src_code), 
-             "#include <stdio.h>\nint main() {\n%s\nreturn 0;\n}", src_code);
+    // Wrap what we slurped in with a wrapper program...
+    buffer_t* wrapped_src_code = make_buffer(input_buffer->capacity + 1024*1);
+    wrapped_src_code = buffer_printf(wrapped_src_code, "#include <stdio.h>\nint main() {\n%s\nreturn 0;\n}", 
+				     buffer_to_c_string(input_buffer));
 
     // Write wrapped src_code to a temporary file
-    fp = fopen(filename, "w");
-    fputs(wrapped_src_code, fp);
-    fclose(fp);
+    buffer_write_file(wrapped_src_code, filename);
 
     // Compilation attempts (GCC, Clang, TCC)
     const char *compilers[] = {"gcc", "clang", "tcc"};
@@ -50,6 +38,7 @@ int main() {
 
     for (int i = 0; i < num_compilers; i++) {
         for (int j = 0; j < num_options; j++) {
+	  char command_line[MAX_COMMAND_LINE_SIZE];
             snprintf(command_line, sizeof(command_line), "%s %s -o temp_out %s 2> /dev/null", 
                      compilers[i], options[j], filename);
             
