@@ -1,3 +1,22 @@
+// Something like this broke our typedef support pretty quickly when
+// we started trying to ingest our own code. While you don't need this
+// particular formulation for newly written omni-c code, we really
+// need to be able to understand this for C interop.
+
+enum color_foo_t {
+  COLOR_NONE,
+  COLOR_RED,
+  COLOR_WHITE,
+  COLOR_BLUE,
+};
+
+typedef enum {
+  COLOR_NONE,
+  COLOR_RED,
+  COLOR_WHITE,
+  COLOR_BLUE,
+} color_t;
+
 // Functions should be the only difficult ones (now that we have
 // decent support for parser types now.
 

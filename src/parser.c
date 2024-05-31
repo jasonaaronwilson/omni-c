@@ -139,6 +139,8 @@ typedef struct type_node_S {
   // canonical name by combining multiple tokens or just remapping a
   // token if necessary.
   oc_token_t* type_name;
+  // These are for "complicated" user types like enum/struct/union
+  parse_node_t* user_type;
   // Generic types (which C doesn't have but C++ kind of has) or even
   // just pointer and array types will have at least one child.
   node_list_t type_args;
@@ -912,6 +914,8 @@ canonical_type_result_t make_type_token_result(char* str, int consumed_tokens) {
  */
 canonical_type_result_t parse_canonical_type(value_array_t* tokens,
                                              uint64_t position) {
+  log_info("parse_canonical_type(_, %d)", position & 0xffffffff);
+
   oc_token_t* a = token_at(tokens, position);
   oc_token_t* b = token_at(tokens, position + 1);
   oc_token_t* c = token_at(tokens, position + 2);
@@ -1013,9 +1017,29 @@ canonical_type_result_t parse_canonical_type(value_array_t* tokens,
                                    .consumed_tokens = 0};
 }
 
+parse_result_t parse_user_type_node(value_array_t* tokens, uint64_t position) {
+  log_info("parse_user_type_node(_, %d)", position & 0xffffffff);
+
+  parse_result_t result = parse_enum_node(tokens, position);
+  if (is_valid_result(result)) {
+    return result;
+  }
+
+  result = parse_structure_node(tokens, position);
+  if (is_valid_result(result)) {
+    return result;
+  }
+
+  // TODO(jawilson): unions!
+
+  return parse_result_empty();
+}
+
+
 parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_type_node(_, %d)", position & 0xffffffff);
   type_node_t* result = malloc_type_node();
+  parse_node_t* user_type = NULL;
 
   // First see if we have a canonical type result...
   canonical_type_result_t canonical_type_result
@@ -1023,18 +1047,26 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
   oc_token_t* type_name = canonical_type_result.canonical_type;
   position += canonical_type_result.consumed_tokens;
 
-  // If it's not canonical, then the first token should be a type name.
+  // If it's not canonical, then it could be a struct/union/or enum
   if (type_name == NULL) {
-    result->type_node_kind = TYPE_NODE_KIND_TYPENAME;
-    type_name = token_at(tokens, position++);
+    parse_result_t user_type_result = parse_user_type_node(tokens, position);
+    if (is_valid_result(user_type_result)) {
+      // TODO(jawilson): we need a kind for a user type
+      result->type_node_kind = TYPE_NODE_KIND_TYPENAME;
+      user_type = user_type_result.node;
+      position = user_type_result.next_token_position;
+    } else {
+      result->type_node_kind = TYPE_NODE_KIND_TYPENAME;
+      type_name = token_at(tokens, position++);
+      if (type_name->type != TOKEN_TYPE_IDENTIFIER) {
+        return parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, type_name);
+      }
+    }
   } else {
     result->type_node_kind = TYPE_NODE_KIND_PRIMITIVE_TYPENAME;
   }
 
   // TODO(jawilson): allow parens for more complicated types...
-  if (type_name->type != TOKEN_TYPE_IDENTIFIER) {
-    return parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, type_name);
-  }
 
   result->type_name = type_name;
   while (true) {
@@ -1074,8 +1106,8 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
 
 /**
  * Parse a node representing something that starts with the "enum"
- * keyword. This can be used as part of a type or else part of an enum
- * declaration.
+ * keyword. This can be used as part of a typedef or else part of an
+ * enum declaration.
  */
 parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_enum_node(_, %d)", position & 0xffffffff);
@@ -1084,15 +1116,18 @@ parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position) {
     return parse_result_empty();
   }
   enum_node_t* result = malloc_enum_node();
-  oc_token_t* token = token_at(tokens, position++);
+  oc_token_t* token = token_at(tokens, position);
   if (token->type == TOKEN_TYPE_IDENTIFIER) {
     result->name = token;
-    token = token_at(tokens, position++);
+    position += 1;
+    token = token_at(tokens, position);
   }
   if (!token_matches(token, "{")) {
-    // TODO(jawilson): brace or identifier in some cases...
+    // TODO(jawilson): this is actually not an error example "enum
+    // foo".
     parse_error_result(PARSE_ERROR_OPEN_BRACE_EXPECTED, token);
   }
+  position++;
   while (true) {
     token = token_at(tokens, position);
     if (token_matches(token, "}")) {
@@ -1149,6 +1184,7 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
  * TODO(jawilson): typedef int (*StringToInt)(const char*);
  */
 parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
+  log_info("parse_typedef_node(_, %d)", position & 0xffffffff);
   oc_token_t* typedef_token = token_at(tokens, position++);
   if (!token_matches(typedef_token, "typedef")) {
     return parse_result_empty();
@@ -1185,6 +1221,7 @@ parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
  */
 parse_result_t parse_global_variable_node(value_array_t* tokens,
                                           uint64_t position) {
+  log_info("parse_global_variable_node(_, %d)", position & 0xffffffff);
   parse_result_t type = parse_type_node(tokens, position);
   if (!is_valid_result(type)) {
     // ERROR?
