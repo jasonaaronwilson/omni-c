@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     int num_compilers = sizeof(compilers) / sizeof(compilers[0]);
     int num_options = sizeof(options) / sizeof(options[0]);
 
-    int return_code = 1;
+    int return_code = 0;
     for (int i = 0; i < num_compilers; i++) {
         for (int j = 0; j < num_options; j++) {
 	  buffer_t* command_line_buffer = buffer_printf(make_buffer(0), 
@@ -47,10 +47,9 @@ int main(int argc, char** argv) {
 	  char* command_line = buffer_to_c_string(command_line_buffer);
 	  if (system(command_line) == 0) {
 	    printf("SUCCESS %s %s\n", compilers[i], options[j]);
-		return_code = 0;
             } else {
 	    printf("FAILURE %s %s\n", compilers[i], options[j]);
-		return_code = 1;
+		return_code |= 1;
             }
 	  free_bytes(command_line);
 	  free_bytes(command_line_buffer);
