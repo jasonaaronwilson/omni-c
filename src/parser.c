@@ -649,6 +649,8 @@ parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position);
 parse_result_t parse_global_variable_node(value_array_t* tokens,
                                           uint64_t position);
 
+parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position);
+
 #endif /* _PARSER_H_ */
 
 /* ====================================================================== */
@@ -1241,10 +1243,38 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
   result->type = to_type_node(type.node);
   result->name = name;
 
+  oc_token_t* equal_token = token_at(tokens, position);
+  if (token_matches(equal_token, "=")) {
+    position++;
+    parse_result_t literal_result = parse_literal_node(tokens, position);
+    if (is_valid_result(literal_result)) {
+      result->value = literal_result.node;
+      position = literal_result.next_token_position;
+    } else {
+      return literal_result;
+    }
+  }
+
   oc_token_t* semi = token_at(tokens, position++);
   if (!token_matches(semi, ";")) {
     return parse_error_result(PARSE_ERROR_SEMICOLON_EXPECTED, name);
   }
 
   return parse_result(to_node(result), position);
+}
+
+parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position) {
+  log_info("parse_literal_node(_, %d)", position & 0xffffffff);
+
+  oc_token_t* token = token_at(tokens, position++);
+  if (token->type == TOKEN_TYPE_INTEGER_LITERAL
+      || token->type == TOKEN_TYPE_STRING_LITERAL
+      || token->type == TOKEN_TYPE_FLOAT_LITERAL
+      || token->type == TOKEN_TYPE_CHARACTER_LITERAL) {
+    literal_node_t* result = malloc_literal_node();
+    result->value = token;
+    return parse_result(to_node(result), position);
+  }
+
+  return parse_result_empty();
 }
