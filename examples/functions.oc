@@ -14,6 +14,13 @@ int foo(int arg0);
 // prototype with no argument types
 int foo();
 
+// prototype with no argument types
+int foo(void);
+
+// A more complicated prototype
+buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
+                                             compiler_error_t* error);
+
 // ======================================================================
 // At this time any function body that are legal tokens and properly
 // match up it's delimiters can be parsed correctly but eventually we

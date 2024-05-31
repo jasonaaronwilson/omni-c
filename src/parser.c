@@ -711,19 +711,24 @@ parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
 
 parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_structure_node(_, %d)", position & 0xffffffff);
-  oc_token_t* token = token_at(tokens, position++);
+  oc_token_t* token = token_at(tokens, position);
   if (!token_matches(token, "struct")) {
     return parse_result_empty();
   }
   struct_node_t* result = malloc_struct_node();
 
-  token = token_at(tokens, position++);
+  position++;
+  token = token_at(tokens, position);
   if (token->type == TOKEN_TYPE_IDENTIFIER) {
     result->name = token;
-    token = token_at(tokens, position++);
+    position++;
+    token = token_at(tokens, position);
   }
 
+  log_info("-- parse_structure_node(_, %d)", position & 0xffffffff);
+
   if (token_matches(token, "{")) {
+    position++;
     while (true) {
       token = token_at(tokens, position);
       if (token_matches(token, "}")) {
@@ -810,7 +815,6 @@ parse_result_t parse_function_node(value_array_t* tokens, uint64_t position) {
         // ERROR instead?
         return parse_result_empty();
       }
-      position++;
     }
   }
 

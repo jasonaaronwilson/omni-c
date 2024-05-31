@@ -1,3 +1,5 @@
+struct forward_declaration_S;
+
 struct empty_struct_t {};
 
 struct simple_struct_t {
