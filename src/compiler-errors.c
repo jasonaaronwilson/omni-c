@@ -120,8 +120,10 @@ char* error_open_semicolon_expected
     = "A parse error has occurred since a semicolon was expected";
 
 char* error_unrecognized_top_level_declaration
-    = "Unable to parse a top-level declaration (struct, union, function, "
-      "typedef currently supported).";
+    = "Unable to parse a top-level declaration.\n\nVariables, functions, "
+      "structures, unions, and typedefs are currently supported.\n\n"
+      "(Additionally, C pre-processor directives are allowed but "
+      "are currently skipped before parsing.)";
 
 buffer_t*
     buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
