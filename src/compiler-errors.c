@@ -120,6 +120,16 @@ src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location,
   return result;
 }
 
+char* formatted_snippet
+    = "======================================================================\n"
+      "{error-prefix-lines}"
+      "{error-highlight-on}"
+      "{error-current-line}"
+      "{error-highlight-off}"
+      "{error-suffix-lines}"
+      "\n======================================================================"
+      "\n";
+
 char* do_common_replacements(char* template, compiler_error_t* error) {
   buffer_t* buffer = make_buffer(256);
 
@@ -143,6 +153,9 @@ char* do_common_replacements(char* template, compiler_error_t* error) {
 
   buffer = buffer_append_string(buffer, template);
 
+  // This comes first itself contains replacable bits!
+  buffer = buffer_replace_all(buffer, "{formatted_snippet}", formatted_snippet);
+
   // This might create whacky effects when looking at out own source
   // code or anything containing our magic strings.
 
@@ -162,31 +175,27 @@ char* do_common_replacements(char* template, compiler_error_t* error) {
 }
 
 char* parse_error_unknown
-    = "A parse error has occurred but the error message is unavailable.";
+    = "A parse error has occurred but the error message is unavailable.\n"
+      "{formatted_snippet}";
 
 char* error_field_width_or_semicolon
     = "A parse error has occurred while trying to read a structure or union "
-      "field.\n\n"
+      "field.\n"
+      "{formatted_snippet}"
       "Expected a field width or a semi-colon.";
 
 char* error_open_brace_expected
     = "A parse error has occurred while trying to parse after an opening '[' "
-      "character.\n\n"
-      "Expected a closing ']'.";
+      "character. Expected a closing ']'.\n"
+      "{formatted_snippet}";
 
 char* error_open_semicolon_expected
-    = "A parse error has occurred since a semicolon was expected";
+    = "A parse error has occurred since a semicolon was expected.\n"
+      "{formatted_snippet}";
 
 char* error_unrecognized_top_level_declaration
     = "Unable to parse a top-level declaration.\n"
-      "======================================================================\n"
-      "{error-prefix-lines}"
-      "{error-highlight-on}"
-      "{error-current-line}"
-      "{error-highlight-off}"
-      "{error-suffix-lines}"
-      "\n======================================================================"
-      "\n"
+      "{formatted_snippet}"
       "\nVariables, functions, "
       "structures, unions, and typedefs are currently supported.\n\n"
       "(Additionally, C pre-processor directives are allowed but "
