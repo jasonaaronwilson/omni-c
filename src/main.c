@@ -72,6 +72,7 @@ void print_tokens(void) {
     if (FLAG_print_tokens_parse_and_print) {
       parse_result_t declarations = parse_declarations(tokens, 0);
       if (is_error_result(declarations)) {
+        declarations.parse_error.file_name = file->file_name;
         buffer_t* buffer = make_buffer(1);
         buffer = buffer_append_human_readable_error(
             buffer, &(declarations.parse_error));
@@ -80,7 +81,8 @@ void print_tokens(void) {
       } else {
         buffer_t* buffer = make_buffer(1024);
         buffer = buffer_append_parse_node(buffer, declarations.node, 0);
-        fprintf(stdout, "** Parse Nodes **\n%s\n", buffer_to_c_string(buffer));
+        fprintf(stdout, "** Parse Nodes %s **\n%s\n", file->file_name,
+                buffer_to_c_string(buffer));
       }
     }
   }

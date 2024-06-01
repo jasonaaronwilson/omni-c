@@ -48,6 +48,7 @@ typedef struct compiler_error_S {
   tokenizer_error_t tokenizer_error_code;
   parse_error_code_t parser_error_code;
   struct oc_token_S* error_token;
+  char* file_name;
 } compiler_error_t;
 
 buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
@@ -81,14 +82,18 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
 char* do_common_replacements(char* template, compiler_error_t* error) {
   buffer_t* buffer = make_buffer(256);
 
+  char* file_name = error->file_name;
+
   if (error->error_token) {
     line_and_column_t position_info = buffer_position_to_line_and_column(
         error->error_token->buffer, error->error_token->start);
-    // TODO(jawilson): figure out filename and format as a GNU error
-    // string.
-    buffer = buffer_printf(buffer, "COMPILER ERROR: line=%d, column=%d\n",
+
+    // This is the gnu standard for error names, lines, and columns
+    buffer = buffer_printf(buffer, "%s:%d.%d: ", file_name,
                            position_info.line & 0xffffffff,
                            position_info.column & 0xffffffff);
+  } else {
+    buffer = buffer_printf(buffer, "%s:%d.%d: ", file_name, 0, 0);
   }
 
   buffer = buffer_append_string(buffer, template);
