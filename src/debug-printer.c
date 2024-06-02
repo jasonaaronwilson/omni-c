@@ -175,7 +175,7 @@ __attribute__((warn_unused_result)) buffer_t*
   for (uint64_t i = 0; i < length; i++) {
     oc_token_t* token = cast(oc_token_t*, value_array_get(tokens, i).ptr);
     buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "%s[%lld]: %s", field_name, i,
+    buffer = buffer_printf(buffer, "%s[%lld]: %s\n", field_name, i,
                            token_to_string(*token));
   }
   return buffer;
@@ -284,8 +284,8 @@ __attribute__((warn_unused_result)) buffer_t*
                                int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_LITERAL\n");
-  buffer = buffer_indent(buffer, indention_level);
   if (node->token != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
     buffer
         = buffer_printf(buffer, "token: %s\n", token_to_string(*(node->token)));
   }
@@ -390,6 +390,11 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "type:\n");
     buffer = buffer_append_type_node(buffer, node->type, indention_level + 1);
+  }
+  if (node->value != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_append_string(buffer, "value:\n");
+    buffer = buffer_append_parse_node(buffer, node->value, indention_level + 1);
   }
   return buffer;
 }
