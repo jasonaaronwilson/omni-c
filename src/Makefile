@@ -52,6 +52,7 @@ clean:
 	rm -f omni-c
 	find . -name '*.h' | xargs -n 1 rm -f
 	find . -name '*~' | xargs -n 1 rm -f
+	rm -f tools/syntax-c
 
 diff: clean
 	git difftool HEAD
