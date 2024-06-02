@@ -226,7 +226,11 @@ typedef struct enum_element_S {
  */
 typedef struct literal_node_S {
   parse_node_type_t tag;
-  oc_token_t* value;
+  oc_token_t* token;
+  // This is used for string literals since in C multiple string
+  // literals can appear in sequence and should be treated like a
+  // single literal if these literals were smushed into one token.
+  value_array_t* tokens;
 } literal_node_t;
 
 /**
@@ -1092,7 +1096,7 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
       node_list_add_node(&array_result->type_args, to_node(result));
       if (next->type == TOKEN_TYPE_INTEGER_LITERAL) {
         literal_node_t* literal = malloc_literal_node();
-        literal->value = next;
+        literal->token = next;
         array_result->type_node_kind = TYPE_NODE_KIND_SIZED_ARRAY;
         next = token_at(tokens, position++);
         node_list_add_node(&array_result->type_args, to_node(literal));
@@ -1264,16 +1268,30 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
 }
 
 parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position) {
-  log_info("parse_literal_node(_, %d)", position & 0xffffffff);
+  log_info("parse_literal_node(_, %lld)", position);
 
-  oc_token_t* token = token_at(tokens, position++);
+  oc_token_t* token = token_at(tokens, position);
+
+  if (token->type == TOKEN_TYPE_STRING_LITERAL) {
+    literal_node_t* result = malloc_literal_node();
+    result->tokens = make_value_array(1);
+    while (true) {
+      oc_token_t* token = token_at(tokens, position);
+      if (token == NULL || token->type != TOKEN_TYPE_STRING_LITERAL) {
+        return parse_result(to_node(result), position);
+      }
+      value_array_add(result->tokens, ptr_to_value(token));
+      position++;
+    }
+  }
+
   if (token->type == TOKEN_TYPE_INTEGER_LITERAL
       || token->type == TOKEN_TYPE_STRING_LITERAL
       || token->type == TOKEN_TYPE_FLOAT_LITERAL
       || token->type == TOKEN_TYPE_CHARACTER_LITERAL) {
     literal_node_t* result = malloc_literal_node();
-    result->value = token;
-    return parse_result(to_node(result), position);
+    result->token = token;
+    return parse_result(to_node(result), position + 1);
   }
 
   return parse_result_empty();

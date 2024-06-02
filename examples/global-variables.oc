@@ -2,5 +2,8 @@ int some_int_global;
 
 int another_int_global = 1;
 
-char* parse_error_unknown
+char* some_string_global
     = "A parse error has occurred but the error message is unavailable.";
+
+char* multi_string_global
+    = "string_1" "string_2" "string_3";

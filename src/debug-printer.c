@@ -162,6 +162,26 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
+/**
+ * @function buffer_append_tokens
+ *
+ * Append the debugging version of a list of value_array of tokens
+ * (not as common as node lists).
+ */
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_tokens(buffer_t* buffer, value_array_t* tokens,
+                         char* field_name, int indention_level) {
+  uint64_t length = tokens->length;
+  for (uint64_t i = 0; i < length; i++) {
+    oc_token_t* token = cast(oc_token_t*, value_array_get(tokens, i).ptr);
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "%s[%lld]: %s", field_name, i,
+                           token_to_string(*token));
+  }
+  return buffer;
+}
+
+
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_declarations(buffer_t* buffer, declarations_t* node,
                                int indention_level) {
@@ -265,8 +285,14 @@ __attribute__((warn_unused_result)) buffer_t*
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_LITERAL\n");
   buffer = buffer_indent(buffer, indention_level);
-  buffer
-      = buffer_printf(buffer, "value: %s\n", token_to_string(*(node->value)));
+  if (node->token != NULL) {
+    buffer
+        = buffer_printf(buffer, "token: %s\n", token_to_string(*(node->token)));
+  }
+  if (node->tokens != NULL) {
+    buffer
+        = buffer_append_tokens(buffer, node->tokens, "tokens", indention_level);
+  }
   return buffer;
 }
 
