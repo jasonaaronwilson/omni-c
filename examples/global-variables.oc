@@ -11,5 +11,13 @@ char* multi_string_global
 char* string_array[];
 char* string_array_array[][];
 
-/* char* foo_array[] = {"foo", "foobar"}; */
+char* foo_array[] = {"foo", "foobar"};
+
+boolean_t my_bool;
+boolean_t my_bool_true = true;
+boolean_t my_bool_false = false;
+
+char* ptr_null = NULL;
+char* ptr_nullptr = nullptr;
+
 

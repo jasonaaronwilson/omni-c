@@ -219,21 +219,6 @@ typedef struct enum_element_S {
 } enum_element_t;
 
 /**
- * @structure enum_element_t
- *
- * Represents a source code literal such as an integer/floating-point
- * number, character constant, or a string literal.
- */
-typedef struct literal_node_S {
-  parse_node_type_t tag;
-  oc_token_t* token;
-  // This is used for string literals since in C multiple string
-  // literals can appear in sequence and should be treated like a
-  // single literal if these literals were smushed into one token.
-  value_array_t* tokens;
-} literal_node_t;
-
-/**
  * @structure function_body_node_t
  *
  * Represents an (unparsed) function body.
@@ -243,6 +228,24 @@ typedef struct function_body_node_S {
   oc_token_t* open_brace_token;
   oc_token_t* close_brace_token;
 } function_body_node_t;
+
+
+/**
+ * @structure literal_node_t
+ *
+ * Represents a source code literal such as an integer/floating-point
+ * number, character constant, a string literal, or a complex
+ * initializer like {1, 2}.
+ */
+typedef struct literal_node_S {
+  parse_node_type_t tag;
+  oc_token_t* token;
+  // This is used for string literals since in C multiple string
+  // literals can appear in sequence and should be treated like a
+  // single literal if these literals were smushed into one token.
+  value_array_t* tokens;
+  function_body_node_t* initializer_node;
+} literal_node_t;
 
 /**
  * @structure function_node_t
@@ -1301,6 +1304,27 @@ parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position) {
       value_array_add(result->tokens, ptr_to_value(token));
       position++;
     }
+  }
+
+  if (token_matches(token, "{")) {
+    parse_result_t fn_body_node_result
+        = parse_function_body_node(tokens, position);
+    if (is_valid_result(fn_body_node_result)) {
+      literal_node_t* result = malloc_literal_node();
+      result->initializer_node
+          = to_function_body_node(fn_body_node_result.node);
+      return parse_result(to_node(result),
+                          fn_body_node_result.next_token_position);
+    } else {
+      return fn_body_node_result;
+    }
+  }
+
+  if (token_matches(token, "NULL") || token_matches(token, "nullptr")
+      || token_matches(token, "true") || token_matches(token, "false")) {
+    literal_node_t* result = malloc_literal_node();
+    result->token = token;
+    return parse_result(to_node(result), position + 1);
   }
 
   if (token->type == TOKEN_TYPE_INTEGER_LITERAL
