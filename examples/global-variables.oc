@@ -7,3 +7,9 @@ char* some_string_global
 
 char* multi_string_global
     = "string_1" "string_2" "string_3";
+
+char* string_array[];
+char* string_array_array[][];
+
+/* char* foo_array[] = {"foo", "foobar"}; */
+

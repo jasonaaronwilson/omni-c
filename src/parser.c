@@ -280,6 +280,7 @@ typedef struct global_variable_node_S {
   oc_token_t* name;
   type_node_t* type;
   parse_node_t* value;
+  boolean_t number_array_suffixes;
 } global_variable_node_t;
 
 /**
@@ -1246,6 +1247,23 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
   global_variable_node_t* result = malloc_global_variable_node();
   result->type = to_type_node(type.node);
   result->name = name;
+
+  while (true) {
+    // TODO(jawilson): capture array sizes!
+    oc_token_t* open_bracket_token = token_at(tokens, position);
+    if (token_matches(open_bracket_token, "[")) {
+      position++;
+      oc_token_t* close_bracket_token = token_at(tokens, position);
+      if (!token_matches(close_bracket_token, "]")) {
+        return parse_error_result(PARSE_ERROR_CLOSE_BRACKET_EXPECTED,
+                                  close_bracket_token);
+      }
+      position++;
+      result->number_array_suffixes++;
+    } else {
+      break;
+    }
+  }
 
   oc_token_t* equal_token = token_at(tokens, position);
   if (token_matches(equal_token, "=")) {
