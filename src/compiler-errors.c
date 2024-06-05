@@ -35,6 +35,8 @@ typedef enum {
   PARSE_ERROR_CLOSE_BRACKET_EXPECTED,
   PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
   PARSE_ERROR_SEMICOLON_EXPECTED,
+  PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER,
+  PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER,
 } parse_error_code_t;
 
 struct oc_token_S;
@@ -201,6 +203,19 @@ char* error_unrecognized_top_level_declaration
       "(Additionally, C pre-processor directives are allowed but "
       "are currently skipped before parsing.)";
 
+char* error_conflicting_storage_class_specifier
+    = "Conflicting storage class specifiers.\n"
+      "{formatted_snippet}"
+      "\nA storage class specifier is either static, extern, auto, or "
+      "register\n"
+      "For each 'declaration', only one of them is allowed.";
+
+char* error_conflicting_function_specifier
+    = "Conflicting function specifier.\n"
+      "{formatted_snippet}"
+      "\nThe only known function specifier is inline so you likely repeated "
+      "it.";
+
 buffer_t*
     buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
                                                  compiler_error_t* error) {
@@ -233,6 +248,14 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
 
   case PARSE_ERROR_SEMICOLON_EXPECTED:
     template = error_open_semicolon_expected;
+    break;
+
+  case PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER:
+    template = error_conflicting_storage_class_specifier;
+    break;
+
+  case PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER:
+    template = error_conflicting_function_specifier;
     break;
 
   default:

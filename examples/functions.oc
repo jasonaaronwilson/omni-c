@@ -42,3 +42,41 @@ int two(int a, int b) {
   } while (2);
   return a + b;
 }
+
+static void foo(void) {
+}
+
+extern void foo2(void) {
+}
+
+static inline int compute_value(int a, int b) {
+    return a + b;
+}
+
+// Not the preferred order but I think gcc would accept this...
+inline static int compute_value(int a, int b) {
+    return a + b;
+}
+
+// Correct and conventional order?
+static inline __attribute__((warn_unused_result)) int compute_value(int a, int b) {
+    return a + b;
+}
+
+// not inlined but static with attribute
+static __attribute__((warn_unused_result)) int compute_value(int a, int b) {
+    return a + b;
+}
+
+// not inlined but extern with attribute
+extern __attribute__((warn_unused_result)) int compute_value(int a, int b) {
+    return a + b;
+}
+
+/*
+// GCC allows this, though it is less conventional
+__attribute__((warn_unused_result)) static inline int compute_value(int a, int b) {
+    return a + b;
+}
+*/
+

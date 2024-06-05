@@ -56,6 +56,7 @@ typedef enum {
   PARSE_NODE_TYPEDEF,
   PARSE_NODE_GLOBAL_VARIABLE_DEFINITION,
   PARSE_NODE_UNPARSED_EXPRESSION,
+  PARSE_NODE_ATTRIBUTE,
 } parse_node_type_t;
 
 /**
@@ -254,11 +255,21 @@ typedef struct literal_node_S {
  */
 typedef struct function_node_S {
   parse_node_type_t tag;
-  oc_token_t* function_name;
+
+  oc_token_t* storage_class_specifier; // static, extern, auto, register
+  oc_token_t* function_specifier;      // inline
+  // __attribute__((...))  warn_unsed_result, noreturn, deprecated,
+  // unused, format... format looks harder to parse than the others so
+  // for now we will just keep all token between (( and )).
+  node_list_t attributes;
+
   type_node_t* return_type;
+
+  oc_token_t* function_name;
   node_list_t function_args;
+
   // Until we learn how to fully parse expressions, this contains all
-  // of the tokens between "{" and "}" (and also those tokens).
+  // of the tokens between and including "{" and "}".
   function_body_node_t* body;
 } function_node_t;
 
@@ -300,10 +311,26 @@ typedef struct global_variable_node_S {
  */
 typedef struct unparsed_expression_S {
   parse_node_type_t tag;
+  // TODO(jawilson): consider creating and using a token list...
   oc_token_t* first_token;
   oc_token_t* last_token;
 } unparsed_expression_t;
 
+/**
+ * @structure attribute_node_t
+ *
+ * Represents __attribute__((...)) nodes. We aren't trying to fully
+ * understand these yet (if we did, splitting them into independent
+ * attributes would probably be wise so that we can tell if say
+ * something has warn_unsed_result or noreturn (the other are less
+ * interesting and if truly compiling to C or C++ then it might not
+ * matter what we do).
+ */
+typedef struct attribute_node_S {
+  parse_node_type_t tag;
+  oc_token_t* inner_start_token;
+  oc_token_t* inner_end_token;
+} attribute_node_t;
 
 // PARSE_NODE_UNPARSED_EXPRESSION
 
@@ -446,7 +473,7 @@ static inline function_node_t* to_function_node(parse_node_t* ptr) {
 /**
  * @function to_function_argument_node
  *
- * Safely cast a generic node to a function argument node after
+ * Safely cast a generic node to a function_argument_node_t after
  * examining it's tag.
  */
 static inline function_argument_node_t*
@@ -460,8 +487,8 @@ static inline function_argument_node_t*
 /**
  * @function to_function_body_node
  *
- * Safely cast a generic node to a function body node after examining
- * it's tag.
+ * Safely cast a generic node to a function_body_node_t after
+ * examining it's tag.
  */
 static inline function_body_node_t* to_function_body_node(parse_node_t* ptr) {
   if (ptr == NULL || ptr->tag != PARSE_NODE_FUNCTION_BODY) {
@@ -473,7 +500,7 @@ static inline function_body_node_t* to_function_body_node(parse_node_t* ptr) {
 /**
  * @function to_typedef_node
  *
- * Safely cast a generic node to a tyedef node after examining it's
+ * Safely cast a generic node to a typedef_node_t after examining it's
  * tag.
  */
 static inline typedef_node_t* to_typedef_node(parse_node_t* ptr) {
@@ -486,8 +513,8 @@ static inline typedef_node_t* to_typedef_node(parse_node_t* ptr) {
 /**
  * @function to_global_variable_node
  *
- * Safely cast a generic node to a tyedef node after examining it's
- * tag.
+ * Safely cast a generic node to a global_variable_node_t after
+ * examining it's tag.
  */
 static inline global_variable_node_t*
     to_global_variable_node(parse_node_t* ptr) {
@@ -500,8 +527,8 @@ static inline global_variable_node_t*
 /**
  * @function to_unparsed_expression
  *
- * Safely cast a generic node to a tyedef node after examining it's
- * tag.
+ * Safely cast a generic node to an unparsed_expression_t node after
+ * examining it's tag.
  */
 static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr) {
   if (ptr == NULL || ptr->tag != PARSE_NODE_UNPARSED_EXPRESSION) {
@@ -510,6 +537,18 @@ static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr) {
   return cast(unparsed_expression_t*, ptr);
 }
 
+/**
+ * @function to_attribute_node
+ *
+ * Safely cast a generic node to a attribute_node_t after examining
+ * it's tag.
+ */
+static inline attribute_node_t* to_attribute_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_ATTRIBUTE) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(attribute_node_t*, ptr);
+}
 
 /* ====================================================================== */
 /* Inlined helpers for parse_result_t implementation */
@@ -622,6 +661,12 @@ static inline typedef_node_t* malloc_typedef_node() {
 static inline global_variable_node_t* malloc_global_variable_node() {
   global_variable_node_t* result = malloc_struct(global_variable_node_t);
   result->tag = PARSE_NODE_GLOBAL_VARIABLE_DEFINITION;
+  return result;
+}
+
+static inline attribute_node_t* malloc_attribute_node() {
+  attribute_node_t* result = malloc_struct(attribute_node_t);
+  result->tag = PARSE_NODE_ATTRIBUTE;
   return result;
 }
 
@@ -784,11 +829,59 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
 }
 
 /**
+ * @function parse_attribute_node
+ *
+ * Parses an attribute like __attribute__((warn_unsed_result)), etc.
+ */
+parse_result_t parse_attribute_node(value_array_t* tokens, uint64_t position) {
+  return parse_result_empty();
+}
+
+/**
  * @function parse_function_node
  *
  * Parses a function node (either a prototype or full function definition).
  */
 parse_result_t parse_function_node(value_array_t* tokens, uint64_t position) {
+
+  oc_token_t* storage_class_specifier = NULL;
+  oc_token_t* function_specifier = NULL;
+  node_list_t attributes = {0};
+
+  while (1) {
+    oc_token_t* token = token_at(tokens, position);
+    if (token_matches(token, "static")
+        || token_matches(token, "extern")
+        // These are not really appropriate for a function...
+        || token_matches(token, "auto") || token_matches(token, "register")) {
+      if (storage_class_specifier == NULL) {
+        storage_class_specifier = token;
+        position++;
+      } else {
+        return parse_error_result(
+            PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER, token);
+      }
+    } else if (token_matches(token, "inline")) {
+      if (function_specifier == NULL) {
+        function_specifier = token;
+        position++;
+      } else {
+        return parse_error_result(PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER,
+                                  token);
+      }
+    } else if (token_matches(token, "__attribute__")) {
+      parse_result_t attribute_result = parse_attribute_node(tokens, position);
+      if (is_valid_result(attribute_result)) {
+        node_list_add_node(&attributes, attribute_result.node);
+        position = attribute_result.next_token_position;
+      } else {
+        return attribute_result;
+      }
+    } else {
+      break;
+    }
+  }
+
   parse_result_t return_type = parse_type_node(tokens, position);
   if (is_empty_result(return_type)) {
     return parse_result_empty();
