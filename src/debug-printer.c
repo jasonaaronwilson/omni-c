@@ -22,20 +22,13 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_parse_node(buffer_t* buffer, parse_node_t* node,
                              int indention_level);
 
-#endif /* _DEBUG_PRINTER_H_ */
-
-
-/* ====================================================================== */
-/* "Local" Forward Declarations */
-/* ====================================================================== */
-
 __attribute__((warn_unused_result)) static inline buffer_t*
     buffer_indent(buffer_t* buffer, int indention_level) {
   return buffer_append_repeated_byte(buffer, ' ', indention_level * 4);
 }
 
 __attribute__((warn_unused_result)) buffer_t*
-    buffer_append_declarations(buffer_t* buffer, declarations_t* node,
+    buffer_append_declarations(buffer_t* buffer, declarations_node_t* node,
                                int indention_level);
 
 __attribute__((warn_unused_result)) buffer_t*
@@ -82,6 +75,8 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_global_variable_node(buffer_t* buffer,
                                        global_variable_node_t* node,
                                        int indention_level);
+
+#endif /* _DEBUG_PRINTER_H_ */
 
 /**
  * @function buffer_append_parse_node
@@ -183,7 +178,7 @@ __attribute__((warn_unused_result)) buffer_t*
 
 
 __attribute__((warn_unused_result)) buffer_t*
-    buffer_append_declarations(buffer_t* buffer, declarations_t* node,
+    buffer_append_declarations(buffer_t* buffer, declarations_node_t* node,
                                int indention_level) {
   return buffer_append_node_list(buffer, node->declarations, "declaration",
                                  indention_level);

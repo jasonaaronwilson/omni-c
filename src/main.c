@@ -123,14 +123,27 @@ void extract_prototypes(void) {
                                           .keep_c_preprocessor_lines = false,
                                       });
 
-    parse_result_t declarations = parse_declarations(tokens, 0);
-    if (is_error_result(declarations)) {
-      declarations.parse_error.file_name = file->file_name;
+    parse_result_t declarations_result = parse_declarations(tokens, 0);
+    if (is_error_result(declarations_result)) {
+      declarations_result.parse_error.file_name = file->file_name;
       buffer_t* buffer = make_buffer(1);
-      buffer = buffer_append_human_readable_error(buffer,
-                                                  &(declarations.parse_error));
+      buffer = buffer_append_human_readable_error(
+          buffer, &(declarations_result.parse_error));
       log_fatal("%s", buffer_to_c_string(buffer));
       fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+
+    declarations_node_t* root = to_declarations_node(declarations_result.node);
+    uint64_t length = node_list_length(root->declarations);
+    for (uint64_t i = 0; i < length; i++) {
+      parse_node_t* node = node_list_get(root->declarations, i);
+      if (node->tag == PARSE_NODE_FUNCTION) {
+        function_node_t* fn_node = to_function_node(node);
+        if (fn_node->body != NULL) {
+          output = buffer_append_function_node(output, fn_node, 0);
+          output = buffer_printf(output, "\n\n");
+        }
+      }
     }
   }
 
@@ -411,8 +424,10 @@ int main(int argc, char** argv) {
     ////     print_parse_trees();
   } else if (string_equal("print-tokens", FLAG_command)) {
     print_tokens();
+  } else if (string_equal("extract-prototypes", FLAG_command)) {
+    extract_prototypes();
   } else {
-    fprintf(stderr, "Uknown command: %s\n", FLAG_command);
+    fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }
 
   exit(0);

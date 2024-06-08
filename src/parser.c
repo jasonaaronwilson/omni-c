@@ -93,15 +93,15 @@ typedef struct parse_result_S {
 /* ====================================================================== */
 
 /**
- * @structure declarations_t
+ * @structure declarations_node_t
  *
  * Represents all of the top-level declarations in a file (or later a
  * namespace).
  */
-typedef struct declarations_S {
+typedef struct declarations_node_S {
   parse_node_type_t tag;
   node_list_t declarations;
-} declarations_t;
+} declarations_node_t;
 
 /**
  * @enum type_node_kind_t
@@ -399,11 +399,11 @@ static inline field_node_t* to_field_node(parse_node_t* ptr) {
  * Safely cast a generic node to a declarations node after examining
  * it's tag.
  */
-static inline declarations_t* to_declarations_node(parse_node_t* ptr) {
+static inline declarations_node_t* to_declarations_node(parse_node_t* ptr) {
   if (ptr == NULL || ptr->tag != PARSE_NODE_DECLARATIONS) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  return cast(declarations_t*, ptr);
+  return cast(declarations_node_t*, ptr);
 }
 
 /**
@@ -593,8 +593,8 @@ static inline boolean_t is_valid_result(parse_result_t result) {
 /* Node allocation and initialization (makes sure we have the right tag). */
 /* ====================================================================== */
 
-static inline declarations_t* malloc_declarations() {
-  declarations_t* result = malloc_struct(declarations_t);
+static inline declarations_node_t* malloc_declarations() {
+  declarations_node_t* result = malloc_struct(declarations_node_t);
   result->tag = PARSE_NODE_DECLARATIONS;
   return result;
 }
@@ -713,7 +713,7 @@ parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position);
 
 parse_result_t parse_declarations(value_array_t* tokens, uint64_t position) {
   log_info("parse_declarations(_, %d)", position & 0xffffffff);
-  declarations_t* result = malloc_declarations();
+  declarations_node_t* result = malloc_declarations();
   while (position < tokens->length) {
     parse_result_t declaration = parse_declaration(tokens, position);
     if (is_error_result(declaration)) {
