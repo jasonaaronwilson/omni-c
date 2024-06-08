@@ -8,7 +8,9 @@ FOO_SRC_C =  \
 	armyknife-lib-impl.c \
 	main.c
 
-CC_FLAGS=-g -rdynamic -I ~/src/tree-sitter/lib/include 
+CC_FLAGS=-g -rdynamic -I ~/src/tree-sitter/lib/include
+
+CC_FLAGS_OPT=-g -rdynamic -I ~/src/tree-sitter/lib/include -O3
 
 SRC_C = armyknife-lib-impl.c \
 	mode.c \
@@ -24,14 +26,15 @@ SRC_C = armyknife-lib-impl.c \
 	debug-printer.c \
 	main.c
 
-TREE_SITTER_FILES = ~/src/tree-sitter-c/src/parser.c ~/src/tree-sitter/libtree-sitter.a
-
 generate-header-files: ${SRC_C}
 	../../c-single-source-file/generate-header-file ${SRC_C}
 	# find . -name '*.h' | xargs -n 1 chmod u-w
 
 omni-c: ${SRC_C} generate-header-files
-	gcc ${CC_FLAGS} -o omni-c ${SRC_C} ${TREE_SITTER_FILES}
+	gcc ${CC_FLAGS} -o omni-c ${SRC_C}
+
+omni-c-opt: ${SRC_C} generate-header-files
+	gcc ${CC_FLAGS_OPT} -o omni-c-opt ${SRC_C}
 
 test: omni-c
 	./omni-c print-tokens --parse-and-print=true \
@@ -41,9 +44,9 @@ test: omni-c
 		../examples/global-variables.oc \
 		../examples/simple-c-proprocess.oc
 
-self-test: omni-c
-	./omni-c print-tokens --parse-and-print=true ${SRC_C}
-
+self-test: omni-c-opt
+	/usr/bin/time --portability ./omni-c-opt print-tokens --parse-and-print=true ${SRC_C}
+	wc --lines ${SRC_C}
 
 format:
 	clang-format -i ${SRC_C}

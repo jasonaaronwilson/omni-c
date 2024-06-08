@@ -15,7 +15,7 @@ value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
 boolean_t FLAG_include_unnamed_nodes = false;
 
-boolean_t FLAG_print_tokens_show_tokens = true;
+boolean_t FLAG_print_tokens_show_tokens = false;
 boolean_t FLAG_print_tokens_include_whitespace = false;
 boolean_t FLAG_print_tokens_include_comments = false;
 boolean_t FLAG_print_tokens_parse_and_print = true;
