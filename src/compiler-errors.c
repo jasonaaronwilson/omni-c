@@ -37,6 +37,8 @@ typedef enum {
   PARSE_ERROR_SEMICOLON_EXPECTED,
   PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER,
   PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER,
+  PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE,
+  PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE,
 } parse_error_code_t;
 
 struct oc_token_S;
@@ -216,6 +218,20 @@ char* error_conflicting_function_specifier
       "\nThe only known function specifier is inline so you likely repeated "
       "it.";
 
+char* error_expected_open_paren_for_underscore_attribute
+    = "This doesn't look like a valid attribute specification.\n"
+      "{formatted_snippet}"
+      "\nAttributes roughly look like __attribute__((...))\n"
+      "\nYou might have unbalanced parens...";
+
+char* error_expected_matching_close_paren_after_underscore_attribute
+    = "This doesn't look like a valid attribute specification.\n"
+      "{formatted_snippet}"
+      "\nAttributes roughly look like __attribute__((...))\n"
+      "\nYou might have unbalanced parens...";
+
+// ======================================================================
+
 buffer_t*
     buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
                                                  compiler_error_t* error) {
@@ -256,6 +272,14 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
 
   case PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER:
     template = error_conflicting_function_specifier;
+    break;
+
+  case PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+    template = error_expected_open_paren_for_underscore_attribute;
+    break;
+
+  case PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+    template = error_expected_matching_close_paren_after_underscore_attribute;
     break;
 
   default:

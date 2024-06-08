@@ -834,6 +834,58 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
  * Parses an attribute like __attribute__((warn_unsed_result)), etc.
  */
 parse_result_t parse_attribute_node(value_array_t* tokens, uint64_t position) {
+  oc_token_t* token = token_at(tokens, position);
+  if (!token_matches(token, "__attribute__")) {
+    return parse_result_empty();
+  }
+  position++;
+
+  // We need to match two open parens!
+  for (int i = 0; i < 2; i++) {
+    token = token_at(tokens, position);
+    if (!token_matches(token, "(")) {
+      return parse_error_result(
+          PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE, token);
+    }
+    position++;
+  }
+
+  // This "inner" most paren we just parsed is the one we want to
+  // close...
+  int unclosed_paren_count = 1;
+  position++;
+
+  oc_token_t* inner_start_token = token_at(tokens, position);
+  oc_token_t* inner_end_token = token_at(tokens, position);
+  do {
+    oc_token_t* token = token_at(tokens, position);
+    if (token_matches(token, "(")) {
+      unclosed_paren_count++;
+    } else if (token_matches(token, ")")) {
+      unclosed_paren_count--;
+    } else {
+      inner_end_token = token;
+    }
+    position++;
+  } while (unclosed_paren_count > 0);
+
+  // That only got us to the closing paren (but at this point
+  // inner_start_token and inner_end_token should be correct if we
+  // find the additional closing paren).
+
+  oc_token_t* outer_close_paren_token = token_at(tokens, position);
+  if (token_matches(outer_close_paren_token, ")")) {
+    attribute_node_t* result = malloc_attribute_node();
+    result->inner_start_token = inner_start_token;
+    result->inner_end_token = inner_end_token;
+    return parse_result(to_node(result), position + 1);
+  } else {
+    return parse_error_result(
+        PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE,
+        outer_close_paren_token);
+  }
+
+  // NOT REACHED...
   return parse_result_empty();
 }
 
@@ -852,8 +904,20 @@ parse_result_t parse_function_node(value_array_t* tokens, uint64_t position) {
     oc_token_t* token = token_at(tokens, position);
     if (token_matches(token, "static")
         || token_matches(token, "extern")
-        // These are not really appropriate for a function...
-        || token_matches(token, "auto") || token_matches(token, "register")) {
+        // This isn't really appropriate for a function as a real
+        // storage class but C23 is using it to denote a deduced type,
+        // i.e., let the compiler figure out the return type. If this
+        // is already true or might happen, then "auto" isn't really
+        // appropriate here. One step at a time!
+        || token_matches(token, "auto")
+        // A version of "chatgpt" suggested register is a valid
+        // storage class for a function (not a function pointer) and
+        // even if this is true, it seems unlikely this was
+        // accomplished in practice (though I've had a little fun
+        // thinking about it - likely a bad idea for highly pipelined
+        // processors but it might have been a way to avoid
+        // self-modifying code in early "bit-blit" routines.)
+        || token_matches(token, "register")) {
       if (storage_class_specifier == NULL) {
         storage_class_specifier = token;
         position++;
