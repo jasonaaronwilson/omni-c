@@ -48,6 +48,10 @@ self-test: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt print-tokens --parse-and-print=true ${SRC_C}
 	wc --lines ${SRC_C}
 
+extract-prototypes: omni-c-opt
+	/usr/bin/time --portability ./omni-c-opt extract-prototypes ${SRC_C}
+	wc --lines ${SRC_C}
+
 format:
 	clang-format -i ${SRC_C}
 
