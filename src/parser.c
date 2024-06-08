@@ -291,10 +291,11 @@ typedef struct function_argument_node_S {
  */
 typedef struct global_variable_node_S {
   parse_node_type_t tag;
-  oc_token_t* name;
+  oc_token_t* storage_class_specifier; // static, extern, auto, register
   type_node_t* type;
+  oc_token_t* name;
   parse_node_t* value;
-  boolean_t number_array_suffixes;
+  boolean_t number_of_array_suffixes;
 } global_variable_node_t;
 
 /**
@@ -1393,6 +1394,24 @@ parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
 parse_result_t parse_global_variable_node(value_array_t* tokens,
                                           uint64_t position) {
   log_info("parse_global_variable_node(_, %d)", position & 0xffffffff);
+
+  oc_token_t* storage_class_specifier = NULL;
+
+  while (1) {
+    oc_token_t* token = token_at(tokens, position);
+    if (token_matches(token, "static") || token_matches(token, "extern")) {
+      if (storage_class_specifier == NULL) {
+        storage_class_specifier = token;
+        position++;
+      } else {
+        return parse_error_result(
+            PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER, token);
+      }
+    } else {
+      break;
+    }
+  }
+
   parse_result_t type = parse_type_node(tokens, position);
   if (!is_valid_result(type)) {
     // ERROR?
@@ -1419,7 +1438,7 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
                                   close_bracket_token);
       }
       position++;
-      result->number_array_suffixes++;
+      result->number_of_array_suffixes++;
     } else {
       break;
     }

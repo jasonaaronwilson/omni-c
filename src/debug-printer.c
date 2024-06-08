@@ -309,7 +309,11 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer = buffer_append_type_node(buffer, node->return_type,
                                      indention_level + 1);
   }
-
+  if (node->storage_class_specifier != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
+                           token_to_string(*(node->storage_class_specifier)));
+  }
   if (node->body != NULL) {
     buffer
         = buffer_append_function_body_node(buffer, node->body, indention_level);
@@ -396,5 +400,11 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer = buffer_append_string(buffer, "value:\n");
     buffer = buffer_append_parse_node(buffer, node->value, indention_level + 1);
   }
+  if (node->storage_class_specifier != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
+                           token_to_string(*(node->storage_class_specifier)));
+  }
+
   return buffer;
 }
