@@ -82,7 +82,7 @@ void print_tokens(void) {
         fatal_error(ERROR_ILLEGAL_STATE);
       } else {
         buffer_t* buffer = make_buffer(1024);
-        buffer = buffer_append_parse_node(buffer, declarations.node, 0);
+        buffer = buffer_append_dbg_parse_node(buffer, declarations.node, 0);
         fprintf(stdout, "** Parse Nodes %s **\n%s\n", file->file_name,
                 buffer_to_c_string(buffer));
       }
@@ -140,7 +140,7 @@ void extract_prototypes(void) {
       if (node->tag == PARSE_NODE_FUNCTION) {
         function_node_t* fn_node = to_function_node(node);
         if (fn_node->body != NULL) {
-          output = buffer_append_function_node(output, fn_node, 0);
+          output = buffer_append_dbg_function_node(output, fn_node, 0);
           output = buffer_printf(output, "\n\n");
         }
       }
