@@ -24,6 +24,7 @@ SRC_C = armyknife-lib-impl.c \
 	to-string-helpers.c \
 	node-list.c \
 	debug-printer.c \
+	header-file-printer.c \
 	main.c
 
 generate-header-files: ${SRC_C}
@@ -71,5 +72,3 @@ how-big: clean
 	cat ${SRC_C} | wc --lines
 
 cf: format clean
-
-
