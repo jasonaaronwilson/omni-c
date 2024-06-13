@@ -38,14 +38,10 @@ __attribute__((warn_unused_result)) buffer_t*
 #endif /* _HEADER_FILE_PRINTER_H_ */
 
 __attribute__((warn_unused_result)) buffer_t*
-    buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
-  return buffer;
-}
-
-__attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_function_node_prototype(buffer_t* buffer,
                                             function_node_t* node) {
-
+  buffer = buffer_append_c_type_node(buffer, node->return_type);
+  buffer = buffer_printf(buffer, "%s();\n", token_to_string(*(node->function_name)));
   /*
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
@@ -89,5 +85,15 @@ __attribute__((warn_unused_result)) buffer_t*
                            token_to_string(*(node->arg_name)));
   }
   */
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
+  // Nowhere near complete.
+  if (node->type_name != NULL) {
+    buffer = buffer_append_token_string(buffer, *(node->type_name));
+    buffer = buffer_printf(buffer, " ");
+  }
   return buffer;
 }

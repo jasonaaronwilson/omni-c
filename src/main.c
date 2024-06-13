@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "debug-printer.h"
+#include "header-file-printer.h"
 #include "file-reader.h"
 #include "lexer.h"
 #include "parser.h"
@@ -140,7 +141,7 @@ void extract_prototypes(void) {
       if (node->tag == PARSE_NODE_FUNCTION) {
         function_node_t* fn_node = to_function_node(node);
         if (fn_node->body != NULL) {
-          output = buffer_append_dbg_function_node(output, fn_node, 0);
+          output = buffer_append_c_function_node_prototype(output, fn_node);
           output = buffer_printf(output, "\n\n");
         }
       }
