@@ -5,8 +5,8 @@
 #include <stdio.h>
 
 #include "debug-printer.h"
-#include "header-file-printer.h"
 #include "file-reader.h"
+#include "header-file-printer.h"
 #include "lexer.h"
 #include "parser.h"
 #include "token-transformer.h"

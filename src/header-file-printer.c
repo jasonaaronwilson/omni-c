@@ -41,7 +41,20 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_function_node_prototype(buffer_t* buffer,
                                             function_node_t* node) {
   buffer = buffer_append_c_type_node(buffer, node->return_type);
-  buffer = buffer_printf(buffer, "%s();\n", token_to_string(*(node->function_name)));
+  buffer
+      = buffer_printf(buffer, " %s(", token_to_string(*(node->function_name)));
+
+  for (int i = 0; i < node_list_length(node->function_args); i++) {
+    if (i > 0) {
+      buffer = buffer_printf(buffer, ", ");
+    }
+    function_argument_node_t* arg_node
+        = to_function_argument_node(node_list_get(node->function_args, i));
+    buffer = buffer_append_c_function_argument_node(buffer, arg_node);
+  }
+
+  buffer = buffer_printf(buffer, ");\n");
+
   /*
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
@@ -69,31 +82,34 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_function_argument_node(buffer_t* buffer,
                                            function_argument_node_t* node) {
-  /*
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
-  if (node->arg_type != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "arg_type:\n");
-    buffer
-        = buffer_append_dbg_type_node(buffer, node->arg_type, indention_level +
-  1);
-  }
+  buffer = buffer_append_c_type_node(buffer, node->arg_type);
   if (node->arg_name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "arg_name: %s\n",
-                           token_to_string(*(node->arg_name)));
+    buffer = buffer_printf(buffer, " %s", token_to_string(*(node->arg_name)));
   }
-  */
   return buffer;
 }
 
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
-  // Nowhere near complete.
-  if (node->type_name != NULL) {
-    buffer = buffer_append_token_string(buffer, *(node->type_name));
-    buffer = buffer_printf(buffer, " ");
+
+  switch (node->type_node_kind) {
+  case TYPE_NODE_KIND_POINTER:
+    buffer = buffer_append_c_type_node(
+        buffer, to_type_node(node_list_get(node->type_args, 0)));
+    buffer = buffer_printf(buffer, "*");
+    break;
+
+  case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
+  case TYPE_NODE_KIND_TYPENAME:
+    if (node->type_name != NULL) {
+      buffer = buffer_append_token_string(buffer, *(node->type_name));
+    }
+    break;
+
+  default:
+    buffer = buffer_printf(buffer, "**FIXME**");
+    break;
   }
+
   return buffer;
 }
