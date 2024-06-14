@@ -353,7 +353,7 @@ void extract_prototypes(void) {
 void configure_print_tokens_command(void);
 void configure_extract_prototypes_command(void);
 
-void configure_flags() {
+void configure_flags(void) {
   flag_program_name("omni-c");
   flag_description(
       "omni-c is a transpiler for the omni-c language as well as a code "

@@ -555,7 +555,7 @@ static inline attribute_node_t* to_attribute_node(parse_node_t* ptr) {
 /* Inlined helpers for parse_result_t implementation */
 /* ====================================================================== */
 
-static inline parse_result_t parse_result_empty() {
+static inline parse_result_t parse_result_empty(void) {
   return (parse_result_t){0};
 }
 
@@ -593,79 +593,79 @@ static inline boolean_t is_valid_result(parse_result_t result) {
 /* Node allocation and initialization (makes sure we have the right tag). */
 /* ====================================================================== */
 
-static inline declarations_node_t* malloc_declarations() {
+static inline declarations_node_t* malloc_declarations(void) {
   declarations_node_t* result = malloc_struct(declarations_node_t);
   result->tag = PARSE_NODE_DECLARATIONS;
   return result;
 }
 
-static inline enum_node_t* malloc_enum_node() {
+static inline enum_node_t* malloc_enum_node(void) {
   enum_node_t* result = malloc_struct(enum_node_t);
   result->tag = PARSE_NODE_ENUM;
   return result;
 }
 
-static inline enum_element_t* malloc_enum_element() {
+static inline enum_element_t* malloc_enum_element(void) {
   enum_element_t* result = malloc_struct(enum_element_t);
   result->tag = PARSE_NODE_ENUM_ELEMENT;
   return result;
 }
 
-static inline type_node_t* malloc_type_node() {
+static inline type_node_t* malloc_type_node(void) {
   type_node_t* result = malloc_struct(type_node_t);
   result->tag = PARSE_NODE_TYPE;
   return result;
 }
 
-static inline struct_node_t* malloc_struct_node() {
+static inline struct_node_t* malloc_struct_node(void) {
   struct_node_t* result = malloc_struct(struct_node_t);
   result->tag = PARSE_NODE_STRUCT;
   return result;
 }
 
-static inline field_node_t* malloc_field_node() {
+static inline field_node_t* malloc_field_node(void) {
   field_node_t* result = malloc_struct(field_node_t);
   result->tag = PARSE_NODE_FIELD;
   return result;
 }
 
-static inline literal_node_t* malloc_literal_node() {
+static inline literal_node_t* malloc_literal_node(void) {
   literal_node_t* result = malloc_struct(literal_node_t);
   result->tag = PARSE_NODE_LITERAL;
   return result;
 }
 
-static inline function_node_t* malloc_function_node() {
+static inline function_node_t* malloc_function_node(void) {
   function_node_t* result = malloc_struct(function_node_t);
   result->tag = PARSE_NODE_FUNCTION;
   return result;
 }
 
-static inline function_argument_node_t* malloc_function_argument_node() {
+static inline function_argument_node_t* malloc_function_argument_node(void) {
   function_argument_node_t* result = malloc_struct(function_argument_node_t);
   result->tag = PARSE_NODE_FUNCTION_ARGUMENT;
   return result;
 }
 
-static inline function_body_node_t* malloc_function_body_node() {
+static inline function_body_node_t* malloc_function_body_node(void) {
   function_body_node_t* result = malloc_struct(function_body_node_t);
   result->tag = PARSE_NODE_FUNCTION_BODY;
   return result;
 }
 
-static inline typedef_node_t* malloc_typedef_node() {
+static inline typedef_node_t* malloc_typedef_node(void) {
   typedef_node_t* result = malloc_struct(typedef_node_t);
   result->tag = PARSE_NODE_TYPEDEF;
   return result;
 }
 
-static inline global_variable_node_t* malloc_global_variable_node() {
+static inline global_variable_node_t* malloc_global_variable_node(void) {
   global_variable_node_t* result = malloc_struct(global_variable_node_t);
   result->tag = PARSE_NODE_GLOBAL_VARIABLE_DEFINITION;
   return result;
 }
 
-static inline attribute_node_t* malloc_attribute_node() {
+static inline attribute_node_t* malloc_attribute_node(void) {
   attribute_node_t* result = malloc_struct(attribute_node_t);
   result->tag = PARSE_NODE_ATTRIBUTE;
   return result;
