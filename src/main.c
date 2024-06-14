@@ -91,6 +91,9 @@ void print_tokens(void) {
   }
 }
 
+//// TODO(jawilson):
+//// boolean_t FLAG_prototype_empty_bodies = true;
+
 void extract_prototypes(void) {
   log_info("extract_prototypes()");
 
@@ -140,10 +143,19 @@ void extract_prototypes(void) {
       parse_node_t* node = node_list_get(root->declarations, i);
       if (node->tag == PARSE_NODE_FUNCTION) {
         function_node_t* fn_node = to_function_node(node);
-        if (fn_node->body != NULL) {
-          output = buffer_append_c_function_node_prototype(output, fn_node);
-          output = buffer_printf(output, "\n\n");
+        if (fn_node->body == NULL) {
+          continue;
         }
+        if (fn_node->function_specifier != NULL
+            && token_matches(fn_node->function_specifier, "inline")) {
+          continue;
+        }
+        if (fn_node->storage_class_specifier != NULL
+            && token_matches(fn_node->function_specifier, "static")) {
+          continue;
+        }
+        output = buffer_append_c_function_node_prototype(output, fn_node);
+        output = buffer_printf(output, "\n\n");
       }
     }
   }
