@@ -11,7 +11,9 @@
  * @file header-file-printer.c
  *
  * This file provides primitives to "print" out certain kinds of parse
- * nodes in a suitable format for a C "header" file.
+ * nodes in a suitable format for a C "header" file (which means they
+ * will be potentially be the same as for a normal non-header file
+ * which we will sort out later).
  *
  * This will eventually support one of our immediate goals which is
  * that no one should ever have to write a header file themselves even
@@ -23,6 +25,13 @@
  * The primitives are not smart enough to make decisions about the
  * order things should appear in the header file, etc.
  */
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_c_raw_token_span(buffer_t* buffer, oc_token_t* start_token,
+                                   oc_token_t* end_token);
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_c_attribute_node(buffer_t* buffer, attribute_node_t* node);
 
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_function_node_prototype(buffer_t* buffer,
@@ -40,6 +49,15 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_function_node_prototype(buffer_t* buffer,
                                             function_node_t* node) {
+
+  for (int i = 0; i < node_list_length(node->attributes); i++) {
+    buffer = buffer_append_c_attribute_node(
+        buffer, to_attribute_node(node_list_get(node->attributes, i)));
+    buffer = buffer_printf(buffer, " ");
+  }
+
+  // What happend to static/extern and inline?
+
   buffer = buffer_append_c_type_node(buffer, node->return_type);
   buffer
       = buffer_printf(buffer, " %s(", token_to_string(*(node->function_name)));
@@ -111,5 +129,46 @@ __attribute__((warn_unused_result)) buffer_t*
     break;
   }
 
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_c_attribute_node(buffer_t* buffer, attribute_node_t* node) {
+  buffer = buffer_printf(buffer, "__attribute__((");
+
+  // Since parser.c doesn't fully parse attributes because we were
+  // lazy and don't need to care yet, we simply need to emit a
+  // sub-string of the two tokens we were smart enough to retain. We
+  // may end up with non-canonicalized whitespace, comments and stuff
+  // like that between them, i.e., rather than just putting everything
+  // on a single line which we were doing up until now, we are at the
+  // mercy of the input more-so than usually permissive parser.
+  //
+  // We can hopefully reach a demo state where technically we don't
+  // need to write function prototypes for our own code anymore and
+  // the code is still available as ANSI C when hanlding our own
+  // source code for development and boot-strapping.
+  buffer = buffer_append_c_raw_token_span(buffer, node->inner_start_token,
+                                          node->inner_end_token);
+
+
+  buffer = buffer_printf(buffer, "))");
+  return buffer;
+}
+
+//
+// Any call to this means that we haven't explicitly "parsed" the
+// input yet and are passing a RAW span to the C compiler potentially
+// without having completely signed off on it completely (though the
+// region will be lexicially consistent with our lexer).
+//
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_c_raw_token_span(buffer_t* buffer, oc_token_t* start_token,
+                                   oc_token_t* end_token) {
+  if (start_token->buffer != end_token->buffer) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  buffer = buffer_append_sub_buffer(buffer, start_token->start, end_token->end,
+                                    start_token->buffer);
   return buffer;
 }
