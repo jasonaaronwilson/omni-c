@@ -94,16 +94,26 @@ void print_tokens(void) {
 //// TODO(jawilson):
 //// boolean_t FLAG_prototype_empty_bodies = true;
 
+boolean_t FLAG_unique_prototype_header_files = false;
+
 void extract_prototypes(void) {
   log_info("extract_prototypes()");
 
   buffer_t* output = make_buffer(16 * 1024);
-  output
-      = buffer_printf(output, "/* Automatically extracted prototypes */\n\n");
 
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
+    if (FLAG_unique_prototype_header_files) {
+      buffer_clear(output);
+    }
+
     oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
+    output = buffer_printf(
+        output, "/* Automatically extracted prototypes from %s */\n\n",
+        file->file_name);
+
+    output = buffer_printf(output,
+                           "#ifdef OMNI_C_INCLUDE_GENERATED_HEADER_FILES\n");
 
     fprintf(stdout, "====================================================\n");
     fprintf(stdout, "====> Processing %s\n", file->file_name);
@@ -185,9 +195,21 @@ void extract_prototypes(void) {
         output = buffer_printf(output, "\n");
       }
     }
+
+    output = buffer_printf(
+        output, "#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES */\n");
+
+    if (FLAG_unique_prototype_header_files) {
+      char* output_file_name = string_printf("%s.generated.h", file->file_name);
+      buffer_write_file(output, output_file_name);
+      free_bytes(output_file_name);
+    }
   }
 
-  fprintf(stdout, "%s", buffer_to_c_string(output));
+  if (!FLAG_unique_prototype_header_files) {
+    // TODO(jawilson): output to --output...
+    fprintf(stdout, "%s", buffer_to_c_string(output));
+  }
 }
 
 //// /**
@@ -433,6 +455,8 @@ void configure_print_tokens_command(void) {
 void configure_extract_prototypes_command(void) {
   flag_command("extract-prototypes", &FLAG_command);
   flag_string("--output-file", &FLAG_ouput_file);
+  flag_boolean("--unique-prototype-header-files",
+               &FLAG_unique_prototype_header_files);
   flag_file_args(&FLAG_files);
 }
 

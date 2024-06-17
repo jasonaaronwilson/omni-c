@@ -8,9 +8,9 @@ FOO_SRC_C =  \
 	armyknife-lib-impl.c \
 	main.c
 
-CC_FLAGS=-g -rdynamic -I ~/src/tree-sitter/lib/include
+CC_FLAGS := -g -rdynamic -I ~/src/tree-sitter/lib/include -DOMNI_C_INCLUDE_GENERATED_HEADER_FILES 
 
-CC_FLAGS_OPT=-g -rdynamic -I ~/src/tree-sitter/lib/include -O3
+CC_FLAGS_OPT := -g -rdynamic -I ~/src/tree-sitter/lib/include -DOMNI_C_INCLUDE_GENERATED_HEADER_FILES -O3
 
 SRC_C = armyknife-lib-impl.c \
 	mode.c \
@@ -27,8 +27,28 @@ SRC_C = armyknife-lib-impl.c \
 	header-file-printer.c \
 	main.c
 
+# TODO(jawilson): generate this list automatically from the above
+# which is a little less risky for the first checkin which we can live
+# with for a bit.
+SRC_C_GENERATED_H = armyknife-lib-impl.c.header.h \
+	mode.c.header.h \
+	keywords.c.header.h \
+	oc-file.c.header.h \
+	file-reader.c.header.h \
+	compiler-errors.c.header.h \
+	lexer.c.header.h \
+	token-transformer.c.header.h \
+	parser.c.header.h \
+	to-string-helpers.c.header.h \
+	node-list.c.header.h \
+	debug-printer.c.header.h \
+	header-file-printer.c.header.h \
+	main.c.header.h
+
 generate-header-files: ${SRC_C}
 	../../c-single-source-file/generate-header-file ${SRC_C}
+	rm -f ${SRC_C_GENERATED_H}
+	touch ${SRC_C_GENERATED_H}
 	# find . -name '*.h' | xargs -n 1 chmod u-w
 
 omni-c: ${SRC_C} generate-header-files
@@ -50,7 +70,7 @@ self-parse-test: omni-c-opt
 	wc --lines ${SRC_C}
 
 extract-prototypes: omni-c-opt
-	/usr/bin/time --portability ./omni-c-opt extract-prototypes ${SRC_C}
+	/usr/bin/time --portability ./omni-c-opt extract-prototypes --unique-prototype-header-files=true ${SRC_C}
 	wc --lines ${SRC_C}
 
 format:
