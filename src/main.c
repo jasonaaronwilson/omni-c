@@ -143,19 +143,46 @@ void extract_prototypes(void) {
       parse_node_t* node = node_list_get(root->declarations, i);
       if (node->tag == PARSE_NODE_FUNCTION) {
         function_node_t* fn_node = to_function_node(node);
+
+        // Skip existing prototypes. We assume multiple prototypes are
+        // allowed by ISO C is long as they are the same. This means
+        // that we can extract prototypes and include them before
+        // existing prototypes and the compiler will help make sure we
+        // did this correctly before actually removing any
+        // prototypes. We could also thus probably emit a prototype
+        // for each prototype and besides having a duplicate (or more)
+        // prototype, everything should technically be OK. Just
+        // ignoring prototypes is certainly useful for debugging.
         if (fn_node->body == NULL) {
           continue;
         }
+
+        // Normally prototypes aren't used for inline functions (and
+        // normally they are declared static...) since the inline
+        // functions often appears instead of their prototypes in a
+        // header file. Honestly I haven't completely figured this out
+        // yet. Skipping these prototypes for now if probably fine for
+        // the demo especially since the wisely used ones will be be
+        // static which we are skipping below anyways (for now).
         if (fn_node->function_specifier != NULL
             && token_matches(fn_node->function_specifier, "inline")) {
           continue;
         }
+        // "static" for a "top-level" declaration means that the
+        // declaration is not supposed to be visible outside the
+        // compilation unit which sort of corresponds to a single "C"
+        // file if the C pre-processor didn't exist -- or at least
+        // that is where I eventually want to have Omni-C to
+        // behave. At least for now, the simplest thing is to not try
+        // to put them into any header files which we can revisit
+        // later (along with static inline...)
         if (fn_node->storage_class_specifier != NULL
             && token_matches(fn_node->function_specifier, "static")) {
           continue;
         }
+
         output = buffer_append_c_function_node_prototype(output, fn_node);
-        output = buffer_printf(output, "\n\n");
+        output = buffer_printf(output, "\n");
       }
     }
   }

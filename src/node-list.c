@@ -53,7 +53,7 @@ static inline uint64_t node_list_length(node_list_t node_list) {
 /**
  * @function node_list_is_empty
  *
- * Return true is the node list is empty.
+ * Return true if the node list is empty.
  */
 static inline boolean_t node_list_is_empty(node_list_t node_list) {
   return node_list_length(node_list) == 0;

@@ -256,12 +256,13 @@ typedef struct literal_node_S {
 typedef struct function_node_S {
   parse_node_type_t tag;
 
-  oc_token_t* storage_class_specifier; // static, extern, auto, register
-  oc_token_t* function_specifier;      // inline
   // __attribute__((...))  warn_unsed_result, noreturn, deprecated,
   // unused, format... format looks harder to parse than the others so
   // for now we will just keep all token between (( and )).
   node_list_t attributes;
+
+  oc_token_t* storage_class_specifier; // static, extern, auto, register
+  oc_token_t* function_specifier;      // inline
 
   type_node_t* return_type;
 
@@ -841,7 +842,7 @@ parse_result_t parse_attribute_node(value_array_t* tokens, uint64_t position) {
   }
   position++;
 
-  // We need to match two open parens!
+  // We need to match two open parens
   for (int i = 0; i < 2; i++) {
     token = token_at(tokens, position);
     if (!token_matches(token, "(")) {
@@ -851,43 +852,32 @@ parse_result_t parse_attribute_node(value_array_t* tokens, uint64_t position) {
     position++;
   }
 
-  // This "inner" most paren we just parsed is the one we want to
-  // close...
-  int unclosed_paren_count = 1;
-  position++;
-
   oc_token_t* inner_start_token = token_at(tokens, position);
   oc_token_t* inner_end_token = token_at(tokens, position);
+  int unclosed_paren_count = 2;
   do {
+    // TODO(jawilson): handle reaching the end of the token stream
+    // more gracefully.
     oc_token_t* token = token_at(tokens, position);
+    // If this were to happen immediately after the first two parens,
+    // that would probably be illegal.
     if (token_matches(token, "(")) {
       unclosed_paren_count++;
     } else if (token_matches(token, ")")) {
       unclosed_paren_count--;
+      if (unclosed_paren_count == 0) {
+        break;
+      }
     } else {
       inner_end_token = token;
     }
     position++;
-  } while (unclosed_paren_count > 0);
+  } while (1);
 
-  // That only got us to the closing paren (but at this point
-  // inner_start_token and inner_end_token should be correct if we
-  // find the additional closing paren).
-
-  oc_token_t* outer_close_paren_token = token_at(tokens, position);
-  if (token_matches(outer_close_paren_token, ")")) {
-    attribute_node_t* result = malloc_attribute_node();
-    result->inner_start_token = inner_start_token;
-    result->inner_end_token = inner_end_token;
-    return parse_result(to_node(result), position + 1);
-  } else {
-    return parse_error_result(
-        PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE,
-        outer_close_paren_token);
-  }
-
-  // NOT REACHED...
-  return parse_result_empty();
+  attribute_node_t* result = malloc_attribute_node();
+  result->inner_start_token = inner_start_token;
+  result->inner_end_token = inner_end_token;
+  return parse_result(to_node(result), position + 1);
 }
 
 /**
@@ -962,8 +952,11 @@ parse_result_t parse_function_node(value_array_t* tokens, uint64_t position) {
   }
 
   function_node_t* fn_node = malloc_function_node();
-  fn_node->function_name = fn_name;
+  fn_node->attributes = attributes;
+  fn_node->storage_class_specifier = storage_class_specifier;
+  fn_node->function_specifier = function_specifier;
   fn_node->return_type = to_type_node(return_type.node);
+  fn_node->function_name = fn_name;
 
   oc_token_t* next = token_at(tokens, position);
   if (token_matches(next, ")")) {

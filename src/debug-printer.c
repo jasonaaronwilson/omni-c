@@ -78,6 +78,10 @@ __attribute__((warn_unused_result)) buffer_t*
                                            global_variable_node_t* node,
                                            int indention_level);
 
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* node,
+                                     int indention_level);
+
 #endif /* _DEBUG_PRINTER_H_ */
 
 /**
@@ -135,6 +139,10 @@ __attribute__((warn_unused_result)) buffer_t*
   case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
     return buffer_append_dbg_global_variable_node(
         buffer, to_global_variable_node(node), indention_level);
+
+  case PARSE_NODE_ATTRIBUTE:
+    return buffer_append_dbg_attribute_node(buffer, to_attribute_node(node),
+                                            indention_level);
 
   default:
     break;
@@ -300,19 +308,37 @@ __attribute__((warn_unused_result)) buffer_t*
                                     int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
-  buffer = buffer_append_dbg_node_list(buffer, node->function_args,
-                                       "function_args", indention_level);
+
+  buffer = buffer_append_dbg_node_list(buffer, node->attributes, "attribute",
+                                       indention_level);
+
+  if (node->storage_class_specifier != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
+                           token_to_string(*(node->storage_class_specifier)));
+  }
+
+  if (node->function_specifier != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "function_specifier: %s\n",
+                           token_to_string(*(node->function_specifier)));
+  }
+
   if (node->return_type != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "return_type:\n");
     buffer = buffer_append_dbg_type_node(buffer, node->return_type,
                                          indention_level + 1);
   }
-  if (node->storage_class_specifier != NULL) {
+
+  if (node->function_name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
-                           token_to_string(*(node->storage_class_specifier)));
+    buffer = buffer_printf(buffer, "function_name: %s\n",
+                           token_to_string(*(node->function_name)));
   }
+
+  buffer = buffer_append_dbg_node_list(buffer, node->function_args,
+                                       "function_args", indention_level);
   if (node->body != NULL) {
     buffer = buffer_append_dbg_function_body_node(buffer, node->body,
                                                   indention_level);
@@ -409,5 +435,23 @@ __attribute__((warn_unused_result)) buffer_t*
                            token_to_string(*(node->storage_class_specifier)));
   }
 
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* node,
+                                     int indention_level) {
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_ATTRIBUTE\n");
+  if (node->inner_start_token != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "inner_start_token: %s\n",
+                           token_to_string(*(node->inner_start_token)));
+  }
+  if (node->inner_end_token != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
+    buffer = buffer_printf(buffer, "inner_end_token: %s\n",
+                           token_to_string(*(node->inner_end_token)));
+  }
   return buffer;
 }

@@ -45,7 +45,7 @@ test: omni-c
 		../examples/global-variables.oc \
 		../examples/simple-c-proprocess.oc
 
-self-test: omni-c-opt
+self-parse-test: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt print-tokens --parse-and-print=true ${SRC_C}
 	wc --lines ${SRC_C}
 
