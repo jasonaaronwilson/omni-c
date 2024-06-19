@@ -23,11 +23,6 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
                                  int indention_level);
 
-__attribute__((warn_unused_result)) static inline buffer_t*
-    buffer_indent(buffer_t* buffer, int indention_level) {
-  return buffer_append_repeated_byte(buffer, ' ', indention_level * 4);
-}
-
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_dbg_declarations(buffer_t* buffer, declarations_node_t* node,
                                    int indention_level);
@@ -85,6 +80,11 @@ __attribute__((warn_unused_result)) buffer_t*
 #endif
 
 #include "debug-printer.c.generated.h"
+
+__attribute__((warn_unused_result)) static inline buffer_t*
+    buffer_indent(buffer_t* buffer, int indention_level) {
+  return buffer_append_repeated_byte(buffer, ' ', indention_level * 4);
+}
 
 #endif /* _DEBUG_PRINTER_H_ */
 
