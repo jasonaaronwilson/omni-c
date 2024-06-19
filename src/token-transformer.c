@@ -49,6 +49,8 @@ typedef struct token_transformer_options_S {
 value_array_t* transform_tokens(value_array_t* tokens,
                                 token_transformer_options_t xform_options);
 
+#include "token-transformer.c.generated.h"
+
 #endif /* _TOKEN_TRANSFORMER_H_ */
 
 /**
