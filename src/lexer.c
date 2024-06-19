@@ -81,6 +81,22 @@ static inline boolean_t token_contains(oc_token_t* token, char* str) {
   return buffer_region_contains(token->buffer, token->start, token->end, str);
 }
 
+/**
+ * @struct token_or_error_t
+ *
+ * Allow each "sub-tokenizer" to return either a token (or an error)
+ * for each token.
+ */
+struct token_or_error_S {
+  oc_token_t token;
+  tokenizer_error_t error_code;
+  uint64_t error_position;
+};
+
+typedef struct token_or_error_S token_or_error_t;
+
+#include "lexer.c.generated.h"
+
 #endif /* _LEXER_H_ */
 
 /**
@@ -163,20 +179,6 @@ __attribute__((warn_unused_result)) buffer_t*
 // have some kind of file_private annotation on it... Or
 // namespaces...)
 /* ========================================================================= */
-
-/**
- * @struct token_or_error_t
- *
- * Allow each "sub-tokenizer" to return either a token (or an error)
- * for each token.
- */
-struct token_or_error_S {
-  oc_token_t token;
-  tokenizer_error_t error_code;
-  uint64_t error_position;
-};
-
-typedef struct token_or_error_S token_or_error_t;
 
 /* ========================================================================= */
 // Tokenize whitespace
