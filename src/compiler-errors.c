@@ -69,11 +69,6 @@ typedef struct {
 
 #include "lexer.h"
 
-buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer,
-                                                       compiler_error_t* error);
-buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
-                                                    compiler_error_t* error);
-
 /**
  * @function buffer_append_human_readable_error
  *

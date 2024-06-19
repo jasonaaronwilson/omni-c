@@ -7,6 +7,11 @@
 
 #endif /* _FILE_READER_H_ */
 
+/**
+ * @function read_files
+ *
+ * Read the given files using read_file into a single array.
+ */
 value_array_t* read_files(value_array_t* files) {
   fprintf(stderr, "Parsing %d files...\n", files->length);
   value_array_t* result = make_value_array(files->length);
