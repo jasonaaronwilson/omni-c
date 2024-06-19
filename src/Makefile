@@ -1,7 +1,7 @@
 all: omni-c
 
-CC_FLAGS := -g -rdynamic -I ~/src/tree-sitter/lib/include -DOMNI_C_INCLUDE_GENERATED_HEADER_FILES 
-CC_FLAGS_OPT := -g -rdynamic -I ~/src/tree-sitter/lib/include -DOMNI_C_INCLUDE_GENERATED_HEADER_FILES -O3
+CC_FLAGS := -g -rdynamic -I ~/src/tree-sitter/lib/include
+CC_FLAGS_OPT := -g -rdynamic -I ~/src/tree-sitter/lib/include -O3
 
 SRC_C = armyknife-lib-impl.c \
 	mode.c \
@@ -42,6 +42,9 @@ self-parse-test: omni-c-opt
 extract-prototypes: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt extract-prototypes --unique-prototype-header-files=true ${SRC_C}
 	wc --lines ${SRC_C}
+
+bootstrap:
+	./bootstrap.sh
 
 save-bootstrap-prototypes: extract-prototypes
 	cp -upv --target=bootstrap-saved/ *.c.generated.h

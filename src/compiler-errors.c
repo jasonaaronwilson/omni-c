@@ -58,10 +58,17 @@ typedef struct compiler_error_S {
 buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
                                              compiler_error_t* error);
 
+typedef struct {
+  char* previous_lines;
+  char* current_line;
+  char* next_lines;
+} src_code_snippets_t;
+
 // Reinclude generated prototypes...
-// #include "compiler-errors.c.generated.h"
+#include "compiler-errors.c.generated.h"
 
 #endif /* _COMPILER_ERRORS_H_ */
+
 
 #include "lexer.h"
 
@@ -85,12 +92,6 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
   }
   return buffer;
 }
-
-typedef struct {
-  char* previous_lines;
-  char* current_line;
-  char* next_lines;
-} src_code_snippets_t;
 
 /**
  * @function get_source_code_snippet
