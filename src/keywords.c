@@ -5,11 +5,6 @@
 #include "mode.h"
 #include <c-armyknife-lib.h>
 
-#ifdef HAND_WRITTEN_PROTOTYPES
-boolean_t is_reserved_word(input_mode_t mode, char* str);
-boolean_t is_builtin_type_name(input_mode_t mode, char* str);
-#endif
-
 #include "keywords.c.generated.h"
 
 #endif /* _KEYWORDS_H_ */

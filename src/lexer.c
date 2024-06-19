@@ -48,21 +48,6 @@ struct oc_tokenizer_result_S {
 
 typedef struct oc_tokenizer_result_S oc_tokenizer_result_t;
 
-#ifdef HAND_WRITTEN_PROTOTYPES
-char* token_to_string(oc_token_t token);
-
-char* token_type_to_string(token_type_t type);
-
-__attribute__((warn_unused_result)) buffer_t*
-    append_token_debug_string(buffer_t* buffer, oc_token_t token);
-
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_token_string(buffer_t* buffer, oc_token_t token);
-
-oc_tokenizer_result_t tokenize(buffer_t* buffer);
-
-#endif
-
 static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
     return NULL;

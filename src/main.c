@@ -415,11 +415,6 @@ void extract_prototypes(void) {
 //// void configure_extract_header_file_command(void);
 ////
 
-#ifdef HAND_WRITTEN_PROTOTYPES
-void configure_print_tokens_command(void);
-void configure_extract_prototypes_command(void);
-#endif
-
 void configure_flags(void) {
   flag_program_name("omni-c");
   flag_description(
