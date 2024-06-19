@@ -1,6 +1,5 @@
 /* Automatically extracted prototypes from debug-printer.c */
 
-#ifdef OMNI_C_INCLUDE_GENERATED_HEADER_FILES
 __attribute__((warn_unused_result)) buffer_t* buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node, int indention_level);
 
 __attribute__((warn_unused_result)) buffer_t* buffer_append_dbg_node_list(buffer_t* buffer, node_list_t list, char* field_name, int indention_level);
@@ -33,4 +32,3 @@ __attribute__((warn_unused_result)) buffer_t* buffer_append_dbg_global_variable_
 
 __attribute__((warn_unused_result)) buffer_t* buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* node, int indention_level);
 
-#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES */

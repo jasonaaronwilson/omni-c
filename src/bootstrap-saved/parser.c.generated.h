@@ -1,6 +1,5 @@
 /* Automatically extracted prototypes from parser.c */
 
-#ifdef OMNI_C_INCLUDE_GENERATED_HEADER_FILES
 parse_result_t parse_declarations(value_array_t* tokens, uint64_t position);
 
 parse_result_t parse_declaration(value_array_t* tokens, uint64_t position);
@@ -35,4 +34,3 @@ parse_result_t parse_global_variable_node(value_array_t* tokens, uint64_t positi
 
 parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position);
 
-#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES */

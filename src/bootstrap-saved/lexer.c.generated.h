@@ -1,6 +1,5 @@
 /* Automatically extracted prototypes from lexer.c */
 
-#ifdef OMNI_C_INCLUDE_GENERATED_HEADER_FILES
 char* token_to_string(oc_token_t token);
 
 char* token_type_to_string(token_type_t type);
@@ -35,4 +34,3 @@ token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_pos
 
 oc_tokenizer_result_t tokenize(buffer_t* buffer);
 
-#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES */

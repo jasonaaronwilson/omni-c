@@ -14,7 +14,7 @@
 # omni-c to build a bootstrap version with which to continue
 # development.
 
-cp -upv --target-directory=. bootstrap-out/*
+cp -upv --target-directory=. bootstrap-saved/*
 
 echo "Bootstrap process is complete."
 

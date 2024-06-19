@@ -58,6 +58,9 @@ typedef struct compiler_error_S {
 buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
                                              compiler_error_t* error);
 
+// Reinclude generated prototypes...
+// #include "compiler-errors.c.generated.h"
+
 #endif /* _COMPILER_ERRORS_H_ */
 
 #include "lexer.h"

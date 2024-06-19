@@ -112,8 +112,10 @@ void extract_prototypes(void) {
         output, "/* Automatically extracted prototypes from %s */\n\n",
         file->file_name);
 
+    /*
     output = buffer_printf(output,
                            "#ifdef OMNI_C_INCLUDE_GENERATED_HEADER_FILES\n");
+    */
 
     fprintf(stdout, "====================================================\n");
     fprintf(stdout, "====> Processing %s\n", file->file_name);
@@ -196,8 +198,8 @@ void extract_prototypes(void) {
       }
     }
 
-    output = buffer_printf(
-        output, "#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES */\n");
+    // output = buffer_printf(
+    // output, "#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES */\n");
 
     if (FLAG_unique_prototype_header_files) {
       char* output_file_name = string_printf("%s.generated.h", file->file_name);
