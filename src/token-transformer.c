@@ -46,11 +46,6 @@ typedef struct token_transformer_options_S {
   boolean_t keep_c_preprocessor_lines;
 } token_transformer_options_t;
 
-#ifdef HAND_WRITTEN_PROTOTYPES
-value_array_t* transform_tokens(value_array_t* tokens,
-                                token_transformer_options_t xform_options);
-#endif
-
 #include "token-transformer.c.generated.h"
 
 #endif /* _TOKEN_TRANSFORMER_H_ */

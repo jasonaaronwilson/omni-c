@@ -61,11 +61,6 @@ typedef struct {
   char* next_lines;
 } src_code_snippets_t;
 
-#ifdef HAND_WRITTEN_PROTOTYPES
-buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
-                                             compiler_error_t* error);
-#endif
-
 // Reinclude generated prototypes...
 #include "compiler-errors.c.generated.h"
 

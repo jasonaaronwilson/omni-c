@@ -12,12 +12,6 @@
  * hand-written versions here.
  */
 
-#ifdef HAND_WRITTEN_PROTOTYPES
-char* parse_node_type_to_string(parse_node_type_t type);
-char* parse_error_code_to_string(parse_error_code_t error_code);
-char* type_node_kind_to_string(type_node_kind_t kind);
-#endif
-
 #include "to-string-helpers.c.generated.h"
 
 #endif /* _TO_STRING_HELPERS_H_ */
