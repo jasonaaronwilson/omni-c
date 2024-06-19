@@ -18,6 +18,7 @@
  * we were using tree-sitter).
  */
 
+#ifdef HAND_WRITTEN_PROTOTYPES
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
                                  int indention_level);
@@ -81,6 +82,7 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* node,
                                      int indention_level);
+#endif
 
 #include "debug-printer.c.generated.h"
 

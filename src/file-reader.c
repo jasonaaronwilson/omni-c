@@ -3,8 +3,10 @@
 
 #include "oc-file.h"
 
+#ifdef HAND_WRITTEN_PROTOTYPES
 value_array_t* read_files(value_array_t* files);
 oc_file_t* read_file(char* file_name);
+#endif
 
 #include "file-reader.c.generated.h"
 

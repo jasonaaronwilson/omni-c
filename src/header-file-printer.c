@@ -26,6 +26,7 @@
  * order things should appear in the header file, etc.
  */
 
+#ifdef HAND_WRITTEN_PROTOTYPES
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_raw_token_span(buffer_t* buffer, oc_token_t* start_token,
                                    oc_token_t* end_token);
@@ -43,6 +44,7 @@ __attribute__((warn_unused_result)) buffer_t*
 
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_type_node(buffer_t* buffer, type_node_t* node);
+#endif
 
 #include "header-file-printer.c.generated.h"
 
