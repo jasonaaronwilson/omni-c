@@ -6,7 +6,69 @@ standard library.
 
 ## Status
 
-We are still in the design phase and there is no compiler or translator available yet.
+* We now (2024-06-19) have a decent lexer and a very incomplete parser
+  but that is good enough to *extract prototypes* from our own source
+  code. In theory we never have to write prototypes again for extern
+  functions or care about their order in the file (more work is
+  required to handle static and also inline functions though I think
+  those won't be too much trouble - handling types fully has me more
+  worried) which means we can also order functions essentially anyway
+  we want now so a more top-down style can be used a tiny win but we
+  can start to get a feel about how "partial bootstrapping" is doing
+  to work.
+* (We will take header file extraction further and eventually only
+  shared macros will need to be inside of the header block so that at
+  least all of the code I write works this way. It is important to eat
+  one's own "dogfood".)
+* The short-cuts we took mean we can't radically transform the bodies
+  of functions where most of the interesting transformations will
+  occur (templates being the most interesting, over-loaded functions
+  kind of have to come along for the ride with that, but both require
+  identifying callsites precisely and in some ways maintaining certain
+  C pre-processor behaviors could be hard so we might need to work on
+  a few other things in c-armyknife-lib first so that isn't going to
+  be easy for several reasons).
+* At almost anytime, we could convert to a certain subset of C++ as
+  the output language which is one of several targets anyways but that
+  would mean we couldn't be run on platforms where there isn't a great
+  C++ compiler. It's also less academic which let's be honest is part
+  of what I'm doing here. Go will still up being better than omni-c
+  for writing compilers including omni-c and once there is a standard
+  comitte an independent open source compiler with great compatibility
+  and performance, I'm going wonder why I did all of this (oh yeah, to
+  point out that exceptions are not the problem and we can have
+  them). Our goal is actually between Go (garbage collected) and Rust
+  (to avoid the infamous borrow checker) and provide a pathway for
+  porting large amounts of C code to something better. Even if that
+  means conversion to Rust or Zig, that will be a win for portability
+  of C code).
+* SO the easiest next thing we can do are actually around top-level
+  constructs for example enum->string and
+  buffer_sub_string->enum. Since neither has to be perfectly precise
+  during bootstrapping so it shouldn't add much cogniative load above
+  what we are already doing for extracting prototypes).
+* I dislike the current hand-written parser though it has been useful
+  for learning some do's and don'ts but is why I am hesitant to go
+  into function bodies to turn them into parse trees because the first
+  version seldom work great the first time and require debugging
+  instead of trivally seeing the error when confronted with a
+  counter-example. While we probably still need heuristics from PEG in
+  some cases (a sub-tree that gets the fartherest is likely the error
+  folks want), we have the inklings of a decent error reporting
+  mechanism.
+* Self-compilation performance seems likely to be dominated by gcc or
+  clang for a while longer so that isn't a reason to reason to deep
+  dive into a combinatorial parser, a parser generator, etc., just
+  yet...
+
+In summary, this project is in flight but unforunately only has a
+single (lazy) developer.
+
+# Older README
+
+Even if this is my exact feature set (which it probably isn't), it
+doesn't lay out interesting things like a timeline for each feature to
+become available.
 
 ## Features
 
@@ -43,8 +105,9 @@ want to):
 1. utf8 strings by default (convertible at no cost to C char\* style
    strings for C and OS inter-op).
 1. language level threads (not necessarily Go lang level cheap though)
+   (Let's hold off on making promises...)
 1. guaranteed self tail calls with the aim of getting tail calls
-   supported in all cases without any performance hit.
+   supported in all cases without *too* much of a performance hit.
 1. "_" can be used in numeric constants (like ' in C23)
 1. empty arguments lists mean that the function takes zero arguments
    (like C++ etc.) instead of taking arbitrary arguments, like having
@@ -53,11 +116,8 @@ want to):
 Next are some features that really change the feel of the language and
 thus the standard library:
 
-1. closures (simpler and prettier than C++, more like Java or ML)
-1. garbage collection (manual management will still be an option for
-   embedded systems or other low-level programming [^1]
 1. generically typed functions and structures (not as complex as you
-   think because we don't have inheritance!)
+   think because we *don't* have inheritance!)
 1. multiple array types (array, fixed_array, unsafe_array) and bounds
    checking (dynamic if necessary) for all but unsafe_array (which
    only exists for C interop) ; the controversial part may be that []
@@ -70,13 +130,23 @@ thus the standard library:
 1. scheme like "let" *expressions* allows statements to be executed in
    expression contexts (which was already somewhat possible in C via
    inline functions though this allows these statements to side-effect
-   variables and even "loop" or otherwise change control flow).
+   variables and even "loop" or otherwise change control flow). gcc
+   may already allow this but it's not standard C.
 1. fluid_let - this makes thread local variables "cool" again and
    inverts dependency injection back to just having
    dependencies. (global variables that are fluid must have the
    `fluid` anntoation applied to them).
-1. non-textual macros (honestly I have no idea what this looks like
-   yet meaning this is the hardest part to design)
+1. eliminate the C pre-processor and eliminate purely textual macros
+   (honestly I have no idea what this looks like yet meaning this is
+   the hardest part to design - templates and constexpr look to carry
+   C++ pretty far and Rust has a model).
+
+I'd like to optionally have these features. In some sense they are
+tied together though and will not be an initial focus.
+
+1. closures (simpler and prettier than C++, more like Java or ML)
+1. garbage collection (manual management will still be an option for
+   embedded systems or other low-level programming [^1]
 
 The Omni C standard library provides a minimal set of collections
 including at least:
@@ -94,6 +164,10 @@ as building strings (so like StringBuilder in Java) as well as a
 buffer for two way communication with another thread (so to Unix pipes
 or channels in Go).
 
+The Omni C standard library doesn't exist but c-armyknife-lib is kind
+of a painful and not memory safe version of what it might look like
+and if we can write a compiler using it, it probably isn't horrible...
+
 ### No Inheritance
 
 Missing from this feature list is *inheritance* a hallmark of OOP. Not
@@ -104,44 +178,57 @@ to provide a compelling alternative. There are some domains such as UI
 can't define all of the behavior in a piece of code, that is fine,
 explicitly pass in behavior via closures.
 
+(The initial compiler is using hand-written (inline) functions like
+to_field_node() and to_node() which do dynamic type-checking - kind of
+like ugly typed-union's on obviously a little code-gen and you might
+have something more explicit than Go's `any` but maybe not as
+type super awesomeness as a "tagged union" in ML).
+
 ## Features Removed from Standard C
 
 1. many types of silent type conversions
-1. switch fall through (and Duff's device is therefore certainly not
-   pretty but may still work efficiently...)
-1. the special `[]` syntax for array types (since we have multiple
-   types of arrays which are basically necessary to avoid an entire
-   class of safety problems but still allow C interop). `[]` are still
-   useable to access an element of an array as well (as they are
-   available with other collections like hashtable).
-1. many obsolete keywords like `register` and the `auto` storage
-   specifier (`static` is now specified as an attribute allowed on local
-   variables).
+1. switch fall through (and probably therefore Duff's device unless
+   you want to write some gotos and hope the compiler does that right
+   thing)
+1. [] is going to become "syntatic sugar" instead of the dangerous
+   (though well defined in terms of the transformation) syntatic sugar
+   it already is. Certain kinds of profiling might be able to point
+   out where [] is more expensive than say lg-n so it shouldn't
+   completely shock the sensibilities of old-timers (and more
+   importantly the right data-structure is used).
+1. some obsolete keywords like `register` will continue to have no
+   function but we will go further and simply eliminate them for most
+   backends and let them do their "thing"
 1. octal - still supported but requires the "0o" prefix. Octal bugs
    are not that common overall but it is worth making things more
-   consistent anyways.
+   consistent anyways. --allow-ocatal=true and be used when porting
+   code.
 1. VLA - since we don't have default arrays, VLA arrays kind of don't
    make sense. This doesn't mean that VLA will not be utilized in
    certain contexts by generated code.
 
 ## Rationale
 
-The biggest change from C is probably generic structures and functions
-and that's what I am experimenting with here the most despite these
-being readily available in most C derived languages. Without
-inheritance these become much simpler than one might expect and hence
-we are keeping with the simplicity aspect of the C language.
+The biggest change from C is probably generic structures and generic
+functions and that's what I am experimenting with here the most
+despite these being readily available in most C derived
+languages. Without inheritance these become much simpler than one
+might expect in terms of the type system and hence we are keeping with
+the simplicity aspect of the C language.
 
 The aging C standard library can feel bloated while still being
 insufficient for modern programming. One of the largest C programs,
-the Linux kernel, doesn't even use the C standard library! One reason
-may be that large parts of the C standard library is just a wrapper
-around calling into the kernel and the kernel probably wouldn't want
-to call into itself in the exact same way (though there is something
-interesting about the kernel being able to call itself via a standard
-library that has the same interface as user code). If the C standard
-library was better organized (aka modular) and more powerful, the
-Linux kernel would *want* to use *parts* of that library.
+the Linux kernel, doesn't even use the C standard library.
+
+One reason may be that large parts of the C standard library is just a
+wrapper around calling into the kernel and the kernel probably
+wouldn't want to call into itself in the exact same way (though there
+is something interesting about the kernel being able to call itself
+via a standard library that has the same interface as user code).
+
+If the C standard library was better organized (aka modular) and more
+powerful, the Linux kernel would *want* to use *parts* of that
+library. (Certainly not the raw IO parts...)
 
 Namespaces and libraries immediately confer code organization benefits
 to Omni C and we should apply the same to the standard library by
@@ -149,6 +236,11 @@ organizing it as well as keeping it out of the default namespace as
 much as possible. Additionally we will use more readable identifiers
 (unless the abbreviation is very widespread like stdout instead of
 standard_output).
+
+Just like C++, there has to be some mode where it's possible to FFI
+with minimal overhead to C libraries. (We should probably provide
+mechanisms to work with C++ as seamlessly but that is not part of the
+MVP).
 
 Unlike Java, there isn't a 1:1 correspondance between a file and
 namespaces (some other modern languages also follow this path). This
@@ -178,7 +270,9 @@ weakpoints and fleshing out the standard library later.
 
 ## Using Omni C
 
-Note: the first version of Omni-C will probably output C++ instead of C as that means we can use templates and inline functions without lowering them to C code.
+Note: the first version of Omni-C will probably output C++ instead of
+C as that means we can use templates and inline functions without
+lowering them to C code.
 
 Omni C by default is a transpiler targeting C (and thus wasm via C to
 wasm translation).
