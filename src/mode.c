@@ -39,4 +39,6 @@ typedef enum {
   OUTPUT_MODE_C_PLUS_PLUS,
 } output_mode_t;
 
+#include "mode.c.generated.h"
+
 #endif /* _MODE_H_ */

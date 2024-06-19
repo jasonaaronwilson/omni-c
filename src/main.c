@@ -12,6 +12,8 @@
 #include "token-transformer.h"
 #include <c-armyknife-lib.h>
 
+#include "main.c.generated.h"
+
 value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
 boolean_t FLAG_include_unnamed_nodes = false;
