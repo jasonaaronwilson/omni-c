@@ -8,6 +8,8 @@
 boolean_t is_reserved_word(input_mode_t mode, char* str);
 boolean_t is_builtin_type_name(input_mode_t mode, char* str);
 
+#include "keywords.c.generated.h"
+
 #endif /* _KEYWORDS_H_ */
 
 char* c_keywords_array[] = {

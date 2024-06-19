@@ -44,6 +44,8 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_c_type_node(buffer_t* buffer, type_node_t* node);
 
+#include "header-file-printer.c.generated.h"
+
 #endif /* _HEADER_FILE_PRINTER_H_ */
 
 __attribute__((warn_unused_result)) buffer_t*
