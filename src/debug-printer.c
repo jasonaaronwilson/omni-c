@@ -82,9 +82,7 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* node,
                                      int indention_level);
 
-// #ifdef OMNI_C_INCLUDE_GENERATED_HEADER_FILES
-// #include "debug-printer.c.generated.h"
-// #endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES */
+#include "debug-printer.c.generated.h"
 
 #endif /* _DEBUG_PRINTER_H_ */
 
