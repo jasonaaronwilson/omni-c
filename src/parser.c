@@ -706,6 +706,13 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
 
 parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position);
 
+typedef struct canonical_type_result_s {
+  oc_token_t* canonical_type;
+  int consumed_tokens;
+} canonical_type_result_t;
+
+#include "parser.c.generated.h"
+
 #endif /* _PARSER_H_ */
 
 /* ====================================================================== */
@@ -1054,11 +1061,6 @@ parse_result_t parse_function_body_node(value_array_t* tokens,
 
   return parse_result(to_node(result), position);
 }
-
-typedef struct canonical_type_result_s {
-  oc_token_t* canonical_type;
-  int consumed_tokens;
-} canonical_type_result_t;
 
 canonical_type_result_t make_type_token_result(char* str, int consumed_tokens) {
   oc_token_t* canonical_token = malloc_struct(oc_token_t);

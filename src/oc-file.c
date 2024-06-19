@@ -25,4 +25,6 @@ struct oc_file_S {
 
 typedef struct oc_file_S oc_file_t;
 
+#include "oc-file.c.generated.h"
+
 #endif /* _OC_FILE_H_ */

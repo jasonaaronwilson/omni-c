@@ -72,4 +72,6 @@ static inline struct parse_node_s* node_list_get(node_list_t node_list,
   return cast(struct parse_node_s*, value_array_get(node_list.list, index).ptr);
 }
 
+#include "node-list.c.generated.h"
+
 #endif /* _NODE_LIST_H_ */
