@@ -98,8 +98,8 @@ void print_tokens(void) {
 
 boolean_t FLAG_unique_prototype_header_files = false;
 
-void extract_prototypes(void) {
-  log_info("extract_prototypes()");
+void extract_command(char* command) {
+  log_info("extract_prototypes(%s)", command);
 
   buffer_t* output = make_buffer(16 * 1024);
 
@@ -490,7 +490,7 @@ int main(int argc, char** argv) {
   } else if (string_equal("print-tokens", FLAG_command)) {
     print_tokens();
   } else if (string_equal("extract-prototypes", FLAG_command)) {
-    extract_prototypes();
+    extract_command("extract-prototypes");
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

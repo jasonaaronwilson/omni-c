@@ -4,7 +4,7 @@ void do_print_tokens(value_array_t* tokens, char* message);
 
 void print_tokens(void);
 
-void extract_prototypes(void);
+void extract_command(char* command);
 
 void configure_flags(void);
 
