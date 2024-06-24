@@ -1,30 +1,29 @@
 # Roadmap
 
-This roadmap doesn't match perfectly with README.md because that may more aspirational
-than what can be delivered to get 90% of the way there.
+This roadmap no longer matches the one in README.md.
 
-# Step 1 (basic source file convenience)
+# Phase One (basic source file conveniences)
 
-1. implement tree-sitter "cat"
-2. implement header file creator (parse top-level stuff and just output .h)
-3. add some auto-generated code like enum to string and back
-4. eventually output a single .c and .h for all files in a library
+1. implement header file creator (parse top-level stuff and just
+   output .h)
+1. add some auto-generated code like enum to string and back
+   again.
+1. eventually output a single .c and .h for all files in a
+   library.
 
-# Step 2 (non generic features)
+# Phase Two (non template features)
 
+1. fully parse function bodies
 1. compute types of everything
-2. overloaded functions
-3. polyfill auto if necessary
-4. method syntax
-5. [] in expressions are syntactic sugure for index_get_operation/index_set_operation
-6. binary objects in the library
+   * "auto" in C23 can be provided but more importantly we can query
+     it's actual type from an editor, tool, etc.
+1. overloaded functions
+1. [] in expressions are syntactic sugure for
+   index_get_operation/index_set_operation
+1. method syntax
 7. namespaces
-8. closures
 
-# Step 3 (generic features)
+# Phase Three (templates)
 
-1. one option is to simply implement templates and not flipping care
-
-# Step 4 (C backend, exceptions, gc, etc.)
-
-1. 
+# Phase Four (advanced features like exceptions, gc support, closures,
+  etc.)
