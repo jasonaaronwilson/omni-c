@@ -99,6 +99,25 @@ void print_tokens(void) {
 boolean_t FLAG_unique_prototype_header_files = false;
 
 __attribute__((warn_unused_result)) buffer_t*
+    extract_enums_process_declarations(buffer_t* output,
+                                       declarations_node_t* root) {
+  uint64_t length = node_list_length(root->declarations);
+
+  for (uint64_t i = 0; i < length; i++) {
+    parse_node_t* node = node_list_get(root->declarations, i);
+    if (node->tag == PARSE_NODE_TYPEDEF) {
+      /*
+      output = buffer_append_c_function_node_prototype(output, fn_node);
+      output = buffer_printf(output, "\n");
+      */
+    } else if (node->tag == PARSE_NODE_ENUM) {
+    }
+  }
+
+  return output;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
     extract_prototypes_process_declarations(buffer_t* output,
                                             declarations_node_t* root) {
   uint64_t length = node_list_length(root->declarations);
@@ -156,21 +175,22 @@ __attribute__((warn_unused_result)) buffer_t*
 void extract_command(char* command) {
   log_info("extract_prototypes(%s)", command);
 
-  buffer_t* output = make_buffer(16 * 1024);
+  buffer_t* prototype_outputs = make_buffer(16 * 1024);
 
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
     if (FLAG_unique_prototype_header_files) {
-      buffer_clear(output);
+      buffer_clear(prototype_outputs);
     }
 
     oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
-    output = buffer_printf(
-        output, "/* Automatically extracted prototypes from %s */\n\n",
-        file->file_name);
+    prototype_outputs
+        = buffer_printf(prototype_outputs,
+                        "/* Automatically extracted prototypes from %s */\n\n",
+                        file->file_name);
 
     /*
-    output = buffer_printf(output,
+    prototype_outputs = buffer_printf(prototype_outputs,
                            "#ifdef OMNI_C_INCLUDE_GENERATED_HEADER_FILES\n");
     */
 
@@ -207,21 +227,24 @@ void extract_command(char* command) {
     }
 
     declarations_node_t* root = to_declarations_node(declarations_result.node);
-    output = extract_prototypes_process_declarations(output, root);
+    prototype_outputs
+        = extract_prototypes_process_declarations(prototype_outputs, root);
 
-    // output = buffer_printf(
-    // output, "#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES */\n");
+    // prototype_outputs = buffer_printf(
+    // prototype_outputs, "#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES
+    // */\n");
 
     if (FLAG_unique_prototype_header_files) {
-      char* output_file_name = string_printf("%s.generated.h", file->file_name);
-      buffer_write_file(output, output_file_name);
-      free_bytes(output_file_name);
+      char* prototype_outputs_file_name
+          = string_printf("%s.generated.h", file->file_name);
+      buffer_write_file(prototype_outputs, prototype_outputs_file_name);
+      free_bytes(prototype_outputs_file_name);
     }
   }
 
   if (!FLAG_unique_prototype_header_files) {
-    // TODO(jawilson): output to --output...
-    fprintf(stdout, "%s", buffer_to_c_string(output));
+    // TODO(jawilson): prototype_outputs to --prototype_outputs...
+    fprintf(stdout, "%s", buffer_to_c_string(prototype_outputs));
   }
 }
 
