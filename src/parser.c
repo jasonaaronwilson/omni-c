@@ -116,6 +116,7 @@ typedef enum {
   TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY,
   TYPE_NODE_KIND_PRIMITIVE_TYPENAME,
   TYPE_NODE_KIND_TYPENAME,
+  TYPE_NODE_KIND_TYPE_EXPRESSION,
 } type_node_kind_t;
 
 /**
@@ -1202,7 +1203,6 @@ parse_result_t parse_user_type_node(value_array_t* tokens, uint64_t position) {
 parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_type_node(_, %d)", position & 0xffffffff);
   type_node_t* result = malloc_type_node();
-  parse_node_t* user_type = NULL;
 
   // First see if we have a canonical type result...
   canonical_type_result_t canonical_type_result
@@ -1215,8 +1215,8 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
     parse_result_t user_type_result = parse_user_type_node(tokens, position);
     if (is_valid_result(user_type_result)) {
       // TODO(jawilson): we need a kind for a user type
-      result->type_node_kind = TYPE_NODE_KIND_TYPENAME;
-      user_type = user_type_result.node;
+      result->type_node_kind = TYPE_NODE_KIND_TYPE_EXPRESSION;
+      result->user_type = user_type_result.node;
       position = user_type_result.next_token_position;
     } else {
       result->type_node_kind = TYPE_NODE_KIND_TYPENAME;

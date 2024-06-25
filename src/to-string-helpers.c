@@ -85,6 +85,8 @@ char* type_node_kind_to_string(type_node_kind_t kind) {
     return "TYPE_NODE_KIND_PRIMITIVE_TYPENAME";
   case TYPE_NODE_KIND_TYPENAME:
     return "TYPE_NODE_KIND_TYPENAME";
+  case TYPE_NODE_KIND_TYPE_EXPRESSION:
+    return "TYPE_NODE_KIND_TYPE_EXPRESSION";
   }
   return "**NOT REACHED**";
 }

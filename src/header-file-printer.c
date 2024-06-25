@@ -109,7 +109,8 @@ __attribute__((warn_unused_result)) buffer_t*
     break;
 
   default:
-    buffer = buffer_printf(buffer, "**FIXME**");
+    log_fatal("type_node_kind is not expected.");
+    fatal_error(ERROR_ILLEGAL_STATE);
     break;
   }
 
