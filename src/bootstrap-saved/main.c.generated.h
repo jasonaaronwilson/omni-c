@@ -4,6 +4,8 @@ void do_print_tokens(value_array_t* tokens, char* message);
 
 void print_tokens(void);
 
+__attribute__((warn_unused_result)) buffer_t* extract_prototypes_process_declarations(buffer_t* output, declarations_node_t* root);
+
 void extract_command(char* command);
 
 void configure_flags(void);
