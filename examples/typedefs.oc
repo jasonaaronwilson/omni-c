@@ -10,6 +10,8 @@ enum color_foo_t {
   COLOR_BLUE,
 };
 
+// Our debug printer seems unable to fully print out the parse tree
+// for this as of 2024-06-25. Shouldn't take too long to fix this...
 typedef enum {
   COLOR_NONE,
   COLOR_RED,
