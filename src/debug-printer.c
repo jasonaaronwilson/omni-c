@@ -144,7 +144,8 @@ __attribute__((warn_unused_result)) buffer_t*
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_ENUM\n");
   if (node->name != NULL) {
-    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
+    buffer
+        = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
   }
   buffer = buffer_append_dbg_node_list(buffer, node->elements, "element",
                                        indention_level);
@@ -158,7 +159,8 @@ __attribute__((warn_unused_result)) buffer_t*
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_STRUCT\n");
   buffer = buffer_indent(buffer, indention_level);
   if (node->name != NULL) {
-    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
+    buffer
+        = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
   }
   buffer = buffer_append_dbg_node_list(buffer, node->fields, "field",
                                        indention_level);
@@ -230,7 +232,8 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->user_type != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "user_type:\n");
-    buffer = buffer_append_dbg_parse_node(buffer, node->user_type, indention_level + 1);
+    buffer = buffer_append_dbg_parse_node(buffer, node->user_type,
+                                          indention_level + 1);
   }
   buffer = buffer_append_dbg_node_list(buffer, node->type_args, "type_arg",
                                        indention_level);

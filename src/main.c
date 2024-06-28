@@ -157,17 +157,23 @@ void extract_command(char* command) {
 
     if (string_equal("extract-prototypes", command)) {
       prototype_outputs
-        = extract_prototypes_process_declarations(prototype_outputs, root);
+          = extract_prototypes_process_declarations(prototype_outputs, root);
     } else if (string_equal("extract-enums", command)) {
-      enum_outputs
-        = extract_enums_process_declarations(enum_outputs, root);
+      enum_outputs = extract_enums_process_declarations(enum_outputs, root);
     }
 
     if (FLAG_unique_prototype_header_files) {
-      char* prototype_outputs_file_name
-          = string_printf("%s.generated.h", file->file_name);
-      buffer_write_file(prototype_outputs, prototype_outputs_file_name);
-      free_bytes(prototype_outputs_file_name);
+      if (string_equal("extract-prototypes", command)) {
+        char* prototype_outputs_file_name
+            = string_printf("%s.generated.h", file->file_name);
+        buffer_write_file(prototype_outputs, prototype_outputs_file_name);
+        free_bytes(prototype_outputs_file_name);
+      } else if (string_equal("extract-enums", command)) {
+        char* enum_outputs_file_name
+            = string_printf("%s.enum-generated.h", file->file_name);
+        buffer_write_file(enum_outputs, enum_outputs_file_name);
+        free_bytes(enum_outputs_file_name);
+      }
     }
   }
 
@@ -460,7 +466,7 @@ int main(int argc, char** argv) {
   } else if (string_equal("print-tokens", FLAG_command)) {
     print_tokens();
   } else if (string_equal("extract-enums", FLAG_command)
-	     || string_equal("extract-prototypes", FLAG_command)) {
+             || string_equal("extract-prototypes", FLAG_command)) {
     extract_command(FLAG_command);
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);

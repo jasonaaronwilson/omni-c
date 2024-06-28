@@ -14,8 +14,8 @@
 
 #include <c-armyknife-lib.h>
 
-#include "parser.h"
 #include "header-file-printer.h"
+#include "parser.h"
 
 __attribute__((warn_unused_result)) buffer_t*
     extract_enums_process_declarations(buffer_t* output,
@@ -25,13 +25,17 @@ __attribute__((warn_unused_result)) buffer_t*
   for (uint64_t i = 0; i < length; i++) {
     parse_node_t* node = node_list_get(root->declarations, i);
     if (node->tag == PARSE_NODE_TYPEDEF) {
+      typedef_node_t* typedef_node = to_typedef_node(node);
+      output = buffer_printf(output, "/* %s */\n",
+                             token_to_string(*(typedef_node->name)));
       /*
       output = buffer_append_c_function_node_prototype(output, fn_node);
       output = buffer_printf(output, "\n");
       */
     } else if (node->tag == PARSE_NODE_ENUM) {
       // TODO(jawilson): invoke something from compiler-error!
-      log_fatal("Top level enums that aren't part of a typedef are not supported!");
+      log_fatal(
+          "Top level enums that aren't part of a typedef are not supported!");
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
@@ -93,4 +97,3 @@ __attribute__((warn_unused_result)) buffer_t*
 
   return output;
 }
-
