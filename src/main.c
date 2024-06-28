@@ -389,6 +389,7 @@ void configure_flags(void) {
   // configure_extract_header_file_command();
   configure_print_tokens_command();
   configure_extract_prototypes_command();
+  configure_extract_enums_command();
 }
 
 //// void configure_build_command(void) {
@@ -413,6 +414,14 @@ void configure_print_tokens_command(void) {
   flag_boolean("--include-whitespace", &FLAG_print_tokens_include_whitespace);
   flag_boolean("--include-comments", &FLAG_print_tokens_include_comments);
   flag_boolean("--parse-and-print", &FLAG_print_tokens_parse_and_print);
+  flag_file_args(&FLAG_files);
+}
+
+void configure_extract_enums_command(void) {
+  flag_command("extract-enums", &FLAG_command);
+  flag_string("--output-file", &FLAG_ouput_file);
+  flag_boolean("--unique-prototype-header-files",
+               &FLAG_unique_prototype_header_files);
   flag_file_args(&FLAG_files);
 }
 
@@ -452,8 +461,9 @@ int main(int argc, char** argv) {
     ////     print_parse_trees();
   } else if (string_equal("print-tokens", FLAG_command)) {
     print_tokens();
-  } else if (string_equal("extract-prototypes", FLAG_command)) {
-    extract_command("extract-prototypes");
+  } else if (string_equal("extract-enums", FLAG_command)
+	     || string_equal("extract-prototypes", FLAG_command)) {
+    extract_command(FLAG_command);
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

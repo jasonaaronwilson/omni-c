@@ -40,6 +40,10 @@ self-parse-test: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt print-tokens --parse-and-print=true ${SRC_C}
 	wc --lines ${SRC_C}
 
+extract-enums: omni-c-opt
+	/usr/bin/time --portability ./omni-c-opt extract-enums --unique-prototype-header-files=true ${SRC_C}
+	wc --lines ${SRC_C}
+
 extract-prototypes: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt extract-prototypes --unique-prototype-header-files=true ${SRC_C}
 	wc --lines ${SRC_C}
