@@ -107,6 +107,7 @@ void extract_command(char* command) {
   log_info("extract_prototypes(%s)", command);
 
   buffer_t* prototype_outputs = make_buffer(16 * 1024);
+  buffer_t* enum_outputs = make_buffer(16 * 1024);
 
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
@@ -119,11 +120,6 @@ void extract_command(char* command) {
         = buffer_printf(prototype_outputs,
                         "/* Automatically extracted prototypes from %s */\n\n",
                         file->file_name);
-
-    /*
-    prototype_outputs = buffer_printf(prototype_outputs,
-                           "#ifdef OMNI_C_INCLUDE_GENERATED_HEADER_FILES\n");
-    */
 
     fprintf(stdout, "====================================================\n");
     fprintf(stdout, "====> Processing %s\n", file->file_name);
@@ -158,12 +154,14 @@ void extract_command(char* command) {
     }
 
     declarations_node_t* root = to_declarations_node(declarations_result.node);
-    prototype_outputs
-        = extract_prototypes_process_declarations(prototype_outputs, root);
 
-    // prototype_outputs = buffer_printf(
-    // prototype_outputs, "#endif /* OMNI_C_INCLUDE_GENERATED_HEADER_FILES
-    // */\n");
+    if (string_equal("extract-prototypes", command)) {
+      prototype_outputs
+        = extract_prototypes_process_declarations(prototype_outputs, root);
+    } else if (string_equal("extract-enums", command)) {
+      enum_outputs
+        = extract_enums_process_declarations(enum_outputs, root);
+    }
 
     if (FLAG_unique_prototype_header_files) {
       char* prototype_outputs_file_name
