@@ -17,6 +17,14 @@
 #include "header-file-printer.h"
 #include "parser.h"
 
+static inline char* remove_type_suffix(char* typename) {
+  if (string_ends_with(typename, "_t")) {
+    return string_substring(typename, 0, strlen(typename) - 2);
+  } else {
+    return typename;
+  }
+}
+
 __attribute__((warn_unused_result)) buffer_t*
     extract_enums_process_declarations(buffer_t* output,
                                        declarations_node_t* root) {
@@ -35,22 +43,25 @@ __attribute__((warn_unused_result)) buffer_t*
         output = buffer_append_enum_node(output, enum_node);
         output = buffer_printf(output, ";\n\n");
 
+        char* enum_node_name = token_to_string(*(typedef_node->name));
+        char* to_string_prefix = remove_type_suffix(enum_node_name);
+        char* enum_node_type_string = enum_node_name;
+
         output = buffer_append_enum_to_string(
-            output, enum_node, token_to_string(*(typedef_node->name)),
-            token_to_string(*(typedef_node->name)));
+            output, enum_node, to_string_prefix, enum_node_type_string);
         output = buffer_append_string_to_enum(
-            output, enum_node, token_to_string(*(typedef_node->name)),
-            token_to_string(*(typedef_node->name)));
+            output, enum_node, to_string_prefix, enum_node_type_string);
       }
     } else if (node->tag == PARSE_NODE_ENUM) {
       enum_node_t* enum_node = to_enum_node(node);
       output = buffer_append_enum_node(output, enum_node);
       output = buffer_printf(output, ";\n\n");
       char* enum_node_name = token_to_string(*(enum_node->name));
+      char* to_string_prefix = remove_type_suffix(enum_node_name);
       char* enum_node_type_string = string_printf("enum %s", enum_node_name);
-      output = buffer_append_enum_to_string(output, enum_node, enum_node_name,
+      output = buffer_append_enum_to_string(output, enum_node, to_string_prefix,
                                             enum_node_type_string);
-      output = buffer_append_string_to_enum(output, enum_node, enum_node_name,
+      output = buffer_append_string_to_enum(output, enum_node, to_string_prefix,
                                             enum_node_type_string);
     }
   }

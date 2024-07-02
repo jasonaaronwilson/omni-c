@@ -221,9 +221,9 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node,
                                  char* to_string_fn_prefix, char* type_string) {
-  buffer = buffer_printf(buffer,
-                         "static inline %s string_to_string(char* value) {\n",
-                         type_string, to_string_fn_prefix);
+  buffer
+      = buffer_printf(buffer, "static inline %s string_to_%s(char* value) {\n",
+                      type_string, to_string_fn_prefix);
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
     enum_element_t* element
