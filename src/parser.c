@@ -358,11 +358,21 @@ static inline parse_node_t* to_node(void* ptr) {
 /**
  * @function is_struct_node
  *
- * Helper to determine if a node is a struct node before trying to
- * cast it.
+ * Helper to determine if a node is a struct node (for example before
+ * trying to cast it using to_struct_node).
  */
 static inline boolean_t is_struct_node(parse_node_t* ptr) {
   return (ptr != NULL) && (ptr->tag == PARSE_NODE_STRUCT);
+}
+
+/**
+ * @function is_enum_node
+ *
+ * Helper to determine if a node is an enum node (for example before
+ * trying to cast it using to_enum_node).
+ */
+static inline boolean_t is_enum_node(parse_node_t* ptr) {
+  return (ptr != NULL) && (ptr->tag == PARSE_NODE_ENUM);
 }
 
 /**

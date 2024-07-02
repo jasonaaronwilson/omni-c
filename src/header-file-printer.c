@@ -157,3 +157,35 @@ __attribute__((warn_unused_result)) buffer_t*
                                     start_token->buffer);
   return buffer;
 }
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_enum_node(buffer_t* buffer, enum_node_t* node) {
+
+  buffer = buffer_printf(buffer, "enum ");
+  if (node->name != NULL) {
+    buffer = buffer_printf(buffer, " %s\n", node->name);
+  }
+  buffer = buffer_printf(buffer, "{\n");
+
+  for (int i = 0; i < node_list_length(node->elements); i++) {
+    buffer = buffer_printf(buffer, "    ");
+    buffer = buffer_append_enum_element(
+        buffer, to_enum_element_node(node_list_get(node->elements, i)));
+    buffer = buffer_printf(buffer, ",\n");
+  }
+  buffer = buffer_printf(buffer, "}");
+
+  return buffer;
+}
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_enum_element(buffer_t* buffer, enum_element_t* node) {
+
+  buffer = buffer_append_token_string(buffer, *(node->name));
+  if (node->value != NULL) {
+    buffer = buffer_printf(buffer, " = ");
+    buffer = buffer_append_token_string(buffer, *(node->value));
+  }
+
+  return buffer;
+}

@@ -26,8 +26,12 @@ __attribute__((warn_unused_result)) buffer_t*
     parse_node_t* node = node_list_get(root->declarations, i);
     if (node->tag == PARSE_NODE_TYPEDEF) {
       typedef_node_t* typedef_node = to_typedef_node(node);
-      output = buffer_printf(output, "/* %s */\n",
-                             token_to_string(*(typedef_node->name)));
+      if (is_enum_node(typedef_node->type_node->user_type)) {
+	output = buffer_printf(output, "typedef ");
+	output = buffer_printf(output, "%s ", token_to_string(*(typedef_node->name)));
+	output = buffer_append_enum_node(output, to_enum_node(typedef_node->type_node->user_type));
+	output = buffer_printf(output, ";\n\n", token_to_string(*(typedef_node->name)));
+      }
       /*
       output = buffer_append_c_function_node_prototype(output, fn_node);
       output = buffer_printf(output, "\n");
