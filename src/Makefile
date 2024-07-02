@@ -34,7 +34,8 @@ test: omni-c
 		../examples/functions.oc \
 		../examples/typedefs.oc \
 		../examples/global-variables.oc \
-		../examples/simple-c-proprocess.oc
+		../examples/simple-c-proprocess.oc \
+		../examples/enum.oc
 
 self-parse-test: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt print-tokens --parse-and-print=true ${SRC_C}
@@ -42,6 +43,7 @@ self-parse-test: omni-c-opt
 
 extract-enums: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt extract-enums --unique-prototype-header-files=true ${SRC_C}
+	./omni-c-opt extract-enums --unique-prototype-header-files=true ../examples/enum.oc
 	wc --lines ${SRC_C}
 
 extract-prototypes: omni-c-opt

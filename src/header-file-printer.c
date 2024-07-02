@@ -163,7 +163,7 @@ __attribute__((warn_unused_result)) buffer_t*
 
   buffer = buffer_printf(buffer, "enum ");
   if (node->name != NULL) {
-    buffer = buffer_printf(buffer, " %s\n", node->name);
+    buffer = buffer_printf(buffer, "%s\n", token_to_string(*(node->name)));
   }
   buffer = buffer_printf(buffer, "{\n");
 

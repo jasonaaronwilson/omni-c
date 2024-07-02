@@ -33,8 +33,7 @@ __attribute__((warn_unused_result)) buffer_t*
         output = buffer_printf(output, "%s ",
                                token_to_string(*(typedef_node->name)));
         output = buffer_append_enum_node(output, enum_node);
-        output = buffer_printf(output, ";\n\n",
-                               token_to_string(*(typedef_node->name)));
+        output = buffer_printf(output, ";\n\n");
 
         output = buffer_append_enum_to_string(
             output, enum_node, token_to_string(*(typedef_node->name)),
@@ -44,10 +43,15 @@ __attribute__((warn_unused_result)) buffer_t*
             token_to_string(*(typedef_node->name)));
       }
     } else if (node->tag == PARSE_NODE_ENUM) {
-      // TODO(jawilson): invoke something from compiler-error!
-      log_fatal(
-          "Top level enums that aren't part of a typedef are not supported!");
-      fatal_error(ERROR_ILLEGAL_STATE);
+      enum_node_t* enum_node = to_enum_node(node);
+      output = buffer_append_enum_node(output, enum_node);
+      output = buffer_printf(output, ";\n\n");
+      char* enum_node_name = token_to_string(*(enum_node->name));
+      char* enum_node_type_string = string_printf("enum %s", enum_node_name);
+      output = buffer_append_enum_to_string(output, enum_node, enum_node_name,
+                                            enum_node_type_string);
+      output = buffer_append_string_to_enum(output, enum_node, enum_node_name,
+                                            enum_node_type_string);
     }
   }
 

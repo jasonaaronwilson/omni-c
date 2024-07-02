@@ -11,5 +11,7 @@ enum month_t {
 enum no_elements_t {
 };
 
+/*
 enum {
 };
+*/
