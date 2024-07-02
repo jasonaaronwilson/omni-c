@@ -27,15 +27,14 @@ __attribute__((warn_unused_result)) buffer_t*
     if (node->tag == PARSE_NODE_TYPEDEF) {
       typedef_node_t* typedef_node = to_typedef_node(node);
       if (is_enum_node(typedef_node->type_node->user_type)) {
+	enum_node_t* enum_node = to_enum_node(typedef_node->type_node->user_type);
 	output = buffer_printf(output, "typedef ");
 	output = buffer_printf(output, "%s ", token_to_string(*(typedef_node->name)));
-	output = buffer_append_enum_node(output, to_enum_node(typedef_node->type_node->user_type));
+	output = buffer_append_enum_node(output, enum_node);
 	output = buffer_printf(output, ";\n\n", token_to_string(*(typedef_node->name)));
+
+	output = buffer_append_enum_to_string(output, enum_node, token_to_string(*(typedef_node->name)), token_to_string(*(typedef_node->name)));
       }
-      /*
-      output = buffer_append_c_function_node_prototype(output, fn_node);
-      output = buffer_printf(output, "\n");
-      */
     } else if (node->tag == PARSE_NODE_ENUM) {
       // TODO(jawilson): invoke something from compiler-error!
       log_fatal(

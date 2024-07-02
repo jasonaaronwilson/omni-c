@@ -14,3 +14,5 @@ __attribute__((warn_unused_result)) buffer_t* buffer_append_enum_node(buffer_t* 
 
 __attribute__((warn_unused_result)) buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node);
 
+__attribute__((warn_unused_result)) buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node, char* to_string_fn_prefix, char* type_string);
+
