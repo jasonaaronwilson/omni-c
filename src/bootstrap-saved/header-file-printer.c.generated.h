@@ -10,7 +10,7 @@ __attribute__((warn_unused_result)) buffer_t* buffer_append_c_attribute_node(buf
 
 __attribute__((warn_unused_result)) buffer_t* buffer_append_c_raw_token_span(buffer_t* buffer, oc_token_t* start_token, oc_token_t* end_token);
 
-__attribute__((warn_unused_result)) buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node);
-
 __attribute__((warn_unused_result)) buffer_t* buffer_append_enum_node(buffer_t* buffer, enum_node_t* node);
+
+__attribute__((warn_unused_result)) buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node);
 
