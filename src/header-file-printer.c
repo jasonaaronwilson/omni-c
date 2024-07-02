@@ -192,12 +192,16 @@ __attribute__((warn_unused_result)) buffer_t*
 
 
 __attribute__((warn_unused_result)) buffer_t*
-buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node, char* to_string_fn_prefix, char* type_string) {
-  buffer = buffer_printf(buffer, "static inline char* %s_to_string(%s value) {\n", to_string_fn_prefix, type_string);
+    buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node,
+                                 char* to_string_fn_prefix, char* type_string) {
+  buffer
+      = buffer_printf(buffer, "static inline char* %s_to_string(%s value) {\n",
+                      to_string_fn_prefix, type_string);
   buffer = buffer_printf(buffer, "  switch (value) {\n");
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
-    enum_element_t* element = to_enum_element_node(node_list_get(node->elements, i));
+    enum_element_t* element
+        = to_enum_element_node(node_list_get(node->elements, i));
     buffer = buffer_printf(buffer, "    case ");
     buffer = buffer_append_token_string(buffer, *(element->name));
     buffer = buffer_printf(buffer, ":\n      return \"");
@@ -205,7 +209,8 @@ buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node, char* to_strin
     buffer = buffer_printf(buffer, "\";\n");
   }
   buffer = buffer_printf(buffer, "    default:\n");
-  buffer = buffer_printf(buffer, "      return \"<<unknown-%s>>\";\n", to_string_fn_prefix);
+  buffer = buffer_printf(buffer, "      return \"<<unknown-%s>>\";\n",
+                         to_string_fn_prefix);
 
   buffer = buffer_printf(buffer, "  }\n");
   buffer = buffer_printf(buffer, "}\n\n");
@@ -214,11 +219,15 @@ buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node, char* to_strin
 }
 
 __attribute__((warn_unused_result)) buffer_t*
-buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node, char* to_string_fn_prefix, char* type_string) {
-  buffer = buffer_printf(buffer, "static inline %s string_to_string(char* value) {\n", type_string, to_string_fn_prefix);
+    buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node,
+                                 char* to_string_fn_prefix, char* type_string) {
+  buffer = buffer_printf(buffer,
+                         "static inline %s string_to_string(char* value) {\n",
+                         type_string, to_string_fn_prefix);
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
-    enum_element_t* element = to_enum_element_node(node_list_get(node->elements, i));
+    enum_element_t* element
+        = to_enum_element_node(node_list_get(node->elements, i));
     buffer = buffer_printf(buffer, "  if (strcmp(value, \"");
     buffer = buffer_append_token_string(buffer, *(element->name));
     buffer = buffer_printf(buffer, "\") == 0) {");
