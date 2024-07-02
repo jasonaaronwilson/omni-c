@@ -219,10 +219,10 @@ buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node, char* to_strin
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
     enum_element_t* element = to_enum_element_node(node_list_get(node->elements, i));
-    buffer = buffer_printf(buffer, "  if (strcmp(value, ");
+    buffer = buffer_printf(buffer, "  if (strcmp(value, \"");
     buffer = buffer_append_token_string(buffer, *(element->name));
     buffer = buffer_printf(buffer, "\") == 0) {");
-    buffer = buffer_printf(buffer, "    return ");
+    buffer = buffer_printf(buffer, "\n    return ");
     buffer = buffer_append_token_string(buffer, *(element->name));
     buffer = buffer_printf(buffer, ";\n  }\n");
   }

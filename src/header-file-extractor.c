@@ -34,6 +34,7 @@ __attribute__((warn_unused_result)) buffer_t*
 	output = buffer_printf(output, ";\n\n", token_to_string(*(typedef_node->name)));
 
 	output = buffer_append_enum_to_string(output, enum_node, token_to_string(*(typedef_node->name)), token_to_string(*(typedef_node->name)));
+	output = buffer_append_string_to_enum(output, enum_node, token_to_string(*(typedef_node->name)), token_to_string(*(typedef_node->name)));
       }
     } else if (node->tag == PARSE_NODE_ENUM) {
       // TODO(jawilson): invoke something from compiler-error!
