@@ -63,6 +63,7 @@ clean:
 	rm -f omni-c omni-c-opt
 	find . -name '*.h' -not -path './bootstrap-saved/*' | xargs -n 1 rm -f
 	find . -name '*~' | xargs -n 1 rm -f
+	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
 	rm -f tools/syntax-c
 
 diff: clean
