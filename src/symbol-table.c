@@ -67,3 +67,22 @@ symbol_table_t* make_symbol_table(void) {
   result->functions = make_symbol_table_map();
   return result;
 }
+
+void symbol_table_add_children(declarations_node_t* root) {
+  uint64_t length = node_list_length(root->declarations);
+  for (uint64_t i = 0; i < length; i++) {
+    parse_node_t* node = node_list_get(root->declarations, i);
+    switch (node->tag) {
+    case PARSE_NODE_ENUM:
+    case PARSE_NODE_FUNCTION:
+    case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
+    case PARSE_NODE_STRUCT:
+    case PARSE_NODE_TYPEDEF:
+      break;
+
+    default:
+      fatal_error(ERROR_ILLEGAL_STATE);
+      break;
+    }
+  }
+}
