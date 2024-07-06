@@ -48,6 +48,22 @@ typedef struct symbol_table_S {
   symbol_table_map_t* functions;
 } symbol_table_t;
 
-// #include "symbol-table.c.generated.h"
+#include "symbol-table.c.generated.h"
 
 #endif /* _SYMBOL_TABLE_H_ */
+
+symbol_table_map_t* make_symbol_table_map(void) {
+  symbol_table_map_t* result = malloc_struct(symbol_table_map_t);
+  result->map = make_string_hashtable(16);
+  return result;
+}
+
+symbol_table_t* make_symbol_table(void) {
+  symbol_table_t* result = malloc_struct(symbol_table_t);
+  result->enums = make_symbol_table_map();
+  result->typedefs = make_symbol_table_map();
+  result->structures = make_symbol_table_map();
+  result->variables = make_symbol_table_map();
+  result->functions = make_symbol_table_map();
+  return result;
+}
