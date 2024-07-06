@@ -16,6 +16,7 @@ SRC_C = armyknife-lib-impl.c \
 	node-list.c \
 	debug-printer.c \
 	header-file-printer.c \
+	symbol-table.c \
 	header-file-extractor.c \
 	main.c
 
