@@ -10,10 +10,13 @@
  * These hold multiple pieces of data about a symbol in one the the
  * maps below.
  *
- * The next_binding field is only meant to be used by
- * symbol_table_map_t which should not be dependeded upon.
+ * The next_binding field holds either alternate definitions of the
+ * same thing (for example a prototype versus the main function
+ * definition), or alernate things with the same name (for example
+ * over-loaded functions).
  */
 typedef struct symbol_table_binding_S {
+  char* key_string;
   struct symbol_table_binding_S* next_binding;
   parse_node_t* definition_node;
 } symbol_table_binding_t;
@@ -29,9 +32,8 @@ typedef struct symbol_table_binding_S {
  * to each map.
  */
 typedef struct symbol_table_map_S {
-  string_hashtable_t* map;
-  symbol_table_binding_t* first_binding;
-  symbol_table_binding_t* last_binding;
+  string_hashtable_t* ht;
+  value_array_t* ordered_bindings;
 } symbol_table_map_t;
 
 /**
@@ -54,7 +56,8 @@ typedef struct symbol_table_S {
 
 symbol_table_map_t* make_symbol_table_map(void) {
   symbol_table_map_t* result = malloc_struct(symbol_table_map_t);
-  result->map = make_string_hashtable(16);
+  result->ht = make_string_hashtable(16);
+  result->ordered_bindings = make_value_array(16);
   return result;
 }
 
@@ -68,12 +71,23 @@ symbol_table_t* make_symbol_table(void) {
   return result;
 }
 
-void symbol_table_add_children(declarations_node_t* root) {
+void symbol_table_add_binding(symbol_table_map_t* map, symbol_table_binding_t* binding) {
+  if (is_ok(string_ht_find(map->ht, binding->key_string))) {
+    // DUPLICATE!
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  map->ht = string_ht_insert(map->ht, binding->key_string, ptr_to_value(binding));
+  value_array_add(map->ordered_bindings, ptr_to_value(binding));
+}
+
+void symbol_table_add_children(symbol_table_t* symbol_table, declarations_node_t* root) {
   uint64_t length = node_list_length(root->declarations);
   for (uint64_t i = 0; i < length; i++) {
     parse_node_t* node = node_list_get(root->declarations, i);
     switch (node->tag) {
     case PARSE_NODE_ENUM:
+      symbol_table_add_binding(symbol_table->enums, NULL);
+      break;
     case PARSE_NODE_FUNCTION:
     case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
     case PARSE_NODE_STRUCT:
