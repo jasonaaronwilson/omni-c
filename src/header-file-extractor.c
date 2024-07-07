@@ -126,7 +126,7 @@ __attribute__((warn_unused_result)) buffer_t*
 
 __attribute__((warn_unused_result)) buffer_t*
     extract_structures_process_declarations(buffer_t* output,
-					    declarations_node_t* root) {
+                                            declarations_node_t* root) {
   uint64_t length = node_list_length(root->declarations);
 
   for (uint64_t i = 0; i < length; i++) {
@@ -136,7 +136,7 @@ __attribute__((warn_unused_result)) buffer_t*
       if (is_struct_node(typedef_node->type_node->user_type)) {
         struct_node_t* struct_node
             = to_struct_node(typedef_node->type_node->user_type);
-	/*
+        /*
         output = buffer_printf(output, "typedef ");
         output = buffer_printf(output, "%s ",
                                token_to_string(*(typedef_node->name)));
@@ -151,7 +151,7 @@ __attribute__((warn_unused_result)) buffer_t*
             output, enum_node, to_string_prefix, enum_node_type_string);
         output = buffer_append_string_to_enum(
             output, enum_node, to_string_prefix, enum_node_type_string);
-	*/
+        */
       }
     } else if (node->tag == PARSE_NODE_STRUCT) {
       struct_node_t* struct_node = to_struct_node(node);

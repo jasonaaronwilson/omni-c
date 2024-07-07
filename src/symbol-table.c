@@ -89,10 +89,12 @@ symbol_table_t* make_symbol_table(void) {
   return result;
 }
 
-void symbol_table_add_definition_node(symbol_table_map_t* map, char* key_string, parse_node_t* node) {
+void symbol_table_add_declaration_node(symbol_table_map_t* map,
+                                       char* key_string, parse_node_t* node) {
   value_result_t previous_binding = string_ht_find(map->ht, key_string);
   if (is_ok(previous_binding)) {
-    symbol_table_binding_t* binding = cast(symbol_table_binding_t*, previous_binding.ptr);
+    symbol_table_binding_t* binding
+        = cast(symbol_table_binding_t*, previous_binding.ptr);
     value_array_add(binding->definition_nodes, ptr_to_value(node));
     return;
   }
@@ -105,17 +107,21 @@ void symbol_table_add_definition_node(symbol_table_map_t* map, char* key_string,
   // I trust them.
   binding->definition_nodes = make_value_array(2);
   value_array_add(binding->definition_nodes, ptr_to_value(node));
-  map->ht = string_ht_insert(map->ht, binding->key_string, ptr_to_value(binding));
+  map->ht
+      = string_ht_insert(map->ht, binding->key_string, ptr_to_value(binding));
   value_array_add(map->ordered_bindings, ptr_to_value(binding));
 }
 
-void symbol_table_add_children(symbol_table_t* symbol_table, declarations_node_t* root) {
+void symbol_table_add_declartions(symbol_table_t* symbol_table,
+                                  declarations_node_t* root) {
   uint64_t length = node_list_length(root->declarations);
   for (uint64_t i = 0; i < length; i++) {
     parse_node_t* node = node_list_get(root->declarations, i);
     switch (node->tag) {
     case PARSE_NODE_ENUM:
-      // symbol_table_add_binding(symbol_table->enums, NULL);
+      symbol_table_add_declaration_node(
+          symbol_table->enums, token_to_string(*(to_enum_node(node)->name)),
+          node);
       break;
     case PARSE_NODE_FUNCTION:
     case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
