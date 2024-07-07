@@ -175,14 +175,14 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "name: ");
-    buffer = buffer_append_token_string(buffer, *(node->name));
+    buffer = buffer_append_token_string(buffer, node->name);
     buffer = buffer_printf(buffer, "\n");
   }
 
   if (node->value != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "value: ");
-    buffer = buffer_append_token_string(buffer, *(node->value));
+    buffer = buffer_append_token_string(buffer, node->value);
     buffer = buffer_printf(buffer, "\n");
   }
 
@@ -197,7 +197,7 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "name: ");
-    buffer = buffer_append_token_string(buffer, *(node->name));
+    buffer = buffer_append_token_string(buffer, node->name);
     buffer = buffer_printf(buffer, "\n");
   }
   if (node->type != NULL) {
@@ -225,7 +225,7 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->type_name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_append_string(buffer, "type_name: ");
-    buffer = buffer_append_token_string(buffer, *(node->type_name));
+    buffer = buffer_append_token_string(buffer, node->type_name);
     buffer = buffer_printf(buffer, "\n");
   }
   if (node->user_type != NULL) {

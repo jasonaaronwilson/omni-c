@@ -103,7 +103,7 @@ __attribute__((warn_unused_result)) buffer_t*
   case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
   case TYPE_NODE_KIND_TYPENAME:
     if (node->type_name != NULL) {
-      buffer = buffer_append_token_string(buffer, *(node->type_name));
+      buffer = buffer_append_token_string(buffer, node->type_name);
     }
     break;
 
@@ -180,10 +180,10 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_enum_element(buffer_t* buffer, enum_element_t* node) {
 
-  buffer = buffer_append_token_string(buffer, *(node->name));
+  buffer = buffer_append_token_string(buffer, node->name);
   if (node->value != NULL) {
     buffer = buffer_printf(buffer, " = ");
-    buffer = buffer_append_token_string(buffer, *(node->value));
+    buffer = buffer_append_token_string(buffer, node->value);
   }
 
   return buffer;
@@ -202,9 +202,9 @@ __attribute__((warn_unused_result)) buffer_t*
     enum_element_t* element
         = to_enum_element_node(node_list_get(node->elements, i));
     buffer = buffer_printf(buffer, "    case ");
-    buffer = buffer_append_token_string(buffer, *(element->name));
+    buffer = buffer_append_token_string(buffer, element->name);
     buffer = buffer_printf(buffer, ":\n      return \"");
-    buffer = buffer_append_token_string(buffer, *(element->name));
+    buffer = buffer_append_token_string(buffer, element->name);
     buffer = buffer_printf(buffer, "\";\n");
   }
   buffer = buffer_printf(buffer, "    default:\n");
@@ -228,10 +228,10 @@ __attribute__((warn_unused_result)) buffer_t*
     enum_element_t* element
         = to_enum_element_node(node_list_get(node->elements, i));
     buffer = buffer_printf(buffer, "  if (strcmp(value, \"");
-    buffer = buffer_append_token_string(buffer, *(element->name));
+    buffer = buffer_append_token_string(buffer, element->name);
     buffer = buffer_printf(buffer, "\") == 0) {");
     buffer = buffer_printf(buffer, "\n    return ");
-    buffer = buffer_append_token_string(buffer, *(element->name));
+    buffer = buffer_append_token_string(buffer, element->name);
     buffer = buffer_printf(buffer, ";\n  }\n");
   }
   buffer = buffer_printf(buffer, "  return 0;\n");
