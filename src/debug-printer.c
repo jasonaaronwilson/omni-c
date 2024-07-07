@@ -125,7 +125,7 @@ __attribute__((warn_unused_result)) buffer_t*
     oc_token_t* token = cast(oc_token_t*, value_array_get(tokens, i).ptr);
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "%s[%lld]: %s\n", field_name, i,
-                           token_to_string(*token));
+                           token_to_string(token));
   }
   return buffer;
 }
@@ -145,8 +145,7 @@ __attribute__((warn_unused_result)) buffer_t*
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_ENUM\n");
   if (node->name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
-    buffer
-        = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
+    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
   }
   buffer = buffer_append_dbg_node_list(buffer, node->elements, "element",
                                        indention_level);
@@ -160,8 +159,7 @@ __attribute__((warn_unused_result)) buffer_t*
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_STRUCT\n");
   buffer = buffer_indent(buffer, indention_level);
   if (node->name != NULL) {
-    buffer
-        = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
+    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
   }
   buffer = buffer_append_dbg_node_list(buffer, node->fields, "field",
                                        indention_level);
@@ -248,8 +246,7 @@ __attribute__((warn_unused_result)) buffer_t*
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_LITERAL\n");
   if (node->token != NULL) {
     buffer = buffer_indent(buffer, indention_level);
-    buffer
-        = buffer_printf(buffer, "token: %s\n", token_to_string(*(node->token)));
+    buffer = buffer_printf(buffer, "token: %s\n", token_to_string(node->token));
   }
   if (node->tokens != NULL) {
     buffer = buffer_append_dbg_tokens(buffer, node->tokens, "tokens",
@@ -270,13 +267,13 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->storage_class_specifier != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
-                           token_to_string(*(node->storage_class_specifier)));
+                           token_to_string(node->storage_class_specifier));
   }
 
   if (node->function_specifier != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "function_specifier: %s\n",
-                           token_to_string(*(node->function_specifier)));
+                           token_to_string(node->function_specifier));
   }
 
   if (node->return_type != NULL) {
@@ -289,7 +286,7 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->function_name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "function_name: %s\n",
-                           token_to_string(*(node->function_name)));
+                           token_to_string(node->function_name));
   }
 
   buffer = buffer_append_dbg_node_list(buffer, node->function_args,
@@ -317,7 +314,7 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->arg_name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "arg_name: %s\n",
-                           token_to_string(*(node->arg_name)));
+                           token_to_string(node->arg_name));
   }
   return buffer;
 }
@@ -331,12 +328,12 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->open_brace_token != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "open_brace_token: %s\n",
-                           token_to_string(*(node->open_brace_token)));
+                           token_to_string(node->open_brace_token));
   }
   if (node->close_brace_token != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "close_brace_token: %s\n",
-                           token_to_string(*(node->close_brace_token)));
+                           token_to_string(node->close_brace_token));
   }
   return buffer;
 }
@@ -348,8 +345,7 @@ __attribute__((warn_unused_result)) buffer_t*
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_TYPEDEF\n");
   if (node->name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
-    buffer
-        = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
+    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
   }
   if (node->type_node != NULL) {
     buffer = buffer_indent(buffer, indention_level);
@@ -369,8 +365,7 @@ __attribute__((warn_unused_result)) buffer_t*
       = buffer_printf(buffer, "tag: PARSE_NODE_GLOBAL_VARIABLE_DEFINITION\n");
   if (node->name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
-    buffer
-        = buffer_printf(buffer, "name: %s\n", token_to_string(*(node->name)));
+    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
   }
   if (node->type != NULL) {
     buffer = buffer_indent(buffer, indention_level);
@@ -387,7 +382,7 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->storage_class_specifier != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
-                           token_to_string(*(node->storage_class_specifier)));
+                           token_to_string(node->storage_class_specifier));
   }
 
   return buffer;
@@ -401,12 +396,12 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->inner_start_token != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "inner_start_token: %s\n",
-                           token_to_string(*(node->inner_start_token)));
+                           token_to_string(node->inner_start_token));
   }
   if (node->inner_end_token != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "inner_end_token: %s\n",
-                           token_to_string(*(node->inner_end_token)));
+                           token_to_string(node->inner_end_token));
   }
   return buffer;
 }

@@ -38,12 +38,12 @@ __attribute__((warn_unused_result)) buffer_t*
         enum_node_t* enum_node
             = to_enum_node(typedef_node->type_node->user_type);
         output = buffer_printf(output, "typedef ");
-        output = buffer_printf(output, "%s ",
-                               token_to_string(*(typedef_node->name)));
+        output
+            = buffer_printf(output, "%s ", token_to_string(typedef_node->name));
         output = buffer_append_enum_node(output, enum_node);
         output = buffer_printf(output, ";\n\n");
 
-        char* enum_node_name = token_to_string(*(typedef_node->name));
+        char* enum_node_name = token_to_string(typedef_node->name);
         char* to_string_prefix = remove_type_suffix(enum_node_name);
         char* enum_node_type_string = enum_node_name;
 
@@ -56,7 +56,7 @@ __attribute__((warn_unused_result)) buffer_t*
       enum_node_t* enum_node = to_enum_node(node);
       output = buffer_append_enum_node(output, enum_node);
       output = buffer_printf(output, ";\n\n");
-      char* enum_node_name = token_to_string(*(enum_node->name));
+      char* enum_node_name = token_to_string(enum_node->name);
       char* to_string_prefix = remove_type_suffix(enum_node_name);
       char* enum_node_type_string = string_printf("enum %s", enum_node_name);
       output = buffer_append_enum_to_string(output, enum_node, to_string_prefix,
@@ -139,11 +139,11 @@ __attribute__((warn_unused_result)) buffer_t*
         /*
         output = buffer_printf(output, "typedef ");
         output = buffer_printf(output, "%s ",
-                               token_to_string(*(typedef_node->name)));
+                               token_to_string(typedef_node->name));
         output = buffer_append_enum_node(output, enum_node);
         output = buffer_printf(output, ";\n\n");
 
-        char* enum_node_name = token_to_string(*(typedef_node->name));
+        char* enum_node_name = token_to_string(typedef_node->name);
         char* to_string_prefix = remove_type_suffix(enum_node_name);
         char* enum_node_type_string = enum_node_name;
 
@@ -158,7 +158,7 @@ __attribute__((warn_unused_result)) buffer_t*
       /*
       output = buffer_append_enum_node(output, enum_node);
       output = buffer_printf(output, ";\n\n");
-      char* enum_node_name = token_to_string(*(enum_node->name));
+      char* enum_node_name = token_to_string(enum_node->name);
       char* to_string_prefix = remove_type_suffix(enum_node_name);
       char* enum_node_type_string = string_printf("enum %s", enum_node_name);
       output = buffer_append_enum_to_string(output, enum_node, to_string_prefix,

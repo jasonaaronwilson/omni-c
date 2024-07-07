@@ -43,8 +43,7 @@ __attribute__((warn_unused_result)) buffer_t*
   // What happend to static/extern and inline?
 
   buffer = buffer_append_c_type_node(buffer, node->return_type);
-  buffer
-      = buffer_printf(buffer, " %s(", token_to_string(*(node->function_name)));
+  buffer = buffer_printf(buffer, " %s(", token_to_string(node->function_name));
 
   for (int i = 0; i < node_list_length(node->function_args); i++) {
     if (i > 0) {
@@ -69,7 +68,7 @@ __attribute__((warn_unused_result)) buffer_t*
   if (node->storage_class_specifier != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
-                           token_to_string(*(node->storage_class_specifier)));
+                           token_to_string(node->storage_class_specifier));
   }
   if (node->body != NULL) {
     buffer
@@ -86,7 +85,7 @@ __attribute__((warn_unused_result)) buffer_t*
                                            function_argument_node_t* node) {
   buffer = buffer_append_c_type_node(buffer, node->arg_type);
   if (node->arg_name != NULL) {
-    buffer = buffer_printf(buffer, " %s", token_to_string(*(node->arg_name)));
+    buffer = buffer_printf(buffer, " %s", token_to_string(node->arg_name));
   }
   return buffer;
 }
@@ -163,7 +162,7 @@ __attribute__((warn_unused_result)) buffer_t*
 
   buffer = buffer_printf(buffer, "enum ");
   if (node->name != NULL) {
-    buffer = buffer_printf(buffer, "%s\n", token_to_string(*(node->name)));
+    buffer = buffer_printf(buffer, "%s\n", token_to_string(node->name));
   }
   buffer = buffer_printf(buffer, "{\n");
 

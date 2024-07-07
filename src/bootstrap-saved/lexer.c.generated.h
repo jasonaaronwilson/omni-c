@@ -1,6 +1,8 @@
 /* Automatically extracted prototypes from lexer.c */
 
-char* token_to_string(oc_token_t token);
+char* token_to_string(oc_token_t* token);
+
+char* token_struct_to_string(oc_token_t token);
 
 char* token_type_to_string(token_type_t type);
 

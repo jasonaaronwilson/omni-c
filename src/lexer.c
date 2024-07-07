@@ -92,7 +92,20 @@ typedef struct token_or_error_S token_or_error_t;
  *
  * Return the token as a character string.
  */
-char* token_to_string(oc_token_t token) {
+char* token_to_string(oc_token_t* token) {
+  return buffer_c_substring(token->buffer, token->start, token->end);
+}
+
+/**
+ * @function token_struct_to_string
+ *
+ * This was the original token_to_string however a pointer to a token
+ * is much more common hence the longer name. It's not even clear we
+ * really need this version since you can just use &xyz in many cases
+ * so maybe we can make this go away. Had we started the other way,
+ * perhaps we would never have written it this way.
+ */
+char* token_struct_to_string(oc_token_t token) {
   return buffer_c_substring(token.buffer, token.start, token.end);
 }
 
@@ -133,7 +146,7 @@ char* token_type_to_string(token_type_t type) {
  */
 __attribute__((warn_unused_result)) buffer_t*
     append_token_debug_string(buffer_t* buffer, oc_token_t token) {
-  char* str = token_to_string(token);
+  char* str = token_to_string(&token);
   buffer = buffer_printf(
       buffer, "type: %s start: %d end: %d line=%d column=%d str: %s",
       token_type_to_string(token.type), token.start, token.end,
@@ -153,7 +166,7 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_append_token_string(buffer_t* buffer, oc_token_t token) {
   // TODO(jawilson): don't rely on token_to_string so we don't have to
   // allocate and deallocate something.
-  char* str = token_to_string(token);
+  char* str = token_struct_to_string(token);
   buffer = buffer_printf(buffer, "%s", str);
   free_bytes(str);
   return buffer;

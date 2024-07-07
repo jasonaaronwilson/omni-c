@@ -120,8 +120,7 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table,
     switch (node->tag) {
     case PARSE_NODE_ENUM:
       symbol_table_add_declaration_node(
-          symbol_table->enums, token_to_string(*(to_enum_node(node)->name)),
-          node);
+          symbol_table->enums, token_to_string(to_enum_node(node)->name), node);
       break;
     case PARSE_NODE_FUNCTION:
     case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
