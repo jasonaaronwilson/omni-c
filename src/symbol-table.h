@@ -1,3 +1,5 @@
+// SSCF generated file from: symbol-table.c
+
 #line 2 "symbol-table.c"
 #ifndef _SYMBOL_TABLE_H_
 #define _SYMBOL_TABLE_H_
@@ -71,61 +73,3 @@ typedef struct symbol_table_S {
 #include "symbol-table.c.generated.h"
 
 #endif /* _SYMBOL_TABLE_H_ */
-
-symbol_table_map_t* make_symbol_table_map(void) {
-  symbol_table_map_t* result = malloc_struct(symbol_table_map_t);
-  result->ht = make_string_hashtable(16);
-  result->ordered_bindings = make_value_array(16);
-  return result;
-}
-
-symbol_table_t* make_symbol_table(void) {
-  symbol_table_t* result = malloc_struct(symbol_table_t);
-  result->enums = make_symbol_table_map();
-  result->typedefs = make_symbol_table_map();
-  result->structures = make_symbol_table_map();
-  result->variables = make_symbol_table_map();
-  result->functions = make_symbol_table_map();
-  return result;
-}
-
-void symbol_table_add_definition_node(symbol_table_map_t* map, char* key_string, parse_node_t* node) {
-  value_result_t previous_binding = string_ht_find(map->ht, key_string);
-  if (is_ok(previous_binding)) {
-    symbol_table_binding_t* binding = cast(symbol_table_binding_t*, previous_binding.ptr);
-    value_array_add(binding->definition_nodes, ptr_to_value(node));
-    return;
-  }
-  symbol_table_binding_t* binding = malloc_struct(symbol_table_binding_t);
-  binding->key_string = key_string;
-  // This is overkill for a large number of top level forms but it's
-  // not as terrible per se as using an array when we could use a
-  // linked list (not available in c-armyknife-lib). Let's get the
-  // code to work right first any value_arrays are simple enough that
-  // I trust them.
-  binding->definition_nodes = make_value_array(2);
-  value_array_add(binding->definition_nodes, ptr_to_value(node));
-  map->ht = string_ht_insert(map->ht, binding->key_string, ptr_to_value(binding));
-  value_array_add(map->ordered_bindings, ptr_to_value(binding));
-}
-
-void symbol_table_add_children(symbol_table_t* symbol_table, declarations_node_t* root) {
-  uint64_t length = node_list_length(root->declarations);
-  for (uint64_t i = 0; i < length; i++) {
-    parse_node_t* node = node_list_get(root->declarations, i);
-    switch (node->tag) {
-    case PARSE_NODE_ENUM:
-      // symbol_table_add_binding(symbol_table->enums, NULL);
-      break;
-    case PARSE_NODE_FUNCTION:
-    case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
-    case PARSE_NODE_STRUCT:
-    case PARSE_NODE_TYPEDEF:
-      break;
-
-    default:
-      fatal_error(ERROR_ILLEGAL_STATE);
-      break;
-    }
-  }
-}
