@@ -205,11 +205,3 @@ void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value
     symbol_table_add_declartions(symbol_table, root);
   }
 }
-
-
-
-
-
-
-
-

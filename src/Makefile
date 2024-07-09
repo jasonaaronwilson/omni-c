@@ -51,6 +51,10 @@ extract-prototypes: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt extract-prototypes --unique-prototype-header-files=true ${SRC_C}
 	wc --lines ${SRC_C}
 
+test-symbol-table: omni-c-opt
+	/usr/bin/time --portability ./omni-c-opt test-symbol-table ${SRC_C}
+	wc --lines ${SRC_C}
+
 bootstrap:
 	./bootstrap.sh
 

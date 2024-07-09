@@ -14,6 +14,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "token-transformer.h"
+#include "symbol-table.h"
 #include <c-armyknife-lib.h>
 
 #include "header-file-extractor.c.generated.h"
@@ -394,6 +395,7 @@ void configure_flags(void) {
   configure_print_tokens_command();
   configure_extract_prototypes_command();
   configure_extract_enums_command();
+  configure_test_symbol_table_command();
 }
 
 //// void configure_build_command(void) {
@@ -437,6 +439,11 @@ void configure_extract_prototypes_command(void) {
   flag_file_args(&FLAG_files);
 }
 
+void configure_test_symbol_table_command(void) {
+  flag_command("test-symbol-table", &FLAG_command);
+  flag_file_args(&FLAG_files);
+}
+
 int main(int argc, char** argv) {
   configure_fatal_errors((fatal_error_config_t){
       .catch_sigsegv = true,
@@ -468,6 +475,9 @@ int main(int argc, char** argv) {
   } else if (string_equal("extract-enums", FLAG_command)
              || string_equal("extract-prototypes", FLAG_command)) {
     extract_command(FLAG_command);
+  } else if (string_equal("test-symbol-table", FLAG_command)) {
+    symbol_table_t* symbol_table = make_symbol_table();
+    add_parse_and_add_top_level_definitions(symbol_table, FLAG_files);
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

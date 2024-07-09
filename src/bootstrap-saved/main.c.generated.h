@@ -6,6 +6,8 @@ void print_tokens(void);
 
 void extract_command(char* command);
 
+void configure_test_symbol_table_command(void);
+
 void configure_flags(void);
 
 void configure_print_tokens_command(void);
