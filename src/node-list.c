@@ -9,8 +9,8 @@ struct parse_node_s;
 /**
  * @structure node_list_t
  *
- * A list of "child" parse nodes. (Currently implemented by wrapping
- * value_array_t*).
+ * A list of of parse_node_s* which shouldn't really be a thing
+ * (should be "struct parse_node_S*" or parse_node_t*)/
  */
 typedef struct node_list_S {
   value_array_t* list;
