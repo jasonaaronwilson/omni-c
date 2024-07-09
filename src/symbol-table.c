@@ -3,6 +3,9 @@
 #define _SYMBOL_TABLE_H_
 
 #include "parser.h"
+#include "file-reader.h"
+#include "token-transformer.h"
+#include <c-armyknife-lib.h>
 
 /**
  * @struct symbol_table_binding_t
@@ -108,11 +111,10 @@ void symbol_table_add_declaration_node(symbol_table_map_t* map,
   }
   symbol_table_binding_t* binding = malloc_struct(symbol_table_binding_t);
   binding->key_string = key_string;
-  // This is overkill for a large number of top level forms but it's
-  // not as terrible per se as using an array when we could use a
-  // linked list (not available in c-armyknife-lib). Let's get the
-  // code to work right first any value_arrays are simple enough that
-  // I trust them.
+  // The choice of initial elements is overkill for a large number of
+  // top level forms. A linked list might not be a bad choice here but
+  // c-armyknife-lib doesn't implement simple linked-lists yet. Let's
+  // get the code to work right first.
   binding->definition_nodes = make_value_array(2);
   value_array_add(binding->definition_nodes, ptr_to_value(node));
   map->ht
@@ -168,3 +170,46 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table,
     }
   }
 }
+
+void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names) {
+  value_array_t* files = read_files(file_names);
+  for (int i = 0; i < files->length; i++) {
+    oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
+
+    oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
+    if (tokenizer_result.tokenizer_error_code) {
+      log_warn("Tokenizer error: \"%s\"::%d -- %d",
+               file->file_name,
+               tokenizer_result.tokenizer_error_position,
+               tokenizer_result.tokenizer_error_code);
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+    value_array_t* tokens = tokenizer_result.tokens;
+    tokens = transform_tokens(tokens, (token_transformer_options_t){
+                                          .keep_whitespace = false,
+                                          .keep_comments = false,
+                                          .keep_javadoc_comments = false,
+                                          .keep_c_preprocessor_lines = false,
+                                      });
+    parse_result_t declarations_result = parse_declarations(tokens, 0);
+    if (is_error_result(declarations_result)) {
+      declarations_result.parse_error.file_name = file->file_name;
+      buffer_t* buffer = make_buffer(1);
+      buffer = buffer_append_human_readable_error(
+						  buffer, &(declarations_result.parse_error));
+      log_fatal("%s", buffer_to_c_string(buffer));
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+    
+    declarations_node_t* root = to_declarations_node(declarations_result.node);
+    symbol_table_add_declartions(symbol_table, root);
+  }
+}
+
+
+
+
+
+
+
+
