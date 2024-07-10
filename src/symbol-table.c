@@ -142,7 +142,7 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table,
 
     case PARSE_NODE_FUNCTION:
       symbol_table_add_declaration_node(
-          symbol_table->enums,
+          symbol_table->functions,
           token_to_string(to_function_node(node)->function_name), node);
       break;
 
@@ -204,4 +204,14 @@ void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value
     declarations_node_t* root = to_declarations_node(declarations_result.node);
     symbol_table_add_declartions(symbol_table, root);
   }
+}
+
+buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table) {
+  buffer = buffer_printf(buffer, "Symbol Table Stats\n");
+  buffer = buffer_printf(buffer, "#enums %d\n", string_ht_num_entries(symbol_table->enums->ht));
+  buffer = buffer_printf(buffer, "#typedefs %d\n", string_ht_num_entries(symbol_table->typedefs->ht));
+  buffer = buffer_printf(buffer, "#structures %d\n", string_ht_num_entries(symbol_table->structures->ht));
+  buffer = buffer_printf(buffer, "#variables %d\n", string_ht_num_entries(symbol_table->variables->ht));
+  buffer = buffer_printf(buffer, "#functions %d\n", string_ht_num_entries(symbol_table->functions->ht));
+  return buffer;
 }

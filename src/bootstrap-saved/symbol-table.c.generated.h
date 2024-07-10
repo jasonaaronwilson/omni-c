@@ -10,3 +10,5 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_nod
 
 void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names);
 
+buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table);
+
