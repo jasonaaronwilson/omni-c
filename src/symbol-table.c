@@ -2,8 +2,8 @@
 #ifndef _SYMBOL_TABLE_H_
 #define _SYMBOL_TABLE_H_
 
-#include "parser.h"
 #include "file-reader.h"
+#include "parser.h"
 #include "token-transformer.h"
 #include <c-armyknife-lib.h>
 
@@ -171,15 +171,15 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table,
   }
 }
 
-void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names) {
+void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
+                                             value_array_t* file_names) {
   value_array_t* files = read_files(file_names);
   for (int i = 0; i < files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
 
     oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
     if (tokenizer_result.tokenizer_error_code) {
-      log_warn("Tokenizer error: \"%s\"::%d -- %d",
-               file->file_name,
+      log_warn("Tokenizer error: \"%s\"::%d -- %d", file->file_name,
                tokenizer_result.tokenizer_error_position,
                tokenizer_result.tokenizer_error_code);
       fatal_error(ERROR_ILLEGAL_INPUT);
@@ -196,11 +196,11 @@ void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value
       declarations_result.parse_error.file_name = file->file_name;
       buffer_t* buffer = make_buffer(1);
       buffer = buffer_append_human_readable_error(
-						  buffer, &(declarations_result.parse_error));
+          buffer, &(declarations_result.parse_error));
       log_fatal("%s", buffer_to_c_string(buffer));
       fatal_error(ERROR_ILLEGAL_INPUT);
     }
-    
+
     declarations_node_t* root = to_declarations_node(declarations_result.node);
     symbol_table_add_declartions(symbol_table, root);
   }
@@ -208,10 +208,15 @@ void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value
 
 buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table) {
   buffer = buffer_printf(buffer, "Symbol Table Stats\n");
-  buffer = buffer_printf(buffer, "#enums %d\n", string_ht_num_entries(symbol_table->enums->ht));
-  buffer = buffer_printf(buffer, "#typedefs %d\n", string_ht_num_entries(symbol_table->typedefs->ht));
-  buffer = buffer_printf(buffer, "#structures %d\n", string_ht_num_entries(symbol_table->structures->ht));
-  buffer = buffer_printf(buffer, "#variables %d\n", string_ht_num_entries(symbol_table->variables->ht));
-  buffer = buffer_printf(buffer, "#functions %d\n", string_ht_num_entries(symbol_table->functions->ht));
+  buffer = buffer_printf(buffer, "#enums %d\n",
+                         string_ht_num_entries(symbol_table->enums->ht));
+  buffer = buffer_printf(buffer, "#typedefs %d\n",
+                         string_ht_num_entries(symbol_table->typedefs->ht));
+  buffer = buffer_printf(buffer, "#structures %d\n",
+                         string_ht_num_entries(symbol_table->structures->ht));
+  buffer = buffer_printf(buffer, "#variables %d\n",
+                         string_ht_num_entries(symbol_table->variables->ht));
+  buffer = buffer_printf(buffer, "#functions %d\n",
+                         string_ht_num_entries(symbol_table->functions->ht));
   return buffer;
 }

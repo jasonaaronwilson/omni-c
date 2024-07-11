@@ -13,8 +13,9 @@
 #include "header-file-printer.h"
 #include "lexer.h"
 #include "parser.h"
-#include "token-transformer.h"
+#include "source-to-source.h"
 #include "symbol-table.h"
+#include "token-transformer.h"
 #include <c-armyknife-lib.h>
 
 #include "header-file-extractor.c.generated.h"
@@ -481,6 +482,7 @@ int main(int argc, char** argv) {
     buffer_t* buffer = make_buffer(128);
     buffer = symbol_table_stats(buffer, symbol_table);
     fprintf(stdout, "%s", buffer_to_c_string(buffer));
+    split_structure_typedefs(symbol_table);
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

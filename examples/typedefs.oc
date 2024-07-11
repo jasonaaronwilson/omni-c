@@ -25,3 +25,7 @@ typedef enum {
 typedef int my_int;
 
 typedef int**[] my_compile_type;
+
+typedef struct foo_S {
+   int x;
+} foo_t;
