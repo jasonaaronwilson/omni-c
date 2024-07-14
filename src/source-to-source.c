@@ -66,12 +66,67 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
         && is_struct_node(node->type_node->user_type)) {
       struct_node_t* struct_node = to_struct_node(node->type_node->user_type);
       if (!struct_node->partial_definition) {
+
         if (struct_node->name == NULL) {
           struct_node->name
               = generate_struct_name_from_typedef_name(node->name);
         }
+
         log_info("Splitting %s off from %s", token_to_string(node->name),
                  token_to_string(struct_node->name));
+
+        // Below the code is the transformation we want to do. We want
+        // to take the PARSE_NODE_STRUCT and add it into the symbol
+        // table as it's own independent entry and replace it with the
+        // "partial definition" struct node.
+
+        struct_node_t* partial_definition = malloc_struct_node();
+        partial_definition->partial_definition = true;
+        partial_definition->name = struct_node->name;
+
+        node->type_node->user_type = cast(parse_node_t*, partial_definition);
+        symbol_table_add_declaration_node(symbol_table->structures,
+                                          token_to_string(struct_node->name),
+                                          cast(parse_node_t*, struct_node));
+
+        // declaration[4]:
+        //     tag: PARSE_NODE_TYPEDEF
+        //     name: before_split_t
+        //     type_node:
+        //         tag: PARSE_NODE_TYPE
+        //         type_node_kind: TYPE_NODE_KIND_TYPE_EXPRESSION
+        //         user_type:
+        //             tag: PARSE_NODE_STRUCT
+        //             name: before_split_S
+        //             partial_definition: false
+        //             field[0]:
+        //                 tag: PARSE_NODE_FIELD
+        //                 name: int64_field
+        //                 type:
+        //                     tag: PARSE_NODE_TYPE
+        //                     type_node_kind: TYPE_NODE_KIND_TYPENAME
+        //                     type_name: uint64_t
+        // declaration[5]:
+        //     tag: PARSE_NODE_STRUCT
+        //     name: after_split_S
+        //     partial_definition: false
+        //     field[0]:
+        //         tag: PARSE_NODE_FIELD
+        //         name: int64_field
+        //         type:
+        //             tag: PARSE_NODE_TYPE
+        //             type_node_kind: TYPE_NODE_KIND_TYPENAME
+        //             type_name: uint64_t
+        // declaration[6]:
+        //     tag: PARSE_NODE_TYPEDEF
+        //     name: after_split_t
+        //     type_node:
+        //         tag: PARSE_NODE_TYPE
+        //         type_node_kind: TYPE_NODE_KIND_TYPE_EXPRESSION
+        //         user_type:
+        //             tag: PARSE_NODE_STRUCT
+        //             name: after_split_S
+        //             partial_definition: true
       }
     }
   }

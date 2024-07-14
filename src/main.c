@@ -483,6 +483,9 @@ int main(int argc, char** argv) {
     buffer = symbol_table_stats(buffer, symbol_table);
     fprintf(stdout, "%s", buffer_to_c_string(buffer));
     split_structure_typedefs(symbol_table);
+    buffer_clear(buffer);
+    buffer = symbol_table_stats(buffer, symbol_table);
+    fprintf(stdout, "%s", buffer_to_c_string(buffer));
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

@@ -7,3 +7,13 @@ typedef struct foo_S foo_t;
 struct foo_S {
    uint64_t int64_field;
 };
+
+typedef struct before_split_S {
+   uint64_t int64_field;
+} before_split_t;
+
+struct after_split_S {
+   uint64_t int64_field;
+};
+
+typedef struct after_split_S after_split_t;
