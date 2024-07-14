@@ -46,7 +46,10 @@
 // }
 
 oc_token_t* generate_struct_name_from_typedef_name(oc_token_t* name) {
-  return NULL;
+  oc_token_t* generated = make_derived_token(name);
+  buffer_append_string(generated->buffer, "__generated_S");
+  generated->end = generated->buffer->length;
+  return generated;
 }
 
 void split_structure_typedefs(symbol_table_t* symbol_table) {
@@ -67,8 +70,9 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
           struct_node->name
               = generate_struct_name_from_typedef_name(node->name);
         }
-        fprintf(stdout, "We should split this node? %s\n",
-                token_to_string(node->name));
+        fprintf(stdout, "We should split this node? %s // %s\n",
+                token_to_string(node->name),
+                token_to_string(struct_node->name));
       }
     }
   }
