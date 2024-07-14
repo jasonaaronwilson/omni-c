@@ -157,10 +157,13 @@ __attribute__((warn_unused_result)) buffer_t*
                                   int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_STRUCT\n");
-  buffer = buffer_indent(buffer, indention_level);
   if (node->name != NULL) {
+    buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
   }
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_printf(buffer, "partial_definition: %s\n",
+                         node->partial_definition ? "true" : "false");
   buffer = buffer_append_dbg_node_list(buffer, node->fields, "field",
                                        indention_level);
   return buffer;

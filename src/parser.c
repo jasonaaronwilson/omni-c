@@ -813,6 +813,8 @@ parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
       node_list_add_node(&result->fields, field.node);
       position = field.next_token_position;
     }
+  } else {
+    result->partial_definition = true;
   }
 
   return parse_result(to_node(result), position);
