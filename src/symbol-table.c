@@ -244,9 +244,9 @@ buffer_t*
 
 buffer_t* buffer_append_dgb_symbol_table(buffer_t* buffer,
                                          symbol_table_t* symbol_table) {
-  buffer = buffer_printf(
-      buffer,
-      "\n==================== Begin Symbol Table ====================\n");
+  buffer = buffer_printf(buffer,
+                         "\n========================= Begin Symbol Table "
+                         "=========================\n");
   buffer = buffer_printf(buffer, "*** Symbol Table Enumerations ***\n");
   buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->enums);
   buffer = buffer_printf(buffer, "\n*** Symbol Table Typedefs ***\n");
@@ -258,7 +258,8 @@ buffer_t* buffer_append_dgb_symbol_table(buffer_t* buffer,
   buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->variables);
   buffer = buffer_printf(buffer, "\n*** Symbol Table Functions ***\n");
   buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->functions);
-  buffer = buffer_printf(
-      buffer, "==================== End Symbol Table ====================\n\n");
+  buffer = buffer_printf(buffer,
+                         "========================= End Symbol Table "
+                         "=========================\n\n");
   return buffer;
 }
