@@ -1,5 +1,7 @@
 typedef struct empty_S {} empty_t;
 
+typedef struct {} anonymous_empty_t;
+
 typedef struct foo_S foo_t;
 
 struct foo_S {

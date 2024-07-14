@@ -4,6 +4,8 @@ char* token_to_string(oc_token_t* token);
 
 char* token_type_to_string(token_type_t type);
 
+oc_token_t* make_derived_token(oc_token_t* source_token);
+
 __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token);
 
 __attribute__((warn_unused_result)) buffer_t* buffer_append_token_string(buffer_t* buffer, oc_token_t* token);

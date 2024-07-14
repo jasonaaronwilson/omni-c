@@ -45,6 +45,10 @@
 //
 // }
 
+oc_token_t* generate_struct_name_from_typedef_name(oc_token_t* name) {
+  return NULL;
+}
+
 void split_structure_typedefs(symbol_table_t* symbol_table) {
   for (int i = 0; i < symbol_table->typedefs->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding = cast(
@@ -57,8 +61,15 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     if (node->type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION
         && is_struct_node(node->type_node->user_type)) {
-      fprintf(stdout, "We should split this node? %s\n",
-              token_to_string(node->name));
+      struct_node_t* struct_node = to_struct_node(node->type_node->user_type);
+      if (!struct_node->partial_definition) {
+        if (struct_node->name == NULL) {
+          struct_node->name
+              = generate_struct_name_from_typedef_name(node->name);
+        }
+        fprintf(stdout, "We should split this node? %s\n",
+                token_to_string(node->name));
+      }
     }
   }
 }

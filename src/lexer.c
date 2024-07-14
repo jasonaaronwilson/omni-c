@@ -29,24 +29,20 @@ typedef enum {
   TOKEN_TYPE_CHARACTER_LITERAL
 } token_type_t;
 
-struct oc_token_S {
+typedef struct oc_token_S {
   buffer_t* buffer;
   token_type_t type;
   int32_t start;
   int32_t end;
   int32_t line_number;
   int32_t column_number;
-};
+} oc_token_t;
 
-typedef struct oc_token_S oc_token_t;
-
-struct oc_tokenizer_result_S {
+typedef struct oc_tokenizer_result_S {
   value_array_t* tokens;
   uint64_t tokenizer_error_position;
   tokenizer_error_t tokenizer_error_code;
-};
-
-typedef struct oc_tokenizer_result_S oc_tokenizer_result_t;
+} oc_tokenizer_result_t;
 
 static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
@@ -121,6 +117,25 @@ char* token_type_to_string(token_type_t type) {
     return "TOKEN_TYPE_CHARACTER_LITERAL";
   }
   fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+/**
+ * @function make_derived_token
+ *
+ * A dervied token is a type of synthetic token based on another
+ * token.
+ */
+oc_token_t* make_derived_token(oc_token_t* source_token) {
+  oc_token_t* result
+      = cast(oc_token_t*,
+             malloc_copy_of(cast(uint8_t*, source_token), sizeof(oc_token_t)));
+  buffer_t* buffer = make_buffer(source_token->end - source_token->start);
+  buffer = buffer_append_sub_buffer(buffer, source_token->start,
+                                    source_token->end, result->buffer);
+  result->buffer = buffer;
+  result->start = 0;
+  result->end = buffer->length;
+  return result;
 }
 
 /**
