@@ -55,7 +55,7 @@ extract-prototypes: omni-c-opt
 test-symbol-table: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt test-symbol-table ${SRC_C}
 	./omni-c-opt print-tokens --parse-and-print=true ../examples/struct-typedefs.oc
-	./omni-c-opt test-symbol-table ../examples/struct-typedefs.oc
+	ARMYKNIFE_LIB_LOG_LEVEL=info ./omni-c-opt test-symbol-table ../examples/struct-typedefs.oc
 	wc --lines ${SRC_C}
 
 bootstrap:

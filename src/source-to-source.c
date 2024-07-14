@@ -70,9 +70,8 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
           struct_node->name
               = generate_struct_name_from_typedef_name(node->name);
         }
-        fprintf(stdout, "We should split this node? %s // %s\n",
-                token_to_string(node->name),
-                token_to_string(struct_node->name));
+        log_info("Splitting %s off from %s", token_to_string(node->name),
+                 token_to_string(struct_node->name));
       }
     }
   }
