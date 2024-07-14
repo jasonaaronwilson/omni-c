@@ -3,8 +3,8 @@
 #define _SOURCE_TO_SOURCE_H_
 
 #include "parser.h"
-#include "source-to-source.c.generated.h"
 #include "symbol-table.h"
+#include "source-to-source.c.generated.h"
 #include <c-armyknife-lib.h>
 
 #endif /* _SOURCE_TO_SOURCE_H_ */

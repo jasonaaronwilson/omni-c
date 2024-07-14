@@ -1,0 +1,5 @@
+typedef struct foo_S foo_t;
+
+struct foo_S {
+   uint64_t int64_field;
+};
