@@ -2,6 +2,7 @@
 #ifndef _SYMBOL_TABLE_H_
 #define _SYMBOL_TABLE_H_
 
+#include "debug-printer.h"
 #include "file-reader.h"
 #include "parser.h"
 #include "token-transformer.h"
@@ -218,5 +219,37 @@ buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table) {
                          string_ht_num_entries(symbol_table->variables->ht));
   buffer = buffer_printf(buffer, "#functions %d\n",
                          string_ht_num_entries(symbol_table->functions->ht));
+  return buffer;
+}
+
+buffer_t*
+    buffer_appennd_dbg_symbol_table_map(buffer_t* buffer,
+                                        symbol_table_map_t* symbol_table_map) {
+  for (int i = 0; i < symbol_table_map->ordered_bindings->length; i++) {
+    if (i > 0) {
+      buffer = buffer_printf(buffer, "\n");
+    }
+    symbol_table_binding_t* binding
+        = cast(symbol_table_binding_t*,
+               value_array_get(symbol_table_map->ordered_bindings, i).ptr);
+    buffer = buffer_printf(buffer, "%s:\n", binding->key_string);
+    // Cheat for now. just the first parse_node_t
+    buffer = buffer_append_dbg_parse_node(
+        buffer,
+        cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr),
+        1);
+  }
+  return buffer;
+}
+
+buffer_t* buffer_append_dgb_symbol_table(buffer_t* buffer,
+                                         symbol_table_t* symbol_table) {
+  buffer = buffer_printf(buffer, "*** The Symbol Table ***\n");
+  buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->enums);
+  buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->typedefs);
+  buffer
+      = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->structures);
+  buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->variables);
+  buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->functions);
   return buffer;
 }
