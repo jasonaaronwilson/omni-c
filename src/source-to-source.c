@@ -4,8 +4,13 @@
 
 #include "parser.h"
 #include "symbol-table.h"
-#include "source-to-source.c.generated.h"
 #include <c-armyknife-lib.h>
+
+// Make sure this comes after symbol-table.h. We've gotten lucky so
+// far because most files define something between the includes and
+// the inclusion of the generated header file.
+
+#include "source-to-source.c.generated.h"
 
 #endif /* _SOURCE_TO_SOURCE_H_ */
 
