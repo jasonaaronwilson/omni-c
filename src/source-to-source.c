@@ -183,14 +183,16 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table) {
   for (int i = 0; i < bindings->length; i++) {
     symbol_table_binding_t* binding
         = cast(symbol_table_binding_t*, value_array_get(bindings, i).ptr);
-    if (!binding->visited) {
-      value_array_add(reordered_bindings, ptr_to_value(binding));
-      binding->visited = true;
-    }
   }
   symbol_table->typedefs->ordered_bindings = reordered_bindings;
 }
 
 void reorder_symbol_table_typedefs__process_binding(
     symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
-    value_array_t* reordered_bindings) {}
+    value_array_t* reordered_bindings) {
+  if (!binding->visited) {
+    // TODO(jawilson): actually try to process dependencies first!
+    value_array_add(reordered_bindings, ptr_to_value(binding));
+    binding->visited = true;
+  }
+}

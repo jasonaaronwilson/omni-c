@@ -479,11 +479,19 @@ int main(int argc, char** argv) {
   } else if (string_equal("test-symbol-table", FLAG_command)) {
     symbol_table_t* symbol_table = make_symbol_table();
     add_parse_and_add_top_level_definitions(symbol_table, FLAG_files);
+
     buffer_t* buffer = make_buffer(128);
     buffer = symbol_table_stats(buffer, symbol_table);
     buffer_append_dgb_symbol_table(buffer, symbol_table);
     fprintf(stdout, "%s", buffer_to_c_string(buffer));
+
     split_structure_typedefs(symbol_table);
+    buffer_clear(buffer);
+    buffer = symbol_table_stats(buffer, symbol_table);
+    buffer_append_dgb_symbol_table(buffer, symbol_table);
+    fprintf(stdout, "%s", buffer_to_c_string(buffer));
+
+    reorder_symbol_table_typedefs(symbol_table);
     buffer_clear(buffer);
     buffer = symbol_table_stats(buffer, symbol_table);
     buffer_append_dgb_symbol_table(buffer, symbol_table);
