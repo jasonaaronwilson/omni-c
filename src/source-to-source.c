@@ -79,8 +79,8 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
         // Below the few lines that do the actual transformation I've
         // left kind of like what the transformation looks like in
         // practice..
-	//
-	// We want to take the PARSE_NODE_STRUCT and add it into the
+        //
+        // We want to take the PARSE_NODE_STRUCT and add it into the
         // symbol table as it's own independent entry (we made sure it
         // wasn't anonymous above) and replace it with a "partial
         // definition" struct node. We've now made compilation (to ISO
@@ -181,7 +181,8 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table) {
   value_array_t* bindings = symbol_table->typedefs->ordered_bindings;
   value_array_t* reordered_bindings = make_value_array(bindings->length);
   for (int i = 0; i < bindings->length; i++) {
-    symbol_table_binding_t* binding = cast(symbol_table_binding_t*, value_array_get(bindings, i).ptr);
+    symbol_table_binding_t* binding
+        = cast(symbol_table_binding_t*, value_array_get(bindings, i).ptr);
     if (!binding->visited) {
       value_array_add(reordered_bindings, ptr_to_value(binding));
       binding->visited = true;
@@ -189,3 +190,7 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table) {
   }
   symbol_table->typedefs->ordered_bindings = reordered_bindings;
 }
+
+void reorder_symbol_table_typedefs__process_binding(
+    symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
+    value_array_t* reordered_bindings) {}
