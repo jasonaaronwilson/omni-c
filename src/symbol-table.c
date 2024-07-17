@@ -45,6 +45,10 @@ typedef struct symbol_table_binding_S {
   //
   // struct symbol_table_binding_S* unrelated_bindings;
 
+  // This is used when reordering bindings using DFS. See
+  // source-to-source.c.
+  boolean_t visited;
+
 } symbol_table_binding_t;
 
 /**
