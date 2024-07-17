@@ -191,6 +191,25 @@ void reorder_symbol_table_typedefs__process_binding(
     symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
   if (!binding->visited) {
+    if (binding->definition_nodes->length != 1) {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    parse_node_t* node = cast(
+        parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr);
+    typedef_node_t* typedef_node = to_typedef_node(node);
+    type_node_t* type_node = typedef_node->type_node;
+    // TODO(jawilson): ARRAY, SIZED_ARRAY, VARIABLE_SIZED_ARRAY
+    while (type_node->type_node_kind == TYPE_NODE_KIND_POINTER) {
+      type_node = to_type_node(node_list_get(type_node->type_args, 0));
+    }
+    if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
+      // HERE
+    } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION) {
+      // HERE
+    } else if (type_node->type_node_kind != TYPE_NODE_KIND_PRIMITIVE_TYPENAME) {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
     // TODO(jawilson): actually try to process dependencies first!
     value_array_add(reordered_bindings, ptr_to_value(binding));
     binding->visited = true;
