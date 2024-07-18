@@ -105,6 +105,18 @@ symbol_table_t* make_symbol_table(void) {
   return result;
 }
 
+/**
+ * Get an existing binding or return NULL.
+ */
+symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map,
+                                             char* key_string) {
+  value_result_t result = string_ht_find(map->ht, key_string);
+  if (is_ok(result)) {
+    return cast(symbol_table_binding_t*, result.ptr);
+  }
+  return NULL;
+}
+
 void symbol_table_add_declaration_node(symbol_table_map_t* map,
                                        char* key_string, parse_node_t* node) {
   value_result_t previous_binding = string_ht_find(map->ht, key_string);

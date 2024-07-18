@@ -1,0 +1,2 @@
+typedef a b;
+typedef uint64_t a;

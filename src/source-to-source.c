@@ -183,6 +183,8 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table) {
   for (int i = 0; i < bindings->length; i++) {
     symbol_table_binding_t* binding
         = cast(symbol_table_binding_t*, value_array_get(bindings, i).ptr);
+    reorder_symbol_table_typedefs__process_binding(symbol_table->typedefs,
+                                                   binding, reordered_bindings);
   }
   symbol_table->typedefs->ordered_bindings = reordered_bindings;
 }
@@ -190,6 +192,7 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table) {
 void reorder_symbol_table_typedefs__process_binding(
     symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
+  log_warn("JASON looking at %s", binding->key_string);
   if (!binding->visited) {
     if (binding->definition_nodes->length != 1) {
       fatal_error(ERROR_ILLEGAL_STATE);
@@ -203,13 +206,25 @@ void reorder_symbol_table_typedefs__process_binding(
       type_node = to_type_node(node_list_get(type_node->type_args, 0));
     }
     if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
-      // HERE
+      char* type_name = token_to_string(type_node->type_name);
+      symbol_table_binding_t* dependent_binding
+          = symbol_table_map_get(typedefs, type_name);
+      if (dependent_binding != NULL) {
+        reorder_symbol_table_typedefs__process_binding(
+            typedefs, dependent_binding, reordered_bindings);
+      }
     } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION) {
-      // HERE
+      // I think there is nothing to do for this case since either
+      // enum, struct, or union. enum's will come first anyways and
+      // struct or unions should have been split by
+      // split_structure_typedefs and can thus be handled below all of
+      // the typedefs.
     } else if (type_node->type_node_kind != TYPE_NODE_KIND_PRIMITIVE_TYPENAME) {
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
+    log_warn("JASON adding %s at position %d", binding->key_string,
+             reordered_bindings->length);
     // TODO(jawilson): actually try to process dependencies first!
     value_array_add(reordered_bindings, ptr_to_value(binding));
     binding->visited = true;

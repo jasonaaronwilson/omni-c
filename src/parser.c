@@ -145,7 +145,7 @@ typedef struct type_node_S {
 } type_node_t;
 
 /**
- * @structure type_node_t
+ * @structure typedef_node_t
  *
  * Represents a typedef in C or C++.
  */
