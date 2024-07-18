@@ -1,4 +1,4 @@
-#line 2 "sourcer-to-source.c"
+#line 2 "source-to-source.c"
 #ifndef _SOURCE_TO_SOURCE_H_
 #define _SOURCE_TO_SOURCE_H_
 
@@ -139,7 +139,11 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
   }
 }
 
+// ======================================================================
+
 // TODO(jawilson): split typedef enums
+
+// ======================================================================
 
 /**
  * @function reorder_symbol_table_typedefs
@@ -229,4 +233,51 @@ void reorder_symbol_table_typedefs__process_binding(
     value_array_add(reordered_bindings, ptr_to_value(binding));
     binding->visited = true;
   }
+}
+
+// ======================================================================
+// reorder_symbol_table_structures
+// ======================================================================
+
+void reorder_symbol_table_structures_process_binding(
+    symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
+    value_array_t* reordered_bindings) {
+  log_warn("JASON looking at %s", binding->key_string);
+  if (!binding->visited) {
+    if (binding->definition_nodes->length != 1) {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    parse_node_t* node = cast(
+        parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr);
+    struct_node_t* structure_node = to_struct_node(node);
+
+    // TODO(jawilson): recursively visit each field. We probably need
+    // to step into typenames..
+
+    value_array_add(reordered_bindings, ptr_to_value(binding));
+    binding->visited = true;
+  }
+}
+
+/**
+ * @function reorder_symbol_table_structures
+ *
+ * This will be similar to reorder_symbol_table_typedefs but for
+ * structures.
+ *
+ * Unlike reorder_symbol_table_typedefs__process_binding, we don't
+ * need to worry about pointers, only arrays and either typenames
+ * (that resolve to non-pointers or arrays) or non pointed to struct
+ * fields.
+ */
+void reorder_symbol_table_structures(symbol_table_t* symbol_table) {
+  value_array_t* bindings = symbol_table->structures->ordered_bindings;
+  value_array_t* reordered_bindings = make_value_array(bindings->length);
+  for (int i = 0; i < bindings->length; i++) {
+    symbol_table_binding_t* binding
+        = cast(symbol_table_binding_t*, value_array_get(bindings, i).ptr);
+    reorder_symbol_table_structures_process_binding(
+        symbol_table->typedefs, binding, reordered_bindings);
+  }
+  symbol_table->structures->ordered_bindings = reordered_bindings;
 }
