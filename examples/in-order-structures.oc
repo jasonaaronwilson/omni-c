@@ -1,0 +1,7 @@
+struct a {
+  uint64_t foo;
+};
+
+struct b {
+  struct a bar;
+};

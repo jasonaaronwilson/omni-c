@@ -240,7 +240,7 @@ void reorder_symbol_table_typedefs__process_binding(
 // ======================================================================
 
 void reorder_symbol_table_structures_process_binding(
-    symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
+    symbol_table_t* symbol_table, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
   log_warn("JASON looking at %s", binding->key_string);
   if (!binding->visited) {
@@ -250,6 +250,37 @@ void reorder_symbol_table_structures_process_binding(
     parse_node_t* node = cast(
         parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr);
     struct_node_t* structure_node = to_struct_node(node);
+
+    uint64_t length = node_list_length(structure_node->fields);
+    for (uint64_t i = 0; i < length; i++) {
+      field_node_t* field
+          = to_field_node(node_list_get(structure_node->fields, i));
+      type_node_t* type_node = field->type;
+
+      if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
+        // TODO(jawwilson): write and call resolve typedef.
+      } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION
+                 && is_struct_node(type_node->user_type)) {
+        struct_node_t* struct_node = to_struct_node(type_node->user_type);
+        if (!struct_node->partial_definition || struct_node->name == NULL) {
+          fatal_error(ERROR_ILLEGAL_STATE);
+        }
+        char* key_string = token_to_string(struct_node->name);
+        symbol_table_binding_t* dependent_structure
+            = symbol_table_map_get(symbol_table->structures, key_string);
+        if (dependent_structure != NULL) {
+          if (dependent_structure == binding) {
+            // Trivial self-recursive case. It's OK to have a field
+            // that is a pointer to your own structure but not a full
+            // value since it would be an infinite regress...
+            fatal_error(ERROR_ILLEGAL_STATE);
+          }
+
+          reorder_symbol_table_structures_process_binding(
+              symbol_table, dependent_structure, reordered_bindings);
+        }
+      }
+    }
 
     // TODO(jawilson): recursively visit each field. We probably need
     // to step into typenames..
@@ -276,8 +307,8 @@ void reorder_symbol_table_structures(symbol_table_t* symbol_table) {
   for (int i = 0; i < bindings->length; i++) {
     symbol_table_binding_t* binding
         = cast(symbol_table_binding_t*, value_array_get(bindings, i).ptr);
-    reorder_symbol_table_structures_process_binding(
-        symbol_table->typedefs, binding, reordered_bindings);
+    reorder_symbol_table_structures_process_binding(symbol_table, binding,
+                                                    reordered_bindings);
   }
   symbol_table->structures->ordered_bindings = reordered_bindings;
 }
