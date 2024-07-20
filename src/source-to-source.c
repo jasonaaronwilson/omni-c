@@ -258,6 +258,31 @@ void reorder_symbol_table_structures_process_binding(
       type_node_t* type_node = field->type;
 
       if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
+	// reorder_symbol_table_typedefs puts the typedefs in ONE OF
+	// MANY legal orderings. All full structure definitions we can
+	// put afterwards because of the typedef split
+	// transformation. (BTW, it's possible that even a "single
+	// pass" compiler wouldn't necessarily care about the order of
+	// those split typedefs if they lazily build up a symbol
+	// table.... I will need to consult various C standards and
+	// perform actual test cases against all relevant C compilers
+	// (and retro C compilers that would be nice to transpile to.)
+	// 
+	// Even though we ordered the typedefs such that any compiler
+	// can handle them, the rubber meets the road when determining
+	// the size of structures/unions which is largely what the
+	// most straight-forward single pass C compilers will want as
+	// input. So now we need to "see through" typedef abstractions
+	// to be able able to get at the "real" thing (if it's a
+	// structure or union -- maybe we give up right now since we
+	// don't parse header files) so these can be properly ordered
+	// just like any target C compiler will.
+	//
+	// I could wax a lot about recursive data-structures but the
+	// simple idea that a pointer to X has a known size allows us
+	// to break cycles and again produce again ONE OF MANY
+	// orderings for structures like we did for typedefs.
+
         // TODO(jawwilson): write and call resolve typedef.
       } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION
                  && is_struct_node(type_node->user_type)) {
