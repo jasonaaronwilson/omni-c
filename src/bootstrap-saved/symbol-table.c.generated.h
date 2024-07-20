@@ -6,6 +6,8 @@ symbol_table_t* make_symbol_table(void);
 
 symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_string);
 
+parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char* key_string);
+
 void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string, parse_node_t* node);
 
 void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_node_t* root);

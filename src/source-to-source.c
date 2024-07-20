@@ -283,6 +283,19 @@ void reorder_symbol_table_structures_process_binding(
 	// to break cycles and again produce again ONE OF MANY
 	// orderings for structures like we did for typedefs.
 
+	do {
+	  char* key_string = token_to_string(type_node->type_name);
+	  symbol_table_binding_t* possbile_typedef_binding = 
+	    symbol_table_map_get(symbol_table->typedefs, key_string);
+	  /*
+	  if (possbile_typedef_binding != NULL) {
+	    typedef_node_t* typedef_node = to_typedef_node(possbile_typedef_binding);
+	  } else {
+	    log_warn("Treating %s as though it will be magically provided: %s", key_string);
+	  }
+	  */
+	} while (0);
+
         // TODO(jawwilson): write and call resolve typedef.
       } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION
                  && is_struct_node(type_node->user_type)) {

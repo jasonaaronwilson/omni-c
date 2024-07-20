@@ -106,6 +106,8 @@ symbol_table_t* make_symbol_table(void) {
 }
 
 /**
+ * @function symbol_table_map_get
+ *
  * Get an existing binding or return NULL.
  */
 symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map,
@@ -113,6 +115,27 @@ symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map,
   value_result_t result = string_ht_find(map->ht, key_string);
   if (is_ok(result)) {
     return cast(symbol_table_binding_t*, result.ptr);
+  }
+  return NULL;
+}
+
+/**
+ * @function symbol_table_map_get_only_definition
+ *
+ * Our data-structures support more than one definition for a given
+ * name because we want to support partial (incremental) definition of
+ * structures as well as eventually overloaded functions. In other
+ * cases, this is more concise.
+ */
+parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map,
+						   char* key_string) {
+  value_result_t result = string_ht_find(map->ht, key_string);
+  if (is_ok(result)) {
+    symbol_table_binding_t* binding = cast(symbol_table_binding_t*, result.ptr);
+    if (binding->definition_nodes->length != 1) {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    return cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr);
   }
   return NULL;
 }

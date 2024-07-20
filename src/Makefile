@@ -27,7 +27,7 @@ generate-header-files: ${SRC_C}
 omni-c: ${SRC_C} generate-header-files
 	gcc ${CC_FLAGS} -o omni-c ${SRC_C}
 
-omni-c-opt: ${SRC_C} generate-header-files
+omni-c-opt: omni-c ${SRC_C} generate-header-files
 	gcc ${CC_FLAGS_OPT} -o omni-c-opt ${SRC_C}
 
 test: omni-c
@@ -53,11 +53,11 @@ extract-prototypes: omni-c-opt
 	wc --lines ${SRC_C}
 
 test-symbol-table: omni-c-opt
-	/usr/bin/time --portability ./omni-c-opt test-symbol-table ${SRC_C}
-	./omni-c-opt print-tokens --parse-and-print=true ../examples/struct-typedefs.oc
-	ARMYKNIFE_LIB_LOG_LEVEL=info ./omni-c-opt test-symbol-table ../examples/struct-typedefs.oc
-	/usr/bin/time --portability ./omni-c-opt test-symbol-table ../examples/out-of-order-typedef.oc
-	/usr/bin/time --portability ./omni-c-opt test-symbol-table ../examples/in-order-typedef.oc
+	/usr/bin/time --portability ./omni-c test-symbol-table ${SRC_C}
+	./omni-c print-tokens --parse-and-print=true ../examples/struct-typedefs.oc
+	ARMYKNIFE_LIB_LOG_LEVEL=info ./omni-c test-symbol-table ../examples/struct-typedefs.oc
+	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/out-of-order-typedef.oc
+	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/in-order-typedef.oc
 	wc --lines ${SRC_C}
 
 bootstrap:
