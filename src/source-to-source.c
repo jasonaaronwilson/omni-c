@@ -239,90 +239,77 @@ void reorder_symbol_table_typedefs__process_binding(
 // reorder_symbol_table_structures
 // ======================================================================
 
+struct_node_t*
+    get_full_structure_definition_node(symbol_table_binding_t* binding) {
+  for (uint64_t i = 0; i < binding->definition_nodes->length; i++) {
+    parse_node_t* node = cast(
+        parse_node_t*, value_array_get(binding->definition_nodes, i).ptr);
+    struct_node_t* structure_node = to_struct_node(node);
+    if (!structure_node->partial_definition) {
+      return structure_node;
+    }
+  }
+  fatal_error(ERROR_ILLEGAL_STATE);
+  return NULL;
+}
+
 void reorder_symbol_table_structures_process_binding(
     symbol_table_t* symbol_table, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
   log_warn("JASON looking at %s", binding->key_string);
   if (!binding->visited) {
-    if (binding->definition_nodes->length != 1) {
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-    parse_node_t* node = cast(
-        parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr);
-    struct_node_t* structure_node = to_struct_node(node);
-
+    struct_node_t* structure_node = get_full_structure_definition_node(binding);
     uint64_t length = node_list_length(structure_node->fields);
     for (uint64_t i = 0; i < length; i++) {
       field_node_t* field
           = to_field_node(node_list_get(structure_node->fields, i));
       type_node_t* type_node = field->type;
 
-      if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
-	// reorder_symbol_table_typedefs puts the typedefs in ONE OF
-	// MANY legal orderings. All full structure definitions we can
-	// put afterwards because of the typedef split
-	// transformation. (BTW, it's possible that even a "single
-	// pass" compiler wouldn't necessarily care about the order of
-	// those split typedefs if they lazily build up a symbol
-	// table.... I will need to consult various C standards and
-	// perform actual test cases against all relevant C compilers
-	// (and retro C compilers that would be nice to transpile to.)
-	// 
-	// Even though we ordered the typedefs such that any compiler
-	// can handle them, the rubber meets the road when determining
-	// the size of structures/unions which is largely what the
-	// most straight-forward single pass C compilers will want as
-	// input. So now we need to "see through" typedef abstractions
-	// to be able able to get at the "real" thing (if it's a
-	// structure or union -- maybe we give up right now since we
-	// don't parse header files) so these can be properly ordered
-	// just like any target C compiler will.
-	//
-	// I could wax a lot about recursive data-structures but the
-	// simple idea that a pointer to X has a known size allows us
-	// to break cycles and again produce again ONE OF MANY
-	// orderings for structures like we did for typedefs.
-
-	do {
-	  char* key_string = token_to_string(type_node->type_name);
-	  symbol_table_binding_t* possbile_typedef_binding = 
-	    symbol_table_map_get(symbol_table->typedefs, key_string);
-	  /*
-	  if (possbile_typedef_binding != NULL) {
-	    typedef_node_t* typedef_node = to_typedef_node(possbile_typedef_binding);
-	  } else {
-	    log_warn("Treating %s as though it will be magically provided: %s", key_string);
-	  }
-	  */
-	} while (0);
-
-        // TODO(jawwilson): write and call resolve typedef.
-      } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION
-                 && is_struct_node(type_node->user_type)) {
-        struct_node_t* struct_node = to_struct_node(type_node->user_type);
-        if (!struct_node->partial_definition || struct_node->name == NULL) {
-          fatal_error(ERROR_ILLEGAL_STATE);
-        }
-        char* key_string = token_to_string(struct_node->name);
-        symbol_table_binding_t* dependent_structure
-            = symbol_table_map_get(symbol_table->structures, key_string);
-        if (dependent_structure != NULL) {
-          if (dependent_structure == binding) {
-            // Trivial self-recursive case. It's OK to have a field
-            // that is a pointer to your own structure but not a full
-            // value since it would be an infinite regress...
+      while (type_node != NULL) {
+        log_warn("JASON looking at %p", type_node);
+        if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
+          char* key_string = token_to_string(type_node->type_name);
+          // symbol_table_binding_t* possbile_typedef_binding =
+          // symbol_table_map_get(symbol_table->typedefs, key_string);
+          parse_node_t* possible_typedef_node
+              = symbol_table_map_get_only_definition(symbol_table->typedefs,
+                                                     key_string);
+          if (possible_typedef_node != NULL) {
+            typedef_node_t* typedef_node
+                = to_typedef_node(possible_typedef_node);
+            if (typedef_node->type_node->type_node_kind
+                == TYPE_NODE_KIND_TYPENAME) {
+              type_node = typedef_node->type_node;
+              continue;
+            }
+          } else {
+            log_warn("Treating '%s' as though it will be magically provided.",
+                     key_string);
+          }
+        } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION
+                   && is_struct_node(type_node->user_type)) {
+          struct_node_t* struct_node = to_struct_node(type_node->user_type);
+          if (!struct_node->partial_definition || struct_node->name == NULL) {
             fatal_error(ERROR_ILLEGAL_STATE);
           }
-
-          reorder_symbol_table_structures_process_binding(
-              symbol_table, dependent_structure, reordered_bindings);
+          char* key_string = token_to_string(struct_node->name);
+          symbol_table_binding_t* dependent_structure
+              = symbol_table_map_get(symbol_table->structures, key_string);
+          if (dependent_structure != NULL) {
+            if (dependent_structure == binding) {
+              // Trivial self-recursive case. It's OK to have a field
+              // that is a pointer to your own structure but not a full
+              // value since it would be an infinite regress...
+              fatal_error(ERROR_ILLEGAL_STATE);
+            }
+            reorder_symbol_table_structures_process_binding(
+                symbol_table, dependent_structure, reordered_bindings);
+          }
         }
+
+        type_node = NULL;
       }
     }
-
-    // TODO(jawilson): recursively visit each field. We probably need
-    // to step into typenames..
-
     value_array_add(reordered_bindings, ptr_to_value(binding));
     binding->visited = true;
   }

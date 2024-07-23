@@ -128,14 +128,15 @@ symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map,
  * cases, this is more concise.
  */
 parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map,
-						   char* key_string) {
+                                                   char* key_string) {
   value_result_t result = string_ht_find(map->ht, key_string);
   if (is_ok(result)) {
     symbol_table_binding_t* binding = cast(symbol_table_binding_t*, result.ptr);
     if (binding->definition_nodes->length != 1) {
       fatal_error(ERROR_ILLEGAL_STATE);
     }
-    return cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr);
+    return cast(parse_node_t*,
+                value_array_get(binding->definition_nodes, 0).ptr);
   }
   return NULL;
 }
