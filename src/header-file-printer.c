@@ -30,6 +30,77 @@
 
 #endif /* _HEADER_FILE_PRINTER_H_ */
 
+/**
+ * @function buffer_append_dbg_parse_node
+ *
+ * Append the debugging version of a parse node to a buffer.
+ */
+buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
+  switch (node->tag) {
+
+    /*
+  case PARSE_NODE_DECLARATIONS:
+    return buffer_append_dbg_declarations(buffer, to_declarations_node(node),
+                                          indention_level);
+    */
+
+  case PARSE_NODE_ENUM:
+    return buffer_append_enum_node(buffer, to_enum_node(node));
+
+    /*
+  case PARSE_NODE_ENUM_ELEMENT:
+    return buffer_append_dbg_enum_element(buffer, to_enum_element_node(node),
+                                          indention_level);
+    */
+
+  case PARSE_NODE_STRUCT:
+    return buffer_append_struct_node(buffer, to_struct_node(node));
+
+    /*
+  case PARSE_NODE_FIELD:
+    return buffer_append_dbg_field_node(buffer, to_field_node(node),
+                                        indention_level);
+
+  case PARSE_NODE_TYPE:
+    return buffer_append_dbg_type_node(buffer, to_type_node(node),
+                                       indention_level);
+
+  case PARSE_NODE_LITERAL:
+    return buffer_append_dbg_literal_node(buffer, to_literal_node(node),
+                                          indention_level);
+
+  case PARSE_NODE_FUNCTION:
+    return buffer_append_dbg_function_node(buffer, to_function_node(node),
+                                           indention_level);
+
+  case PARSE_NODE_FUNCTION_ARGUMENT:
+    return buffer_append_dbg_function_argument_node(
+        buffer, to_function_argument_node(node), indention_level);
+
+  case PARSE_NODE_FUNCTION_BODY:
+    return buffer_append_dbg_function_body_node(
+        buffer, to_function_body_node(node), indention_level);
+
+  case PARSE_NODE_TYPEDEF:
+    return buffer_append_dbg_typedef_node(buffer, to_typedef_node(node),
+                                          indention_level);
+
+  case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
+    return buffer_append_dbg_global_variable_node(
+        buffer, to_global_variable_node(node), indention_level);
+
+  case PARSE_NODE_ATTRIBUTE:
+    return buffer_append_dbg_attribute_node(buffer, to_attribute_node(node),
+                                            indention_level);
+
+    */
+
+  default:
+    break;
+  }
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
 buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
                                                   function_node_t* node) {
 
@@ -103,6 +174,10 @@ buffer_t* buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
     if (node->type_name != NULL) {
       buffer = buffer_append_token_string(buffer, node->type_name);
     }
+    break;
+
+  case TYPE_NODE_KIND_TYPE_EXPRESSION:
+    buffer_append_parse_node(buffer, node->user_type);
     break;
 
   default:
@@ -244,9 +319,12 @@ buffer_t* buffer_append_field_node(buffer_t* buffer, field_node_t* node) {
   return buffer;
 }
 
+/**
+ * @function buffer_append_struct_node
+ */
 buffer_t* buffer_append_struct_node(buffer_t* buffer, struct_node_t* node) {
 
-  buffer_printf(buffer, "struct ");
+  buffer_append_string(buffer, "struct ");
   if (node->name != NULL) {
     buffer_printf(buffer, "%s ", token_to_string(node->name));
   }
@@ -262,5 +340,17 @@ buffer_t* buffer_append_struct_node(buffer_t* buffer, struct_node_t* node) {
     buffer_printf(buffer, "}");
   }
 
+  return buffer;
+}
+
+/**
+ * @function buffer_append_typedef_node
+ */
+buffer_t* buffer_append_typedef_node(buffer_t* buffer, typedef_node_t* node) {
+  buffer_append_string(buffer, "typedef ");
+  buffer_append_c_type_node(buffer, node->type_node);
+  buffer_append_string(buffer, " ");
+  buffer_printf(buffer, "%s ", token_to_string(node->name));
+  buffer_append_string(buffer, ";\n");
   return buffer;
 }

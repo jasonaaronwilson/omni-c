@@ -470,6 +470,15 @@ void generate_header_file(void) {
     buffer_append_string(buffer, ";\n\n");
   }
 
+  for (int i = 0; i < symbol_table->typedefs->ordered_bindings->length; i++) {
+    symbol_table_binding_t* binding = cast(
+        symbol_table_binding_t*,
+        value_array_get(symbol_table->typedefs->ordered_bindings, i).ptr);
+    typedef_node_t* typedef_node = to_typedef_node(
+        cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
+    buffer_append_typedef_node(buffer, typedef_node);
+  }
+
   fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
 }
 
