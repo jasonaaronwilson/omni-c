@@ -18,3 +18,7 @@ buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node, char
 
 buffer_t* buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node, char* to_string_fn_prefix, char* type_string);
 
+buffer_t* buffer_append_field_node(buffer_t* buffer, field_node_t* node);
+
+buffer_t* buffer_append_struct_node(buffer_t* buffer, struct_node_t* node);
+

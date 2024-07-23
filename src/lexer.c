@@ -164,8 +164,7 @@ __attribute__((warn_unused_result)) buffer_t*
  * used for tokens that don't contain a newline or else we will need
  * to start quoting tokens.
  */
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_token_string(buffer_t* buffer, oc_token_t* token) {
+buffer_t* buffer_append_token_string(buffer_t* buffer, oc_token_t* token) {
   // TODO(jawilson): don't rely on token_to_string so we don't have to
   // allocate and deallocate something.
   char* str = token_to_string(token);

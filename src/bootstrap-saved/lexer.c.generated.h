@@ -8,7 +8,7 @@ oc_token_t* make_derived_token(oc_token_t* source_token);
 
 __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, oc_token_t token);
 
-__attribute__((warn_unused_result)) buffer_t* buffer_append_token_string(buffer_t* buffer, oc_token_t* token);
+buffer_t* buffer_append_token_string(buffer_t* buffer, oc_token_t* token);
 
 token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position);
 
