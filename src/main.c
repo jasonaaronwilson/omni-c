@@ -460,6 +460,8 @@ void generate_header_file(void) {
   reorder_symbol_table_structures(symbol_table);
   buffer_t* buffer = make_buffer(1024 * 8);
 
+  buffer_append_string(buffer, "// ========== enums ==========\n\n");
+
   for (int i = 0; i < symbol_table->enums->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding
         = cast(symbol_table_binding_t*,
@@ -470,6 +472,7 @@ void generate_header_file(void) {
     buffer_append_string(buffer, ";\n\n");
   }
 
+  buffer_append_string(buffer, "// ========== typedefs ==========\n\n");
   for (int i = 0; i < symbol_table->typedefs->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding = cast(
         symbol_table_binding_t*,
@@ -477,6 +480,29 @@ void generate_header_file(void) {
     typedef_node_t* typedef_node = to_typedef_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     buffer_append_typedef_node(buffer, typedef_node);
+    buffer_append_string(buffer, "\n");
+  }
+
+  buffer_append_string(buffer, "// ========== stuctures/unions ==========\n\n");
+  for (int i = 0; i < symbol_table->structures->ordered_bindings->length; i++) {
+    symbol_table_binding_t* binding = cast(
+        symbol_table_binding_t*,
+        value_array_get(symbol_table->structures->ordered_bindings, i).ptr);
+    struct_node_t* struct_node = get_full_structure_definition_node(binding);
+    buffer_append_struct_node(buffer, struct_node);
+    buffer_append_string(buffer, ";\n\n");
+  }
+
+  // TODO(jawilson): variables
+
+  buffer_append_string(buffer, "// ========== function prototypes ==========\n\n");
+  for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
+    symbol_table_binding_t* binding = cast(
+        symbol_table_binding_t*,
+        value_array_get(symbol_table->functions->ordered_bindings, i).ptr);
+    function_node_t* function_node = to_function_node(
+        cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
+    buffer_append_c_function_node_prototype(buffer, function_node);
   }
 
   fprintf(stdout, "%s\n", buffer_to_c_string(buffer));

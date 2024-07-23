@@ -326,11 +326,11 @@ buffer_t* buffer_append_struct_node(buffer_t* buffer, struct_node_t* node) {
 
   buffer_append_string(buffer, "struct ");
   if (node->name != NULL) {
-    buffer_printf(buffer, "%s ", token_to_string(node->name));
+    buffer_printf(buffer, "%s", token_to_string(node->name));
   }
 
   if (!node->partial_definition) {
-    buffer_printf(buffer, "{\n");
+    buffer_printf(buffer, " {\n");
     for (int i = 0; i < node_list_length(node->fields); i++) {
       buffer_printf(buffer, "    ");
       buffer_append_field_node(buffer,
@@ -350,7 +350,7 @@ buffer_t* buffer_append_typedef_node(buffer_t* buffer, typedef_node_t* node) {
   buffer_append_string(buffer, "typedef ");
   buffer_append_c_type_node(buffer, node->type_node);
   buffer_append_string(buffer, " ");
-  buffer_printf(buffer, "%s ", token_to_string(node->name));
+  buffer_printf(buffer, "%s", token_to_string(node->name));
   buffer_append_string(buffer, ";\n");
   return buffer;
 }
