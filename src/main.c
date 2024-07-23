@@ -479,7 +479,13 @@ void generate_header_file(void) {
         value_array_get(symbol_table->typedefs->ordered_bindings, i).ptr);
     typedef_node_t* typedef_node = to_typedef_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
+    if (is_enum_node(typedef_node->type_node->user_type)) {
+      buffer_append_string(buffer, "#ifdef USE_GENERATED_HEADER_FILE\n");
+    }
     buffer_append_typedef_node(buffer, typedef_node);
+    if (is_enum_node(typedef_node->type_node->user_type)) {
+      buffer_append_string(buffer, "#endif /* USE_GENERATED_HEADER_FILE */\n");
+    }
     buffer_append_string(buffer, "\n");
   }
 
@@ -505,7 +511,11 @@ void generate_header_file(void) {
     buffer_append_c_function_node_prototype(buffer, function_node);
   }
 
-  fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
+  if (FLAG_ouput_file == NULL) {
+    fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
+  } else {
+    buffer_write_file(buffer, FLAG_ouput_file);
+  }
 }
 
 int main(int argc, char** argv) {

@@ -63,7 +63,7 @@ test-symbol-table: omni-c-opt
 	wc --lines ${SRC_C}
 
 do-generate-header-file: omni-c-opt
-	/usr/bin/time --portability ./omni-c generate-header-file ${SRC_C}
+	/usr/bin/time --portability ./omni-c generate-header-file --output-file=gloabl-header-file.h ${SRC_C}
 
 bootstrap:
 	./bootstrap.sh
