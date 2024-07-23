@@ -397,6 +397,7 @@ void configure_flags(void) {
   configure_extract_prototypes_command();
   configure_extract_enums_command();
   configure_test_symbol_table_command();
+  configure_generate_header_file();
 }
 
 //// void configure_build_command(void) {
@@ -443,6 +444,33 @@ void configure_extract_prototypes_command(void) {
 void configure_test_symbol_table_command(void) {
   flag_command("test-symbol-table", &FLAG_command);
   flag_file_args(&FLAG_files);
+}
+
+void configure_generate_header_file(void) {
+  flag_command("generate-header-file", &FLAG_command);
+  flag_string("--output-file", &FLAG_ouput_file);
+  flag_file_args(&FLAG_files);
+}
+
+void generate_header_file(void) {
+  symbol_table_t* symbol_table = make_symbol_table();
+  add_parse_and_add_top_level_definitions(symbol_table, FLAG_files);
+  split_structure_typedefs(symbol_table);
+  reorder_symbol_table_typedefs(symbol_table);
+  reorder_symbol_table_structures(symbol_table);
+  buffer_t* buffer = make_buffer(1024 * 8);
+
+  for (int i = 0; i < symbol_table->enums->ordered_bindings->length; i++) {
+    symbol_table_binding_t* binding
+        = cast(symbol_table_binding_t*,
+               value_array_get(symbol_table->enums->ordered_bindings, i).ptr);
+    enum_node_t* enum_node = to_enum_node(
+        cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
+    buffer_append_enum_node(buffer, enum_node);
+    buffer_append_string(buffer, ";\n\n");
+  }
+
+  fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
 }
 
 int main(int argc, char** argv) {
@@ -502,7 +530,8 @@ int main(int argc, char** argv) {
     buffer = symbol_table_stats(buffer, symbol_table);
     buffer_append_dgb_symbol_table(buffer, symbol_table);
     fprintf(stdout, "%s", buffer_to_c_string(buffer));
-
+  } else if (string_equal("generate-header-file", FLAG_command)) {
+    generate_header_file();
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

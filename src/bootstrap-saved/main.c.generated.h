@@ -16,5 +16,9 @@ void configure_extract_prototypes_command(void);
 
 void configure_test_symbol_table_command(void);
 
+void configure_generate_header_file(void);
+
+void generate_header_file(void);
+
 int main(int argc, char** argv);
 

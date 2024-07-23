@@ -62,6 +62,9 @@ test-symbol-table: omni-c-opt
 	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/out-of-order-structures.oc
 	wc --lines ${SRC_C}
 
+do-generate-header-file: omni-c-opt
+	/usr/bin/time --portability ./omni-c generate-header-file ${SRC_C}
+
 bootstrap:
 	./bootstrap.sh
 
