@@ -58,6 +58,8 @@ test-symbol-table: omni-c-opt
 	ARMYKNIFE_LIB_LOG_LEVEL=info ./omni-c test-symbol-table ../examples/struct-typedefs.oc
 	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/out-of-order-typedef.oc
 	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/in-order-typedef.oc
+	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/in-order-structures.oc
+	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/out-of-order-structures.oc
 	wc --lines ${SRC_C}
 
 bootstrap:

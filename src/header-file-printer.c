@@ -30,9 +30,8 @@
 
 #endif /* _HEADER_FILE_PRINTER_H_ */
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_c_function_node_prototype(buffer_t* buffer,
-                                            function_node_t* node) {
+buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
+                                                  function_node_t* node) {
 
   for (int i = 0; i < node_list_length(node->attributes); i++) {
     buffer = buffer_append_c_attribute_node(
@@ -80,7 +79,7 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
+buffer_t*
     buffer_append_c_function_argument_node(buffer_t* buffer,
                                            function_argument_node_t* node) {
   buffer = buffer_append_c_type_node(buffer, node->arg_type);
@@ -90,8 +89,7 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
+buffer_t* buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
 
   switch (node->type_node_kind) {
   case TYPE_NODE_KIND_POINTER:
@@ -116,8 +114,8 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_c_attribute_node(buffer_t* buffer, attribute_node_t* node) {
+buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
+                                         attribute_node_t* node) {
   buffer = buffer_printf(buffer, "__attribute__((");
 
   // Since parser.c doesn't fully parse attributes because we were
@@ -146,9 +144,9 @@ __attribute__((warn_unused_result)) buffer_t*
 // without having completely signed off on it completely (though the
 // region will be lexicially consistent with our lexer).
 //
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_c_raw_token_span(buffer_t* buffer, oc_token_t* start_token,
-                                   oc_token_t* end_token) {
+buffer_t* buffer_append_c_raw_token_span(buffer_t* buffer,
+                                         oc_token_t* start_token,
+                                         oc_token_t* end_token) {
   if (start_token->buffer != end_token->buffer) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -157,8 +155,7 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_enum_node(buffer_t* buffer, enum_node_t* node) {
+buffer_t* buffer_append_enum_node(buffer_t* buffer, enum_node_t* node) {
 
   buffer = buffer_printf(buffer, "enum ");
   if (node->name != NULL) {
@@ -177,8 +174,7 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_enum_element(buffer_t* buffer, enum_element_t* node) {
+buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node) {
 
   buffer = buffer_append_token_string(buffer, node->name);
   if (node->value != NULL) {
@@ -190,9 +186,9 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node,
-                                 char* to_string_fn_prefix, char* type_string) {
+buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node,
+                                       char* to_string_fn_prefix,
+                                       char* type_string) {
   buffer
       = buffer_printf(buffer, "static inline char* %s_to_string(%s value) {\n",
                       to_string_fn_prefix, type_string);
@@ -217,9 +213,9 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node,
-                                 char* to_string_fn_prefix, char* type_string) {
+buffer_t* buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node,
+                                       char* to_string_fn_prefix,
+                                       char* type_string) {
   buffer
       = buffer_printf(buffer, "static inline %s string_to_%s(char* value) {\n",
                       type_string, to_string_fn_prefix);
