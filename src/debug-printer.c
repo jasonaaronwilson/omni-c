@@ -122,7 +122,7 @@ __attribute__((warn_unused_result)) buffer_t*
                              char* field_name, int indention_level) {
   uint64_t length = tokens->length;
   for (uint64_t i = 0; i < length; i++) {
-    oc_token_t* token = cast(oc_token_t*, value_array_get(tokens, i).ptr);
+    oc_token_t* token = value_array_get_ptr(tokens, i, oc_token_t*);
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "%s[%lld]: %s\n", field_name, i,
                            token_to_string(token));

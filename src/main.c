@@ -52,7 +52,7 @@ void print_tokens(void) {
 
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
-    oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
+    oc_file_t* file = value_array_get_ptr(files, i, oc_file_t*);
 
     fprintf(stdout, "====================================================\n");
     fprintf(stdout, "====> Processing %s\n", file->file_name);
@@ -117,7 +117,7 @@ void extract_command(char* command) {
       buffer_clear(prototype_outputs);
     }
 
-    oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
+    oc_file_t* file = value_array_get_ptr(files, i, oc_file_t*);
     prototype_outputs
         = buffer_printf(prototype_outputs,
                         "/* Automatically extracted prototypes from %s */\n\n",
@@ -463,20 +463,18 @@ void generate_header_file(void) {
   buffer_append_string(buffer, "// ========== enums ==========\n\n");
 
   for (int i = 0; i < symbol_table->enums->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding
-        = cast(symbol_table_binding_t*,
-               value_array_get(symbol_table->enums->ordered_bindings, i).ptr);
+    symbol_table_binding_t* binding = value_array_get_ptr(
+        symbol_table->enums->ordered_bindings, i, symbol_table_binding_t*);
     enum_node_t* enum_node = to_enum_node(
-        cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
+        value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*));
     buffer_append_enum_node(buffer, enum_node);
     buffer_append_string(buffer, ";\n\n");
   }
 
   buffer_append_string(buffer, "// ========== typedefs ==========\n\n");
   for (int i = 0; i < symbol_table->typedefs->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = cast(
-        symbol_table_binding_t*,
-        value_array_get(symbol_table->typedefs->ordered_bindings, i).ptr);
+    symbol_table_binding_t* binding = value_array_get_ptr(
+        symbol_table->typedefs->ordered_bindings, i, symbol_table_binding_t*);
     typedef_node_t* typedef_node = to_typedef_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     // if (is_enum_node(typedef_node->type_node->user_type)) {
@@ -491,9 +489,8 @@ void generate_header_file(void) {
 
   buffer_append_string(buffer, "// ========== stuctures/unions ==========\n\n");
   for (int i = 0; i < symbol_table->structures->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = cast(
-        symbol_table_binding_t*,
-        value_array_get(symbol_table->structures->ordered_bindings, i).ptr);
+    symbol_table_binding_t* binding = value_array_get_ptr(
+        symbol_table->structures->ordered_bindings, i, symbol_table_binding_t*);
     struct_node_t* struct_node = get_full_structure_definition_node(binding);
     buffer_append_struct_node(buffer, struct_node);
     buffer_append_string(buffer, ";\n\n");
@@ -504,9 +501,8 @@ void generate_header_file(void) {
   buffer_append_string(buffer,
                        "// ========== function prototypes ==========\n\n");
   for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = cast(
-        symbol_table_binding_t*,
-        value_array_get(symbol_table->functions->ordered_bindings, i).ptr);
+    symbol_table_binding_t* binding = value_array_get_ptr(
+        symbol_table->functions->ordered_bindings, i, symbol_table_binding_t*);
     function_node_t* function_node = to_function_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     buffer_append_c_function_node_prototype(buffer, function_node);

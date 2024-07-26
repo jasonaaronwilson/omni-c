@@ -69,7 +69,7 @@ static inline struct parse_node_s* node_list_get(node_list_t node_list,
   if (node_list.list == NULL) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
-  return cast(struct parse_node_s*, value_array_get(node_list.list, index).ptr);
+  return value_array_get_ptr(node_list.list, index, struct parse_node_s*);
 }
 
 #include "node-list.c.generated.h"

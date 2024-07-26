@@ -48,7 +48,7 @@ static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
     return NULL;
   }
-  return cast(oc_token_t*, value_array_get(tokens, position).ptr);
+  return value_array_get_ptr(tokens, position, oc_token_t*);
 }
 
 static inline boolean_t token_matches(oc_token_t* token, char* str) {
