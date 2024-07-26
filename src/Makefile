@@ -21,6 +21,9 @@ SRC_C = armyknife-lib-impl.c \
 	header-file-extractor.c \
 	main.c
 
+# Derived list of header file names
+SRC_H = $(SRC_C:.c=.h)
+
 generate-header-files: ${SRC_C}
 	../../c-single-source-file/generate-header-file ${SRC_C}
 
@@ -64,6 +67,10 @@ test-symbol-table: omni-c-opt
 
 do-generate-header-file: omni-c-opt
 	/usr/bin/time --portability ./omni-c generate-header-file --output-file=gloabl-header-file.h ${SRC_C}
+
+## # Pattern rule for generating header files
+## %.h: %.c
+##	./omni-c generate-header-file --output-file=$@ $<
 
 bootstrap:
 	./bootstrap.sh
