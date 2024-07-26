@@ -196,7 +196,7 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table) {
 void reorder_symbol_table_typedefs__process_binding(
     symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
-  log_warn("JASON looking at %s", binding->key_string);
+  log_info("processing binding %s", binding->key_string);
   if (!binding->visited) {
     if (binding->definition_nodes->length != 1) {
       fatal_error(ERROR_ILLEGAL_STATE);
@@ -227,7 +227,7 @@ void reorder_symbol_table_typedefs__process_binding(
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-    log_warn("JASON adding %s at position %d", binding->key_string,
+    log_info("adding binding %s at position %d", binding->key_string,
              reordered_bindings->length);
     // TODO(jawilson): actually try to process dependencies first!
     value_array_add(reordered_bindings, ptr_to_value(binding));
@@ -256,7 +256,7 @@ struct_node_t*
 void reorder_symbol_table_structures_process_binding(
     symbol_table_t* symbol_table, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
-  log_warn("JASON looking at %s", binding->key_string);
+  log_info("processing %s", binding->key_string);
   if (!binding->visited) {
     struct_node_t* structure_node = get_full_structure_definition_node(binding);
     uint64_t length = node_list_length(structure_node->fields);
@@ -266,7 +266,7 @@ void reorder_symbol_table_structures_process_binding(
       type_node_t* type_node = field->type;
 
       while (type_node != NULL) {
-        log_warn("JASON looking at %p", type_node);
+        log_info("now processing type %p", type_node);
         if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
           char* key_string = token_to_string(type_node->type_name);
           // symbol_table_binding_t* possbile_typedef_binding =

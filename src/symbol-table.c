@@ -212,6 +212,33 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table,
   }
 }
 
+/**
+ * @function add_includes
+ *
+ * Quick and dirty "scanner" for constructs like `#include <stdio.h>`
+ * or `#include "foo.h`". It's important to note that we aren't
+ * actually doing the inclusion, just trying to track the includes
+ * that the code uses.
+ */
+void add_includes(symbol_table_t* symbol_table, value_array_t* tokens) {
+  for (uint64_t i = 0; i < tokens->length; i++) {
+    oc_token_t* token = value_array_get_ptr(tokens, i, oc_token_t*);
+    if (token_matches(token, "#")) {
+      token = value_array_get_ptr(tokens, i + 1, oc_token_t*);
+      // TODO(jawilson): skip whitespace...
+      if (token_matches(token, "include")) {
+        uint64_t j = i + 2;
+        while (j < tokens->length
+               && !token_matches(value_array_get_ptr(tokens, j, oc_token_t*),
+                                 "\n")) {
+          j++;
+        }
+        log_warn("Found include %d to %d", i, j);
+      }
+    }
+  }
+}
+
 void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
                                              value_array_t* file_names) {
   value_array_t* files = read_files(file_names);
@@ -226,6 +253,7 @@ void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
       fatal_error(ERROR_ILLEGAL_INPUT);
     }
     value_array_t* tokens = tokenizer_result.tokens;
+    add_includes(symbol_table, tokens);
     tokens = transform_tokens(tokens, (token_transformer_options_t){
                                           .keep_whitespace = false,
                                           .keep_comments = false,

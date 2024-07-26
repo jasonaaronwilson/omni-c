@@ -501,7 +501,8 @@ void generate_header_file(void) {
 
   // TODO(jawilson): variables
 
-  buffer_append_string(buffer, "// ========== function prototypes ==========\n\n");
+  buffer_append_string(buffer,
+                       "// ========== function prototypes ==========\n\n");
   for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding = cast(
         symbol_table_binding_t*,
