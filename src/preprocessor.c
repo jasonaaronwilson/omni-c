@@ -2,19 +2,24 @@
 #ifndef _PREPROCESSOR_H_
 #define _PREPROCESSOR_H_
 
-#include "preprocessor.h"
+#include "lexer.h"
+#include "parser.h"
+#include "symbol-table.h"
+
 #include <c-armyknife-lib.h>
 
 typedef struct {
   boolean_t keep_system_includes;
   boolean_t keep_user_includes;
+
 } c_preprocess_options_t;
 
 typedef struct {
-  uint64_t start_token_position;
-  uint64_t end_token_position;
-  uint64_t start_buffer_position;
-  uint64_t end_buffer_position;
+  uint64_t token_start_position;
+  uint64_t token_end_position;
+  uint64_t buffer_start_position;
+  uint64_t buffer_end_position;
+  buffer_t* buffer;
 } c_preprocessor_directive_range_t;
 
 #endif /* _PREPROCESSOR_H_ */
@@ -69,12 +74,16 @@ mark_c_preprocessor_directive(c_preprocess_options_t options,
     oc_token_t* token = token_at(tokens, position);
     token->is_cpp_token = true;
     if (position == start_position) {
-      result.start_token_position = start_position;
-      result.start_buffer_position = token->start;
+      result.token_start_position = start_position;
+      result.buffer_start_position = token->start;
+      result.buffer = token->buffer;
     }
-    result.end_token_position = position;
-    result.end_buffer_position = token->end;
-    if ((token->type == TOKEN_TYPE_WHITESPACE) && token_ends_with(token, "\n")) {
+    if (result.buffer != token->buffer) {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    result.token_end_position = position + 1;
+    result.buffer_end_position = token->end;
+    if ((token->type == TOKEN_TYPE_WHITESPACE) && token_contains(token, "\n")) {
       break;
     }
   }
@@ -85,34 +94,40 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options,
 					 symbol_table_t* symbol_table,
 					 value_array_t* tokens,
 					 uint64_t start_position) {
-  uint64_t end_position = 
+  c_preprocessor_directive_range_t range = 
     mark_c_preprocessor_directive(options, tokens, start_position);
   oc_token_t* directive_name = token_at(tokens, start_position + 1);
+  // skip whitespace above if necessary...
   if (token_matches(directive_name, "include")) {
-
-
-
-    // TODO(jawilson): figure out if this is a user or system include
-    // and save a simplified "parse node" for include into the symbol
-    // table depending on
+    cpp_include_node_t* node = malloc_cpp_include_node();
+    node->text = buffer_c_substring(range.buffer, 
+				    range.buffer_start_position, 
+				    range.buffer_end_position);
+    if (string_contains_char(node->text, '<')) {
+      // "system" include
+    } else {
+      // "user" include
+    }
+    // TODO(jawilson): save parse node into the symbol table
   } else if (token_matches(directive_name, "define")) {
-    // TODO(jawilson): extract raw text from the start of the first
-    // token to the end of the last token (or the end of the buffer)
-    // and add a define to the symbol table.
+    cpp_define_node_t* node = malloc_cpp_define_node();
+    node->text = buffer_c_substring(range.buffer, 
+				    range.buffer_start_position, 
+				    range.buffer_end_position);
+    // TODO(jawilson): save parse node into the symbol table
   }
-  return end_position;
+  return range.token_end_position;
 }
 
-value_array_t* handle_c_preprocessor_directives(c_preprocess_options_t options,
+void handle_c_preprocessor_directives(c_preprocess_options_t options,
 						symbol_table_t* symbol_table,
 						value_array_t* tokens) {
-  for (uint64 position = 0; position < tokens->length; position++) {
+  for (uint64_t position = 0; position < tokens->length;) {
     oc_token_t* token = token_at(tokens, position);
     if (token_matches(token, "#")) {
       position = handle_c_preprocessor_directive(options, symbol_table, tokens, position);
+    } else {
+      position++;
     }
   }
-  // TODO(jawilson): filter out directives and whitespace tokens for
-  // the result.
-  return NULL;
 }
