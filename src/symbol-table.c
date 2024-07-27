@@ -221,22 +221,6 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table,
  * that the code uses.
  */
 void add_includes(symbol_table_t* symbol_table, value_array_t* tokens) {
-  for (uint64_t i = 0; i < tokens->length; i++) {
-    oc_token_t* token = value_array_get_ptr(tokens, i, oc_token_t*);
-    if (token_matches(token, "#")) {
-      token = value_array_get_ptr(tokens, i + 1, oc_token_t*);
-      // TODO(jawilson): skip whitespace...
-      if (token_matches(token, "include")) {
-        uint64_t j = i + 2;
-        while (j < tokens->length
-               && !token_matches(value_array_get_ptr(tokens, j, oc_token_t*),
-                                 "\n")) {
-          j++;
-        }
-        log_warn("Found include %d to %d", i, j);
-      }
-    }
-  }
 }
 
 void add_parse_and_add_top_level_definitions(symbol_table_t* symbol_table,

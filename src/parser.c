@@ -57,6 +57,8 @@ typedef enum {
   PARSE_NODE_GLOBAL_VARIABLE_DEFINITION,
   PARSE_NODE_UNPARSED_EXPRESSION,
   PARSE_NODE_ATTRIBUTE,
+  PARSE_NODE_CPP_INCLUDE,
+  PARSE_NODE_CPP_DEFINE,
 } parse_node_type_t;
 
 /**
@@ -331,6 +333,27 @@ typedef struct attribute_node_S {
   oc_token_t* inner_end_token;
 } attribute_node_t;
 
+/**
+ * @structure cpp_include_node_t
+ *
+ * Represents either a "system" or "user" include.
+ */
+typedef struct {
+  parse_node_type_t tag;
+  char* text;
+} cpp_include_node_t;
+
+/**
+ * @structure cpp_define_node_t
+ *
+ * Represents either a simple substitution like `#define FOO 123` or a
+ * macro that takes zero or more arguments.
+ */
+typedef struct {
+  parse_node_type_t tag;
+  char* text;
+} cpp_define_node_t ;
+
 // PARSE_NODE_UNPARSED_EXPRESSION
 
 /* ====================================================================== */
@@ -559,6 +582,32 @@ static inline attribute_node_t* to_attribute_node(parse_node_t* ptr) {
   return cast(attribute_node_t*, ptr);
 }
 
+/**
+ * @function to_cpp_define_node
+ *
+ * Safely cast a generic node to a cpp_define_node_t after examining
+ * it's tag.
+ */
+static inline cpp_define_node_t* to_cpp_define_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_CPP_DEFINE) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(cpp_define_node_t*, ptr);
+}
+
+/**
+ * @function to_cpp_include_node
+ *
+ * Safely cast a generic node to a cpp_include_node_t after examining
+ * it's tag.
+ */
+static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_CPP_INCLUDE) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(cpp_include_node_t*, ptr);
+}
+
 /* ====================================================================== */
 /* Inlined helpers for parse_result_t implementation */
 /* ====================================================================== */
@@ -676,6 +725,18 @@ static inline global_variable_node_t* malloc_global_variable_node(void) {
 static inline attribute_node_t* malloc_attribute_node(void) {
   attribute_node_t* result = malloc_struct(attribute_node_t);
   result->tag = PARSE_NODE_ATTRIBUTE;
+  return result;
+}
+
+static inline cpp_include_node_t* malloc_cpp_include_node(void) {
+  cpp_include_node_t* result = malloc_struct(cpp_include_node_t);
+  result->tag = PARSE_NODE_CPP_INCLUDE;
+  return result;
+}
+
+static inline cpp_define_node_t* malloc_cpp_define_node(void) {
+  cpp_define_node_t* result = malloc_struct(cpp_define_node_t);
+  result->tag = PARSE_NODE_CPP_DEFINE;
   return result;
 }
 

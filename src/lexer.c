@@ -36,6 +36,7 @@ typedef struct oc_token_S {
   int32_t end;
   int32_t line_number;
   int32_t column_number;
+  boolean_t is_cpp_token;
 } oc_token_t;
 
 typedef struct oc_tokenizer_result_S {
