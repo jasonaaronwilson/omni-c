@@ -22,6 +22,8 @@ typedef struct {
   buffer_t* buffer;
 } c_preprocessor_directive_range_t;
 
+#include "preprocessor.c.generated.h"
+
 #endif /* _PREPROCESSOR_H_ */
 
 /**

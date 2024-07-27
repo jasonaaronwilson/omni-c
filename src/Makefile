@@ -20,6 +20,7 @@ SRC_C = armyknife-lib-impl.c \
 	source-to-source.c \
 	preprocessor.c \
 	header-file-extractor.c \
+	symbol-table-builder.c \
 	main.c
 
 # Derived list of header file names

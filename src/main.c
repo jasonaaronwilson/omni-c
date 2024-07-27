@@ -15,7 +15,9 @@
 #include "parser.h"
 #include "source-to-source.h"
 #include "symbol-table.h"
+#include "symbol-table-builder.h"
 #include "token-transformer.h"
+
 #include <c-armyknife-lib.h>
 
 #include "header-file-extractor.c.generated.h"
@@ -454,7 +456,7 @@ void configure_generate_header_file(void) {
 
 void generate_header_file(void) {
   symbol_table_t* symbol_table = make_symbol_table();
-  add_parse_and_add_top_level_definitions(symbol_table, FLAG_files);
+  parse_and_add_top_level_definitions(symbol_table, FLAG_files);
   split_structure_typedefs(symbol_table);
   reorder_symbol_table_typedefs(symbol_table);
   reorder_symbol_table_structures(symbol_table);
@@ -548,7 +550,7 @@ int main(int argc, char** argv) {
     extract_command(FLAG_command);
   } else if (string_equal("test-symbol-table", FLAG_command)) {
     symbol_table_t* symbol_table = make_symbol_table();
-    add_parse_and_add_top_level_definitions(symbol_table, FLAG_files);
+    parse_and_add_top_level_definitions(symbol_table, FLAG_files);
 
     buffer_t* buffer = make_buffer(128);
     buffer = symbol_table_stats(buffer, symbol_table);
