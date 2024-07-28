@@ -245,7 +245,7 @@ void configure_generate_header_file(void) {
 
 boolean_t is_inlined_function(function_node_t* node) {
   return token_matches(node->storage_class_specifier, "static")
-    && token_matches(node->function_specifier, "inline");
+         && token_matches(node->function_specifier, "inline");
 }
 
 void generate_header_file(void) {

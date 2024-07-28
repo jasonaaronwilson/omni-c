@@ -106,7 +106,7 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
  * otherwise the same.
  */
 buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer,
-					       function_node_t* node) {
+                                               function_node_t* node) {
 
   for (int i = 0; i < node_list_length(node->attributes); i++) {
     buffer = buffer_append_c_attribute_node(
@@ -146,7 +146,8 @@ buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
   return buffer;
 }
 
-buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer, function_node_t* node) {
+buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer,
+                                                 function_node_t* node) {
   buffer_append_c_function_node_prefix(buffer, node);
   function_body_node_t* body = node->body;
   uint64_t start = body->open_brace_token->start;

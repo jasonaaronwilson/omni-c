@@ -253,6 +253,53 @@ struct_node_t*
   return NULL;
 }
 
+symbol_table_binding_t*
+    resolve_typename_to_structure_binding(symbol_table_t* symbol_table,
+                                          type_node_t* type_node) {
+  if (type_node->type_node_kind == TYPE_NODE_KIND_POINTER) {
+    log_info(
+        "resolve_typename_to_structure_binding -- not looking through pointers "
+        "%p",
+        type_node);
+    return NULL;
+  }
+
+  if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION) {
+    parse_node_t* user_type = type_node->user_type;
+    if (is_struct_node(user_type)) {
+      struct_node_t* struct_node = to_struct_node(user_type);
+      if (struct_node->name != NULL) {
+        char* key_name = token_to_string(struct_node->name);
+        symbol_table_binding_t* binding
+            = symbol_table_map_get(symbol_table->structures, key_name);
+        log_info(
+            "resolve_typename_to_structure_binding -- returning binding %p",
+            binding);
+        return binding;
+      }
+    }
+    return resolve_typename_to_structure_binding(symbol_table, type_node);
+  }
+
+  // TODO(jawilson): recurse on any ARRAY type.
+  char* key_string = token_to_string(type_node->type_name);
+  log_info("resolve_typename_to_structure_binding -- %d %s", type_node->tag,
+           key_string);
+  symbol_table_binding_t* typedef_binding
+      = symbol_table_map_get(symbol_table->typedefs, key_string);
+  if (typedef_binding != NULL) {
+    if (typedef_binding->definition_nodes->length != 1) {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr(
+        typedef_binding->definition_nodes, 0, parse_node_t*));
+    return resolve_typename_to_structure_binding(symbol_table,
+                                                 typedef_node->type_node);
+  } else {
+    return symbol_table_map_get(symbol_table->structures, key_string);
+  }
+}
+
 void reorder_symbol_table_structures_process_binding(
     symbol_table_t* symbol_table, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
@@ -266,6 +313,9 @@ void reorder_symbol_table_structures_process_binding(
       type_node_t* type_node = field->type;
 
       while (type_node != NULL) {
+        symbol_table_binding_t* foo
+            = resolve_typename_to_structure_binding(symbol_table, type_node);
+
         log_info("now processing type %p", type_node);
         if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
           char* key_string = token_to_string(type_node->type_name);

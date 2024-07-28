@@ -14,6 +14,8 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_nod
 
 buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table);
 
+buffer_t* buffer_append_dgb_binding(buffer_t* buffer, symbol_table_binding_t* binding);
+
 buffer_t* buffer_appennd_dbg_symbol_table_map(buffer_t* buffer, symbol_table_map_t* symbol_table_map);
 
 buffer_t* buffer_append_dgb_symbol_table(buffer_t* buffer, symbol_table_t* symbol_table);
