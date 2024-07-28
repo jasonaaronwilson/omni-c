@@ -14,8 +14,8 @@
 #include "lexer.h"
 #include "parser.h"
 #include "source-to-source.h"
-#include "symbol-table.h"
 #include "symbol-table-builder.h"
+#include "symbol-table.h"
 #include "token-transformer.h"
 
 #include <c-armyknife-lib.h>

@@ -59,10 +59,10 @@ typedef struct {
  * Determine the extent of a C pre-procesor directive (and mark each
  * token as is_cpp_token so it can be easily removed).
  */
-c_preprocessor_directive_range_t 
-mark_c_preprocessor_directive(c_preprocess_options_t options,
-			      value_array_t* tokens,
-			      uint64_t start_position) {
+c_preprocessor_directive_range_t
+    mark_c_preprocessor_directive(c_preprocess_options_t options,
+                                  value_array_t* tokens,
+                                  uint64_t start_position) {
 
   c_preprocessor_directive_range_t result = {0};
 
@@ -93,18 +93,17 @@ mark_c_preprocessor_directive(c_preprocess_options_t options,
 }
 
 uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options,
-					 symbol_table_t* symbol_table,
-					 value_array_t* tokens,
-					 uint64_t start_position) {
-  c_preprocessor_directive_range_t range = 
-    mark_c_preprocessor_directive(options, tokens, start_position);
+                                         symbol_table_t* symbol_table,
+                                         value_array_t* tokens,
+                                         uint64_t start_position) {
+  c_preprocessor_directive_range_t range
+      = mark_c_preprocessor_directive(options, tokens, start_position);
   oc_token_t* directive_name = token_at(tokens, start_position + 1);
   // skip whitespace above if necessary...
   if (token_matches(directive_name, "include")) {
     cpp_include_node_t* node = malloc_cpp_include_node();
-    node->text = buffer_c_substring(range.buffer, 
-				    range.buffer_start_position, 
-				    range.buffer_end_position);
+    node->text = buffer_c_substring(range.buffer, range.buffer_start_position,
+                                    range.buffer_end_position);
     if (string_contains_char(node->text, '<')) {
       // "system" include
     } else {
@@ -113,21 +112,21 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options,
     // TODO(jawilson): save parse node into the symbol table
   } else if (token_matches(directive_name, "define")) {
     cpp_define_node_t* node = malloc_cpp_define_node();
-    node->text = buffer_c_substring(range.buffer, 
-				    range.buffer_start_position, 
-				    range.buffer_end_position);
+    node->text = buffer_c_substring(range.buffer, range.buffer_start_position,
+                                    range.buffer_end_position);
     // TODO(jawilson): save parse node into the symbol table
   }
   return range.token_end_position;
 }
 
 void handle_c_preprocessor_directives(c_preprocess_options_t options,
-						symbol_table_t* symbol_table,
-						value_array_t* tokens) {
+                                      symbol_table_t* symbol_table,
+                                      value_array_t* tokens) {
   for (uint64_t position = 0; position < tokens->length;) {
     oc_token_t* token = token_at(tokens, position);
     if (token_matches(token, "#")) {
-      position = handle_c_preprocessor_directive(options, symbol_table, tokens, position);
+      position = handle_c_preprocessor_directive(options, symbol_table, tokens,
+                                                 position);
     } else {
       position++;
     }

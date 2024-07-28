@@ -352,7 +352,7 @@ typedef struct {
 typedef struct {
   parse_node_type_t tag;
   char* text;
-} cpp_define_node_t ;
+} cpp_define_node_t;
 
 // PARSE_NODE_UNPARSED_EXPRESSION
 

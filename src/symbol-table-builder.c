@@ -2,8 +2,8 @@
 #ifndef _SYMBOL_TABLE_BUILDER_H_
 #define _SYMBOL_TABLE_BUILDER_H_
 
-#include "symbol-table.h"
 #include "preprocessor.h"
+#include "symbol-table.h"
 
 // Nothing besides protos and includes
 
@@ -12,7 +12,7 @@
 #endif /* _SYMBOL_TABLE_BUILDER_H_ */
 
 void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
-                                             value_array_t* file_names) {
+                                         value_array_t* file_names) {
   value_array_t* files = read_files(file_names);
   for (int i = 0; i < files->length; i++) {
     oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
@@ -25,6 +25,13 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
       fatal_error(ERROR_ILLEGAL_INPUT);
     }
     value_array_t* tokens = tokenizer_result.tokens;
+
+    handle_c_preprocessor_directives(
+        (c_preprocess_options_t){
+            .keep_system_includes = true,
+            .keep_user_includes = false,
+        },
+        symbol_table, tokens);
 
     // add_includes(symbol_table, tokens);
 
@@ -48,4 +55,3 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
     symbol_table_add_declartions(symbol_table, root);
   }
 }
-
