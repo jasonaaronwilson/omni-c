@@ -31,18 +31,6 @@
 #endif /* _HEADER_FILE_PRINTER_H_ */
 
 /**
- * @function buffer_append_literal_node
- */
-buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
-  if (node->token != NULL) {
-    buffer_append_token_string(buffer, node->token);
-  } else {
-    buffer_append_string(buffer, "FIXME LITERAL NODE");
-  }
-  return buffer;
-}
-
-/**
  * @function buffer_append_dbg_parse_node
  *
  * Append the debugging version of a parse node to a buffer.
@@ -160,13 +148,18 @@ buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
   return buffer;
 }
 
+buffer_t* buffer_append_function_body_node(buffer_t* buffer,
+					   function_body_node_t* node) {
+  uint64_t start = node->open_brace_token->start;
+  uint64_t end = node->close_brace_token->end;
+  buffer_append_sub_buffer(buffer, start, end, node->open_brace_token->buffer);
+  return buffer;
+}
+
 buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer,
                                                  function_node_t* node) {
   buffer_append_c_function_node_prefix(buffer, node);
-  function_body_node_t* body = node->body;
-  uint64_t start = body->open_brace_token->start;
-  uint64_t end = body->close_brace_token->end;
-  buffer_append_sub_buffer(buffer, start, end, body->open_brace_token->buffer);
+  buffer_append_function_body_node(buffer, node->body);
   buffer_append_string(buffer, "\n");
   return buffer;
 }
@@ -413,3 +406,18 @@ buffer_t* buffer_append_global_variable_node(buffer_t* buffer,
   buffer_append_string(buffer, ";");
   return buffer;
 }
+
+/**
+ * @function buffer_append_literal_node
+ */
+buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
+  if (node->token != NULL) {
+    buffer_append_token_string(buffer, node->token);
+  } else if (node->initializer_node != NULL) {
+    buffer_append_function_body_node(buffer, node->initializer_node);
+  } else {
+    buffer_append_string(buffer, "FIXME");
+  }
+  return buffer;
+}
+
