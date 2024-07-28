@@ -1,5 +1,7 @@
 /* Automatically extracted prototypes from header-file-printer.c */
 
+buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node);
+
 buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node);
 
 buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer, function_node_t* node);

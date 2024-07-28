@@ -309,7 +309,13 @@ void generate_header_file(void) {
     buffer_append_string(buffer, ";\n\n");
   }
 
-  // TODO(jawilson): variables
+  buffer_append_string(buffer, "// ========== global variables ==========\n\n");
+  for (int i = 0; i < symbol_table->variables->ordered_bindings->length; i++) {
+    symbol_table_binding_t* binding = value_array_get_ptr(
+        symbol_table->variables->ordered_bindings, i, symbol_table_binding_t*);
+    buffer_append_global_variable_node(buffer, value_array_get_ptr(binding->definition_nodes, 0, global_variable_node_t*));
+    buffer_append_string(buffer, "\n");
+  }
 
   buffer_append_string(buffer,
                        "// ========== function prototypes ==========\n\n");

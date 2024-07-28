@@ -31,6 +31,18 @@
 #endif /* _HEADER_FILE_PRINTER_H_ */
 
 /**
+ * @function buffer_append_literal_node
+ */
+buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
+  if (node->token != NULL) {
+    buffer_append_token_string(buffer, node->token);
+  } else {
+    buffer_append_string(buffer, "FIXME LITERAL NODE");
+  }
+  return buffer;
+}
+
+/**
  * @function buffer_append_dbg_parse_node
  *
  * Append the debugging version of a parse node to a buffer.
@@ -64,10 +76,12 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
   case PARSE_NODE_TYPE:
     return buffer_append_dbg_type_node(buffer, to_type_node(node),
                                        indention_level);
+    */
 
   case PARSE_NODE_LITERAL:
-    return buffer_append_dbg_literal_node(buffer, to_literal_node(node),
-                                          indention_level);
+    return buffer_append_literal_node(buffer, to_literal_node(node));
+
+    /*
 
   case PARSE_NODE_FUNCTION:
     return buffer_append_dbg_function_node(buffer, to_function_node(node),
@@ -84,15 +98,15 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
   case PARSE_NODE_TYPEDEF:
     return buffer_append_dbg_typedef_node(buffer, to_typedef_node(node),
                                           indention_level);
+    */
 
   case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
-    return buffer_append_dbg_global_variable_node(
-        buffer, to_global_variable_node(node), indention_level);
+    return buffer_append_global_variable_node(buffer, to_global_variable_node(node));
 
+    /*
   case PARSE_NODE_ATTRIBUTE:
     return buffer_append_dbg_attribute_node(buffer, to_attribute_node(node),
                                             indention_level);
-
     */
 
   default:
