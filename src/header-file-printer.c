@@ -89,7 +89,8 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
     */
 
   case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
-    return buffer_append_global_variable_node(buffer, to_global_variable_node(node));
+    return buffer_append_global_variable_node(buffer,
+                                              to_global_variable_node(node));
 
     /*
   case PARSE_NODE_ATTRIBUTE:
@@ -149,7 +150,7 @@ buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
 }
 
 buffer_t* buffer_append_function_body_node(buffer_t* buffer,
-					   function_body_node_t* node) {
+                                           function_body_node_t* node) {
   uint64_t start = node->open_brace_token->start;
   uint64_t end = node->close_brace_token->end;
   buffer_append_sub_buffer(buffer, start, end, node->open_brace_token->buffer);
@@ -391,7 +392,7 @@ buffer_t* buffer_append_cpp_define_node(buffer_t* buffer,
  * @function buffer_append_global_variable_node
  */
 buffer_t* buffer_append_global_variable_node(buffer_t* buffer,
-					     global_variable_node_t* node) {
+                                             global_variable_node_t* node) {
   if (node->storage_class_specifier != NULL) {
     buffer_append_token_string(buffer, node->storage_class_specifier);
     buffer_append_string(buffer, " ");
@@ -415,9 +416,14 @@ buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
     buffer_append_token_string(buffer, node->token);
   } else if (node->initializer_node != NULL) {
     buffer_append_function_body_node(buffer, node->initializer_node);
+  } else if (node->tokens != NULL && node->tokens->length > 0) {
+    for (uint64_t i = 0; i < node->tokens->length; i++) {
+      buffer_append_string(buffer, " ");
+      oc_token_t* token = value_array_get_ptr(node->tokens, i, oc_token_t*);
+      buffer_append_token_string(buffer, token);
+    }
   } else {
     buffer_append_string(buffer, "FIXME");
   }
   return buffer;
 }
-
