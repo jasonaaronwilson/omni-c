@@ -472,6 +472,23 @@ void generate_header_file(void) {
   reorder_symbol_table_structures(symbol_table);
   buffer_t* buffer = make_buffer(1024 * 8);
 
+  buffer_append_string(buffer, "// ========== system includes ==========\n\n");
+  for (uint64_t i = 0; i < symbol_table->system_includes->length; i++) {
+    cpp_include_node_t* node = value_array_get_ptr(
+        symbol_table->system_includes, i, cpp_include_node_t*);
+    buffer_append_cpp_include_node(buffer, node);
+  }
+
+  // result->user_includes
+
+  buffer_append_string(buffer, "// ========== defines ==========\n\n");
+  for (uint64_t i = 0; i < symbol_table->defines->length; i++) {
+    cpp_define_node_t* node
+        = value_array_get_ptr(symbol_table->defines, i, cpp_define_node_t*);
+    buffer_append_cpp_define_node(buffer, node);
+    buffer_append_string(buffer, "\n");
+  }
+
   buffer_append_string(buffer, "// ========== enums ==========\n\n");
 
   for (int i = 0; i < symbol_table->enums->ordered_bindings->length; i++) {

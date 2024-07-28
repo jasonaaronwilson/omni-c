@@ -26,3 +26,7 @@ buffer_t* buffer_append_struct_node(buffer_t* buffer, struct_node_t* node);
 
 buffer_t* buffer_append_typedef_node(buffer_t* buffer, typedef_node_t* node);
 
+buffer_t* buffer_append_cpp_include_node(buffer_t* buffer, cpp_include_node_t* node);
+
+buffer_t* buffer_append_cpp_define_node(buffer_t* buffer, cpp_define_node_t* node);
+
