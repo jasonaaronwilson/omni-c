@@ -33,8 +33,6 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
         },
         symbol_table, tokens);
 
-    // add_includes(symbol_table, tokens);
-
     tokens = transform_tokens(tokens, (token_transformer_options_t){
                                           .keep_whitespace = false,
                                           .keep_comments = false,

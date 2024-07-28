@@ -47,48 +47,25 @@ typedef struct token_transformer_options_S {
 value_array_t* transform_tokens(value_array_t* tokens,
                                 token_transformer_options_t xform_options) {
   value_array_t* result = make_value_array(tokens->length);
-  boolean_t is_c_preprocessor_line = false;
   for (int position = 0; position < tokens->length; position++) {
     oc_token_t* token = token_at(tokens, position);
-
-    boolean_t keep_token = false;
-    switch (token->type) {
-    case TOKEN_TYPE_WHITESPACE:
-      keep_token = xform_options.keep_whitespace;
-      if (token_contains(token, "\n")) {
-        is_c_preprocessor_line = false;
-      }
-      break;
-    case TOKEN_TYPE_COMMENT:
+    if (token->is_cpp_token && !xform_options.keep_c_preprocessor_lines) {
+      continue;
+    }
+    if (token->type == TOKEN_TYPE_WHITESPACE && !xform_options.keep_whitespace) {
+      continue;
+    }
+    if (token->type == TOKEN_TYPE_COMMENT) {
       if (token_starts_with(token, "/**")) {
-        keep_token = xform_options.keep_javadoc_comments;
-      } else {
-        keep_token = xform_options.keep_comments;
-      }
-      // This is super confusing and is why you should only use non
-      // line comments in C macros...
-      // if (is_c_preprocessor_line && token_starts_with(token, "//")) {
-      // is_c_preprocessor_line = false;
-      // }
-      break;
-    default:
-      keep_token = true;
-      break;
-    }
-
-    if (token->type == TOKEN_TYPE_PUNCTUATION) {
-      if (!is_c_preprocessor_line && token_matches(token, "#")) {
-        is_c_preprocessor_line = true;
+	if (!xform_options.keep_javadoc_comments) {
+	  continue;
+	}
+      } else if (!xform_options.keep_comments) {
+	continue;
       }
     }
 
-    if (!xform_options.keep_c_preprocessor_lines) {
-      keep_token = keep_token && !is_c_preprocessor_line;
-    }
-
-    if (keep_token) {
-      value_array_add(result, ptr_to_value(token));
-    }
+    value_array_add(result, ptr_to_value(token));
   }
 
   return result;

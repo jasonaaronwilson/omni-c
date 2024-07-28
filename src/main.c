@@ -140,6 +140,16 @@ void extract_command(char* command) {
     }
 
     value_array_t* tokens = tokenizer_result.tokens;
+
+    symbol_table_t* symbol_table = make_symbol_table();
+
+    handle_c_preprocessor_directives(
+        (c_preprocess_options_t){
+            .keep_system_includes = false,
+            .keep_user_includes = false,
+        },
+        symbol_table, tokens);
+
     tokens = transform_tokens(tokens, (token_transformer_options_t){
                                           .keep_whitespace = false,
                                           .keep_comments = false,
