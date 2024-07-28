@@ -243,6 +243,11 @@ void configure_generate_header_file(void) {
   flag_file_args(&FLAG_files);
 }
 
+boolean_t is_inlined_function(function_node_t* node) {
+  return token_matches(node->storage_class_specifier, "static")
+    && token_matches(node->function_specifier, "inline");
+}
+
 void generate_header_file(void) {
   symbol_table_t* symbol_table = make_symbol_table();
   parse_and_add_top_level_definitions(symbol_table, FLAG_files);
@@ -313,7 +318,21 @@ void generate_header_file(void) {
         symbol_table->functions->ordered_bindings, i, symbol_table_binding_t*);
     function_node_t* function_node = to_function_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
-    buffer_append_c_function_node_prototype(buffer, function_node);
+    if (!is_inlined_function(function_node)) {
+      buffer_append_c_function_node_prototype(buffer, function_node);
+    }
+  }
+
+  buffer_append_string(buffer,
+                       "// ========== inlined functions ==========\n\n");
+  for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
+    symbol_table_binding_t* binding = value_array_get_ptr(
+        symbol_table->functions->ordered_bindings, i, symbol_table_binding_t*);
+    function_node_t* function_node = to_function_node(
+        cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
+    if (is_inlined_function(function_node)) {
+      buffer_append_c_function_node_and_body(buffer, function_node);
+    }
   }
 
   if (FLAG_ouput_file == NULL) {

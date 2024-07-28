@@ -101,8 +101,12 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
-buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
-                                                  function_node_t* node) {
+/**
+ * Not a full function prototypes since the semi-colon is missing but
+ * otherwise the same.
+ */
+buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer,
+					       function_node_t* node) {
 
   for (int i = 0; i < node_list_length(node->attributes); i++) {
     buffer = buffer_append_c_attribute_node(
@@ -131,30 +135,24 @@ buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
         = to_function_argument_node(node_list_get(node->function_args, i));
     buffer = buffer_append_c_function_argument_node(buffer, arg_node);
   }
+  buffer_append_string(buffer, ")");
+  return buffer;
+}
 
-  buffer = buffer_printf(buffer, ");\n");
+buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
+                                                  function_node_t* node) {
+  buffer_append_c_function_node_prefix(buffer, node);
+  buffer = buffer_printf(buffer, ";\n");
+  return buffer;
+}
 
-  /*
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
-  buffer = buffer_append_dbg_node_list(buffer, node->function_args,
-  "function_args", indention_level); if (node->return_type != NULL) { buffer =
-  buffer_indent(buffer, indention_level); buffer = buffer_append_string(buffer,
-  "return_type:\n"); buffer = buffer_append_dbg_type_node(buffer,
-  node->return_type, indention_level + 1);
-  }
-  if (node->storage_class_specifier != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
-                           token_to_string(node->storage_class_specifier));
-  }
-  if (node->body != NULL) {
-    buffer
-        = buffer_append_dbg_function_body_node(buffer, node->body,
-  indention_level);
-  }
-  */
-
+buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer, function_node_t* node) {
+  buffer_append_c_function_node_prefix(buffer, node);
+  function_body_node_t* body = node->body;
+  uint64_t start = body->open_brace_token->start;
+  uint64_t end = body->close_brace_token->end;
+  buffer_append_sub_buffer(buffer, start, end, body->open_brace_token->buffer);
+  buffer_append_string(buffer, "\n");
   return buffer;
 }
 

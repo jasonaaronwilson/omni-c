@@ -18,6 +18,8 @@ void configure_test_symbol_table_command(void);
 
 void configure_generate_header_file(void);
 
+boolean_t is_inlined_function(function_node_t* node);
+
 void generate_header_file(void);
 
 int main(int argc, char** argv);

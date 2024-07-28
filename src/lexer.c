@@ -53,6 +53,9 @@ static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
 }
 
 static inline boolean_t token_matches(oc_token_t* token, char* str) {
+  if (token == NULL) {
+    return false;
+  }
   int str_len = strlen(str);
   return str_len == (token->end - token->start)
          && buffer_match_string_at(token->buffer, token->start, str);
