@@ -239,6 +239,7 @@ buffer_t* buffer_append_dgb_binding(buffer_t* buffer,
   buffer = buffer_append_dbg_parse_node(
       buffer, value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*),
       1);
+  return buffer;
 }
 
 buffer_t*

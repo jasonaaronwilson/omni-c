@@ -272,13 +272,16 @@ symbol_table_binding_t*
         char* key_name = token_to_string(struct_node->name);
         symbol_table_binding_t* binding
             = symbol_table_map_get(symbol_table->structures, key_name);
+        char* dbg_binding = buffer_to_c_string(
+            buffer_append_dgb_binding(make_buffer(10), binding));
         log_info(
-            "resolve_typename_to_structure_binding -- returning binding %p",
-            binding);
+            "resolve_typename_to_structure_binding -- returning binding %p %s",
+            binding, dbg_binding);
         return binding;
       }
     }
-    return resolve_typename_to_structure_binding(symbol_table, type_node);
+    // ignore enums, they are already processed...
+    return NULL;
   }
 
   // TODO(jawilson): recurse on any ARRAY type.
@@ -305,63 +308,23 @@ void reorder_symbol_table_structures_process_binding(
     value_array_t* reordered_bindings) {
   log_info("processing %s", binding->key_string);
   if (!binding->visited) {
+    binding->visited = true;
     struct_node_t* structure_node = get_full_structure_definition_node(binding);
     uint64_t length = node_list_length(structure_node->fields);
     for (uint64_t i = 0; i < length; i++) {
       field_node_t* field
           = to_field_node(node_list_get(structure_node->fields, i));
       type_node_t* type_node = field->type;
-
-      while (type_node != NULL) {
-        symbol_table_binding_t* foo
+      if (type_node != NULL) {
+        symbol_table_binding_t* field_type_binding
             = resolve_typename_to_structure_binding(symbol_table, type_node);
-
-        log_info("now processing type %p", type_node);
-        if (type_node->type_node_kind == TYPE_NODE_KIND_TYPENAME) {
-          char* key_string = token_to_string(type_node->type_name);
-          // symbol_table_binding_t* possbile_typedef_binding =
-          // symbol_table_map_get(symbol_table->typedefs, key_string);
-          parse_node_t* possible_typedef_node
-              = symbol_table_map_get_only_definition(symbol_table->typedefs,
-                                                     key_string);
-          if (possible_typedef_node != NULL) {
-            typedef_node_t* typedef_node
-                = to_typedef_node(possible_typedef_node);
-            if (typedef_node->type_node->type_node_kind
-                == TYPE_NODE_KIND_TYPENAME) {
-              type_node = typedef_node->type_node;
-              continue;
-            }
-          } else {
-            log_warn("Treating '%s' as though it will be magically provided.",
-                     key_string);
-          }
-        } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION
-                   && is_struct_node(type_node->user_type)) {
-          struct_node_t* struct_node = to_struct_node(type_node->user_type);
-          if (!struct_node->partial_definition || struct_node->name == NULL) {
-            fatal_error(ERROR_ILLEGAL_STATE);
-          }
-          char* key_string = token_to_string(struct_node->name);
-          symbol_table_binding_t* dependent_structure
-              = symbol_table_map_get(symbol_table->structures, key_string);
-          if (dependent_structure != NULL) {
-            if (dependent_structure == binding) {
-              // Trivial self-recursive case. It's OK to have a field
-              // that is a pointer to your own structure but not a full
-              // value since it would be an infinite regress...
-              fatal_error(ERROR_ILLEGAL_STATE);
-            }
-            reorder_symbol_table_structures_process_binding(
-                symbol_table, dependent_structure, reordered_bindings);
-          }
+        if (field_type_binding != NULL && !field_type_binding->visited) {
+          reorder_symbol_table_structures_process_binding(
+              symbol_table, field_type_binding, reordered_bindings);
         }
-
-        type_node = NULL;
       }
     }
     value_array_add(reordered_bindings, ptr_to_value(binding));
-    binding->visited = true;
   }
 }
 
