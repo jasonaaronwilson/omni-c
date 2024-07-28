@@ -47,6 +47,10 @@ typedef struct symbol_table_binding_S {
 
   // This is used when reordering bindings using DFS. See
   // source-to-source.c.
+
+  // TODO(jawilson): do we need two visited flags? Maybe clear by
+  // doing a pass over the reordered nodes?
+
   boolean_t visited;
 
 } symbol_table_binding_t;

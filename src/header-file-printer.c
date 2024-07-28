@@ -379,3 +379,23 @@ buffer_t* buffer_append_cpp_define_node(buffer_t* buffer,
   buffer_append_string(buffer, node->text);
   return buffer;
 }
+
+/**
+ * @function buffer_append_global_variable_node
+ */
+buffer_t* buffer_append_global_variable_node(buffer_t* buffer,
+					     global_variable_node_t* node) {
+  if (node->storage_class_specifier != NULL) {
+    buffer_append_token_string(buffer, node->storage_class_specifier);
+    buffer_append_string(buffer, " ");
+  }
+  buffer_append_c_type_node(buffer, node->type);
+  buffer_append_string(buffer, " ");
+  buffer_append_token_string(buffer, node->name);
+  if (node->value != NULL) {
+    buffer_append_string(buffer, " = ");
+    buffer_append_parse_node(buffer, node->value);
+  }
+  buffer_append_string(buffer, ";");
+  return buffer;
+}

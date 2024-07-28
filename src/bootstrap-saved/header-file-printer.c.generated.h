@@ -34,3 +34,5 @@ buffer_t* buffer_append_cpp_include_node(buffer_t* buffer, cpp_include_node_t* n
 
 buffer_t* buffer_append_cpp_define_node(buffer_t* buffer, cpp_define_node_t* node);
 
+buffer_t* buffer_append_global_variable_node(buffer_t* buffer, global_variable_node_t* node);
+
