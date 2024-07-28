@@ -52,16 +52,17 @@ value_array_t* transform_tokens(value_array_t* tokens,
     if (token->is_cpp_token && !xform_options.keep_c_preprocessor_lines) {
       continue;
     }
-    if (token->type == TOKEN_TYPE_WHITESPACE && !xform_options.keep_whitespace) {
+    if (token->type == TOKEN_TYPE_WHITESPACE
+        && !xform_options.keep_whitespace) {
       continue;
     }
     if (token->type == TOKEN_TYPE_COMMENT) {
       if (token_starts_with(token, "/**")) {
-	if (!xform_options.keep_javadoc_comments) {
-	  continue;
-	}
+        if (!xform_options.keep_javadoc_comments) {
+          continue;
+        }
       } else if (!xform_options.keep_comments) {
-	continue;
+        continue;
       }
     }
 

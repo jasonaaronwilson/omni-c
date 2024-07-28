@@ -105,16 +105,15 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options,
     node->text = buffer_c_substring(range.buffer, range.buffer_start_position,
                                     range.buffer_end_position);
     if (string_contains_char(node->text, '<')) {
-      // "system" include
+      value_array_add(symbol_table->system_includes, ptr_to_value(node));
     } else {
-      // "user" include
+      value_array_add(symbol_table->user_includes, ptr_to_value(node));
     }
-    // TODO(jawilson): save parse node into the symbol table
   } else if (token_matches(directive_name, "define")) {
     cpp_define_node_t* node = malloc_cpp_define_node();
     node->text = buffer_c_substring(range.buffer, range.buffer_start_position,
                                     range.buffer_end_position);
-    // TODO(jawilson): save parse node into the symbol table
+    value_array_add(symbol_table->defines, ptr_to_value(node));
   }
   return range.token_end_position;
 }
