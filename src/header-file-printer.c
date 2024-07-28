@@ -110,10 +110,18 @@ buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
     buffer = buffer_printf(buffer, " ");
   }
 
-  // What happend to static/extern and inline?
+  if (node->storage_class_specifier != NULL) {
+    buffer_append_token_string(buffer, node->storage_class_specifier);
+    buffer_append_string(buffer, " ");
+  }
 
-  buffer = buffer_append_c_type_node(buffer, node->return_type);
-  buffer = buffer_printf(buffer, " %s(", token_to_string(node->function_name));
+  if (node->function_specifier != NULL) {
+    buffer_append_token_string(buffer, node->function_specifier);
+    buffer_append_string(buffer, " ");
+  }
+
+  buffer_append_c_type_node(buffer, node->return_type);
+  buffer_printf(buffer, " %s(", token_to_string(node->function_name));
 
   for (int i = 0; i < node_list_length(node->function_args); i++) {
     if (i > 0) {
