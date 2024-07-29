@@ -30,7 +30,7 @@ fi
 echo "=====> Invoking gcc on the generated output..."
 
 # -pedantic -- ISO doesn't like "empty" translations units
-gcc -c -fsyntax-only -Wall -std=c99 ${OUT_FILE}
+gcc -c -Wall -Werror -std=c99 ${OUT_FILE}
 if [ $? -ne 0 ] ; then
   echo "FAIL: gcc failed on the output ${OUT_FILE} for ${FILE}" >&2
   exit 1

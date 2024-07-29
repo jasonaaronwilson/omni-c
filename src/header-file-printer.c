@@ -400,6 +400,9 @@ buffer_t* buffer_append_global_variable_node(buffer_t* buffer,
   buffer_append_c_type_node(buffer, node->type);
   buffer_append_string(buffer, " ");
   buffer_append_token_string(buffer, node->name);
+  for (int i = 0; i < node->number_of_array_suffixes; i++) {
+    buffer_append_string(buffer, "[]");
+  }
   if (node->value != NULL) {
     buffer_append_string(buffer, " = ");
     buffer_append_parse_node(buffer, node->value);

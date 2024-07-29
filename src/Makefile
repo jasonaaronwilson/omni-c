@@ -69,6 +69,7 @@ test-symbol-table: omni-c-opt
 
 do-generate-header-file: omni-c-opt
 	/usr/bin/time --portability ./omni-c generate-header-file --output-file=global-header-file.h ${SRC_C}
+	gcc -c -Wall -Werror -std=c99 global-header-file.h
 
 ## # Pattern rule for generating header files
 ## %.h: %.c
@@ -94,7 +95,7 @@ clean:
 	find . -name '*~' | xargs -n 1 rm -f
 	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
 	rm -f tools/syntax-c
-	rm -f test-out.c
+	rm -f test-out.c test-out.o
 
 diff: clean
 	git difftool HEAD
