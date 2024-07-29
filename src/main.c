@@ -257,6 +257,9 @@ boolean_t is_inlined_function(function_node_t* node) {
  * @function generate_c_output_file
  */
 void generate_c_output_file(boolean_t is_library) {
+
+  boolean_t is_header_file = !is_library;
+
   symbol_table_t* symbol_table = make_symbol_table();
   parse_and_add_top_level_definitions(symbol_table, FLAG_files);
   split_structure_typedefs(symbol_table);
@@ -264,11 +267,29 @@ void generate_c_output_file(boolean_t is_library) {
   reorder_symbol_table_structures(symbol_table);
   buffer_t* buffer = make_buffer(1024 * 8);
 
+  char* guard_name = "_HEADER_FILE_GUARD_";
+
+  if (is_header_file) {
+    buffer_printf(buffer, "#ifndef %s\n#define %s\n\n", guard_name, guard_name);
+  }
+
+  boolean_t append_newline_after_system_includes = false;
   buffer_append_string(buffer, "// ========== system includes ==========\n\n");
+  string_hashtable_t* system_includes_set = make_string_hashtable(19);
   for (uint64_t i = 0; i < symbol_table->system_includes->length; i++) {
+    append_newline_after_system_includes = true;
     cpp_include_node_t* node = value_array_get_ptr(
         symbol_table->system_includes, i, cpp_include_node_t*);
-    buffer_append_cpp_include_node(buffer, node);
+    char* include_statement = buffer_to_c_string(
+        buffer_append_cpp_include_node(make_buffer(32), node));
+    if (!is_ok(string_ht_find(system_includes_set, include_statement))) {
+      system_includes_set = string_ht_insert(
+          system_includes_set, include_statement, boolean_to_value(true));
+      buffer_append_string(buffer, include_statement);
+    }
+  }
+  if (append_newline_after_system_includes) {
+    buffer_append_string(buffer, "\n");
   }
 
   // result->user_includes
@@ -298,13 +319,7 @@ void generate_c_output_file(boolean_t is_library) {
         symbol_table->typedefs->ordered_bindings, i, symbol_table_binding_t*);
     typedef_node_t* typedef_node = to_typedef_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
-    // if (is_enum_node(typedef_node->type_node->user_type)) {
-    // buffer_append_string(buffer, "#ifdef USE_GENERATED_HEADER_FILE\n");
-    // }
     buffer_append_typedef_node(buffer, typedef_node);
-    // if (is_enum_node(typedef_node->type_node->user_type)) {
-    // buffer_append_string(buffer, "#endif /* USE_GENERATED_HEADER_FILE */\n");
-    // }
     buffer_append_string(buffer, "\n");
   }
 
@@ -317,16 +332,24 @@ void generate_c_output_file(boolean_t is_library) {
     buffer_append_string(buffer, ";\n\n");
   }
 
+  boolean_t append_newline_after_variables = false;
   buffer_append_string(buffer, "// ========== global variables ==========\n\n");
   for (int i = 0; i < symbol_table->variables->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding = value_array_get_ptr(
         symbol_table->variables->ordered_bindings, i, symbol_table_binding_t*);
     buffer_append_global_variable_node(
-        buffer, value_array_get_ptr(binding->definition_nodes, 0,
-                                    global_variable_node_t*));
+        buffer,
+        value_array_get_ptr(binding->definition_nodes, 0,
+                            global_variable_node_t*),
+        is_library);
     buffer_append_string(buffer, "\n");
   }
 
+  if (append_newline_after_variables) {
+    buffer_append_string(buffer, "\n");
+  }
+
+  boolean_t append_newline_after_prototypes = false;
   buffer_append_string(buffer,
                        "// ========== function prototypes ==========\n\n");
   for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
@@ -335,10 +358,15 @@ void generate_c_output_file(boolean_t is_library) {
     function_node_t* function_node = to_function_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     if (!is_inlined_function(function_node)) {
+      append_newline_after_prototypes = true;
       buffer_append_c_function_node_prototype(buffer, function_node);
     }
   }
+  if (append_newline_after_prototypes) {
+    buffer_append_string(buffer, "\n");
+  }
 
+  boolean_t append_newline_after_inlines = false;
   buffer_append_string(buffer,
                        "// ========== inlined functions ==========\n\n");
   for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
@@ -347,24 +375,40 @@ void generate_c_output_file(boolean_t is_library) {
     function_node_t* function_node = to_function_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     if (is_inlined_function(function_node)) {
+      append_newline_after_inlines = true;
       buffer_append_c_function_node_and_body(buffer, function_node);
     }
   }
 
+  if (append_newline_after_inlines) {
+    buffer_append_string(buffer, "\n");
+  }
+
+  boolean_t append_newline_after_functions = false;
   if (is_library) {
-    buffer_append_string(buffer,
-			 "// ========== functions ==========\n\n");
-    for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
-      symbol_table_binding_t* binding = value_array_get_ptr(
-							    symbol_table->functions->ordered_bindings, i, symbol_table_binding_t*);
+    buffer_append_string(buffer, "// ========== functions ==========\n\n");
+    for (int i = 0; i < symbol_table->functions->ordered_bindings->length;
+         i++) {
+      symbol_table_binding_t* binding
+          = value_array_get_ptr(symbol_table->functions->ordered_bindings, i,
+                                symbol_table_binding_t*);
       for (int j = 0; j < binding->definition_nodes->length; j++) {
-	function_node_t* function_node = to_function_node(
-							  cast(parse_node_t*, value_array_get(binding->definition_nodes, j).ptr));
-	if (!is_inlined_function(function_node) && function_node->body != NULL) {
-	  buffer_append_c_function_node_and_body(buffer, function_node);
-	}
+        function_node_t* function_node = to_function_node(cast(
+            parse_node_t*, value_array_get(binding->definition_nodes, j).ptr));
+        if (!is_inlined_function(function_node)
+            && function_node->body != NULL) {
+          append_newline_after_functions = true;
+          buffer_append_c_function_node_and_body(buffer, function_node);
+        }
       }
     }
+  }
+  if (append_newline_after_functions) {
+    buffer_append_string(buffer, "\n");
+  }
+
+  if (is_header_file) {
+    buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
   }
 
   if (FLAG_ouput_file == NULL) {

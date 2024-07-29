@@ -88,9 +88,10 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
                                           indention_level);
     */
 
+    // Always assuming this is a library is problematic...
   case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
-    return buffer_append_global_variable_node(buffer,
-                                              to_global_variable_node(node));
+    return buffer_append_global_variable_node(
+        buffer, to_global_variable_node(node), true);
 
     /*
   case PARSE_NODE_ATTRIBUTE:
@@ -392,18 +393,23 @@ buffer_t* buffer_append_cpp_define_node(buffer_t* buffer,
  * @function buffer_append_global_variable_node
  */
 buffer_t* buffer_append_global_variable_node(buffer_t* buffer,
-                                             global_variable_node_t* node) {
+                                             global_variable_node_t* node,
+                                             boolean_t is_library) {
+  boolean_t is_header_file = !is_library;
   if (node->storage_class_specifier != NULL) {
     buffer_append_token_string(buffer, node->storage_class_specifier);
     buffer_append_string(buffer, " ");
+  } else if (is_header_file) {
+    buffer_append_string(buffer, "extern ");
   }
+
   buffer_append_c_type_node(buffer, node->type);
   buffer_append_string(buffer, " ");
   buffer_append_token_string(buffer, node->name);
   for (int i = 0; i < node->number_of_array_suffixes; i++) {
     buffer_append_string(buffer, "[]");
   }
-  if (node->value != NULL) {
+  if (is_library && node->value != NULL) {
     buffer_append_string(buffer, " = ");
     buffer_append_parse_node(buffer, node->value);
   }
