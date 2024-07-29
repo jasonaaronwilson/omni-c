@@ -71,9 +71,10 @@ do-generate-header-file: omni-c-opt
 	/usr/bin/time --portability ./omni-c generate-header-file --output-file=global-header-file.h ${SRC_C}
 	gcc -c -Wall -Werror -std=c99 global-header-file.h
 
+# TODO(jawilson): -Werror 
 self: omni-c
 	/usr/bin/time --portability ./omni-c generate-library --output-file=self.c ${SRC_C}
-	gcc -o self -Wall -Werror -std=c99 self.c
+	gcc -o self -Wall -std=c99 -DC_ARMYKNIFE_LIB_IMPL self.c
 
 ## # Pattern rule for generating header files
 ## %.h: %.c

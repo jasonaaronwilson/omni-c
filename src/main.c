@@ -7,6 +7,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "debug-printer.h"
 #include "file-reader.h"
@@ -356,10 +357,12 @@ void generate_c_output_file(boolean_t is_library) {
     for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
       symbol_table_binding_t* binding = value_array_get_ptr(
 							    symbol_table->functions->ordered_bindings, i, symbol_table_binding_t*);
-      function_node_t* function_node = to_function_node(
-							cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
-      if (!is_inlined_function(function_node)) {
-	buffer_append_c_function_node_and_body(buffer, function_node);
+      for (int j = 0; j < binding->definition_nodes->length; j++) {
+	function_node_t* function_node = to_function_node(
+							  cast(parse_node_t*, value_array_get(binding->definition_nodes, j).ptr));
+	if (!is_inlined_function(function_node) && function_node->body != NULL) {
+	  buffer_append_c_function_node_and_body(buffer, function_node);
+	}
       }
     }
   }
