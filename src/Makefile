@@ -77,7 +77,8 @@ do-generate-header-file: omni-c-opt
 TESTS= \
 	tests/trivial.sh \
 	tests/ordering-bug.sh \
-	tests/in-order-structures.sh
+	tests/in-order-structures.sh \
+	tests/out-of-order-structures.sh
 
 test: omni-c
 	tools/run-tests.sh ${TESTS}

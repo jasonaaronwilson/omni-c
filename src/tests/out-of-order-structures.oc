@@ -3,5 +3,5 @@ struct b {
 };
 
 struct a {
-  uint64_t foo;
+  int foo;
 };

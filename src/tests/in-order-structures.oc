@@ -1,5 +1,5 @@
 struct a {
-  uint64_t foo;
+  int foo;
 };
 
 struct b {
