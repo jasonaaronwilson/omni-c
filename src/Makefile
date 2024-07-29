@@ -96,6 +96,7 @@ clean:
 	find . -name '*~' | xargs -n 1 rm -f
 	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
 	rm -f tools/syntax-c
+	rm -f test-out.c
 
 diff: clean
 	git difftool HEAD
