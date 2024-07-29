@@ -248,6 +248,9 @@ boolean_t is_inlined_function(function_node_t* node) {
          && token_matches(node->function_specifier, "inline");
 }
 
+/**
+ * @function generate_header_file
+ */
 void generate_header_file(void) {
   symbol_table_t* symbol_table = make_symbol_table();
   parse_and_add_top_level_definitions(symbol_table, FLAG_files);
@@ -346,6 +349,7 @@ void generate_header_file(void) {
   if (FLAG_ouput_file == NULL) {
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
   } else {
+    log_info("Attempting to write buffer to %s", FLAG_ouput_file);
     buffer_write_file(buffer, FLAG_ouput_file);
   }
 }
@@ -409,6 +413,8 @@ int main(int argc, char** argv) {
     fprintf(stdout, "%s", buffer_to_c_string(buffer));
   } else if (string_equal("generate-header-file", FLAG_command)) {
     generate_header_file();
+    log_info("Exiting normally!");
+    exit(0);
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }
