@@ -15,7 +15,7 @@ fi
 # export ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS=30
 export ARMYKNIFE_LIB_LOG_LEVEL=info
 
-echo "=====> Running omni-c..."
+echo "=====> Invoking omni-c..."
 "$OMNI_C_PATH" generate-header-file "--output-file=${OUT_FILE}" ${FILE}
 if [ $? -ne 0 ] ; then
   echo "FAIL: generate-header-file failed to generate output file for ${FILE}" >&2
@@ -27,7 +27,7 @@ if [ "$SHOW_OUTPUT" = "true" ]; then
   cat ${OUT_FILE}
 fi
 
-echo "=====> Running gcc on the generated output..."
+echo "=====> Invoking gcc on the generated output..."
 
 # -pedantic -- ISO doesn't like "empty" translations units
 gcc -c -fsyntax-only -Wall -std=c99 ${OUT_FILE}

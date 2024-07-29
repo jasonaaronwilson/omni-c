@@ -35,7 +35,7 @@ omni-c: ${SRC_C} generate-header-files
 omni-c-opt: omni-c ${SRC_C} generate-header-files
 	gcc ${CC_FLAGS_OPT} -o omni-c-opt ${SRC_C}
 
-test: omni-c
+test-print-tokens: omni-c
 	./omni-c print-tokens --parse-and-print=true \
 		../examples/structures.oc \
 		../examples/functions.oc \
@@ -73,6 +73,12 @@ do-generate-header-file: omni-c-opt
 ## # Pattern rule for generating header files
 ## %.h: %.c
 ##	./omni-c generate-header-file --output-file=$@ $<
+
+TESTS= \
+	tests/trivial.sh
+
+test: omni-c
+	tools/run-tests.sh ${TESTS}
 
 bootstrap:
 	./bootstrap.sh
