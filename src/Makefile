@@ -75,7 +75,8 @@ do-generate-header-file: omni-c-opt
 ##	./omni-c generate-header-file --output-file=$@ $<
 
 TESTS= \
-	tests/trivial.sh
+	tests/trivial.sh \
+	tests/ordering-bug.sh
 
 test: omni-c
 	tools/run-tests.sh ${TESTS}
