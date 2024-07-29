@@ -16,11 +16,11 @@ void configure_extract_prototypes_command(void);
 
 void configure_test_symbol_table_command(void);
 
-void configure_generate_header_file(void);
+void configure_generate_c_output_file(void);
 
 boolean_t is_inlined_function(function_node_t* node);
 
-void generate_header_file(void);
+void generate_c_output_file(boolean_t is_library);
 
 int main(int argc, char** argv);
 

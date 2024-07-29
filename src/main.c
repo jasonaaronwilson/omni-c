@@ -204,7 +204,7 @@ void configure_flags(void) {
   configure_extract_prototypes_command();
   configure_extract_enums_command();
   configure_test_symbol_table_command();
-  configure_generate_header_file();
+  configure_generate_c_output_file();
 }
 
 void configure_print_tokens_command(void) {
@@ -237,8 +237,12 @@ void configure_test_symbol_table_command(void) {
   flag_file_args(&FLAG_files);
 }
 
-void configure_generate_header_file(void) {
+void configure_generate_c_output_file(void) {
   flag_command("generate-header-file", &FLAG_command);
+  flag_string("--output-file", &FLAG_ouput_file);
+  flag_file_args(&FLAG_files);
+
+  flag_command("generate-library", &FLAG_command);
   flag_string("--output-file", &FLAG_ouput_file);
   flag_file_args(&FLAG_files);
 }
@@ -249,9 +253,9 @@ boolean_t is_inlined_function(function_node_t* node) {
 }
 
 /**
- * @function generate_header_file
+ * @function generate_c_output_file
  */
-void generate_header_file(void) {
+void generate_c_output_file(boolean_t is_library) {
   symbol_table_t* symbol_table = make_symbol_table();
   parse_and_add_top_level_definitions(symbol_table, FLAG_files);
   split_structure_typedefs(symbol_table);
@@ -346,6 +350,20 @@ void generate_header_file(void) {
     }
   }
 
+  if (is_library) {
+    buffer_append_string(buffer,
+			 "// ========== functions ==========\n\n");
+    for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
+      symbol_table_binding_t* binding = value_array_get_ptr(
+							    symbol_table->functions->ordered_bindings, i, symbol_table_binding_t*);
+      function_node_t* function_node = to_function_node(
+							cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
+      if (!is_inlined_function(function_node)) {
+	buffer_append_c_function_node_and_body(buffer, function_node);
+      }
+    }
+  }
+
   if (FLAG_ouput_file == NULL) {
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
   } else {
@@ -380,6 +398,14 @@ int main(int argc, char** argv) {
     ////     extract_header_file();
     ////   } else if (string_equal("print-parse-trees", FLAG_command)) {
     ////     print_parse_trees();
+  } else if (string_equal("generate-header-file", FLAG_command)) {
+    generate_c_output_file(false);
+    log_info("Exiting normally!");
+    exit(0);
+  } else if (string_equal("generate-library", FLAG_command)) {
+    generate_c_output_file(true);
+    log_info("Exiting normally!");
+    exit(0);
   } else if (string_equal("print-tokens", FLAG_command)) {
     print_tokens();
   } else if (string_equal("extract-enums", FLAG_command)
@@ -411,10 +437,6 @@ int main(int argc, char** argv) {
     buffer = symbol_table_stats(buffer, symbol_table);
     buffer_append_dgb_symbol_table(buffer, symbol_table);
     fprintf(stdout, "%s", buffer_to_c_string(buffer));
-  } else if (string_equal("generate-header-file", FLAG_command)) {
-    generate_header_file();
-    log_info("Exiting normally!");
-    exit(0);
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }
