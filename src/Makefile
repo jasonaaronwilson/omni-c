@@ -3,7 +3,7 @@ all: omni-c
 CC_FLAGS := -g -rdynamic -I ~/src/tree-sitter/lib/include
 CC_FLAGS_OPT := -g -rdynamic -I ~/src/tree-sitter/lib/include -O3
 
-SRC_C = armyknife-lib-impl.c \
+SRC_C_SELF = \
 	mode.c \
 	keywords.c \
 	oc-file.c \
@@ -22,6 +22,9 @@ SRC_C = armyknife-lib-impl.c \
 	header-file-extractor.c \
 	symbol-table-builder.c \
 	main.c
+
+SRC_C := armyknife-lib-impl.c $(SRC_C_SELF)
+
 
 # Derived list of header file names
 SRC_H = $(SRC_C:.c=.h)
@@ -73,8 +76,8 @@ do-generate-header-file: omni-c-opt
 
 # TODO(jawilson): -Werror 
 self: omni-c
-	/usr/bin/time --portability ./omni-c generate-library --output-file=self.c ${SRC_C}
-	gcc -o self -Wall -std=c99 -DC_ARMYKNIFE_LIB_IMPL self.c
+	/usr/bin/time --portability ./omni-c generate-library --output-file=self.c ${SRC_C_SELF}
+	gcc -o self -Wall -std=c99 self.c armyknife-lib-impl.c
 
 ## # Pattern rule for generating header files
 ## %.h: %.c
