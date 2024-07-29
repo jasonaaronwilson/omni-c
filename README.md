@@ -6,6 +6,13 @@ standard library.
 
 ## Status
 
+* We now (2024-07-29) can turn our own source code into a single C
+  file that can be compiled (extensive testing on this to make sure
+  it's equivalent hasn't been done yet). Unfortunately there are still
+  some problems that prevent us from producing a single global header
+  file (namely global variable - we might just be able to not output
+  them temporarily). Many short-cuts were taken so this is unlikely to
+  work for arbitrary C code. The git tag is milestone-1.
 * We now (2024-06-19) have a decent lexer and a very incomplete parser
   but that is good enough to *extract prototypes* from our own source
   code. In theory we never have to write prototypes again for extern
