@@ -204,6 +204,7 @@ typedef struct enum_node_S {
   parse_node_type_t tag;
   oc_token_t* name;
   node_list_t elements;
+  boolean_t partial_definition;
 } enum_node_t;
 
 /**
@@ -1359,9 +1360,8 @@ parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position) {
     token = token_at(tokens, position);
   }
   if (!token_matches(token, "{")) {
-    // TODO(jawilson): this is actually not an error example "enum
-    // foo".
-    parse_error_result(PARSE_ERROR_OPEN_BRACE_EXPECTED, token);
+    result->partial_definition = true;
+    return parse_result(to_node(result), position);
   }
   position++;
   while (true) {

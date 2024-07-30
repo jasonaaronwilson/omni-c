@@ -252,6 +252,10 @@ buffer_t* buffer_append_enum_node(buffer_t* buffer, enum_node_t* node) {
   if (node->name != NULL) {
     buffer = buffer_printf(buffer, "%s\n", token_to_string(node->name));
   }
+  if (node->partial_definition) {
+    return buffer;
+  }
+
   buffer = buffer_printf(buffer, "{\n");
 
   for (int i = 0; i < node_list_length(node->elements); i++) {

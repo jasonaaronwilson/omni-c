@@ -20,8 +20,7 @@
 
 #include "debug-printer.c.generated.h"
 
-__attribute__((warn_unused_result)) static inline buffer_t*
-    buffer_indent(buffer_t* buffer, int indention_level) {
+static inline buffer_t* buffer_indent(buffer_t* buffer, int indention_level) {
   return buffer_append_repeated_byte(buffer, ' ', indention_level * 4);
 }
 
@@ -32,9 +31,8 @@ __attribute__((warn_unused_result)) static inline buffer_t*
  *
  * Append the debugging version of a parse node to a buffer.
  */
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
-                                 int indention_level) {
+buffer_t* buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
+                                       int indention_level) {
   switch (node->tag) {
   case PARSE_NODE_DECLARATIONS:
     return buffer_append_dbg_declarations(buffer, to_declarations_node(node),
@@ -98,9 +96,8 @@ __attribute__((warn_unused_result)) buffer_t*
  *
  * Append the debugging version of a list of parse nodes to a buffer.
  */
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_node_list(buffer_t* buffer, node_list_t list,
-                                char* field_name, int indention_level) {
+buffer_t* buffer_append_dbg_node_list(buffer_t* buffer, node_list_t list,
+                                      char* field_name, int indention_level) {
   uint64_t length = node_list_length(list);
   for (uint64_t i = 0; i < length; i++) {
     parse_node_t* node = node_list_get(list, i);
@@ -117,9 +114,8 @@ __attribute__((warn_unused_result)) buffer_t*
  * Append the debugging version of a list of value_array of tokens
  * (not as common as node lists).
  */
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_tokens(buffer_t* buffer, value_array_t* tokens,
-                             char* field_name, int indention_level) {
+buffer_t* buffer_append_dbg_tokens(buffer_t* buffer, value_array_t* tokens,
+                                   char* field_name, int indention_level) {
   uint64_t length = tokens->length;
   for (uint64_t i = 0; i < length; i++) {
     oc_token_t* token = value_array_get_ptr(tokens, i, oc_token_t*);
@@ -131,30 +127,32 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_declarations(buffer_t* buffer, declarations_node_t* node,
-                                   int indention_level) {
+buffer_t* buffer_append_dbg_declarations(buffer_t* buffer,
+                                         declarations_node_t* node,
+                                         int indention_level) {
   return buffer_append_dbg_node_list(buffer, node->declarations, "declaration",
                                      indention_level);
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_enum(buffer_t* buffer, enum_node_t* node,
-                           int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_ENUM\n");
+buffer_t* buffer_append_dbg_enum(buffer_t* buffer, enum_node_t* node,
+                                 int indention_level) {
+  buffer_indent(buffer, indention_level);
+  buffer_printf(buffer, "tag: PARSE_NODE_ENUM\n");
   if (node->name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
+    buffer_indent(buffer, indention_level);
+    buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
   }
-  buffer = buffer_append_dbg_node_list(buffer, node->elements, "element",
-                                       indention_level);
+  buffer_append_dbg_node_list(buffer, node->elements, "element",
+                              indention_level);
+  if (node->partial_definition) {
+    buffer_indent(buffer, indention_level);
+    buffer_printf(buffer, "partial_definition: true\n");
+  }
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_struct_node(buffer_t* buffer, struct_node_t* node,
-                                  int indention_level) {
+buffer_t* buffer_append_dbg_struct_node(buffer_t* buffer, struct_node_t* node,
+                                        int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_STRUCT\n");
   if (node->name != NULL) {
@@ -169,9 +167,8 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_enum_element(buffer_t* buffer, enum_element_t* node,
-                                   int indention_level) {
+buffer_t* buffer_append_dbg_enum_element(buffer_t* buffer, enum_element_t* node,
+                                         int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_ENUM_ELEMENT\n");
 
@@ -192,9 +189,8 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_field_node(buffer_t* buffer, field_node_t* node,
-                                 int indention_level) {
+buffer_t* buffer_append_dbg_field_node(buffer_t* buffer, field_node_t* node,
+                                       int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_FIELD\n");
   if (node->name != NULL) {
@@ -215,9 +211,8 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_type_node(buffer_t* buffer, type_node_t* node,
-                                int indention_level) {
+buffer_t* buffer_append_dbg_type_node(buffer_t* buffer, type_node_t* node,
+                                      int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_TYPE\n");
 
@@ -242,9 +237,8 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_literal_node(buffer_t* buffer, literal_node_t* node,
-                                   int indention_level) {
+buffer_t* buffer_append_dbg_literal_node(buffer_t* buffer, literal_node_t* node,
+                                         int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_LITERAL\n");
   if (node->token != NULL) {
@@ -258,9 +252,9 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_function_node(buffer_t* buffer, function_node_t* node,
-                                    int indention_level) {
+buffer_t* buffer_append_dbg_function_node(buffer_t* buffer,
+                                          function_node_t* node,
+                                          int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
 
@@ -302,10 +296,8 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_function_argument_node(buffer_t* buffer,
-                                             function_argument_node_t* node,
-                                             int indention_level) {
+buffer_t* buffer_append_dbg_function_argument_node(
+    buffer_t* buffer, function_argument_node_t* node, int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
   if (node->arg_type != NULL) {
@@ -322,10 +314,9 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_function_body_node(buffer_t* buffer,
-                                         function_body_node_t* node,
-                                         int indention_level) {
+buffer_t* buffer_append_dbg_function_body_node(buffer_t* buffer,
+                                               function_body_node_t* node,
+                                               int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION_BODY\n");
   if (node->open_brace_token != NULL) {
@@ -341,9 +332,8 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_typedef_node(buffer_t* buffer, typedef_node_t* node,
-                                   int indention_level) {
+buffer_t* buffer_append_dbg_typedef_node(buffer_t* buffer, typedef_node_t* node,
+                                         int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_TYPEDEF\n");
   if (node->name != NULL) {
@@ -359,10 +349,9 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_global_variable_node(buffer_t* buffer,
-                                           global_variable_node_t* node,
-                                           int indention_level) {
+buffer_t* buffer_append_dbg_global_variable_node(buffer_t* buffer,
+                                                 global_variable_node_t* node,
+                                                 int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer
       = buffer_printf(buffer, "tag: PARSE_NODE_GLOBAL_VARIABLE_DEFINITION\n");
@@ -391,9 +380,9 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer;
 }
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* node,
-                                     int indention_level) {
+buffer_t* buffer_append_dbg_attribute_node(buffer_t* buffer,
+                                           attribute_node_t* node,
+                                           int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
   buffer = buffer_printf(buffer, "tag: PARSE_NODE_ATTRIBUTE\n");
   if (node->inner_start_token != NULL) {

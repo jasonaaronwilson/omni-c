@@ -1,8 +1,10 @@
 #!/bin/bash
 
+readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
+
 TARGET_C_FILE=$1
 shift
 
-../omni-c generate-library --output-file=${TARGET_C_FILE} $*
+$DIR/../omni-c generate-library --output-file=${TARGET_C_FILE} $*
 gcc ${TARGET_C_FILE}
 
