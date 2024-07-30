@@ -83,9 +83,12 @@ fragment_t* generate_struct_fragment() {
   buffer_t* text = make_buffer(1);
   buffer_printf(text, "struct %s {\n", raw_type_name);
   if (fragment_count > 0) {
-    char* field_type = get_random_type_name();
-    char* field_name = generate_random_name("field");
-    buffer_printf(text, "   %s %s;\n", field_type, field_name);
+    int num_fields = random_under(8) + 1;
+    for (int i = 0; i < num_fields; i++) {
+      char* field_type = get_random_type_name();
+      char* field_name = generate_random_name("field");
+      buffer_printf(text, "   %s %s;\n", field_type, field_name);
+    }
   }
   buffer_printf(text, "};\n");
   result->c_definition_text = buffer_to_c_string(text);
