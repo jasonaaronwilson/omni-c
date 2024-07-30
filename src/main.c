@@ -224,7 +224,8 @@ void configure_print_tokens_command(void) {
   flag_boolean("--include-whitespace", &FLAG_print_tokens_include_whitespace);
   flag_boolean("--include-comments", &FLAG_print_tokens_include_comments);
   flag_boolean("--parse-and-print", &FLAG_print_tokens_parse_and_print);
-  flag_boolean("--show-appended-tokens", &FLAG_print_tokens_show_appended_tokens);
+  flag_boolean("--show-appended-tokens",
+               &FLAG_print_tokens_show_appended_tokens);
   flag_file_args(&FLAG_files);
 }
 
