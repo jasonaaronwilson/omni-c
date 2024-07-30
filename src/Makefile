@@ -96,6 +96,7 @@ save-bootstrap-prototypes: extract-prototypes
 
 format:
 	clang-format -i ${SRC_C}
+	clang-format -i tools/random-code-generator.c
 
 clean:
 	rm -f omni-c omni-c-opt
@@ -103,7 +104,7 @@ clean:
 	find . -name '*~' | xargs -n 1 rm -f
 	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
 	rm -f tools/syntax-c
-	rm -f test-out.c test-out.o
+	rm -f test-out.c test-out.o self self.c global-header-file.h.gch
 
 diff: clean
 	git difftool HEAD
