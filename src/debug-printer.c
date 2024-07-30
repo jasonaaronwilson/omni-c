@@ -397,3 +397,20 @@ buffer_t* buffer_append_dbg_attribute_node(buffer_t* buffer,
   }
   return buffer;
 }
+
+/* ====================================================================== */
+
+/**
+ * @function debug_append_tokens
+ *
+ * This function simply appends the contents of all tokens
+ * together. This is useful for debugging source to source
+ * transformations based on modiying the token stream before before
+ * (like replacing nullptr with NULL).
+ */
+void debug_append_tokens(buffer_t* buffer, value_array_t* tokens) {
+  for (int i = 0; i < tokens->length; i++) {
+    oc_token_t* token = token_at(tokens, i);
+    buffer_append_sub_buffer(buffer, token->start, token->end, token->buffer);
+  }
+}

@@ -16,3 +16,5 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
 
 void reorder_symbol_table_structures(symbol_table_t* symbol_table);
 
+void convert_nullptr_to_null(value_array_t* tokens);
+

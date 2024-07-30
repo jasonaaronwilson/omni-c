@@ -32,6 +32,7 @@ boolean_t FLAG_print_tokens_show_tokens = false;
 boolean_t FLAG_print_tokens_include_whitespace = false;
 boolean_t FLAG_print_tokens_include_comments = false;
 boolean_t FLAG_print_tokens_parse_and_print = true;
+boolean_t FLAG_print_tokens_show_appended_tokens = true;
 
 char* FLAG_ouput_file = NULL;
 
@@ -72,6 +73,15 @@ void print_tokens(void) {
     }
 
     value_array_t* tokens = tokenizer_result.tokens;
+
+    convert_nullptr_to_null(tokens);
+
+    if (FLAG_print_tokens_show_appended_tokens) {
+      buffer_t* appended_tokens = make_buffer(1);
+      debug_append_tokens(appended_tokens, tokens);
+      fprintf(stdout, "%s", buffer_to_c_string(appended_tokens));
+    }
+
     do_print_tokens(tokens, "before xform tokens");
 
     tokens = transform_tokens(
@@ -214,6 +224,7 @@ void configure_print_tokens_command(void) {
   flag_boolean("--include-whitespace", &FLAG_print_tokens_include_whitespace);
   flag_boolean("--include-comments", &FLAG_print_tokens_include_comments);
   flag_boolean("--parse-and-print", &FLAG_print_tokens_parse_and_print);
+  flag_boolean("--show-appended-tokens", &FLAG_print_tokens_show_appended_tokens);
   flag_file_args(&FLAG_files);
 }
 

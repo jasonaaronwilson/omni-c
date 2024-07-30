@@ -32,3 +32,5 @@ buffer_t* buffer_append_dbg_global_variable_node(buffer_t* buffer, global_variab
 
 buffer_t* buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* node, int indention_level);
 
+void debug_append_tokens(buffer_t* buffer, value_array_t* tokens);
+

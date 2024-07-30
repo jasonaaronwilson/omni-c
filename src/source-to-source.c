@@ -350,3 +350,27 @@ void reorder_symbol_table_structures(symbol_table_t* symbol_table) {
   }
   symbol_table->structures->ordered_bindings = reordered_bindings;
 }
+
+/**
+ * @function convert_nullptr_to_null
+ *
+ * This function runs before parsing and simply replaces each instance
+ * of "nullptr" to NULL so that the input can use nullptr and still
+ * compile with c99 without worrying about header files, etc.
+ *
+ * TODO(jawilson): this isn't going to work right until we fully parse
+ * without the shortcuts like function body parsing. One work around
+ * is to print the tokens to a buffer and lex them again.
+ */
+void convert_nullptr_to_null(value_array_t* tokens) {
+  // easy way to break-point... __asm("int3");
+  buffer_t* null_token = buffer_append_string(make_buffer(1), "NULL");
+  for (int i = 0; i < tokens->length; i++) {
+    oc_token_t* token = token_at(tokens, i);
+    if (token_matches(token, "nullptr")) {
+      token->start = 0;
+      token->end = null_token->length;
+      token->buffer = null_token;
+    }
+  }
+}
