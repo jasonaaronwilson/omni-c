@@ -12,7 +12,6 @@ SRC_C_SELF = \
 	lexer.c \
 	token-transformer.c \
 	parser.c \
-	to-string-helpers.c \
 	node-list.c \
 	debug-printer.c \
 	header-file-printer.c \
@@ -24,7 +23,7 @@ SRC_C_SELF = \
 	srcgen.c \
 	main.c
 
-SRC_C := armyknife-lib-impl.c $(SRC_C_SELF)
+SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c $(SRC_C_SELF)
 
 
 # Derived list of header file names
@@ -78,7 +77,7 @@ do-generate-header-file: omni-c-opt
 # TODO(jawilson): -Werror 
 self: omni-c
 	/usr/bin/time --portability ./omni-c generate-library --output-file=self.c ${SRC_C_SELF}
-	gcc -o self -Wall -std=c99 self.c armyknife-lib-impl.c
+	gcc -o self -Wall -std=c99 -DOMNI_C_SELF_GENERATED self.c armyknife-lib-impl.c
 
 ## # Pattern rule for generating header files
 ## %.h: %.c
@@ -105,7 +104,7 @@ clean:
 	find . -name '*~' | xargs -n 1 rm -f
 	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
 	rm -f tools/syntax-c
-	rm -f test-out.c test-out.o self self.c global-header-file.h.gch
+	rm -f test-out.c test-out.o self self.c global-header-file.h.gch a.out tools/a.out
 
 diff: clean
 	git difftool HEAD

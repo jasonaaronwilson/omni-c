@@ -15,6 +15,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "source-to-source.h"
+#include "srcgen.h"
 #include "symbol-table-builder.h"
 #include "symbol-table.h"
 #include "token-transformer.h"
@@ -27,14 +28,13 @@
 value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
 boolean_t FLAG_include_unnamed_nodes = false;
-
 boolean_t FLAG_print_tokens_show_tokens = false;
 boolean_t FLAG_print_tokens_include_whitespace = false;
 boolean_t FLAG_print_tokens_include_comments = false;
 boolean_t FLAG_print_tokens_parse_and_print = true;
 boolean_t FLAG_print_tokens_show_appended_tokens = true;
-
 char* FLAG_ouput_file = NULL;
+boolean_t FLAG_generate_enum_convertors = true;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
@@ -253,10 +253,12 @@ void configure_test_symbol_table_command(void) {
 void configure_generate_c_output_file(void) {
   flag_command("generate-header-file", &FLAG_command);
   flag_string("--output-file", &FLAG_ouput_file);
+  flag_boolean("--generate_enum_convertors", &FLAG_generate_enum_convertors);
   flag_file_args(&FLAG_files);
 
   flag_command("generate-library", &FLAG_command);
   flag_string("--output-file", &FLAG_ouput_file);
+  flag_boolean("--generate_enum_convertors", &FLAG_generate_enum_convertors);
   flag_file_args(&FLAG_files);
 }
 
@@ -274,6 +276,9 @@ void generate_c_output_file(boolean_t is_library) {
 
   symbol_table_t* symbol_table = make_symbol_table();
   parse_and_add_top_level_definitions(symbol_table, FLAG_files);
+  if (FLAG_generate_enum_convertors) {
+    srcgen_enum_to_string_converters(symbol_table);
+  }
   split_structure_typedefs(symbol_table);
   reorder_symbol_table_typedefs(symbol_table);
   reorder_symbol_table_structures(symbol_table);

@@ -3,6 +3,7 @@
 #define _LEXER_H_
 
 #include "compiler-errors.h"
+
 #include <c-armyknife-lib.h>
 #include <ctype.h>
 
@@ -83,6 +84,8 @@ struct token_or_error_S {
 
 typedef struct token_or_error_S token_or_error_t;
 
+char* token_type_to_string(token_type_t type);
+
 #include "lexer.c.generated.h"
 
 #endif /* _LEXER_H_ */
@@ -94,33 +97,6 @@ typedef struct token_or_error_S token_or_error_t;
  */
 char* token_to_string(oc_token_t* token) {
   return buffer_c_substring(token->buffer, token->start, token->end);
-}
-
-/**
- * @function token_type_to_string
- *
- * Return a string representation of a token type.
- */
-char* token_type_to_string(token_type_t type) {
-  switch (type) {
-  case TOKEN_TYPE_WHITESPACE:
-    return "TOKEN_TYPE_WHITESPACE";
-  case TOKEN_TYPE_COMMENT:
-    return "TOKEN_TYPE_COMMENT";
-  case TOKEN_TYPE_IDENTIFIER:
-    return "TOKEN_TYPE_IDENTIFIER";
-  case TOKEN_TYPE_PUNCTUATION:
-    return "TOKEN_TYPE_PUNCTUATION";
-  case TOKEN_TYPE_INTEGER_LITERAL:
-    return "TOKEN_TYPE_INTEGER_LITERAL";
-  case TOKEN_TYPE_FLOAT_LITERAL:
-    return "TOKEN_TYPE_FLOAT_LITERAL";
-  case TOKEN_TYPE_STRING_LITERAL:
-    return "TOKEN_TYPE_STRING_LITERAL";
-  case TOKEN_TYPE_CHARACTER_LITERAL:
-    return "TOKEN_TYPE_CHARACTER_LITERAL";
-  }
-  fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 /**

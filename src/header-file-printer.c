@@ -280,13 +280,17 @@ buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node) {
   return buffer;
 }
 
-
+/**
+ * @function buffer_append_enum_to_string
+ *
+ * Adds the source code to a function like input_mode_to_string (from
+ * the enum input_mode_t).
+ */
 buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node,
                                        char* to_string_fn_prefix,
                                        char* type_string) {
-  buffer
-      = buffer_printf(buffer, "static inline char* %s_to_string(%s value) {\n",
-                      to_string_fn_prefix, type_string);
+  buffer = buffer_printf(buffer, "char* %s_to_string(%s value) {\n",
+                         to_string_fn_prefix, type_string);
   buffer = buffer_printf(buffer, "  switch (value) {\n");
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
@@ -308,12 +312,17 @@ buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node,
   return buffer;
 }
 
+/**
+ * @function buffer_append_string_to_enum
+ *
+ * Adds the source code to a function like string_to_input_mode (from
+ * the enum input_mode_t).
+ */
 buffer_t* buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node,
                                        char* to_string_fn_prefix,
                                        char* type_string) {
-  buffer
-      = buffer_printf(buffer, "static inline %s string_to_%s(char* value) {\n",
-                      type_string, to_string_fn_prefix);
+  buffer = buffer_printf(buffer, "%s string_to_%s(char* value) {\n",
+                         type_string, to_string_fn_prefix);
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
     enum_element_t* element
