@@ -21,6 +21,7 @@ SRC_C_SELF = \
 	preprocessor.c \
 	header-file-extractor.c \
 	symbol-table-builder.c \
+	srcgen.c \
 	main.c
 
 SRC_C := armyknife-lib-impl.c $(SRC_C_SELF)
