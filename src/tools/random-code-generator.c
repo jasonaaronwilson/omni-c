@@ -26,12 +26,11 @@ typedef struct fragment_s {
   char* c_definition_text;
 } fragment_t;
 
-random_state_t* random_state;
 fragment_t* fragments[NUM_FRAGMENTS];
 int fragment_count = 0;
 
 static inline int random_under(int limit) {
-  return (int) random_next_uint64_below(random_state, limit);
+  return (int) random_next_uint64_below(random_state(), limit);
 }
 
 char* generate_random_name(char* str) {
@@ -39,7 +38,11 @@ char* generate_random_name(char* str) {
 }
 
 fragment_t* get_random_type_fragment() {
-  return fragments[random_under(fragment_count)];
+  int n = random_under(fragment_count);
+  if (fragment_count > 10) {
+    n = n & (-1 << 1);
+  }
+  return fragments[n];
 }
 
 char* get_random_type_suffix() {
@@ -123,8 +126,8 @@ void shuffle_array(fragment_t* arr[], int size) {
 
 // Main function
 int main(int argc, char** argv) {
-  random_state_t state = random_state_for_test();
-  random_state = &state;
+  // random_state_t state = random_state_for_test();
+  // random_state = &state;
 
   // Generate fragments. This will naturally be in the correct order
   // for C to handle as we are generating based off of a tree. This is
