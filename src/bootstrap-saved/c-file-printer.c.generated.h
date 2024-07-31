@@ -1,4 +1,4 @@
-/* Automatically extracted prototypes from header-file-printer.c */
+/* Automatically extracted prototypes from c-file-printer.c */
 
 buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node);
 
