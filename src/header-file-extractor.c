@@ -14,7 +14,7 @@
 
 #include <c-armyknife-lib.h>
 
-#include "header-file-printer.h"
+#include "c-file-printer.h"
 #include "parser.h"
 
 static inline char* remove_type_suffix(char* typename) {

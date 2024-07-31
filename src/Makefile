@@ -14,7 +14,7 @@ SRC_C_SELF = \
 	parser.c \
 	node-list.c \
 	debug-printer.c \
-	header-file-printer.c \
+	c-file-printer.c \
 	symbol-table.c \
 	source-to-source.c \
 	preprocessor.c \

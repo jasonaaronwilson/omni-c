@@ -9,9 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "c-file-printer.h"
 #include "debug-printer.h"
 #include "file-reader.h"
-#include "header-file-printer.h"
 #include "lexer.h"
 #include "parser.h"
 #include "source-to-source.h"

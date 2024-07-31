@@ -1,6 +1,6 @@
-#line 2 "header-file-printer.c"
-#ifndef _HEADER_FILE_PRINTER_H_
-#define _HEADER_FILE_PRINTER_H_
+#line 2 "c-file-printer.c"
+#ifndef _C_FILE_PRINTER_H_
+#define _C_FILE_PRINTER_H_
 
 #include "lexer.h"
 #include "parser.h"
@@ -8,7 +8,7 @@
 #include <ctype.h>
 
 /**
- * @file header-file-printer.c
+ * @file c-file-printer.c
  *
  * This file provides primitives to "print" out certain kinds of parse
  * nodes in a suitable format for a C "header" file (which means they
@@ -26,9 +26,9 @@
  * order things should appear in the header file, etc.
  */
 
-#include "header-file-printer.c.generated.h"
+#include "c-file-printer.c.generated.h"
 
-#endif /* _HEADER_FILE_PRINTER_H_ */
+#endif /* _C_FILE_PRINTER_H_ */
 
 /**
  * @function buffer_append_dbg_parse_node

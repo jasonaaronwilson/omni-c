@@ -8,7 +8,7 @@
 #ifndef _SRCGEN_H_
 #define _SRCGEN_H_
 
-#include "header-file-printer.h"
+#include "c-file-printer.h"
 #include "parser.h"
 #include "symbol-table-builder.h"
 #include <c-armyknife-lib.h>
