@@ -4,6 +4,8 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "pratt-parser.h"
+
 #include <c-armyknife-lib.h>
 #include <ctype.h>
 
@@ -84,6 +86,14 @@ buffer_t* buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
   case PARSE_NODE_ATTRIBUTE:
     return buffer_append_dbg_attribute_node(buffer, to_attribute_node(node),
                                             indention_level);
+
+  case PARSE_NODE_IDENTIFIER:
+    return buffer_append_dbg_identifier_node(buffer, to_identifier_node(node),
+                                             indention_level);
+
+  case PARSE_NODE_BINARY_OPERATOR:
+    return buffer_append_dbg_binary_operator_node(
+        buffer, to_binary_operator_node(node), indention_level);
 
   default:
     break;
@@ -413,4 +423,34 @@ void debug_append_tokens(buffer_t* buffer, value_array_t* tokens) {
     oc_token_t* token = token_at(tokens, i);
     buffer_append_sub_buffer(buffer, token->start, token->end, token->buffer);
   }
+}
+
+buffer_t* buffer_append_dbg_identifier_node(buffer_t* buffer,
+                                            identifier_node_t* node,
+                                            int indention_level) {
+  buffer_indent(buffer, indention_level);
+  buffer_printf(buffer, "tag: PARSE_NODE_TYPEDEF\n");
+  buffer_indent(buffer, indention_level);
+  buffer_printf(buffer, "name: %s\n", token_to_string(node->token));
+  return buffer;
+}
+
+buffer_t* buffer_append_dbg_binary_operator_node(buffer_t* buffer,
+                                                 binary_operator_node_t* node,
+                                                 int indention_level) {
+  buffer_indent(buffer, indention_level);
+  buffer_printf(buffer, "tag: PARSE_NODE_BINARY_OPERATOR\n");
+  buffer_indent(buffer, indention_level);
+  buffer_printf(buffer, "operator: %s\n", token_to_string(node->operator));
+
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_append_string(buffer, "left:\n");
+  buffer
+      = buffer_append_dbg_parse_node(buffer, node->left, indention_level + 1);
+
+  buffer = buffer_indent(buffer, indention_level);
+  buffer = buffer_append_string(buffer, "right:\n");
+  buffer
+      = buffer_append_dbg_parse_node(buffer, node->right, indention_level + 1);
+  return buffer;
 }

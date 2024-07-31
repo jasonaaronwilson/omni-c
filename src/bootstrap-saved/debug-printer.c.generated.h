@@ -34,3 +34,7 @@ buffer_t* buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* n
 
 void debug_append_tokens(buffer_t* buffer, value_array_t* tokens);
 
+buffer_t* buffer_append_dbg_identifier_node(buffer_t* buffer, identifier_node_t* node, int indention_level);
+
+buffer_t* buffer_append_dbg_binary_operator_node(buffer_t* buffer, binary_operator_node_t* node, int indention_level);
+

@@ -61,10 +61,6 @@ typedef struct {
   precedence_t precedence;
 } pratt_parser_instruction_t;
 
-#include "pratt-parser.c.generated.h"
-
-#endif /* _PRATT_PARSER_H_ */
-
 /**
  * @structure identifier_node_t
  *
@@ -102,11 +98,42 @@ static inline identifier_node_t* malloc_identifier_node(void) {
   return result;
 }
 
+/**
+ * @function to_identifier_node
+ *
+ * Safely cast a generic node to an identifier node after examining
+ * it's tag.
+ */
+static inline identifier_node_t* to_identifier_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_IDENTIFIER) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(identifier_node_t*, ptr);
+}
+
+/**
+ * @function to_binary_operator_node
+ *
+ * Safely cast a generic node to a binary operator node after
+ * examining it's tag.
+ */
+static inline binary_operator_node_t*
+    to_binary_operator_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_BINARY_OPERATOR) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(binary_operator_node_t*, ptr);
+}
+
 pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token);
 pratt_parser_instruction_t get_infix_instruction(oc_token_t* token);
 parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
                                         value_array_t* tokens,
                                         uint64_t position, parse_node_t* left);
+
+#include "pratt-parser.c.generated.h"
+
+#endif /* _PRATT_PARSER_H_ */
 
 /**
  * @function pratt_parse_expression
@@ -116,6 +143,9 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
 parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
                                       int precedence) {
   oc_token_t* token = token_at(tokens, position++);
+  if (token == NULL) {
+    return parse_result_empty();
+  }
   pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(token);
   if (prefix_instruction.operation == PRATT_PARSE_UNKNOWN) {
     return parse_error_result(PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL,
@@ -197,6 +227,7 @@ pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token) {
         .precedence = PRECEDENCE_UNARY,
     };
   }
+  return (pratt_parser_instruction_t){0};
 }
 
 /**
@@ -221,7 +252,7 @@ pratt_parser_instruction_t get_infix_instruction(oc_token_t* token) {
         .precedence = PRECEDENCE_MULTIPICITIVE,
     };
   }
-  fatal_error(ERROR_ILLEGAL_STATE);
+  return (pratt_parser_instruction_t){0};
 }
 
 /**

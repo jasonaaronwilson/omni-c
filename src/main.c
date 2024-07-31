@@ -458,6 +458,13 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
                                         .keep_c_preprocessor_lines = false,
                                     });
   parse_result_t result = pratt_parse_expression(tokens, 0, 0);
+  if (!is_valid_result(result)) {
+    fprintf(stderr, "FAIL");
+    exit(1);
+  }
+  buffer_t* output
+      = buffer_append_dbg_parse_node(make_buffer(1), result.node, 0);
+  fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
 int main(int argc, char** argv) {
