@@ -4,8 +4,8 @@
 
 #include <c-armyknife-lib.h>
 
-#include "parser.h"
 #include "compiler-errors.h"
+#include "parser.h"
 
 /**
  * @file pratt-parser.c
@@ -14,7 +14,8 @@
  * amount of inefficiency in some compilers. Instead we use the Pratt
  * parsing algorithm (similar to shunting yard) to parse expressions.
  *
- * See: https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
+ * See:
+ * https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
  */
 
 typedef enum {
@@ -25,7 +26,7 @@ typedef enum {
   PRATT_PARSE_CONDITIONAL,
   PRATT_PARSE_OPEN_PAREN,
   PRATT_PARSE_IDENTIFIER,
-  
+
 } pratt_parser_operation_t;
 
 typedef enum {
@@ -62,26 +63,65 @@ typedef struct {
 
 #endif /* _PRATT_PARSER_H_ */
 
+/**
+ * @structure identifier_node_t
+ *
+ * Represents an identifier (variable, named constant, etc.). In other
+ * parts of the parser we generally didn't need these since usually
+ * just having the token itself was sufficient however this fits the
+ * paradigm better for expressions.
+ */
+typedef struct {
+  parse_node_type_t tag;
+  oc_token_t* token;
+} identifier_node_t;
+
+/**
+ * @structure binary_operator_node_t
+ *
+ * Represents A + B, etc.
+ */
+typedef struct {
+  parse_node_type_t tag;
+  oc_token_t* operator;
+  parse_node_t* left;
+  parse_node_t* right;
+} binary_operator_node_t;
+
+static inline binary_operator_node_t* malloc_binary_operator_node(void) {
+  binary_operator_node_t* result = malloc_struct(binary_operator_node_t);
+  result->tag = PARSE_NODE_BINARY_OPERATOR;
+  return result;
+}
+
+static inline identifier_node_t* malloc_identifier_node(void) {
+  identifier_node_t* result = malloc_struct(identifier_node_t);
+  result->tag = PARSE_NODE_IDENTIFIER;
+  return result;
+}
+
 pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token);
 pratt_parser_instruction_t get_infix_instruction(oc_token_t* token);
 parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
-					value_array_t* tokens, 
-					uint64_t position,
-					parse_node_t* left);
+                                        value_array_t* tokens,
+                                        uint64_t position, parse_node_t* left);
 
 /**
  * @function pratt_parse_expression
  *
  * Parses an Omni C expression using "top-down operator precedence".
  */
-parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position, int precedence) {
+parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
+                                      int precedence) {
   oc_token_t* token = token_at(tokens, position++);
   pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(token);
   if (prefix_instruction.operation == PRATT_PARSE_UNKNOWN) {
-    return parse_error_result(PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL, token);
+    return parse_error_result(PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL,
+                              token);
   }
 
-  parse_result_t left = pratt_handle_instruction(prefix_instruction, tokens, position, NULL);
+  parse_result_t left
+      = pratt_handle_instruction(prefix_instruction, tokens, position, NULL);
   if (!is_valid_result(left)) {
     return left;
   }
@@ -89,17 +129,19 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position, 
 
   while (1) {
     oc_token_t* infix_token = token_at(tokens, position);
-    pratt_parser_instruction_t infix_instruction = get_infix_instruction(infix_token);
+    pratt_parser_instruction_t infix_instruction
+        = get_infix_instruction(infix_token);
     if (infix_instruction.operation == PRATT_PARSE_UNKNOWN) {
       break;
     }
     if (precedence < infix_instruction.precedence) {
       position++;
-      left = pratt_handle_instruction(infix_instruction, tokens, position, left.node);
+      left = pratt_handle_instruction(infix_instruction, tokens, position,
+                                      left.node);
       if (!is_valid_result(left)) {
-	return left;
+        return left;
       } else {
-	position = left.next_token_position;
+        position = left.next_token_position;
       }
     }
   }
@@ -118,41 +160,39 @@ pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token) {
   switch (token->type) {
 
   case TOKEN_TYPE_IDENTIFIER:
-    return (pratt_parser_instruction_t) {
-      .token = token,
-      .operation = PRATT_PARSE_IDENTIFIER,
-      .precedence = PRECEDENCE_PRIMARY,
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_IDENTIFIER,
+        .precedence = PRECEDENCE_PRIMARY,
     };
 
   case TOKEN_TYPE_INTEGER_LITERAL:
   case TOKEN_TYPE_FLOAT_LITERAL:
   case TOKEN_TYPE_STRING_LITERAL:
   case TOKEN_TYPE_CHARACTER_LITERAL:
-    return (pratt_parser_instruction_t) {
-      .token = token,
-      .operation = PRATT_PARSE_PREFIX_OPERATOR,
-      .precedence = PRECEDENCE_PRIMARY,
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_PREFIX_OPERATOR,
+        .precedence = PRECEDENCE_PRIMARY,
     };
 
   case TOKEN_TYPE_PUNCTUATION:
     break;
 
   default:
-    return (pratt_parser_instruction_t) {
-      .token = token,
-      .operation = PRATT_PARSE_UNKNOWN,
-      .precedence = PRECEDENCE_UNKNOWN,
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_UNKNOWN,
+        .precedence = PRECEDENCE_UNKNOWN,
     };
   }
 
-  if (token_matches(token, "+")
-      || token_matches(token, "-")
-      || token_matches(token, "~")
-      || token_matches(token, "!")) {
-    return (pratt_parser_instruction_t) {
-      .token = token,
-      .operation = PRATT_PARSE_PREFIX_OPERATOR,
-      .precedence = PRECEDENCE_UNARY,
+  if (token_matches(token, "+") || token_matches(token, "-")
+      || token_matches(token, "~") || token_matches(token, "!")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_PREFIX_OPERATOR,
+        .precedence = PRECEDENCE_UNARY,
     };
   }
 }
@@ -166,17 +206,17 @@ pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token) {
  */
 pratt_parser_instruction_t get_infix_instruction(oc_token_t* token) {
   if (token_matches(token, "+") || token_matches(token, "-")) {
-    return (pratt_parser_instruction_t) {
-      .token = token,
-      .operation = PRATT_PARSE_BINARY_OPERATOR,
-      .precedence = PRECEDENCE_ADDITIVE,
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_ADDITIVE,
     };
   }
   if (token_matches(token, "*") || token_matches(token, "/")) {
-    return (pratt_parser_instruction_t) {
-      .token = token,
-      .operation = PRATT_PARSE_BINARY_OPERATOR,
-      .precedence = PRECEDENCE_MULTIPICITIVE,
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_MULTIPICITIVE,
     };
   }
   fatal_error(ERROR_ILLEGAL_STATE);
@@ -189,10 +229,33 @@ pratt_parser_instruction_t get_infix_instruction(oc_token_t* token) {
  * performed.
  */
 parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
-					value_array_t* tokens, 
-					uint64_t position,
-					parse_node_t* left) {
+                                        value_array_t* tokens,
+                                        uint64_t position, parse_node_t* left) {
+  // Also just token_at(position) if we want "immutable"
+  // instructions...
+  oc_token_t* token = instruction.token;
+
   switch (instruction.operation) {
+  case PRATT_PARSE_BINARY_OPERATOR:
+    do {
+      parse_result_t right = pratt_parse_expression(tokens, position + 1,
+                                                    instruction.precedence);
+      binary_operator_node_t* result = malloc_binary_operator_node();
+      result->operator= token;
+      result->left = left;
+      result->right = right.node;
+      return parse_result(to_node(result), right.next_token_position);
+    } while (0);
+
+  case PRATT_PARSE_IDENTIFIER:
+    do {
+      identifier_node_t* result = malloc_identifier_node();
+      result->token = token;
+      return parse_result(to_node(result), position + 1);
+    } while (0);
+
+    break;
+
   default:
     break;
   }
