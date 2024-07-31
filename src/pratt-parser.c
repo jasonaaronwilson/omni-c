@@ -61,6 +61,8 @@ typedef struct {
   precedence_t precedence;
 } pratt_parser_instruction_t;
 
+#include "pratt-parser.c.generated.h"
+
 #endif /* _PRATT_PARSER_H_ */
 
 /**

@@ -14,6 +14,7 @@
 #include "file-reader.h"
 #include "lexer.h"
 #include "parser.h"
+#include "pratt-parser.h"
 #include "source-to-source.h"
 #include "srcgen.h"
 #include "symbol-table-builder.h"
@@ -35,6 +36,7 @@ boolean_t FLAG_print_tokens_parse_and_print = true;
 boolean_t FLAG_print_tokens_show_appended_tokens = true;
 char* FLAG_ouput_file = NULL;
 boolean_t FLAG_generate_enum_convertors = true;
+char* FLAG_expression = NULL;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
@@ -205,6 +207,11 @@ void extract_command(char* command) {
   }
 }
 
+void configure_parse_expression(void) {
+  flag_command("parse-expression", &FLAG_command);
+  flag_string("--expression", &FLAG_expression);
+}
+
 void configure_flags(void) {
   flag_program_name("omni-c");
   flag_description(
@@ -216,6 +223,7 @@ void configure_flags(void) {
   configure_extract_enums_command();
   configure_test_symbol_table_command();
   configure_generate_c_output_file();
+  configure_parse_expression();
 }
 
 void configure_print_tokens_command(void) {
@@ -436,6 +444,22 @@ void generate_c_output_file(boolean_t is_library) {
   }
 }
 
+void parse_expression_string_and_print_parse_tree(char* expression) {
+  oc_tokenizer_result_t tokenizer_result
+      = tokenize(buffer_append_string(make_buffer(1), expression));
+  if (tokenizer_result.tokenizer_error_code) {
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+  value_array_t* tokens = tokenizer_result.tokens;
+  tokens = transform_tokens(tokens, (token_transformer_options_t){
+                                        .keep_whitespace = false,
+                                        .keep_comments = false,
+                                        .keep_javadoc_comments = false,
+                                        .keep_c_preprocessor_lines = false,
+                                    });
+  parse_result_t result = pratt_parse_expression(tokens, 0, 0);
+}
+
 int main(int argc, char** argv) {
   configure_fatal_errors((fatal_error_config_t){
       .catch_sigsegv = true,
@@ -470,6 +494,8 @@ int main(int argc, char** argv) {
     generate_c_output_file(true);
     log_info("Exiting normally!");
     exit(0);
+  } else if (string_equal("parse-expression", FLAG_command)) {
+    parse_expression_string_and_print_parse_tree(FLAG_expression);
   } else if (string_equal("print-tokens", FLAG_command)) {
     print_tokens();
   } else if (string_equal("extract-enums", FLAG_command)
