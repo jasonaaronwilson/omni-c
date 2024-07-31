@@ -142,12 +142,13 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
  */
 parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
                                       int precedence) {
-  oc_token_t* token = token_at(tokens, position++);
+  oc_token_t* token = token_at(tokens, position);
   if (token == NULL) {
     return parse_result_empty();
   }
   pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(token);
   if (prefix_instruction.operation == PRATT_PARSE_UNKNOWN) {
+    log_warn("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
     return parse_error_result(PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL,
                               token);
   }
@@ -155,15 +156,20 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
   parse_result_t left
       = pratt_handle_instruction(prefix_instruction, tokens, position, NULL);
   if (!is_valid_result(left)) {
+    log_warn("(RETURNING ERROR) handle instruction\n", token_to_string(token));
     return left;
   }
   position = left.next_token_position;
 
   while (1) {
     oc_token_t* infix_token = token_at(tokens, position);
+    log_warn("token position = %d (token = %s)\n", position,
+             token_to_string(infix_token));
     pratt_parser_instruction_t infix_instruction
         = get_infix_instruction(infix_token);
     if (infix_instruction.operation == PRATT_PARSE_UNKNOWN) {
+      log_warn("(RETURNING LEFT) no infix instruction for %s\n",
+               token_to_string(infix_token));
       break;
     }
     if (precedence < infix_instruction.precedence) {
@@ -171,6 +177,9 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
       left = pratt_handle_instruction(infix_instruction, tokens, position,
                                       left.node);
       if (!is_valid_result(left)) {
+        log_warn(
+            "(RETURNING LEFT) infix instruction returned invalid result %s\n",
+            token_to_string(infix_token));
         return left;
       } else {
         position = left.next_token_position;
@@ -267,12 +276,19 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
   // Also just token_at(position) if we want "immutable"
   // instructions...
   oc_token_t* token = instruction.token;
+  log_warn("handling instruction at pos=%d token=%s", position,
+           token_to_string(token));
 
   switch (instruction.operation) {
   case PRATT_PARSE_BINARY_OPERATOR:
     do {
       parse_result_t right = pratt_parse_expression(tokens, position + 1,
                                                     instruction.precedence);
+      if (!is_valid_result(right)) {
+        log_warn("right side of token %s (at pos=%d) is not valid",
+                 token_to_string(token), position + 1);
+        return right;
+      }
       binary_operator_node_t* result = malloc_binary_operator_node();
       result->operator= token;
       result->left = left;

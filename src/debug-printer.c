@@ -443,14 +443,17 @@ buffer_t* buffer_append_dbg_binary_operator_node(buffer_t* buffer,
   buffer_indent(buffer, indention_level);
   buffer_printf(buffer, "operator: %s\n", token_to_string(node->operator));
 
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_append_string(buffer, "left:\n");
-  buffer
-      = buffer_append_dbg_parse_node(buffer, node->left, indention_level + 1);
+  if (node->left != NULL) {
+    buffer_indent(buffer, indention_level);
+    buffer_append_string(buffer, "left:\n");
+    buffer_append_dbg_parse_node(buffer, node->left, indention_level + 1);
+  }
 
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_append_string(buffer, "right:\n");
-  buffer
-      = buffer_append_dbg_parse_node(buffer, node->right, indention_level + 1);
+  if (node->right != NULL) {
+    buffer_indent(buffer, indention_level);
+    buffer_append_string(buffer, "right:\n");
+    buffer_append_dbg_parse_node(buffer, node->right, indention_level + 1);
+  }
+
   return buffer;
 }
