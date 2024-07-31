@@ -21,6 +21,7 @@ SRC_C_SELF = \
 	header-file-extractor.c \
 	symbol-table-builder.c \
 	srcgen.c \
+	pratt-parser.c \
 	main.c
 
 SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c $(SRC_C_SELF)
