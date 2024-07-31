@@ -113,9 +113,9 @@ buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer,
                                                function_node_t* node) {
 
   for (int i = 0; i < node_list_length(node->attributes); i++) {
-    buffer = buffer_append_c_attribute_node(
+    buffer_append_c_attribute_node(
         buffer, to_attribute_node(node_list_get(node->attributes, i)));
-    buffer = buffer_printf(buffer, " ");
+    buffer_printf(buffer, " ");
   }
 
   if (node->storage_class_specifier != NULL) {
@@ -133,11 +133,11 @@ buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer,
 
   for (int i = 0; i < node_list_length(node->function_args); i++) {
     if (i > 0) {
-      buffer = buffer_printf(buffer, ", ");
+      buffer_printf(buffer, ", ");
     }
     function_argument_node_t* arg_node
         = to_function_argument_node(node_list_get(node->function_args, i));
-    buffer = buffer_append_c_function_argument_node(buffer, arg_node);
+    buffer_append_c_function_argument_node(buffer, arg_node);
   }
   buffer_append_string(buffer, ")");
   return buffer;
@@ -146,7 +146,7 @@ buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer,
 buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
                                                   function_node_t* node) {
   buffer_append_c_function_node_prefix(buffer, node);
-  buffer = buffer_printf(buffer, ";\n");
+  buffer_printf(buffer, ";\n");
   return buffer;
 }
 
@@ -169,9 +169,9 @@ buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer,
 buffer_t*
     buffer_append_c_function_argument_node(buffer_t* buffer,
                                            function_argument_node_t* node) {
-  buffer = buffer_append_c_type_node(buffer, node->arg_type);
+  buffer_append_c_type_node(buffer, node->arg_type);
   if (node->arg_name != NULL) {
-    buffer = buffer_printf(buffer, " %s", token_to_string(node->arg_name));
+    buffer_printf(buffer, " %s", token_to_string(node->arg_name));
   }
   return buffer;
 }
@@ -180,15 +180,15 @@ buffer_t* buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
 
   switch (node->type_node_kind) {
   case TYPE_NODE_KIND_POINTER:
-    buffer = buffer_append_c_type_node(
-        buffer, to_type_node(node_list_get(node->type_args, 0)));
-    buffer = buffer_printf(buffer, "*");
+    buffer_append_c_type_node(buffer,
+                              to_type_node(node_list_get(node->type_args, 0)));
+    buffer_printf(buffer, "*");
     break;
 
   case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
   case TYPE_NODE_KIND_TYPENAME:
     if (node->type_name != NULL) {
-      buffer = buffer_append_token_string(buffer, node->type_name);
+      buffer_append_token_string(buffer, node->type_name);
     }
     break;
 
@@ -207,7 +207,7 @@ buffer_t* buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
 
 buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
                                          attribute_node_t* node) {
-  buffer = buffer_printf(buffer, "__attribute__((");
+  buffer_printf(buffer, "__attribute__((");
 
   // Since parser.c doesn't fully parse attributes because we were
   // lazy and don't need to care yet, we simply need to emit a
@@ -221,11 +221,11 @@ buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
   // need to write function prototypes for our own code anymore and
   // the code is still available as ANSI C when hanlding our own
   // source code for development and boot-strapping.
-  buffer = buffer_append_c_raw_token_span(buffer, node->inner_start_token,
-                                          node->inner_end_token);
+  buffer_append_c_raw_token_span(buffer, node->inner_start_token,
+                                 node->inner_end_token);
 
 
-  buffer = buffer_printf(buffer, "))");
+  buffer_printf(buffer, "))");
   return buffer;
 }
 
@@ -241,40 +241,40 @@ buffer_t* buffer_append_c_raw_token_span(buffer_t* buffer,
   if (start_token->buffer != end_token->buffer) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  buffer = buffer_append_sub_buffer(buffer, start_token->start, end_token->end,
-                                    start_token->buffer);
+  buffer_append_sub_buffer(buffer, start_token->start, end_token->end,
+                           start_token->buffer);
   return buffer;
 }
 
 buffer_t* buffer_append_enum_node(buffer_t* buffer, enum_node_t* node) {
 
-  buffer = buffer_printf(buffer, "enum ");
+  buffer_printf(buffer, "enum ");
   if (node->name != NULL) {
-    buffer = buffer_printf(buffer, "%s\n", token_to_string(node->name));
+    buffer_printf(buffer, "%s\n", token_to_string(node->name));
   }
   if (node->partial_definition) {
     return buffer;
   }
 
-  buffer = buffer_printf(buffer, "{\n");
+  buffer_printf(buffer, "{\n");
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
-    buffer = buffer_printf(buffer, "    ");
-    buffer = buffer_append_enum_element(
+    buffer_printf(buffer, "    ");
+    buffer_append_enum_element(
         buffer, to_enum_element_node(node_list_get(node->elements, i)));
-    buffer = buffer_printf(buffer, ",\n");
+    buffer_printf(buffer, ",\n");
   }
-  buffer = buffer_printf(buffer, "}");
+  buffer_printf(buffer, "}");
 
   return buffer;
 }
 
 buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node) {
 
-  buffer = buffer_append_token_string(buffer, node->name);
+  buffer_append_token_string(buffer, node->name);
   if (node->value != NULL) {
-    buffer = buffer_printf(buffer, " = ");
-    buffer = buffer_append_token_string(buffer, node->value);
+    buffer_printf(buffer, " = ");
+    buffer_append_token_string(buffer, node->value);
   }
 
   return buffer;
@@ -289,25 +289,25 @@ buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node) {
 buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node,
                                        char* to_string_fn_prefix,
                                        char* type_string) {
-  buffer = buffer_printf(buffer, "char* %s_to_string(%s value) {\n",
-                         to_string_fn_prefix, type_string);
-  buffer = buffer_printf(buffer, "  switch (value) {\n");
+  buffer_printf(buffer, "char* %s_to_string(%s value) {\n", to_string_fn_prefix,
+                type_string);
+  buffer_printf(buffer, "  switch (value) {\n");
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
     enum_element_t* element
         = to_enum_element_node(node_list_get(node->elements, i));
-    buffer = buffer_printf(buffer, "    case ");
-    buffer = buffer_append_token_string(buffer, element->name);
-    buffer = buffer_printf(buffer, ":\n      return \"");
-    buffer = buffer_append_token_string(buffer, element->name);
-    buffer = buffer_printf(buffer, "\";\n");
+    buffer_printf(buffer, "    case ");
+    buffer_append_token_string(buffer, element->name);
+    buffer_printf(buffer, ":\n      return \"");
+    buffer_append_token_string(buffer, element->name);
+    buffer_printf(buffer, "\";\n");
   }
-  buffer = buffer_printf(buffer, "    default:\n");
-  buffer = buffer_printf(buffer, "      return \"<<unknown-%s>>\";\n",
-                         to_string_fn_prefix);
+  buffer_printf(buffer, "    default:\n");
+  buffer_printf(buffer, "      return \"<<unknown-%s>>\";\n",
+                to_string_fn_prefix);
 
-  buffer = buffer_printf(buffer, "  }\n");
-  buffer = buffer_printf(buffer, "}\n\n");
+  buffer_printf(buffer, "  }\n");
+  buffer_printf(buffer, "}\n\n");
 
   return buffer;
 }
@@ -321,21 +321,21 @@ buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node,
 buffer_t* buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node,
                                        char* to_string_fn_prefix,
                                        char* type_string) {
-  buffer = buffer_printf(buffer, "%s string_to_%s(char* value) {\n",
-                         type_string, to_string_fn_prefix);
+  buffer_printf(buffer, "%s string_to_%s(char* value) {\n", type_string,
+                to_string_fn_prefix);
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
     enum_element_t* element
         = to_enum_element_node(node_list_get(node->elements, i));
-    buffer = buffer_printf(buffer, "  if (strcmp(value, \"");
-    buffer = buffer_append_token_string(buffer, element->name);
-    buffer = buffer_printf(buffer, "\") == 0) {");
-    buffer = buffer_printf(buffer, "\n    return ");
-    buffer = buffer_append_token_string(buffer, element->name);
-    buffer = buffer_printf(buffer, ";\n  }\n");
+    buffer_printf(buffer, "  if (strcmp(value, \"");
+    buffer_append_token_string(buffer, element->name);
+    buffer_printf(buffer, "\") == 0) {");
+    buffer_printf(buffer, "\n    return ");
+    buffer_append_token_string(buffer, element->name);
+    buffer_printf(buffer, ";\n  }\n");
   }
-  buffer = buffer_printf(buffer, "  return 0;\n");
-  buffer = buffer_printf(buffer, "}\n\n");
+  buffer_printf(buffer, "  return 0;\n");
+  buffer_printf(buffer, "}\n\n");
 
   return buffer;
 }
