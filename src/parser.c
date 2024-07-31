@@ -9,7 +9,7 @@
 #include <ctype.h>
 
 /**
- * @file parser
+ * @file parser.c
  *
  * This is a hand-written parser which is meant to eventually fully
  * parse Omni C and ISO C (and maybe even parts of C++ that aren't
