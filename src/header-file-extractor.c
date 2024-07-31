@@ -1,6 +1,11 @@
 /**
  * @file header-file-extractor.c
  *
+ * DEPRECATED: This is the original tool to put function prototypes
+ * into header files though we played around with extracting enums and
+ * doing code generation for those at the same time however the new
+ * code based on the system_table_t is much simpler.
+ *
  * These routines consume parsed top-level C (and eventually omni-c)
  * declarations to produce C (or maybe C++) header files or C
  * fragments.
