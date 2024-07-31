@@ -26,7 +26,6 @@ typedef enum {
   PRATT_PARSE_CONDITIONAL,
   PRATT_PARSE_OPEN_PAREN,
   PRATT_PARSE_IDENTIFIER,
-
 } pratt_parser_operation_t;
 
 typedef enum {
@@ -37,21 +36,21 @@ typedef enum {
 // clang-format off
 typedef enum {
   PRECEDENCE_UNKNOWN,        
-  PRECEDENCE_PRIMARY,        // LEFT_TO_RIGHT ---- () [] -> . (literals and identifiers)
-  PRECEDENCE_UNARY,          // RIGHT_TO_LEFT ---- ! ~ ++ -- + - * & (cast) sizeof
-  PRECEDENCE_MULTIPICITIVE,  // LEFT_TO_RIGHT ---- * / %
-  PRECEDENCE_ADDITIVE,       // LEFT_TO_RIGHT ---- + -
-  PRECEDENCE_SHIFT,          // LEFT_TO_RIGHT ---- << >>
-  PRECEDENCE_RELATIONAL,     // LEFT_TO_RIGHT ---- < <= > >=
-  PRECEDENCE_EQUALITY,       // LEFT_TO_RIGHT ---- == !=
-  PRECEDENCE_AND,            // LEFT_TO_RIGHT ---- &
-  PRECEDENCE_XOR,            // LEFT_TO_RIGHT ---- ^
-  PRECEDENCE_OR,             // LEFT_TO_RIGHT ---- |
-  PRECEDENCE_LOGICAL_AND,    // LEFT_TO_RIGHT ---- &&
-  PRECEDENCE_LOGICAL_OR,     // LEFT_TO_RIGHT ---- ||
-  PRECEDENCE_CONDITIONAL,    // RIGHT_TO_LEFT ---- ?:
-  PRECEDENCE_ASSIGNMENT,     // RIGHT_TO_LEFT ---- = += -= *= /= %= &= ^= |= <<= >>=
   PRECEDENCE_COMMA,          // LEFT_TO_RIGHT ---- ,
+  PRECEDENCE_ASSIGNMENT,     // RIGHT_TO_LEFT ---- = += -= *= /= %= &= ^= |= <<= >>=
+  PRECEDENCE_CONDITIONAL,    // RIGHT_TO_LEFT ---- ?:
+  PRECEDENCE_LOGICAL_OR,     // LEFT_TO_RIGHT ---- ||
+  PRECEDENCE_LOGICAL_AND,    // LEFT_TO_RIGHT ---- &&
+  PRECEDENCE_OR,             // LEFT_TO_RIGHT ---- |
+  PRECEDENCE_XOR,            // LEFT_TO_RIGHT ---- ^
+  PRECEDENCE_AND,            // LEFT_TO_RIGHT ---- &
+  PRECEDENCE_EQUALITY,       // LEFT_TO_RIGHT ---- == !=
+  PRECEDENCE_RELATIONAL,     // LEFT_TO_RIGHT ---- < <= > >=
+  PRECEDENCE_SHIFT,          // LEFT_TO_RIGHT ---- << >>
+  PRECEDENCE_ADDITIVE,       // LEFT_TO_RIGHT ---- + -
+  PRECEDENCE_MULTIPICITIVE,  // LEFT_TO_RIGHT ---- * / %
+  PRECEDENCE_UNARY,          // RIGHT_TO_LEFT ---- ! ~ ++ -- + - * & (cast) sizeof
+  PRECEDENCE_PRIMARY,        // LEFT_TO_RIGHT ---- () [] -> . (literals and identifiers)
 } precedence_t;
 // clang-format on
 
@@ -135,6 +134,44 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
 
 #endif /* _PRATT_PARSER_H_ */
 
+associativity_t precedence_to_associativity(precedence_t precedence) {
+  switch (precedence) {
+  case PRECEDENCE_PRIMARY:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_UNARY:
+    return RIGHT_TO_LEFT;
+  case PRECEDENCE_MULTIPICITIVE:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_ADDITIVE:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_SHIFT:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_RELATIONAL:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_EQUALITY:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_AND:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_XOR:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_OR:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_LOGICAL_AND:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_LOGICAL_OR:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_CONDITIONAL:
+    return RIGHT_TO_LEFT;
+  case PRECEDENCE_ASSIGNMENT:
+    return RIGHT_TO_LEFT;
+  case PRECEDENCE_COMMA:
+    return LEFT_TO_RIGHT;
+  default:
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return 0;
+}
+
 /**
  * @function pratt_parse_expression
  *
@@ -182,6 +219,8 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
       } else {
         position = left.next_token_position;
       }
+    } else {
+      break;
     }
   }
 
@@ -280,6 +319,12 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
   switch (instruction.operation) {
   case PRATT_PARSE_BINARY_OPERATOR:
     do {
+
+      int recursive_precedence = instruction.precedence;
+      if (precedence_to_associativity(recursive_precedence) == LEFT_TO_RIGHT) {
+        recursive_precedence--;
+      }
+
       parse_result_t right = pratt_parse_expression(tokens, position + 1,
                                                     instruction.precedence);
       if (!is_valid_result(right)) {
