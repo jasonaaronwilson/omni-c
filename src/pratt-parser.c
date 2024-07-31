@@ -163,8 +163,7 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
 
   while (1) {
     oc_token_t* infix_token = token_at(tokens, position);
-    log_warn("token position = %d (token = %s)\n", position,
-             token_to_string(infix_token));
+    log_warn("pos=%d token=%s\n", position, token_to_string(infix_token));
     pratt_parser_instruction_t infix_instruction
         = get_infix_instruction(infix_token);
     if (infix_instruction.operation == PRATT_PARSE_UNKNOWN) {
@@ -173,7 +172,6 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
       break;
     }
     if (precedence < infix_instruction.precedence) {
-      position++;
       left = pratt_handle_instruction(infix_instruction, tokens, position,
                                       left.node);
       if (!is_valid_result(left)) {
