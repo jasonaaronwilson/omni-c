@@ -134,48 +134,10 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
 
 #endif /* _PRATT_PARSER_H_ */
 
-associativity_t precedence_to_associativity(precedence_t precedence) {
-  switch (precedence) {
-  case PRECEDENCE_PRIMARY:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_UNARY:
-    return RIGHT_TO_LEFT;
-  case PRECEDENCE_MULTIPICITIVE:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_ADDITIVE:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_SHIFT:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_RELATIONAL:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_EQUALITY:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_AND:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_XOR:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_OR:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_LOGICAL_AND:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_LOGICAL_OR:
-    return LEFT_TO_RIGHT;
-  case PRECEDENCE_CONDITIONAL:
-    return RIGHT_TO_LEFT;
-  case PRECEDENCE_ASSIGNMENT:
-    return RIGHT_TO_LEFT;
-  case PRECEDENCE_COMMA:
-    return LEFT_TO_RIGHT;
-  default:
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-  return 0;
-}
-
 /**
  * @function pratt_parse_expression
  *
- * Parses an Omni C expression using "top-down operator precedence".
+ * Parse a C "expression" with the "Pratt" algorithm.
  */
 parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
                                       int precedence) {
@@ -226,6 +188,62 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
 
   return left;
 }
+
+/**
+ * @function pratt_handle_instruction 
+ *
+ * This is where the work specified in the "instruction" is performed.
+ */
+parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
+                                        value_array_t* tokens,
+                                        uint64_t position, parse_node_t* left) {
+  // Also just token_at(position) if we want "immutable"
+  // instructions...
+  oc_token_t* token = instruction.token;
+  log_warn("handling instruction at pos=%d token=%s", position,
+           token_to_string(token));
+
+  switch (instruction.operation) {
+  case PRATT_PARSE_BINARY_OPERATOR:
+    do {
+
+      int recursive_precedence = instruction.precedence;
+      if (precedence_to_associativity(recursive_precedence) == LEFT_TO_RIGHT) {
+	recursive_precedence--;
+      }
+
+      parse_result_t right = pratt_parse_expression(tokens, position + 1,
+                                                    instruction.precedence);
+      if (!is_valid_result(right)) {
+        log_warn("right side of token %s (at pos=%d) is not valid",
+                 token_to_string(token), position + 1);
+        return right;
+      }
+      binary_operator_node_t* result = malloc_binary_operator_node();
+      result->operator= token;
+      result->left = left;
+      result->right = right.node;
+      return parse_result(to_node(result), right.next_token_position);
+    } while (0);
+
+  case PRATT_PARSE_IDENTIFIER:
+    do {
+      identifier_node_t* result = malloc_identifier_node();
+      result->token = token;
+      return parse_result(to_node(result), position + 1);
+    } while (0);
+
+    break;
+
+  default:
+    break;
+  }
+  return parse_result_empty();
+}
+
+/* ====================================================================== */
+/*                These are effectively table lookups...                  */
+/* ====================================================================== */
 
 /**
  * @function get_prefix_instruction
@@ -302,54 +320,35 @@ pratt_parser_instruction_t get_infix_instruction(oc_token_t* token) {
 }
 
 /**
- * @function pratt_handle_instruction
+ * @function precedence_to_associativity
  *
- * This is where the work specified in the operation contained is
- * performed.
+ * Associativity determines how we treat repeated sequences with
+ * operators at the same level.
+ *
+ * A OP B OP C.
+ *
+ * LEFT_TO_RIGHT would be `(A OP B) OP C` while RIGHT_TO_LEFT would be
+ * `A OP (B OP C)`
  */
-parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
-                                        value_array_t* tokens,
-                                        uint64_t position, parse_node_t* left) {
-  // Also just token_at(position) if we want "immutable"
-  // instructions...
-  oc_token_t* token = instruction.token;
-  log_warn("handling instruction at pos=%d token=%s", position,
-           token_to_string(token));
-
-  switch (instruction.operation) {
-  case PRATT_PARSE_BINARY_OPERATOR:
-    do {
-
-      int recursive_precedence = instruction.precedence;
-      if (precedence_to_associativity(recursive_precedence) == LEFT_TO_RIGHT) {
-        recursive_precedence--;
-      }
-
-      parse_result_t right = pratt_parse_expression(tokens, position + 1,
-                                                    instruction.precedence);
-      if (!is_valid_result(right)) {
-        log_warn("right side of token %s (at pos=%d) is not valid",
-                 token_to_string(token), position + 1);
-        return right;
-      }
-      binary_operator_node_t* result = malloc_binary_operator_node();
-      result->operator= token;
-      result->left = left;
-      result->right = right.node;
-      return parse_result(to_node(result), right.next_token_position);
-    } while (0);
-
-  case PRATT_PARSE_IDENTIFIER:
-    do {
-      identifier_node_t* result = malloc_identifier_node();
-      result->token = token;
-      return parse_result(to_node(result), position + 1);
-    } while (0);
-
-    break;
-
+associativity_t precedence_to_associativity(precedence_t precedence) {
+  switch (precedence) {
+  case PRECEDENCE_PRIMARY: return LEFT_TO_RIGHT;
+  case PRECEDENCE_UNARY: return RIGHT_TO_LEFT;
+  case PRECEDENCE_MULTIPICITIVE: return LEFT_TO_RIGHT;
+  case PRECEDENCE_ADDITIVE: return LEFT_TO_RIGHT;
+  case PRECEDENCE_SHIFT: return LEFT_TO_RIGHT;
+  case PRECEDENCE_RELATIONAL: return LEFT_TO_RIGHT;
+  case PRECEDENCE_EQUALITY: return LEFT_TO_RIGHT;
+  case PRECEDENCE_AND: return LEFT_TO_RIGHT;
+  case PRECEDENCE_XOR: return LEFT_TO_RIGHT;
+  case PRECEDENCE_OR: return LEFT_TO_RIGHT;
+  case PRECEDENCE_LOGICAL_AND: return LEFT_TO_RIGHT;
+  case PRECEDENCE_LOGICAL_OR: return LEFT_TO_RIGHT;
+  case PRECEDENCE_CONDITIONAL: return RIGHT_TO_LEFT;
+  case PRECEDENCE_ASSIGNMENT: return RIGHT_TO_LEFT;
+  case PRECEDENCE_COMMA: return LEFT_TO_RIGHT;
   default:
-    break;
+    fatal_error(ERROR_ILLEGAL_STATE);
   }
-  return parse_result_empty();
+  return 0;
 }
