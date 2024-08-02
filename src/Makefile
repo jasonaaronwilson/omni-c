@@ -62,16 +62,6 @@ extract-prototypes: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt extract-prototypes --unique-prototype-header-files=true ${SRC_C}
 	wc --lines ${SRC_C}
 
-test-symbol-table: omni-c-opt
-	/usr/bin/time --portability ./omni-c test-symbol-table ${SRC_C}
-	./omni-c print-tokens --parse-and-print=true ../examples/struct-typedefs.oc
-	ARMYKNIFE_LIB_LOG_LEVEL=info ./omni-c test-symbol-table ../examples/struct-typedefs.oc
-	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/out-of-order-typedef.oc
-	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/in-order-typedef.oc
-	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/in-order-structures.oc
-	/usr/bin/time --portability ./omni-c test-symbol-table ../examples/out-of-order-structures.oc
-	wc --lines ${SRC_C}
-
 do-generate-header-file: omni-c-opt
 	/usr/bin/time --portability ./omni-c generate-header-file --output-file=global-header-file.h ${SRC_C}
 	gcc -c -Wall -Werror -std=c99 global-header-file.h

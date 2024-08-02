@@ -222,7 +222,6 @@ void configure_flags(void) {
   configure_print_tokens_command();
   configure_extract_prototypes_command();
   configure_extract_enums_command();
-  configure_test_symbol_table_command();
   configure_generate_c_output_file();
   configure_parse_expression();
 }
@@ -251,11 +250,6 @@ void configure_extract_prototypes_command(void) {
   flag_string("--output-file", &FLAG_ouput_file);
   flag_boolean("--unique-prototype-header-files",
                &FLAG_unique_prototype_header_files);
-  flag_file_args(&FLAG_files);
-}
-
-void configure_test_symbol_table_command(void) {
-  flag_command("test-symbol-table", &FLAG_command);
   flag_file_args(&FLAG_files);
 }
 
@@ -534,32 +528,6 @@ int main(int argc, char** argv) {
   } else if (string_equal("extract-enums", FLAG_command)
              || string_equal("extract-prototypes", FLAG_command)) {
     extract_command(FLAG_command);
-  } else if (string_equal("test-symbol-table", FLAG_command)) {
-    symbol_table_t* symbol_table = make_symbol_table();
-    parse_and_add_top_level_definitions(symbol_table, FLAG_files);
-
-    buffer_t* buffer = make_buffer(128);
-    buffer = symbol_table_stats(buffer, symbol_table);
-    buffer_append_dgb_symbol_table(buffer, symbol_table);
-    fprintf(stdout, "%s", buffer_to_c_string(buffer));
-
-    split_structure_typedefs(symbol_table);
-    buffer_clear(buffer);
-    buffer = symbol_table_stats(buffer, symbol_table);
-    buffer_append_dgb_symbol_table(buffer, symbol_table);
-    fprintf(stdout, "%s", buffer_to_c_string(buffer));
-
-    reorder_symbol_table_typedefs(symbol_table);
-    buffer_clear(buffer);
-    buffer = symbol_table_stats(buffer, symbol_table);
-    buffer_append_dgb_symbol_table(buffer, symbol_table);
-    fprintf(stdout, "%s", buffer_to_c_string(buffer));
-
-    reorder_symbol_table_structures(symbol_table);
-    buffer_clear(buffer);
-    buffer = symbol_table_stats(buffer, symbol_table);
-    buffer_append_dgb_symbol_table(buffer, symbol_table);
-    fprintf(stdout, "%s", buffer_to_c_string(buffer));
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

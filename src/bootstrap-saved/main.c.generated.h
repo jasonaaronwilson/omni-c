@@ -16,8 +16,6 @@ void configure_extract_enums_command(void);
 
 void configure_extract_prototypes_command(void);
 
-void configure_test_symbol_table_command(void);
-
 void configure_generate_c_output_file(void);
 
 boolean_t is_inlined_function(function_node_t* node);
