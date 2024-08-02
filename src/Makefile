@@ -6,7 +6,7 @@ CC_FLAGS_OPT := -g -rdynamic -I ~/src/tree-sitter/lib/include -O3
 SRC_C_SELF = \
 	mode.c \
 	keywords.c \
-	oc-file.c \
+	file.c \
 	file-reader.c \
 	compiler-errors.c \
 	lexer.c \
@@ -89,6 +89,9 @@ save-bootstrap-prototypes: extract-prototypes
 format:
 	clang-format -i ${SRC_C}
 	clang-format -i tools/random-code-generator.c
+
+tags:
+	etags *.c bootstrap-saved/*.h
 
 clean:
 	rm -f omni-c omni-c-opt

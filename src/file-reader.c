@@ -10,7 +10,7 @@
 #ifndef _FILE_READER_H_
 #define _FILE_READER_H_
 
-#include "oc-file.h"
+#include "file.h"
 
 #include "file-reader.c.generated.h"
 
