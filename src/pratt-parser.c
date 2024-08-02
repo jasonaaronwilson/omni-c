@@ -190,7 +190,7 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
 }
 
 /**
- * @function pratt_handle_instruction 
+ * @function pratt_handle_instruction
  *
  * This is where the work specified in the "instruction" is performed.
  */
@@ -206,10 +206,9 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
   switch (instruction.operation) {
   case PRATT_PARSE_BINARY_OPERATOR:
     do {
-
       int recursive_precedence = instruction.precedence;
       if (precedence_to_associativity(recursive_precedence) == LEFT_TO_RIGHT) {
-	recursive_precedence--;
+        recursive_precedence--;
       }
 
       parse_result_t right = pratt_parse_expression(tokens, position + 1,
@@ -233,7 +232,22 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
       return parse_result(to_node(result), position + 1);
     } while (0);
 
-    break;
+  case PRATT_PARSE_PREFIX_OPERATOR:
+    do {
+      int recursive_precedence = instruction.precedence;
+      parse_result_t right = pratt_parse_expression(tokens, position + 1,
+                                                    instruction.precedence);
+      if (!is_valid_result(right)) {
+        log_warn("right side of token %s (at pos=%d) is not valid",
+                 token_to_string(token), position + 1);
+        return right;
+      }
+      binary_operator_node_t* result = malloc_binary_operator_node();
+      result->operator= token;
+      result->left = left;
+      result->right = right.node;
+      return parse_result(to_node(result), right.next_token_position);
+    } while (0);
 
   default:
     break;
@@ -309,11 +323,69 @@ pratt_parser_instruction_t get_infix_instruction(oc_token_t* token) {
         .precedence = PRECEDENCE_ADDITIVE,
     };
   }
-  if (token_matches(token, "*") || token_matches(token, "/")) {
+  if (token_matches(token, "*") || token_matches(token, "/")
+      || token_matches(token, "%")) {
     return (pratt_parser_instruction_t){
         .token = token,
         .operation = PRATT_PARSE_BINARY_OPERATOR,
         .precedence = PRECEDENCE_MULTIPICITIVE,
+    };
+  }
+  if (token_matches(token, "<<") || token_matches(token, ">>")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_SHIFT,
+    };
+  }
+  if (token_matches(token, "||")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_LOGICAL_OR,
+    };
+  }
+  if (token_matches(token, "&&")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_LOGICAL_AND,
+    };
+  }
+  if (token_matches(token, "|")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_OR,
+    };
+  }
+  if (token_matches(token, "^")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_XOR,
+    };
+  }
+  if (token_matches(token, "&")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_AND,
+    };
+  }
+  if (token_matches(token, "==") || token_matches(token, "!=")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_EQUALITY,
+    };
+  }
+  if (token_matches(token, "<") || token_matches(token, "<=")
+      || token_matches(token, ">") || token_matches(token, ">=")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_RELATIONAL,
     };
   }
   return (pratt_parser_instruction_t){0};
@@ -332,21 +404,36 @@ pratt_parser_instruction_t get_infix_instruction(oc_token_t* token) {
  */
 associativity_t precedence_to_associativity(precedence_t precedence) {
   switch (precedence) {
-  case PRECEDENCE_PRIMARY: return LEFT_TO_RIGHT;
-  case PRECEDENCE_UNARY: return RIGHT_TO_LEFT;
-  case PRECEDENCE_MULTIPICITIVE: return LEFT_TO_RIGHT;
-  case PRECEDENCE_ADDITIVE: return LEFT_TO_RIGHT;
-  case PRECEDENCE_SHIFT: return LEFT_TO_RIGHT;
-  case PRECEDENCE_RELATIONAL: return LEFT_TO_RIGHT;
-  case PRECEDENCE_EQUALITY: return LEFT_TO_RIGHT;
-  case PRECEDENCE_AND: return LEFT_TO_RIGHT;
-  case PRECEDENCE_XOR: return LEFT_TO_RIGHT;
-  case PRECEDENCE_OR: return LEFT_TO_RIGHT;
-  case PRECEDENCE_LOGICAL_AND: return LEFT_TO_RIGHT;
-  case PRECEDENCE_LOGICAL_OR: return LEFT_TO_RIGHT;
-  case PRECEDENCE_CONDITIONAL: return RIGHT_TO_LEFT;
-  case PRECEDENCE_ASSIGNMENT: return RIGHT_TO_LEFT;
-  case PRECEDENCE_COMMA: return LEFT_TO_RIGHT;
+  case PRECEDENCE_PRIMARY:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_UNARY:
+    return RIGHT_TO_LEFT;
+  case PRECEDENCE_MULTIPICITIVE:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_ADDITIVE:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_SHIFT:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_RELATIONAL:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_EQUALITY:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_AND:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_XOR:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_OR:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_LOGICAL_AND:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_LOGICAL_OR:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_CONDITIONAL:
+    return RIGHT_TO_LEFT;
+  case PRECEDENCE_ASSIGNMENT:
+    return RIGHT_TO_LEFT;
+  case PRECEDENCE_COMMA:
+    return LEFT_TO_RIGHT;
   default:
     fatal_error(ERROR_ILLEGAL_STATE);
   }
