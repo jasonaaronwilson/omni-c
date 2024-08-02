@@ -297,8 +297,12 @@ pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token) {
     };
   }
 
+  // also need (cast) and sizeof
   if (token_matches(token, "+") || token_matches(token, "-")
-      || token_matches(token, "~") || token_matches(token, "!")) {
+      || token_matches(token, "~") || token_matches(token, "!")
+      || token_matches(token, "!") || token_matches(token, "++")
+      || token_matches(token, "--") || token_matches(token, "*")
+      || token_matches(token, "&")) {
     return (pratt_parser_instruction_t){
         .token = token,
         .operation = PRATT_PARSE_PREFIX_OPERATOR,
@@ -388,6 +392,28 @@ pratt_parser_instruction_t get_infix_instruction(oc_token_t* token) {
         .precedence = PRECEDENCE_RELATIONAL,
     };
   }
+
+  if (token_matches(token, "->") || token_matches(token, ".")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_PREFIX_OPERATOR,
+        .precedence = PRECEDENCE_PRIMARY,
+    };
+  }
+
+  if (token_matches(token, "=") || token_matches(token, "+=")
+      || token_matches(token, "-=") || token_matches(token, "*=")
+      || token_matches(token, "/=") || token_matches(token, "%=")
+      || token_matches(token, "&=") || token_matches(token, "^=")
+      || token_matches(token, "|=") || token_matches(token, "<<=")
+      || token_matches(token, ">>=")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
+        .precedence = PRECEDENCE_ASSIGNMENT,
+    };
+  }
+
   return (pratt_parser_instruction_t){0};
 }
 
