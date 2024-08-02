@@ -91,9 +91,9 @@ buffer_t* buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
     return buffer_append_dbg_identifier_node(buffer, to_identifier_node(node),
                                              indention_level);
 
-  case PARSE_NODE_BINARY_OPERATOR:
-    return buffer_append_dbg_binary_operator_node(
-        buffer, to_binary_operator_node(node), indention_level);
+  case PARSE_NODE_OPERATOR:
+    return buffer_append_dbg_operator_node(buffer, to_operator_node(node),
+                                           indention_level);
 
   default:
     break;
@@ -435,11 +435,11 @@ buffer_t* buffer_append_dbg_identifier_node(buffer_t* buffer,
   return buffer;
 }
 
-buffer_t* buffer_append_dbg_binary_operator_node(buffer_t* buffer,
-                                                 binary_operator_node_t* node,
-                                                 int indention_level) {
+buffer_t* buffer_append_dbg_operator_node(buffer_t* buffer,
+                                          operator_node_t* node,
+                                          int indention_level) {
   buffer_indent(buffer, indention_level);
-  buffer_printf(buffer, "tag: PARSE_NODE_BINARY_OPERATOR\n");
+  buffer_printf(buffer, "tag: PARSE_NODE_OPERATOR\n");
   buffer_indent(buffer, indention_level);
   buffer_printf(buffer, "operator: %s\n", token_to_string(node->operator));
 

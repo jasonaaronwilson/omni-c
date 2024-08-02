@@ -74,7 +74,7 @@ typedef struct {
 } identifier_node_t;
 
 /**
- * @structure binary_operator_node_t
+ * @structure operator_node_t
  *
  * Represents A + B, etc.
  */
@@ -83,11 +83,11 @@ typedef struct {
   oc_token_t* operator;
   parse_node_t* left;
   parse_node_t* right;
-} binary_operator_node_t;
+} operator_node_t;
 
-static inline binary_operator_node_t* malloc_binary_operator_node(void) {
-  binary_operator_node_t* result = malloc_struct(binary_operator_node_t);
-  result->tag = PARSE_NODE_BINARY_OPERATOR;
+static inline operator_node_t* malloc_operator_node(void) {
+  operator_node_t* result = malloc_struct(operator_node_t);
+  result->tag = PARSE_NODE_OPERATOR;
   return result;
 }
 
@@ -111,17 +111,16 @@ static inline identifier_node_t* to_identifier_node(parse_node_t* ptr) {
 }
 
 /**
- * @function to_binary_operator_node
+ * @function to_operator_node
  *
  * Safely cast a generic node to a binary operator node after
  * examining it's tag.
  */
-static inline binary_operator_node_t*
-    to_binary_operator_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_BINARY_OPERATOR) {
+static inline operator_node_t* to_operator_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_OPERATOR) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  return cast(binary_operator_node_t*, ptr);
+  return cast(operator_node_t*, ptr);
 }
 
 pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token);
@@ -218,7 +217,7 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
                  token_to_string(token), position + 1);
         return right;
       }
-      binary_operator_node_t* result = malloc_binary_operator_node();
+      operator_node_t* result = malloc_operator_node();
       result->operator= token;
       result->left = left;
       result->right = right.node;
@@ -242,7 +241,7 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
                  token_to_string(token), position + 1);
         return right;
       }
-      binary_operator_node_t* result = malloc_binary_operator_node();
+      operator_node_t* result = malloc_operator_node();
       result->operator= token;
       result->left = left;
       result->right = right.node;
