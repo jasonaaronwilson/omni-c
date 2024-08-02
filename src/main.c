@@ -37,6 +37,7 @@ boolean_t FLAG_print_tokens_show_appended_tokens = true;
 char* FLAG_ouput_file = NULL;
 boolean_t FLAG_generate_enum_convertors = true;
 char* FLAG_expression = NULL;
+boolean_t FLAG_dump_symbol_table = false;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
@@ -261,18 +262,37 @@ void configure_test_symbol_table_command(void) {
 void configure_generate_c_output_file(void) {
   flag_command("generate-header-file", &FLAG_command);
   flag_string("--output-file", &FLAG_ouput_file);
-  flag_boolean("--generate_enum_convertors", &FLAG_generate_enum_convertors);
+  flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
+  flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_file_args(&FLAG_files);
 
   flag_command("generate-library", &FLAG_command);
   flag_string("--output-file", &FLAG_ouput_file);
-  flag_boolean("--generate_enum_convertors", &FLAG_generate_enum_convertors);
+  flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
+  flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_file_args(&FLAG_files);
 }
 
 boolean_t is_inlined_function(function_node_t* node) {
   return token_matches(node->storage_class_specifier, "static")
          && token_matches(node->function_specifier, "inline");
+}
+
+void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table) {
+  if (FLAG_dump_symbol_table) {
+    fprintf(stderr,
+            "=================================================================="
+            "====\n");
+    fprintf(stderr, "%s\n", phase_name);
+    fprintf(stderr,
+            "=================================================================="
+            "====\n\n");
+    buffer_t* buffer = make_buffer(128);
+    buffer = symbol_table_stats(buffer, symbol_table);
+    buffer_append_dgb_symbol_table(buffer, symbol_table);
+
+    fprintf(stderr, "%s", buffer_to_c_string(buffer));
+  }
 }
 
 /**
@@ -284,12 +304,18 @@ void generate_c_output_file(boolean_t is_library) {
 
   symbol_table_t* symbol_table = make_symbol_table();
   parse_and_add_top_level_definitions(symbol_table, FLAG_files);
+  dump_symbol_table("initial parse", symbol_table);
   if (FLAG_generate_enum_convertors) {
     srcgen_enum_to_string_converters(symbol_table);
+    dump_symbol_table("enum to string generation", symbol_table);
   }
   split_structure_typedefs(symbol_table);
+  dump_symbol_table("split structures", symbol_table);
   reorder_symbol_table_typedefs(symbol_table);
+  dump_symbol_table("reorder typedefs", symbol_table);
   reorder_symbol_table_structures(symbol_table);
+  dump_symbol_table("reorder structures", symbol_table);
+
   buffer_t* buffer = make_buffer(1024 * 8);
 
   char* guard_name = "_HEADER_FILE_GUARD_";

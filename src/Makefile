@@ -50,7 +50,7 @@ test-print-tokens: omni-c
 		../examples/enum.oc
 
 self-parse-test: omni-c-opt
-	/usr/bin/time --portability ./omni-c-opt print-tokens --parse-and-print=true ${SRC_C}
+	/usr/bin/time --portability ./omni-c-opt print-tokens --parse-and-print=true ${SRC_C_SELF}
 	wc --lines ${SRC_C}
 
 extract-enums: omni-c-opt
@@ -78,7 +78,7 @@ do-generate-header-file: omni-c-opt
 
 # TODO(jawilson): -Werror 
 self: omni-c
-	/usr/bin/time --portability ./omni-c generate-library --output-file=self.c ${SRC_C_SELF}
+	/usr/bin/time --portability ./omni-c generate-library --dump-symbol-table=true --output-file=self.c ${SRC_C_SELF}
 	gcc -o self -Wall -std=c99 -DOMNI_C_SELF_GENERATED self.c armyknife-lib-impl.c
 
 ## # Pattern rule for generating header files
