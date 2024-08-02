@@ -131,7 +131,7 @@ static inline parse_result_t parse_result(parse_node_t* node,
 
 
 static inline parse_result_t parse_error_result(parse_error_code_t error_code,
-                                                oc_token_t* error_token) {
+                                                token_t* error_token) {
   return (parse_result_t){.parse_error = (compiler_error_t){
                               .parser_error_code = error_code,
                               .error_token = error_token,

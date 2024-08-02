@@ -48,7 +48,7 @@ value_array_t* transform_tokens(value_array_t* tokens,
                                 token_transformer_options_t xform_options) {
   value_array_t* result = make_value_array(tokens->length);
   for (int position = 0; position < tokens->length; position++) {
-    oc_token_t* token = token_at(tokens, position);
+    token_t* token = token_at(tokens, position);
     if (token->is_cpp_token && !xform_options.keep_c_preprocessor_lines) {
       continue;
     }

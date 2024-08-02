@@ -55,7 +55,7 @@ typedef enum {
 // clang-format on
 
 typedef struct {
-  oc_token_t* token;
+  token_t* token;
   pratt_parser_operation_t operation;
   precedence_t precedence;
 } pratt_parser_instruction_t;
@@ -70,7 +70,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
-  oc_token_t* token;
+  token_t* token;
 } identifier_node_t;
 
 /**
@@ -80,7 +80,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
-  oc_token_t* operator;
+  token_t* operator;
   parse_node_t* left;
   parse_node_t* right;
 } operator_node_t;
@@ -123,8 +123,8 @@ static inline operator_node_t* to_operator_node(parse_node_t* ptr) {
   return cast(operator_node_t*, ptr);
 }
 
-pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token);
-pratt_parser_instruction_t get_infix_instruction(oc_token_t* token);
+pratt_parser_instruction_t get_prefix_instruction(token_t* token);
+pratt_parser_instruction_t get_infix_instruction(token_t* token);
 parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
                                         value_array_t* tokens,
                                         uint64_t position, parse_node_t* left);
@@ -140,7 +140,7 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
  */
 parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
                                       int precedence) {
-  oc_token_t* token = token_at(tokens, position);
+  token_t* token = token_at(tokens, position);
   if (token == NULL) {
     return parse_result_empty();
   }
@@ -160,7 +160,7 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
   position = left.next_token_position;
 
   while (1) {
-    oc_token_t* infix_token = token_at(tokens, position);
+    token_t* infix_token = token_at(tokens, position);
     log_warn("pos=%d token=%s\n", position, token_to_string(infix_token));
     pratt_parser_instruction_t infix_instruction
         = get_infix_instruction(infix_token);
@@ -198,7 +198,7 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
                                         uint64_t position, parse_node_t* left) {
   // Also just token_at(position) if we want "immutable"
   // instructions...
-  oc_token_t* token = instruction.token;
+  token_t* token = instruction.token;
   log_warn("handling instruction at pos=%d token=%s", position,
            token_to_string(token));
 
@@ -265,7 +265,7 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
  * since we don't have a unique type for each token though we could do
  * that in the future...)
  */
-pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token) {
+pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
   switch (token->type) {
 
   case TOKEN_TYPE_IDENTIFIER:
@@ -318,7 +318,7 @@ pratt_parser_instruction_t get_prefix_instruction(oc_token_t* token) {
  * since we don't have a unique type for each token though we could do
  * that in the future...)
  */
-pratt_parser_instruction_t get_infix_instruction(oc_token_t* token) {
+pratt_parser_instruction_t get_infix_instruction(token_t* token) {
   if (token_matches(token, "+") || token_matches(token, "-")) {
     return (pratt_parser_instruction_t){
         .token = token,

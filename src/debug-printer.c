@@ -129,7 +129,7 @@ buffer_t* buffer_append_dbg_tokens(buffer_t* buffer, value_array_t* tokens,
                                    char* field_name, int indention_level) {
   uint64_t length = tokens->length;
   for (uint64_t i = 0; i < length; i++) {
-    oc_token_t* token = value_array_get_ptr(tokens, i, oc_token_t*);
+    token_t* token = value_array_get_ptr(tokens, i, token_t*);
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "%s[%lld]: %s\n", field_name, i,
                            token_to_string(token));
@@ -421,7 +421,7 @@ buffer_t* buffer_append_dbg_attribute_node(buffer_t* buffer,
  */
 void debug_append_tokens(buffer_t* buffer, value_array_t* tokens) {
   for (int i = 0; i < tokens->length; i++) {
-    oc_token_t* token = token_at(tokens, i);
+    token_t* token = token_at(tokens, i);
     buffer_append_sub_buffer(buffer, token->start, token->end, token->buffer);
   }
 }

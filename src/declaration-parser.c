@@ -65,7 +65,7 @@ typedef struct type_node_S {
   // To simplify handling of signed and unsigned types, we use a
   // canonical name by combining multiple tokens or just remapping a
   // token if necessary.
-  oc_token_t* type_name;
+  token_t* type_name;
   // These are for "complicated" user types like enum/struct/union
   parse_node_t* user_type;
   // Generic types (which C doesn't have but C++ kind of has) or even
@@ -80,7 +80,7 @@ typedef struct type_node_S {
  */
 typedef struct typedef_node_S {
   parse_node_type_t tag;
-  oc_token_t* name;
+  token_t* name;
   type_node_t* type_node;
 } typedef_node_t;
 
@@ -91,7 +91,7 @@ typedef struct typedef_node_S {
  */
 typedef struct struct_node_S {
   parse_node_type_t tag;
-  oc_token_t* name;
+  token_t* name;
   node_list_t fields;
   boolean_t partial_definition;
 } struct_node_t;
@@ -118,8 +118,8 @@ typedef struct union_node_S {
 typedef struct field_node_S {
   parse_node_type_t tag;
   type_node_t* type;
-  oc_token_t* name;
-  oc_token_t* bit_field_width;
+  token_t* name;
+  token_t* bit_field_width;
 } field_node_t;
 
 /**
@@ -129,7 +129,7 @@ typedef struct field_node_S {
  */
 typedef struct enum_node_S {
   parse_node_type_t tag;
-  oc_token_t* name;
+  token_t* name;
   node_list_t elements;
   boolean_t partial_definition;
 } enum_node_t;
@@ -142,8 +142,8 @@ typedef struct enum_node_S {
  */
 typedef struct enum_element_S {
   parse_node_type_t tag;
-  oc_token_t* name;
-  oc_token_t* value;
+  token_t* name;
+  token_t* value;
 } enum_element_t;
 
 /**
@@ -153,8 +153,8 @@ typedef struct enum_element_S {
  */
 typedef struct function_body_node_S {
   parse_node_type_t tag;
-  oc_token_t* open_brace_token;
-  oc_token_t* close_brace_token;
+  token_t* open_brace_token;
+  token_t* close_brace_token;
 } function_body_node_t;
 
 
@@ -167,7 +167,7 @@ typedef struct function_body_node_S {
  */
 typedef struct literal_node_S {
   parse_node_type_t tag;
-  oc_token_t* token;
+  token_t* token;
   // This is used for string literals since in C multiple string
   // literals can appear in sequence and should be treated like a
   // single literal if these literals were smushed into one token.
@@ -188,12 +188,12 @@ typedef struct function_node_S {
   // for now we will just keep all token between (( and )).
   node_list_t attributes;
 
-  oc_token_t* storage_class_specifier; // static, extern, auto, register
-  oc_token_t* function_specifier;      // inline
+  token_t* storage_class_specifier; // static, extern, auto, register
+  token_t* function_specifier;      // inline
 
   type_node_t* return_type;
 
-  oc_token_t* function_name;
+  token_t* function_name;
   node_list_t function_args;
 
   // Until we learn how to fully parse expressions, this contains all
@@ -209,7 +209,7 @@ typedef struct function_node_S {
 typedef struct function_argument_node_S {
   parse_node_type_t tag;
   type_node_t* arg_type;
-  oc_token_t* arg_name;
+  token_t* arg_name;
 } function_argument_node_t;
 
 /**
@@ -219,9 +219,9 @@ typedef struct function_argument_node_S {
  */
 typedef struct global_variable_node_S {
   parse_node_type_t tag;
-  oc_token_t* storage_class_specifier; // static, extern, auto, register
+  token_t* storage_class_specifier; // static, extern, auto, register
   type_node_t* type;
-  oc_token_t* name;
+  token_t* name;
   parse_node_t* value;
   boolean_t number_of_array_suffixes;
 } global_variable_node_t;
@@ -241,8 +241,8 @@ typedef struct global_variable_node_S {
 typedef struct unparsed_expression_S {
   parse_node_type_t tag;
   // TODO(jawilson): consider creating and using a token list...
-  oc_token_t* first_token;
-  oc_token_t* last_token;
+  token_t* first_token;
+  token_t* last_token;
 } unparsed_expression_t;
 
 /**
@@ -257,8 +257,8 @@ typedef struct unparsed_expression_S {
  */
 typedef struct attribute_node_S {
   parse_node_type_t tag;
-  oc_token_t* inner_start_token;
-  oc_token_t* inner_end_token;
+  token_t* inner_start_token;
+  token_t* inner_end_token;
 } attribute_node_t;
 
 /**
@@ -652,7 +652,7 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
 parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position);
 
 typedef struct canonical_type_result_s {
-  oc_token_t* canonical_type;
+  token_t* canonical_type;
   int consumed_tokens;
 } canonical_type_result_t;
 
@@ -720,7 +720,7 @@ parse_result_t parse_declaration(value_array_t* tokens, uint64_t position) {
 
 parse_result_t parse_structure_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_structure_node(_, %d)", position & 0xffffffff);
-  oc_token_t* token = token_at(tokens, position);
+  token_t* token = token_at(tokens, position);
   if (!token_matches(token, "struct")) {
     return parse_result_empty();
   }
@@ -765,7 +765,7 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
     return field_type;
   }
   position = field_type.next_token_position;
-  oc_token_t* field_name = token_at(tokens, position++);
+  token_t* field_name = token_at(tokens, position++);
   // TODO(jawilson): make field_name is an identifier.
   log_info("parse_field_node(_, %d)", position & 0xffffffff);
 
@@ -790,7 +790,7 @@ parse_result_t parse_field_node(value_array_t* tokens, uint64_t position) {
  * Parses an attribute like __attribute__((warn_unsed_result)), etc.
  */
 parse_result_t parse_attribute_node(value_array_t* tokens, uint64_t position) {
-  oc_token_t* token = token_at(tokens, position);
+  token_t* token = token_at(tokens, position);
   if (!token_matches(token, "__attribute__")) {
     return parse_result_empty();
   }
@@ -806,13 +806,13 @@ parse_result_t parse_attribute_node(value_array_t* tokens, uint64_t position) {
     position++;
   }
 
-  oc_token_t* inner_start_token = token_at(tokens, position);
-  oc_token_t* inner_end_token = token_at(tokens, position);
+  token_t* inner_start_token = token_at(tokens, position);
+  token_t* inner_end_token = token_at(tokens, position);
   int unclosed_paren_count = 2;
   do {
     // TODO(jawilson): handle reaching the end of the token stream
     // more gracefully.
-    oc_token_t* token = token_at(tokens, position);
+    token_t* token = token_at(tokens, position);
     // If this were to happen immediately after the first two parens,
     // that would probably be illegal.
     if (token_matches(token, "(")) {
@@ -841,12 +841,12 @@ parse_result_t parse_attribute_node(value_array_t* tokens, uint64_t position) {
  */
 parse_result_t parse_function_node(value_array_t* tokens, uint64_t position) {
 
-  oc_token_t* storage_class_specifier = NULL;
-  oc_token_t* function_specifier = NULL;
+  token_t* storage_class_specifier = NULL;
+  token_t* function_specifier = NULL;
   node_list_t attributes = {0};
 
   while (1) {
-    oc_token_t* token = token_at(tokens, position);
+    token_t* token = token_at(tokens, position);
     if (token_matches(token, "static")
         || token_matches(token, "extern")
         // This isn't really appropriate for a function as a real
@@ -896,11 +896,11 @@ parse_result_t parse_function_node(value_array_t* tokens, uint64_t position) {
     return parse_result_empty();
   }
   position = return_type.next_token_position;
-  oc_token_t* fn_name = token_at(tokens, position++);
+  token_t* fn_name = token_at(tokens, position++);
   if (fn_name->type != TOKEN_TYPE_IDENTIFIER) {
     return parse_result_empty();
   }
-  oc_token_t* open_paren = token_at(tokens, position++);
+  token_t* open_paren = token_at(tokens, position++);
   if (!token_matches(open_paren, "(")) {
     return parse_result_empty();
   }
@@ -912,7 +912,7 @@ parse_result_t parse_function_node(value_array_t* tokens, uint64_t position) {
   fn_node->return_type = to_type_node(return_type.node);
   fn_node->function_name = fn_name;
 
-  oc_token_t* next = token_at(tokens, position);
+  token_t* next = token_at(tokens, position);
   if (token_matches(next, ")")) {
     position++;
   } else {
@@ -966,7 +966,7 @@ parse_result_t parse_function_argument_node(value_array_t* tokens,
   position = type.next_token_position;
   function_argument_node_t* result = malloc_function_argument_node();
   result->arg_type = to_type_node(type.node);
-  oc_token_t* next = token_at(tokens, position);
+  token_t* next = token_at(tokens, position);
   if (next->type == TOKEN_TYPE_IDENTIFIER) {
     result->arg_name = next;
     position++;
@@ -992,7 +992,7 @@ parse_result_t parse_function_body_node(value_array_t* tokens,
   // delimiters.
   int count = 0;
   do {
-    oc_token_t* token = token_at(tokens, position++);
+    token_t* token = token_at(tokens, position++);
     if (count == 0) {
       result->open_brace_token = token;
     } else {
@@ -1010,7 +1010,7 @@ parse_result_t parse_function_body_node(value_array_t* tokens,
 }
 
 canonical_type_result_t make_type_token_result(char* str, int consumed_tokens) {
-  oc_token_t* canonical_token = malloc_struct(oc_token_t);
+  token_t* canonical_token = malloc_struct(token_t);
   canonical_token->type = TOKEN_TYPE_IDENTIFIER;
   canonical_token->buffer = buffer_from_string(str);
   canonical_token->start = 0;
@@ -1030,9 +1030,9 @@ canonical_type_result_t parse_canonical_type(value_array_t* tokens,
                                              uint64_t position) {
   log_info("parse_canonical_type(_, %d)", position & 0xffffffff);
 
-  oc_token_t* a = token_at(tokens, position);
-  oc_token_t* b = token_at(tokens, position + 1);
-  oc_token_t* c = token_at(tokens, position + 2);
+  token_t* a = token_at(tokens, position);
+  token_t* b = token_at(tokens, position + 1);
+  token_t* c = token_at(tokens, position + 2);
 
   if (token_matches(a, "signed") && token_matches(b, "short")
       && token_matches(c, "int")) {
@@ -1157,7 +1157,7 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
   // First see if we have a canonical type result...
   canonical_type_result_t canonical_type_result
       = parse_canonical_type(tokens, position);
-  oc_token_t* type_name = canonical_type_result.canonical_type;
+  token_t* type_name = canonical_type_result.canonical_type;
   position += canonical_type_result.consumed_tokens;
 
   // If it's not canonical, then it could be a struct/union/or enum
@@ -1183,7 +1183,7 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
 
   result->type_name = type_name;
   while (true) {
-    oc_token_t* next = token_at(tokens, position);
+    token_t* next = token_at(tokens, position);
     if (token_matches(next, "*")) {
       position++;
       type_node_t* ptr_result = malloc_type_node();
@@ -1192,7 +1192,7 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
       result = ptr_result;
     } else if (token_matches(next, "[")) {
       position++;
-      oc_token_t* open = next;
+      token_t* open = next;
       next = token_at(tokens, position++);
       type_node_t* array_result = malloc_type_node();
       array_result->type_node_kind = TYPE_NODE_KIND_ARRAY;
@@ -1224,12 +1224,12 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
  */
 parse_result_t parse_enum_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_enum_node(_, %d)", position & 0xffffffff);
-  oc_token_t* keyword_token = token_at(tokens, position++);
+  token_t* keyword_token = token_at(tokens, position++);
   if (!token_matches(keyword_token, "enum")) {
     return parse_result_empty();
   }
   enum_node_t* result = malloc_enum_node();
-  oc_token_t* token = token_at(tokens, position);
+  token_t* token = token_at(tokens, position);
   if (token->type == TOKEN_TYPE_IDENTIFIER) {
     result->name = token;
     position += 1;
@@ -1260,16 +1260,16 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
                                        uint64_t position) {
   log_info("parse_enum_element_node(_, %d)", position & 0xffffffff);
   enum_element_t* result = malloc_enum_element();
-  oc_token_t* name = token_at(tokens, position++);
+  token_t* name = token_at(tokens, position++);
   result->name = name;
   if (name->type != TOKEN_TYPE_IDENTIFIER) {
     return parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
   }
 
-  oc_token_t* next = token_at(tokens, position);
+  token_t* next = token_at(tokens, position);
   if (token_matches(next, "=")) {
     position++;
-    oc_token_t* value = token_at(tokens, position);
+    token_t* value = token_at(tokens, position);
     if (value->type != TOKEN_TYPE_INTEGER_LITERAL) {
       return parse_error_result(PARSE_ERROR_INTEGER_LITERAL_EXPECTED, value);
     }
@@ -1297,7 +1297,7 @@ parse_result_t parse_enum_element_node(value_array_t* tokens,
  */
 parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_typedef_node(_, %d)", position & 0xffffffff);
-  oc_token_t* typedef_token = token_at(tokens, position++);
+  token_t* typedef_token = token_at(tokens, position++);
   if (!token_matches(typedef_token, "typedef")) {
     return parse_result_empty();
   }
@@ -1308,7 +1308,7 @@ parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
     return parse_result_empty();
   }
   position = type.next_token_position;
-  oc_token_t* name = token_at(tokens, position++);
+  token_t* name = token_at(tokens, position++);
   if (name->type != TOKEN_TYPE_IDENTIFIER) {
     parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
   }
@@ -1317,7 +1317,7 @@ parse_result_t parse_typedef_node(value_array_t* tokens, uint64_t position) {
   result->type_node = to_type_node(type.node);
   result->name = name;
 
-  oc_token_t* semi = token_at(tokens, position++);
+  token_t* semi = token_at(tokens, position++);
   if (!token_matches(semi, ";")) {
     return parse_error_result(PARSE_ERROR_SEMICOLON_EXPECTED, name);
   }
@@ -1335,10 +1335,10 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
                                           uint64_t position) {
   log_info("parse_global_variable_node(_, %d)", position & 0xffffffff);
 
-  oc_token_t* storage_class_specifier = NULL;
+  token_t* storage_class_specifier = NULL;
 
   while (1) {
-    oc_token_t* token = token_at(tokens, position);
+    token_t* token = token_at(tokens, position);
     if (token_matches(token, "static") || token_matches(token, "extern")) {
       if (storage_class_specifier == NULL) {
         storage_class_specifier = token;
@@ -1358,7 +1358,7 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
     return parse_result_empty();
   }
   position = type.next_token_position;
-  oc_token_t* name = token_at(tokens, position++);
+  token_t* name = token_at(tokens, position++);
   if (name->type != TOKEN_TYPE_IDENTIFIER) {
     parse_error_result(PARSE_ERROR_IDENTIFIER_EXPECTED, name);
   }
@@ -1369,10 +1369,10 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
 
   while (true) {
     // TODO(jawilson): capture array sizes!
-    oc_token_t* open_bracket_token = token_at(tokens, position);
+    token_t* open_bracket_token = token_at(tokens, position);
     if (token_matches(open_bracket_token, "[")) {
       position++;
-      oc_token_t* close_bracket_token = token_at(tokens, position);
+      token_t* close_bracket_token = token_at(tokens, position);
       if (!token_matches(close_bracket_token, "]")) {
         return parse_error_result(PARSE_ERROR_CLOSE_BRACKET_EXPECTED,
                                   close_bracket_token);
@@ -1384,7 +1384,7 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
     }
   }
 
-  oc_token_t* equal_token = token_at(tokens, position);
+  token_t* equal_token = token_at(tokens, position);
   if (token_matches(equal_token, "=")) {
     position++;
     parse_result_t literal_result = parse_literal_node(tokens, position);
@@ -1396,7 +1396,7 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
     }
   }
 
-  oc_token_t* semi = token_at(tokens, position++);
+  token_t* semi = token_at(tokens, position++);
   if (!token_matches(semi, ";")) {
     return parse_error_result(PARSE_ERROR_SEMICOLON_EXPECTED, name);
   }
@@ -1407,13 +1407,13 @@ parse_result_t parse_global_variable_node(value_array_t* tokens,
 parse_result_t parse_literal_node(value_array_t* tokens, uint64_t position) {
   log_info("parse_literal_node(_, %lld)", position);
 
-  oc_token_t* token = token_at(tokens, position);
+  token_t* token = token_at(tokens, position);
 
   if (token->type == TOKEN_TYPE_STRING_LITERAL) {
     literal_node_t* result = malloc_literal_node();
     result->tokens = make_value_array(1);
     while (true) {
-      oc_token_t* token = token_at(tokens, position);
+      token_t* token = token_at(tokens, position);
       if (token == NULL || token->type != TOKEN_TYPE_STRING_LITERAL) {
         return parse_result(to_node(result), position);
       }

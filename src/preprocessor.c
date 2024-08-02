@@ -73,7 +73,7 @@ c_preprocessor_directive_range_t
   // end of a white-space token).
   uint64_t position = start_position;
   for (; position < tokens->length; position++) {
-    oc_token_t* token = token_at(tokens, position);
+    token_t* token = token_at(tokens, position);
     token->is_cpp_token = true;
     if (position == start_position) {
       result.token_start_position = start_position;
@@ -98,7 +98,7 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options,
                                          uint64_t start_position) {
   c_preprocessor_directive_range_t range
       = mark_c_preprocessor_directive(options, tokens, start_position);
-  oc_token_t* directive_name = token_at(tokens, start_position + 1);
+  token_t* directive_name = token_at(tokens, start_position + 1);
   // skip whitespace above if necessary...
   if (token_matches(directive_name, "include")) {
     cpp_include_node_t* node = malloc_cpp_include_node();
@@ -122,7 +122,7 @@ void handle_c_preprocessor_directives(c_preprocess_options_t options,
                                       symbol_table_t* symbol_table,
                                       value_array_t* tokens) {
   for (uint64_t position = 0; position < tokens->length;) {
-    oc_token_t* token = token_at(tokens, position);
+    token_t* token = token_at(tokens, position);
     if (token_matches(token, "#")) {
       position = handle_c_preprocessor_directive(options, symbol_table, tokens,
                                                  position);

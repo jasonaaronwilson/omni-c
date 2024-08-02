@@ -30,8 +30,8 @@
  * be necessary but are also not hamrful.
  */
 
-oc_token_t* generate_struct_name_from_typedef_name(oc_token_t* name) {
-  oc_token_t* generated = make_derived_token(name);
+token_t* generate_struct_name_from_typedef_name(token_t* name) {
+  token_t* generated = make_derived_token(name);
   buffer_append_string(generated->buffer, "__generated_S");
   generated->end = generated->buffer->length;
   return generated;
@@ -366,7 +366,7 @@ void convert_nullptr_to_null(value_array_t* tokens) {
   // easy way to break-point... __asm("int3");
   buffer_t* null_token = buffer_append_string(make_buffer(1), "NULL");
   for (int i = 0; i < tokens->length; i++) {
-    oc_token_t* token = token_at(tokens, i);
+    token_t* token = token_at(tokens, i);
     if (token_matches(token, "nullptr")) {
       token->start = 0;
       token->end = null_token->length;

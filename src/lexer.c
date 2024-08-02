@@ -38,7 +38,7 @@ typedef struct oc_token_S {
   int32_t line_number;
   int32_t column_number;
   boolean_t is_cpp_token;
-} oc_token_t;
+} token_t;
 
 typedef struct oc_tokenizer_result_S {
   value_array_t* tokens;
@@ -46,14 +46,14 @@ typedef struct oc_tokenizer_result_S {
   tokenizer_error_t tokenizer_error_code;
 } oc_tokenizer_result_t;
 
-static inline oc_token_t* token_at(value_array_t* tokens, uint64_t position) {
+static inline token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
     return NULL;
   }
-  return value_array_get_ptr(tokens, position, oc_token_t*);
+  return value_array_get_ptr(tokens, position, token_t*);
 }
 
-static inline boolean_t token_matches(oc_token_t* token, char* str) {
+static inline boolean_t token_matches(token_t* token, char* str) {
   if (token == NULL) {
     return false;
   }
@@ -62,11 +62,11 @@ static inline boolean_t token_matches(oc_token_t* token, char* str) {
          && buffer_match_string_at(token->buffer, token->start, str);
 }
 
-static inline boolean_t token_starts_with(oc_token_t* token, char* str) {
+static inline boolean_t token_starts_with(token_t* token, char* str) {
   return buffer_match_string_at(token->buffer, token->start, str);
 }
 
-static inline boolean_t token_contains(oc_token_t* token, char* str) {
+static inline boolean_t token_contains(token_t* token, char* str) {
   return buffer_region_contains(token->buffer, token->start, token->end, str);
 }
 
@@ -77,7 +77,7 @@ static inline boolean_t token_contains(oc_token_t* token, char* str) {
  * for each token.
  */
 struct token_or_error_S {
-  oc_token_t token;
+  token_t token;
   tokenizer_error_t error_code;
   uint64_t error_position;
 };
@@ -95,7 +95,7 @@ char* token_type_to_string(token_type_t type);
  *
  * Return the token as a character string.
  */
-char* token_to_string(oc_token_t* token) {
+char* token_to_string(token_t* token) {
   return buffer_c_substring(token->buffer, token->start, token->end);
 }
 
@@ -105,10 +105,9 @@ char* token_to_string(oc_token_t* token) {
  * A dervied token is a type of synthetic token based on another
  * token.
  */
-oc_token_t* make_derived_token(oc_token_t* source_token) {
-  oc_token_t* result
-      = cast(oc_token_t*,
-             malloc_copy_of(cast(uint8_t*, source_token), sizeof(oc_token_t)));
+token_t* make_derived_token(token_t* source_token) {
+  token_t* result = cast(
+      token_t*, malloc_copy_of(cast(uint8_t*, source_token), sizeof(token_t)));
   buffer_t* buffer = make_buffer(source_token->end - source_token->start);
   buffer = buffer_append_sub_buffer(buffer, source_token->start,
                                     source_token->end, result->buffer);
@@ -127,7 +126,7 @@ oc_token_t* make_derived_token(oc_token_t* source_token) {
  * type: TOKEN_TYPE_IDENTIFIER start: 10 end: 15 str: asdf
  */
 __attribute__((warn_unused_result)) buffer_t*
-    append_token_debug_string(buffer_t* buffer, oc_token_t token) {
+    append_token_debug_string(buffer_t* buffer, token_t token) {
   char* str = token_to_string(&token);
   buffer = buffer_printf(
       buffer, "type: %s start: %d end: %d line=%d column=%d str: %s",
@@ -144,7 +143,7 @@ __attribute__((warn_unused_result)) buffer_t*
  * used for tokens that don't contain a newline or else we will need
  * to start quoting tokens.
  */
-buffer_t* buffer_append_token_string(buffer_t* buffer, oc_token_t* token) {
+buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token) {
   // TODO(jawilson): don't rely on token_to_string so we don't have to
   // allocate and deallocate something.
   char* str = token_to_string(token);
@@ -200,10 +199,10 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer,
     }
   }
 
-  return (token_or_error_t){.token = (oc_token_t){.buffer = buffer,
-                                                  .type = TOKEN_TYPE_WHITESPACE,
-                                                  .start = start_position,
-                                                  .end = pos}};
+  return (token_or_error_t){.token = (token_t){.buffer = buffer,
+                                               .type = TOKEN_TYPE_WHITESPACE,
+                                               .start = start_position,
+                                               .end = pos}};
 }
 
 /* ========================================================================= */
@@ -246,10 +245,10 @@ token_or_error_t tokenize_identifier(buffer_t* buffer,
     pos += decode_result.num_bytes;
   }
 
-  return (token_or_error_t){.token = (oc_token_t){.buffer = buffer,
-                                                  .type = TOKEN_TYPE_IDENTIFIER,
-                                                  .start = start_position,
-                                                  .end = pos}};
+  return (token_or_error_t){.token = (token_t){.buffer = buffer,
+                                               .type = TOKEN_TYPE_IDENTIFIER,
+                                               .start = start_position,
+                                               .end = pos}};
 }
 
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
@@ -272,10 +271,10 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
     pos += decode_result.num_bytes;
   }
 
-  return (token_or_error_t){.token = (oc_token_t){.buffer = buffer,
-                                                  .type = token_type,
-                                                  .start = start_position,
-                                                  .end = pos}};
+  return (token_or_error_t){.token = (token_t){.buffer = buffer,
+                                               .type = token_type,
+                                               .start = start_position,
+                                               .end = pos}};
 }
 
 static char* c_punctuation[] = {
@@ -350,11 +349,10 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer,
   for (int i = 0; i < num_elements; i++) {
     if (buffer_match_string_at(buffer, start_position, c_punctuation[i])) {
       return (token_or_error_t){
-          .token
-          = (oc_token_t){.buffer = buffer,
-                         .type = TOKEN_TYPE_PUNCTUATION,
-                         .start = start_position,
-                         .end = start_position + strlen(c_punctuation[i])}};
+          .token = (token_t){.buffer = buffer,
+                             .type = TOKEN_TYPE_PUNCTUATION,
+                             .start = start_position,
+                             .end = start_position + strlen(c_punctuation[i])}};
     }
   }
   return (token_or_error_t){.error_code
@@ -372,22 +370,20 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position) {
     for (uint64_t position = start_position + 2; position < buffer->length;
          position++) {
       if (buffer_match_string_at(buffer, position, "\n")) {
-        return (token_or_error_t){.token
-                                  = (oc_token_t){.buffer = buffer,
-                                                 .type = TOKEN_TYPE_COMMENT,
-                                                 .start = start_position,
-                                                 .end = position + 1}};
+        return (token_or_error_t){.token = (token_t){.buffer = buffer,
+                                                     .type = TOKEN_TYPE_COMMENT,
+                                                     .start = start_position,
+                                                     .end = position + 1}};
       }
     }
   } else {
     for (uint64_t position = start_position + 2; position < buffer->length;
          position++) {
       if (buffer_match_string_at(buffer, position, "*/")) {
-        return (token_or_error_t){.token
-                                  = (oc_token_t){.buffer = buffer,
-                                                 .type = TOKEN_TYPE_COMMENT,
-                                                 .start = start_position,
-                                                 .end = position + 2}};
+        return (token_or_error_t){.token = (token_t){.buffer = buffer,
+                                                     .type = TOKEN_TYPE_COMMENT,
+                                                     .start = start_position,
+                                                     .end = position + 2}};
       }
     }
   }
@@ -420,10 +416,10 @@ token_or_error_t tokenize_quoted_literal_common(
       position += strlen(quoted_closing_sequence);
     } else if (buffer_match_string_at(buffer, position, closing_sequence)) {
       return (token_or_error_t){
-          .token = (oc_token_t){.buffer = buffer,
-                                .type = token_type,
-                                .start = start_position,
-                                .end = position + strlen(closing_sequence)}};
+          .token = (token_t){.buffer = buffer,
+                             .type = token_type,
+                             .start = start_position,
+                             .end = position + strlen(closing_sequence)}};
     } else {
       // TODO(jawilson): add an option to iterate "properly" over
       // utf-8 code-points one by one. This is not necessary since no
@@ -460,8 +456,8 @@ token_or_error_t tokenize_character_literal(buffer_t* buffer,
 }
 
 
-static inline oc_token_t* heap_allocate_token(oc_token_t token) {
-  oc_token_t* result = malloc_struct(oc_token_t);
+static inline token_t* heap_allocate_token(token_t token) {
+  token_t* result = malloc_struct(token_t);
   *result = token;
   return result;
 }
@@ -504,7 +500,7 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
     }
 
     uint32_t code_point = decode_result.code_point;
-    oc_token_t* token = NULL;
+    token_t* token = NULL;
 
     if (isspace(code_point)) {
       read_token(tokenize_whitespace);

@@ -236,9 +236,8 @@ buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
 // without having completely signed off on it completely (though the
 // region will be lexicially consistent with our lexer).
 //
-buffer_t* buffer_append_c_raw_token_span(buffer_t* buffer,
-                                         oc_token_t* start_token,
-                                         oc_token_t* end_token) {
+buffer_t* buffer_append_c_raw_token_span(buffer_t* buffer, token_t* start_token,
+                                         token_t* end_token) {
   if (start_token->buffer != end_token->buffer) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -442,7 +441,7 @@ buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
   } else if (node->tokens != NULL && node->tokens->length > 0) {
     for (uint64_t i = 0; i < node->tokens->length; i++) {
       buffer_append_string(buffer, " ");
-      oc_token_t* token = value_array_get_ptr(node->tokens, i, oc_token_t*);
+      token_t* token = value_array_get_ptr(node->tokens, i, token_t*);
       buffer_append_token_string(buffer, token);
     }
   } else {

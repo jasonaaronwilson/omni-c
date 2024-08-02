@@ -46,7 +46,7 @@ void do_print_tokens(value_array_t* tokens, char* message) {
     // comments can be quite large.
     buffer_t* buffer = make_buffer(tokens->length * 60);
     for (int j = 0; j < tokens->length; j++) {
-      oc_token_t* token = token_at(tokens, j);
+      token_t* token = token_at(tokens, j);
       buffer = append_token_debug_string(buffer, *token);
       buffer = buffer_append_string(buffer, "\n");
     }
