@@ -59,7 +59,7 @@ void print_tokens(void) {
 
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
-    oc_file_t* file = value_array_get_ptr(files, i, oc_file_t*);
+    file_t* file = value_array_get_ptr(files, i, file_t*);
 
     fprintf(stdout, "====================================================\n");
     fprintf(stdout, "====> Processing %s\n", file->file_name);
@@ -130,7 +130,7 @@ void extract_command(char* command) {
       buffer_clear(prototype_outputs);
     }
 
-    oc_file_t* file = value_array_get_ptr(files, i, oc_file_t*);
+    file_t* file = value_array_get_ptr(files, i, file_t*);
     prototype_outputs
         = buffer_printf(prototype_outputs,
                         "/* Automatically extracted prototypes from %s */\n\n",

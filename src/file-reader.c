@@ -38,8 +38,8 @@ value_array_t* read_files(value_array_t* files) {
  * Read a file from the file-system into memory and put a nice wrapper
  * around the bytes in that file.
  */
-oc_file_t* read_file(char* file_name) {
-  oc_file_t* result = malloc_struct(oc_file_t);
+file_t* read_file(char* file_name) {
+  file_t* result = malloc_struct(file_t);
 
   buffer_t* buffer = make_buffer(1024 * 8);
   buffer = buffer_append_file_contents(buffer, file_name);

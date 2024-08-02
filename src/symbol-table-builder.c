@@ -26,7 +26,7 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
                                          value_array_t* file_names) {
   value_array_t* files = read_files(file_names);
   for (int i = 0; i < files->length; i++) {
-    oc_file_t* file = (oc_file_t*) value_array_get(files, i).ptr;
+    file_t* file = (file_t*) value_array_get(files, i).ptr;
     symbol_table_parse_buffer(symbol_table, file->data, file->file_name);
   }
 }

@@ -1,5 +1,5 @@
 /**
- * An oc_file_t contains either an Omni C source file, a standard C
+ * An file_t contains either an Omni C source file, a standard C
  * source file, uninterpreted data (for embed), or at times perhaps
  * even a library.
  */
@@ -14,15 +14,15 @@ typedef enum {
   OMNI_C_SOURCE_FILE,
   STD_C_SOURCE_FILE,
   DATA_FILE,
-} oc_file_tag_t;
+} file_tag_t;
 
 struct oc_file_S {
-  oc_file_tag_t tag;
+  file_tag_t tag;
   char* file_name;
   buffer_t* data;
 };
 
-typedef struct oc_file_S oc_file_t;
+typedef struct oc_file_S file_t;
 
 #include "oc-file.c.generated.h"
 
