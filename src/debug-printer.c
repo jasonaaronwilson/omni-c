@@ -2,6 +2,7 @@
 #ifndef _DEBUG_PRINTER_H_
 #define _DEBUG_PRINTER_H_
 
+#include "declaration-parser.h"
 #include "lexer.h"
 #include "parser.h"
 #include "pratt-parser.h"

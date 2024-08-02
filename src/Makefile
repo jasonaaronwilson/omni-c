@@ -12,6 +12,7 @@ SRC_C_SELF = \
 	lexer.c \
 	token-transformer.c \
 	parser.c \
+	declaration-parser.c \
 	node-list.c \
 	debug-printer.c \
 	c-file-printer.c \

@@ -2,6 +2,7 @@
 #ifndef _TO_STRING_HELPERS_H_
 #define _TO_STRING_HELPERS_H_
 
+#include "declaration-parser.h"
 #include "parser.h"
 
 /**
@@ -41,29 +42,6 @@ char* parse_node_type_to_string(parse_node_type_t type) {
     return "PARSE_NODE_UNION";
   case PARSE_NODE_TYPE:
     return "PARSE_NODE_TYPE";
-  }
-  return "**NOT REACHED**";
-}
-
-char* parse_error_code_to_string(parse_error_code_t error_code) {
-  switch (error_code) {
-  default:
-  case PARSE_ERROR_UNKNOWN:
-    return "PARSE_ERROR_UNKNOWN";
-  case PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED:
-    return "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED";
-  case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
-    return "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON";
-  case PARSE_ERROR_EXPECTED_SEMICOLON:
-    return "PARSE_ERROR_EXPECTED_SEMICOLON";
-  case PARSE_ERROR_IDENTIFIER_EXPECTED:
-    return "PARSE_ERROR_IDENTIFIER_EXPECTED";
-  case PARSE_ERROR_INTEGER_LITERAL_EXPECTED:
-    return "PARSE_ERROR_INTEGER_LITERAL_EXPECTED";
-  case PARSE_ERROR_OPEN_BRACE_EXPECTED:
-    return "PARSE_ERROR_OPEN_BRACE_EXPECTED";
-  case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
-    return "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION";
   }
   return "**NOT REACHED**";
 }

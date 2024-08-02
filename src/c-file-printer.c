@@ -2,6 +2,7 @@
 #ifndef _C_FILE_PRINTER_H_
 #define _C_FILE_PRINTER_H_
 
+#include "declaration-parser.h"
 #include "lexer.h"
 #include "parser.h"
 #include <c-armyknife-lib.h>

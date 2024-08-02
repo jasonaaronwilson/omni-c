@@ -1,4 +1,4 @@
-/* Automatically extracted prototypes from parser.c */
+/* Automatically extracted prototypes from declaration-parser.c */
 
 parse_result_t parse_declarations(value_array_t* tokens, uint64_t position);
 
