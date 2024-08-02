@@ -16,13 +16,11 @@ typedef enum {
   DATA_FILE,
 } file_tag_t;
 
-struct oc_file_S {
+typedef struct file_S {
   file_tag_t tag;
   char* file_name;
   buffer_t* data;
-};
-
-typedef struct oc_file_S file_t;
+} file_t;
 
 #include "oc-file.c.generated.h"
 
