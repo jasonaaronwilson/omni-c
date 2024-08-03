@@ -50,6 +50,7 @@ struct oc_token_S;
  * Represents errors in many phases of the compiler.
  */
 typedef struct compiler_error_S {
+  uint64_t error_position;
   tokenizer_error_t tokenizer_error_code;
   parse_error_code_t parser_error_code;
   struct oc_token_S* error_token;
