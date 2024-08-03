@@ -443,6 +443,7 @@ void generate_c_output_file(boolean_t is_library) {
         if (!is_inlined_function(function_node)
             && function_node->body != NULL) {
           append_newline_after_functions = true;
+          buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
           buffer_append_c_function_node_and_body(buffer, function_node);
         }
       }

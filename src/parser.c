@@ -154,9 +154,8 @@ static inline boolean_t is_valid_result(parse_result_t result) {
 
 #endif /* _PARSER_H_ */
 
-char* parse_error_code_to_string(parse_error_code_t error_code) {
-  switch (error_code) {
-  default:
+char* parse_error_code_to_string_1(parse_error_code_t value) {
+  switch (value) {
   case PARSE_ERROR_UNKNOWN:
     return "PARSE_ERROR_UNKNOWN";
   case PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED:
@@ -171,8 +170,24 @@ char* parse_error_code_to_string(parse_error_code_t error_code) {
     return "PARSE_ERROR_INTEGER_LITERAL_EXPECTED";
   case PARSE_ERROR_OPEN_BRACE_EXPECTED:
     return "PARSE_ERROR_OPEN_BRACE_EXPECTED";
+  case PARSE_ERROR_CLOSE_BRACKET_EXPECTED:
+    return "PARSE_ERROR_CLOSE_BRACKET_EXPECTED";
   case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
     return "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION";
+  case PARSE_ERROR_SEMICOLON_EXPECTED:
+    return "PARSE_ERROR_SEMICOLON_EXPECTED";
+  case PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER:
+    return "PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER";
+  case PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER:
+    return "PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER";
+  case PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+    return "PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE";
+  case PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+    return "PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_"
+           "ATTRIBUTE";
+  case PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL:
+    return "PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL";
+  default:
+    return "<<unknown-parse_error_code>>";
   }
-  return "**NOT REACHED**";
 }
