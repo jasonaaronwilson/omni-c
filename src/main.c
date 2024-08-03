@@ -443,6 +443,7 @@ void generate_c_output_file(boolean_t is_library) {
         if (!is_inlined_function(function_node)
             && function_node->body != NULL) {
           append_newline_after_functions = true;
+          buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
           buffer_append_c_function_node_and_body(buffer, function_node);
         }
       }
@@ -507,19 +508,13 @@ int main(int argc, char** argv) {
     // and caught above. Note sure why this is still happening but
     // paranoid code can be easier to debug.
     fatal_error(ERROR_BAD_COMMAND_LINE);
-    ////   } else if (string_equal("build", FLAG_command)) {
-    ////     translate_and_build();
-    ////   } else if (string_equal("extract-header-file", FLAG_command)) {
-    ////     extract_header_file();
-    ////   } else if (string_equal("print-parse-trees", FLAG_command)) {
-    ////     print_parse_trees();
   } else if (string_equal("generate-header-file", FLAG_command)) {
     generate_c_output_file(false);
-    log_info("Exiting normally!");
+    log_info("Exiting normally.");
     exit(0);
   } else if (string_equal("generate-library", FLAG_command)) {
     generate_c_output_file(true);
-    log_info("Exiting normally!");
+    log_info("Exiting normally.");
     exit(0);
   } else if (string_equal("parse-expression", FLAG_command)) {
     parse_expression_string_and_print_parse_tree(FLAG_expression);
