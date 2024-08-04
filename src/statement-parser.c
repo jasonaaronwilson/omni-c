@@ -9,6 +9,9 @@
  */
 typedef struct {
   parse_node_type_t tag;
+  parse_node_t* if_condition;
+  parse_node_t* if_true;
+  parse_node_t* if_else;
 } if_statement_node_t;
 
 /**
@@ -16,6 +19,10 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  parse_node_t* for_init;
+  parse_node_t* for_test;
+  parse_node_t* for_increment;
+  parse_node_t* for_body;
 } for_statement_node_t;
 
 /**
@@ -172,7 +179,7 @@ pstatus_t parse_block(pstate_t* pstate) {
   if (!pstate_expect_token_string("{")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* result = malloc_block_node();
+  parse_node_t* result = make_block_node();
   while (parse_statement(pstate)) {
     // TODO(jawilson) saved individual statements
   }
@@ -185,7 +192,7 @@ pstatus_t parse_block(pstate_t* pstate) {
 /**
  * @parse parse_return_statement
  */
-pstatus_t parse_return_statemen(pstate_t* pstate) {
+pstatus_t parse_return_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (!pstate_expect_token_string("return")) {
     return pstate_propagate_error(pstate, saved_position);
@@ -208,14 +215,14 @@ pstatus_t parse_if_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* if_test = pstate_node(pstate);
-  if (!pstate_expect_token_string(")") || !pstate_parse_statement(pstate)) {
+  if (!pstate_expect_token_string(")") || !parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* if_true = pstate_node(pstate);
   parse_node_t* if_false = NULL;
   if (pstate_match_token_string("else")) {
     pstate_advance(pstate);
-    if (!pstate_parse_statement(pstate)) {
+    if (!parse_statement(pstate)) {
       return pstate_propagate_error(pstate, saved_position);
     }
     if_false = pstate_node(pstate);
@@ -233,7 +240,7 @@ pstatus_t parse_while_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* while_test = pstate_node(pstate);
-  if (!pstate_expect_token_string(")") || !pstate_parse_statement(pstate)) {
+  if (!pstate_expect_token_string(")") || !parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* while_body = pstate_node(pstate);
@@ -349,4 +356,70 @@ pstatus_t parse_expression_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   return pstate_node_result(make_expression_statement(expr));
+}
+
+/**
+ * @function parse_goto_statement
+ */
+pstatus_t parse_goto_statement(pstate_t* pstate) { return false; }
+
+/**
+ * @function parse_break_statement
+ */
+pstatus_t parse_break_statement(pstate_t* pstate) { return false; }
+
+/**
+ * @function parse_continue_statement
+ */
+pstatus_t parse_continue_statement(pstate_t* pstate) { return false; }
+
+/**
+ * @function parse_label_statement
+ */
+pstatus_t parse_label_statement(pstate_t* pstate) { return false; }
+
+/**
+ * @function parse_variable_statement
+ *
+ * For example "uint64_t foo = 12345;"
+ */
+pstatus_t parse_variable_statement(pstate_t* pstate) { return false; }
+
+/**
+ * @function parse_empty_statement
+ */
+pstatus_t parse_empty_statement(pstate_t* pstate) { return false; }
+
+/* ====================================================================== */
+/* constructors, etc. for statement nodes */
+/* ====================================================================== */
+
+block_node_t* make_block_node() {
+  for_statement_node_t* result = malloc_struct(for_statement_node_t);
+  result->tag = PARSE_NODE_BLOCK;
+  return result;
+}
+
+for_statement_node_t* make_for_statement(parse_node_t* for_init,
+                                         parse_node_t* for_test,
+                                         parse_node_t* for_increment,
+                                         parse_node_t* for_body) {
+  for_statement_node_t* result = malloc_struct(for_statement_node_t);
+  result->tag = PARSE_NODE_FOR_STATEMENT;
+  result->for_init = for_init;
+  result->for_test = for_test;
+  result->for_increment = for_increment;
+  result->for_body = for_body;
+  return result;
+}
+
+if_statement_node_t* make_if_statement(parse_node_t* if_condition,
+                                       parse_node_t* if_true,
+                                       parse_node_t* if_else) {
+  if_statement_node_t* result = malloc_struct(if_statement_node_t);
+  result->tag = PARSE_NODE_IF_STATEMENT;
+  result->if_condition = if_condition;
+  result->if_true = if_true;
+  result->if_else = if_else;
+  return result;
 }
