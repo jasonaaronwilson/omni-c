@@ -54,7 +54,7 @@ struct oc_token_S;
 typedef struct compiler_error_S {
   uint64_t error_position;
   tokenizer_error_t tokenizer_error_code;
-  parse_error_code_t parser_error_code;
+  parse_error_code_t parse_error_code;
   struct oc_token_S* error_token;
   char* file_name;
 } compiler_error_t;
@@ -83,7 +83,7 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer,
   if (error->tokenizer_error_code != TOKENIZER_ERROR_UNKNOWN) {
     buffer = buffer_append_human_readable_tokenizer_error(buffer, error);
   }
-  if (error->parser_error_code != PARSE_ERROR_UNKNOWN) {
+  if (error->parse_error_code != PARSE_ERROR_UNKNOWN) {
     buffer = buffer_append_human_readable_parser_error(buffer, error);
   }
   return buffer;
@@ -247,9 +247,9 @@ buffer_t*
 buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
                                                     compiler_error_t* error) {
   buffer = buffer_printf(buffer, "\nparser error code = %d\n",
-                         error->parser_error_code);
+                         error->parse_error_code);
   char* template = NULL;
-  switch (error->parser_error_code) {
+  switch (error->parse_error_code) {
   case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
     template = error_field_width_or_semicolon;
     break;

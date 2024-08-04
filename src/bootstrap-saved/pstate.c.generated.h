@@ -2,15 +2,21 @@
 
 void ensure_empty_result_state(pstate_t* pstate);
 
+pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code);
+
 pstate_t* pstate_ignore_error(pstate_t* pstate);
 
 pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position);
 
-pstatus_t pstate_token_result(pstate_t* pstate, token_t* token);
+pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token);
 
-pstatus_t pstate_node_result(pstate_t* pstate, parse_node_t* node);
+pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node);
 
-token_t* pstate_token(pstate_t* pstate);
+token_t* pstate_get_result_token(pstate_t* pstate);
+
+parse_node_t* pstate_get_result_node(pstate_t* pstate);
+
+parse_node_t* pstate_get_optional_result_node(pstate_t* pstate);
 
 token_t* pstate_peek(pstate_t* pstate, int offset);
 

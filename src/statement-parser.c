@@ -30,6 +30,8 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  parse_node_t* statement;
+  parse_node_t* condition;
 } do_statement_node_t;
 
 /**
@@ -37,6 +39,8 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  parse_node_t* condition;
+  parse_node_t* statement;
 } while_statement_node_t;
 
 /**
@@ -51,6 +55,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  value_array_t* statements;
 } block_node_t;
 
 /**
@@ -58,6 +63,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  parse_node_t* expression;
 } return_statement_node_t;
 
 /**
@@ -65,6 +71,8 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  parse_node_t* expression;
+  parse_node_t* block;
 } switch_statement_node_t;
 
 /**
@@ -72,6 +80,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  parse_node_t* expression;
 } case_label_node_t;
 
 /**
@@ -86,6 +95,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  token_t* label;
 } goto_statement_node_t;
 
 /**
@@ -107,6 +117,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  token_t* label;
 } label_node_t;
 
 /**
@@ -114,6 +125,9 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  // type
+  // name
+  parse_node_t* expression;
 } variable_statement_node_t;
 
 /**
@@ -121,6 +135,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  parse_node_t* expression;
 } expression_statement_node_t;
 
 // Should come after any includes that provide types.
@@ -186,7 +201,7 @@ pstatus_t parse_block(pstate_t* pstate) {
   if (!pstate_expect_token_string("}")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_node_result(pstate, result);
+  return pstate_set_result_node(pstate, result);
 }
 
 /**
@@ -198,11 +213,11 @@ pstatus_t parse_return_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_expression(pstate);
-  parse_node_t* expr = pstate_get_optional_node(pstate);
+  parse_node_t* expr = pstate_get_optional_result_node(pstate);
   if (!pstate_expect_token_string(";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_node_result(make_return_statement(expr));
+  return pstate_set_result_node(make_return_statement(expr));
 }
 
 /**
@@ -211,23 +226,23 @@ pstatus_t parse_return_statement(pstate_t* pstate) {
 pstatus_t parse_if_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (!pstate_expect_token_string("if") || !pstate_expect_token_string("(")
-      || !pstate_parse_expression(pstate)) {
+      || !parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* if_test = pstate_node(pstate);
+  parse_node_t* if_test = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(")") || !parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* if_true = pstate_node(pstate);
+  parse_node_t* if_true = pstate_get_result_node(pstate);
   parse_node_t* if_false = NULL;
   if (pstate_match_token_string("else")) {
     pstate_advance(pstate);
     if (!parse_statement(pstate)) {
       return pstate_propagate_error(pstate, saved_position);
     }
-    if_false = pstate_node(pstate);
+    if_false = pstate_get_result_node(pstate);
   }
-  return pstate_node_result(make_if_statement(if_test, if_true, if_false));
+  return pstate_set_result_node(make_if_statement(if_test, if_true, if_false));
 }
 
 /**
@@ -236,15 +251,15 @@ pstatus_t parse_if_statement(pstate_t* pstate) {
 pstatus_t parse_while_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (!pstate_expect_token_string("while") || !pstate_expect_token_string("(")
-      || !pstate_parse_expression(pstate)) {
+      || !parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* while_test = pstate_node(pstate);
+  parse_node_t* while_test = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(")") || !parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* while_body = pstate_node(pstate);
-  return pstate_node_result(make_while_statement(while_test, while_body));
+  parse_node_t* while_body = pstate_get_result_node(pstate);
+  return pstate_set_result_node(make_while_statement(while_test, while_body));
 }
 
 /**
@@ -255,19 +270,19 @@ pstatus_t parse_do_statement(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, "do") || !parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* do_while_body = pstate_node(pstate);
+  parse_node_t* do_while_body = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string("(")) {
     return pstate_propagate_error(pstate, saved_position);
   }
   if (!parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* do_while_test = pstate_node(pstate);
+  parse_node_t* do_while_test = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(")")
       || !pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_node_result(
+  return pstate_set_result_node(
       make_do_while_statement(do_while_body, do_while_test));
 }
 
@@ -283,26 +298,26 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
   if (!parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* for_init = pstate_node(pstate);
+  parse_node_t* for_init = pstate_get_result_node(pstate);
   if (!parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* for_test = pstate_node(pstate);
+  parse_node_t* for_test = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
   if (!parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* for_increment = pstate_node(pstate);
+  parse_node_t* for_increment = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(pstate, ")")) {
     return pstate_propagate_error(pstate, saved_position);
   }
   if (!parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* for_body = pstate_node(pstate);
-  return pstate_node_result(
+  parse_node_t* for_body = pstate_get_result_node(pstate);
+  return pstate_set_result_node(
       make_for_statement(for_init, for_test, for_increment, for_body));
 }
 
@@ -313,15 +328,15 @@ pstatus_t parse_switch_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (!pstate_expect_token_string(pstate, "switch")
       || !pstate_expect_token_string(pstate, "(")
-      || !parse_experssion(pstate)) {
+      || !parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* switch_item = pstate_node(pstate);
+  parse_node_t* switch_item = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(")") || !parse_block(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* block = pstate_node(pstate);
-  return pstate_node_result(make_switch_statement(switch_item, block));
+  parse_node_t* block = pstate_get_result_node(pstate);
+  return pstate_set_result_node(make_switch_statement(switch_item, block));
 }
 
 /**
@@ -330,14 +345,14 @@ pstatus_t parse_switch_statement(pstate_t* pstate) {
 pstatus_t parse_case_label(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (!pstate_expect_token_string(pstate, "case")
-      || !parse_experssion(pstate)) {
+      || !parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* case_expr = pstate_node(pstate);
+  parse_node_t* case_expr = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(":")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_node_result(make_case_label(case_expr));
+  return pstate_set_result_node(make_case_label(case_expr));
 }
 
 /**
@@ -351,11 +366,11 @@ pstatus_t parse_expression_statement(pstate_t* pstate) {
   if (!parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* expr = pstate_node(pstate);
+  parse_node_t* expr = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_node_result(make_expression_statement(expr));
+  return pstate_set_result_node(make_expression_statement_node(expr));
 }
 
 /**
@@ -390,6 +405,11 @@ pstatus_t parse_variable_statement(pstate_t* pstate) { return false; }
  */
 pstatus_t parse_empty_statement(pstate_t* pstate) { return false; }
 
+/**
+ * @function parse_default_label
+ */
+pstatus_t parse_default_label(pstate_t* pstate) { return false; }
+
 /* ====================================================================== */
 /* constructors, etc. for statement nodes */
 /* ====================================================================== */
@@ -421,5 +441,21 @@ if_statement_node_t* make_if_statement(parse_node_t* if_condition,
   result->if_condition = if_condition;
   result->if_true = if_true;
   result->if_else = if_else;
+  return result;
+}
+
+expression_statement_node_t*
+    make_expression_statement_node(parse_node_t* expression) {
+  expression_statement_node_t* result
+      = malloc_struct(expression_statement_node_t);
+  result->tag = PARSE_NODE_EXPRESSION_STATEMENT;
+  result->expression = expression;
+  return result;
+}
+
+return_statement_node_t* make_return_statement(parse_node_t* expression) {
+  return_statement_node_t* result = malloc_struct(return_statement_node_t);
+  result->tag = PARSE_NODE_RETURN_STATEMENT;
+  result->expression = expression;
   return result;
 }

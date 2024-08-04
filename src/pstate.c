@@ -4,7 +4,9 @@
 
 #include "parser.h"
 
-// TODO(jawilson): include our own auto-generated prototypes.
+// Must come last
+
+#include "pstate.c.generated.h"
 
 #endif /* _PSTATE_H_ */
 
@@ -18,9 +20,23 @@
  */
 void ensure_empty_result_state(pstate_t* pstate) {
   if (pstate->result_token != NULL || pstate->result_node != NULL
-      || pstate->error.parser_error_code) {
+      || pstate->error.parse_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+}
+
+/**
+ * @function pstate_error
+ *
+ * Sets the error in state (possibly overwriting an existing error
+ * contained in pstate).
+ */
+pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position,
+                       parse_error_code_t parse_error_code) {
+  // ensure mostly empty.
+  // TODO(jawilson): fill in more of compiler error.
+  pstate->error.parse_error_code = parse_error_code;
+  return false;
 }
 
 /**
@@ -37,7 +53,7 @@ void ensure_empty_result_state(pstate_t* pstate) {
  * long blocks
  */
 pstate_t* pstate_ignore_error(pstate_t* pstate) {
-  if (!pstate->error.parser_error_code) {
+  if (!pstate->error.parse_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   pstate->error = (compiler_error_t){0};
@@ -53,47 +69,77 @@ pstate_t* pstate_ignore_error(pstate_t* pstate) {
  * changing position unless we were successful.
  */
 pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position) {
-  if (!pstate->error.parser_error_code) {
+  if (!pstate->error.parse_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return false;
 }
 
 /**
- * @function pstate_token_result
+ * @function pstate_set_result_token
  *
  * This is much less common that returning a node (perhaps we don't
  * even need it?)
  */
-pstatus_t pstate_token_result(pstate_t* pstate, token_t* token) {
+pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token) {
   ensure_empty_result_state(pstate);
   pstate->result_token = token;
   return true;
 }
 
 /**
- * @function pstate_node_result
+ * @function pstate_set_result_node
  *
  * This is the common path for returning a node when the parse was
  * successful.
  */
-pstatus_t pstate_node_result(pstate_t* pstate, parse_node_t* node) {
+pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node) {
   ensure_empty_result_state(pstate);
   pstate->result_node = node;
   return true;
 }
 
 /**
- * @parse pstate_token
+ * @parse pstate_get_token
  *
  * Return the result token in the pstate. This is not necessarily the
  * token that is currently at the head of the stream (for that use
  * pstate_peek).
  */
-token_t* pstate_token(pstate_t* pstate) {
+token_t* pstate_get_result_token(pstate_t* pstate) {
+  // TODO(jawilson): check error
   token_t* token = pstate->result_token;
   pstate->result_token = NULL;
   return token;
+}
+
+/**
+ * @parse pstate_get_result_node
+ *
+ * Return the result node in the pstate. This will never return NULL
+ * (see pstate_get_optional_result_node);
+ */
+parse_node_t* pstate_get_result_node(pstate_t* pstate) {
+  // TODO(jawilson): check error
+  parse_node_t* result = pstate->result_node;
+  if (result == NULL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  pstate->result_node = NULL;
+  return result;
+}
+
+/**
+ * @parse pstate_get_optional_result_node
+ *
+ * Return the result node in the pstate. This will never return NULL
+ * (see pstate_get_optional_result_node);
+ */
+parse_node_t* pstate_get_optional_result_node(pstate_t* pstate) {
+  // TODO(jawilson): clear error
+  parse_node_t* result = pstate->result_node;
+  pstate->result_node = NULL;
+  return result;
 }
 
 /**
@@ -117,7 +163,7 @@ token_t* pstate_peek(pstate_t* pstate, int offset) {
  * in an error state.
  */
 token_t* pstate_advance(pstate_t* pstate) {
-  if (pstate->error.parser_error_code) {
+  if (pstate->error.parse_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   token_t* token = pstate_peek(pstate, 0);
@@ -151,7 +197,7 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string) {
     pstate->position += 1;
     return true;
   }
-  pstate->error.parser_error_code = PARSE_ERROR_EXPECTED_TOKEN;
+  pstate->error.parse_error_code = PARSE_ERROR_EXPECTED_TOKEN;
   return false;
 }
 
