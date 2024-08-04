@@ -8,6 +8,13 @@
 
 #endif /* _STATEMENT_PARSER_H_ */
 
+#if 0
+
+pstatus_t parse_expression(pstate_t* pstate) {
+  // FIXME!
+  return true;
+}
+
 /**
  * @parse parse_statement
  *
@@ -71,12 +78,12 @@ pstatus_t parse_return_statemen(pstate_t* pstate) {
   if (!pstate_expect_token_string("return")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  pstate_parse_expression(pstate);
+  parse_expression(pstate);
   parse_node_t* expr = pstate_get_optional_node(pstate);
   if (!pstate_expect_token_string(";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_node_result(make_if_statement(if_test, if_true, if_false);
+  return pstate_node_result(make_return_statement(expr));
 }
 
 /**
@@ -161,6 +168,7 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
   if (!parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
+  parse_node_t* for_init = pstate_node(pstate);
   if (!parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
@@ -179,7 +187,7 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* for_body = pstate_node(pstate);
-  return pstate_node_result(make_for_statement(for_init, for_test, for_next, for_body));
+  return pstate_node_result(make_for_statement(for_init, for_test, for_increment, for_body));
 }
 
 /**
@@ -194,7 +202,7 @@ pstatus_t parse_switch_statement(pstate_t* pstate) {
   }
   parse_node_t* switch_item = pstate_node(pstate);
   if (!pstate_expect_token_string(")")
-      !pstate_parse_block_1(pstate)) {
+      || !parse_block(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* block = pstate_node(pstate);
@@ -234,3 +242,5 @@ pstatus_t parse_expression_statement(pstate_t* pstate) {
   }
   return pstate_node_result(make_expression_statement(expr));
 }
+
+#endif /* 0 */

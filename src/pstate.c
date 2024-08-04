@@ -17,13 +17,14 @@
  * about when we don't care about them.
  */
 void ensure_empty_result_state(pstate_t* pstate) {
-  if (pstate->result_token != NULL || pstate->result_node != NULL || pstate->error.parser_error_code) {
+  if (pstate->result_token != NULL || pstate->result_node != NULL
+      || pstate->error.parser_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 /**
- * @pstate_ignore_error
+ * @function pstate_ignore_error
  *
  * If we are parsing something that is optional or for which there are
  * multiple possible things to parse, typically we want to ignore the
@@ -39,9 +40,23 @@ pstate_t* pstate_ignore_error(pstate_t* pstate) {
   if (!pstate->error.parser_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  pstate->error = (compiler_error_t) {0};
+  pstate->error = (compiler_error_t){0};
   ensure_empty_result_state(pstate);
   return pstate;
+}
+
+/**
+ * @function pstate_ignore_error
+ *
+ * This just makes sure we really do currently have an error in pstate
+ * and then restores the saved position to meet our contract of not
+ * changing position unless we were successful.
+ */
+pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position) {
+  if (!pstate->error.parser_error_code) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return false;
 }
 
 /**

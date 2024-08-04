@@ -12,6 +12,7 @@ SRC_C_SELF = \
 	lexer.c \
 	token-transformer.c \
 	parser.c \
+	pstate.c \
 	declaration-parser.c \
 	node-list.c \
 	debug-printer.c \
@@ -23,6 +24,7 @@ SRC_C_SELF = \
 	symbol-table-builder.c \
 	srcgen.c \
 	pratt-parser.c \
+	statement-parser.c \
 	main.c
 
 SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c $(SRC_C_SELF)

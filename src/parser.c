@@ -178,7 +178,7 @@ typedef boolean_t pstatus_t;
  * way.
  *
  * The new "calling convention" is inspired by the old one but:
- * 
+ *
  * 1. makes it about as easy to *return* a result but much easier to
  * "handle" the failure case. This is because we return a boolean
  * derived type which can be used directly in an if statement. The
