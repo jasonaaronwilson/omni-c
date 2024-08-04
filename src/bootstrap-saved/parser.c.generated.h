@@ -1,4 +1,4 @@
 /* Automatically extracted prototypes from parser.c */
 
-char* parse_error_code_to_string(parse_error_code_t error_code);
+char* parse_error_code_to_string_1(parse_error_code_t value);
 
