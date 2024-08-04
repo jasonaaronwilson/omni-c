@@ -4,11 +4,123 @@
 
 #include "parser.h"
 
-// include our own prototypes
+/**
+ * @structure if_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} if_statement_node_t;
+
+/**
+ * @structure for_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} for_statement_node_t;
+
+/**
+ * @structure do_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} do_statement_node_t;
+
+/**
+ * @structure while_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} while_statement_node_t;
+
+/**
+ * @structure empty_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} empty_statement_node_t;
+
+/**
+ * @structure block_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} block_node_t;
+
+/**
+ * @structure return_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} return_statement_node_t;
+
+/**
+ * @structure switch_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} switch_statement_node_t;
+
+/**
+ * @structure case_label_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} case_label_node_t;
+
+/**
+ * @structure default_label_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} _node_t;
+
+/**
+ * @structure goto_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} goto_statement_node_t;
+
+/**
+ * @structure break_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} break_statement_node_t;
+
+/**
+ * @structure continue_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} continue_statement_node_t;
+
+/**
+ * @structure label_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} label_node_t;
+
+/**
+ * @structure variable_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} variable_statement_node_t;
+
+/**
+ * @structure expression_statement_node_t
+ */
+typedef struct {
+  parse_node_type_t tag;
+} expression_statement_node_t;
+
+// Should come after any includes that provide types.
+
+#include "statement-parser.c.generated.h"
 
 #endif /* _STATEMENT_PARSER_H_ */
-
-#if 0
 
 pstatus_t parse_expression(pstate_t* pstate) {
   // FIXME!
@@ -91,14 +203,12 @@ pstatus_t parse_return_statemen(pstate_t* pstate) {
  */
 pstatus_t parse_if_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  if (!pstate_expect_token_string("if")
-      || !pstate_expect_token_string("(")
+  if (!pstate_expect_token_string("if") || !pstate_expect_token_string("(")
       || !pstate_parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* if_test = pstate_node(pstate);
-  if (!pstate_expect_token_string(")")
-      || !pstate_parse_statement(pstate)) {
+  if (!pstate_expect_token_string(")") || !pstate_parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* if_true = pstate_node(pstate);
@@ -118,14 +228,12 @@ pstatus_t parse_if_statement(pstate_t* pstate) {
  */
 pstatus_t parse_while_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  if (!pstate_expect_token_string("while")
-      || !pstate_expect_token_string("(")
+  if (!pstate_expect_token_string("while") || !pstate_expect_token_string("(")
       || !pstate_parse_expression(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* while_test = pstate_node(pstate);
-  if (!pstate_expect_token_string(")")
-      || !pstate_parse_statement(pstate)) {
+  if (!pstate_expect_token_string(")") || !pstate_parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* while_body = pstate_node(pstate);
@@ -137,8 +245,7 @@ pstatus_t parse_while_statement(pstate_t* pstate) {
  */
 pstatus_t parse_do_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  if (!pstate_expect_token_string(pstate, "do")
-      || !parse_statement(pstate)){
+  if (!pstate_expect_token_string(pstate, "do") || !parse_statement(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* do_while_body = pstate_node(pstate);
@@ -153,7 +260,8 @@ pstatus_t parse_do_statement(pstate_t* pstate) {
       || !pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_node_result(make_do_while_statement(do_while_body, do_while_test));
+  return pstate_node_result(
+      make_do_while_statement(do_while_body, do_while_test));
 }
 
 /**
@@ -187,7 +295,8 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* for_body = pstate_node(pstate);
-  return pstate_node_result(make_for_statement(for_init, for_test, for_increment, for_body));
+  return pstate_node_result(
+      make_for_statement(for_init, for_test, for_increment, for_body));
 }
 
 /**
@@ -197,12 +306,11 @@ pstatus_t parse_switch_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (!pstate_expect_token_string(pstate, "switch")
       || !pstate_expect_token_string(pstate, "(")
-      || !parse_experssion(pstate)){
+      || !parse_experssion(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* switch_item = pstate_node(pstate);
-  if (!pstate_expect_token_string(")")
-      || !parse_block(pstate)) {
+  if (!pstate_expect_token_string(")") || !parse_block(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* block = pstate_node(pstate);
@@ -242,5 +350,3 @@ pstatus_t parse_expression_statement(pstate_t* pstate) {
   }
   return pstate_node_result(make_expression_statement(expr));
 }
-
-#endif /* 0 */
