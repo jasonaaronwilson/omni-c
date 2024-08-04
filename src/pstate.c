@@ -63,7 +63,7 @@ pstatus_t pstate_token_result(pstate_t* pstate, token_t* token) {
  * successful.
  */
 pstatus_t pstate_node_result(pstate_t* pstate, parse_node_t* node) {
-  ensure_empty_return_state();
+  ensure_empty_result_state(pstate);
   pstate->result_node = node;
   return true;
 }
@@ -89,8 +89,8 @@ token_t* pstate_token(pstate_t* pstate) {
  * pstate_peek).
  */
 token_t* pstate_peek(pstate_t* pstate, int offset) {
-  ensure_empty_return_state(pstate);
-  token_t* token = get_token(pstate->tokens, pstate->position + offset);
+  ensure_empty_result_state(pstate);
+  token_t* token = token_at(pstate->tokens, pstate->position + offset);
   return token;
 }
 
@@ -102,7 +102,7 @@ token_t* pstate_peek(pstate_t* pstate, int offset) {
  * in an error state.
  */
 token_t* pstate_advance(pstate_t* pstate) {
-  if (pstate->error.parse_error_code) {
+  if (pstate->error.parser_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   token_t* token = pstate_peek(pstate, 0);
@@ -136,7 +136,7 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string) {
     pstate->position += 1;
     return true;
   }
-  pstate->error->error_code = PARSE_ERROR_EXPECTED_TOKEN;
+  pstate->error.parser_error_code = PARSE_ERROR_EXPECTED_TOKEN;
   return false;
 }
 
