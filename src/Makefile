@@ -1,5 +1,7 @@
 all: omni-c
 
+STABLE_BINARY_PATH := $(if $(wildcard omni-c),./omni-c,../../omni-c-stable/src/omni-c)
+
 CC_FLAGS := -g -rdynamic -I ~/src/tree-sitter/lib/include
 CC_FLAGS_OPT := -g -rdynamic -I ~/src/tree-sitter/lib/include -O3
 
@@ -58,8 +60,8 @@ extract-enums: omni-c-opt
 	./omni-c-opt extract-enums --unique-prototype-header-files=true ../examples/enum.oc
 	wc --lines ${SRC_C}
 
-extract-prototypes: omni-c-opt
-	/usr/bin/time --portability ./omni-c-opt extract-prototypes --unique-prototype-header-files=true ${SRC_C}
+extract-prototypes:
+	$(STABLE_BINARY_PATH) extract-prototypes --unique-prototype-header-files=true ${SRC_C}
 	wc --lines ${SRC_C}
 
 do-generate-header-file: omni-c-opt
