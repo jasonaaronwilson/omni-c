@@ -46,3 +46,11 @@ expression_statement_node_t* make_expression_statement_node(parse_node_t* expres
 
 return_statement_node_t* make_return_statement(parse_node_t* expression);
 
+while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node_t* body);
+
+do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* condition);
+
+switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_node_t* block);
+
+case_label_node_t* make_case_label(parse_node_t* expression);
+
