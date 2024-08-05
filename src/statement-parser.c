@@ -437,19 +437,6 @@ pstatus_t parse_default_label(pstate_t* pstate) { return false; }
 /* constructors, etc. for statement nodes */
 /* ====================================================================== */
 
-block_node_t* make_block_node() {
-  block_node_t* result = malloc_struct(block_node_t);
-  result->tag = PARSE_NODE_BLOCK;
-  return result;
-}
-
-break_statement_node_t* make_break_statement(token_t* break_keyword_token) {
-  break_statement_node_t* result = malloc_struct(break_statement_node_t);
-  result->tag = PARSE_NODE_BREAK_STATEMENT;
-  result->break_keyword_token = break_keyword_token;
-  return result;
-}
-
 for_statement_node_t* make_for_statement(parse_node_t* for_init,
                                          parse_node_t* for_test,
                                          parse_node_t* for_increment,
@@ -508,6 +495,36 @@ do_statement_node_t* make_do_statement(parse_node_t* body,
   return result;
 }
 
+/**
+ * @function make_break_statement
+ *
+ * Allocating a break statement node and set it's field values.
+ */
+break_statement_node_t* make_break_statement(token_t* break_keyword_token) {
+  break_statement_node_t* result = malloc_struct(break_statement_node_t);
+  result->tag = PARSE_NODE_BREAK_STATEMENT;
+  result->break_keyword_token = break_keyword_token;
+  return result;
+}
+
+/**
+ * @function to_break_statement_node
+ *
+ * Safely cast a generic node pointer to a break_statement_node_t
+ * pointer after examining it's tag.
+ */
+break_statement_node_t* to_break_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_BREAK_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(break_statement_node_t*, ptr);
+}
+
+/**
+ * @function make_switch_statement
+ *
+ * Allocating a switch statement node and set it's field values.
+ */
 switch_statement_node_t* make_switch_statement(parse_node_t* expression,
                                                parse_node_t* block) {
   switch_statement_node_t* result = malloc_struct(switch_statement_node_t);
@@ -517,6 +534,24 @@ switch_statement_node_t* make_switch_statement(parse_node_t* expression,
   return result;
 }
 
+/**
+ * @function to_switch_statement_node
+ *
+ * Safely cast a generic node pointer to a switch_statement_node_t
+ * pointer after examining it's tag.
+ */
+switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_SWITCH_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(switch_statement_node_t*, ptr);
+}
+
+/**
+ * @function make_case_label
+ *
+ * Allocating a case label node and set it's field values.
+ */
 case_label_node_t* make_case_label(parse_node_t* expression) {
   case_label_node_t* result = malloc_struct(case_label_node_t);
   result->tag = PARSE_NODE_CASE_LABEL;
@@ -524,16 +559,41 @@ case_label_node_t* make_case_label(parse_node_t* expression) {
   return result;
 }
 
-
 /**
- * @function to_break_statement_node
+ * @function to_case_label_node
  *
- * Safely cast a generic node to a attribute_node_t after examining
- * it's tag.
+ * Safely cast a generic node pointer to a case_label_node_t
+ * pointer after examining it's tag.
  */
-break_statement_node_t* to_break_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_BREAK_STATEMENT) {
+case_label_node_t* to_case_label_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_CASE_LABEL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  return cast(break_statement_node_t*, ptr);
+  return cast(case_label_node_t*, ptr);
+}
+
+/**
+ * @function make_block_node
+ *
+ * Allocating a block node and set it's field values. Typically
+ * statements are added to the block node after creation.
+ */
+block_node_t* make_block_node() {
+  block_node_t* result = malloc_struct(block_node_t);
+  result->tag = PARSE_NODE_BLOCK;
+  result->statements = make_value_array(4);
+  return result;
+}
+
+/**
+ * @function to_block_node
+ *
+ * Safely cast a generic node pointer to a block_node_t
+ * pointer after examining it's tag.
+ */
+block_node_t* to_block_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_BLOCK) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(block_node_t*, ptr);
 }
