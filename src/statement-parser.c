@@ -3,6 +3,7 @@
 #define _STATEMNET_PARSER_H_
 
 #include "parser.h"
+#include "pstate.h"
 
 /**
  * @structure if_statement_node_t
@@ -194,7 +195,7 @@ pstatus_t parse_block(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, "{")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* result = make_block_node();
+  parse_node_t* result = to_node(make_block_node());
   while (parse_statement(pstate)) {
     // TODO(jawilson) saved individual statements
   }
@@ -217,7 +218,7 @@ pstatus_t parse_return_statement(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, make_return_statement(expr));
+  return pstate_set_result_node(pstate, to_node(make_return_statement(expr)));
 }
 
 /**
@@ -236,15 +237,15 @@ pstatus_t parse_if_statement(pstate_t* pstate) {
   }
   parse_node_t* if_true = pstate_get_result_node(pstate);
   parse_node_t* if_false = NULL;
-  if (pstate_match_token_string("else")) {
+  if (pstate_match_token_string(pstate, "else")) {
     pstate_advance(pstate);
     if (!parse_statement(pstate)) {
       return pstate_propagate_error(pstate, saved_position);
     }
     if_false = pstate_get_result_node(pstate);
   }
-  return pstate_set_result_node(pstate,
-                                make_if_statement(if_test, if_true, if_false));
+  return pstate_set_result_node(
+      pstate, to_node(make_if_statement(if_test, if_true, if_false)));
 }
 
 /**
@@ -262,8 +263,8 @@ pstatus_t parse_while_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* while_body = pstate_get_result_node(pstate);
-  return pstate_set_result_node(pstate,
-                                make_while_statement(while_test, while_body));
+  return pstate_set_result_node(
+      pstate, to_node(make_while_statement(while_test, while_body)));
 }
 
 /**
@@ -287,7 +288,7 @@ pstatus_t parse_do_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   return pstate_set_result_node(
-      pstate, make_do_statement(do_while_body, do_while_condition));
+      pstate, to_node(make_do_statement(do_while_body, do_while_condition)));
 }
 
 /**
@@ -322,7 +323,8 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
   }
   parse_node_t* for_body = pstate_get_result_node(pstate);
   return pstate_set_result_node(
-      pstate, make_for_statement(for_init, for_test, for_increment, for_body));
+      pstate,
+      to_node(make_for_statement(for_init, for_test, for_increment, for_body)));
 }
 
 /**
@@ -340,8 +342,8 @@ pstatus_t parse_switch_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* block = pstate_get_result_node(pstate);
-  return pstate_set_result_node(pstate,
-                                make_switch_statement(switch_item, block));
+  return pstate_set_result_node(
+      pstate, to_node(make_switch_statement(switch_item, block)));
 }
 
 /**
@@ -357,7 +359,7 @@ pstatus_t parse_case_label(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, ":")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, make_case_label(case_expr));
+  return pstate_set_result_node(pstate, to_node(make_case_label(case_expr)));
 }
 
 /**
@@ -375,7 +377,8 @@ pstatus_t parse_expression_statement(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, make_expression_statement_node(expr));
+  return pstate_set_result_node(pstate,
+                                to_node(make_expression_statement_node(expr)));
 }
 
 /**
@@ -420,7 +423,7 @@ pstatus_t parse_default_label(pstate_t* pstate) { return false; }
 /* ====================================================================== */
 
 block_node_t* make_block_node() {
-  for_statement_node_t* result = malloc_struct(for_statement_node_t);
+  block_node_t* result = malloc_struct(block_node_t);
   result->tag = PARSE_NODE_BLOCK;
   return result;
 }

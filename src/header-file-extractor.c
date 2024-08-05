@@ -139,7 +139,7 @@ __attribute__((warn_unused_result)) buffer_t*
     if (node->tag == PARSE_NODE_TYPEDEF) {
       typedef_node_t* typedef_node = to_typedef_node(node);
       if (is_struct_node(typedef_node->type_node->user_type)) {
-        struct_node_t* struct_node
+        [[gnu::unused]] struct_node_t* struct_node
             = to_struct_node(typedef_node->type_node->user_type);
         /*
         output = buffer_printf(output, "typedef ");
@@ -159,7 +159,7 @@ __attribute__((warn_unused_result)) buffer_t*
         */
       }
     } else if (node->tag == PARSE_NODE_STRUCT) {
-      struct_node_t* struct_node = to_struct_node(node);
+      [[gnu::unused]] struct_node_t* struct_node = to_struct_node(node);
       /*
       output = buffer_append_enum_node(output, enum_node);
       output = buffer_printf(output, ";\n\n");

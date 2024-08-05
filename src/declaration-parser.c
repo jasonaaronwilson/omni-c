@@ -223,7 +223,7 @@ typedef struct global_variable_node_S {
   type_node_t* type;
   token_t* name;
   parse_node_t* value;
-  boolean_t number_of_array_suffixes;
+  int number_of_array_suffixes;
 } global_variable_node_t;
 
 /**
@@ -1192,7 +1192,7 @@ parse_result_t parse_type_node(value_array_t* tokens, uint64_t position) {
       result = ptr_result;
     } else if (token_matches(next, "[")) {
       position++;
-      token_t* open = next;
+      [[gnu::unused]] token_t* open = next;
       next = token_at(tokens, position++);
       type_node_t* array_result = malloc_type_node();
       array_result->type_node_kind = TYPE_NODE_KIND_ARRAY;

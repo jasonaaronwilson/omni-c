@@ -2,8 +2,9 @@ all: omni-c
 
 STABLE_BINARY_PATH := $(if $(wildcard omni-c),./omni-c,../../omni-c-stable/src/omni-c)
 
-CC_FLAGS := -g -rdynamic -I ~/src/tree-sitter/lib/include
-CC_FLAGS_OPT := -g -rdynamic -I ~/src/tree-sitter/lib/include -O3
+WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format
+CC_FLAGS := -g -rdynamic -I ~/src/tree-sitter/lib/include ${WARN_FLAGS}
+CC_FLAGS_OPT := ${CC_FLAGS} -O3 
 
 SRC_C_SELF = \
 	mode.c \
@@ -73,7 +74,7 @@ do-generate-header-file: omni-c-opt
 # TODO(jawilson): -Werror 
 self: omni-c
 	/usr/bin/time --portability ./omni-c generate-library --dump-symbol-table=true --output-file=self.c ${SRC_C_SELF}
-	gcc -o self -Wall -std=c99 -DOMNI_C_SELF_GENERATED self.c armyknife-lib-impl.c
+	gcc -o self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} self.c armyknife-lib-impl.c
 
 ## # Pattern rule for generating header files
 ## %.h: %.c

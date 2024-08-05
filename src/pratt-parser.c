@@ -233,7 +233,7 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
 
   case PRATT_PARSE_PREFIX_OPERATOR:
     do {
-      int recursive_precedence = instruction.precedence;
+      [[gnu::unused]] int recursive_precedence = instruction.precedence;
       parse_result_t right = pratt_parse_expression(tokens, position + 1,
                                                     instruction.precedence);
       if (!is_valid_result(right)) {
