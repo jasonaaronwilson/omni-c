@@ -15,6 +15,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "pratt-parser.h"
+#include "runtime/reflection.h"
 #include "source-to-source.h"
 #include "srcgen.h"
 #include "statement-parser.h"
