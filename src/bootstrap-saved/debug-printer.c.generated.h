@@ -38,3 +38,5 @@ buffer_t* buffer_append_dbg_identifier_node(buffer_t* buffer, identifier_node_t*
 
 buffer_t* buffer_append_dbg_operator_node(buffer_t* buffer, operator_node_t* node, int indention_level);
 
+buffer_t* buffer_append_dbg_break_statement_node(buffer_t* buffer, break_statement_node_t* node, int indention_level);
+

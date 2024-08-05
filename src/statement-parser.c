@@ -523,3 +523,17 @@ case_label_node_t* make_case_label(parse_node_t* expression) {
   result->expression = expression;
   return result;
 }
+
+
+/**
+ * @function to_break_statement_node
+ *
+ * Safely cast a generic node to a attribute_node_t after examining
+ * it's tag.
+ */
+break_statement_node_t* to_break_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_BREAK_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(break_statement_node_t*, ptr);
+}

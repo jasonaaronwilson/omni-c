@@ -56,3 +56,5 @@ switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_n
 
 case_label_node_t* make_case_label(parse_node_t* expression);
 
+break_statement_node_t* to_break_statement_node(parse_node_t* ptr);
+

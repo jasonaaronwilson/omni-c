@@ -6,6 +6,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "pratt-parser.h"
+#include "statement-parser.h"
 
 #include <c-armyknife-lib.h>
 #include <ctype.h>
@@ -95,6 +96,10 @@ buffer_t* buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
   case PARSE_NODE_OPERATOR:
     return buffer_append_dbg_operator_node(buffer, to_operator_node(node),
                                            indention_level);
+
+  case PARSE_NODE_BREAK_STATEMENT:
+    return buffer_append_dbg_break_statement_node(
+        buffer, to_break_statement_node(node), indention_level);
 
   default:
     break;
@@ -456,5 +461,16 @@ buffer_t* buffer_append_dbg_operator_node(buffer_t* buffer,
     buffer_append_dbg_parse_node(buffer, node->right, indention_level + 1);
   }
 
+  return buffer;
+}
+
+buffer_t* buffer_append_dbg_break_statement_node(buffer_t* buffer,
+                                                 break_statement_node_t* node,
+                                                 int indention_level) {
+  buffer_indent(buffer, indention_level);
+  buffer_printf(buffer, "tag: PARSE_NODE_BREAK_STATEMENT\n");
+  buffer_indent(buffer, indention_level);
+  buffer_printf(buffer, "break_keyword_token: ",
+                token_to_string(node->break_keyword_token));
   return buffer;
 }
