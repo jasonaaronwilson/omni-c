@@ -434,66 +434,8 @@ pstatus_t parse_empty_statement(pstate_t* pstate) { return false; }
 pstatus_t parse_default_label(pstate_t* pstate) { return false; }
 
 /* ====================================================================== */
-/* constructors, etc. for statement nodes */
+/* constructors, etc. */
 /* ====================================================================== */
-
-for_statement_node_t* make_for_statement(parse_node_t* for_init,
-                                         parse_node_t* for_test,
-                                         parse_node_t* for_increment,
-                                         parse_node_t* for_body) {
-  for_statement_node_t* result = malloc_struct(for_statement_node_t);
-  result->tag = PARSE_NODE_FOR_STATEMENT;
-  result->for_init = for_init;
-  result->for_test = for_test;
-  result->for_increment = for_increment;
-  result->for_body = for_body;
-  return result;
-}
-
-if_statement_node_t* make_if_statement(parse_node_t* if_condition,
-                                       parse_node_t* if_true,
-                                       parse_node_t* if_else) {
-  if_statement_node_t* result = malloc_struct(if_statement_node_t);
-  result->tag = PARSE_NODE_IF_STATEMENT;
-  result->if_condition = if_condition;
-  result->if_true = if_true;
-  result->if_else = if_else;
-  return result;
-}
-
-expression_statement_node_t*
-    make_expression_statement_node(parse_node_t* expression) {
-  expression_statement_node_t* result
-      = malloc_struct(expression_statement_node_t);
-  result->tag = PARSE_NODE_EXPRESSION_STATEMENT;
-  result->expression = expression;
-  return result;
-}
-
-return_statement_node_t* make_return_statement(parse_node_t* expression) {
-  return_statement_node_t* result = malloc_struct(return_statement_node_t);
-  result->tag = PARSE_NODE_RETURN_STATEMENT;
-  result->expression = expression;
-  return result;
-}
-
-while_statement_node_t* make_while_statement(parse_node_t* condition,
-                                             parse_node_t* body) {
-  while_statement_node_t* result = malloc_struct(while_statement_node_t);
-  result->tag = PARSE_NODE_WHILE_STATEMENT;
-  result->condition = condition;
-  result->body = body;
-  return result;
-}
-
-do_statement_node_t* make_do_statement(parse_node_t* body,
-                                       parse_node_t* condition) {
-  do_statement_node_t* result = malloc_struct(do_statement_node_t);
-  result->tag = PARSE_NODE_DO_STATEMENT;
-  result->body = body;
-  result->condition = condition;
-  return result;
-}
 
 /**
  * @function make_break_statement
@@ -519,6 +461,8 @@ break_statement_node_t* to_break_statement_node(parse_node_t* ptr) {
   }
   return cast(break_statement_node_t*, ptr);
 }
+
+// ----------------------------------------------------------------------
 
 /**
  * @function make_switch_statement
@@ -547,6 +491,8 @@ switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr) {
   return cast(switch_statement_node_t*, ptr);
 }
 
+// ----------------------------------------------------------------------
+
 /**
  * @function make_case_label
  *
@@ -572,6 +518,8 @@ case_label_node_t* to_case_label_node(parse_node_t* ptr) {
   return cast(case_label_node_t*, ptr);
 }
 
+// ----------------------------------------------------------------------
+
 /**
  * @function make_block_node
  *
@@ -596,4 +544,183 @@ block_node_t* to_block_node(parse_node_t* ptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(block_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_for_statement_node
+ *
+ * Allocating a for statement node and set it's field
+ * values.
+ */
+for_statement_node_t* make_for_statement(parse_node_t* for_init,
+                                         parse_node_t* for_test,
+                                         parse_node_t* for_increment,
+                                         parse_node_t* for_body) {
+  for_statement_node_t* result = malloc_struct(for_statement_node_t);
+  result->tag = PARSE_NODE_FOR_STATEMENT;
+  result->for_init = for_init;
+  result->for_test = for_test;
+  result->for_increment = for_increment;
+  result->for_body = for_body;
+  return result;
+}
+
+/**
+ * @function to_for_statement_node
+ *
+ * Safely cast a generic node pointer to a for_statement_node_t
+ * pointer after examining it's tag.
+ */
+for_statement_node_t* to_for_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_FOR_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(for_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_if_statement
+ *
+ * Allocating a if statement node and set it's field values.
+ */
+if_statement_node_t* make_if_statement(parse_node_t* if_condition,
+                                       parse_node_t* if_true,
+                                       parse_node_t* if_else) {
+  if_statement_node_t* result = malloc_struct(if_statement_node_t);
+  result->tag = PARSE_NODE_IF_STATEMENT;
+  result->if_condition = if_condition;
+  result->if_true = if_true;
+  result->if_else = if_else;
+  return result;
+}
+
+/**
+ * @function to_if_statement_node
+ *
+ * Safely cast a generic node pointer to a if_statement_node_t
+ * pointer after examining it's tag.
+ */
+if_statement_node_t* to_if_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_IF_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(if_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_expression_statement
+ *
+ * Allocating a expression statement node and set it's field values.
+ */
+expression_statement_node_t*
+    make_expression_statement_node(parse_node_t* expression) {
+  expression_statement_node_t* result
+      = malloc_struct(expression_statement_node_t);
+  result->tag = PARSE_NODE_EXPRESSION_STATEMENT;
+  result->expression = expression;
+  return result;
+}
+
+/**
+ * @function to_expression_statement_node
+ *
+ * Safely cast a generic node pointer to a expression_statement_node_t
+ * pointer after examining it's tag.
+ */
+expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_EXPRESSION_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(expression_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_return_statement
+ *
+ * Allocating a return statement node and set it's field values.
+ */
+return_statement_node_t* make_return_statement(parse_node_t* expression) {
+  return_statement_node_t* result = malloc_struct(return_statement_node_t);
+  result->tag = PARSE_NODE_RETURN_STATEMENT;
+  result->expression = expression;
+  return result;
+}
+
+/**
+ * @function to_return_statement_node
+ *
+ * Safely cast a generic node pointer to a return_statement_node_t
+ * pointer after examining it's tag.
+ */
+return_statement_node_t* to_return_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_RETURN_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(return_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_while_statement
+ *
+ * Allocating a while statement node and set it's field values.
+ */
+while_statement_node_t* make_while_statement(parse_node_t* condition,
+                                             parse_node_t* body) {
+  while_statement_node_t* result = malloc_struct(while_statement_node_t);
+  result->tag = PARSE_NODE_WHILE_STATEMENT;
+  result->condition = condition;
+  result->body = body;
+  return result;
+}
+
+/**
+ * @function to_while_statement_node
+ *
+ * Safely cast a generic node pointer to a while_statement_node_t
+ * pointer after examining it's tag.
+ */
+while_statement_node_t* to_while_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_WHILE_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(while_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_do_statement
+ *
+ * Allocating a do statement node and set it's field values.
+ */
+do_statement_node_t* make_do_statement(parse_node_t* body,
+                                       parse_node_t* condition) {
+  do_statement_node_t* result = malloc_struct(do_statement_node_t);
+  result->tag = PARSE_NODE_DO_STATEMENT;
+  result->body = body;
+  result->condition = condition;
+  return result;
+}
+
+/**
+ * @function to_do_statement_node
+ *
+ * Safely cast a generic node pointer to a do_statement_node_t
+ * pointer after examining it's tag.
+ */
+do_statement_node_t* to_do_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_DO_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(do_statement_node_t*, ptr);
 }

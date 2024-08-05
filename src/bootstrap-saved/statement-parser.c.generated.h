@@ -36,18 +36,6 @@ pstatus_t parse_empty_statement(pstate_t* pstate);
 
 pstatus_t parse_default_label(pstate_t* pstate);
 
-for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body);
-
-if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else);
-
-expression_statement_node_t* make_expression_statement_node(parse_node_t* expression);
-
-return_statement_node_t* make_return_statement(parse_node_t* expression);
-
-while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node_t* body);
-
-do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* condition);
-
 break_statement_node_t* make_break_statement(token_t* break_keyword_token);
 
 break_statement_node_t* to_break_statement_node(parse_node_t* ptr);
@@ -63,4 +51,28 @@ case_label_node_t* to_case_label_node(parse_node_t* ptr);
 block_node_t* make_block_node();
 
 block_node_t* to_block_node(parse_node_t* ptr);
+
+for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body);
+
+for_statement_node_t* to_for_statement_node(parse_node_t* ptr);
+
+if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else);
+
+if_statement_node_t* to_if_statement_node(parse_node_t* ptr);
+
+expression_statement_node_t* make_expression_statement_node(parse_node_t* expression);
+
+expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr);
+
+return_statement_node_t* make_return_statement(parse_node_t* expression);
+
+return_statement_node_t* to_return_statement_node(parse_node_t* ptr);
+
+while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node_t* body);
+
+while_statement_node_t* to_while_statement_node(parse_node_t* ptr);
+
+do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* condition);
+
+do_statement_node_t* to_do_statement_node(parse_node_t* ptr);
 
