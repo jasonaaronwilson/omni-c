@@ -470,7 +470,9 @@ buffer_t* buffer_append_dbg_break_statement_node(buffer_t* buffer,
   buffer_indent(buffer, indention_level);
   buffer_printf(buffer, "tag: PARSE_NODE_BREAK_STATEMENT\n");
   buffer_indent(buffer, indention_level);
-  buffer_printf(buffer, "break_keyword_token: ",
-                token_to_string(node->break_keyword_token));
+  if (node->break_keyword_token != NULL) {
+    buffer_printf(buffer, "break_keyword_token: %s",
+                  token_to_string(node->break_keyword_token));
+  }
   return buffer;
 }
