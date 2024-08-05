@@ -3,6 +3,7 @@
 #define _STATEMNET_PARSER_H_
 
 #include "parser.h"
+#include "pratt-parser.h"
 #include "pstate.h"
 
 /**
@@ -104,6 +105,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  token_t* break_keyword_token;
 } break_statement_node_t;
 
 /**
@@ -146,8 +148,13 @@ typedef struct {
 #endif /* _STATEMENT_PARSER_H_ */
 
 pstatus_t parse_expression(pstate_t* pstate) {
-  // FIXME!
-  return true;
+  parse_result_t result
+      = pratt_parse_expression(pstate->tokens, pstate->position, 0);
+  if (!is_valid_result(result)) {
+    pstate_error(pstate, pstate->position, result.parse_error.parse_error_code);
+  }
+  pstate->position = result.next_token_position;
+  return pstate_set_result_node(pstate, result.node);
 }
 
 /**
@@ -166,7 +173,7 @@ pstatus_t parse_expression(pstate_t* pstate) {
  */
 pstatus_t parse_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  if (parse_block(pstate_ignore_error(pstate))
+  if (parse_block(pstate) || parse_break_statement(pstate_ignore_error(pstate))
       || parse_return_statement(pstate_ignore_error(pstate))
       || parse_if_statement(pstate_ignore_error(pstate))
       || parse_while_statement(pstate_ignore_error(pstate))
@@ -175,9 +182,8 @@ pstatus_t parse_statement(pstate_t* pstate) {
       || parse_switch_statement(pstate_ignore_error(pstate))
       || parse_case_label(pstate_ignore_error(pstate))
       || parse_default_label(pstate_ignore_error(pstate))
-      || parse_goto_statement(pstate_ignore_error(pstate))
-      || parse_break_statement(pstate_ignore_error(pstate))
       || parse_continue_statement(pstate_ignore_error(pstate))
+      || parse_goto_statement(pstate_ignore_error(pstate))
       || parse_label_statement(pstate_ignore_error(pstate))
       || parse_variable_statement(pstate_ignore_error(pstate))
       || parse_expression_statement(pstate_ignore_error(pstate))
@@ -389,7 +395,16 @@ pstatus_t parse_goto_statement(pstate_t* pstate) { return false; }
 /**
  * @function parse_break_statement
  */
-pstatus_t parse_break_statement(pstate_t* pstate) { return false; }
+pstatus_t parse_break_statement(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  token_t* break_keyword_token = pstate_peek(pstate, 0);
+  if (!pstate_expect_token_string(pstate, "break")
+      || !pstate_expect_token_string(pstate, ";")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  return pstate_set_result_node(
+      pstate, to_node(make_break_statement(break_keyword_token)));
+}
 
 /**
  * @function parse_continue_statement
@@ -425,6 +440,13 @@ pstatus_t parse_default_label(pstate_t* pstate) { return false; }
 block_node_t* make_block_node() {
   block_node_t* result = malloc_struct(block_node_t);
   result->tag = PARSE_NODE_BLOCK;
+  return result;
+}
+
+break_statement_node_t* make_break_statement(token_t* break_keyword_token) {
+  break_statement_node_t* result = malloc_struct(break_statement_node_t);
+  result->tag = PARSE_NODE_BREAK_STATEMENT;
+  result->break_keyword_token = break_keyword_token;
   return result;
 }
 

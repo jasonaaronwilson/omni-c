@@ -53,9 +53,11 @@ pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position,
  * long blocks
  */
 pstate_t* pstate_ignore_error(pstate_t* pstate) {
+  /*
   if (!pstate->error.parse_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+  */
   pstate->error = (compiler_error_t){0};
   ensure_empty_result_state(pstate);
   return pstate;

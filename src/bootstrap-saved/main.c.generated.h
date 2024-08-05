@@ -6,9 +6,11 @@ void print_tokens(void);
 
 void extract_command(char* command);
 
+void configure_flags(void);
+
 void configure_parse_expression(void);
 
-void configure_flags(void);
+void configure_parse_statement(void);
 
 void configure_print_tokens_command(void);
 
@@ -25,6 +27,8 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table);
 void generate_c_output_file(boolean_t is_library);
 
 void parse_expression_string_and_print_parse_tree(char* expression);
+
+void parse_statement_string_and_print_parse_tree(char* expression);
 
 int main(int argc, char** argv);
 

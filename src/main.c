@@ -17,6 +17,7 @@
 #include "pratt-parser.h"
 #include "source-to-source.h"
 #include "srcgen.h"
+#include "statement-parser.h"
 #include "symbol-table-builder.h"
 #include "symbol-table.h"
 #include "token-transformer.h"
@@ -37,6 +38,7 @@ boolean_t FLAG_print_tokens_show_appended_tokens = true;
 char* FLAG_ouput_file = NULL;
 boolean_t FLAG_generate_enum_convertors = true;
 char* FLAG_expression = NULL;
+char* FLAG_statement = NULL;
 boolean_t FLAG_dump_symbol_table = false;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
@@ -208,11 +210,6 @@ void extract_command(char* command) {
   }
 }
 
-void configure_parse_expression(void) {
-  flag_command("parse-expression", &FLAG_command);
-  flag_string("--expression", &FLAG_expression);
-}
-
 void configure_flags(void) {
   flag_program_name("omni-c");
   flag_description(
@@ -224,6 +221,17 @@ void configure_flags(void) {
   configure_extract_enums_command();
   configure_generate_c_output_file();
   configure_parse_expression();
+  configure_parse_statement();
+}
+
+void configure_parse_expression(void) {
+  flag_command("parse-expression", &FLAG_command);
+  flag_string("--expression", &FLAG_expression);
+}
+
+void configure_parse_statement(void) {
+  flag_command("parse-statement", &FLAG_command);
+  flag_string("--statement", &FLAG_statement);
 }
 
 void configure_print_tokens_command(void) {
@@ -488,6 +496,31 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
+void parse_statement_string_and_print_parse_tree(char* expression) {
+  oc_tokenizer_result_t tokenizer_result
+      = tokenize(buffer_append_string(make_buffer(1), expression));
+  if (tokenizer_result.tokenizer_error_code) {
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+  value_array_t* tokens = tokenizer_result.tokens;
+  tokens = transform_tokens(tokens, (token_transformer_options_t){
+                                        .keep_whitespace = false,
+                                        .keep_comments = false,
+                                        .keep_javadoc_comments = false,
+                                        .keep_c_preprocessor_lines = false,
+                                    });
+  pstate_t state = (pstate_t){0};
+  state.tokens = tokens;
+  pstatus_t status = parse_statement(&state);
+  if (!status) {
+    fprintf(stderr, "FAIL");
+    exit(1);
+  }
+  parse_node_t* node = pstate_get_result_node(&state);
+  buffer_t* output = buffer_append_dbg_parse_node(make_buffer(1), node, 0);
+  fprintf(stdout, "%s\n", buffer_to_c_string(output));
+}
+
 int main(int argc, char** argv) {
   configure_fatal_errors((fatal_error_config_t){
       .catch_sigsegv = true,
@@ -518,6 +551,8 @@ int main(int argc, char** argv) {
     exit(0);
   } else if (string_equal("parse-expression", FLAG_command)) {
     parse_expression_string_and_print_parse_tree(FLAG_expression);
+  } else if (string_equal("parse-statement", FLAG_command)) {
+    parse_statement_string_and_print_parse_tree(FLAG_statement);
   } else if (string_equal("print-tokens", FLAG_command)) {
     print_tokens();
   } else if (string_equal("extract-enums", FLAG_command)

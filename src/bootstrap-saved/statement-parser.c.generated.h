@@ -38,6 +38,8 @@ pstatus_t parse_default_label(pstate_t* pstate);
 
 block_node_t* make_block_node();
 
+break_statement_node_t* make_break_statement(token_t* break_keyword_token);
+
 for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body);
 
 if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else);
