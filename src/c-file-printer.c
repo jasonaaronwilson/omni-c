@@ -449,3 +449,59 @@ buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
   }
   return buffer;
 }
+
+/* ====================================================================== */
+
+buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
+                                      char* fn_prefix) {
+  // clang-format off
+  static char* code_template =
+    "enum_metadata_t* ${fn_prefix}_metadata() {\n"
+    "${element_constructions}"
+    "    static enum_metatdata_t enum_metatdata_result = {\n"
+    "        .name = \"${enum_name}\","
+    "        .elements = &${previous_var_id}\n"
+    "    };\n"
+    "    return &${metadata_var};\n"
+    "}\n\n";
+
+  static char* field_template =
+    "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n"
+    "        .next = &${previous_var_id},\n"
+    "        .name = \"${element_name}\",\n"
+    "        .value = ${element_name}\n"
+    "    };\n";
+  // clang-format on
+
+  buffer_t* element_constructions = make_buffer(128);
+  buffer_t* buf = make_buffer(128);
+
+  char* previous_var_id = "NULL";
+
+  // TODO(jawilson): do in reverse order though no one should
+  // technically care...
+  for (int i = 0; i < node_list_length(node->elements); i++) {
+    enum_element_t* element
+        = to_enum_element_node(node_list_get(node->elements, i));
+    char* var_id = string_printf("var_%d", i);
+    char* element_name = token_to_string(element->name);
+
+    buffer_clear(buf);
+    buffer_append_string(buf, field_template);
+    buffer_replace_all(buf, "${var_id}", var_id);
+    buffer_replace_all(buf, "${previous_var_id}", previous_var_id);
+    buffer_replace_all(buf, "${element_name}", element_name);
+
+    buffer_append_buffer(element_constructions, buf);
+    previous_var_id = var_id;
+  }
+
+  buffer_t* code = buffer_append_string(make_buffer(128), code_template);
+  buffer_replace_all(code, "${fn_prefix}", fn_prefix);
+  buffer_replace_all(code, "${enum_name}", token_to_string(node->name));
+  buffer_replace_all(code, "${previous_var_id}", previous_var_id);
+  buffer_replace_all(code, "${element_constructions}",
+                     buffer_to_c_string(element_constructions));
+
+  return buffer_append_buffer(buffer, code);
+}

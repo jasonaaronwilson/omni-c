@@ -2,7 +2,8 @@
  * @file srcgen.c
  *
  * Given a symbol table, these routines will automatically generate
- * additional source code such as enum->string and string->enum, etc.
+ * additional source code such as enum->string and string->enum,
+ * various kinds of metadata, etc.
  */
 
 #ifndef _SRCGEN_H_

@@ -40,3 +40,5 @@ buffer_t* buffer_append_global_variable_node(buffer_t* buffer, global_variable_n
 
 buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node);
 
+buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix);
+
