@@ -3,7 +3,7 @@ all: omni-c
 STABLE_BINARY_PATH := $(if $(wildcard omni-c),./omni-c,../../omni-c-stable/src/omni-c)
 
 WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format
-CC_FLAGS := -g -rdynamic -I ~/src/tree-sitter/lib/include ${WARN_FLAGS}
+CC_FLAGS := -g -rdynamic -I ${WARN_FLAGS}
 CC_FLAGS_OPT := ${CC_FLAGS} -O3 
 
 SRC_C_SELF = \
