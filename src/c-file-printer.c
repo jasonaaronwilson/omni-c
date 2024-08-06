@@ -453,21 +453,21 @@ buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
 /* ====================================================================== */
 
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
-                                      char* fn_prefix) {
+                                      char* fn_prefix, char* type_string) {
   // clang-format off
   static char* code_template =
     "enum_metadata_t* ${fn_prefix}_metadata() {\n"
     "${element_constructions}"
-    "    static enum_metatdata_t enum_metatdata_result = {\n"
-    "        .name = \"${enum_name}\","
-    "        .elements = &${previous_var_id}\n"
+    "    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {\n"
+    "        .name = \"${enum_name}\",\n"
+    "        .elements = ${previous_var_address}\n"
     "    };\n"
-    "    return &${metadata_var};\n"
+    "    return &enum_metadata_result;\n"
     "}\n\n";
 
   static char* field_template =
     "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n"
-    "        .next = &${previous_var_id},\n"
+    "        .next = ${previous_var_address},\n"
     "        .name = \"${element_name}\",\n"
     "        .value = ${element_name}\n"
     "    };\n";
@@ -476,7 +476,7 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
   buffer_t* element_constructions = make_buffer(128);
   buffer_t* buf = make_buffer(128);
 
-  char* previous_var_id = "NULL";
+  char* previous_var_address = "NULL";
 
   // TODO(jawilson): do in reverse order though no one should
   // technically care...
@@ -489,17 +489,17 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
     buffer_clear(buf);
     buffer_append_string(buf, field_template);
     buffer_replace_all(buf, "${var_id}", var_id);
-    buffer_replace_all(buf, "${previous_var_id}", previous_var_id);
+    buffer_replace_all(buf, "${previous_var_address}", previous_var_address);
     buffer_replace_all(buf, "${element_name}", element_name);
 
     buffer_append_buffer(element_constructions, buf);
-    previous_var_id = var_id;
+    previous_var_address = string_printf("&%s", var_id);
   }
 
   buffer_t* code = buffer_append_string(make_buffer(128), code_template);
   buffer_replace_all(code, "${fn_prefix}", fn_prefix);
-  buffer_replace_all(code, "${enum_name}", token_to_string(node->name));
-  buffer_replace_all(code, "${previous_var_id}", previous_var_id);
+  buffer_replace_all(code, "${enum_name}", type_string);
+  buffer_replace_all(code, "${previous_var_address}", previous_var_address);
   buffer_replace_all(code, "${element_constructions}",
                      buffer_to_c_string(element_constructions));
 

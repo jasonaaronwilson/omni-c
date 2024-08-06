@@ -10,4 +10,5 @@
  */
 
 #define C_ARMYKNIFE_LIB_IMPL
+// #define ARMYKNIFE_LIB_DEFAULT_LOG_LEVEL 4
 #include <c-armyknife-lib.h>

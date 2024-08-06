@@ -73,7 +73,7 @@ do-generate-header-file: omni-c-opt
 
 # TODO(jawilson): -Werror 
 self: omni-c
-	/usr/bin/time --portability ./omni-c generate-library --dump-symbol-table=true --output-file=self.c ${SRC_C_SELF}
+	/usr/bin/time --portability ./omni-c generate-library --dump-symbol-table=false --output-file=self.c ${SRC_C_SELF}
 	gcc -o self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} self.c armyknife-lib-impl.c
 
 ## # Pattern rule for generating header files

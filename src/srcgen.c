@@ -57,6 +57,8 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
                                             enum_node_type_string);
       buffer = buffer_append_string_to_enum(buffer, enum_node, to_string_prefix,
                                             enum_node_type_string);
+      buffer = buffer_append_enum_metadata(buffer, enum_node, to_string_prefix,
+                                           enum_node_type_string);
     }
   }
 
@@ -72,6 +74,8 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
                                           enum_node_type_string);
     buffer = buffer_append_string_to_enum(buffer, enum_node, to_string_prefix,
                                           enum_node_type_string);
+    buffer = buffer_append_enum_metadata(buffer, enum_node, to_string_prefix,
+                                         enum_node_type_string);
   }
 
   if (buffer->length > 0) {
