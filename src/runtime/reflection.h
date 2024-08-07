@@ -1,6 +1,8 @@
 #ifndef _REFLECTION_H_
 #define _REFLECTION_H_
 
+#include <string.h>
+
 /* ====================================================================== */
 // These are the reflection API data structures for a program compiled
 // with Omni C. We use linked lists instead of value_array_t to keep

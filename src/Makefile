@@ -83,7 +83,7 @@ self: omni-c
 TESTS := $(wildcard tests/*.sh)
 
 test: omni-c
-	tools/run-tests.sh ${TESTS}
+	tools/run-tests.lua ${TESTS}
 
 bootstrap:
 	./bootstrap.sh
