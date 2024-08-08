@@ -11,21 +11,6 @@
 #endif /* _PSTATE_H_ */
 
 /**
- * @function ensure_empty_result_state
- *
- * This enforces the condition that we don't currently have a token,
- * node, or error code as the "result" in pstate. This prevents us
- * from silently ignoring previous results instead of being explicit
- * about when we don't care about them.
- */
-void ensure_empty_result_state(pstate_t* pstate) {
-  if (pstate->result_token != NULL || pstate->result_node != NULL
-      || pstate->error.parse_error_code) {
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-/**
  * @function pstate_error
  *
  * Sets the error in state (possibly overwriting an existing error
@@ -33,9 +18,13 @@ void ensure_empty_result_state(pstate_t* pstate) {
  */
 pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position,
                        parse_error_code_t parse_error_code) {
-  // ensure mostly empty.
-  // TODO(jawilson): fill in more of compiler error.
+  pstate->result_token = NULL;
+  pstate->result_node = NULL;
   pstate->error.parse_error_code = parse_error_code;
+  pstate->error.error_position = pstate->position;
+  pstate->error.error_token = token_at(pstate->tokens, pstate->position);
+  // TODO(jawilson): file_name?
+  pstate->position = saved_position;
   return false;
 }
 
@@ -53,24 +42,19 @@ pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position,
  * long blocks
  */
 pstate_t* pstate_ignore_error(pstate_t* pstate) {
-  /*
-  if (!pstate->error.parse_error_code) {
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-  */
   pstate->error = (compiler_error_t){0};
-  ensure_empty_result_state(pstate);
   return pstate;
 }
 
 /**
- * @function pstate_ignore_error
+ * @function pstate_propagate_error
  *
  * This just makes sure we really do currently have an error in pstate
  * and then restores the saved position to meet our contract of not
  * changing position unless we were successful.
  */
 pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position) {
+  pstate->position = saved_position;
   if (!pstate->error.parse_error_code) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -84,7 +68,8 @@ pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position) {
  * even need it?)
  */
 pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token) {
-  ensure_empty_result_state(pstate);
+  pstate->error = (compiler_error_t){0};
+  pstate->result_node = NULL;
   pstate->result_token = token;
   return true;
 }
@@ -96,8 +81,9 @@ pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token) {
  * successful.
  */
 pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node) {
-  ensure_empty_result_state(pstate);
+  pstate->error = (compiler_error_t){0};
   pstate->result_node = node;
+  pstate->result_token = NULL;
   return true;
 }
 
@@ -109,7 +95,11 @@ pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node) {
  * pstate_peek).
  */
 token_t* pstate_get_result_token(pstate_t* pstate) {
-  // TODO(jawilson): check error
+  if (pstate->error.parse_error_code != PARSE_ERROR_UNKNOWN) {
+    log_warn("error code is not zero");
+    pstate->error = (compiler_error_t){0};
+    // fatal_error(ERROR_ILLEGAL_STATE);
+  }
   token_t* token = pstate->result_token;
   pstate->result_token = NULL;
   return token;
@@ -122,7 +112,11 @@ token_t* pstate_get_result_token(pstate_t* pstate) {
  * (see pstate_get_optional_result_node);
  */
 parse_node_t* pstate_get_result_node(pstate_t* pstate) {
-  // TODO(jawilson): check error
+  if (pstate->error.parse_error_code != PARSE_ERROR_UNKNOWN) {
+    log_warn("error code is not zero");
+    pstate->error = (compiler_error_t){0};
+    // fatal_error(ERROR_ILLEGAL_STATE);
+  }
   parse_node_t* result = pstate->result_node;
   if (result == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -138,7 +132,7 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate) {
  * (see pstate_get_optional_result_node);
  */
 parse_node_t* pstate_get_optional_result_node(pstate_t* pstate) {
-  // TODO(jawilson): clear error
+  pstate->error = (compiler_error_t){0};
   parse_node_t* result = pstate->result_node;
   pstate->result_node = NULL;
   return result;
@@ -147,14 +141,11 @@ parse_node_t* pstate_get_optional_result_node(pstate_t* pstate) {
 /**
  * @parse pstate_peek
  *
- * Return the result token in the pstate. This is not necessarily the
- * token that is currently at the head of the stream (for that use
- * pstate_peek).
+ * Return a token at a relative offset from the current position in
+ * pstate.
  */
 token_t* pstate_peek(pstate_t* pstate, int offset) {
-  ensure_empty_result_state(pstate);
-  token_t* token = token_at(pstate->tokens, pstate->position + offset);
-  return token;
+  return token_at(pstate->tokens, pstate->position + offset);
 }
 
 /**
@@ -166,7 +157,9 @@ token_t* pstate_peek(pstate_t* pstate, int offset) {
  */
 token_t* pstate_advance(pstate_t* pstate) {
   if (pstate->error.parse_error_code) {
-    fatal_error(ERROR_ILLEGAL_STATE);
+    log_warn("error code is not zero");
+    pstate->error = (compiler_error_t){0};
+    // fatal_error(ERROR_ILLEGAL_STATE);
   }
   token_t* token = pstate_peek(pstate, 0);
   pstate->position++;
@@ -175,6 +168,8 @@ token_t* pstate_advance(pstate_t* pstate) {
 
 /**
  * @parse pstate_match_token_string
+ *
+ * This does NOT advance the position like the expect version.
  */
 boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string) {
   token_t* token = pstate_peek(pstate, 0);
@@ -196,6 +191,8 @@ boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string) {
 pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string) {
   token_t* token = pstate_peek(pstate, 0);
   if (token_matches(token, token_string)) {
+    pstate->result_node = NULL;
+    pstate->result_token = token;
     pstate->position += 1;
     return true;
   }
@@ -203,5 +200,23 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string) {
   return false;
 }
 
-// TODO(jawilson):
-// pstatus_t pstate_expect_token_type(pstate_t* pstate, "");
+/**
+ * @parse pstate_expect_token_type
+ *
+ * This is similar to pstate_match_token_string except that it is used
+ * when the head token must match the given token or the parse fails
+ * and the caller will return the error. On error, the token match
+ * string is saved to the error so that we can present it in error
+ * messages.
+ */
+pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type) {
+  token_t* token = pstate_peek(pstate, 0);
+  if (token_type == token->type) {
+    pstate->result_node = NULL;
+    pstate->result_token = token;
+    pstate->position += 1;
+    return true;
+  }
+  pstate->error.parse_error_code = PARSE_ERROR_EXPECTED_TOKEN_TYPE;
+  return false;
+}

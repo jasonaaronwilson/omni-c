@@ -80,14 +80,14 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
     return buffer_append_dbg_function_argument_node(
         buffer, to_function_argument_node(node), indention_level);
 
-  case PARSE_NODE_FUNCTION_BODY:
-    return buffer_append_dbg_function_body_node(
-        buffer, to_function_body_node(node), indention_level);
-
   case PARSE_NODE_TYPEDEF:
     return buffer_append_dbg_typedef_node(buffer, to_typedef_node(node),
                                           indention_level);
     */
+
+  case PARSE_NODE_FUNCTION_BODY:
+    return buffer_append_function_body_node(buffer,
+                                            to_function_body_node(node));
 
     // Always assuming this is a library is problematic...
   case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
@@ -208,8 +208,6 @@ buffer_t* buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
 
 buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
                                          attribute_node_t* node) {
-  buffer_printf(buffer, "__attribute__((");
-
   // Since parser.c doesn't fully parse attributes because we were
   // lazy and don't need to care yet, we simply need to emit a
   // sub-string of the two tokens we were smart enough to retain. We
@@ -224,9 +222,6 @@ buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
   // source code for development and boot-strapping.
   buffer_append_c_raw_token_span(buffer, node->inner_start_token,
                                  node->inner_end_token);
-
-
-  buffer_printf(buffer, "))");
   return buffer;
 }
 
@@ -419,8 +414,11 @@ buffer_t* buffer_append_global_variable_node(buffer_t* buffer,
   buffer_append_c_type_node(buffer, node->type);
   buffer_append_string(buffer, " ");
   buffer_append_token_string(buffer, node->name);
-  for (int i = 0; i < node->number_of_array_suffixes; i++) {
-    buffer_append_string(buffer, "[]");
+  if (node->suffixes) {
+    for (int i = 0; i < node->suffixes->length; i++) {
+      buffer_append_parse_node(
+          buffer, value_array_get_ptr(node->suffixes, i, parse_node_t*));
+    }
   }
   if (is_library && node->value != NULL) {
     buffer_append_string(buffer, " = ");

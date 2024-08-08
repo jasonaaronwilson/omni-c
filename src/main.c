@@ -30,6 +30,7 @@
 
 value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
+boolean_t FLAG_print_command_line = true;
 boolean_t FLAG_include_unnamed_nodes = false;
 boolean_t FLAG_print_tokens_show_tokens = false;
 boolean_t FLAG_print_tokens_include_whitespace = false;
@@ -217,6 +218,8 @@ void configure_flags(void) {
       "omni-c is a transpiler for the omni-c language as well as a code "
       "generation tool for ISO C.");
 
+  flag_boolean("--print-command-line", &FLAG_print_command_line);
+
   configure_print_tokens_command();
   configure_extract_prototypes_command();
   configure_extract_enums_command();
@@ -386,6 +389,10 @@ void generate_c_output_file(boolean_t is_library) {
     symbol_table_binding_t* binding = value_array_get_ptr(
         symbol_table->structures->ordered_bindings, i, symbol_table_binding_t*);
     struct_node_t* struct_node = get_full_structure_definition_node(binding);
+    if (struct_node == NULL) {
+      struct_node
+          = value_array_get_ptr(binding->definition_nodes, 0, struct_node_t*);
+    }
     buffer_append_struct_node(buffer, struct_node);
     buffer_append_string(buffer, ";\n\n");
   }
@@ -538,6 +545,14 @@ int main(int argc, char** argv) {
   if (error) {
     flag_print_help(stderr, error);
     exit(1);
+  }
+
+  if (FLAG_print_command_line) {
+    fprintf(stderr, "Command Line:");
+    for (int i = 0; i < argc; i++) {
+      fprintf(stderr, " %s", argv[i]);
+    }
+    fprintf(stderr, "\n");
   }
 
   if (FLAG_command == NULL) {

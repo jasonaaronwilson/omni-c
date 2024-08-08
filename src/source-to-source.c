@@ -249,7 +249,6 @@ struct_node_t*
       return structure_node;
     }
   }
-  fatal_error(ERROR_ILLEGAL_STATE);
   return NULL;
 }
 
@@ -310,6 +309,11 @@ void reorder_symbol_table_structures_process_binding(
   if (!binding->visited) {
     binding->visited = true;
     struct_node_t* structure_node = get_full_structure_definition_node(binding);
+    if (structure_node == NULL) {
+      // We only have partial definitions which is perfectly fine as
+      // long as we only ever use poitners to those nodes.
+      return;
+    }
     uint64_t length = node_list_length(structure_node->fields);
     for (uint64_t i = 0; i < length; i++) {
       field_node_t* field
