@@ -81,7 +81,7 @@ self: omni-c
 ## %.h: %.c
 ##	./omni-c generate-header-file --output-file=$@ $<
 
-TESTS := $(wildcard tests/*.sh)
+TESTS := $(wildcard tests/*.c)
 
 test: omni-c
 	tools/run-tests.lua ${TESTS}
