@@ -65,7 +65,7 @@ for _, arg in ipairs(arg) do
   elseif test_type == TestType.PARSE_TEST then
      exit_status = os.execute("./tools/generate-header-file-test.sh " .. arg)
   elseif test_type == TestType.EXECUTE_TEST then
-     exit_status = os.execute("./tools/compile.sh " .. arg)
+     exit_status = os.execute("./tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
   else
      print("ERROR - unhandled test type")
   end

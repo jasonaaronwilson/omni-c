@@ -2,7 +2,7 @@
 
 readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-TARGET_C_FILE=$1
+TARGET_C_FILE=/tmp/$(basename "$1")
 shift
 
 $DIR/../omni-c generate-library --output-file=${TARGET_C_FILE} $*

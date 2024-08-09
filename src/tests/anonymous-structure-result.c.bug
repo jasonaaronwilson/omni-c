@@ -1,0 +1,61 @@
+#include <stdio.h>
+
+// This is obviously a non-sensical example (that is likely to have
+// ill-defined run-time behavior if we actually called foo but since
+// we mostly just want to test the parser and the gcc parser handles
+// it, so shall we). I believe we can parse it correctly however gcc
+// doesn't our output version.
+
+struct { int x; int y; } foo() {
+  return foo();
+}
+
+// struct { int x, y; } foo() {
+//  return foo();
+// }
+
+int main() {
+  return 0;
+}
+
+/***** OUTPUT ******
+
+#include "runtime/reflection.h"
+
+// ========== system includes ==========
+
+#include <stdio.h>
+
+// ========== defines ==========
+
+// ========== enums ==========
+
+// ========== typedefs ==========
+
+// ========== stuctures/unions ==========
+
+// ========== global variables ==========
+
+// ========== function prototypes ==========
+
+struct  {
+    int x;
+    int y;
+} foo();
+int main();
+
+// ========== inlined functions ==========
+
+// ========== functions ==========
+
+struct  {
+    int x;
+    int y;
+} foo(){
+  return foo();
+}
+int main(){
+  return 0;
+}
+
+*/
