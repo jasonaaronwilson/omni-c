@@ -55,6 +55,7 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
     */
 
   case PARSE_NODE_STRUCT:
+  case PARSE_NODE_UNION:
     return buffer_append_struct_node(buffer, to_struct_node(node));
 
     /*
@@ -125,7 +126,8 @@ buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer,
   }
 
   for (int i = 0; i < token_list_length(node->function_specifiers); i++) {
-    buffer_append_token_string(buffer, token_list_get(node->function_specifiers, i));
+    buffer_append_token_string(buffer,
+                               token_list_get(node->function_specifiers, i));
     buffer_append_string(buffer, " ");
   }
 
@@ -351,8 +353,11 @@ buffer_t* buffer_append_field_node(buffer_t* buffer, field_node_t* node) {
  * @function buffer_append_struct_node
  */
 buffer_t* buffer_append_struct_node(buffer_t* buffer, struct_node_t* node) {
-
-  buffer_append_string(buffer, "struct ");
+  if (node->tag == PARSE_NODE_UNION) {
+    buffer_append_string(buffer, "union ");
+  } else {
+    buffer_append_string(buffer, "struct ");
+  }
   if (node->name != NULL) {
     buffer_printf(buffer, "%s", token_to_string(node->name));
   }

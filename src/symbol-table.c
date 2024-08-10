@@ -203,6 +203,7 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table,
       break;
 
     case PARSE_NODE_STRUCT:
+    case PARSE_NODE_UNION:
       symbol_table_add_declaration_node(
           symbol_table->structures, token_to_string(to_struct_node(node)->name),
           node);

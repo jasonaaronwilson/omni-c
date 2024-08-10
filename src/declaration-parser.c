@@ -7,10 +7,10 @@
 
 #include "compiler-errors.h"
 #include "lexer.h"
-#include "token-list.h"
 #include "node-list.h"
 #include "parser.h"
 #include "pstate.h"
+#include "token-list.h"
 
 /**
  * @file declaration-parser.c
@@ -100,14 +100,15 @@ typedef struct struct_node_S {
 } struct_node_t;
 
 /**
- * @structure oc_union_node_t
+ * @structure union_node_t
  *
  * Represents a partial or full union declaration.
  */
 typedef struct union_node_S {
   parse_node_type_t tag;
-  char* name; // this will be null for anonymous unions...
-  node_list_t members;
+  token_t* name;
+  node_list_t fields;
+  boolean_t partial_definition;
 } union_node_t;
 
 /**
@@ -323,9 +324,13 @@ static inline boolean_t is_enum_node(parse_node_t* ptr) {
  *
  * Safely cast a generic node to a struct node after examining it's
  * tag.
+ *
+ * TODO(jawilson): this is a little ugly but if will hopefully make
+ * things work...
  */
 static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_STRUCT) {
+  if (ptr == NULL
+      || !(ptr->tag == PARSE_NODE_STRUCT || ptr->tag == PARSE_NODE_UNION)) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(struct_node_t*, ptr);
@@ -562,6 +567,12 @@ static inline struct_node_t* malloc_struct_node(void) {
   return result;
 }
 
+static inline union_node_t* malloc_union_node(void) {
+  union_node_t* result = malloc_struct(union_node_t);
+  result->tag = PARSE_NODE_UNION;
+  return result;
+}
+
 static inline field_node_t* malloc_field_node(void) {
   field_node_t* result = malloc_struct(field_node_t);
   result->tag = PARSE_NODE_FIELD;
@@ -669,7 +680,8 @@ pstatus_t parse_declaration(pstate_t* pstate) {
       || parse_typedef_node(pstate_ignore_error(pstate))
       || parse_enum_node_declaration(pstate_ignore_error(pstate))
       || parse_global_variable_node(pstate_ignore_error(pstate))
-      || parse_structure_node_declaration(pstate_ignore_error(pstate))) {
+      || parse_structure_node_declaration(pstate_ignore_error(pstate))
+      || parse_union_node_declaration(pstate_ignore_error(pstate))) {
     return true;
   }
   return pstate_error(pstate, saved_position,
@@ -739,7 +751,7 @@ pstatus_t parse_structure_node(pstate_t* pstate) {
         break;
       }
       pstate_ignore_error(pstate);
-      if (!parse_field_node(pstate)) {
+      if (!parse_field_node(pstate, true)) {
         return pstate_propagate_error(pstate, saved_position);
       }
       node_list_add_node(&result->fields, pstate_get_result_node(pstate));
@@ -755,7 +767,7 @@ pstatus_t parse_structure_node(pstate_t* pstate) {
 /**
  * @function parse_field_node
  */
-pstatus_t parse_field_node(pstate_t* pstate) {
+pstatus_t parse_field_node(pstate_t* pstate, boolean_t allow_field_width) {
   uint64_t saved_position = pstate->position;
   if (!parse_type_node(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
@@ -765,11 +777,13 @@ pstatus_t parse_field_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   token_t* field_name = pstate_get_result_token(pstate);
-  if (pstate_expect_token_string(pstate, ":")) {
-    // TODO(jawilson): capture field width here.
-    pstate_advance(pstate);
-  } else {
-    pstate_ignore_error(pstate);
+  if (allow_field_width) {
+    if (pstate_expect_token_string(pstate, ":")) {
+      // TODO(jawilson): capture field width here.
+      pstate_advance(pstate);
+    } else {
+      pstate_ignore_error(pstate);
+    }
   }
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
@@ -777,6 +791,62 @@ pstatus_t parse_field_node(pstate_t* pstate) {
   field_node_t* result = malloc_field_node();
   result->type = field_type;
   result->name = field_name;
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+/**
+ * @function parse_union_node_declaration
+ *
+ * Parse a union node plus the trailing ";".
+ */
+pstatus_t parse_union_node_declaration(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  // We can't simply chain these because the expect token wipes out
+  // any nodes that haven't get grabbed. Hmmm.
+  if (!parse_union_node(pstate)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  parse_node_t* result = pstate_get_result_node(pstate);
+  if (!pstate_expect_token_string(pstate, ";")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  return pstate_set_result_node(pstate, result);
+}
+
+/**
+ * @function parse_union_node
+ */
+pstatus_t parse_union_node(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  if (!pstate_expect_token_string(pstate, "union")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  union_node_t* result = malloc_union_node();
+
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
+    result->name = pstate_get_result_token(pstate);
+  } else {
+    pstate_ignore_error(pstate);
+  }
+
+  if (pstate_expect_token_string(pstate, "{")) {
+    result->partial_definition = false;
+    while (true) {
+      if (pstate_expect_token_string(pstate, "}")) {
+        break;
+      }
+      pstate_ignore_error(pstate);
+      if (!parse_field_node(pstate, false)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      node_list_add_node(&result->fields, pstate_get_result_node(pstate));
+    }
+  } else {
+    result->partial_definition = true;
+    pstate_ignore_error(pstate);
+  }
+
   return pstate_set_result_node(pstate, to_node(result));
 }
 
@@ -824,10 +894,9 @@ pstatus_t parse_function_node(pstate_t* pstate) {
         return pstate_error(pstate, saved_position,
                             PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);
       }
-    } else if (pstate_expect_token_string(pstate_ignore_error(pstate),
-                                          "inline")
-	       || pstate_expect_token_string(pstate_ignore_error(pstate),
-                                          "_Noreturn")) {
+    } else if (pstate_expect_token_string(pstate_ignore_error(pstate), "inline")
+               || pstate_expect_token_string(pstate_ignore_error(pstate),
+                                             "_Noreturn")) {
       token_list_add(&function_specifiers, pstate_get_result_token(pstate));
     } else if (parse_attribute_node(pstate_ignore_error(pstate))) {
       node_list_add_node(&attributes, pstate_get_result_node(pstate));
@@ -1047,7 +1116,8 @@ pstatus_t parse_user_type_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   // TODO(jawilson): unions!
   if (parse_enum_node(pstate)
-      || parse_structure_node(pstate_ignore_error(pstate))) {
+      || parse_structure_node(pstate_ignore_error(pstate))
+      || parse_union_node(pstate_ignore_error(pstate))) {
     return true;
   } else {
     return pstate_propagate_error(pstate, saved_position);

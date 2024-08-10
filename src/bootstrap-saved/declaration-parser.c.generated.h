@@ -10,7 +10,11 @@ pstatus_t parse_structure_node_declaration(pstate_t* pstate);
 
 pstatus_t parse_structure_node(pstate_t* pstate);
 
-pstatus_t parse_field_node(pstate_t* pstate);
+pstatus_t parse_field_node(pstate_t* pstate, boolean_t allow_field_width);
+
+pstatus_t parse_union_node_declaration(pstate_t* pstate);
+
+pstatus_t parse_union_node(pstate_t* pstate);
 
 pstatus_t parse_attribute_node(pstate_t* pstate);
 

@@ -281,7 +281,7 @@ void configure_generate_c_output_file(void) {
 
 boolean_t is_inlined_function(function_node_t* node) {
   return token_matches(node->storage_class_specifier, "static")
-    && token_list_contains(node->function_specifiers, "inline");
+         && token_list_contains(node->function_specifiers, "inline");
 }
 
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table) {

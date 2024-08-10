@@ -74,7 +74,8 @@ static inline token_t* token_list_get(token_list_t token_list, uint64_t index) {
  *
  * Return true if the token list contains a token with the given text.
  */
-static inline boolean_t token_list_contains(token_list_t token_list, char* token_string) {
+static inline boolean_t token_list_contains(token_list_t token_list,
+                                            char* token_string) {
   for (int i = 0; i < token_list_length(token_list); i++) {
     if (token_matches(token_list_get(token_list, i), token_string)) {
       return true;
