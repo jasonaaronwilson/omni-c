@@ -43,7 +43,7 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
  */
 void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer,
                                char* file_name) {
-  oc_tokenizer_result_t tokenizer_result = tokenize(buffer);
+  tokenizer_result_t tokenizer_result = tokenize(buffer);
   if (tokenizer_result.tokenizer_error_code) {
     log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name,
              tokenizer_result.tokenizer_error_position,

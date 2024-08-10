@@ -40,11 +40,11 @@ typedef struct token_S {
   boolean_t is_cpp_token;
 } token_t;
 
-typedef struct oc_tokenizer_result_S {
+typedef struct tokenizer_result_S {
   value_array_t* tokens;
   uint64_t tokenizer_error_position;
   tokenizer_error_t tokenizer_error_code;
-} oc_tokenizer_result_t;
+} tokenizer_result_t;
 
 static inline token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
@@ -466,7 +466,7 @@ static inline token_t* heap_allocate_token(token_t token) {
   do {                                                                         \
     token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
     if (token_or_error.error_code) {                                           \
-      return (oc_tokenizer_result_t){                                          \
+      return (tokenizer_result_t){                                             \
           .tokenizer_error_code = token_or_error.error_code,                   \
           .tokenizer_error_position = token_or_error.error_position};          \
     }                                                                          \
@@ -481,8 +481,8 @@ static inline token_t* heap_allocate_token(token_t token) {
  * Return a value array of the tokens OR return an error (such as when
  * a character or string literal is unterminated).
  */
-oc_tokenizer_result_t tokenize(buffer_t* buffer) {
-  oc_tokenizer_result_t result = {0};
+tokenizer_result_t tokenize(buffer_t* buffer) {
+  tokenizer_result_t result = {0};
 
   // Sizing this array initially can avoid some copying but for now
   // let's just be dumb and optimize for smallish input sizes.
@@ -495,8 +495,8 @@ oc_tokenizer_result_t tokenize(buffer_t* buffer) {
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
-      return (oc_tokenizer_result_t){.tokenizer_error_code
-                                     = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+      return (tokenizer_result_t){.tokenizer_error_code
+                                  = TOKENIZER_ERROR_UTF_DECODE_ERROR};
     }
 
     uint32_t code_point = decode_result.code_point;

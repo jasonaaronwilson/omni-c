@@ -751,7 +751,7 @@ pstatus_t parse_structure_node(pstate_t* pstate) {
         break;
       }
       pstate_ignore_error(pstate);
-      if (!parse_field_node(pstate, true)) {
+      if (!parse_field_node(pstate)) {
         return pstate_propagate_error(pstate, saved_position);
       }
       node_list_add_node(&result->fields, pstate_get_result_node(pstate));
@@ -767,23 +767,23 @@ pstatus_t parse_structure_node(pstate_t* pstate) {
 /**
  * @function parse_field_node
  */
-pstatus_t parse_field_node(pstate_t* pstate, boolean_t allow_field_width) {
+pstatus_t parse_field_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (!parse_type_node(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
   type_node_t* field_type = to_type_node(pstate_get_result_node(pstate));
   if (!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
-    return pstate_propagate_error(pstate, saved_position);
+    log_warn("Allowing unnamed field in case the type is a union");
+    pstate_ignore_error(pstate);
+    // return pstate_propagate_error(pstate, saved_position);
   }
   token_t* field_name = pstate_get_result_token(pstate);
-  if (allow_field_width) {
-    if (pstate_expect_token_string(pstate, ":")) {
-      // TODO(jawilson): capture field width here.
-      pstate_advance(pstate);
-    } else {
-      pstate_ignore_error(pstate);
-    }
+  if (pstate_expect_token_string(pstate, ":")) {
+    // TODO(jawilson): capture field width here.
+    pstate_advance(pstate);
+  } else {
+    pstate_ignore_error(pstate);
   }
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
@@ -837,7 +837,7 @@ pstatus_t parse_union_node(pstate_t* pstate) {
         break;
       }
       pstate_ignore_error(pstate);
-      if (!parse_field_node(pstate, false)) {
+      if (!parse_field_node(pstate)) {
         return pstate_propagate_error(pstate, saved_position);
       }
       node_list_add_node(&result->fields, pstate_get_result_node(pstate));

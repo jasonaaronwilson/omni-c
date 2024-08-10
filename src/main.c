@@ -69,7 +69,7 @@ void print_tokens(void) {
     fprintf(stdout, "====> Processing %s\n", file->file_name);
     fprintf(stdout, "====================================================\n");
 
-    oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
+    tokenizer_result_t tokenizer_result = tokenize(file->data);
 
     if (tokenizer_result.tokenizer_error_code) {
       log_warn("Tokenizer error: \"%s\"::%d -- %d",
@@ -144,7 +144,7 @@ void extract_command(char* command) {
     fprintf(stdout, "====> Processing %s\n", file->file_name);
     fprintf(stdout, "====================================================\n");
 
-    oc_tokenizer_result_t tokenizer_result = tokenize(file->data);
+    tokenizer_result_t tokenizer_result = tokenize(file->data);
 
     if (tokenizer_result.tokenizer_error_code) {
       log_warn("Tokenizer error: \"%s\"::%d -- %d",
@@ -486,7 +486,7 @@ void generate_c_output_file(boolean_t is_library) {
 }
 
 void parse_expression_string_and_print_parse_tree(char* expression) {
-  oc_tokenizer_result_t tokenizer_result
+  tokenizer_result_t tokenizer_result
       = tokenize(buffer_append_string(make_buffer(1), expression));
   if (tokenizer_result.tokenizer_error_code) {
     fatal_error(ERROR_ILLEGAL_INPUT);
@@ -509,7 +509,7 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
 }
 
 void parse_statement_string_and_print_parse_tree(char* expression) {
-  oc_tokenizer_result_t tokenizer_result
+  tokenizer_result_t tokenizer_result
       = tokenize(buffer_append_string(make_buffer(1), expression));
   if (tokenizer_result.tokenizer_error_code) {
     fatal_error(ERROR_ILLEGAL_INPUT);

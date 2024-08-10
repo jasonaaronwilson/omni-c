@@ -86,7 +86,7 @@ typedef struct symbol_table_S {
   value_array_t* defines;
   symbol_table_map_t* enums;
   symbol_table_map_t* typedefs;
-  symbol_table_map_t* structures;
+  symbol_table_map_t* structures; // includes unions
   symbol_table_map_t* variables;
   symbol_table_map_t* functions;
 } symbol_table_t;

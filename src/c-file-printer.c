@@ -344,7 +344,9 @@ buffer_t* buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node,
 buffer_t* buffer_append_field_node(buffer_t* buffer, field_node_t* node) {
   buffer_append_c_type_node(buffer, node->type);
   buffer_printf(buffer, " ");
-  buffer_append_token_string(buffer, node->name);
+  if (node->name != NULL) {
+    buffer_append_token_string(buffer, node->name);
+  }
   // TODO(jawilson): bits...
   return buffer;
 }
