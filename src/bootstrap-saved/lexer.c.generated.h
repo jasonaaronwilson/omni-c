@@ -32,5 +32,5 @@ boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position);
 
 token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position);
 
-oc_tokenizer_result_t tokenize(buffer_t* buffer);
+tokenizer_result_t tokenize(buffer_t* buffer);
 
