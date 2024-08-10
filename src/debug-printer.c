@@ -283,11 +283,14 @@ buffer_t* buffer_append_dbg_function_node(buffer_t* buffer,
                            token_to_string(node->storage_class_specifier));
   }
 
+  // FIXME! use function_specifiers
+  /*
   if (node->function_specifier != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "function_specifier: %s\n",
                            token_to_string(node->function_specifier));
   }
+  */
 
   if (node->return_type != NULL) {
     buffer = buffer_indent(buffer, indention_level);

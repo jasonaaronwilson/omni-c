@@ -124,8 +124,8 @@ buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer,
     buffer_append_string(buffer, " ");
   }
 
-  if (node->function_specifier != NULL) {
-    buffer_append_token_string(buffer, node->function_specifier);
+  for (int i = 0; i < token_list_length(node->function_specifiers); i++) {
+    buffer_append_token_string(buffer, token_list_get(node->function_specifiers, i));
     buffer_append_string(buffer, " ");
   }
 
@@ -170,9 +170,13 @@ buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer,
 buffer_t*
     buffer_append_c_function_argument_node(buffer_t* buffer,
                                            function_argument_node_t* node) {
-  buffer_append_c_type_node(buffer, node->arg_type);
-  if (node->arg_name != NULL) {
-    buffer_printf(buffer, " %s", token_to_string(node->arg_name));
+  if (node->is_var_args) {
+    buffer_append_string(buffer, "...");
+  } else {
+    buffer_append_c_type_node(buffer, node->arg_type);
+    if (node->arg_name != NULL) {
+      buffer_printf(buffer, " %s", token_to_string(node->arg_name));
+    }
   }
   return buffer;
 }

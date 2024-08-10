@@ -92,7 +92,7 @@ typedef enum {
  * parse_node_t is most used as a pointer, i.e., parse_node_t*, so the fact
  * that some nodes are much bigger than other nodes is irrelevant.
  */
-typedef struct parse_node_s {
+typedef struct parse_node_S {
   parse_node_type_t tag;
 } parse_node_t;
 

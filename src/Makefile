@@ -14,6 +14,7 @@ SRC_C_SELF = \
 	file-reader.c \
 	compiler-errors.c \
 	lexer.c \
+	token-list.c \
 	token-transformer.c \
 	parser.c \
 	pstate.c \

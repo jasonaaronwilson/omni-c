@@ -104,8 +104,7 @@ __attribute__((warn_unused_result)) buffer_t*
       // yet. Skipping these prototypes for now if probably fine for
       // the demo especially since the wisely used ones will be be
       // static which we are skipping below anyways (for now).
-      if (fn_node->function_specifier != NULL
-          && token_matches(fn_node->function_specifier, "inline")) {
+      if (token_list_contains(fn_node->function_specifiers, "inline")) {
         continue;
       }
       // "static" for a "top-level" declaration means that the
@@ -117,7 +116,7 @@ __attribute__((warn_unused_result)) buffer_t*
       // to put them into any header files which we can revisit
       // later (along with static inline...)
       if (fn_node->storage_class_specifier != NULL
-          && token_matches(fn_node->function_specifier, "static")) {
+          && token_matches(fn_node->storage_class_specifier, "static")) {
         continue;
       }
 

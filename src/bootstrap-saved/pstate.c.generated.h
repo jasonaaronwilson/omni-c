@@ -1,7 +1,5 @@
 /* Automatically extracted prototypes from pstate.c */
 
-void ensure_empty_result_state(pstate_t* pstate);
-
 pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code);
 
 pstate_t* pstate_ignore_error(pstate_t* pstate);
@@ -25,4 +23,6 @@ token_t* pstate_advance(pstate_t* pstate);
 boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string);
 
 pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string);
+
+pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type);
 

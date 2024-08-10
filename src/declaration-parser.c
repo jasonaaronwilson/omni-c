@@ -7,6 +7,7 @@
 
 #include "compiler-errors.h"
 #include "lexer.h"
+#include "token-list.h"
 #include "node-list.h"
 #include "parser.h"
 #include "pstate.h"
@@ -191,7 +192,7 @@ typedef struct function_node_S {
   node_list_t attributes;
 
   token_t* storage_class_specifier; // static, extern, auto, register
-  token_t* function_specifier;      // inline
+  token_list_t function_specifiers; // inline, _Norturn, _Atomic
 
   type_node_t* return_type;
 
@@ -212,6 +213,7 @@ typedef struct function_argument_node_S {
   parse_node_type_t tag;
   type_node_t* arg_type;
   token_t* arg_name;
+  boolean_t is_var_args;
 } function_argument_node_t;
 
 /**
@@ -807,7 +809,7 @@ pstatus_t parse_function_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
 
   token_t* storage_class_specifier = NULL;
-  token_t* function_specifier = NULL;
+  token_list_t function_specifiers = {0};
   node_list_t attributes = {0};
 
   while (1) {
@@ -823,13 +825,10 @@ pstatus_t parse_function_node(pstate_t* pstate) {
                             PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);
       }
     } else if (pstate_expect_token_string(pstate_ignore_error(pstate),
-                                          "inline")) {
-      if (function_specifier == NULL) {
-        function_specifier = pstate_get_result_token(pstate);
-      } else {
-        return pstate_error(pstate, saved_position,
-                            PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER);
-      }
+                                          "inline")
+	       || pstate_expect_token_string(pstate_ignore_error(pstate),
+                                          "_Noreturn")) {
+      token_list_add(&function_specifiers, pstate_get_result_token(pstate));
     } else if (parse_attribute_node(pstate_ignore_error(pstate))) {
       node_list_add_node(&attributes, pstate_get_result_node(pstate));
     } else {
@@ -855,7 +854,7 @@ pstatus_t parse_function_node(pstate_t* pstate) {
   function_node_t* fn_node = malloc_function_node();
   fn_node->attributes = attributes;
   fn_node->storage_class_specifier = storage_class_specifier;
-  fn_node->function_specifier = function_specifier;
+  fn_node->function_specifiers = function_specifiers;
   fn_node->return_type = return_type;
   fn_node->function_name = fn_name;
 
@@ -887,15 +886,21 @@ pstatus_t parse_function_node(pstate_t* pstate) {
  */
 pstatus_t parse_function_argument_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  if (!parse_type_node(pstate)) {
-    return pstate_propagate_error(pstate, saved_position);
-  }
   function_argument_node_t* result = malloc_function_argument_node();
-  result->arg_type = to_type_node(pstate_get_result_node(pstate));
-  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
-    result->arg_name = pstate_get_result_token(pstate);
+
+  if (pstate_match_token_string(pstate, "...")) {
+    pstate_advance(pstate);
+    result->is_var_args = true;
   } else {
-    pstate_ignore_error(pstate);
+    if (!parse_type_node(pstate)) {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    result->arg_type = to_type_node(pstate_get_result_node(pstate));
+    if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
+      result->arg_name = pstate_get_result_token(pstate);
+    } else {
+      pstate_ignore_error(pstate);
+    }
   }
   if (pstate_match_token_string(pstate, ",")) {
     pstate_advance(pstate);
@@ -1057,6 +1062,12 @@ pstatus_t parse_user_type_node(pstate_t* pstate) {
 pstatus_t parse_type_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   type_node_t* result = malloc_type_node();
+
+  // Simply skip const to see if that will help us with
+  // c-armyknife-lib
+  if (pstate_match_token_string(pstate, "const")) {
+    pstate_advance(pstate);
+  }
 
   // First see if we have a canonical type result...
   canonical_type_result_t canonical_type_result = parse_canonical_type(pstate);

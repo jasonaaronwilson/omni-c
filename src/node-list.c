@@ -4,13 +4,12 @@
 
 #include <c-armyknife-lib.h>
 
-struct parse_node_s;
+struct parse_node_S;
 
 /**
  * @structure node_list_t
  *
- * A list of of parse_node_s* which shouldn't really be a thing
- * (should be "struct parse_node_S*" or parse_node_t*)/
+ * A list of of parse_node_t*
  */
 typedef struct node_list_S {
   value_array_t* list;
@@ -28,7 +27,7 @@ typedef struct node_list_S {
  * reading is done without the extra address.
  */
 static inline void node_list_add_node(node_list_t* node_list,
-                                      struct parse_node_s* oc_node) {
+                                      struct parse_node_S* oc_node) {
   if (oc_node == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -64,12 +63,12 @@ static inline boolean_t node_list_is_empty(node_list_t node_list) {
  *
  * Return the n-th element of the node list.
  */
-static inline struct parse_node_s* node_list_get(node_list_t node_list,
+static inline struct parse_node_S* node_list_get(node_list_t node_list,
                                                  uint64_t index) {
   if (node_list.list == NULL) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
-  return value_array_get_ptr(node_list.list, index, struct parse_node_s*);
+  return value_array_get_ptr(node_list.list, index, struct parse_node_S*);
 }
 
 #include "node-list.c.generated.h"
