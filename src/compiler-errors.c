@@ -46,7 +46,7 @@ typedef enum {
   PARSE_ERROR_EXPECTED_TOKEN_TYPE,
 } parse_error_code_t;
 
-struct oc_token_S;
+struct token_S;
 
 /**
  * @struct compiler_error_t
@@ -57,7 +57,7 @@ typedef struct compiler_error_S {
   uint64_t error_position;
   tokenizer_error_t tokenizer_error_code;
   parse_error_code_t parse_error_code;
-  struct oc_token_S* error_token;
+  struct token_S* error_token;
   char* file_name;
 } compiler_error_t;
 

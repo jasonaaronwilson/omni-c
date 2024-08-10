@@ -30,7 +30,7 @@ typedef enum {
   TOKEN_TYPE_CHARACTER_LITERAL
 } token_type_t;
 
-typedef struct oc_token_S {
+typedef struct token_S {
   buffer_t* buffer;
   token_type_t type;
   int32_t start;

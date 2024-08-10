@@ -7,7 +7,7 @@
  * gcc -o syntax-c yntax-c.c
  *
  * echo              | ./syntax-c
- * echo "int x = 0;" | .a/syntax-c
+ * echo "int x = 0;" | ./syntax-c
  */
 
 #define C_ARMYKNIFE_LIB_IMPL
