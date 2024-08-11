@@ -196,10 +196,10 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table,
           token_to_string(to_function_node(node)->function_name), node);
       break;
 
-    case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
+    case PARSE_NODE_VARIABLE_DEFINITION:
       symbol_table_add_declaration_node(
           symbol_table->variables,
-          token_to_string(to_global_variable_node(node)->name), node);
+          token_to_string(to_variable_definition_node(node)->name), node);
       break;
 
     case PARSE_NODE_STRUCT:

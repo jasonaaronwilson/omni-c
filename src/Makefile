@@ -30,6 +30,11 @@ SRC_C_SELF = \
 	srcgen.c \
 	pratt-parser.c \
 	statement-parser.c \
+	type-parser.c \
+	user-type-parser.c \
+	variable-definition-parser.c \
+	literal-parser.c \
+	balanced-construct-parser.c \
 	main.c
 
 SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c $(SRC_C_SELF)

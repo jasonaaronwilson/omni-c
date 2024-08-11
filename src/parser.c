@@ -44,7 +44,7 @@ typedef enum {
   PARSE_NODE_ENUM_ELEMENT,
   PARSE_NODE_FIELD,
   PARSE_NODE_GLOBAL_FUNCTION,
-  PARSE_NODE_GLOBAL_VARIABLE,
+  PARSE_NODE_VARIABLE_DEFINITION,
   PARSE_NODE_LIST_OF_NODES,
   PARSE_NODE_STRUCT,
   PARSE_NODE_UNION,
@@ -52,7 +52,6 @@ typedef enum {
   PARSE_NODE_LITERAL,
   PARSE_NODE_FUNCTION,
   PARSE_NODE_FUNCTION_ARGUMENT,
-  PARSE_NODE_FUNCTION_BODY,
   PARSE_NODE_TYPEDEF,
   PARSE_NODE_GLOBAL_VARIABLE_DEFINITION,
   PARSE_NODE_UNPARSED_EXPRESSION,
@@ -77,6 +76,7 @@ typedef enum {
   PARSE_NODE_LABEL,
   PARSE_NODE_VARIABLE_STATEMENT,
   PARSE_NODE_EXPRESSION_STATEMENT,
+  PARSE_NODE_BALANCED_CONSTRUCT,
 } parse_node_type_t;
 
 /**
@@ -217,6 +217,7 @@ typedef boolean_t pstatus_t;
 typedef struct {
   value_array_t* tokens;
   uint64_t position;
+  boolean_t use_statement_parser;
   parse_node_t* result_node;
   token_t* result_token;
   compiler_error_t error;

@@ -6,7 +6,7 @@ buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer, function_node_t
 
 buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer, function_node_t* node);
 
-buffer_t* buffer_append_function_body_node(buffer_t* buffer, function_body_node_t* node);
+buffer_t* buffer_append_balanced_construct_node(buffer_t* buffer, balanced_construct_node_t* node);
 
 buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer, function_node_t* node);
 
@@ -36,7 +36,7 @@ buffer_t* buffer_append_cpp_include_node(buffer_t* buffer, cpp_include_node_t* n
 
 buffer_t* buffer_append_cpp_define_node(buffer_t* buffer, cpp_define_node_t* node);
 
-buffer_t* buffer_append_global_variable_node(buffer_t* buffer, global_variable_node_t* node, boolean_t is_library);
+buffer_t* buffer_append_variable_definition_node(buffer_t* buffer, variable_definition_node_t* node, boolean_t is_library);
 
 buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node);
 

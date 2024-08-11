@@ -2,14 +2,17 @@
 #ifndef _DEBUG_PRINTER_H_
 #define _DEBUG_PRINTER_H_
 
+#include <c-armyknife-lib.h>
+#include <ctype.h>
+
 #include "declaration-parser.h"
 #include "lexer.h"
 #include "parser.h"
 #include "pratt-parser.h"
 #include "statement-parser.h"
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
+#include "type-parser.h"
+#include "user-type-parser.h"
+#include "variable-definition-parser.h"
 
 /**
  * @file debug-printer.c
@@ -73,17 +76,17 @@ buffer_t* buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
     return buffer_append_dbg_function_argument_node(
         buffer, to_function_argument_node(node), indention_level);
 
-  case PARSE_NODE_FUNCTION_BODY:
-    return buffer_append_dbg_function_body_node(
-        buffer, to_function_body_node(node), indention_level);
+  case PARSE_NODE_BALANCED_CONSTRUCT:
+    return buffer_append_dbg_balanced_construct_node(
+        buffer, to_balanced_construct_node(node), indention_level);
 
   case PARSE_NODE_TYPEDEF:
     return buffer_append_dbg_typedef_node(buffer, to_typedef_node(node),
                                           indention_level);
 
-  case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
-    return buffer_append_dbg_global_variable_node(
-        buffer, to_global_variable_node(node), indention_level);
+  case PARSE_NODE_VARIABLE_DEFINITION:
+    return buffer_append_dbg_variable_definition_node(
+        buffer, to_variable_definition_node(node), indention_level);
 
   case PARSE_NODE_ATTRIBUTE:
     return buffer_append_dbg_attribute_node(buffer, to_attribute_node(node),
@@ -308,8 +311,7 @@ buffer_t* buffer_append_dbg_function_node(buffer_t* buffer,
   buffer = buffer_append_dbg_node_list(buffer, node->function_args,
                                        "function_args", indention_level);
   if (node->body != NULL) {
-    buffer = buffer_append_dbg_function_body_node(buffer, node->body,
-                                                  indention_level);
+    buffer = buffer_append_dbg_parse_node(buffer, node->body, indention_level);
   }
 
   return buffer;
@@ -333,20 +335,19 @@ buffer_t* buffer_append_dbg_function_argument_node(
   return buffer;
 }
 
-buffer_t* buffer_append_dbg_function_body_node(buffer_t* buffer,
-                                               function_body_node_t* node,
-                                               int indention_level) {
+buffer_t* buffer_append_dbg_balanced_construct_node(
+    buffer_t* buffer, balanced_construct_node_t* node, int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION_BODY\n");
-  if (node->open_brace_token != NULL) {
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_BALANCED_CONSTRUCT\n");
+  if (node->start_token != NULL) {
     buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "open_brace_token: %s\n",
-                           token_to_string(node->open_brace_token));
+    buffer = buffer_printf(buffer, "start_token: %s\n",
+                           token_to_string(node->start_token));
   }
-  if (node->close_brace_token != NULL) {
+  if (node->end_token != NULL) {
     buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "close_brace_token: %s\n",
-                           token_to_string(node->close_brace_token));
+    buffer = buffer_printf(buffer, "end_token: %s\n",
+                           token_to_string(node->end_token));
   }
   return buffer;
 }
@@ -368,12 +369,10 @@ buffer_t* buffer_append_dbg_typedef_node(buffer_t* buffer, typedef_node_t* node,
   return buffer;
 }
 
-buffer_t* buffer_append_dbg_global_variable_node(buffer_t* buffer,
-                                                 global_variable_node_t* node,
-                                                 int indention_level) {
+buffer_t* buffer_append_dbg_variable_definition_node(
+    buffer_t* buffer, variable_definition_node_t* node, int indention_level) {
   buffer = buffer_indent(buffer, indention_level);
-  buffer
-      = buffer_printf(buffer, "tag: PARSE_NODE_GLOBAL_VARIABLE_DEFINITION\n");
+  buffer = buffer_printf(buffer, "tag: PARSE_NODE_VARIABLE_DEFINITION\n");
   if (node->name != NULL) {
     buffer = buffer_indent(buffer, indention_level);
     buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));

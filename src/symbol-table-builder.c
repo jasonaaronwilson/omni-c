@@ -23,11 +23,13 @@
  * symbol-table to have the same ordering for reproducible builds.
  */
 void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
-                                         value_array_t* file_names) {
+                                         value_array_t* file_names,
+                                         boolean_t use_statement_parser) {
   value_array_t* files = read_files(file_names);
   for (int i = 0; i < files->length; i++) {
     file_t* file = (file_t*) value_array_get(files, i).ptr;
-    symbol_table_parse_buffer(symbol_table, file->data, file->file_name);
+    symbol_table_parse_buffer(symbol_table, file->data, file->file_name,
+                              use_statement_parser);
   }
 }
 
@@ -42,7 +44,8 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
  * srcgen_enum_to_string_converters.
  */
 void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer,
-                               char* file_name) {
+                               char* file_name,
+                               boolean_t use_statement_parser) {
   tokenizer_result_t tokenizer_result = tokenize(buffer);
   if (tokenizer_result.tokenizer_error_code) {
     log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name,
@@ -65,7 +68,8 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer,
                                         .keep_javadoc_comments = false,
                                         .keep_c_preprocessor_lines = false,
                                     });
-  parse_result_t declarations_result = parse_declarations(tokens, 0);
+  parse_result_t declarations_result
+      = parse_declarations(tokens, 0, use_statement_parser);
   if (is_error_result(declarations_result)) {
     declarations_result.parse_error.file_name = file_name;
     buffer_t* buffer = make_buffer(1);

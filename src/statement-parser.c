@@ -57,7 +57,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
-  value_array_t* statements;
+  node_list_t statements;
 } block_node_t;
 
 /**
@@ -185,7 +185,7 @@ pstatus_t parse_statement(pstate_t* pstate) {
       || parse_continue_statement(pstate_ignore_error(pstate))
       || parse_goto_statement(pstate_ignore_error(pstate))
       || parse_label_statement(pstate_ignore_error(pstate))
-      || parse_variable_statement(pstate_ignore_error(pstate))
+      // || parse_variable_statement(pstate_ignore_error(pstate))
       || parse_expression_statement(pstate_ignore_error(pstate))
       || parse_empty_statement(pstate_ignore_error(pstate))) {
     return true;
@@ -201,14 +201,14 @@ pstatus_t parse_block(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, "{")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* result = to_node(make_block_node());
+  block_node_t* result = make_block_node();
   while (parse_statement(pstate)) {
-    // TODO(jawilson) saved individual statements
+    node_list_add_node(&result->statements, pstate_get_result_node(pstate));
   }
   if (!pstate_expect_token_string(pstate, "}")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, result);
+  return pstate_set_result_node(pstate, to_node(result));
 }
 
 /**
@@ -417,13 +417,6 @@ pstatus_t parse_continue_statement(pstate_t* pstate) { return false; }
 pstatus_t parse_label_statement(pstate_t* pstate) { return false; }
 
 /**
- * @function parse_variable_statement
- *
- * For example "uint64_t foo = 12345;"
- */
-pstatus_t parse_variable_statement(pstate_t* pstate) { return false; }
-
-/**
  * @function parse_empty_statement
  */
 pstatus_t parse_empty_statement(pstate_t* pstate) { return false; }
@@ -529,7 +522,6 @@ case_label_node_t* to_case_label_node(parse_node_t* ptr) {
 block_node_t* make_block_node() {
   block_node_t* result = malloc_struct(block_node_t);
   result->tag = PARSE_NODE_BLOCK;
-  result->statements = make_value_array(4);
   return result;
 }
 

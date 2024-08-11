@@ -24,11 +24,11 @@ buffer_t* buffer_append_dbg_function_node(buffer_t* buffer, function_node_t* nod
 
 buffer_t* buffer_append_dbg_function_argument_node(buffer_t* buffer, function_argument_node_t* node, int indention_level);
 
-buffer_t* buffer_append_dbg_function_body_node(buffer_t* buffer, function_body_node_t* node, int indention_level);
+buffer_t* buffer_append_dbg_balanced_construct_node(buffer_t* buffer, balanced_construct_node_t* node, int indention_level);
 
 buffer_t* buffer_append_dbg_typedef_node(buffer_t* buffer, typedef_node_t* node, int indention_level);
 
-buffer_t* buffer_append_dbg_global_variable_node(buffer_t* buffer, global_variable_node_t* node, int indention_level);
+buffer_t* buffer_append_dbg_variable_definition_node(buffer_t* buffer, variable_definition_node_t* node, int indention_level);
 
 buffer_t* buffer_append_dbg_attribute_node(buffer_t* buffer, attribute_node_t* node, int indention_level);
 

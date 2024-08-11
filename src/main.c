@@ -42,6 +42,7 @@ boolean_t FLAG_generate_enum_convertors = true;
 char* FLAG_expression = NULL;
 char* FLAG_statement = NULL;
 boolean_t FLAG_dump_symbol_table = false;
+boolean_t FLAG_use_statement_parser = false;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
@@ -102,7 +103,8 @@ void print_tokens(void) {
     do_print_tokens(tokens, "after xform tokens");
 
     if (FLAG_print_tokens_parse_and_print) {
-      parse_result_t declarations = parse_declarations(tokens, 0);
+      parse_result_t declarations
+          = parse_declarations(tokens, 0, FLAG_use_statement_parser);
       if (is_error_result(declarations)) {
         declarations.parse_error.file_name = file->file_name;
         buffer_t* buffer = make_buffer(1);
@@ -172,7 +174,8 @@ void extract_command(char* command) {
                                           .keep_c_preprocessor_lines = false,
                                       });
 
-    parse_result_t declarations_result = parse_declarations(tokens, 0);
+    parse_result_t declarations_result
+        = parse_declarations(tokens, 0, FLAG_use_statement_parser);
     if (is_error_result(declarations_result)) {
       declarations_result.parse_error.file_name = file->file_name;
       buffer_t* buffer = make_buffer(1);
@@ -218,7 +221,9 @@ void configure_flags(void) {
       "omni-c is a transpiler for the omni-c language as well as a code "
       "generation tool for ISO C.");
 
+  // I don't think these flags are truly global...
   flag_boolean("--print-command-line", &FLAG_print_command_line);
+  flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
 
   configure_print_tokens_command();
   configure_extract_prototypes_command();
@@ -270,12 +275,14 @@ void configure_generate_c_output_file(void) {
   flag_string("--output-file", &FLAG_ouput_file);
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
+  flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
   flag_file_args(&FLAG_files);
 
   flag_command("generate-library", &FLAG_command);
   flag_string("--output-file", &FLAG_ouput_file);
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
+  flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
   flag_file_args(&FLAG_files);
 }
 
@@ -309,7 +316,8 @@ void generate_c_output_file(boolean_t is_library) {
   boolean_t is_header_file = !is_library;
 
   symbol_table_t* symbol_table = make_symbol_table();
-  parse_and_add_top_level_definitions(symbol_table, FLAG_files);
+  parse_and_add_top_level_definitions(symbol_table, FLAG_files,
+                                      FLAG_use_statement_parser);
   dump_symbol_table("initial parse", symbol_table);
   if (FLAG_generate_enum_convertors) {
     srcgen_enum_to_string_converters(symbol_table);
@@ -402,10 +410,10 @@ void generate_c_output_file(boolean_t is_library) {
   for (int i = 0; i < symbol_table->variables->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding = value_array_get_ptr(
         symbol_table->variables->ordered_bindings, i, symbol_table_binding_t*);
-    buffer_append_global_variable_node(
+    buffer_append_variable_definition_node(
         buffer,
         value_array_get_ptr(binding->definition_nodes, 0,
-                            global_variable_node_t*),
+                            variable_definition_node_t*),
         is_library);
     buffer_append_string(buffer, "\n");
   }
@@ -522,6 +530,7 @@ void parse_statement_string_and_print_parse_tree(char* expression) {
                                         .keep_c_preprocessor_lines = false,
                                     });
   pstate_t state = (pstate_t){0};
+  state.use_statement_parser = true;
   state.tokens = tokens;
   pstatus_t status = parse_statement(&state);
   if (!status) {

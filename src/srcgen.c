@@ -80,6 +80,6 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
 
   if (buffer->length > 0) {
     symbol_table_parse_buffer(symbol_table, buffer,
-                              "#<internal-code-generator>");
+                              "#<internal-code-generator>", false);
   }
 }

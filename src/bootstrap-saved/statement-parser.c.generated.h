@@ -30,8 +30,6 @@ pstatus_t parse_continue_statement(pstate_t* pstate);
 
 pstatus_t parse_label_statement(pstate_t* pstate);
 
-pstatus_t parse_variable_statement(pstate_t* pstate);
-
 pstatus_t parse_empty_statement(pstate_t* pstate);
 
 pstatus_t parse_default_label(pstate_t* pstate);

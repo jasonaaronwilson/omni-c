@@ -5,6 +5,9 @@
 #include "declaration-parser.h"
 #include "lexer.h"
 #include "parser.h"
+#include "type-parser.h"
+#include "user-type-parser.h"
+
 #include <c-armyknife-lib.h>
 #include <ctype.h>
 
@@ -86,14 +89,14 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
                                           indention_level);
     */
 
-  case PARSE_NODE_FUNCTION_BODY:
-    return buffer_append_function_body_node(buffer,
-                                            to_function_body_node(node));
+  case PARSE_NODE_BALANCED_CONSTRUCT:
+    return buffer_append_balanced_construct_node(
+        buffer, to_balanced_construct_node(node));
 
     // Always assuming this is a library is problematic...
-  case PARSE_NODE_GLOBAL_VARIABLE_DEFINITION:
-    return buffer_append_global_variable_node(
-        buffer, to_global_variable_node(node), true);
+  case PARSE_NODE_VARIABLE_DEFINITION:
+    return buffer_append_variable_definition_node(
+        buffer, to_variable_definition_node(node), true);
 
     /*
   case PARSE_NODE_ATTRIBUTE:
@@ -153,18 +156,19 @@ buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
   return buffer;
 }
 
-buffer_t* buffer_append_function_body_node(buffer_t* buffer,
-                                           function_body_node_t* node) {
-  uint64_t start = node->open_brace_token->start;
-  uint64_t end = node->close_brace_token->end;
-  buffer_append_sub_buffer(buffer, start, end, node->open_brace_token->buffer);
+buffer_t*
+    buffer_append_balanced_construct_node(buffer_t* buffer,
+                                          balanced_construct_node_t* node) {
+  uint64_t start = node->start_token->start;
+  uint64_t end = node->end_token->end;
+  buffer_append_sub_buffer(buffer, start, end, node->start_token->buffer);
   return buffer;
 }
 
 buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer,
                                                  function_node_t* node) {
   buffer_append_c_function_node_prefix(buffer, node);
-  buffer_append_function_body_node(buffer, node->body);
+  buffer_append_parse_node(buffer, node->body);
   buffer_append_string(buffer, "\n");
   return buffer;
 }
@@ -409,11 +413,10 @@ buffer_t* buffer_append_cpp_define_node(buffer_t* buffer,
 }
 
 /**
- * @function buffer_append_global_variable_node
+ * @function buffer_append_variable_definition_node
  */
-buffer_t* buffer_append_global_variable_node(buffer_t* buffer,
-                                             global_variable_node_t* node,
-                                             boolean_t is_library) {
+buffer_t* buffer_append_variable_definition_node(
+    buffer_t* buffer, variable_definition_node_t* node, boolean_t is_library) {
   boolean_t is_header_file = !is_library;
   if (node->storage_class_specifier != NULL) {
     buffer_append_token_string(buffer, node->storage_class_specifier);
@@ -446,7 +449,8 @@ buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
   if (node->token != NULL) {
     buffer_append_token_string(buffer, node->token);
   } else if (node->initializer_node != NULL) {
-    buffer_append_function_body_node(buffer, node->initializer_node);
+    buffer_append_balanced_construct_node(
+        buffer, to_balanced_construct_node(node->initializer_node));
   } else if (node->tokens != NULL && node->tokens->length > 0) {
     for (uint64_t i = 0; i < node->tokens->length; i++) {
       buffer_append_string(buffer, " ");

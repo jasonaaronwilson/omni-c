@@ -32,8 +32,8 @@ char* parse_node_type_to_string(parse_node_type_t type) {
     return "PARSE_NODE_FIELD";
   case PARSE_NODE_GLOBAL_FUNCTION:
     return "PARSE_NODE_GLOBAL_FUNCTION";
-  case PARSE_NODE_GLOBAL_VARIABLE:
-    return "PARSE_NODE_GLOBAL_VARIABLE";
+  case PARSE_NODE_VARIABLE_DEFINITION:
+    return "PARSE_NODE_VARIABLE_DEFINITION";
   case PARSE_NODE_LIST_OF_NODES:
     return "PARSE_NODE_LIST_OF_NODES";
   case PARSE_NODE_STRUCT:
