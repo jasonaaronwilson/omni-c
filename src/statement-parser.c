@@ -391,7 +391,17 @@ pstatus_t parse_expression_statement(pstate_t* pstate) {
 /**
  * @function parse_goto_statement
  */
-pstatus_t parse_goto_statement(pstate_t* pstate) { return false; }
+pstatus_t parse_goto_statement(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  token_t* label_token = pstate_peek(pstate, 1);
+  if (!pstate_expect_token_string(pstate, "goto")
+      || !pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)
+      || !pstate_expect_token_string(pstate, ";")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  return pstate_set_result_node(pstate,
+                                to_node(make_goto_statement(label_token)));
+}
 
 /**
  * @function parse_break_statement
@@ -526,6 +536,33 @@ label_statement_node_t* to_label_statement_node(parse_node_t* ptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(label_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_goto_statement
+ *
+ * Allocating a break statement node and set it's field values.
+ */
+goto_statement_node_t* make_goto_statement(token_t* label) {
+  goto_statement_node_t* result = malloc_struct(goto_statement_node_t);
+  result->tag = PARSE_NODE_GOTO_STATEMENT;
+  result->label = label;
+  return result;
+}
+
+/**
+ * @function to_goto_statement_node
+ *
+ * Safely cast a generic node pointer to a goto_statement_node_t
+ * pointer after examining it's tag.
+ */
+goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_GOTO_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(goto_statement_node_t*, ptr);
 }
 
 // ----------------------------------------------------------------------
