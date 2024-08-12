@@ -38,6 +38,18 @@ break_statement_node_t* make_break_statement(token_t* break_keyword_token);
 
 break_statement_node_t* to_break_statement_node(parse_node_t* ptr);
 
+continue_statement_node_t* make_continue_statement(token_t* keyword_token);
+
+continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr);
+
+label_statement_node_t* make_label_statement(token_t* label);
+
+label_statement_node_t* to_label_statement_node(parse_node_t* ptr);
+
+goto_statement_node_t* make_goto_statement(token_t* label);
+
+goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr);
+
 switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_node_t* block);
 
 switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr);
