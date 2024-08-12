@@ -50,6 +50,7 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  token_t* semi_colon_token;
 } empty_statement_node_t;
 
 /**
@@ -448,7 +449,15 @@ pstatus_t parse_label_statement(pstate_t* pstate) {
 /**
  * @function parse_empty_statement
  */
-pstatus_t parse_empty_statement(pstate_t* pstate) { return false; }
+pstatus_t parse_empty_statement(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  token_t* semi_colon_token = pstate_peek(pstate, 0);
+  if (!pstate_expect_token_string(pstate, ";")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  return pstate_set_result_node(pstate,
+                                to_node(make_empty_statement(semi_colon_token)));
+}
 
 /**
  * @function parse_default_label
@@ -563,6 +572,33 @@ goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(goto_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_empty_statement
+ *
+ * Allocating a break statement node and set it's field values.
+ */
+empty_statement_node_t* make_empty_statement(token_t* semi_colon_token) {
+  empty_statement_node_t* result = malloc_struct(empty_statement_node_t);
+  result->tag = PARSE_NODE_EMPTY_STATEMENT;
+  result->semi_colon_token = semi_colon_token;
+  return result;
+}
+
+/**
+ * @function to_empty_statement_node
+ *
+ * Safely cast a generic node pointer to a empty_statement_node_t
+ * pointer after examining it's tag.
+ */
+empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_EMPTY_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(empty_statement_node_t*, ptr);
 }
 
 // ----------------------------------------------------------------------

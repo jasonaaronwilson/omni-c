@@ -50,6 +50,10 @@ goto_statement_node_t* make_goto_statement(token_t* label);
 
 goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr);
 
+empty_statement_node_t* make_empty_statement(token_t* semi_colon_token);
+
+empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr);
+
 switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_node_t* block);
 
 switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr);
