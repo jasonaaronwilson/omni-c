@@ -30,9 +30,9 @@ pstatus_t parse_continue_statement(pstate_t* pstate);
 
 pstatus_t parse_label_statement(pstate_t* pstate);
 
-pstatus_t parse_empty_statement(pstate_t* pstate);
-
 pstatus_t parse_default_label(pstate_t* pstate);
+
+pstatus_t parse_empty_statement(pstate_t* pstate);
 
 break_statement_node_t* make_break_statement(token_t* break_keyword_token);
 
@@ -61,6 +61,10 @@ switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr);
 case_label_node_t* make_case_label(parse_node_t* expression);
 
 case_label_node_t* to_case_label_node(parse_node_t* ptr);
+
+default_label_node_t* make_default_label(token_t* default_token);
+
+default_label_node_t* to_default_label_node(parse_node_t* ptr);
 
 block_node_t* make_block_node();
 

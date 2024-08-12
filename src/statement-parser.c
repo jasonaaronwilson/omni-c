@@ -91,7 +91,8 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
-} _node_t;
+  token_t* default_token;
+} default_label_node_t;
 
 /**
  * @structure goto_statement_node_t
@@ -447,6 +448,20 @@ pstatus_t parse_label_statement(pstate_t* pstate) {
 }
 
 /**
+ * @function parse_default_label
+ */
+pstatus_t parse_default_label(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  token_t* default_token = pstate_peek(pstate, 0);
+  if (!pstate_expect_token_string(pstate, "default")
+      || !pstate_expect_token_string(pstate, ":")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  return pstate_set_result_node(pstate,
+                                to_node(make_default_label(default_token)));
+}
+
+/**
  * @function parse_empty_statement
  */
 pstatus_t parse_empty_statement(pstate_t* pstate) {
@@ -455,14 +470,9 @@ pstatus_t parse_empty_statement(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate,
-                                to_node(make_empty_statement(semi_colon_token)));
+  return pstate_set_result_node(
+      pstate, to_node(make_empty_statement(semi_colon_token)));
 }
-
-/**
- * @function parse_default_label
- */
-pstatus_t parse_default_label(pstate_t* pstate) { return false; }
 
 /* ====================================================================== */
 /* constructors, etc. */
@@ -655,6 +665,33 @@ case_label_node_t* to_case_label_node(parse_node_t* ptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(case_label_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_default_label
+ *
+ * Allocating a break statement node and set it's field values.
+ */
+default_label_node_t* make_default_label(token_t* default_token) {
+  default_label_node_t* result = malloc_struct(default_label_node_t);
+  result->tag = PARSE_NODE_DEFAULT_LABEL;
+  result->default_token = default_token;
+  return result;
+}
+
+/**
+ * @function to_default_label_node
+ *
+ * Safely cast a generic node pointer to a default_label_node_t
+ * pointer after examining it's tag.
+ */
+default_label_node_t* to_default_label_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_DEFAULT_LABEL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(default_label_node_t*, ptr);
 }
 
 // ----------------------------------------------------------------------
