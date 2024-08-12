@@ -113,15 +113,16 @@ typedef struct {
  */
 typedef struct {
   parse_node_type_t tag;
+  token_t* continue_keyword_token;
 } continue_statement_node_t;
 
 /**
- * @structure label_node_t
+ * @structure label_statement_t
  */
 typedef struct {
   parse_node_type_t tag;
   token_t* label;
-} label_node_t;
+} label_statement_node_t;
 
 /**
  * @structure variable_statement_node_t
@@ -397,24 +398,42 @@ pstatus_t parse_goto_statement(pstate_t* pstate) { return false; }
  */
 pstatus_t parse_break_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  token_t* break_keyword_token = pstate_peek(pstate, 0);
+  token_t* keyword_token = pstate_peek(pstate, 0);
   if (!pstate_expect_token_string(pstate, "break")
       || !pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(
-      pstate, to_node(make_break_statement(break_keyword_token)));
+  return pstate_set_result_node(pstate,
+                                to_node(make_break_statement(keyword_token)));
 }
 
 /**
  * @function parse_continue_statement
  */
-pstatus_t parse_continue_statement(pstate_t* pstate) { return false; }
+pstatus_t parse_continue_statement(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  token_t* keyword_token = pstate_peek(pstate, 0);
+  if (!pstate_expect_token_string(pstate, "continue")
+      || !pstate_expect_token_string(pstate, ";")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  return pstate_set_result_node(
+      pstate, to_node(make_continue_statement(keyword_token)));
+}
 
 /**
  * @function parse_label_statement
  */
-pstatus_t parse_label_statement(pstate_t* pstate) { return false; }
+pstatus_t parse_label_statement(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  token_t* label_token = pstate_peek(pstate, 0);
+  if (!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)
+      || !pstate_expect_token_string(pstate, ":")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  return pstate_set_result_node(pstate,
+                                to_node(make_label_statement(label_token)));
+}
 
 /**
  * @function parse_empty_statement
@@ -453,6 +472,60 @@ break_statement_node_t* to_break_statement_node(parse_node_t* ptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(break_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_continue_statement
+ *
+ * Allocating a break statement node and set it's field values.
+ */
+continue_statement_node_t* make_continue_statement(token_t* keyword_token) {
+  continue_statement_node_t* result = malloc_struct(continue_statement_node_t);
+  result->tag = PARSE_NODE_CONTINUE_STATEMENT;
+  result->continue_keyword_token = keyword_token;
+  return result;
+}
+
+/**
+ * @function to_continue_statement_node
+ *
+ * Safely cast a generic node pointer to a continue_statement_node_t
+ * pointer after examining it's tag.
+ */
+continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_CONTINUE_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(continue_statement_node_t*, ptr);
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * @function make_label_statement
+ *
+ * Allocating a break statement node and set it's field values.
+ */
+label_statement_node_t* make_label_statement(token_t* label) {
+  label_statement_node_t* result = malloc_struct(label_statement_node_t);
+  result->tag = PARSE_NODE_LABEL_STATEMENT;
+  result->label = label;
+  return result;
+}
+
+/**
+ * @function to_label_statement_node
+ *
+ * Safely cast a generic node pointer to a label_statement_node_t
+ * pointer after examining it's tag.
+ */
+label_statement_node_t* to_label_statement_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_LABEL_STATEMENT) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(label_statement_node_t*, ptr);
 }
 
 // ----------------------------------------------------------------------
