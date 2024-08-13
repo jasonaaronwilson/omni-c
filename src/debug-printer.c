@@ -27,10 +27,6 @@
 
 #include "debug-printer.c.generated.h"
 
-static inline buffer_t* buffer_indent(buffer_t* buffer, int indention_level) {
-  return buffer_append_repeated_byte(buffer, ' ', indention_level * 4);
-}
-
 #endif /* _DEBUG_PRINTER_H_ */
 
 /**
@@ -38,76 +34,81 @@ static inline buffer_t* buffer_indent(buffer_t* buffer, int indention_level) {
  *
  * Append the debugging version of a parse node to a buffer.
  */
-buffer_t* buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
-                                       int indention_level) {
+void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
   switch (node->tag) {
   case PARSE_NODE_DECLARATIONS:
-    return buffer_append_dbg_declarations(buffer, to_declarations_node(node),
-                                          indention_level);
+    buffer_append_dbg_declarations(printer, to_declarations_node(node));
+    break;
 
   case PARSE_NODE_ENUM:
-    return buffer_append_dbg_enum(buffer, to_enum_node(node), indention_level);
+    buffer_append_dbg_enum(printer, to_enum_node(node));
+    break;
 
   case PARSE_NODE_ENUM_ELEMENT:
-    return buffer_append_dbg_enum_element(buffer, to_enum_element_node(node),
-                                          indention_level);
+    buffer_append_dbg_enum_element(printer, to_enum_element_node(node));
+    break;
 
   case PARSE_NODE_STRUCT:
-    return buffer_append_dbg_struct_node(buffer, to_struct_node(node),
-                                         indention_level);
+    buffer_append_dbg_struct_node(printer, to_struct_node(node));
+    break;
 
   case PARSE_NODE_FIELD:
-    return buffer_append_dbg_field_node(buffer, to_field_node(node),
-                                        indention_level);
+    buffer_append_dbg_field_node(printer, to_field_node(node));
+    break;
 
   case PARSE_NODE_TYPE:
-    return buffer_append_dbg_type_node(buffer, to_type_node(node),
-                                       indention_level);
+    buffer_append_dbg_type_node(printer, to_type_node(node));
+    break;
+    ;
 
   case PARSE_NODE_LITERAL:
-    return buffer_append_dbg_literal_node(buffer, to_literal_node(node),
-                                          indention_level);
+    buffer_append_dbg_literal_node(printer, to_literal_node(node));
+    break;
 
   case PARSE_NODE_FUNCTION:
-    return buffer_append_dbg_function_node(buffer, to_function_node(node),
-                                           indention_level);
+    buffer_append_dbg_function_node(printer, to_function_node(node));
+    break;
 
   case PARSE_NODE_FUNCTION_ARGUMENT:
-    return buffer_append_dbg_function_argument_node(
-        buffer, to_function_argument_node(node), indention_level);
+    buffer_append_dbg_function_argument_node(printer,
+                                             to_function_argument_node(node));
+    break;
 
   case PARSE_NODE_BALANCED_CONSTRUCT:
-    return buffer_append_dbg_balanced_construct_node(
-        buffer, to_balanced_construct_node(node), indention_level);
+    buffer_append_dbg_balanced_construct_node(printer,
+                                              to_balanced_construct_node(node));
+    break;
 
   case PARSE_NODE_TYPEDEF:
-    return buffer_append_dbg_typedef_node(buffer, to_typedef_node(node),
-                                          indention_level);
+    buffer_append_dbg_typedef_node(printer, to_typedef_node(node));
+    break;
 
   case PARSE_NODE_VARIABLE_DEFINITION:
-    return buffer_append_dbg_variable_definition_node(
-        buffer, to_variable_definition_node(node), indention_level);
+    buffer_append_dbg_variable_definition_node(
+        printer, to_variable_definition_node(node));
+    break;
 
   case PARSE_NODE_ATTRIBUTE:
-    return buffer_append_dbg_attribute_node(buffer, to_attribute_node(node),
-                                            indention_level);
+    buffer_append_dbg_attribute_node(printer, to_attribute_node(node));
+    break;
 
   case PARSE_NODE_IDENTIFIER:
-    return buffer_append_dbg_identifier_node(buffer, to_identifier_node(node),
-                                             indention_level);
+    buffer_append_dbg_identifier_node(printer, to_identifier_node(node));
+    break;
 
   case PARSE_NODE_OPERATOR:
-    return buffer_append_dbg_operator_node(buffer, to_operator_node(node),
-                                           indention_level);
+    buffer_append_dbg_operator_node(printer, to_operator_node(node));
+    break;
 
   case PARSE_NODE_BREAK_STATEMENT:
-    return buffer_append_dbg_break_statement_node(
-        buffer, to_break_statement_node(node), indention_level);
+    buffer_append_dbg_break_statement_node(printer,
+                                           to_break_statement_node(node));
+    break;
 
   default:
+    fatal_error(ERROR_ILLEGAL_STATE);
     break;
   }
-  fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 /**
@@ -115,16 +116,13 @@ buffer_t* buffer_append_dbg_parse_node(buffer_t* buffer, parse_node_t* node,
  *
  * Append the debugging version of a list of parse nodes to a buffer.
  */
-buffer_t* buffer_append_dbg_node_list(buffer_t* buffer, node_list_t list,
-                                      char* field_name, int indention_level) {
+void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list) {
+  cdl_start_array(printer);
   uint64_t length = node_list_length(list);
   for (uint64_t i = 0; i < length; i++) {
-    parse_node_t* node = node_list_get(list, i);
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "%s[%d]:\n", field_name, i & 0xffffffff);
-    buffer = buffer_append_dbg_parse_node(buffer, node, indention_level + 1);
+    buffer_append_dbg_parse_node(printer, node_list_get(list, i));
   }
-  return buffer;
+  cdl_end_array(printer);
 }
 
 /**
@@ -133,287 +131,284 @@ buffer_t* buffer_append_dbg_node_list(buffer_t* buffer, node_list_t list,
  * Append the debugging version of a list of value_array of tokens
  * (not as common as node lists).
  */
-buffer_t* buffer_append_dbg_tokens(buffer_t* buffer, value_array_t* tokens,
-                                   char* field_name, int indention_level) {
+void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens,
+                              char* field_name) {
+  cdl_key(printer, field_name);
+  cdl_start_array(printer);
   uint64_t length = tokens->length;
   for (uint64_t i = 0; i < length; i++) {
     token_t* token = value_array_get_ptr(tokens, i, token_t*);
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "%s[%lld]: %s\n", field_name, i,
-                           token_to_string(token));
+    cdl_string(printer, token_to_string(token));
   }
-  return buffer;
+  cdl_end_array(printer);
 }
 
 
-buffer_t* buffer_append_dbg_declarations(buffer_t* buffer,
-                                         declarations_node_t* node,
-                                         int indention_level) {
-  return buffer_append_dbg_node_list(buffer, node->declarations, "declaration",
-                                     indention_level);
+void buffer_append_dbg_declarations(cdl_printer_t* printer,
+                                    declarations_node_t* node) {
+  buffer_append_dbg_node_list(printer, node->declarations);
 }
 
-buffer_t* buffer_append_dbg_enum(buffer_t* buffer, enum_node_t* node,
-                                 int indention_level) {
-  buffer_indent(buffer, indention_level);
-  buffer_printf(buffer, "tag: PARSE_NODE_ENUM\n");
+void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_ENUM");
   if (node->name != NULL) {
-    buffer_indent(buffer, indention_level);
-    buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
+    cdl_key(printer, "name");
+    cdl_string(printer, token_to_string(node->name));
   }
-  buffer_append_dbg_node_list(buffer, node->elements, "element",
-                              indention_level);
-  if (node->partial_definition) {
-    buffer_indent(buffer, indention_level);
-    buffer_printf(buffer, "partial_definition: true\n");
-  }
-  return buffer;
+  cdl_key(printer, "elements");
+  buffer_append_dbg_node_list(printer, node->elements);
+  cdl_key(printer, "partial_definition");
+  cdl_boolean(printer, node->partial_definition);
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_struct_node(buffer_t* buffer, struct_node_t* node,
-                                        int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_STRUCT\n");
+void buffer_append_dbg_struct_node(cdl_printer_t* printer,
+                                   struct_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_STRUCT");
   if (node->name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
+    cdl_key(printer, "name");
+    cdl_string(printer, token_to_string(node->name));
   }
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "partial_definition: %s\n",
-                         node->partial_definition ? "true" : "false");
-  buffer = buffer_append_dbg_node_list(buffer, node->fields, "field",
-                                       indention_level);
-  return buffer;
+  cdl_key(printer, "partial_definition");
+  cdl_boolean(printer, node->partial_definition);
+  cdl_key(printer, "fields");
+  buffer_append_dbg_node_list(printer, node->fields);
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_enum_element(buffer_t* buffer, enum_element_t* node,
-                                         int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_ENUM_ELEMENT\n");
-
+void buffer_append_dbg_enum_element(cdl_printer_t* printer,
+                                    enum_element_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_ENUM_ELEMENT");
   if (node->name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "name: ");
-    buffer = buffer_append_token_string(buffer, node->name);
-    buffer = buffer_printf(buffer, "\n");
+    cdl_key(printer, "name");
+    cdl_string(printer, token_to_string(node->name));
   }
-
   if (node->value != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "value: ");
-    buffer = buffer_append_token_string(buffer, node->value);
-    buffer = buffer_printf(buffer, "\n");
+    cdl_key(printer, "value");
+    cdl_string(printer, token_to_string(node->value));
   }
-
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_field_node(buffer_t* buffer, field_node_t* node,
-                                       int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FIELD\n");
+void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_FIELD");
   if (node->name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "name: ");
-    buffer = buffer_append_token_string(buffer, node->name);
-    buffer = buffer_printf(buffer, "\n");
+    cdl_key(printer, "name");
+    cdl_string(printer, token_to_string(node->name));
   }
   if (node->type != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "type:\n");
-    buffer
-        = buffer_append_dbg_type_node(buffer, node->type, indention_level + 1);
+    cdl_key(printer, "type");
+    buffer_append_dbg_type_node(printer, node->type);
   }
-
   // TODO(jawilson): bit_field_width
-
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_type_node(buffer_t* buffer, type_node_t* node,
-                                      int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_TYPE\n");
-
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "type_node_kind: %s\n",
-                         type_node_kind_to_string(node->type_node_kind));
-
+void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_TYPE");
+  cdl_key(printer, "type_node_kind");
+  cdl_string(printer, type_node_kind_to_string(node->type_node_kind));
   if (node->type_name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "type_name: ");
-    buffer = buffer_append_token_string(buffer, node->type_name);
-    buffer = buffer_printf(buffer, "\n");
+    cdl_key(printer, "type_name");
+    cdl_string(printer, token_to_string(node->type_name));
   }
   if (node->user_type != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "user_type:\n");
-    buffer = buffer_append_dbg_parse_node(buffer, node->user_type,
-                                          indention_level + 1);
+    cdl_key(printer, "user_type");
+    buffer_append_dbg_parse_node(printer, node->user_type);
   }
-  buffer = buffer_append_dbg_node_list(buffer, node->type_args, "type_arg",
-                                       indention_level);
-  return buffer;
+  cdl_key(printer, "type_args");
+  buffer_append_dbg_node_list(printer, node->type_args);
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_literal_node(buffer_t* buffer, literal_node_t* node,
-                                         int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_LITERAL\n");
+void buffer_append_dbg_literal_node(cdl_printer_t* printer,
+                                    literal_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_LITERAL");
   if (node->token != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "token: %s\n", token_to_string(node->token));
+    cdl_key(printer, "token");
+    cdl_string(printer, token_to_string(node->token));
   }
   if (node->tokens != NULL) {
-    buffer = buffer_append_dbg_tokens(buffer, node->tokens, "tokens",
-                                      indention_level);
+    buffer_append_dbg_tokens(printer, node->tokens, "tokens");
   }
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_function_node(buffer_t* buffer,
-                                          function_node_t* node,
-                                          int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
-
-  buffer = buffer_append_dbg_node_list(buffer, node->attributes, "attribute",
-                                       indention_level);
+void buffer_append_dbg_function_node(cdl_printer_t* printer,
+                                     function_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_FUNCTION");
+  cdl_key(printer, "attributes");
+  buffer_append_dbg_node_list(printer, node->attributes);
 
   if (node->storage_class_specifier != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
-                           token_to_string(node->storage_class_specifier));
+    cdl_key(printer, "storage_class_specifier");
+    cdl_string(printer, token_to_string(node->storage_class_specifier));
   }
 
   // FIXME! use function_specifiers
-  /*
-  if (node->function_specifier != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "function_specifier: %s\n",
-                           token_to_string(node->function_specifier));
-  }
-  */
 
   if (node->return_type != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "return_type:\n");
-    buffer = buffer_append_dbg_type_node(buffer, node->return_type,
-                                         indention_level + 1);
+    cdl_key(printer, "return_type");
+    buffer_append_dbg_type_node(printer, node->return_type);
   }
 
   if (node->function_name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "function_name: %s\n",
-                           token_to_string(node->function_name));
+    cdl_key(printer, "function_name");
+    cdl_string(printer, token_to_string(node->function_name));
   }
 
-  buffer = buffer_append_dbg_node_list(buffer, node->function_args,
-                                       "function_args", indention_level);
+  cdl_key(printer, "function_args");
+  buffer_append_dbg_node_list(printer, node->function_args);
   if (node->body != NULL) {
-    buffer = buffer_append_dbg_parse_node(buffer, node->body, indention_level);
+    cdl_key(printer, "body");
+    buffer_append_dbg_parse_node(printer, node->body);
   }
-
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_function_argument_node(
-    buffer_t* buffer, function_argument_node_t* node, int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_FUNCTION\n");
+void buffer_append_dbg_function_argument_node(cdl_printer_t* printer,
+                                              function_argument_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_FUNCTION_ARGUEMENT");
+
   if (node->arg_type != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "arg_type:\n");
-    buffer = buffer_append_dbg_type_node(buffer, node->arg_type,
-                                         indention_level + 1);
+    cdl_key(printer, "arg_type");
+    buffer_append_dbg_type_node(printer, node->arg_type);
   }
   if (node->arg_name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "arg_name: %s\n",
-                           token_to_string(node->arg_name));
+    cdl_key(printer, "arg_name");
+    cdl_string(printer, token_to_string(node->arg_name));
   }
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_balanced_construct_node(
-    buffer_t* buffer, balanced_construct_node_t* node, int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_BALANCED_CONSTRUCT\n");
+void buffer_append_dbg_balanced_construct_node(
+    cdl_printer_t* printer, balanced_construct_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_BALANCED_CONSTRUCT");
   if (node->start_token != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "start_token: %s\n",
-                           token_to_string(node->start_token));
+    cdl_key(printer, "start_token");
+    cdl_string(printer, token_to_string(node->start_token));
   }
   if (node->end_token != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "end_token: %s\n",
-                           token_to_string(node->end_token));
+    cdl_key(printer, "end_token");
+    cdl_string(printer, token_to_string(node->end_token));
   }
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_typedef_node(buffer_t* buffer, typedef_node_t* node,
-                                         int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_TYPEDEF\n");
+void buffer_append_dbg_typedef_node(cdl_printer_t* printer,
+                                    typedef_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_TYPEDEF");
   if (node->name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
+    cdl_key(printer, "name");
+    cdl_string(printer, token_to_string(node->name));
   }
   if (node->type_node != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "type_node:\n");
-    buffer = buffer_append_dbg_type_node(buffer, node->type_node,
-                                         indention_level + 1);
+    cdl_key(printer, "type_node");
+    buffer_append_dbg_type_node(printer, node->type_node);
   }
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_variable_definition_node(
-    buffer_t* buffer, variable_definition_node_t* node, int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_VARIABLE_DEFINITION\n");
+void buffer_append_dbg_variable_definition_node(
+    cdl_printer_t* printer, variable_definition_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_VARIABLE_DEFINITION");
   if (node->name != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "name: %s\n", token_to_string(node->name));
+    cdl_key(printer, "name");
+    cdl_string(printer, token_to_string(node->name));
   }
   if (node->type != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "type:\n");
-    buffer
-        = buffer_append_dbg_type_node(buffer, node->type, indention_level + 1);
+    cdl_key(printer, "type");
+    buffer_append_dbg_type_node(printer, node->type);
   }
   if (node->value != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_append_string(buffer, "value:\n");
-    buffer = buffer_append_dbg_parse_node(buffer, node->value,
-                                          indention_level + 1);
+    cdl_key(printer, "value");
+    buffer_append_dbg_parse_node(printer, node->value);
   }
   if (node->storage_class_specifier != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "storage_class_specifier: %s\n",
-                           token_to_string(node->storage_class_specifier));
+    cdl_key(printer, "storage_class_specifier");
+    cdl_string(printer, token_to_string(node->storage_class_specifier));
   }
-
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dbg_attribute_node(buffer_t* buffer,
-                                           attribute_node_t* node,
-                                           int indention_level) {
-  buffer = buffer_indent(buffer, indention_level);
-  buffer = buffer_printf(buffer, "tag: PARSE_NODE_ATTRIBUTE\n");
+void buffer_append_dbg_attribute_node(cdl_printer_t* printer,
+                                      attribute_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_ATTRIBUTE");
   if (node->inner_start_token != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "inner_start_token: %s\n",
-                           token_to_string(node->inner_start_token));
+    cdl_key(printer, "inner_start_token");
+    cdl_string(printer, token_to_string(node->inner_start_token));
   }
   if (node->inner_end_token != NULL) {
-    buffer = buffer_indent(buffer, indention_level);
-    buffer = buffer_printf(buffer, "inner_end_token: %s\n",
-                           token_to_string(node->inner_end_token));
+    cdl_key(printer, "inner_end_token");
+    cdl_string(printer, token_to_string(node->inner_end_token));
   }
-  return buffer;
+  cdl_end_table(printer);
+}
+
+/* ====================================================================== */
+
+void buffer_append_dbg_identifier_node(cdl_printer_t* printer,
+                                       identifier_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_IDENTIFIER");
+  cdl_key(printer, "token");
+  cdl_string(printer, token_to_string(node->token));
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_operator_node(cdl_printer_t* printer,
+                                     operator_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_OPERATOR");
+  cdl_key(printer, "operator");
+  cdl_string(printer, token_to_string(node->operator));
+  if (node->left != NULL) {
+    cdl_key(printer, "left");
+    buffer_append_dbg_parse_node(printer, node->left);
+  }
+  if (node->right != NULL) {
+    cdl_key(printer, "right");
+    buffer_append_dbg_parse_node(printer, node->right);
+  }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_break_statement_node(cdl_printer_t* printer,
+                                            break_statement_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_BREAK_STATEMENT");
+  if (node->break_keyword_token != NULL) {
+    cdl_key(printer, "break_keyword_token");
+    cdl_string(printer, token_to_string(node->break_keyword_token));
+  }
+  cdl_end_table(printer);
 }
 
 /* ====================================================================== */
@@ -431,50 +426,4 @@ void debug_append_tokens(buffer_t* buffer, value_array_t* tokens) {
     token_t* token = token_at(tokens, i);
     buffer_append_sub_buffer(buffer, token->start, token->end, token->buffer);
   }
-}
-
-buffer_t* buffer_append_dbg_identifier_node(buffer_t* buffer,
-                                            identifier_node_t* node,
-                                            int indention_level) {
-  buffer_indent(buffer, indention_level);
-  buffer_printf(buffer, "tag: PARSE_NODE_TYPEDEF\n");
-  buffer_indent(buffer, indention_level);
-  buffer_printf(buffer, "name: %s\n", token_to_string(node->token));
-  return buffer;
-}
-
-buffer_t* buffer_append_dbg_operator_node(buffer_t* buffer,
-                                          operator_node_t* node,
-                                          int indention_level) {
-  buffer_indent(buffer, indention_level);
-  buffer_printf(buffer, "tag: PARSE_NODE_OPERATOR\n");
-  buffer_indent(buffer, indention_level);
-  buffer_printf(buffer, "operator: %s\n", token_to_string(node->operator));
-
-  if (node->left != NULL) {
-    buffer_indent(buffer, indention_level);
-    buffer_append_string(buffer, "left:\n");
-    buffer_append_dbg_parse_node(buffer, node->left, indention_level + 1);
-  }
-
-  if (node->right != NULL) {
-    buffer_indent(buffer, indention_level);
-    buffer_append_string(buffer, "right:\n");
-    buffer_append_dbg_parse_node(buffer, node->right, indention_level + 1);
-  }
-
-  return buffer;
-}
-
-buffer_t* buffer_append_dbg_break_statement_node(buffer_t* buffer,
-                                                 break_statement_node_t* node,
-                                                 int indention_level) {
-  buffer_indent(buffer, indention_level);
-  buffer_printf(buffer, "tag: PARSE_NODE_BREAK_STATEMENT\n");
-  buffer_indent(buffer, indention_level);
-  if (node->break_keyword_token != NULL) {
-    buffer_printf(buffer, "break_keyword_token: %s",
-                  token_to_string(node->break_keyword_token));
-  }
-  return buffer;
 }
