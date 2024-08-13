@@ -5,6 +5,7 @@
 #include <c-armyknife-lib.h>
 
 #include "compiler-errors.h"
+#include "literal-parser.h"
 #include "parser.h"
 
 /**
@@ -26,6 +27,7 @@ typedef enum {
   PRATT_PARSE_CONDITIONAL,
   PRATT_PARSE_OPEN_PAREN,
   PRATT_PARSE_IDENTIFIER,
+  PRATT_PARSE_LITERAL,
 } pratt_parser_operation_t;
 
 typedef enum {
@@ -231,6 +233,19 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
       return parse_result(to_node(result), position + 1);
     } while (0);
 
+  case PRATT_PARSE_LITERAL:
+    do {
+      pstate_t pstate = {0};
+      pstate.tokens = tokens;
+      pstate.position = position;
+      pstate.use_statement_parser = true;
+      if (!parse_literal_node(&pstate)) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      return parse_result(to_node(pstate_get_result_node(&pstate)),
+                          pstate.position);
+    } while (0);
+
   case PRATT_PARSE_PREFIX_OPERATOR:
     do {
       [[gnu::unused]] int recursive_precedence = instruction.precedence;
@@ -281,7 +296,7 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
   case TOKEN_TYPE_CHARACTER_LITERAL:
     return (pratt_parser_instruction_t){
         .token = token,
-        .operation = PRATT_PARSE_PREFIX_OPERATOR,
+        .operation = PRATT_PARSE_LITERAL,
         .precedence = PRECEDENCE_PRIMARY,
     };
 

@@ -8,6 +8,7 @@
 #include "balanced-construct-parser.h"
 #include "compiler-errors.h"
 #include "parser.h"
+#include "pratt-parser.h"
 #include "pstate.h"
 #include "type-parser.h"
 
@@ -54,10 +55,20 @@ static inline variable_definition_node_t*
 
 #endif /* _VARIABLE_DEFINITION_PARSER_H_ */
 
+pstatus_t parse_expression(pstate_t* pstate) {
+  parse_result_t result
+      = pratt_parse_expression(pstate->tokens, pstate->position, 0);
+  if (!is_valid_result(result) || result.node == NULL) {
+    pstate_error(pstate, pstate->position, result.parse_error.parse_error_code);
+  }
+  pstate->position = result.next_token_position;
+  return pstate_set_result_node(pstate, result.node);
+}
+
 /**
  * @function parse_variable_definition_node
  *
- * Parses a C/C++ global variable.
+ * Parses a global or local variable.
  */
 pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -98,7 +109,7 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   }
 
   if (pstate_expect_token_string(pstate, "=")) {
-    if (!parse_literal_node(pstate)) {
+    if (!parse_expression(pstate)) {
       return pstate_propagate_error(pstate, saved_position);
     } else {
       result->value = pstate_get_result_node(pstate);
