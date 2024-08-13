@@ -241,9 +241,9 @@ buffer_t* buffer_append_dgb_binding(buffer_t* buffer,
                                     symbol_table_binding_t* binding) {
   buffer_printf(buffer, "%s:\n", binding->key_string);
   // Cheat for now. just the first parse_node_t
-  buffer = buffer_append_dbg_parse_node(
-      buffer, value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*),
-      1);
+  buffer_append_dbg_parse_node(
+      make_cdl_printer(buffer),
+      value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*));
   return buffer;
 }
 

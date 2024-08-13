@@ -114,7 +114,8 @@ void print_tokens(void) {
         fatal_error(ERROR_ILLEGAL_STATE);
       } else {
         buffer_t* buffer = make_buffer(1024);
-        buffer = buffer_append_dbg_parse_node(buffer, declarations.node, 0);
+        buffer_append_dbg_parse_node(make_cdl_printer(buffer),
+                                     declarations.node);
         fprintf(stdout, "** Parse Nodes %s **\n%s\n", file->file_name,
                 buffer_to_c_string(buffer));
       }
@@ -511,8 +512,8 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
     fprintf(stderr, "FAIL");
     exit(1);
   }
-  buffer_t* output
-      = buffer_append_dbg_parse_node(make_buffer(1), result.node, 0);
+  buffer_t* output = make_buffer(1);
+  buffer_append_dbg_parse_node(make_cdl_printer(output), result.node);
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
@@ -538,7 +539,8 @@ void parse_statement_string_and_print_parse_tree(char* expression) {
     exit(1);
   }
   parse_node_t* node = pstate_get_result_node(&state);
-  buffer_t* output = buffer_append_dbg_parse_node(make_buffer(1), node, 0);
+  buffer_t* output = make_buffer(1);
+  buffer_append_dbg_parse_node(make_cdl_printer(output), node);
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 

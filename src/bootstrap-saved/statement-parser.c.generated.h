@@ -30,13 +30,29 @@ pstatus_t parse_continue_statement(pstate_t* pstate);
 
 pstatus_t parse_label_statement(pstate_t* pstate);
 
-pstatus_t parse_empty_statement(pstate_t* pstate);
-
 pstatus_t parse_default_label(pstate_t* pstate);
+
+pstatus_t parse_empty_statement(pstate_t* pstate);
 
 break_statement_node_t* make_break_statement(token_t* break_keyword_token);
 
 break_statement_node_t* to_break_statement_node(parse_node_t* ptr);
+
+continue_statement_node_t* make_continue_statement(token_t* keyword_token);
+
+continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr);
+
+label_statement_node_t* make_label_statement(token_t* label);
+
+label_statement_node_t* to_label_statement_node(parse_node_t* ptr);
+
+goto_statement_node_t* make_goto_statement(token_t* label);
+
+goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr);
+
+empty_statement_node_t* make_empty_statement(token_t* semi_colon_token);
+
+empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr);
 
 switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_node_t* block);
 
@@ -45,6 +61,10 @@ switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr);
 case_label_node_t* make_case_label(parse_node_t* expression);
 
 case_label_node_t* to_case_label_node(parse_node_t* ptr);
+
+default_label_node_t* make_default_label(token_t* default_token);
+
+default_label_node_t* to_default_label_node(parse_node_t* ptr);
 
 block_node_t* make_block_node();
 
