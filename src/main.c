@@ -495,6 +495,10 @@ void generate_c_output_file(boolean_t is_library) {
 }
 
 void parse_expression_string_and_print_parse_tree(char* expression) {
+  if (expression == NULL) {
+    log_fatal("Expression not specified!");
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
   tokenizer_result_t tokenizer_result
       = tokenize(buffer_append_string(make_buffer(1), expression));
   if (tokenizer_result.tokenizer_error_code) {

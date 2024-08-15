@@ -26,12 +26,16 @@ local TestType = {
     PARSE_TEST = 2,
     -- The same as PARSE_TEST except additionally the compiled program
     -- with be run
-    EXECUTE_TEST = 3
+    EXECUTE_TEST = 3,
+    -- The test it a simple expression that should be parsed
+    PARSE_EXPRESSION = 4
 }
 
 local function get_test_type(filename)
    if ends_with(filename, ".sh") then
       return TestType.SCRIPT
+   elseif ends_with(filename, ".e") then
+      return TestType.PARSE_EXPRESSION
    else
       local contents = read_file(filename)
       if contains(contents, "main%(") then
@@ -66,6 +70,9 @@ for _, arg in ipairs(arg) do
      exit_status = os.execute("./tools/generate-header-file-test.sh " .. arg)
   elseif test_type == TestType.EXECUTE_TEST then
      exit_status = os.execute("./tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
+  elseif test_type == TestType.PARSE_EXPRESSION then
+     local contents = read_file(arg)
+     exit_status = os.execute("./omni-c parse-expression --expression \"" .. contents .. "\"")
   else
      print("ERROR - unhandled test type")
   end
