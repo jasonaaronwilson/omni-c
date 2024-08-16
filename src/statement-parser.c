@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "pratt-parser.h"
 #include "pstate.h"
+#include "variable-definition-parser.h"
 
 /**
  * @structure if_statement_node_t
@@ -150,16 +151,6 @@ typedef struct {
 
 #endif /* _STATEMENT_PARSER_H_ */
 
-pstatus_t parse_expression(pstate_t* pstate) {
-  parse_result_t result
-      = pratt_parse_expression(pstate->tokens, pstate->position, 0);
-  if (!is_valid_result(result)) {
-    pstate_error(pstate, pstate->position, result.parse_error.parse_error_code);
-  }
-  pstate->position = result.next_token_position;
-  return pstate_set_result_node(pstate, result.node);
-}
-
 /**
  * @parse parse_statement
  *
@@ -188,7 +179,7 @@ pstatus_t parse_statement(pstate_t* pstate) {
       || parse_continue_statement(pstate_ignore_error(pstate))
       || parse_goto_statement(pstate_ignore_error(pstate))
       || parse_label_statement(pstate_ignore_error(pstate))
-      // || parse_variable_statement(pstate_ignore_error(pstate))
+      || parse_variable_definition_node(pstate_ignore_error(pstate))
       || parse_expression_statement(pstate_ignore_error(pstate))
       || parse_empty_statement(pstate_ignore_error(pstate))) {
     return true;
