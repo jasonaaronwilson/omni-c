@@ -50,6 +50,19 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
     }
     pstate_ignore_error(pstate);
     return pstate_set_result_node(pstate, to_node(result));
+  }
+
+  if (pstate_expect_token_type(pstate_ignore_error(pstate),
+                               TOKEN_TYPE_INTEGER_LITERAL)
+      || pstate_expect_token_type(pstate_ignore_error(pstate),
+                                  TOKEN_TYPE_FLOAT_LITERAL)
+      || pstate_expect_token_type(pstate_ignore_error(pstate),
+                                  TOKEN_TYPE_CHARACTER_LITERAL)) {
+    literal_node_t* result = malloc_literal_node();
+    result->tokens = make_value_array(1);
+    value_array_add(result->tokens,
+                    ptr_to_value(pstate_get_result_token(pstate)));
+    return pstate_set_result_node(pstate, to_node(result));
   } else {
     pstate_ignore_error(pstate);
   }
