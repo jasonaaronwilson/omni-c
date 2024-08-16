@@ -104,7 +104,7 @@ if failure == 0 then
 else
   print("Failed " .. failure .. " tests:")
   for _, test in ipairs(failed_tests) do
-    print(test)
+    print("    " .. test)
   end
   os.exit(1) 
 end
