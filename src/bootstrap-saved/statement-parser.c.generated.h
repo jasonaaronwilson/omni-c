@@ -1,7 +1,5 @@
 /* Automatically extracted prototypes from statement-parser.c */
 
-pstatus_t parse_expression(pstate_t* pstate);
-
 pstatus_t parse_statement(pstate_t* pstate);
 
 pstatus_t parse_block(pstate_t* pstate);

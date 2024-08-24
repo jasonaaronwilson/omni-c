@@ -126,11 +126,8 @@ static inline operator_node_t* to_operator_node(parse_node_t* ptr) {
   return cast(operator_node_t*, ptr);
 }
 
-pratt_parser_instruction_t get_prefix_instruction(token_t* token);
-pratt_parser_instruction_t get_infix_instruction(token_t* token);
-parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
-                                        value_array_t* tokens,
-                                        uint64_t position, parse_node_t* left);
+// pratt_parser_instruction_t get_prefix_instruction(token_t* token);
+// pratt_parser_instruction_t get_infix_instruction(token_t* token);
 
 #include "pratt-parser.c.generated.h"
 
@@ -141,54 +138,41 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
  *
  * Parse a C "expression" with the "Pratt" algorithm.
  */
-parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
-                                      int precedence) {
-  token_t* token = token_at(tokens, position);
+pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence) {
+  uint64_t saved_position = pstate->position;
+  token_t* token = pstate_peek(pstate, 0);
   if (token == NULL) {
-    return parse_result_empty();
+    return pstate_error(pstate, saved_position, PARSE_ERROR_EOF);
   }
   pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(token);
   if (prefix_instruction.operation == PRATT_PARSE_UNKNOWN) {
     log_warn("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
-    return parse_error_result(PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL,
-                              token);
+    return pstate_error(pstate, saved_position,
+                        PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL);
   }
 
-  parse_result_t left
-      = pratt_handle_instruction(prefix_instruction, tokens, position, NULL);
-  if (!is_valid_result(left)) {
+  if (!pratt_handle_instruction(pstate, prefix_instruction, NULL)) {
     log_warn("(RETURNING ERROR) handle instruction\n", token_to_string(token));
-    return left;
+    return pstate_propagate_error(pstate, saved_position);
   }
-  position = left.next_token_position;
+
+  parse_node_t* left = pstate_get_result_node(pstate);
 
   while (1) {
-    token_t* infix_token = token_at(tokens, position);
-    log_warn("pos=%d token=%s\n", position, token_to_string(infix_token));
     pratt_parser_instruction_t infix_instruction
-        = get_infix_instruction(infix_token);
-    if (infix_instruction.operation == PRATT_PARSE_UNKNOWN) {
-      log_warn("(RETURNING LEFT) no infix instruction for %s\n",
-               token_to_string(infix_token));
-      break;
+        = get_infix_instruction(pstate_peek(pstate, 0));
+    if (infix_instruction.operation == PRATT_PARSE_UNKNOWN
+        || (precedence < infix_instruction.precedence)) {
+      return pstate_set_result_node(pstate, left);
     }
-    if (precedence < infix_instruction.precedence) {
-      left = pratt_handle_instruction(infix_instruction, tokens, position,
-                                      left.node);
-      if (!is_valid_result(left)) {
-        log_warn(
-            "(RETURNING LEFT) infix instruction returned invalid result %s\n",
-            token_to_string(infix_token));
-        return left;
-      } else {
-        position = left.next_token_position;
-      }
-    } else {
-      break;
+    if (!pratt_handle_instruction(pstate, infix_instruction, left)) {
+      return pstate_propagate_error(pstate, saved_position);
     }
+    left = pstate_get_result_node(pstate);
   }
 
-  return left;
+  /* NOT REACHED */
+  return NULL;
 }
 
 /**
@@ -196,14 +180,12 @@ parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position,
  *
  * This is where the work specified in the "instruction" is performed.
  */
-parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
-                                        value_array_t* tokens,
-                                        uint64_t position, parse_node_t* left) {
-  // Also just token_at(position) if we want "immutable"
-  // instructions...
-  token_t* token = instruction.token;
-  log_warn("handling instruction at pos=%d token=%s", position,
-           token_to_string(token));
+pstatus_t pratt_handle_instruction(pstate_t* pstate,
+                                   pratt_parser_instruction_t instruction,
+                                   parse_node_t* left) {
+  uint64_t saved_position = pstate->position;
+  token_t* token = pstate_peek(pstate, 0);
+  pstate_advance(pstate);
 
   switch (instruction.operation) {
   case PRATT_PARSE_BINARY_OPERATOR:
@@ -212,70 +194,53 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
       if (precedence_to_associativity(recursive_precedence) == LEFT_TO_RIGHT) {
         recursive_precedence--;
       }
-
-      parse_result_t right = pratt_parse_expression(tokens, position + 1,
-                                                    instruction.precedence);
-      if (!is_valid_result(right)) {
-        log_warn("right side of token %s (at pos=%d) is not valid",
-                 token_to_string(token), position + 1);
-        return right;
+      if (!pratt_parse_expression(pstate, recursive_precedence)) {
+        return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
       result->operator= token;
       result->left = left;
-      result->right = right.node;
-      return parse_result(to_node(result), right.next_token_position);
+      result->right = pstate_get_result_node(pstate);
+      return pstate_set_result_node(pstate, to_node(result));
     } while (0);
 
   case PRATT_PARSE_IDENTIFIER:
     do {
       identifier_node_t* result = malloc_identifier_node();
       result->token = token;
-      return parse_result(to_node(result), position + 1);
+      return pstate_set_result_node(pstate, to_node(result));
     } while (0);
 
   case PRATT_PARSE_LITERAL:
-    do {
-      pstate_t pstate = (pstate_t){
-          .use_statement_parser = true,
-          .tokens = tokens,
-          .position = position,
-      };
-      if (parse_literal_node(&pstate)) {
-        return parse_result(to_node(pstate_get_result_node(&pstate)),
-                            pstate.position);
-      } else {
-        return parse_error_result(PARSE_ERROR_NOT_LITERAL_NODE, token);
-      }
-    } while (0);
+    return parse_literal_node(pstate);
 
   case PRATT_PARSE_PREFIX_OPERATOR:
     do {
       [[gnu::unused]] int recursive_precedence = instruction.precedence;
-      parse_result_t right = pratt_parse_expression(tokens, position + 1,
-                                                    instruction.precedence);
-      if (!is_valid_result(right)) {
-        log_warn("right side of token %s (at pos=%d) is not valid",
-                 token_to_string(token), position + 1);
-        return right;
+      if (!pratt_parse_expression(pstate, instruction.precedence)) {
+        return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
       result->operator= token;
-      result->left = left;
-      result->right = right.node;
-      return parse_result(to_node(result), right.next_token_position);
+      if (left != NULL) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      result->left = NULL;
+      result->right = pstate_get_result_node(pstate);
+      return pstate_set_result_node(pstate, to_node(result));
     } while (0);
 
   case PRATT_PARSE_SUB_EXPRESSION:
     do {
       // TODO(jawilson): fixme.
-      return parse_result_empty();
     } while (0);
+    break;
 
   default:
     break;
   }
-  return parse_result_empty();
+  return pstate_error(pstate, saved_position,
+                      PARSE_ERROR_UNHANDLED_INSTRUCTION);
 }
 
 /* ====================================================================== */

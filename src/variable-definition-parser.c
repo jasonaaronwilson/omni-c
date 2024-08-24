@@ -55,14 +55,13 @@ static inline variable_definition_node_t*
 
 #endif /* _VARIABLE_DEFINITION_PARSER_H_ */
 
+/**
+ * @function parse_expression
+ *
+ * Parses an expression.
+ */
 pstatus_t parse_expression(pstate_t* pstate) {
-  parse_result_t result
-      = pratt_parse_expression(pstate->tokens, pstate->position, 0);
-  if (!is_valid_result(result) || result.node == NULL) {
-    pstate_error(pstate, pstate->position, result.parse_error.parse_error_code);
-  }
-  pstate->position = result.next_token_position;
-  return pstate_set_result_node(pstate, result.node);
+  return pratt_parse_expression(pstate, 0);
 }
 
 /**

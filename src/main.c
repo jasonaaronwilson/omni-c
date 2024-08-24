@@ -511,13 +511,17 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
                                         .keep_javadoc_comments = false,
                                         .keep_c_preprocessor_lines = false,
                                     });
-  parse_result_t result = pratt_parse_expression(tokens, 0, 0);
-  if (!is_valid_result(result)) {
-    fprintf(stderr, "FAIL");
+
+  pstate_t pstate = (pstate_t){0};
+  pstate.use_statement_parser = true;
+  pstate.tokens = tokens;
+  if (!parse_expression(&pstate)) {
+    fprintf(stderr, "FAIL\n");
     exit(1);
   }
   buffer_t* output = make_buffer(1);
-  buffer_append_dbg_parse_node(make_cdl_printer(output), result.node);
+  buffer_append_dbg_parse_node(make_cdl_printer(output),
+                               pstate_get_result_node(&pstate));
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 

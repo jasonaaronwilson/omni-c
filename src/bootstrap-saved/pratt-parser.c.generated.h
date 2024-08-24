@@ -1,8 +1,8 @@
 /* Automatically extracted prototypes from pratt-parser.c */
 
-parse_result_t pratt_parse_expression(value_array_t* tokens, uint64_t position, int precedence);
+pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence);
 
-parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction, value_array_t* tokens, uint64_t position, parse_node_t* left);
+pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left);
 
 pratt_parser_instruction_t get_prefix_instruction(token_t* token);
 
