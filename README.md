@@ -1,13 +1,14 @@
 # Omni-C
 
 A C derived programming language so similar to C you may not even
-realize it's different until you write programs in excess of 5K lines
-where it's modern conveniences shine.
+realize it's different. If you already know C, you can start using
+omni-c right away.
 
-No more writing header files, you'll enjoy a fully independent
-declaration order, stronger runtime safety, an enhanced standard
-library with basic collections already included, trivial refactors are
-easier than C, etc.
+The main feature is that you'll enjoy a fully independent declaration
+order (so you never have to write a header file again), an enhanced
+standard library with basic collections to promote additional run-time
+safety, overloaded functions, templates, call functions with method
+syntax, and basic reflection capabilities.
 
 Since Omni C is a transpiler you will get the same code quality as the
 target C compiler such as gcc, clang, tcc, msvc, and custom compilers
@@ -24,9 +25,9 @@ like so:
 ```
 
 If you are building larger programs, you may need to create libraries
-and may want to use a build system of your choice, but everything is
-still simple and you still won't have to write header files anymore
-even if you want to use your library written in omni-c from within a
+and begin using a build system of your choice, but everything is still
+simple and you still won't have to write header files anymore even if
+you want to use your library written in omni-c from within a
 traditional C code base (we generate a suitable header file for you!)
 
 We will probably have a (versioned) package mechanism like all other
@@ -52,16 +53,13 @@ into a buffer_t though we think you'll prefer string interpolation
 more (they still use buffer_t underneath).
 
 Unlike the C standard library, everything added to Omni C uses very
-readable names so you can read your code without using an LLM to
-explain things to you.
+readable names.
 
 I'm using the precursor library called c-armyknife-lib to write omni-c
-so that the omni-c compiler and except for the syntax being a bit
-unwieldy at times which Omni C aims to fix via templates, I haven't
-done much low-level memory corruption style debugging in quite a
-while. While C++ can probably argue the same, you can use Omni C when
-a C++ compiler but unlike C++, there is quite a bit less magic going
-on (no move semantics, etc.)
+and low-level memory curruption is is very rare. While C++ can
+probably argue the same, you can use Omni C when a C++ compiler isn't
+available but unlike C++, there is quite a bit less magic going on (no
+move semantics, etc.)
 
 ## Features
 
@@ -104,7 +102,8 @@ on (no move semantics, etc.)
    initialization than is typically done in C).
 1. Easy stuff like being able to set default values for fields of a
    struct.
-1. switch statements can switch on "char*" as easily as integers.
+1. switch statements can switch on "char*" or buffer_t as easily as
+   integers.
 1. iterators from the standard library allows "foreach".
 1. an alternative to the C pre-processor's purely textual macros
    (similar to Zig macros).
