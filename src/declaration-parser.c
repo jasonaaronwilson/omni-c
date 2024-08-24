@@ -346,20 +346,16 @@ char* type_node_kind_to_string(type_node_kind_t kind);
  * declarations until the end of the file is reached. By this point in
  * time we have removed all of the c-preprocessor instructions.
  */
-parse_result_t parse_declarations(value_array_t* tokens, uint64_t position,
-                                  boolean_t use_statement_parser) {
-  pstate_t pstate = (pstate_t){.tokens = tokens,
-                               .use_statement_parser = use_statement_parser};
+pstatus_t parse_declarations(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
   declarations_node_t* result = malloc_declarations();
-  while (pstate.position < tokens->length) {
-    if (!parse_declaration(&pstate)) {
-      parse_result_t parse_result = (parse_result_t){0};
-      parse_result.parse_error = pstate.error;
-      return parse_result;
+  while (pstate->position < pstate->tokens->length) {
+    if (!parse_declaration(pstate)) {
+      return pstate_propagate_error(pstate, saved_position);
     }
-    node_list_add_node(&result->declarations, pstate_get_result_node(&pstate));
+    node_list_add_node(&result->declarations, pstate_get_result_node(pstate));
   }
-  return parse_result(to_node(result), pstate.position);
+  return pstate_set_result_node(pstate, to_node(result));
 }
 
 /**

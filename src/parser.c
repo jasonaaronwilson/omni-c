@@ -96,18 +96,6 @@ typedef struct parse_node_S {
   parse_node_type_t tag;
 } parse_node_t;
 
-/**
- * @struct parse_node_t
- *
- * This is the common return result for the various node parse
- * functions.
- */
-typedef struct parse_result_S {
-  parse_node_t* node;
-  uint64_t next_token_position;
-  compiler_error_t parse_error;
-} parse_result_t;
-
 /* ====================================================================== */
 /* General inlined accessors, helpers, and macros */
 /* ====================================================================== */
@@ -122,44 +110,6 @@ typedef struct parse_result_S {
  */
 static inline parse_node_t* to_node(void* ptr) {
   return cast(parse_node_t*, ptr);
-}
-
-/* ====================================================================== */
-/* Inlined helpers for parse_result_t implementation */
-/* ====================================================================== */
-
-static inline parse_result_t parse_result_empty(void) {
-  return (parse_result_t){0};
-}
-
-static inline boolean_t is_empty_result(parse_result_t result) {
-  return (result.parse_error.parse_error_code == PARSE_ERROR_UNKNOWN)
-         && (result.node == NULL);
-}
-
-static inline parse_result_t parse_result(parse_node_t* node,
-                                          uint64_t last_token_position) {
-  if (node == NULL) {
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-  return (parse_result_t){node, last_token_position};
-}
-
-
-static inline parse_result_t parse_error_result(parse_error_code_t error_code,
-                                                token_t* error_token) {
-  return (parse_result_t){.parse_error = (compiler_error_t){
-                              .parse_error_code = error_code,
-                              .error_token = error_token,
-                          }};
-}
-
-static inline boolean_t is_error_result(parse_result_t result) {
-  return result.parse_error.parse_error_code != 0;
-}
-
-static inline boolean_t is_valid_result(parse_result_t result) {
-  return result.node != NULL;
 }
 
 /**

@@ -103,19 +103,18 @@ void print_tokens(void) {
     do_print_tokens(tokens, "after xform tokens");
 
     if (FLAG_print_tokens_parse_and_print) {
-      parse_result_t declarations
-          = parse_declarations(tokens, 0, FLAG_use_statement_parser);
-      if (is_error_result(declarations)) {
-        declarations.parse_error.file_name = file->file_name;
+      pstate_t pstate = (pstate_t){
+          .tokens = tokens, .use_statement_parser = FLAG_use_statement_parser};
+      if (!parse_declarations(&pstate)) {
+        pstate.error.file_name = file->file_name;
         buffer_t* buffer = make_buffer(1);
-        buffer = buffer_append_human_readable_error(
-            buffer, &(declarations.parse_error));
+        buffer = buffer_append_human_readable_error(buffer, &(pstate.error));
         log_fatal("%s", buffer_to_c_string(buffer));
-        fatal_error(ERROR_ILLEGAL_STATE);
+        fatal_error(ERROR_ILLEGAL_INPUT);
       } else {
         buffer_t* buffer = make_buffer(1024);
         buffer_append_dbg_parse_node(make_cdl_printer(buffer),
-                                     declarations.node);
+                                     pstate_get_result_node(&pstate));
         fprintf(stdout, "** Parse Nodes %s **\n%s\n", file->file_name,
                 buffer_to_c_string(buffer));
       }
@@ -175,18 +174,18 @@ void extract_command(char* command) {
                                           .keep_c_preprocessor_lines = false,
                                       });
 
-    parse_result_t declarations_result
-        = parse_declarations(tokens, 0, FLAG_use_statement_parser);
-    if (is_error_result(declarations_result)) {
-      declarations_result.parse_error.file_name = file->file_name;
+    pstate_t pstate = (pstate_t){
+        .tokens = tokens, .use_statement_parser = FLAG_use_statement_parser};
+    if (!parse_declarations(&pstate)) {
+      pstate.error.file_name = file->file_name;
       buffer_t* buffer = make_buffer(1);
-      buffer = buffer_append_human_readable_error(
-          buffer, &(declarations_result.parse_error));
+      buffer = buffer_append_human_readable_error(buffer, &(pstate.error));
       log_fatal("%s", buffer_to_c_string(buffer));
       fatal_error(ERROR_ILLEGAL_INPUT);
     }
 
-    declarations_node_t* root = to_declarations_node(declarations_result.node);
+    declarations_node_t* root
+        = to_declarations_node(pstate_get_result_node(&pstate));
 
     if (string_equal("extract-prototypes", command)) {
       prototype_outputs

@@ -1,6 +1,6 @@
 /* Automatically extracted prototypes from declaration-parser.c */
 
-parse_result_t parse_declarations(value_array_t* tokens, uint64_t position, boolean_t use_statement_parser);
+pstatus_t parse_declarations(pstate_t* pstate);
 
 pstatus_t parse_declaration(pstate_t* pstate);
 
