@@ -469,7 +469,8 @@ buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
 /**
  * @function buffer_append_literal_node
  */
-buffer_t* buffer_append_identifier_node(buffer_t* buffer, identifier_node_t* node) {
+buffer_t* buffer_append_identifier_node(buffer_t* buffer,
+                                        identifier_node_t* node) {
   if (node->token == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }

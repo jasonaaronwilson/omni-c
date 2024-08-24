@@ -232,6 +232,16 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       return pstate_set_result_node(pstate, to_node(result));
     } while (0);
 
+  case PRATT_PARSE_POSTFIX_OPERATOR:
+    do {
+      pstate_advance(pstate);
+      operator_node_t* result = malloc_operator_node();
+      result->operator= token;
+      result->left = left;
+      result->right = NULL;
+      return pstate_set_result_node(pstate, to_node(result));
+    } while (0);
+
   case PRATT_PARSE_SUB_EXPRESSION:
     do {
       if (!pstate_expect_token_string(pstate, "(")) {
@@ -400,15 +410,20 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token) {
         .precedence = PRECEDENCE_RELATIONAL,
     };
   }
-
   if (token_matches(token, "->") || token_matches(token, ".")) {
     return (pratt_parser_instruction_t){
         .token = token,
-        .operation = PRATT_PARSE_PREFIX_OPERATOR,
+        .operation = PRATT_PARSE_BINARY_OPERATOR,
         .precedence = PRECEDENCE_PRIMARY,
     };
   }
-
+  if (token_matches(token, "++") || token_matches(token, "--")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_POSTFIX_OPERATOR,
+        .precedence = PRECEDENCE_UNARY,
+    };
+  }
   if (token_matches(token, "=") || token_matches(token, "+=")
       || token_matches(token, "-=") || token_matches(token, "*=")
       || token_matches(token, "/=") || token_matches(token, "%=")
