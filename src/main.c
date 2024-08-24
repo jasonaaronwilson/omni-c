@@ -518,9 +518,13 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
     fprintf(stderr, "FAIL\n");
     exit(1);
   }
+  parse_node_t* node = pstate_get_result_node(&pstate);
+  if (!pstate_expect_token_string(&pstate, ";")) {
+    fprintf(stderr, "FAIL (expected ';')\n");
+    exit(1);
+  }
   buffer_t* output = make_buffer(1);
-  buffer_append_dbg_parse_node(make_cdl_printer(output),
-                               pstate_get_result_node(&pstate));
+  buffer_append_dbg_parse_node(make_cdl_printer(output), node);
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
