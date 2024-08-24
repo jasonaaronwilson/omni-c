@@ -28,6 +28,7 @@ typedef enum {
   PRATT_PARSE_OPEN_PAREN,
   PRATT_PARSE_IDENTIFIER,
   PRATT_PARSE_LITERAL,
+  PRATT_PARSE_SUB_EXPRESSION,
 } pratt_parser_operation_t;
 
 typedef enum {
@@ -265,6 +266,12 @@ parse_result_t pratt_handle_instruction(pratt_parser_instruction_t instruction,
       return parse_result(to_node(result), right.next_token_position);
     } while (0);
 
+  case PRATT_PARSE_SUB_EXPRESSION:
+    do {
+      // TODO(jawilson): fixme.
+      return parse_result_empty();
+    } while (0);
+
   default:
     break;
   }
@@ -310,6 +317,14 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
         .token = token,
         .operation = PRATT_PARSE_UNKNOWN,
         .precedence = PRECEDENCE_UNKNOWN,
+    };
+  }
+
+  if (token_matches(token, "(")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_SUB_EXPRESSION,
+        .precedence = PRECEDENCE_PRIMARY,
     };
   }
 
