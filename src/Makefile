@@ -83,6 +83,9 @@ self: omni-c
 	/usr/bin/time --portability ./omni-c generate-library --dump-symbol-table=false --output-file=self.c ${SRC_C_SELF}
 	gcc -o self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} self.c armyknife-lib-impl.c
 
+bisect-self: omni-c
+	tools/bisect.sh ${SRC_C_SELF}
+
 ## # Pattern rule for generating header files
 ## %.h: %.c
 ##	./omni-c generate-header-file --output-file=$@ $<

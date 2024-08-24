@@ -40,5 +40,7 @@ buffer_t* buffer_append_variable_definition_node(buffer_t* buffer, variable_defi
 
 buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node);
 
+buffer_t* buffer_append_identifier_node(buffer_t* buffer, identifier_node_t* node);
+
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string);
 
