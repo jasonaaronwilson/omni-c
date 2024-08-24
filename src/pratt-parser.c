@@ -162,7 +162,7 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence) {
     pratt_parser_instruction_t infix_instruction
         = get_infix_instruction(pstate_peek(pstate, 0));
     if (infix_instruction.operation == PRATT_PARSE_UNKNOWN
-        || (precedence < infix_instruction.precedence)) {
+        || (precedence >= infix_instruction.precedence)) {
       return pstate_set_result_node(pstate, left);
     }
     if (!pratt_handle_instruction(pstate, infix_instruction, left)) {
@@ -234,7 +234,17 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
 
   case PRATT_PARSE_SUB_EXPRESSION:
     do {
-      // TODO(jawilson): fixme.
+      if (!pstate_expect_token_string(pstate, "(")) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      if (!pratt_parse_expression(pstate, 0)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* inner_expression = pstate_get_result_node(pstate);
+      if (!pstate_expect_token_string(pstate, ")")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      return pstate_set_result_node(pstate, inner_expression);
     } while (0);
     break;
 
