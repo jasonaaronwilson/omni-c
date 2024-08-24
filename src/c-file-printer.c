@@ -74,6 +74,9 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
   case PARSE_NODE_LITERAL:
     return buffer_append_literal_node(buffer, to_literal_node(node));
 
+  case PARSE_NODE_IDENTIFIER:
+    return buffer_append_identifier_node(buffer, to_identifier_node(node));
+
     /*
 
   case PARSE_NODE_FUNCTION:
@@ -460,6 +463,17 @@ buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
   } else {
     buffer_append_string(buffer, "FIXME");
   }
+  return buffer;
+}
+
+/**
+ * @function buffer_append_literal_node
+ */
+buffer_t* buffer_append_identifier_node(buffer_t* buffer, identifier_node_t* node) {
+  if (node->token == NULL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  buffer_append_token_string(buffer, node->token);
   return buffer;
 }
 
