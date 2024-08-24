@@ -65,6 +65,21 @@ pstatus_t parse_expression(pstate_t* pstate) {
 }
 
 /**
+ * @function parse_initializer
+ *
+ * Parses an initializer like {0, 1, 3}
+ */
+pstatus_t parse_initializer(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  if (token_matches(pstate_peek(pstate, 0), "{")) {
+    return parse_balanced_construct(pstate);
+  }
+  return pstate_error(pstate, saved_position,
+                      PARSE_ERROR_CLOSE_BRACKET_EXPECTED);
+}
+
+
+/**
  * @function parse_variable_definition_node
  *
  * Parses a global or local variable.
@@ -108,7 +123,8 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   }
 
   if (pstate_expect_token_string(pstate, "=")) {
-    if (!parse_expression(pstate)) {
+    if (!parse_initializer(pstate)
+        && !parse_expression(pstate_ignore_error(pstate))) {
       return pstate_propagate_error(pstate, saved_position);
     } else {
       result->value = pstate_get_result_node(pstate);
