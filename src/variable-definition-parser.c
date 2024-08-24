@@ -123,11 +123,11 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   }
 
   if (pstate_expect_token_string(pstate, "=")) {
-    if (!parse_initializer(pstate)
-        && !parse_expression(pstate_ignore_error(pstate))) {
-      return pstate_propagate_error(pstate, saved_position);
-    } else {
+    if (parse_initializer(pstate)
+        || parse_expression(pstate_ignore_error(pstate))) {
       result->value = pstate_get_result_node(pstate);
+    } else {
+      return pstate_propagate_error(pstate, saved_position);
     }
   } else {
     pstate_ignore_error(pstate);

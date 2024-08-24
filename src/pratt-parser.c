@@ -185,11 +185,11 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
                                    parse_node_t* left) {
   uint64_t saved_position = pstate->position;
   token_t* token = pstate_peek(pstate, 0);
-  pstate_advance(pstate);
 
   switch (instruction.operation) {
   case PRATT_PARSE_BINARY_OPERATOR:
     do {
+      pstate_advance(pstate);
       int recursive_precedence = instruction.precedence;
       if (precedence_to_associativity(recursive_precedence) == LEFT_TO_RIGHT) {
         recursive_precedence--;
@@ -206,6 +206,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
 
   case PRATT_PARSE_IDENTIFIER:
     do {
+      pstate_advance(pstate);
       identifier_node_t* result = malloc_identifier_node();
       result->token = token;
       return pstate_set_result_node(pstate, to_node(result));
@@ -216,6 +217,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
 
   case PRATT_PARSE_PREFIX_OPERATOR:
     do {
+      pstate_advance(pstate);
       [[gnu::unused]] int recursive_precedence = instruction.precedence;
       if (!pratt_parse_expression(pstate, instruction.precedence)) {
         return pstate_propagate_error(pstate, saved_position);
