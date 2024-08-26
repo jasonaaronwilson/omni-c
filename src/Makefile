@@ -116,6 +116,7 @@ clean:
 	rm -f tools/syntax-c
 	rm -f test-out.c test-out.o self self.c global-header-file.h.gch a.out tools/a.out
 	rm -f tests/a.out tmp.c
+	rm -f tests/*.out
 
 diff: clean
 	git difftool HEAD

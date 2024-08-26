@@ -25,7 +25,7 @@ format:
 	clang-format -i ${SRC_C}
 
 clean:
-	rm ./syntax-c
+	rm -f ./syntax-c
 	find . -name '*.h' | xargs -n 1 rm -f
 	find . -name '*~' | xargs -n 1 rm -f
 

@@ -1,5 +1,15 @@
 #!/usr/bin/env lua
 
+local function file_exists(filename)
+    local file = io.open(filename, "r")
+    if file then
+        io.close(file)
+        return true
+    else
+        return false
+    end
+end
+
 local function read_file(filename)
   local file, err = io.open(filename, "r")  -- Open in read mode
   if not file then
@@ -72,7 +82,14 @@ for _, arg in ipairs(arg) do
      exit_status = os.execute("./tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
   elseif test_type == TestType.PARSE_EXPRESSION then
      local contents = read_file(arg)
-     exit_status = os.execute("./omni-c parse-expression --expression \"" .. contents .. "\"")
+     local golden_file = arg .. ".golden"
+     local output_file = arg .. ".out"
+     exit_status = os.execute("./omni-c parse-expression --expression \"" .. contents .. "\" >" .. output_file)
+     if exit_status and file_exists(golden_file) then
+          exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
+     else
+	print(read_file(output_file))
+     end
   else
      print("ERROR - unhandled test type")
   end
