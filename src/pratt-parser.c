@@ -25,10 +25,10 @@ typedef enum {
   PRATT_PARSE_BINARY_OPERATOR,
   PRATT_PARSE_POSTFIX_OPERATOR,
   PRATT_PARSE_CONDITIONAL,
-  PRATT_PARSE_OPEN_PAREN,
   PRATT_PARSE_IDENTIFIER,
   PRATT_PARSE_LITERAL,
   PRATT_PARSE_SUB_EXPRESSION,
+  PRATT_PARSE_INDEX_EXPRESSION,
 } pratt_parser_operation_t;
 
 typedef enum {
@@ -258,6 +258,26 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
     } while (0);
     break;
 
+  case PRATT_PARSE_INDEX_EXPRESSION:
+    do {
+      if (!pstate_expect_token_string(pstate, "[")) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      if (!pratt_parse_expression(pstate, 0)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* inner_expression = pstate_get_result_node(pstate);
+      if (!pstate_expect_token_string(pstate, "]")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      operator_node_t* result = malloc_operator_node();
+      result->operator = token;
+      result->left = left;
+      result->right = inner_expression;
+      return pstate_set_result_node(pstate, to_node(result));
+    } while (0);
+    break;
+
   default:
     break;
   }
@@ -434,6 +454,13 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token) {
         .token = token,
         .operation = PRATT_PARSE_BINARY_OPERATOR,
         .precedence = PRECEDENCE_ASSIGNMENT,
+    };
+  }
+  if (token_matches(token, "[")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_INDEX_EXPRESSION,
+        .precedence = PRECEDENCE_PRIMARY,
     };
   }
 
