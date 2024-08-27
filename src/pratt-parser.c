@@ -32,6 +32,7 @@ typedef enum {
   PRATT_PARSE_INDEX_EXPRESSION,
   PRATT_PARSE_SIZEOF,
   PRATT_PARSE_CAST_MACRO,
+  PRATT_PARSE_CALL,
 } pratt_parser_operation_t;
 
 typedef enum {
@@ -331,6 +332,33 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
     } while (0);
     break;
 
+  case PRATT_PARSE_CALL:
+    do {
+      if (!pstate_expect_token_string(pstate, "(")) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      boolean_t expect_comma = false;
+      while (!token_matches(pstate_peek(pstate, 0), ")")) {
+        if (expect_comma) {
+          if (!pstate_expect_token_string(pstate, ",")) {
+            return pstate_propagate_error(pstate, saved_position);
+          }
+        } else {
+          expect_comma = true;
+        }
+        if (!pratt_parse_expression(pstate, PRECEDENCE_ASSIGNMENT)) {
+          return pstate_propagate_error(pstate, saved_position);
+        }
+      }
+      if (!pstate_expect_token_string(pstate, ")")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      operator_node_t* result = malloc_operator_node();
+      result->operator= token;
+      return pstate_set_result_node(pstate, to_node(result));
+    } while (0);
+    break;
+
   default:
     break;
   }
@@ -527,6 +555,13 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token) {
     return (pratt_parser_instruction_t){
         .token = token,
         .operation = PRATT_PARSE_INDEX_EXPRESSION,
+        .precedence = PRECEDENCE_PRIMARY,
+    };
+  }
+  if (token_matches(token, "(")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_CALL,
         .precedence = PRECEDENCE_PRIMARY,
     };
   }
