@@ -7,6 +7,7 @@
 #include "compiler-errors.h"
 #include "literal-parser.h"
 #include "parser.h"
+#include "type-parser.h"
 
 /**
  * @file pratt-parser.c
@@ -29,6 +30,8 @@ typedef enum {
   PRATT_PARSE_LITERAL,
   PRATT_PARSE_SUB_EXPRESSION,
   PRATT_PARSE_INDEX_EXPRESSION,
+  PRATT_PARSE_SIZEOF,
+  PRATT_PARSE_CAST_MACRO,
 } pratt_parser_operation_t;
 
 typedef enum {
@@ -278,6 +281,56 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
     } while (0);
     break;
 
+  case PRATT_PARSE_SIZEOF:
+    do {
+      if (!pstate_expect_token_string(pstate, "sizeof")) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      if (!pstate_expect_token_string(pstate, "(")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      if (!pratt_parse_expression(pstate, 0)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* inner_expression = pstate_get_result_node(pstate);
+      if (!pstate_expect_token_string(pstate, ")")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      operator_node_t* result = malloc_operator_node();
+      result->operator= token;
+      result->right = inner_expression;
+      return pstate_set_result_node(pstate, to_node(result));
+    } while (0);
+    break;
+
+  case PRATT_PARSE_CAST_MACRO:
+    do {
+      if (!pstate_expect_token_string(pstate, "cast")) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      if (!pstate_expect_token_string(pstate, "(")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      if (!parse_type_node(pstate)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* type_node = pstate_get_result_node(pstate);
+      if (!pstate_expect_token_string(pstate, ",")
+          || !pratt_parse_expression(pstate, PRECEDENCE_ASSIGNMENT)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* expression = pstate_get_result_node(pstate);
+      if (!pstate_expect_token_string(pstate, ")")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      operator_node_t* result = malloc_operator_node();
+      result->operator= token;
+      result->left = type_node;
+      result->right = expression;
+      return pstate_set_result_node(pstate, to_node(result));
+    } while (0);
+    break;
+
   default:
     break;
   }
@@ -300,6 +353,20 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
   switch (token->type) {
 
   case TOKEN_TYPE_IDENTIFIER:
+    if (token_matches(token, "sizeof")) {
+      return (pratt_parser_instruction_t){
+          .token = token,
+          .operation = PRATT_PARSE_SIZEOF,
+          .precedence = PRECEDENCE_UNARY,
+      };
+    }
+    if (token_matches(token, "cast")) {
+      return (pratt_parser_instruction_t){
+          .token = token,
+          .operation = PRATT_PARSE_CAST_MACRO,
+          .precedence = PRECEDENCE_UNARY,
+      };
+    }
     return (pratt_parser_instruction_t){
         .token = token,
         .operation = PRATT_PARSE_IDENTIFIER,
@@ -335,7 +402,7 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
     };
   }
 
-  // also need (cast) and sizeof
+  // also need (cast)
   if (token_matches(token, "+") || token_matches(token, "-")
       || token_matches(token, "~") || token_matches(token, "!")
       || token_matches(token, "!") || token_matches(token, "++")

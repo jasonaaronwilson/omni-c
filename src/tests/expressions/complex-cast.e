@@ -1,0 +1,1 @@
+cast(uint64_t*[], foo.bar);

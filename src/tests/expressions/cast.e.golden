@@ -1,0 +1,28 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = cast
+    left = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_TYPENAME
+        type_name = uint64_t
+        type_args = [
+        ]
+    }
+    right = {
+        tag = PARSE_NODE_OPERATOR
+        operator = "+"
+        left = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                "1"
+            ]
+        }
+        right = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                "2"
+            ]
+        }
+    }
+}
+
