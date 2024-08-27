@@ -90,7 +90,7 @@ bisect-self: omni-c
 ## %.h: %.c
 ##	./omni-c generate-header-file --output-file=$@ $<
 
-TESTS := $(wildcard tests/*.c tests/*.e)
+TESTS := $(wildcard tests/*.c tests/expressions/*.e)
 
 test: omni-c
 	tools/run-tests.lua ${TESTS}
@@ -116,7 +116,7 @@ clean:
 	rm -f tools/syntax-c
 	rm -f test-out.c test-out.o self self.c global-header-file.h.gch a.out tools/a.out
 	rm -f tests/a.out tmp.c
-	rm -f tests/*.out
+	rm -f tests/*.out tests/expressions/*.out
 
 diff: clean
 	git difftool HEAD
