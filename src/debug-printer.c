@@ -105,6 +105,10 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
                                            to_break_statement_node(node));
     break;
 
+  case PARSE_NODE_CALL:
+    buffer_append_dbg_call_node(printer, to_call_node(node));
+    break;
+
   default:
     fatal_error(ERROR_ILLEGAL_STATE);
     break;
@@ -396,6 +400,17 @@ void buffer_append_dbg_operator_node(cdl_printer_t* printer,
     cdl_key(printer, "right");
     buffer_append_dbg_parse_node(printer, node->right);
   }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_CALL");
+  cdl_key(printer, "function");
+  buffer_append_dbg_parse_node(printer, node->function);
+  cdl_key(printer, "args");
+  buffer_append_dbg_node_list(printer, node->args);
   cdl_end_table(printer);
 }
 

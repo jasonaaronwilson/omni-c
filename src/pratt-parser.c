@@ -364,6 +364,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pstate_expect_token_string(pstate, "(")) {
         fatal_error(ERROR_ILLEGAL_STATE);
       }
+      call_node_t* result = malloc_call_node();
+      result->function = left;
       boolean_t expect_comma = false;
       while (!token_matches(pstate_peek(pstate, 0), ")")) {
         if (expect_comma) {
@@ -376,12 +378,11 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
         if (!pratt_parse_expression(pstate, PRECEDENCE_ASSIGNMENT)) {
           return pstate_propagate_error(pstate, saved_position);
         }
+        node_list_add_node(&result->args, pstate_get_result_node(pstate));
       }
       if (!pstate_expect_token_string(pstate, ")")) {
         return pstate_propagate_error(pstate, saved_position);
       }
-      operator_node_t* result = malloc_operator_node();
-      result->operator= token;
       return pstate_set_result_node(pstate, to_node(result));
     } while (0);
     break;
