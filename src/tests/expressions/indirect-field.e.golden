@@ -1,0 +1,17 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = "*"
+    right = {
+        tag = PARSE_NODE_OPERATOR
+        operator = "."
+        left = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = s
+        }
+        right = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = field
+        }
+    }
+}
+
