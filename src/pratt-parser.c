@@ -92,6 +92,17 @@ typedef struct {
   parse_node_t* right;
 } operator_node_t;
 
+/**
+ * @structure call_node_t
+ *
+ * Represents a function call.
+ */
+typedef struct {
+  parse_node_type_t tag;
+  parse_node_t* function;
+  node_list_t args;
+} call_node_t;
+
 static inline operator_node_t* malloc_operator_node(void) {
   operator_node_t* result = malloc_struct(operator_node_t);
   result->tag = PARSE_NODE_OPERATOR;
@@ -101,6 +112,12 @@ static inline operator_node_t* malloc_operator_node(void) {
 static inline identifier_node_t* malloc_identifier_node(void) {
   identifier_node_t* result = malloc_struct(identifier_node_t);
   result->tag = PARSE_NODE_IDENTIFIER;
+  return result;
+}
+
+static inline call_node_t* malloc_call_node(void) {
+  call_node_t* result = malloc_struct(call_node_t);
+  result->tag = PARSE_NODE_CALL;
   return result;
 }
 
@@ -130,8 +147,18 @@ static inline operator_node_t* to_operator_node(parse_node_t* ptr) {
   return cast(operator_node_t*, ptr);
 }
 
-// pratt_parser_instruction_t get_prefix_instruction(token_t* token);
-// pratt_parser_instruction_t get_infix_instruction(token_t* token);
+/**
+ * @function to_operator_node
+ *
+ * Safely cast a generic node to a function call node after examining
+ * it's tag.
+ */
+static inline call_node_t* to_call_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_CALL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(call_node_t*, ptr);
+}
 
 #include "pratt-parser.c.generated.h"
 
