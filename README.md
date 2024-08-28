@@ -56,7 +56,7 @@ Unlike the C standard library, everything added to Omni C uses very
 readable names.
 
 I'm using the precursor library called c-armyknife-lib to write omni-c
-and low-level memory curruption is is very rare. While C++ can
+and low-level memory curruption is now very rare. While C++ can
 probably argue the same, you can use Omni C when a C++ compiler isn't
 available but unlike C++, there is quite a bit less magic going on (no
 move semantics, etc.)
