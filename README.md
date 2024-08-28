@@ -77,14 +77,16 @@ move semantics, etc.)
 1. automatically generated run-time reflection capabilities and other
    code generation niceties so you can focus on writing real
    code. Want to dump a structure for debugging? That code never needs
-   to be written by hand on a case by case basis.
+   to be written by hand on a case by case basis. (If gdb can do it,
+   we can do it better).
 1. consistent naming of types uint64_t, etc. This promotes the same
    behavior across all platforms and IMHO looks nice (especially with
-   the right syntax highlighting). Unlike Java, we didn't arbitrarily
+   the right syntax highlighting). Unlike Java, we don't arbitrarily
    decide to not allow unsigned types.
 1. raw arrays without length are depcrecated as is other forms of
    pointer arithmetic. This will lead to a much safer language (though
-   still not as safe as languages like Go).
+   still not as safe as languages like Go which hide this
+   functionality even though they still have it).
 1. interpolated strings are simply nicer than printf functions being
    easier to read in many cases.
 1. scheme like "let" *expressions* allows statements to be executed in
@@ -96,17 +98,25 @@ move semantics, etc.)
    inverts dependency injection back to just having
    dependencies. (global variables that are fluid must have the
    `fluid` anntoation applied to them).
-1. C++ style templates.
+1. C++ style templates as a basis for generic programming. No "OOP"
+   required. You can write your own generic container and since there
+   is no inheritance (because there is no OOP), I can't see the reason
+   that we need to worry about various forms of type variance like
+   "covariance", "contravariance", "invariance", and
+   "bivariance". While there are very real concerns about "code
+   explosion" because code is over specialized, I think we'll be able
+   to find a balance.
 1. Namespaces and modules when you want them (modules can all
    automatically initialize themselves allowing much richer
    initialization than is typically done in C).
 1. Easy stuff like being able to set default values for fields of a
-   struct.
+   struct even if it's heap allocated.
 1. switch statements can switch on "char*" or buffer_t as easily as
    integers.
 1. iterators from the standard library allows "foreach".
-1. an alternative to the C pre-processor's purely textual macros
-   (similar to Zig macros).
+1. an alternative to the C pre-processor's purely textual macros (Zig
+   has some nice stuff though way to much "const-expression"
+   aware mentatility).
 
 ## Status
 
