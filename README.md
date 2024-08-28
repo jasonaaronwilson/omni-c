@@ -7,13 +7,15 @@ omni-c right away.
 The main feature is that you'll enjoy a fully independent declaration
 order (so you never have to write a header file again), an enhanced
 standard library with basic collections to promote additional run-time
-safety, overloaded functions, templates, call functions with method
-syntax, and basic reflection capabilities.
+safety, overloaded functions, generic programming via templates,
+function calling with method a method syntax, and even some basic
+reflection capabilities. (You'll never worry about turning an enum to
+a string or vice-versa).
 
-Since Omni C is a transpiler you will get the same code quality as the
-target C compiler such as gcc, clang, tcc, msvc, and custom compilers
-for embedded development work and thus Omni C should run practically
-everywhere.
+Since Omni C is a transpiler you will get the same code quality as
+your favorite C compiler such as gcc, clang, tcc, msvc, and custom
+compilers for embedded development work (we will "poly-fill" to
+ancient C compilers because we can).
 
 ## Using Omni C
 
@@ -24,11 +26,9 @@ like so:
   omni-c build --executable=my_program *.c sub-directory/*.c
 ```
 
-If you are building larger programs, you may need to create libraries
-and begin using a build system of your choice, but everything is still
-simple and you still won't have to write header files anymore even if
-you want to use your library written in omni-c from within a
-traditional C code base (we generate a suitable header file for you!)
+If you are building larger programs, you may want to create libraries
+and begin using a build system of your choice, but omni-c isn't
+forcing this on you.
 
 We will probably have a (versioned) package mechanism like all other
 modern languages so you can stand on the shoulders of giants instead
@@ -110,6 +110,17 @@ move semantics, etc.)
 
 ## Status
 
+* (2024-08-27) We now use "cson" (JSON without commas and "opened-up"
+  using " = " instead of ":" - it just *looks* better) for parse-tree
+  debug output. Golden files have been added (based on cson) so we are
+  unlikely to go backwards and more golden file will be added for
+  non-expression constructs.
+  At this point, I feel like Omni C is unlikely to use the native C
+  "cast" syntax ` (type) value ` but the same construct is available
+  via ` cast(type, value) ` where cast is a new keyword. While it's
+  much more readable, and it's a one line macro so you could start
+  using it today, if your are casting things this much, you may have a
+  problem omni-c can't fix.
 * (2024-08-11) The top-level parser has been rewritten in a new style
   which is much easier to read and debug. The statement parser is
   showing signs of life but is incomplete. Some naive assumptions
