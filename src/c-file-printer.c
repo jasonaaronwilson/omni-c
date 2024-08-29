@@ -7,6 +7,7 @@
 #include "parser.h"
 #include "type-parser.h"
 #include "user-type-parser.h"
+#include "statement-parser.h"
 
 #include <c-armyknife-lib.h>
 #include <ctype.h>
@@ -91,6 +92,9 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
     return buffer_append_dbg_typedef_node(buffer, to_typedef_node(node),
                                           indention_level);
     */
+
+  case PARSE_NODE_BLOCK:
+    return buffer_append_block_node(buffer, to_block_node(node));
 
   case PARSE_NODE_BALANCED_CONSTRUCT:
     return buffer_append_balanced_construct_node(
@@ -475,6 +479,17 @@ buffer_t* buffer_append_identifier_node(buffer_t* buffer,
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   buffer_append_token_string(buffer, node->token);
+  return buffer;
+}
+
+/**
+ * @function buffer_append_block_node
+ */
+buffer_t* buffer_append_block_node(buffer_t* buffer, block_node_t* node) {
+  uint64_t length = node_list_length(node->statements);
+  for (uint64_t i = 0; i < length; i++) {
+    buffer_append_parse_node(buffer, node_list_get(node->statements, i));
+  }
   return buffer;
 }
 

@@ -35,7 +35,7 @@ local TestType = {
     -- file and compiled with gcc
     PARSE_TEST = 2,
     -- The same as PARSE_TEST except additionally the compiled program
-    -- with be run
+    -- is run
     EXECUTE_TEST = 3,
     -- The test it a simple expression that should be parsed
     PARSE_EXPRESSION = 4
