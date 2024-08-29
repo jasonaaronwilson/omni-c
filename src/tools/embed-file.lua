@@ -23,19 +23,28 @@ local function file_to_c_code()
 
     -- Generate C code
     local num_bytes = #bytes
-    local c_code = string.format("uin64_t %s_LENGTH = %d;\n", var_name, num_bytes)
-    c_code = c_code .. string.format("uin8_t %s[] = {\n", var_name)
+    local c_code = ""
+    c_code = c_code .. "#include <c-armyknife-lib.h>\n\n"
+    c_code = c_code .. string.format("buffer_t* get_%s_buffer(void) {\n", var_name);
+
+    c_code = c_code .. string.format("  static uint8_t %s[] = {\n    ", var_name)
 
     for i = 1, num_bytes do
         c_code = c_code .. bytes[i]
         if i % 8 == 0 or i == num_bytes then
-            c_code = c_code .. ",\n"
+            c_code = c_code .. ",\n    "
         else
             c_code = c_code .. ", "
         end
     end
 
     c_code = c_code .. "};\n"
+    c_code = c_code .. string.format("  buffer_t* result = make_buffer(%d);\n", num_bytes)
+    c_code = c_code .. string.format("  for (int i = 0; i < %d; i++) {\n", num_bytes)
+    c_code = c_code .. string.format("    buffer_append_byte(result, %s[i]);\n", var_name)
+    c_code = c_code .. string.format("  }\n")
+    c_code = c_code .. string.format("  return result;\n")
+    c_code = c_code .. string.format("}\n");
     
     return c_code
 end

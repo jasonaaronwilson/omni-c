@@ -308,6 +308,8 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table) {
   }
 }
 
+buffer_t* get_reflection_header_buffer(void);
+
 /**
  * @function generate_c_output_file
  */
@@ -338,9 +340,7 @@ void generate_c_output_file(boolean_t is_library) {
     buffer_printf(buffer, "#ifndef %s\n#define %s\n\n", guard_name, guard_name);
   }
 
-  // TODO(jawilson): we should already have this file compiled in as a
-  // constant uint8_t constant so we can just append it.
-  buffer_printf(buffer, "#include \"runtime/reflection.h\"\n\n");
+  buffer_append_buffer(buffer, get_reflection_header_buffer());
 
   boolean_t append_newline_after_system_includes = false;
   buffer_append_string(buffer, "// ========== system includes ==========\n\n");

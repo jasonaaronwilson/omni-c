@@ -5,9 +5,9 @@
 #include "declaration-parser.h"
 #include "lexer.h"
 #include "parser.h"
+#include "statement-parser.h"
 #include "type-parser.h"
 #include "user-type-parser.h"
-#include "statement-parser.h"
 
 #include <c-armyknife-lib.h>
 #include <ctype.h>

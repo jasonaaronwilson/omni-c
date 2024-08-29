@@ -37,11 +37,14 @@ SRC_C_SELF = \
 	balanced-construct-parser.c \
 	main.c
 
-SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c $(SRC_C_SELF)
+SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c reflection-header.c $(SRC_C_SELF)
 
 
 # Derived list of header file names
 SRC_H = $(SRC_C:.c=.h)
+
+generate-reflection-embedding: runtime/reflection.h
+	tools/embed-file.lua reflection_header runtime/reflection.h > reflection-header.c
 
 generate-header-files: ${SRC_C}
 	../../c-single-source-file/generate-header-file ${SRC_C}
