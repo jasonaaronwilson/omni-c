@@ -38,6 +38,7 @@ static inline char* remove_type_suffix_1(char* typename) {
  */
 void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
   buffer_t* buffer = make_buffer(1);
+  printer_t* printer = make_printer(buffer, 2);
 
   for (int i = 0; i < symbol_table->typedefs->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding = value_array_get_ptr(
@@ -53,12 +54,12 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
       char* to_string_prefix = remove_type_suffix_1(enum_node_name);
       char* enum_node_type_string = enum_node_name;
 
-      buffer = buffer_append_enum_to_string(buffer, enum_node, to_string_prefix,
-                                            enum_node_type_string);
-      buffer = buffer_append_string_to_enum(buffer, enum_node, to_string_prefix,
-                                            enum_node_type_string);
-      buffer = buffer_append_enum_metadata(buffer, enum_node, to_string_prefix,
-                                           enum_node_type_string);
+      append_enum_to_string(printer, enum_node, to_string_prefix,
+                            enum_node_type_string);
+      append_string_to_enum(printer, enum_node, to_string_prefix,
+                            enum_node_type_string);
+      buffer_append_enum_metadata(buffer, enum_node, to_string_prefix,
+                                  enum_node_type_string);
     }
   }
 
@@ -70,12 +71,12 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
     char* enum_node_name = token_to_string(enum_node->name);
     char* to_string_prefix = remove_type_suffix_1(enum_node_name);
     char* enum_node_type_string = string_printf("enum %s", enum_node_name);
-    buffer = buffer_append_enum_to_string(buffer, enum_node, to_string_prefix,
-                                          enum_node_type_string);
-    buffer = buffer_append_string_to_enum(buffer, enum_node, to_string_prefix,
-                                          enum_node_type_string);
-    buffer = buffer_append_enum_metadata(buffer, enum_node, to_string_prefix,
-                                         enum_node_type_string);
+    append_enum_to_string(printer, enum_node, to_string_prefix,
+                          enum_node_type_string);
+    append_string_to_enum(printer, enum_node, to_string_prefix,
+                          enum_node_type_string);
+    buffer_append_enum_metadata(buffer, enum_node, to_string_prefix,
+                                enum_node_type_string);
   }
 
   if (buffer->length > 0) {

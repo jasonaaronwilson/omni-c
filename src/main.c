@@ -310,6 +310,15 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table) {
 
 buffer_t* get_reflection_header_buffer(void);
 
+char* include_node_to_string(cpp_include_node_t* node) {
+  buffer_t* buffer = make_buffer(32);
+  printer_t* printer = make_printer(buffer, 2);
+  append_cpp_include_node(printer, node);
+  char* include_statement = buffer_to_c_string(buffer);
+  // free buffer and printer...
+  return include_statement;
+}
+
 /**
  * @function generate_c_output_file
  */
@@ -333,6 +342,7 @@ void generate_c_output_file(boolean_t is_library) {
   dump_symbol_table("reorder structures", symbol_table);
 
   buffer_t* buffer = make_buffer(1024 * 8);
+  printer_t* printer = make_printer(buffer, 2);
 
   char* guard_name = "_HEADER_FILE_GUARD_";
 
@@ -349,8 +359,7 @@ void generate_c_output_file(boolean_t is_library) {
     append_newline_after_system_includes = true;
     cpp_include_node_t* node = value_array_get_ptr(
         symbol_table->system_includes, i, cpp_include_node_t*);
-    char* include_statement = buffer_to_c_string(
-        buffer_append_cpp_include_node(make_buffer(32), node));
+    char* include_statement = include_node_to_string(node);
     if (!is_ok(string_ht_find(system_includes_set, include_statement))) {
       system_includes_set = string_ht_insert(
           system_includes_set, include_statement, boolean_to_value(true));
@@ -367,8 +376,8 @@ void generate_c_output_file(boolean_t is_library) {
   for (uint64_t i = 0; i < symbol_table->defines->length; i++) {
     cpp_define_node_t* node
         = value_array_get_ptr(symbol_table->defines, i, cpp_define_node_t*);
-    buffer_append_cpp_define_node(buffer, node);
-    buffer_append_string(buffer, "\n");
+    append_cpp_define_node(printer, node);
+    append_string(printer, "\n");
   }
 
   buffer_append_string(buffer, "// ========== enums ==========\n\n");
@@ -378,8 +387,8 @@ void generate_c_output_file(boolean_t is_library) {
         symbol_table->enums->ordered_bindings, i, symbol_table_binding_t*);
     enum_node_t* enum_node = to_enum_node(
         value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*));
-    buffer_append_enum_node(buffer, enum_node);
-    buffer_append_string(buffer, ";\n\n");
+    append_enum_node(printer, enum_node);
+    append_string(printer, ";\n\n");
   }
 
   buffer_append_string(buffer, "// ========== typedefs ==========\n\n");
@@ -388,8 +397,8 @@ void generate_c_output_file(boolean_t is_library) {
         symbol_table->typedefs->ordered_bindings, i, symbol_table_binding_t*);
     typedef_node_t* typedef_node = to_typedef_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
-    buffer_append_typedef_node(buffer, typedef_node);
-    buffer_append_string(buffer, "\n");
+    append_typedef_node(printer, typedef_node);
+    append_string(printer, "\n");
   }
 
   buffer_append_string(buffer, "// ========== stuctures/unions ==========\n\n");
@@ -401,8 +410,8 @@ void generate_c_output_file(boolean_t is_library) {
       struct_node
           = value_array_get_ptr(binding->definition_nodes, 0, struct_node_t*);
     }
-    buffer_append_struct_node(buffer, struct_node);
-    buffer_append_string(buffer, ";\n\n");
+    append_struct_node(printer, struct_node);
+    append_string(printer, ";\n\n");
   }
 
   boolean_t append_newline_after_variables = false;
@@ -410,16 +419,16 @@ void generate_c_output_file(boolean_t is_library) {
   for (int i = 0; i < symbol_table->variables->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding = value_array_get_ptr(
         symbol_table->variables->ordered_bindings, i, symbol_table_binding_t*);
-    buffer_append_variable_definition_node(
-        buffer,
+    append_variable_definition_node(
+        printer,
         value_array_get_ptr(binding->definition_nodes, 0,
                             variable_definition_node_t*),
         is_library);
-    buffer_append_string(buffer, "\n");
+    append_string(printer, "\n");
   }
 
   if (append_newline_after_variables) {
-    buffer_append_string(buffer, "\n");
+    append_string(printer, "\n");
   }
 
   boolean_t append_newline_after_prototypes = false;
@@ -432,11 +441,11 @@ void generate_c_output_file(boolean_t is_library) {
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     if (!is_inlined_function(function_node)) {
       append_newline_after_prototypes = true;
-      buffer_append_c_function_node_prototype(buffer, function_node);
+      append_c_function_node_prototype(printer, function_node);
     }
   }
   if (append_newline_after_prototypes) {
-    buffer_append_string(buffer, "\n");
+    append_string(printer, "\n");
   }
 
   boolean_t append_newline_after_inlines = false;
@@ -449,7 +458,7 @@ void generate_c_output_file(boolean_t is_library) {
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     if (is_inlined_function(function_node)) {
       append_newline_after_inlines = true;
-      buffer_append_c_function_node_and_body(buffer, function_node);
+      append_c_function_node_and_body(printer, function_node);
     }
   }
 
@@ -472,7 +481,7 @@ void generate_c_output_file(boolean_t is_library) {
             && function_node->body != NULL) {
           append_newline_after_functions = true;
           buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
-          buffer_append_c_function_node_and_body(buffer, function_node);
+          append_c_function_node_and_body(printer, function_node);
         }
       }
     }

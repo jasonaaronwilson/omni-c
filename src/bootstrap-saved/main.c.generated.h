@@ -24,6 +24,8 @@ boolean_t is_inlined_function(function_node_t* node);
 
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table);
 
+char* include_node_to_string(cpp_include_node_t* node);
+
 void generate_c_output_file(boolean_t is_library);
 
 void parse_expression_string_and_print_parse_tree(char* expression);

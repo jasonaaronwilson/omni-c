@@ -82,7 +82,8 @@ pstatus_t parse_balanced_construct(pstate_t* pstate) {
     } else {
       pstate_advance(pstate_ignore_error(pstate));
     }
-  } while (open_parens + open_brackets + open_braces > 0);
+  } while (open_parens + open_brackets + open_braces > 0
+           && pstate->position < pstate->tokens->length);
 
   if (pstate->position == saved_position + 1) {
     // FIXME error type

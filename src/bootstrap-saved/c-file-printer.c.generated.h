@@ -1,46 +1,48 @@
 /* Automatically extracted prototypes from c-file-printer.c */
 
-buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node);
+printer_t* append_parse_node(printer_t* printer, parse_node_t* node);
 
-buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer, function_node_t* node);
+printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* node);
 
-buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer, function_node_t* node);
+printer_t* append_c_function_node_prototype(printer_t* printer, function_node_t* node);
 
-buffer_t* buffer_append_balanced_construct_node(buffer_t* buffer, balanced_construct_node_t* node);
+printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct_node_t* node);
 
-buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer, function_node_t* node);
+printer_t* append_c_function_node_and_body(printer_t* printer, function_node_t* node);
 
-buffer_t* buffer_append_c_function_argument_node(buffer_t* buffer, function_argument_node_t* node);
+printer_t* append_c_function_argument_node(printer_t* printer, function_argument_node_t* node);
 
-buffer_t* buffer_append_c_type_node(buffer_t* buffer, type_node_t* node);
+printer_t* append_c_type_node(printer_t* printer, type_node_t* node);
 
-buffer_t* buffer_append_c_attribute_node(buffer_t* buffer, attribute_node_t* node);
+printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node);
 
-buffer_t* buffer_append_c_raw_token_span(buffer_t* buffer, token_t* start_token, token_t* end_token);
+printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, token_t* end_token);
 
-buffer_t* buffer_append_enum_node(buffer_t* buffer, enum_node_t* node);
+printer_t* append_enum_node(printer_t* printer, enum_node_t* node);
 
-buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node);
+printer_t* append_enum_element(printer_t* printer, enum_element_t* node);
 
-buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node, char* to_string_fn_prefix, char* type_string);
+printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string);
 
-buffer_t* buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node, char* to_string_fn_prefix, char* type_string);
+printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string);
 
-buffer_t* buffer_append_field_node(buffer_t* buffer, field_node_t* node);
+printer_t* append_field_node(printer_t* printer, field_node_t* node);
 
-buffer_t* buffer_append_struct_node(buffer_t* buffer, struct_node_t* node);
+printer_t* append_struct_node(printer_t* printer, struct_node_t* node);
 
-buffer_t* buffer_append_typedef_node(buffer_t* buffer, typedef_node_t* node);
+printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node);
 
-buffer_t* buffer_append_cpp_include_node(buffer_t* buffer, cpp_include_node_t* node);
+printer_t* append_cpp_include_node(printer_t* printer, cpp_include_node_t* node);
 
-buffer_t* buffer_append_cpp_define_node(buffer_t* buffer, cpp_define_node_t* node);
+printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node);
 
-buffer_t* buffer_append_variable_definition_node(buffer_t* buffer, variable_definition_node_t* node, boolean_t is_library);
+printer_t* append_variable_definition_node(printer_t* printer, variable_definition_node_t* node, boolean_t is_library);
 
-buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node);
+printer_t* append_literal_node(printer_t* printer, literal_node_t* node);
 
-buffer_t* buffer_append_identifier_node(buffer_t* buffer, identifier_node_t* node);
+printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node);
+
+printer_t* append_block_node(printer_t* printer, block_node_t* node);
 
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string);
 

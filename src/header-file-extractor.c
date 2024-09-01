@@ -21,6 +21,7 @@
 
 #include "c-file-printer.h"
 #include "parser.h"
+#include "printer.h"
 
 static inline char* remove_type_suffix(char* typename) {
   if (string_ends_with(typename, "_t")) {
@@ -33,6 +34,8 @@ static inline char* remove_type_suffix(char* typename) {
 __attribute__((warn_unused_result)) buffer_t*
     extract_enums_process_declarations(buffer_t* output,
                                        declarations_node_t* root) {
+  printer_t* printer = make_printer(output, 2);
+
   uint64_t length = node_list_length(root->declarations);
 
   for (uint64_t i = 0; i < length; i++) {
@@ -42,32 +45,31 @@ __attribute__((warn_unused_result)) buffer_t*
       if (is_enum_node(typedef_node->type_node->user_type)) {
         enum_node_t* enum_node
             = to_enum_node(typedef_node->type_node->user_type);
-        output = buffer_printf(output, "typedef ");
-        output
-            = buffer_printf(output, "%s ", token_to_string(typedef_node->name));
-        output = buffer_append_enum_node(output, enum_node);
-        output = buffer_printf(output, ";\n\n");
+        buffer_printf(output, "typedef ");
+        buffer_printf(output, "%s ", token_to_string(typedef_node->name));
+        append_enum_node(printer, enum_node);
+        buffer_printf(output, ";\n\n");
 
         char* enum_node_name = token_to_string(typedef_node->name);
         char* to_string_prefix = remove_type_suffix(enum_node_name);
         char* enum_node_type_string = enum_node_name;
 
-        output = buffer_append_enum_to_string(
-            output, enum_node, to_string_prefix, enum_node_type_string);
-        output = buffer_append_string_to_enum(
-            output, enum_node, to_string_prefix, enum_node_type_string);
+        append_enum_to_string(printer, enum_node, to_string_prefix,
+                              enum_node_type_string);
+        append_string_to_enum(printer, enum_node, to_string_prefix,
+                              enum_node_type_string);
       }
     } else if (node->tag == PARSE_NODE_ENUM) {
       enum_node_t* enum_node = to_enum_node(node);
-      output = buffer_append_enum_node(output, enum_node);
-      output = buffer_printf(output, ";\n\n");
+      append_enum_node(printer, enum_node);
+      buffer_printf(output, ";\n\n");
       char* enum_node_name = token_to_string(enum_node->name);
       char* to_string_prefix = remove_type_suffix(enum_node_name);
       char* enum_node_type_string = string_printf("enum %s", enum_node_name);
-      output = buffer_append_enum_to_string(output, enum_node, to_string_prefix,
-                                            enum_node_type_string);
-      output = buffer_append_string_to_enum(output, enum_node, to_string_prefix,
-                                            enum_node_type_string);
+      append_enum_to_string(printer, enum_node, to_string_prefix,
+                            enum_node_type_string);
+      append_string_to_enum(printer, enum_node, to_string_prefix,
+                            enum_node_type_string);
     }
   }
 
@@ -77,6 +79,7 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     extract_prototypes_process_declarations(buffer_t* output,
                                             declarations_node_t* root) {
+  printer_t* printer = make_printer(output, 2);
   uint64_t length = node_list_length(root->declarations);
 
   for (uint64_t i = 0; i < length; i++) {
@@ -120,8 +123,8 @@ __attribute__((warn_unused_result)) buffer_t*
         continue;
       }
 
-      output = buffer_append_c_function_node_prototype(output, fn_node);
-      output = buffer_printf(output, "\n");
+      append_c_function_node_prototype(printer, fn_node);
+      buffer_printf(output, "\n");
     }
   }
 

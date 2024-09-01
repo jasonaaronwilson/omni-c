@@ -35,6 +35,7 @@ SRC_C_SELF = \
 	variable-definition-parser.c \
 	literal-parser.c \
 	balanced-construct-parser.c \
+	printer.c \
 	main.c
 
 SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c reflection-header.c $(SRC_C_SELF)

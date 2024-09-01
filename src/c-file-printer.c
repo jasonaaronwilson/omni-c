@@ -5,6 +5,7 @@
 #include "declaration-parser.h"
 #include "lexer.h"
 #include "parser.h"
+#include "printer.h"
 #include "statement-parser.h"
 #include "type-parser.h"
 #include "user-type-parser.h"
@@ -36,80 +37,51 @@
 #endif /* _C_FILE_PRINTER_H_ */
 
 /**
- * @function buffer_append_dbg_parse_node
+ * @function append_parse_node
  *
- * Append the debugging version of a parse node to a buffer.
+ * Append the debugging version of a parse node to a printer.
  */
-buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
+printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   switch (node->tag) {
 
-    /*
-  case PARSE_NODE_DECLARATIONS:
-    return buffer_append_dbg_declarations(buffer, to_declarations_node(node),
-                                          indention_level);
-    */
-
   case PARSE_NODE_ENUM:
-    return buffer_append_enum_node(buffer, to_enum_node(node));
-
-    /*
-  case PARSE_NODE_ENUM_ELEMENT:
-    return buffer_append_dbg_enum_element(buffer, to_enum_element_node(node),
-                                          indention_level);
-    */
+    return append_enum_node(printer, to_enum_node(node));
 
   case PARSE_NODE_STRUCT:
   case PARSE_NODE_UNION:
-    return buffer_append_struct_node(buffer, to_struct_node(node));
+    return append_struct_node(printer, to_struct_node(node));
 
     /*
-  case PARSE_NODE_FIELD:
-    return buffer_append_dbg_field_node(buffer, to_field_node(node),
-                                        indention_level);
-
   case PARSE_NODE_TYPE:
-    return buffer_append_dbg_type_node(buffer, to_type_node(node),
-                                       indention_level);
+    return append_type_node(printer, to_type_node(node));
     */
 
   case PARSE_NODE_LITERAL:
-    return buffer_append_literal_node(buffer, to_literal_node(node));
+    return append_literal_node(printer, to_literal_node(node));
 
   case PARSE_NODE_IDENTIFIER:
-    return buffer_append_identifier_node(buffer, to_identifier_node(node));
+    return append_identifier_node(printer, to_identifier_node(node));
 
     /*
-
   case PARSE_NODE_FUNCTION:
-    return buffer_append_dbg_function_node(buffer, to_function_node(node),
-                                           indention_level);
-
-  case PARSE_NODE_FUNCTION_ARGUMENT:
-    return buffer_append_dbg_function_argument_node(
-        buffer, to_function_argument_node(node), indention_level);
+    return append_function_node(printer, to_function_node(node));
+    */
 
   case PARSE_NODE_TYPEDEF:
-    return buffer_append_dbg_typedef_node(buffer, to_typedef_node(node),
-                                          indention_level);
-    */
+    return append_typedef_node(printer, to_typedef_node(node));
 
   case PARSE_NODE_BLOCK:
-    return buffer_append_block_node(buffer, to_block_node(node));
+    return append_block_node(printer, to_block_node(node));
 
   case PARSE_NODE_BALANCED_CONSTRUCT:
-    return buffer_append_balanced_construct_node(
-        buffer, to_balanced_construct_node(node));
+    return append_balanced_construct_node(printer,
+                                          to_balanced_construct_node(node));
 
-    // Always assuming this is a library is problematic...
+    // TODO(jawilson): Always assuming this is a library is
+    // problematic...
   case PARSE_NODE_VARIABLE_DEFINITION:
-    return buffer_append_variable_definition_node(
-        buffer, to_variable_definition_node(node), true);
-
-    /*
-  case PARSE_NODE_ATTRIBUTE:
-    return buffer_append_dbg_attribute_node(buffer, to_attribute_node(node),
-                                            indention_level);
-    */
+    return append_variable_definition_node(
+        printer, to_variable_definition_node(node), true);
 
   default:
     break;
@@ -118,100 +90,104 @@ buffer_t* buffer_append_parse_node(buffer_t* buffer, parse_node_t* node) {
 }
 
 /**
- * Not a full function prototypes since the semi-colon is missing but
- * otherwise the same.
+ * @function append_c_function_node_prefix
+ *
+ * Almost a full function prototypes (but the semi-colon is
+ * missing). This is used to print out prototypes or before printing
+ * out a full function body.
  */
-buffer_t* buffer_append_c_function_node_prefix(buffer_t* buffer,
-                                               function_node_t* node) {
+printer_t* append_c_function_node_prefix(printer_t* printer,
+                                         function_node_t* node) {
 
   for (int i = 0; i < node_list_length(node->attributes); i++) {
-    buffer_append_c_attribute_node(
-        buffer, to_attribute_node(node_list_get(node->attributes, i)));
-    buffer_printf(buffer, " ");
+    append_c_attribute_node(
+        printer, to_attribute_node(node_list_get(node->attributes, i)));
+    append_string(printer, " ");
   }
 
   if (node->storage_class_specifier != NULL) {
-    buffer_append_token_string(buffer, node->storage_class_specifier);
-    buffer_append_string(buffer, " ");
+    append_token(printer, node->storage_class_specifier);
+    append_string(printer, " ");
   }
 
   for (int i = 0; i < token_list_length(node->function_specifiers); i++) {
-    buffer_append_token_string(buffer,
-                               token_list_get(node->function_specifiers, i));
-    buffer_append_string(buffer, " ");
+    append_token(printer, token_list_get(node->function_specifiers, i));
+    append_string(printer, " ");
   }
 
-  buffer_append_c_type_node(buffer, node->return_type);
-  buffer_printf(buffer, " %s(", token_to_string(node->function_name));
+  append_c_type_node(printer, node->return_type);
+  printer_space(printer);
+  append_token(printer, node->function_name);
+  append_string(printer, "(");
 
   for (int i = 0; i < node_list_length(node->function_args); i++) {
     if (i > 0) {
-      buffer_printf(buffer, ", ");
+      append_string(printer, ", ");
     }
     function_argument_node_t* arg_node
         = to_function_argument_node(node_list_get(node->function_args, i));
-    buffer_append_c_function_argument_node(buffer, arg_node);
+    append_c_function_argument_node(printer, arg_node);
   }
-  buffer_append_string(buffer, ")");
-  return buffer;
+  append_string(printer, ")");
+  return printer;
 }
 
-buffer_t* buffer_append_c_function_node_prototype(buffer_t* buffer,
-                                                  function_node_t* node) {
-  buffer_append_c_function_node_prefix(buffer, node);
-  buffer_printf(buffer, ";\n");
-  return buffer;
+printer_t* append_c_function_node_prototype(printer_t* printer,
+                                            function_node_t* node) {
+  append_c_function_node_prefix(printer, node);
+  append_string(printer, ";\n");
+  return printer;
 }
 
-buffer_t*
-    buffer_append_balanced_construct_node(buffer_t* buffer,
+printer_t* append_balanced_construct_node(printer_t* printer,
                                           balanced_construct_node_t* node) {
   uint64_t start = node->start_token->start;
   uint64_t end = node->end_token->end;
-  buffer_append_sub_buffer(buffer, start, end, node->start_token->buffer);
-  return buffer;
+  buffer_append_sub_buffer(printer->buffer, start, end,
+                           node->start_token->buffer);
+  return printer;
 }
 
-buffer_t* buffer_append_c_function_node_and_body(buffer_t* buffer,
-                                                 function_node_t* node) {
-  buffer_append_c_function_node_prefix(buffer, node);
-  buffer_append_parse_node(buffer, node->body);
-  buffer_append_string(buffer, "\n");
-  return buffer;
+printer_t* append_c_function_node_and_body(printer_t* printer,
+                                           function_node_t* node) {
+  append_c_function_node_prefix(printer, node);
+  append_parse_node(printer, node->body);
+  printer_newline(printer);
+  return printer;
 }
 
-buffer_t*
-    buffer_append_c_function_argument_node(buffer_t* buffer,
+printer_t* append_c_function_argument_node(printer_t* printer,
                                            function_argument_node_t* node) {
   if (node->is_var_args) {
-    buffer_append_string(buffer, "...");
+    append_string(printer, "...");
   } else {
-    buffer_append_c_type_node(buffer, node->arg_type);
+    append_c_type_node(printer, node->arg_type);
     if (node->arg_name != NULL) {
-      buffer_printf(buffer, " %s", token_to_string(node->arg_name));
+      printer_space(printer);
+      append_token(printer, node->arg_name);
     }
   }
-  return buffer;
+  return printer;
 }
 
-buffer_t* buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
+printer_t* append_c_type_node(printer_t* printer, type_node_t* node) {
 
   switch (node->type_node_kind) {
   case TYPE_NODE_KIND_POINTER:
-    buffer_append_c_type_node(buffer,
-                              to_type_node(node_list_get(node->type_args, 0)));
-    buffer_printf(buffer, "*");
+    append_c_type_node(printer,
+                       to_type_node(node_list_get(node->type_args, 0)));
+    append_string(printer, "*");
     break;
 
   case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
   case TYPE_NODE_KIND_TYPENAME:
     if (node->type_name != NULL) {
-      buffer_append_token_string(buffer, node->type_name);
+      append_token(printer, node->type_name);
     }
     break;
 
   case TYPE_NODE_KIND_TYPE_EXPRESSION:
-    buffer_append_parse_node(buffer, node->user_type);
+    append_parse_node(printer, node->user_type);
     break;
 
   default:
@@ -220,11 +196,10 @@ buffer_t* buffer_append_c_type_node(buffer_t* buffer, type_node_t* node) {
     break;
   }
 
-  return buffer;
+  return printer;
 }
 
-buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
-                                         attribute_node_t* node) {
+printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node) {
   // Since parser.c doesn't fully parse attributes because we were
   // lazy and don't need to care yet, we simply need to emit a
   // sub-string of the two tokens we were smart enough to retain. We
@@ -237,9 +212,9 @@ buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
   // need to write function prototypes for our own code anymore and
   // the code is still available as ANSI C when hanlding our own
   // source code for development and boot-strapping.
-  buffer_append_c_raw_token_span(buffer, node->inner_start_token,
-                                 node->inner_end_token);
-  return buffer;
+  append_c_raw_token_span(printer, node->inner_start_token,
+                          node->inner_end_token);
+  return printer;
 }
 
 //
@@ -248,252 +223,278 @@ buffer_t* buffer_append_c_attribute_node(buffer_t* buffer,
 // without having completely signed off on it completely (though the
 // region will be lexicially consistent with our lexer).
 //
-buffer_t* buffer_append_c_raw_token_span(buffer_t* buffer, token_t* start_token,
-                                         token_t* end_token) {
+printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token,
+                                   token_t* end_token) {
   if (start_token->buffer != end_token->buffer) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  buffer_append_sub_buffer(buffer, start_token->start, end_token->end,
+  buffer_append_sub_buffer(printer->buffer, start_token->start, end_token->end,
                            start_token->buffer);
-  return buffer;
+  return printer;
 }
 
-buffer_t* buffer_append_enum_node(buffer_t* buffer, enum_node_t* node) {
+printer_t* append_enum_node(printer_t* printer, enum_node_t* node) {
 
-  buffer_printf(buffer, "enum ");
+  append_string(printer, "enum ");
   if (node->name != NULL) {
-    buffer_printf(buffer, "%s\n", token_to_string(node->name));
+    append_token(printer, node->name);
+    printer_newline(printer);
   }
   if (node->partial_definition) {
-    return buffer;
+    return printer;
   }
 
-  buffer_printf(buffer, "{\n");
+  append_string(printer, "{\n");
+  printer_increase_indent(printer);
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
-    buffer_printf(buffer, "    ");
-    buffer_append_enum_element(
-        buffer, to_enum_element_node(node_list_get(node->elements, i)));
-    buffer_printf(buffer, ",\n");
+    printer_indent(printer);
+    append_enum_element(printer,
+                        to_enum_element_node(node_list_get(node->elements, i)));
+    append_string(printer, ",\n");
   }
-  buffer_printf(buffer, "}");
+  append_string(printer, "}");
+  printer_decrease_indent(printer);
 
-  return buffer;
+  return printer;
 }
 
-buffer_t* buffer_append_enum_element(buffer_t* buffer, enum_element_t* node) {
-
-  buffer_append_token_string(buffer, node->name);
+printer_t* append_enum_element(printer_t* printer, enum_element_t* node) {
+  append_token(printer, node->name);
   if (node->value != NULL) {
-    buffer_printf(buffer, " = ");
-    buffer_append_token_string(buffer, node->value);
+    append_string(printer, " = ");
+    append_token(printer, node->value);
   }
-
-  return buffer;
+  return printer;
 }
 
 /**
- * @function buffer_append_enum_to_string
+ * @function append_enum_to_string
  *
  * Adds the source code to a function like input_mode_to_string (from
  * the enum input_mode_t).
  */
-buffer_t* buffer_append_enum_to_string(buffer_t* buffer, enum_node_t* node,
-                                       char* to_string_fn_prefix,
-                                       char* type_string) {
-  buffer_printf(buffer, "char* %s_to_string(%s value) {\n", to_string_fn_prefix,
-                type_string);
-  buffer_printf(buffer, "  switch (value) {\n");
+printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node,
+                                 char* to_string_fn_prefix, char* type_string) {
+  append_string(printer, "char* ");
+  append_string(printer, to_string_fn_prefix);
+  append_string(printer, "_to_string(");
+  append_string(printer, type_string);
+  append_string(printer, " value) {\n");
+  printer_increase_indent(printer);
+  printer_indent(printer);
+  append_string(printer, "switch (value) {\n");
+  printer_indent(printer);
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
     enum_element_t* element
         = to_enum_element_node(node_list_get(node->elements, i));
-    buffer_printf(buffer, "    case ");
-    buffer_append_token_string(buffer, element->name);
-    buffer_printf(buffer, ":\n      return \"");
-    buffer_append_token_string(buffer, element->name);
-    buffer_printf(buffer, "\";\n");
+    printer_indent(printer);
+    append_string(printer, "case ");
+    append_token(printer, element->name);
+    append_string(printer, ":\n");
+    printer_increase_indent(printer);
+    append_string(printer, "return \"");
+    append_token(printer, element->name);
+    append_string(printer, "\";\n");
+    printer_decrease_indent(printer);
   }
-  buffer_printf(buffer, "    default:\n");
-  buffer_printf(buffer, "      return \"<<unknown-%s>>\";\n",
-                to_string_fn_prefix);
 
-  buffer_printf(buffer, "  }\n");
-  buffer_printf(buffer, "}\n\n");
+  printer_indent(printer);
+  append_string(printer, "default:\n");
 
-  return buffer;
+  printer_increase_indent(printer);
+  printer_indent(printer);
+  append_string(printer, "return \"<<unknown-");
+  append_string(printer, to_string_fn_prefix);
+  append_string(printer, ">>\";\n");
+  printer_decrease_indent(printer);
+  printer_indent(printer);
+  append_string(printer, "}\n");
+  printer_decrease_indent(printer);
+  append_string(printer, "}\n\n");
+
+  return printer;
 }
 
 /**
- * @function buffer_append_string_to_enum
+ * @function append_string_to_enum
  *
  * Adds the source code to a function like string_to_input_mode (from
  * the enum input_mode_t).
  */
-buffer_t* buffer_append_string_to_enum(buffer_t* buffer, enum_node_t* node,
-                                       char* to_string_fn_prefix,
-                                       char* type_string) {
-  buffer_printf(buffer, "%s string_to_%s(char* value) {\n", type_string,
-                to_string_fn_prefix);
+printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node,
+                                 char* to_string_fn_prefix, char* type_string) {
+  append_string(printer, type_string);
+  append_string(printer, " string_to_");
+  append_string(printer, to_string_fn_prefix);
+  append_string(printer, "(char* value) {\n");
+  printer_increase_indent(printer);
 
   for (int i = 0; i < node_list_length(node->elements); i++) {
     enum_element_t* element
         = to_enum_element_node(node_list_get(node->elements, i));
-    buffer_printf(buffer, "  if (strcmp(value, \"");
-    buffer_append_token_string(buffer, element->name);
-    buffer_printf(buffer, "\") == 0) {");
-    buffer_printf(buffer, "\n    return ");
-    buffer_append_token_string(buffer, element->name);
-    buffer_printf(buffer, ";\n  }\n");
+    printer_indent(printer);
+    append_string(printer, "if (strcmp(value, \"");
+    append_token(printer, element->name);
+    append_string(printer, "\") == 0) {\n");
+    printer_increase_indent(printer);
+    append_string(printer, "return ");
+    append_token(printer, element->name);
+    append_string(printer, ";\n");
+    printer_decrease_indent(printer);
+    printer_indent(printer);
+    append_string(printer, "}\n");
   }
-  buffer_printf(buffer, "  return 0;\n");
-  buffer_printf(buffer, "}\n\n");
+  printer_indent(printer);
+  append_string(printer, "return 0;\n");
+  printer_decrease_indent(printer);
+  append_string(printer, "}\n\n");
 
-  return buffer;
+  return printer;
 }
 
-buffer_t* buffer_append_field_node(buffer_t* buffer, field_node_t* node) {
-  buffer_append_c_type_node(buffer, node->type);
-  buffer_printf(buffer, " ");
+printer_t* append_field_node(printer_t* printer, field_node_t* node) {
+  append_c_type_node(printer, node->type);
+  append_string(printer, " ");
   if (node->name != NULL) {
-    buffer_append_token_string(buffer, node->name);
+    append_token(printer, node->name);
   }
-  // TODO(jawilson): bits...
-  return buffer;
+  // TODO(jawilson): If the field has a bit-width, we need to print
+  // that out as well.
+  return printer;
 }
 
 /**
- * @function buffer_append_struct_node
+ * @function append_struct_node
  */
-buffer_t* buffer_append_struct_node(buffer_t* buffer, struct_node_t* node) {
-  if (node->tag == PARSE_NODE_UNION) {
-    buffer_append_string(buffer, "union ");
-  } else {
-    buffer_append_string(buffer, "struct ");
-  }
+printer_t* append_struct_node(printer_t* printer, struct_node_t* node) {
+  append_string(printer, node->tag == PARSE_NODE_UNION ? "union " : "struct ");
   if (node->name != NULL) {
-    buffer_printf(buffer, "%s", token_to_string(node->name));
+    append_token(printer, node->name);
   }
 
   if (!node->partial_definition) {
-    buffer_printf(buffer, " {\n");
+    append_string(printer, " {\n");
+    printer_increase_indent(printer);
     for (int i = 0; i < node_list_length(node->fields); i++) {
-      buffer_printf(buffer, "    ");
-      buffer_append_field_node(buffer,
-                               to_field_node(node_list_get(node->fields, i)));
-      buffer_printf(buffer, ";\n");
+      printer_indent(printer);
+      append_field_node(printer, to_field_node(node_list_get(node->fields, i)));
+      append_string(printer, ";\n");
     }
-    buffer_printf(buffer, "}");
+    printer_decrease_indent(printer);
+    append_string(printer, "}");
   }
 
-  return buffer;
+  return printer;
 }
 
 /**
- * @function buffer_append_typedef_node
+ * @function append_typedef_node
  */
-buffer_t* buffer_append_typedef_node(buffer_t* buffer, typedef_node_t* node) {
-  buffer_append_string(buffer, "typedef ");
-  buffer_append_c_type_node(buffer, node->type_node);
-  buffer_append_string(buffer, " ");
-  buffer_printf(buffer, "%s", token_to_string(node->name));
-  buffer_append_string(buffer, ";\n");
-  return buffer;
+printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node) {
+  append_string(printer, "typedef ");
+  append_c_type_node(printer, node->type_node);
+  append_string(printer, " ");
+  append_token(printer, node->name);
+  append_string(printer, ";\n");
+  return printer;
 }
 
 /**
- * @function buffer_append_cpp_include_node
+ * @function append_cpp_include_node
  */
-buffer_t* buffer_append_cpp_include_node(buffer_t* buffer,
-                                         cpp_include_node_t* node) {
-  buffer_append_string(buffer, node->text);
-  return buffer;
+printer_t* append_cpp_include_node(printer_t* printer,
+                                   cpp_include_node_t* node) {
+  append_string(printer, node->text);
+  return printer;
 }
 
 /**
- * @function buffer_append_cpp_define_node
+ * @function append_cpp_define_node
  */
-buffer_t* buffer_append_cpp_define_node(buffer_t* buffer,
-                                        cpp_define_node_t* node) {
-  buffer_append_string(buffer, node->text);
-  return buffer;
+printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node) {
+  append_string(printer, node->text);
+  return printer;
 }
 
 /**
- * @function buffer_append_variable_definition_node
+ * @function append_variable_definition_node
  */
-buffer_t* buffer_append_variable_definition_node(
-    buffer_t* buffer, variable_definition_node_t* node, boolean_t is_library) {
+printer_t* append_variable_definition_node(printer_t* printer,
+                                           variable_definition_node_t* node,
+                                           boolean_t is_library) {
   boolean_t is_header_file = !is_library;
   if (node->storage_class_specifier != NULL) {
-    buffer_append_token_string(buffer, node->storage_class_specifier);
-    buffer_append_string(buffer, " ");
+    append_token(printer, node->storage_class_specifier);
+    append_string(printer, " ");
   } else if (is_header_file) {
-    buffer_append_string(buffer, "extern ");
+    append_string(printer, "extern ");
   }
 
-  buffer_append_c_type_node(buffer, node->type);
-  buffer_append_string(buffer, " ");
-  buffer_append_token_string(buffer, node->name);
+  append_c_type_node(printer, node->type);
+  append_string(printer, " ");
+  append_token(printer, node->name);
   if (node->suffixes) {
     for (int i = 0; i < node->suffixes->length; i++) {
-      buffer_append_parse_node(
-          buffer, value_array_get_ptr(node->suffixes, i, parse_node_t*));
+      append_parse_node(printer,
+                        value_array_get_ptr(node->suffixes, i, parse_node_t*));
     }
   }
   if (is_library && node->value != NULL) {
-    buffer_append_string(buffer, " = ");
-    buffer_append_parse_node(buffer, node->value);
+    append_string(printer, " = ");
+    append_parse_node(printer, node->value);
   }
-  buffer_append_string(buffer, ";");
-  return buffer;
+  append_string(printer, ";");
+  return printer;
 }
 
 /**
- * @function buffer_append_literal_node
+ * @function append_literal_node
  */
-buffer_t* buffer_append_literal_node(buffer_t* buffer, literal_node_t* node) {
+printer_t* append_literal_node(printer_t* printer, literal_node_t* node) {
   if (node->token != NULL) {
-    buffer_append_token_string(buffer, node->token);
+    append_token(printer, node->token);
   } else if (node->initializer_node != NULL) {
-    buffer_append_balanced_construct_node(
-        buffer, to_balanced_construct_node(node->initializer_node));
+    append_balanced_construct_node(
+        printer, to_balanced_construct_node(node->initializer_node));
   } else if (node->tokens != NULL && node->tokens->length > 0) {
     for (uint64_t i = 0; i < node->tokens->length; i++) {
-      buffer_append_string(buffer, " ");
+      append_string(printer, " ");
       token_t* token = value_array_get_ptr(node->tokens, i, token_t*);
-      buffer_append_token_string(buffer, token);
+      append_token(printer, token);
     }
   } else {
-    buffer_append_string(buffer, "FIXME");
+    append_string(printer, "FIXME");
   }
-  return buffer;
+  return printer;
 }
 
 /**
- * @function buffer_append_literal_node
+ * @function append_literal_node
  */
-buffer_t* buffer_append_identifier_node(buffer_t* buffer,
-                                        identifier_node_t* node) {
+printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node) {
   if (node->token == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  buffer_append_token_string(buffer, node->token);
-  return buffer;
+  append_token(printer, node->token);
+  return printer;
 }
 
 /**
- * @function buffer_append_block_node
+ * @function append_block_node
  */
-buffer_t* buffer_append_block_node(buffer_t* buffer, block_node_t* node) {
+printer_t* append_block_node(printer_t* printer, block_node_t* node) {
   uint64_t length = node_list_length(node->statements);
   for (uint64_t i = 0; i < length; i++) {
-    buffer_append_parse_node(buffer, node_list_get(node->statements, i));
+    append_parse_node(printer, node_list_get(node->statements, i));
   }
-  return buffer;
+  return printer;
 }
 
 /* ====================================================================== */
+
+// This doesn't really belong here...
 
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
                                       char* fn_prefix, char* type_string) {
