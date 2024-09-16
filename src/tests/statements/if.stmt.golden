@@ -1,0 +1,18 @@
+{
+    tag = PARSE_NODE_IF_STATEMENT
+    if_condition = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = a
+    }
+    if_true = {
+        tag = PARSE_NODE_BLOCK
+        statements = [
+        ]
+    }
+    if_else = {
+        tag = PARSE_NODE_BLOCK
+        statements = [
+        ]
+    }
+}
+

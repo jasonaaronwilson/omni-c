@@ -117,6 +117,10 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
     buffer_append_dbg_while_node(printer, to_while_statement_node(node));
     break;
 
+  case PARSE_NODE_IF_STATEMENT:
+    buffer_append_dbg_if_node(printer, to_if_statement_node(node));
+    break;
+
   default:
     log_fatal("No debug printer for %s", parse_node_type_to_string(node->tag));
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -392,11 +396,32 @@ void buffer_append_dbg_attribute_node(cdl_printer_t* printer,
 void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node) {
   cdl_start_table(printer);
   cdl_key(printer, "tag");
-  cdl_string(printer, "PARSE_NODE_WHILE_STATEMENT");
+  cdl_string(printer, "PARSE_NODE_BLOCK");
   cdl_key(printer, "statements");
   buffer_append_dbg_node_list(printer, node->statements);
   cdl_end_table(printer);
 }
+
+void buffer_append_dbg_if_node(cdl_printer_t* printer,
+                               if_statement_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_IF_STATEMENT");
+  if (node->if_condition != NULL) {
+    cdl_key(printer, "if_condition");
+    buffer_append_dbg_parse_node(printer, node->if_condition);
+  }
+  if (node->if_true != NULL) {
+    cdl_key(printer, "if_true");
+    buffer_append_dbg_parse_node(printer, node->if_true);
+  }
+  if (node->if_else != NULL) {
+    cdl_key(printer, "if_else");
+    buffer_append_dbg_parse_node(printer, node->if_else);
+  }
+  cdl_end_table(printer);
+}
+
 
 void buffer_append_dbg_while_node(cdl_printer_t* printer,
                                   while_statement_node_t* node) {

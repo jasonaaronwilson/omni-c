@@ -7,7 +7,7 @@
         ]
     }
     body = {
-        tag = PARSE_NODE_WHILE_STATEMENT
+        tag = PARSE_NODE_BLOCK
         statements = [
         ]
     }
