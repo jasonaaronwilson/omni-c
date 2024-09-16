@@ -109,7 +109,16 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
     buffer_append_dbg_call_node(printer, to_call_node(node));
     break;
 
+  case PARSE_NODE_BLOCK:
+    buffer_append_dbg_block_node(printer, to_block_node(node));
+    break;
+
+  case PARSE_NODE_WHILE_STATEMENT:
+    buffer_append_dbg_while_node(printer, to_while_statement_node(node));
+    break;
+
   default:
+    log_fatal("No debug printer for %s", parse_node_type_to_string(node->tag));
     fatal_error(ERROR_ILLEGAL_STATE);
     break;
   }
@@ -374,6 +383,51 @@ void buffer_append_dbg_attribute_node(cdl_printer_t* printer,
 }
 
 /* ====================================================================== */
+/* Statements */
+/* ====================================================================== */
+
+/**
+ * @function buffer_append_dbg_block_node
+ */
+void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_WHILE_STATEMENT");
+  cdl_key(printer, "statements");
+  buffer_append_dbg_node_list(printer, node->statements);
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_while_node(cdl_printer_t* printer,
+                                  while_statement_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_WHILE_STATEMENT");
+  if (node->condition != NULL) {
+    cdl_key(printer, "condition");
+    buffer_append_dbg_parse_node(printer, node->condition);
+  }
+  if (node->body != NULL) {
+    cdl_key(printer, "body");
+    buffer_append_dbg_parse_node(printer, node->body);
+  }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_break_statement_node(cdl_printer_t* printer,
+                                            break_statement_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_BREAK_STATEMENT");
+  if (node->break_keyword_token != NULL) {
+    cdl_key(printer, "break_keyword_token");
+    cdl_string(printer, token_to_string(node->break_keyword_token));
+  }
+  cdl_end_table(printer);
+}
+
+
+/* ====================================================================== */
 
 void buffer_append_dbg_identifier_node(cdl_printer_t* printer,
                                        identifier_node_t* node) {
@@ -411,18 +465,6 @@ void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node) {
   buffer_append_dbg_parse_node(printer, node->function);
   cdl_key(printer, "args");
   buffer_append_dbg_node_list(printer, node->args);
-  cdl_end_table(printer);
-}
-
-void buffer_append_dbg_break_statement_node(cdl_printer_t* printer,
-                                            break_statement_node_t* node) {
-  cdl_start_table(printer);
-  cdl_key(printer, "tag");
-  cdl_string(printer, "PARSE_NODE_BREAK_STATEMENT");
-  if (node->break_keyword_token != NULL) {
-    cdl_key(printer, "break_keyword_token");
-    cdl_string(printer, token_to_string(node->break_keyword_token));
-  }
   cdl_end_table(printer);
 }
 

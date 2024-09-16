@@ -17,9 +17,9 @@
 
 #endif /* _TO_STRING_HELPERS_H_ */
 
-char* parse_node_type_to_string(parse_node_type_t type) {
-  switch (type) {
-  default:
+// I grabbed this from self.c and reformatted it.
+char* parse_node_type_to_string(parse_node_type_t value) {
+  switch (value) {
   case PARSE_NODE_UNKNOWN:
     return "PARSE_NODE_UNKNOWN";
   case PARSE_NODE_DECLARATIONS:
@@ -42,8 +42,65 @@ char* parse_node_type_to_string(parse_node_type_t type) {
     return "PARSE_NODE_UNION";
   case PARSE_NODE_TYPE:
     return "PARSE_NODE_TYPE";
+  case PARSE_NODE_LITERAL:
+    return "PARSE_NODE_LITERAL";
+  case PARSE_NODE_FUNCTION:
+    return "PARSE_NODE_FUNCTION";
+  case PARSE_NODE_FUNCTION_ARGUMENT:
+    return "PARSE_NODE_FUNCTION_ARGUMENT";
+  case PARSE_NODE_TYPEDEF:
+    return "PARSE_NODE_TYPEDEF";
+  case PARSE_NODE_UNPARSED_EXPRESSION:
+    return "PARSE_NODE_UNPARSED_EXPRESSION";
+  case PARSE_NODE_ATTRIBUTE:
+    return "PARSE_NODE_ATTRIBUTE";
+  case PARSE_NODE_CPP_INCLUDE:
+    return "PARSE_NODE_CPP_INCLUDE";
+  case PARSE_NODE_CPP_DEFINE:
+    return "PARSE_NODE_CPP_DEFINE";
+  case PARSE_NODE_OPERATOR:
+    return "PARSE_NODE_OPERATOR";
+  case PARSE_NODE_IDENTIFIER:
+    return "PARSE_NODE_IDENTIFIER";
+  case PARSE_NODE_IF_STATEMENT:
+    return "PARSE_NODE_IF_STATEMENT";
+  case PARSE_NODE_FOR_STATEMENT:
+    return "PARSE_NODE_FOR_STATEMENT";
+  case PARSE_NODE_DO_STATEMENT:
+    return "PARSE_NODE_DO_STATEMENT";
+  case PARSE_NODE_WHILE_STATEMENT:
+    return "PARSE_NODE_WHILE_STATEMENT";
+  case PARSE_NODE_EMPTY_STATEMENT:
+    return "PARSE_NODE_EMPTY_STATEMENT";
+  case PARSE_NODE_BLOCK:
+    return "PARSE_NODE_BLOCK";
+  case PARSE_NODE_RETURN_STATEMENT:
+    return "PARSE_NODE_RETURN_STATEMENT";
+  case PARSE_NODE_SWITCH_STATEMENT:
+    return "PARSE_NODE_SWITCH_STATEMENT";
+  case PARSE_NODE_CASE_LABEL:
+    return "PARSE_NODE_CASE_LABEL";
+  case PARSE_NODE_DEFAULT_LABEL:
+    return "PARSE_NODE_DEFAULT_LABEL";
+  case PARSE_NODE_GOTO_STATEMENT:
+    return "PARSE_NODE_GOTO_STATEMENT";
+  case PARSE_NODE_BREAK_STATEMENT:
+    return "PARSE_NODE_BREAK_STATEMENT";
+  case PARSE_NODE_CONTINUE_STATEMENT:
+    return "PARSE_NODE_CONTINUE_STATEMENT";
+  case PARSE_NODE_LABEL_STATEMENT:
+    return "PARSE_NODE_LABEL_STATEMENT";
+  case PARSE_NODE_VARIABLE_STATEMENT:
+    return "PARSE_NODE_VARIABLE_STATEMENT";
+  case PARSE_NODE_EXPRESSION_STATEMENT:
+    return "PARSE_NODE_EXPRESSION_STATEMENT";
+  case PARSE_NODE_BALANCED_CONSTRUCT:
+    return "PARSE_NODE_BALANCED_CONSTRUCT";
+  case PARSE_NODE_CALL:
+    return "PARSE_NODE_CALL";
+  default:
+    return "<<unknown-parse_node_type>>";
   }
-  return "**NOT REACHED**";
 }
 
 char* type_node_kind_to_string(type_node_kind_t kind) {

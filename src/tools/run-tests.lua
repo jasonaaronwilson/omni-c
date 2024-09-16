@@ -38,14 +38,18 @@ local TestType = {
     -- is run
     EXECUTE_TEST = 3,
     -- The test it a simple expression that should be parsed
-    PARSE_EXPRESSION = 4
+    PARSE_EXPRESSION = 4,
+    -- The test it a simple statement that should be parsed
+    PARSE_STATEMENT = 5
 }
 
 local function get_test_type(filename)
    if ends_with(filename, ".sh") then
       return TestType.SCRIPT
-   elseif ends_with(filename, ".e") then
+   elseif ends_with(filename, ".e") or ends_with(filename, ".expr") then
       return TestType.PARSE_EXPRESSION
+   elseif ends_with(filename, ".stmt") then
+      return TestType.PARSE_STATEMENT
    else
       local contents = read_file(filename)
       if contains(contents, "main%(") then
@@ -85,6 +89,16 @@ for _, arg in ipairs(arg) do
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
      exit_status = os.execute("./omni-c parse-expression --expression \"" .. contents .. "\" >" .. output_file)
+     if exit_status and file_exists(golden_file) then
+          exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
+     else
+	print(read_file(output_file))
+     end
+  elseif test_type == TestType.PARSE_STATEMENT then
+     local contents = read_file(arg)
+     local golden_file = arg .. ".golden"
+     local output_file = arg .. ".out"
+     exit_status = os.execute("./omni-c parse-statement --statement \"" .. contents .. "\" >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else
