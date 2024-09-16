@@ -1,0 +1,29 @@
+{
+    tag = PARSE_NODE_WHILE_STATEMENT
+    condition = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            "1"
+        ]
+    }
+    body = {
+        tag = PARSE_NODE_WHILE_STATEMENT
+        statements = [
+            {
+                tag = PARSE_NODE_WHILE_STATEMENT
+                condition = {
+                    tag = PARSE_NODE_LITERAL
+                    tokens = [
+                        "1"
+                    ]
+                }
+                body = {
+                    tag = PARSE_NODE_WHILE_STATEMENT
+                    statements = [
+                    ]
+                }
+            }
+        ]
+    }
+}
+
