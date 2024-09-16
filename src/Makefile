@@ -1,5 +1,10 @@
 all: omni-c
 
+# The commented out STABLE_BINARY_PATH looks wrong. The wild-card
+# should look for ../../omni-c-stable/src/omni-c-stable and use that
+# if available though warn if that directory exists without a omni-c
+# executable...
+#
 # STABLE_BINARY_PATH := $(if $(wildcard omni-c),./omni-c,../../omni-c-stable/src/omni-c)
 STABLE_BINARY_PATH := ../../omni-c-stable/src/omni-c
 
