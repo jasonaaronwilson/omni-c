@@ -121,6 +121,11 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
     buffer_append_dbg_if_node(printer, to_if_statement_node(node));
     break;
 
+  case PARSE_NODE_EMPTY_STATEMENT:
+    buffer_append_dbg_empty_statement_node(printer,
+                                           to_empty_statement_node(node));
+    break;
+
   default:
     log_fatal("No debug printer for %s", parse_node_type_to_string(node->tag));
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -389,6 +394,17 @@ void buffer_append_dbg_attribute_node(cdl_printer_t* printer,
 /* ====================================================================== */
 /* Statements */
 /* ====================================================================== */
+
+/**
+ * @function buffer_append_dbg_empty_statement_node
+ */
+void buffer_append_dbg_empty_statement_node(cdl_printer_t* printer,
+                                            empty_statement_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_EMPTY_STATEMENT");
+  cdl_end_table(printer);
+}
 
 /**
  * @function buffer_append_dbg_block_node
