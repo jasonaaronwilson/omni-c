@@ -83,9 +83,19 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
     return append_variable_definition_node(
         printer, to_variable_definition_node(node), true);
 
+  case PARSE_NODE_WHILE_STATEMENT:
+    return append_while_statement_node(printer, to_while_statement_node(node));
+
+  case PARSE_NODE_EMPTY_STATEMENT:
+    return append_empty_statement_node(printer, to_empty_statement_node(node));
+
+  case PARSE_NODE_IF_STATEMENT:
+    return append_if_statement_node(printer, to_if_statement_node(node));
+
   default:
     break;
   }
+  log_fatal("No debug C appender for %s", parse_node_type_to_string(node->tag));
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
@@ -481,14 +491,66 @@ printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node) {
   return printer;
 }
 
+/* ====================================================================== *
+ * Statements                                                             *
+ * ====================================================================== */
+
+/**
+ * @function append_empty_statement_node
+ */
+printer_t* append_empty_statement_node(printer_t* printer,
+                                       empty_statement_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, ";\n");
+  return printer;
+}
+
+
 /**
  * @function append_block_node
  */
 printer_t* append_block_node(printer_t* printer, block_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, "{\n");
+  printer_increase_indent(printer);
   uint64_t length = node_list_length(node->statements);
   for (uint64_t i = 0; i < length; i++) {
     append_parse_node(printer, node_list_get(node->statements, i));
   }
+  printer_decrease_indent(printer);
+  printer_indent(printer);
+  append_string(printer, "}\n");
+  return printer;
+}
+
+/**
+ * @function append_if_statement_node
+ */
+printer_t* append_if_statement_node(printer_t* printer,
+                                    if_statement_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, "if (");
+  append_parse_node(printer, node->if_condition);
+  append_string(printer, ")\n");
+  append_parse_node(printer, node->if_true);
+  if (node->if_else) {
+    printer_indent(printer);
+    append_string(printer, "else\n");
+    append_parse_node(printer, node->if_else);
+  }
+  return printer;
+}
+
+/**
+ * @function append_while_statement_node
+ */
+printer_t* append_while_statement_node(printer_t* printer,
+                                       while_statement_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, "while (");
+  append_parse_node(printer, node->condition);
+  append_string(printer, ")\n");
+  append_parse_node(printer, node->body);
   return printer;
 }
 

@@ -561,6 +561,9 @@ void parse_statement_string_and_print_parse_tree(char* expression) {
   parse_node_t* node = pstate_get_result_node(&state);
   buffer_t* output = make_buffer(1);
   buffer_append_dbg_parse_node(make_cdl_printer(output), node);
+  buffer_append_string(output, "\n// C Output\n");
+  printer_t* printer = make_printer(output, 2);
+  append_parse_node(printer, node);
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
