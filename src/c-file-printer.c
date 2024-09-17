@@ -78,7 +78,8 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
                                           to_balanced_construct_node(node));
 
     // TODO(jawilson): Always assuming this is a library is
-    // problematic...
+    // problematic... We should be able to put that information into
+    // the printer itself.
   case PARSE_NODE_VARIABLE_DEFINITION:
     return append_variable_definition_node(
         printer, to_variable_definition_node(node), true);
@@ -92,10 +93,15 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_IF_STATEMENT:
     return append_if_statement_node(printer, to_if_statement_node(node));
 
+  case PARSE_NODE_RETURN_STATEMENT:
+    return append_return_statement_node(printer,
+                                        to_return_statement_node(node));
+    break;
+
   default:
     break;
   }
-  log_fatal("No debug C appender for %s", parse_node_type_to_string(node->tag));
+  log_fatal("No C file appender for %s", parse_node_type_to_string(node->tag));
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
@@ -551,6 +557,21 @@ printer_t* append_while_statement_node(printer_t* printer,
   append_parse_node(printer, node->condition);
   append_string(printer, ")\n");
   append_parse_node(printer, node->body);
+  return printer;
+}
+
+/**
+ * @function append_return_statement_node
+ */
+printer_t* append_return_statement_node(printer_t* printer,
+                                        return_statement_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, "return");
+  if (node->expression != NULL) {
+    append_string(printer, " ");
+    append_parse_node(printer, node->expression);
+  }
+  append_string(printer, ";\n");
   return printer;
 }
 

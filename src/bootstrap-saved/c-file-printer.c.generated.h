@@ -50,5 +50,7 @@ printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* nod
 
 printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node);
 
+printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node);
+
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string);
 

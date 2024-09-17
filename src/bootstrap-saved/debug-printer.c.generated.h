@@ -42,6 +42,8 @@ void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t
 
 void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statement_node_t* node);
 
+void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node);
+
 void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t* node);
 
 void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* node);
