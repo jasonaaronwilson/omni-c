@@ -96,7 +96,9 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_RETURN_STATEMENT:
     return append_return_statement_node(printer,
                                         to_return_statement_node(node));
-    break;
+
+  case PARSE_NODE_BREAK_STATEMENT:
+    return append_break_statement_node(printer, to_break_statement_node(node));
 
   default:
     break;
@@ -511,6 +513,15 @@ printer_t* append_empty_statement_node(printer_t* printer,
   return printer;
 }
 
+/**
+ * @function append_break_statement_node
+ */
+printer_t* append_break_statement_node(printer_t* printer,
+                                       break_statement_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, "break;\n");
+  return printer;
+}
 
 /**
  * @function append_block_node
