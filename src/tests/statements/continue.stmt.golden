@@ -1,0 +1,8 @@
+{
+    tag = PARSE_NODE_CONTINUE_STATEMENT
+    continue_keyword_token = continue
+}
+
+// C Output
+continue;
+
