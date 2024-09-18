@@ -104,6 +104,9 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
     return append_continue_statement_node(printer,
                                           to_continue_statement_node(node));
 
+  case PARSE_NODE_LABEL_STATEMENT:
+    return append_label_statement_node(printer, to_label_statement_node(node));
+
   default:
     break;
   }
@@ -536,6 +539,18 @@ printer_t* append_continue_statement_node(printer_t* printer,
   append_string(printer, "continue;\n");
   return printer;
 }
+
+/**
+ * @function append_label_statement_node
+ */
+printer_t* append_label_statement_node(printer_t* printer,
+                                       label_statement_node_t* node) {
+  printer_indent(printer);
+  append_token(printer, node->label);
+  append_string(printer, ":\n");
+  return printer;
+}
+
 
 /**
  * @function append_block_node

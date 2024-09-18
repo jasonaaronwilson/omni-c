@@ -1,0 +1,8 @@
+{
+    tag = PARSE_NODE_LABEL_STATEMENT
+    label = label_xyz
+}
+
+// C Output
+label_xyz:
+

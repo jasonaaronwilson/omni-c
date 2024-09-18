@@ -110,6 +110,11 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
                                               to_continue_statement_node(node));
     break;
 
+  case PARSE_NODE_LABEL_STATEMENT:
+    buffer_append_dbg_label_statement_node(printer,
+                                           to_label_statement_node(node));
+    break;
+
   case PARSE_NODE_CALL:
     buffer_append_dbg_call_node(printer, to_call_node(node));
     break;
@@ -485,6 +490,18 @@ void buffer_append_dbg_continue_statement_node(
   if (node->continue_keyword_token != NULL) {
     cdl_key(printer, "continue_keyword_token");
     cdl_string(printer, token_to_string(node->continue_keyword_token));
+  }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_label_statement_node(cdl_printer_t* printer,
+                                            label_statement_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_LABEL_STATEMENT");
+  if (node->label != NULL) {
+    cdl_key(printer, "label");
+    cdl_string(printer, token_to_string(node->label));
   }
   cdl_end_table(printer);
 }
