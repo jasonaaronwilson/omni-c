@@ -107,6 +107,10 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_LABEL_STATEMENT:
     return append_label_statement_node(printer, to_label_statement_node(node));
 
+  case PARSE_NODE_EXPRESSION_STATEMENT:
+    return append_expression_statement_node(printer,
+                                            to_expression_statement_node(node));
+
   default:
     break;
   }
@@ -551,6 +555,16 @@ printer_t* append_label_statement_node(printer_t* printer,
   return printer;
 }
 
+/**
+ * @function append_expression_statement_node
+ */
+printer_t* append_expression_statement_node(printer_t* printer,
+                                            expression_statement_node_t* node) {
+  printer_indent(printer);
+  append_parse_node(printer, node->expression);
+  append_string(printer, ";\n");
+  return printer;
+}
 
 /**
  * @function append_block_node

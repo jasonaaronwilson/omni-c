@@ -141,6 +141,11 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
                                             to_return_statement_node(node));
     break;
 
+  case PARSE_NODE_EXPRESSION_STATEMENT:
+    buffer_append_dbg_expression_statement_node(
+        printer, to_expression_statement_node(node));
+    break;
+
   default:
     log_fatal("No debug printer for %s", parse_node_type_to_string(node->tag));
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -511,6 +516,18 @@ void buffer_append_dbg_return_statement_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_RETURN_STATEMENT");
+  if (node->expression != NULL) {
+    cdl_key(printer, "expression");
+    buffer_append_dbg_parse_node(printer, node->expression);
+  }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_expression_statement_node(
+    cdl_printer_t* printer, expression_statement_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_EXPRESSION_STATEMENT");
   if (node->expression != NULL) {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, node->expression);
