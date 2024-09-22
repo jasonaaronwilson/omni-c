@@ -754,6 +754,8 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
   }
   if (token_matches(node->operator, "sizeof")) {
     append_string(printer, ")");
+  } else if (token_matches(node->operator, "[")) {
+    append_string(printer, "]");
   }
   append_string(printer, ")");
   return printer;
