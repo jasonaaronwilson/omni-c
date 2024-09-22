@@ -71,6 +71,7 @@ end
 local success = 0
 local failure = 0
 local failed_tests = {}
+local no_golden_tests = {}
 
 local function get_timestamp()
   return os.clock() * 1000 -- Millisecond precision
@@ -105,6 +106,7 @@ for _, arg in ipairs(arg) do
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else
+        table.insert(no_golden_tests, arg)
 	print(read_file(output_file))
      end
   elseif test_type == TestType.PARSE_STATEMENT then
@@ -115,6 +117,7 @@ for _, arg in ipairs(arg) do
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else
+        table.insert(no_golden_tests, arg)
 	print(read_file(output_file))
      end
   else
@@ -138,6 +141,10 @@ local end_time = get_timestamp()
 local delta_ms = end_time - start_time
 
 print("Total test run time: " .. delta_ms .. " seconds")
+
+for _, test in ipairs(no_golden_tests) do
+  print("  -- No golden file for " .. test)
+end
 
 if success > 0 then
   print("Passed " .. success .. " tests.")
