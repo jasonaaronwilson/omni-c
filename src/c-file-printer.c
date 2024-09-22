@@ -505,7 +505,9 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node) {
         printer, to_balanced_construct_node(node->initializer_node));
   } else if (node->tokens != NULL && node->tokens->length > 0) {
     for (uint64_t i = 0; i < node->tokens->length; i++) {
-      append_string(printer, " ");
+      if (i > 0) {
+        append_string(printer, " ");
+      }
       token_t* token = value_array_get_ptr(node->tokens, i, token_t*);
       append_token(printer, token);
     }
