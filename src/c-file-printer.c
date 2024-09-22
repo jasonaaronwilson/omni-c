@@ -746,8 +746,14 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
     append_parse_node(printer, node->left);
   }
   append_token(printer, node->operator);
+  if (token_matches(node->operator, "sizeof")) {
+    append_string(printer, "(");
+  }
   if (node->right != NULL) {
     append_parse_node(printer, node->right);
+  }
+  if (token_matches(node->operator, "sizeof")) {
+    append_string(printer, ")");
   }
   append_string(printer, ")");
   return printer;

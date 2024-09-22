@@ -7,3 +7,5 @@
     }
 }
 
+// C Output
+(sizeof(uint64_t))
