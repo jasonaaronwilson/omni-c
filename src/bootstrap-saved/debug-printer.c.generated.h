@@ -40,9 +40,17 @@ void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node
 
 void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t* node);
 
+void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node);
+
 void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statement_node_t* node);
 
+void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_statement_node_t* node);
+
+void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statement_node_t* node);
+
 void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node);
+
+void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, expression_statement_node_t* node);
 
 void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t* node);
 

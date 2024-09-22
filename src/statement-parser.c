@@ -276,7 +276,8 @@ pstatus_t parse_do_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* do_while_body = pstate_get_result_node(pstate);
-  if (!pstate_expect_token_string(pstate, "(")) {
+  if (!pstate_expect_token_string(pstate, "while")
+      || !pstate_expect_token_string(pstate, "(")) {
     return pstate_propagate_error(pstate, saved_position);
   }
   if (!parse_expression(pstate)) {

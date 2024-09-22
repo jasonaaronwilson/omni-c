@@ -87,6 +87,9 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_WHILE_STATEMENT:
     return append_while_statement_node(printer, to_while_statement_node(node));
 
+  case PARSE_NODE_DO_STATEMENT:
+    return append_do_statement_node(printer, to_do_statement_node(node));
+
   case PARSE_NODE_EMPTY_STATEMENT:
     return append_empty_statement_node(printer, to_empty_statement_node(node));
 
@@ -613,6 +616,21 @@ printer_t* append_while_statement_node(printer_t* printer,
   append_parse_node(printer, node->body);
   return printer;
 }
+
+/**
+ * @function append_do_statement_node
+ */
+printer_t* append_do_statement_node(printer_t* printer,
+                                    do_statement_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, "do");
+  append_parse_node(printer, node->body);
+  append_string(printer, "while (");
+  append_parse_node(printer, node->condition);
+  append_string(printer, ");\n");
+  return printer;
+}
+
 
 /**
  * @function append_return_statement_node
