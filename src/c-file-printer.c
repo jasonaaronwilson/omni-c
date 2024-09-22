@@ -742,9 +742,13 @@ printer_t* append_return_statement_node(printer_t* printer,
  */
 printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
   append_string(printer, "(");
-  append_parse_node(printer, node->left);
+  if (node->left != NULL) {
+    append_parse_node(printer, node->left);
+  }
   append_token(printer, node->operator);
-  append_parse_node(printer, node->right);
+  if (node->right != NULL) {
+    append_parse_node(printer, node->right);
+  }
   append_string(printer, ")");
   return printer;
 }
