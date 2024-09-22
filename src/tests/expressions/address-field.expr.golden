@@ -1,6 +1,6 @@
 {
     tag = PARSE_NODE_OPERATOR
-    operator = "*"
+    operator = "&"
     right = {
         tag = PARSE_NODE_OPERATOR
         operator = "."
@@ -15,3 +15,5 @@
     }
 }
 
+// C Output
+(&(s.field))
