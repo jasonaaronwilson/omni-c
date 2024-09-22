@@ -1,0 +1,20 @@
+{
+    tag = PARSE_NODE_SWITCH_STATEMENT
+    expression = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            "0"
+        ]
+    }
+    block = {
+        tag = PARSE_NODE_BLOCK
+        statements = [
+        ]
+    }
+}
+
+// C Output
+switch ( 0)
+{
+}
+

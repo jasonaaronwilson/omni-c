@@ -58,6 +58,8 @@ printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* nod
 
 printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node);
 
+printer_t* append_switch_statement_node(printer_t* printer, switch_statement_node_t* node);
+
 printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* node);
 
 printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* node);
