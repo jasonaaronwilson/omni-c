@@ -50,6 +50,10 @@ void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_
 
 void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statement_node_t* node);
 
+void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t* node);
+
+void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_node_t* node);
+
 void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node);
 
 void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, expression_statement_node_t* node);

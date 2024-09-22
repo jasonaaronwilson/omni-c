@@ -1,0 +1,47 @@
+{
+    tag = PARSE_NODE_SWITCH_STATEMENT
+    expression = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = i
+    }
+    block = {
+        tag = PARSE_NODE_BLOCK
+        statements = [
+            {
+                tag = PARSE_NODE_CASE_LABEL
+                expression = {
+                    tag = PARSE_NODE_LITERAL
+                    tokens = [
+                        "0"
+                    ]
+                }
+            }
+            {
+                tag = PARSE_NODE_BREAK_STATEMENT
+                break_keyword_token = break
+            }
+            {
+                tag = PARSE_NODE_DEFAULT_LABEL
+            }
+            {
+                tag = PARSE_NODE_RETURN_STATEMENT
+                expression = {
+                    tag = PARSE_NODE_LITERAL
+                    tokens = [
+                        "10"
+                    ]
+                }
+            }
+        ]
+    }
+}
+
+// C Output
+switch (i)
+{
+  case  0:
+  break;
+  default:
+  return  10;
+}
+

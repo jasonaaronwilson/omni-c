@@ -50,6 +50,10 @@ printer_t* append_continue_statement_node(printer_t* printer, continue_statement
 
 printer_t* append_label_statement_node(printer_t* printer, label_statement_node_t* node);
 
+printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node);
+
+printer_t* append_default_label_node(printer_t* printer, default_label_node_t* node);
+
 printer_t* append_expression_statement_node(printer_t* printer, expression_statement_node_t* node);
 
 printer_t* append_block_node(printer_t* printer, block_node_t* node);

@@ -115,6 +115,14 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
                                            to_label_statement_node(node));
     break;
 
+  case PARSE_NODE_CASE_LABEL:
+    buffer_append_dbg_case_label_node(printer, to_case_label_node(node));
+    break;
+
+  case PARSE_NODE_DEFAULT_LABEL:
+    buffer_append_dbg_default_label_node(printer, to_default_label_node(node));
+    break;
+
   case PARSE_NODE_CALL:
     buffer_append_dbg_call_node(printer, to_call_node(node));
     break;
@@ -560,6 +568,26 @@ void buffer_append_dbg_label_statement_node(cdl_printer_t* printer,
     cdl_key(printer, "label");
     cdl_string(printer, token_to_string(node->label));
   }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_case_label_node(cdl_printer_t* printer,
+                                       case_label_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_CASE_LABEL");
+  if (node->expression != NULL) {
+    cdl_key(printer, "expression");
+    buffer_append_dbg_parse_node(printer, node->expression);
+  }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_default_label_node(cdl_printer_t* printer,
+                                          default_label_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_DEFAULT_LABEL");
   cdl_end_table(printer);
 }
 

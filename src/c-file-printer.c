@@ -113,6 +113,12 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_LABEL_STATEMENT:
     return append_label_statement_node(printer, to_label_statement_node(node));
 
+  case PARSE_NODE_CASE_LABEL:
+    return append_case_label_node(printer, to_case_label_node(node));
+
+  case PARSE_NODE_DEFAULT_LABEL:
+    return append_default_label_node(printer, to_default_label_node(node));
+
   case PARSE_NODE_EXPRESSION_STATEMENT:
     return append_expression_statement_node(printer,
                                             to_expression_statement_node(node));
@@ -562,6 +568,27 @@ printer_t* append_label_statement_node(printer_t* printer,
   printer_indent(printer);
   append_token(printer, node->label);
   append_string(printer, ":\n");
+  return printer;
+}
+
+/**
+ * @function append_case_label_node
+ */
+printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, "case ");
+  append_parse_node(printer, node->expression);
+  append_string(printer, ":\n");
+  return printer;
+}
+
+/**
+ * @function append_label_statement_node
+ */
+printer_t* append_default_label_node(printer_t* printer,
+                                     default_label_node_t* node) {
+  printer_indent(printer);
+  append_string(printer, "default:\n");
   return printer;
 }
 
