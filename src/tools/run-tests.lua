@@ -64,6 +64,10 @@ local function get_test_type(filename)
    end
 end
 
+local function escape_and_quote(str)
+  return '"' .. str:gsub('"', '\\"') .. '"'
+end
+
 local success = 0
 local failure = 0
 local failed_tests = {}
@@ -89,7 +93,7 @@ for _, arg in ipairs(arg) do
   elseif test_type == TestType.EXECUTE_TEST then
      exit_status = os.execute("./tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
   elseif test_type == TestType.PARSE_EXPRESSION or test_type == TestType.PARSE_EXPRESSION_TO_C then
-     local contents = read_file(arg)
+     local contents = escape_and_quote(read_file(arg))
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
      local to_c = "--to-c=false"
@@ -97,17 +101,17 @@ for _, arg in ipairs(arg) do
      	to_c = "--to-c=true"
      end
      exit_status = os.execute("./omni-c parse-expression " .. to_c ..
-       " --expression \"" .. contents .. "\" >" .. output_file)
+       " --expression " .. contents .. " >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else
 	print(read_file(output_file))
      end
   elseif test_type == TestType.PARSE_STATEMENT then
-     local contents = read_file(arg)
+     local contents = escape_and_quote(read_file(arg))
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
-     exit_status = os.execute("./omni-c parse-statement --statement \"" .. contents .. "\" >" .. output_file)
+     exit_status = os.execute("./omni-c parse-statement --statement " .. contents .. " >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else
