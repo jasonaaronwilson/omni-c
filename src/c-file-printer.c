@@ -127,6 +127,9 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
     return append_switch_statement_node(printer,
                                         to_switch_statement_node(node));
 
+  case PARSE_NODE_OPERATOR:
+    return append_operator_node(printer, to_operator_node(node));
+
   default:
     break;
   }
@@ -731,6 +734,18 @@ printer_t* append_return_statement_node(printer_t* printer,
     append_parse_node(printer, node->expression);
   }
   append_string(printer, ";\n");
+  return printer;
+}
+
+/**
+ * @function append_operator_node
+ */
+printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
+  append_string(printer, "(");
+  append_parse_node(printer, node->left);
+  append_token(printer, node->operator);
+  append_parse_node(printer, node->right);
+  append_string(printer, ")");
   return printer;
 }
 
