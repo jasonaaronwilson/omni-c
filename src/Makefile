@@ -99,7 +99,7 @@ bisect-self: omni-c
 ## %.h: %.c
 ##	./omni-c generate-header-file --output-file=$@ $<
 
-TESTS := $(wildcard tests/*.c tests/expressions/*.e tests/statements/*.stmt)
+TESTS := $(wildcard tests/*.c tests/expressions/*.e tests/expressions/*.expr tests/statements/*.stmt)
 
 test: omni-c
 	tools/run-tests.lua ${TESTS}

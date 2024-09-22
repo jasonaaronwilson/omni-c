@@ -43,6 +43,7 @@ char* FLAG_expression = NULL;
 char* FLAG_statement = NULL;
 boolean_t FLAG_dump_symbol_table = false;
 boolean_t FLAG_use_statement_parser = false;
+boolean_t FLAG_to_c = false;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
@@ -236,6 +237,7 @@ void configure_flags(void) {
 void configure_parse_expression(void) {
   flag_command("parse-expression", &FLAG_command);
   flag_string("--expression", &FLAG_expression);
+  flag_boolean("--to-c", &FLAG_to_c);
 }
 
 void configure_parse_statement(void) {
@@ -534,6 +536,11 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
   }
   buffer_t* output = make_buffer(1);
   buffer_append_dbg_parse_node(make_cdl_printer(output), node);
+  if (FLAG_to_c) {
+    buffer_append_string(output, "\n// C Output\n");
+    printer_t* printer = make_printer(output, 2);
+    append_parse_node(printer, node);
+  }
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
