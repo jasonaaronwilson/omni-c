@@ -127,6 +127,10 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
     buffer_append_dbg_while_node(printer, to_while_statement_node(node));
     break;
 
+  case PARSE_NODE_FOR_STATEMENT:
+    buffer_append_dbg_for_node(printer, to_for_statement_node(node));
+    break;
+
   case PARSE_NODE_DO_STATEMENT:
     buffer_append_dbg_do_node(printer, to_do_statement_node(node));
     break;
@@ -475,6 +479,30 @@ void buffer_append_dbg_while_node(cdl_printer_t* printer,
   if (node->body != NULL) {
     cdl_key(printer, "body");
     buffer_append_dbg_parse_node(printer, node->body);
+  }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_for_node(cdl_printer_t* printer,
+                                for_statement_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_FOR_STATEMENT");
+  if (node->for_init != NULL) {
+    cdl_key(printer, "for_init");
+    buffer_append_dbg_parse_node(printer, node->for_init);
+  }
+  if (node->for_test != NULL) {
+    cdl_key(printer, "for_test");
+    buffer_append_dbg_parse_node(printer, node->for_test);
+  }
+  if (node->for_increment != NULL) {
+    cdl_key(printer, "for_increment");
+    buffer_append_dbg_parse_node(printer, node->for_increment);
+  }
+  if (node->for_body != NULL) {
+    cdl_key(printer, "for_body");
+    buffer_append_dbg_parse_node(printer, node->for_body);
   }
   cdl_end_table(printer);
 }

@@ -87,6 +87,9 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_WHILE_STATEMENT:
     return append_while_statement_node(printer, to_while_statement_node(node));
 
+  case PARSE_NODE_FOR_STATEMENT:
+    return append_for_statement_node(printer, to_for_statement_node(node));
+
   case PARSE_NODE_DO_STATEMENT:
     return append_do_statement_node(printer, to_do_statement_node(node));
 
@@ -614,6 +617,44 @@ printer_t* append_while_statement_node(printer_t* printer,
   append_parse_node(printer, node->condition);
   append_string(printer, ")\n");
   append_parse_node(printer, node->body);
+  return printer;
+}
+
+/**
+ * @function append_for_statement_node
+ */
+printer_t* append_for_statement_node(printer_t* printer,
+                                     for_statement_node_t* node) {
+  printer_indent(printer);
+
+  append_string(printer, "for (\n");
+  printer_increase_indent(printer);
+
+  // for_init
+  printer_indent(printer);
+  if (node->for_init != NULL) {
+    append_parse_node(printer, node->for_init);
+  } else {
+    append_string(printer, ";");
+  }
+  printer_newline(printer);
+
+  // for_test
+  printer_indent(printer);
+  if (node->for_test != NULL) {
+    append_parse_node(printer, node->for_test);
+  }
+  append_string(printer, ";");
+  printer_newline(printer);
+
+  // for_increment
+  printer_indent(printer);
+  if (node->for_increment != NULL) {
+    append_parse_node(printer, node->for_increment);
+  }
+  append_string(printer, ")\n");
+  printer_decrease_indent(printer);
+  append_parse_node(printer, node->for_body);
   return printer;
 }
 

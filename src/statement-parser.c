@@ -305,17 +305,17 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* for_init = pstate_get_result_node(pstate);
-  if (!parse_expression(pstate)) {
-    return pstate_propagate_error(pstate, saved_position);
+  parse_node_t* for_test = NULL;
+  if (parse_expression(pstate)) {
+    for_test = pstate_get_result_node(pstate);
   }
-  parse_node_t* for_test = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  if (!parse_expression(pstate)) {
-    return pstate_propagate_error(pstate, saved_position);
+  parse_node_t* for_increment = NULL;
+  if (parse_expression(pstate)) {
+    for_increment = pstate_get_result_node(pstate);
   }
-  parse_node_t* for_increment = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(pstate, ")")) {
     return pstate_propagate_error(pstate, saved_position);
   }
