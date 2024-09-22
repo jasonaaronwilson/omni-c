@@ -1,0 +1,20 @@
+{
+    tag = PARSE_NODE_VARIABLE_DEFINITION
+    name = i
+    type = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_PRIMITIVE_TYPENAME
+        type_name = int
+        type_args = [
+        ]
+    }
+    value = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            "0"
+        ]
+    }
+}
+
+// C Output
+int i =  0;

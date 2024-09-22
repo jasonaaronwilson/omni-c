@@ -1,0 +1,24 @@
+{
+    tag = PARSE_NODE_VARIABLE_DEFINITION
+    name = ptr
+    type = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_POINTER
+        type_args = [
+            {
+                tag = PARSE_NODE_TYPE
+                type_node_kind = TYPE_NODE_KIND_PRIMITIVE_TYPENAME
+                type_name = int
+                type_args = [
+                ]
+            }
+        ]
+    }
+    value = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = NULL
+    }
+}
+
+// C Output
+int* ptr = NULL;
