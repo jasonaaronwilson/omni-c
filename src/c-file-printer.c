@@ -130,6 +130,9 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_OPERATOR:
     return append_operator_node(printer, to_operator_node(node));
 
+  case PARSE_NODE_CALL:
+    return append_call_node(printer, to_call_node(node));
+
   default:
     break;
   }
@@ -756,6 +759,22 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
     append_string(printer, ")");
   } else if (token_matches(node->operator, "[")) {
     append_string(printer, "]");
+  }
+  append_string(printer, ")");
+  return printer;
+}
+
+/**
+ * @function append_call_node
+ */
+printer_t* append_call_node(printer_t* printer, call_node_t* node) {
+  append_parse_node(printer, node->function);
+  append_string(printer, "(");
+  for (int i = 0; i < node_list_length(node->args); i++) {
+    if (i > 0) {
+      append_string(printer, ", ");
+    }
+    append_parse_node(printer, node_list_get(node->args, i));
   }
   append_string(printer, ")");
   return printer;
