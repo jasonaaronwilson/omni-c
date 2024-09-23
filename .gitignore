@@ -1,1 +1,5 @@
 *~
+src/build/
+src/tests/statements/*.out
+src/tests/expressions/*.out
+

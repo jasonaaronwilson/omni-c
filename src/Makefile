@@ -1,6 +1,6 @@
 all: omni-c
 
-BUILD_DIR := $(shell mkdir -p build build/bin build/test build/gen-files; echo `pwd`/build)
+BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/tests/statements build/tests/expressions  ; echo `pwd`/build)
 
 # The commented out STABLE_BINARY_PATH looks wrong. The wild-card
 # should look for ../../omni-c-stable/src/omni-c-stable and use that
@@ -9,6 +9,7 @@ BUILD_DIR := $(shell mkdir -p build build/bin build/test build/gen-files; echo `
 #
 # STABLE_BINARY_PATH := $(if $(wildcard ${BUILD_DIR}/bin/omni-c),${BUILD_DIR}/bin//omni-c,../../omni-c-stable/src/omni-c)
 STABLE_BINARY_PATH := ../../omni-c-stable/src/omni-c
+OMNI_C := build/bin/omni-c
 
 asdf:
 	echo ${BUILD_DIR} -- ${STABLE_BINARY_PATH}
@@ -65,20 +66,16 @@ omni-c: ${SRC_C} generate-header-files
 	gcc ${CC_FLAGS} -Ibuild -I. -o build/bin/omni-c ${SRC_C}
 
 omni-c-opt: omni-c ${SRC_C} generate-header-files
-	gcc ${CC_FLAGS_OPT} -o omni-c-opt ${SRC_C}
+	gcc ${CC_FLAGS_OPT} -Ibuild -I. -o build/bin/omni-c-opt ${SRC_C}
 
 test-print-tokens: omni-c
-	./omni-c print-tokens --parse-and-print=true \
+	${OMNI_C} print-tokens --parse-and-print=true \
 		../examples/structures.oc \
 		../examples/functions.oc \
 		../examples/typedefs.oc \
 		../examples/global-variables.oc \
 		../examples/simple-c-proprocess.oc \
 		../examples/enum.oc
-
-self-parse-test: omni-c-opt
-	/usr/bin/time --portability ./omni-c-opt print-tokens --parse-and-print=true ${SRC_C_SELF}
-	wc --lines ${SRC_C}
 
 extract-enums: omni-c-opt
 	/usr/bin/time --portability ./omni-c-opt extract-enums --unique-prototype-header-files=true ${SRC_C}
@@ -87,21 +84,22 @@ extract-enums: omni-c-opt
 
 extract-prototypes:
 	$(STABLE_BINARY_PATH) extract-prototypes --unique-prototype-header-files=true ${SRC_C}
+	mv *.c.generated.h build/
 	wc --lines ${SRC_C}
 
-do-generate-header-file: omni-c-opt
-	/usr/bin/time --portability ./omni-c generate-header-file --output-file=global-header-file.h ${SRC_C}
+do-generate-header-file: omni-c
+	/usr/bin/time --portability ${OMNI_C} generate-header-file --output-file=global-header-file.h ${SRC_C}
 	gcc -c -Wall -Werror -std=c99 global-header-file.h
 
 # TODO(jawilson): -Werror 
 self: omni-c
-	/usr/bin/time --portability ./omni-c generate-library --dump-symbol-table=false --output-file=self.c ${SRC_C_SELF}
-	gcc -o self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} self.c armyknife-lib-impl.c reflection-header.c
+	/usr/bin/time --portability ${OMNI_C} generate-library --dump-symbol-table=false --output-file=build/self.c ${SRC_C_SELF}
+	gcc -o build/bin/self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} self.c armyknife-lib-impl.c reflection-header.c
 
 
 selfself: omni-c self
-	/usr/bin/time --portability ./self generate-library --dump-symbol-table=false --output-file=selfself.c ${SRC_C_SELF}
-	gcc -o selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} selfself.c armyknife-lib-impl.c reflection-header.c
+	/usr/bin/time --portability build/bin/self generate-library --dump-symbol-table=false --output-file=build/selfself.c ${SRC_C_SELF}
+	gcc -o build/bin/selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} selfself.c armyknife-lib-impl.c reflection-header.c
 
 
 bisect-self: omni-c
