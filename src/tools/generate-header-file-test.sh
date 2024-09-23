@@ -2,7 +2,7 @@
 
 readonly SHOW_OUTPUT="false"
 readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
-readonly OMNI_C_PATH="$DIR/../omni-c"
+readonly OMNI_C_PATH="$DIR/../build/bin/omni-c"
 readonly FILE=$1
 readonly OUT_FILE=test-out.c
 

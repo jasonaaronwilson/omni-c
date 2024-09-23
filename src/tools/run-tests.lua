@@ -101,7 +101,7 @@ for _, arg in ipairs(arg) do
      if test_type == TestType.PARSE_EXPRESSION_TO_C then
      	to_c = "--to-c=true"
      end
-     exit_status = os.execute("./omni-c parse-expression " .. to_c ..
+     exit_status = os.execute("./build/bin/omni-c parse-expression " .. to_c ..
        " --expression " .. contents .. " >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
@@ -113,7 +113,7 @@ for _, arg in ipairs(arg) do
      local contents = escape_and_quote(read_file(arg))
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
-     exit_status = os.execute("./omni-c parse-statement --statement " .. contents .. " >" .. output_file)
+     exit_status = os.execute("./build/bin/omni-c parse-statement --statement " .. contents .. " >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else

@@ -1,12 +1,17 @@
 all: omni-c
 
+BUILD_DIR := $(shell mkdir -p build build/bin build/test build/gen-files; echo `pwd`/build)
+
 # The commented out STABLE_BINARY_PATH looks wrong. The wild-card
 # should look for ../../omni-c-stable/src/omni-c-stable and use that
 # if available though warn if that directory exists without a omni-c
 # executable...
 #
-# STABLE_BINARY_PATH := $(if $(wildcard omni-c),./omni-c,../../omni-c-stable/src/omni-c)
+# STABLE_BINARY_PATH := $(if $(wildcard ${BUILD_DIR}/bin/omni-c),${BUILD_DIR}/bin//omni-c,../../omni-c-stable/src/omni-c)
 STABLE_BINARY_PATH := ../../omni-c-stable/src/omni-c
+
+asdf:
+	echo ${BUILD_DIR} -- ${STABLE_BINARY_PATH}
 
 WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format
 CC_FLAGS := -g -rdynamic -I ${WARN_FLAGS}
@@ -50,13 +55,14 @@ SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c refle
 SRC_H = $(SRC_C:.c=.h)
 
 generate-reflection-embedding: runtime/reflection.h
-	tools/embed-file.lua reflection_header runtime/reflection.h > reflection-header.c
+	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
 generate-header-files: ${SRC_C}
-	../../c-single-source-file/generate-header-file ${SRC_C}
+	cp -p ${SRC_C} ${BUILD_DIR}
+	(cd ${BUILD_DIR} && ../../../c-single-source-file/generate-header-file ${SRC_C})
 
 omni-c: ${SRC_C} generate-header-files
-	gcc ${CC_FLAGS} -o omni-c ${SRC_C}
+	gcc ${CC_FLAGS} -Ibuild -I. -o build/bin/omni-c ${SRC_C}
 
 omni-c-opt: omni-c ${SRC_C} generate-header-files
 	gcc ${CC_FLAGS_OPT} -o omni-c-opt ${SRC_C}
@@ -128,6 +134,7 @@ clean:
 	find . -name '*.h' -not -path './bootstrap-saved/*' -not -path './runtime/*' | xargs -n 1 rm -f
 	find . -name '*~' | xargs -n 1 rm -f
 	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
+	rm -rf  build/
 	rm -f tools/syntax-c
 	rm -f test-out.c test-out.o self self.c selfself selfself.c global-header-file.h.gch a.out tools/a.out
 	rm -f tests/a.out tmp.c
