@@ -34,3 +34,5 @@
     }
 }
 
+// C Output
+(/*CAST*/(typeof(uint64_t*[])) (foo.bar))

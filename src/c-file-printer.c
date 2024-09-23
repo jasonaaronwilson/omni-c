@@ -51,10 +51,8 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_UNION:
     return append_struct_node(printer, to_struct_node(node));
 
-    /*
   case PARSE_NODE_TYPE:
     return append_type_node(printer, to_type_node(node));
-    */
 
   case PARSE_NODE_LITERAL:
     return append_literal_node(printer, to_literal_node(node));
@@ -166,7 +164,7 @@ printer_t* append_c_function_node_prefix(printer_t* printer,
     append_string(printer, " ");
   }
 
-  append_c_type_node(printer, node->return_type);
+  append_type_node(printer, node->return_type);
   printer_space(printer);
   append_token(printer, node->function_name);
   append_string(printer, "(");
@@ -212,7 +210,7 @@ printer_t* append_c_function_argument_node(printer_t* printer,
   if (node->is_var_args) {
     append_string(printer, "...");
   } else {
-    append_c_type_node(printer, node->arg_type);
+    append_type_node(printer, node->arg_type);
     if (node->arg_name != NULL) {
       printer_space(printer);
       append_token(printer, node->arg_name);
@@ -221,12 +219,11 @@ printer_t* append_c_function_argument_node(printer_t* printer,
   return printer;
 }
 
-printer_t* append_c_type_node(printer_t* printer, type_node_t* node) {
+printer_t* append_type_node(printer_t* printer, type_node_t* node) {
 
   switch (node->type_node_kind) {
   case TYPE_NODE_KIND_POINTER:
-    append_c_type_node(printer,
-                       to_type_node(node_list_get(node->type_args, 0)));
+    append_type_node(printer, to_type_node(node_list_get(node->type_args, 0)));
     append_string(printer, "*");
     break;
 
@@ -241,8 +238,15 @@ printer_t* append_c_type_node(printer_t* printer, type_node_t* node) {
     append_parse_node(printer, node->user_type);
     break;
 
+  case TYPE_NODE_KIND_ARRAY:
+    append_string(printer, "typeof(");
+    append_type_node(printer, to_type_node(node_list_get(node->type_args, 0)));
+    append_string(printer, "[])");
+    break;
+
   default:
-    log_fatal("type_node_kind is not expected.");
+    log_fatal("type_node_kind is not expected %s",
+              type_node_kind_to_string(node->type_node_kind));
     fatal_error(ERROR_ILLEGAL_STATE);
     break;
   }
@@ -406,7 +410,7 @@ printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node,
 }
 
 printer_t* append_field_node(printer_t* printer, field_node_t* node) {
-  append_c_type_node(printer, node->type);
+  append_type_node(printer, node->type);
   append_string(printer, " ");
   if (node->name != NULL) {
     append_token(printer, node->name);
@@ -445,7 +449,7 @@ printer_t* append_struct_node(printer_t* printer, struct_node_t* node) {
  */
 printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node) {
   append_string(printer, "typedef ");
-  append_c_type_node(printer, node->type_node);
+  append_type_node(printer, node->type_node);
   append_string(printer, " ");
   append_token(printer, node->name);
   append_string(printer, ";\n");
@@ -483,7 +487,7 @@ printer_t* append_variable_definition_node(printer_t* printer,
     append_string(printer, "extern ");
   }
 
-  append_c_type_node(printer, node->type);
+  append_type_node(printer, node->type);
   append_string(printer, " ");
   append_token(printer, node->name);
   if (node->suffixes) {
@@ -744,6 +748,14 @@ printer_t* append_return_statement_node(printer_t* printer,
  * @function append_operator_node
  */
 printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
+  if (token_matches(node->operator, "cast")) {
+    append_string(printer, "(/*CAST*/(");
+    append_parse_node(printer, node->left);
+    append_string(printer, ") ");
+    append_parse_node(printer, node->right);
+    append_string(printer, ")");
+    return printer;
+  }
   append_string(printer, "(");
   if (node->left != NULL) {
     append_parse_node(printer, node->left);

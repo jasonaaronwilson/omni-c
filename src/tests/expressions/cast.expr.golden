@@ -26,3 +26,5 @@
     }
 }
 
+// C Output
+(/*CAST*/(uint64_t) (1+2))

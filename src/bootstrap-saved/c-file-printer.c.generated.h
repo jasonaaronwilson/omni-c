@@ -12,7 +12,7 @@ printer_t* append_c_function_node_and_body(printer_t* printer, function_node_t* 
 
 printer_t* append_c_function_argument_node(printer_t* printer, function_argument_node_t* node);
 
-printer_t* append_c_type_node(printer_t* printer, type_node_t* node);
+printer_t* append_type_node(printer_t* printer, type_node_t* node);
 
 printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node);
 
