@@ -92,6 +92,12 @@ self: omni-c
 	/usr/bin/time --portability ./omni-c generate-library --dump-symbol-table=false --output-file=self.c ${SRC_C_SELF}
 	gcc -o self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} self.c armyknife-lib-impl.c reflection-header.c
 
+
+selfself: omni-c self
+	/usr/bin/time --portability ./self generate-library --dump-symbol-table=false --output-file=selfself.c ${SRC_C_SELF}
+	gcc -o selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} selfself.c armyknife-lib-impl.c reflection-header.c
+
+
 bisect-self: omni-c
 	tools/bisect.sh ${SRC_C_SELF}
 
@@ -123,7 +129,7 @@ clean:
 	find . -name '*~' | xargs -n 1 rm -f
 	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
 	rm -f tools/syntax-c
-	rm -f test-out.c test-out.o self self.c global-header-file.h.gch a.out tools/a.out
+	rm -f test-out.c test-out.o self self.c selfself selfself.c global-header-file.h.gch a.out tools/a.out
 	rm -f tests/a.out tmp.c
 	rm -f tests/*.out tests/expressions/*.out tests/statements/*.out
 
