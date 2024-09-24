@@ -479,6 +479,7 @@ printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node) {
 printer_t* append_variable_definition_node(printer_t* printer,
                                            variable_definition_node_t* node,
                                            boolean_t is_library) {
+  printer_indent(printer);
   boolean_t is_header_file = !is_library;
   if (node->storage_class_specifier != NULL) {
     append_token(printer, node->storage_class_specifier);
@@ -500,7 +501,7 @@ printer_t* append_variable_definition_node(printer_t* printer,
     append_string(printer, " = ");
     append_parse_node(printer, node->value);
   }
-  append_string(printer, ";");
+  append_string(printer, ";\n");
   return printer;
 }
 
@@ -687,13 +688,12 @@ printer_t* append_for_statement_node(printer_t* printer,
   printer_increase_indent(printer);
 
   // for_init
-  printer_indent(printer);
   if (node->for_init != NULL) {
     append_parse_node(printer, node->for_init);
   } else {
-    append_string(printer, ";");
+    printer_indent(printer);
+    append_string(printer, ";\n");
   }
-  printer_newline(printer);
 
   // for_test
   printer_indent(printer);
