@@ -16,7 +16,7 @@ token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position);
 
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position);
 
-boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_point);
+boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_point, uint32_t previous_code_point);
 
 token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position);
 

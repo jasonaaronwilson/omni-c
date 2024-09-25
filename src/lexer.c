@@ -86,6 +86,14 @@ typedef struct token_or_error_S token_or_error_t;
 
 char* token_type_to_string(token_type_t type);
 
+/**
+ * @enum numeric_literal_encoding_t
+ *
+ * Almost the states for a state machine definition for parsing
+ * numeric literals. We can probably be more accurate by using
+ * additional states for example for each part of a floating point
+ * literal (exponent, mantissa, and exponent).
+ */
 typedef enum {
   NUMERIC_LITERAL_ENCODING_UNDECIDED,
   NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL,

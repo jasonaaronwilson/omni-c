@@ -1,0 +1,19 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = "+"
+    left = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            "1e"
+        ]
+    }
+    right = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            "10"
+        ]
+    }
+}
+
+// C Output
+(1e+10)
