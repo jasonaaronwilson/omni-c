@@ -1,6 +1,7 @@
 all: omni-c
 
-BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/tests/statements build/tests/expressions  ; echo `pwd`/build)
+# Google Gemini tells me this is a bad idea but I'm trying it out anyways.
+BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/tests/statements build/tests/expressions ; echo `pwd`/build)
 
 # The commented out STABLE_BINARY_PATH looks wrong. The wild-card
 # should look for ../../omni-c-stable/src/omni-c-stable and use that

@@ -280,6 +280,7 @@ token_or_error_t tokenize_identifier(buffer_t* buffer,
  */
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
   numeric_literal_encoding_t encoding = NUMERIC_LITERAL_ENCODING_UNDECIDED;
+  uint32_t previous_code_point = 0;
 
   token_type_t token_type = TOKEN_TYPE_INTEGER_LITERAL;
 
@@ -311,24 +312,28 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
       }
       if (changed) {
         pos += decode_result.num_bytes;
+        previous_code_point = code_point;
         offset += 1;
         continue;
       }
     }
 
-    if (code_point == '.' && encoding == NUMERIC_LITERAL_ENCODING_UNDECIDED) {
+    if (code_point == '.' && (encoding == NUMERIC_LITERAL_ENCODING_UNDECIDED
+			      || encoding == NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL)) {
       token_type = TOKEN_TYPE_FLOAT_LITERAL;
       encoding = NUMERIC_LITERAL_ENCODING_FLOAT;
       pos += decode_result.num_bytes;
+      previous_code_point = code_point;
       offset += 1;
       continue;
     }
 
-    if (!can_extend_number(encoding, code_point)) {
+    if (!can_extend_number(encoding, code_point, previous_code_point)) {
       break;
     }
 
     pos += decode_result.num_bytes;
+    previous_code_point = code_point;
     offset += 1;
   }
 
@@ -339,7 +344,7 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
 }
 
 boolean_t can_extend_number(numeric_literal_encoding_t encoding,
-                            uint32_t code_point) {
+                            uint32_t code_point, uint32_t previous_code_point) {
   switch (encoding) {
   case NUMERIC_LITERAL_ENCODING_UNDECIDED:
     return string_contains_char("0123456789.eobxLluUFf", code_point);
@@ -360,7 +365,9 @@ boolean_t can_extend_number(numeric_literal_encoding_t encoding,
     return string_contains_char("0123456789LlUu", code_point);
 
   case NUMERIC_LITERAL_ENCODING_FLOAT:
-    return string_contains_char("0123456789.+-Ff", code_point);
+    return string_contains_char("0123456789Ff", code_point)
+           || previous_code_point == 'e'
+                  && string_contains_char("+-", code_point);
 
   default:
     fatal_error(ERROR_ILLEGAL_STATE);
