@@ -1,0 +1,9 @@
+{
+    tag = PARSE_NODE_LITERAL
+    tokens = [
+        "0x123456789abcdef"
+    ]
+}
+
+// C Output
+0x123456789abcdef

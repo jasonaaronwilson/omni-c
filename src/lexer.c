@@ -86,6 +86,16 @@ typedef struct token_or_error_S token_or_error_t;
 
 char* token_type_to_string(token_type_t type);
 
+typedef enum {
+  NUMERIC_LITERAL_ENCODING_UNDECIDED,
+  NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL,
+  NUMERIC_LITERAL_ENCODING_BINARY,
+  NUMERIC_LITERAL_ENCODING_OCTAL,
+  NUMERIC_LITERAL_ENCODING_HEX,
+  NUMERIC_LITERAL_ENCODING_DECIMAL,
+  NUMERIC_LITERAL_ENCODING_FLOAT,
+} numeric_literal_encoding_t;
+
 #include "lexer.c.generated.h"
 
 #endif /* _LEXER_H_ */
@@ -251,8 +261,29 @@ token_or_error_t tokenize_identifier(buffer_t* buffer,
                                                .end = pos}};
 }
 
+/**
+ * @function tokenize_numeric
+ *
+ * Read a numeric literal.
+ *
+ * We want to support all the formats that C supports:
+ * * 1
+ * * 3.14
+ * * 0x1
+ * * 0o1
+ * * etc.
+ *
+ * We also want to support using 0b* for binary constants and allow
+ * using either "_" or "'" as a grouping seperator. Extensions should
+ * probably all be transformed on output to be a simple decimal
+ * number.
+ */
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
+  numeric_literal_encoding_t encoding = NUMERIC_LITERAL_ENCODING_UNDECIDED;
+
   token_type_t token_type = TOKEN_TYPE_INTEGER_LITERAL;
+
+  uint64_t offset = 0;
   uint64_t pos = start_position;
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
@@ -261,20 +292,82 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
                                 .error_position = pos};
     }
     uint32_t code_point = decode_result.code_point;
-    // FIXME: hexidecimal plus, "e", plus suffixes
-    if (code_point == '.') {
-      token_type = TOKEN_TYPE_FLOAT_LITERAL;
+
+    if (offset == 0 && code_point != '0') {
+      encoding = NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL;
     }
-    if (!(isdigit(code_point) || code_point == '.')) {
+
+    if (offset == 1 && encoding == NUMERIC_LITERAL_ENCODING_UNDECIDED) {
+      boolean_t changed = false;
+      if (code_point == 'x') {
+        encoding = NUMERIC_LITERAL_ENCODING_HEX;
+        changed = true;
+      } else if (code_point == 'o') {
+        encoding = NUMERIC_LITERAL_ENCODING_OCTAL;
+        changed = true;
+      } else if (code_point == 'b') {
+        encoding = NUMERIC_LITERAL_ENCODING_HEX;
+        changed = true;
+      }
+      if (changed) {
+        pos += decode_result.num_bytes;
+        offset += 1;
+        continue;
+      }
+    }
+
+    if (code_point == '.' && encoding == NUMERIC_LITERAL_ENCODING_UNDECIDED) {
+      token_type = TOKEN_TYPE_FLOAT_LITERAL;
+      encoding = NUMERIC_LITERAL_ENCODING_FLOAT;
+      pos += decode_result.num_bytes;
+      offset += 1;
+      continue;
+    }
+
+    if (!can_extend_number(encoding, code_point)) {
       break;
     }
+
     pos += decode_result.num_bytes;
+    offset += 1;
   }
 
   return (token_or_error_t){.token = (token_t){.buffer = buffer,
                                                .type = token_type,
                                                .start = start_position,
                                                .end = pos}};
+}
+
+boolean_t can_extend_number(numeric_literal_encoding_t encoding,
+                            uint32_t code_point) {
+  switch (encoding) {
+  case NUMERIC_LITERAL_ENCODING_UNDECIDED:
+    return string_contains_char("0123456789.eobxLluUFf", code_point);
+
+  case NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL:
+    return string_contains_char("0123456789.e", code_point);
+
+  case NUMERIC_LITERAL_ENCODING_BINARY:
+    return string_contains_char("01", code_point);
+
+  case NUMERIC_LITERAL_ENCODING_OCTAL:
+    return string_contains_char("01234567", code_point);
+
+  case NUMERIC_LITERAL_ENCODING_HEX:
+    return string_contains_char("0123456789abcdefABCDEF", code_point);
+
+  case NUMERIC_LITERAL_ENCODING_DECIMAL:
+    return string_contains_char("0123456789LlUu", code_point);
+
+  case NUMERIC_LITERAL_ENCODING_FLOAT:
+    return string_contains_char("0123456789.+-Ff", code_point);
+
+  default:
+    fatal_error(ERROR_ILLEGAL_STATE);
+    return false;
+  }
+
+  return false;
 }
 
 static char* c_punctuation[] = {

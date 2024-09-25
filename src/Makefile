@@ -93,7 +93,7 @@ do-generate-header-file: omni-c
 
 # TODO(jawilson): -Werror 
 self: omni-c
-	/usr/bin/time --portability ${OMNI_C} generate-library --dump-symbol-table=false --output-file=build/self.c ${SRC_C_SELF}
+	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --dump-symbol-table=false --output-file=build/self.c ${SRC_C_SELF}
 	gcc -o build/bin/self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} self.c armyknife-lib-impl.c reflection-header.c
 
 
@@ -118,7 +118,7 @@ bootstrap:
 	./bootstrap.sh
 
 save-bootstrap-prototypes: extract-prototypes
-	cp -upv --target=bootstrap-saved/ *.c.generated.h
+	cp -upv --target=bootstrap-saved/ build/*.c.generated.h
 
 format:
 	clang-format -i ${SRC_C}
