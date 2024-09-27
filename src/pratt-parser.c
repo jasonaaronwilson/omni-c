@@ -32,6 +32,7 @@ typedef enum {
   PRATT_PARSE_INDEX_EXPRESSION,
   PRATT_PARSE_SIZEOF,
   PRATT_PARSE_CAST_MACRO,
+  PRATT_PARSE_TYPE_OF,
   PRATT_PARSE_CALL,
 } pratt_parser_operation_t;
 
@@ -352,12 +353,35 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
-      result->operator= token;
+      result->operator = token;
       result->left = type_node;
       result->right = expression;
       return pstate_set_result_node(pstate, to_node(result));
     } while (0);
     break;
+
+  case PRATT_PARSE_TYPE_OF:
+    do {
+      if (!pstate_expect_token_string(pstate, "typeof")) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      if (!pstate_expect_token_string(pstate, "(")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      if (!parse_type_node(pstate)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* type_node = pstate_get_result_node(pstate);
+      if (!pstate_expect_token_string(pstate, ")")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      operator_node_t* result = malloc_operator_node();
+      result->operator = token;
+      result->left = type_node;
+      return pstate_set_result_node(pstate, to_node(result));
+    } while (0);
+    break;
+
 
   case PRATT_PARSE_CALL:
     do {
@@ -420,6 +444,13 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
       return (pratt_parser_instruction_t){
           .token = token,
           .operation = PRATT_PARSE_CAST_MACRO,
+          .precedence = PRECEDENCE_UNARY,
+      };
+    }
+    if (token_matches(token, "typeof")) {
+      return (pratt_parser_instruction_t){
+          .token = token,
+          .operation = PRATT_PARSE_TYPE_OF,
           .precedence = PRECEDENCE_UNARY,
       };
     }

@@ -756,6 +756,15 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
     append_string(printer, ")");
     return printer;
   }
+
+  if (token_matches(node->operator, "typeof")) {
+    // TODO(jawilson): make sure left is actually a type.
+    append_string(printer, "typeof(");
+    append_parse_node(printer, node->left);
+    append_string(printer, ") ");
+    return printer;
+  }
+
   append_string(printer, "(");
   if (node->left != NULL) {
     append_parse_node(printer, node->left);
