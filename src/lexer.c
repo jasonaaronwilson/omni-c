@@ -50,7 +50,7 @@ static inline token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
     return NULL;
   }
-  return value_array_get_ptr(tokens, position, token_t*);
+  return value_array_get_ptr(tokens, position, typeof(token_t*));
 }
 
 static inline boolean_t token_matches(token_t* token, char* str) {
