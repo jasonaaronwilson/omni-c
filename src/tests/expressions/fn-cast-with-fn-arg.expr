@@ -1,0 +1,1 @@
+cast(fn_t(void, fn_t(boolean_t, uint64_t)), 0);

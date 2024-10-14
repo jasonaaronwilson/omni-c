@@ -219,6 +219,11 @@ printer_t* append_c_function_argument_node(printer_t* printer,
   return printer;
 }
 
+/**
+ * @function append_type_node
+ *
+ * Append the C version of a type node to a printer.
+ */
 printer_t* append_type_node(printer_t* printer, type_node_t* node) {
 
   switch (node->type_node_kind) {
@@ -235,7 +240,15 @@ printer_t* append_type_node(printer_t* printer, type_node_t* node) {
     break;
 
   case TYPE_NODE_KIND_TYPE_EXPRESSION:
-    append_parse_node(printer, node->user_type);
+    if (token_matches(node->type_name, "fn_t")) {
+      append_fn_type_node(printer, node);
+    } else {
+      // I'm curious what happens here. I recently though this was
+      // dead without running unit tests.
+      //
+      // fatal_error(ERROR_ILLEGAL_STATE);
+      append_parse_node(printer, node->user_type);
+    }
     break;
 
   case TYPE_NODE_KIND_ARRAY:
@@ -251,6 +264,26 @@ printer_t* append_type_node(printer_t* printer, type_node_t* node) {
     break;
   }
 
+  return printer;
+}
+
+/**
+ * @function append_fn_type_node
+ *
+ * Append the C version of a function pointer. This version assumes
+ * that the fn_t macro is available which depends on typeof which is
+ * fairly recent C as of 2024.
+ */
+printer_t* append_fn_type_node(printer_t* printer, type_node_t* node) {
+  append_token(printer, node->type_name);
+  append_string(printer, "(");
+  for (int i = 0; i < node_list_length(node->type_args); i++) {
+    if (i > 0) {
+      append_string(printer, ", ");
+    }
+    append_parse_node(printer, node_list_get(node->type_args, i));
+  }
+  append_string(printer, ")");
   return printer;
 }
 

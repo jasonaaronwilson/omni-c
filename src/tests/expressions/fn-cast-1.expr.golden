@@ -1,0 +1,34 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = cast
+    left = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_TYPE_EXPRESSION
+        type_name = fn_t
+        type_args = [
+            {
+                tag = PARSE_NODE_TYPE
+                type_node_kind = TYPE_NODE_KIND_TYPENAME
+                type_name = void
+                type_args = [
+                ]
+            }
+            {
+                tag = PARSE_NODE_TYPE
+                type_node_kind = TYPE_NODE_KIND_TYPENAME
+                type_name = uint64_t
+                type_args = [
+                ]
+            }
+        ]
+    }
+    right = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            "0"
+        ]
+    }
+}
+
+// C Output
+(/*CAST*/(fn_t(void, uint64_t)) 0)

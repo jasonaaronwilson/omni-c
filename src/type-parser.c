@@ -94,10 +94,14 @@ pstatus_t parse_union_node(pstate_t* pstate);
  */
 pstatus_t parse_type_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
+
+  if (parse_function_type(pstate)) {
+    return true;
+  }
+
   type_node_t* result = malloc_type_node();
 
-  // Simply skip const to see if that will help us with
-  // c-armyknife-lib
+  // TODO(jawilson): figure out what to do about this hack!
   if (pstate_match_token_string(pstate, "const")) {
     pstate_advance(pstate);
   }
@@ -274,4 +278,80 @@ canonical_type_result_t parse_canonical_type(pstate_t* pstate) {
 
   return (canonical_type_result_t){.canonical_type = NULL,
                                    .consumed_tokens = 0};
+}
+
+/**
+ * @function parse_function_type
+ *
+ * Parses a special kind of function pointer type that might look
+ * like:
+ *
+ * ```
+ * fn_t(void, int var_name_1, int*)
+ * ```
+ *
+ * (where var_name is an optional (currently ignored) identifier).
+ */
+pstatus_t parse_function_type(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+
+  token_t* fn_t_token = pstate_peek(pstate, 0);
+
+  if (!pstate_expect_token_string(pstate, "fn_t")
+      || !pstate_expect_token_string(pstate, "(")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  type_node_t* result = malloc_type_node();
+  result->type_node_kind = TYPE_NODE_KIND_TYPE_EXPRESSION;
+  result->type_name = fn_t_token;
+
+  // Parse the return type
+  if (!parse_type_node(pstate)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  node_list_add_node(&result->type_args, pstate_get_result_node(pstate));
+
+  // Parse all of the arguments
+  while (parse_function_type_argument(pstate)) {
+    node_list_add_node(&result->type_args, pstate_get_result_node(pstate));
+  }
+
+  if (!pstate_expect_token_string(pstate, ")")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+/**
+ * @function parse_function_type_argument
+ *
+ * Parse one of the arguments types for a function pointer type. Since
+ * these always appear after a return type, we expect to be looking at
+ * either a "," which we eat. After parsing the type after the ",", we
+ * parse a type and then there is possibly an argumenent name which we
+ * eat.
+ */
+pstatus_t parse_function_type_argument(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+
+  // First eat the initial comma
+  if (!pstate_expect_token_string(pstate, ",")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  // Now parse the type
+  if (!parse_type_node(pstate)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  // Optionally parse an identifier that is thrown away.
+  token_t* suffix = pstate_peek(pstate, 0);
+  if (suffix->type == TOKEN_TYPE_IDENTIFIER) {
+    pstate_advance(pstate);
+  }
+
+  return true;
 }

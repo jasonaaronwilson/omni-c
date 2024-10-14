@@ -353,7 +353,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
-      result->operator = token;
+      result->operator= token;
       result->left = type_node;
       result->right = expression;
       return pstate_set_result_node(pstate, to_node(result));
@@ -376,7 +376,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
-      result->operator = token;
+      result->operator= token;
       result->left = type_node;
       return pstate_set_result_node(pstate, to_node(result));
     } while (0);
