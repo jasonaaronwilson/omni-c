@@ -454,6 +454,13 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
           .precedence = PRECEDENCE_UNARY,
       };
     }
+    if (token_matches(token, "compound_literal")) {
+      return (pratt_parser_instruction_t){
+          .token = token,
+          .operation = PRATT_PARSE_LITERAL,
+          .precedence = PRECEDENCE_UNARY,
+      };
+    }
     return (pratt_parser_instruction_t){
         .token = token,
         .operation = PRATT_PARSE_IDENTIFIER,

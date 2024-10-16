@@ -14,6 +14,8 @@ printer_t* append_c_function_argument_node(printer_t* printer, function_argument
 
 printer_t* append_type_node(printer_t* printer, type_node_t* node);
 
+printer_t* append_fn_type_node(printer_t* printer, type_node_t* node);
+
 printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node);
 
 printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, token_t* end_token);

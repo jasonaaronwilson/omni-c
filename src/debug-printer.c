@@ -305,6 +305,14 @@ void buffer_append_dbg_literal_node(cdl_printer_t* printer,
   if (node->tokens != NULL) {
     buffer_append_dbg_tokens(printer, node->tokens, "tokens");
   }
+  if (node->initializer_node != NULL) {
+    cdl_key(printer, "initializer_node");
+    buffer_append_dbg_parse_node(printer, node->initializer_node);
+  }
+  if (node->initializer_type != NULL) {
+    cdl_key(printer, "initializer_type");
+    buffer_append_dbg_parse_node(printer, node->initializer_type);
+  }
   cdl_end_table(printer);
 }
 

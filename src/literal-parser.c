@@ -25,6 +25,7 @@ typedef struct literal_node_S {
   // single literal if these literals were smushed into one token.
   value_array_t* tokens;
   parse_node_t* initializer_node;
+  parse_node_t* initializer_type;
 } literal_node_t;
 
 static inline literal_node_t* malloc_literal_node(void) {
@@ -36,6 +37,8 @@ static inline literal_node_t* malloc_literal_node(void) {
 #include "literal-parser.c.generated.h"
 
 #endif /* _LITERAL_PARSER_H_ */
+
+#include "type-parser.h"
 
 pstatus_t parse_literal_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -73,6 +76,29 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
     }
     literal_node_t* result = malloc_literal_node();
     result->initializer_node = pstate_get_result_node(pstate);
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+
+  if (pstate_match_token_string(pstate, "compound_literal")) {
+    pstate_advance(pstate);
+    if (!pstate_expect_token_string(pstate, "(") || !parse_type_node(pstate)) {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    parse_node_t* type_node = pstate_get_result_node(pstate);
+    if (!pstate_expect_token_string(pstate, ",")) {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    if (!parse_balanced_construct(pstate)) {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    parse_node_t* initializer_node = pstate_get_result_node(pstate);
+    if (!pstate_expect_token_string(pstate, ")")) {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+    literal_node_t* result = malloc_literal_node();
+    result->initializer_node = initializer_node;
+    result->initializer_type = type_node;
     return pstate_set_result_node(pstate, to_node(result));
   }
 

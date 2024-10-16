@@ -1,0 +1,18 @@
+{
+    tag = PARSE_NODE_LITERAL
+    initializer_node = {
+        tag = PARSE_NODE_BALANCED_CONSTRUCT
+        start_token = "{"
+        end_token = "}"
+    }
+    initializer_type = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_TYPENAME
+        type_name = value_result_t
+        type_args = [
+        ]
+    }
+}
+
+// C Output
+((value_result_t), {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER})

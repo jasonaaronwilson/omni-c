@@ -545,8 +545,16 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node) {
   if (node->token != NULL) {
     append_token(printer, node->token);
   } else if (node->initializer_node != NULL) {
+    if (node->initializer_type != NULL) {
+      append_string(printer, "((");
+      append_parse_node(printer, node->initializer_type);
+      append_string(printer, "), ");
+    }
     append_balanced_construct_node(
         printer, to_balanced_construct_node(node->initializer_node));
+    if (node->initializer_type != NULL) {
+      append_string(printer, ")");
+    }
   } else if (node->tokens != NULL && node->tokens->length > 0) {
     for (uint64_t i = 0; i < node->tokens->length; i++) {
       if (i > 0) {
