@@ -199,8 +199,9 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer,
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
-      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
-                                .error_position = pos};
+      return compound_literal(token_or_error_t,
+                              {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                               .error_position = pos});
     }
     uint32_t code_point = decode_result.code_point;
     if (!isspace(code_point)) {
@@ -217,10 +218,12 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer,
     }
   }
 
-  return (token_or_error_t){.token = (token_t){.buffer = buffer,
-                                               .type = TOKEN_TYPE_WHITESPACE,
-                                               .start = start_position,
-                                               .end = pos}};
+  return compound_literal(
+      token_or_error_t,
+      {.token = compound_literal(token_t, {.buffer = buffer,
+                                           .type = TOKEN_TYPE_WHITESPACE,
+                                           .start = start_position,
+                                           .end = pos})});
 }
 
 /* ========================================================================= */
@@ -253,8 +256,9 @@ token_or_error_t tokenize_identifier(buffer_t* buffer,
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
-      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
-                                .error_position = pos};
+      return compound_literal(token_or_error_t,
+                              {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                               .error_position = pos});
     }
     uint32_t code_point = decode_result.code_point;
     if (!(is_identifier_start(code_point) || isdigit(code_point))) {
@@ -263,10 +267,12 @@ token_or_error_t tokenize_identifier(buffer_t* buffer,
     pos += decode_result.num_bytes;
   }
 
-  return (token_or_error_t){.token = (token_t){.buffer = buffer,
-                                               .type = TOKEN_TYPE_IDENTIFIER,
-                                               .start = start_position,
-                                               .end = pos}};
+  return compound_literal(
+      token_or_error_t,
+      {.token = compound_literal(token_t, {.buffer = buffer,
+                                           .type = TOKEN_TYPE_IDENTIFIER,
+                                           .start = start_position,
+                                           .end = pos})});
 }
 
 /**
@@ -297,8 +303,9 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
-      return (token_or_error_t){.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
-                                .error_position = pos};
+      return compound_literal(token_or_error_t,
+                              {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                               .error_position = pos});
     }
     uint32_t code_point = decode_result.code_point;
 
@@ -346,10 +353,12 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position) {
     offset += 1;
   }
 
-  return (token_or_error_t){.token = (token_t){.buffer = buffer,
-                                               .type = token_type,
-                                               .start = start_position,
-                                               .end = pos}};
+  return compound_literal(
+      token_or_error_t,
+      {.token = compound_literal(token_t, {.buffer = buffer,
+                                           .type = token_type,
+                                           .start = start_position,
+                                           .end = pos})});
 }
 
 boolean_t can_extend_number(numeric_literal_encoding_t encoding,
@@ -457,16 +466,18 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer,
   int num_elements = sizeof(c_punctuation) / sizeof(c_punctuation[0]);
   for (int i = 0; i < num_elements; i++) {
     if (buffer_match_string_at(buffer, start_position, c_punctuation[i])) {
-      return (token_or_error_t){
-          .token = (token_t){.buffer = buffer,
-                             .type = TOKEN_TYPE_PUNCTUATION,
-                             .start = start_position,
-                             .end = start_position + strlen(c_punctuation[i])}};
+      return compound_literal(
+          token_or_error_t,
+          {.token = compound_literal(
+               token_t, {.buffer = buffer,
+                         .type = TOKEN_TYPE_PUNCTUATION,
+                         .start = start_position,
+                         .end = start_position + strlen(c_punctuation[i])})});
     }
   }
-  return (token_or_error_t){.error_code
-                            = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
-                            .error_position = start_position};
+  return compound_literal(
+      token_or_error_t, {.error_code = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
+                         .error_position = start_position});
 }
 
 boolean_t is_comment_start(buffer_t* buffer, uint64_t position) {
@@ -479,26 +490,31 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position) {
     for (uint64_t position = start_position + 2; position < buffer->length;
          position++) {
       if (buffer_match_string_at(buffer, position, "\n")) {
-        return (token_or_error_t){.token = (token_t){.buffer = buffer,
-                                                     .type = TOKEN_TYPE_COMMENT,
-                                                     .start = start_position,
-                                                     .end = position + 1}};
+        return compound_literal(
+            token_or_error_t,
+            {.token = compound_literal(token_t, {.buffer = buffer,
+                                                 .type = TOKEN_TYPE_COMMENT,
+                                                 .start = start_position,
+                                                 .end = position + 1})});
       }
     }
   } else {
     for (uint64_t position = start_position + 2; position < buffer->length;
          position++) {
       if (buffer_match_string_at(buffer, position, "*/")) {
-        return (token_or_error_t){.token = (token_t){.buffer = buffer,
-                                                     .type = TOKEN_TYPE_COMMENT,
-                                                     .start = start_position,
-                                                     .end = position + 2}};
+        return compound_literal(
+            token_or_error_t,
+            {.token = compound_literal(token_t, {.buffer = buffer,
+                                                 .type = TOKEN_TYPE_COMMENT,
+                                                 .start = start_position,
+                                                 .end = position + 2})});
       }
     }
   }
 
-  return (token_or_error_t){.error_code = TOKENIZER_ERROR_UNTERMINATED_COMMENT,
-                            .error_position = start_position};
+  return compound_literal(token_or_error_t,
+                          {.error_code = TOKENIZER_ERROR_UNTERMINATED_COMMENT,
+                           .error_position = start_position});
 }
 
 boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position) {
@@ -524,11 +540,13 @@ token_or_error_t tokenize_quoted_literal_common(
     if (buffer_match_string_at(buffer, position, quoted_closing_sequence)) {
       position += strlen(quoted_closing_sequence);
     } else if (buffer_match_string_at(buffer, position, closing_sequence)) {
-      return (token_or_error_t){
-          .token = (token_t){.buffer = buffer,
-                             .type = token_type,
-                             .start = start_position,
-                             .end = position + strlen(closing_sequence)}};
+      return compound_literal(
+          token_or_error_t,
+          {.token = compound_literal(
+               token_t, {.buffer = buffer,
+                         .type = token_type,
+                         .start = start_position,
+                         .end = position + strlen(closing_sequence)})});
     } else {
       // TODO(jawilson): add an option to iterate "properly" over
       // utf-8 code-points one by one. This is not necessary since no
@@ -538,8 +556,9 @@ token_or_error_t tokenize_quoted_literal_common(
       position += 1;
     }
   }
-  return (token_or_error_t){.error_code = unterminated_error_code,
-                            .error_position = start_position};
+  return compound_literal(token_or_error_t,
+                          {.error_code = unterminated_error_code,
+                           .error_position = start_position});
 }
 
 token_or_error_t tokenize_string_literal(buffer_t* buffer,
@@ -575,9 +594,10 @@ static inline token_t* heap_allocate_token(token_t token) {
   do {                                                                         \
     token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
     if (token_or_error.error_code) {                                           \
-      return (tokenizer_result_t){                                             \
-          .tokenizer_error_code = token_or_error.error_code,                   \
-          .tokenizer_error_position = token_or_error.error_position};          \
+      return compound_literal(                                                 \
+          tokenizer_result_t,                                                  \
+          {.tokenizer_error_code = token_or_error.error_code,                  \
+           .tokenizer_error_position = token_or_error.error_position});        \
     }                                                                          \
     token = heap_allocate_token(token_or_error.token);                         \
     value_array_add(result_tokens, ptr_to_value(token));                       \
@@ -604,8 +624,9 @@ tokenizer_result_t tokenize(buffer_t* buffer) {
   while (pos < buffer_length(buffer)) {
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
     if (decode_result.error) {
-      return (tokenizer_result_t){.tokenizer_error_code
-                                  = TOKENIZER_ERROR_UTF_DECODE_ERROR};
+      return compound_literal(
+          tokenizer_result_t,
+          {.tokenizer_error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR});
     }
 
     uint32_t code_point = decode_result.code_point;
