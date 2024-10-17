@@ -95,7 +95,7 @@ do-generate-header-file: omni-c
 # TODO(jawilson): -Werror 
 self: omni-c
 	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --dump-symbol-table=false --output-file=build/self.c ${SRC_C_SELF}
-	gcc -o build/bin/self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} self.c armyknife-lib-impl.c reflection-header.c
+	gcc -o build/bin/self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/self.c armyknife-lib-impl.c reflection-header.c
 
 
 selfself: omni-c self
