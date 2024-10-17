@@ -294,7 +294,7 @@ symbol_table_binding_t*
       fatal_error(ERROR_ILLEGAL_STATE);
     }
     typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr(
-        typedef_binding->definition_nodes, 0, parse_node_t*));
+        typedef_binding->definition_nodes, 0, typeof(parse_node_t*)));
     return resolve_typename_to_structure_binding(symbol_table,
                                                  typedef_node->type_node);
   } else {

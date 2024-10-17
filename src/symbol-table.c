@@ -145,7 +145,8 @@ parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map,
     if (binding->definition_nodes->length != 1) {
       fatal_error(ERROR_ILLEGAL_STATE);
     }
-    return value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*);
+    return value_array_get_ptr(binding->definition_nodes, 0,
+                               typeof(parse_node_t*));
   }
   return NULL;
 }
@@ -243,7 +244,7 @@ buffer_t* buffer_append_dgb_binding(buffer_t* buffer,
   // Cheat for now. just the first parse_node_t
   buffer_append_dbg_parse_node(
       make_cdl_printer(buffer),
-      value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*));
+      value_array_get_ptr(binding->definition_nodes, 0, typeof(parse_node_t*)));
   return buffer;
 }
 
@@ -255,7 +256,7 @@ buffer_t*
       buffer = buffer_printf(buffer, "\n");
     }
     symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table_map->ordered_bindings, i, symbol_table_binding_t*);
+        symbol_table_map->ordered_bindings, i, typeof(symbol_table_binding_t*));
     buffer_append_dgb_binding(buffer, binding);
   }
   return buffer;

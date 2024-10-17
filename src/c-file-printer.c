@@ -529,8 +529,8 @@ printer_t* append_variable_definition_node(printer_t* printer,
   append_token(printer, node->name);
   if (node->suffixes) {
     for (int i = 0; i < node->suffixes->length; i++) {
-      append_parse_node(printer,
-                        value_array_get_ptr(node->suffixes, i, parse_node_t*));
+      append_parse_node(printer, value_array_get_ptr(node->suffixes, i,
+                                                     typeof(parse_node_t*)));
     }
   }
   if (is_library && node->value != NULL) {
@@ -563,7 +563,7 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node) {
       if (i > 0) {
         append_string(printer, " ");
       }
-      token_t* token = value_array_get_ptr(node->tokens, i, token_t*);
+      token_t* token = value_array_get_ptr(node->tokens, i, typeof(token_t*));
       append_token(printer, token);
     }
   } else {
