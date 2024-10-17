@@ -41,10 +41,11 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
   printer_t* printer = make_printer(buffer, 2);
 
   for (int i = 0; i < symbol_table->typedefs->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table->typedefs->ordered_bindings, i, symbol_table_binding_t*);
-    typedef_node_t* typedef_node = to_typedef_node(
-        value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*));
+    symbol_table_binding_t* binding
+        = value_array_get_ptr(symbol_table->typedefs->ordered_bindings, i,
+                              typeof(symbol_table_binding_t*));
+    typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr(
+        binding->definition_nodes, 0, typeof(parse_node_t*)));
     if (is_enum_node(typedef_node->type_node->user_type)) {
       enum_node_t* enum_node = to_enum_node(typedef_node->type_node->user_type);
       char* enum_node_name = token_to_string(typedef_node->name);
@@ -64,10 +65,11 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
   }
 
   for (int i = 0; i < symbol_table->enums->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table->enums->ordered_bindings, i, symbol_table_binding_t*);
-    enum_node_t* enum_node = to_enum_node(
-        value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*));
+    symbol_table_binding_t* binding
+        = value_array_get_ptr(symbol_table->enums->ordered_bindings, i,
+                              typeof(symbol_table_binding_t*));
+    enum_node_t* enum_node = to_enum_node(value_array_get_ptr(
+        binding->definition_nodes, 0, typeof(parse_node_t*)));
     char* enum_node_name = token_to_string(enum_node->name);
     char* to_string_prefix = remove_type_suffix_1(enum_node_name);
     char* enum_node_type_string = string_printf("enum %s", enum_node_name);

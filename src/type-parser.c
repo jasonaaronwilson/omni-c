@@ -162,13 +162,14 @@ pstatus_t parse_type_node(pstate_t* pstate) {
 }
 
 canonical_type_result_t make_type_token_result(char* str, int consumed_tokens) {
-  token_t* canonical_token = malloc_struct(token_t);
+  token_t* canonical_token = malloc_struct(typeof(token_t));
   canonical_token->type = TOKEN_TYPE_IDENTIFIER;
   canonical_token->buffer = buffer_from_string(str);
   canonical_token->start = 0;
   canonical_token->end = strlen(str);
-  return (canonical_type_result_t){.canonical_type = canonical_token,
-                                   .consumed_tokens = consumed_tokens};
+  return compound_literal(
+      canonical_type_result_t,
+      {.canonical_type = canonical_token, .consumed_tokens = consumed_tokens});
 }
 
 /**
@@ -276,8 +277,8 @@ canonical_type_result_t parse_canonical_type(pstate_t* pstate) {
     return make_type_token_result("double", 1);
   }
 
-  return (canonical_type_result_t){.canonical_type = NULL,
-                                   .consumed_tokens = 0};
+  return compound_literal(canonical_type_result_t,
+                          {.canonical_type = NULL, .consumed_tokens = 0});
 }
 
 /**

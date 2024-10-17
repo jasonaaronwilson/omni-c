@@ -65,7 +65,7 @@ void print_tokens(void) {
 
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < FLAG_files->length; i++) {
-    file_t* file = value_array_get_ptr(files, i, file_t*);
+    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
 
     fprintf(stdout, "====================================================\n");
     fprintf(stdout, "====> Processing %s\n", file->file_name);
@@ -94,18 +94,23 @@ void print_tokens(void) {
     do_print_tokens(tokens, "before xform tokens");
 
     tokens = transform_tokens(
-        tokens, (token_transformer_options_t){
-                    .keep_whitespace = FLAG_print_tokens_include_whitespace,
-                    .keep_comments = FLAG_print_tokens_include_comments,
-                    .keep_javadoc_comments = FLAG_print_tokens_include_comments,
-                    .keep_c_preprocessor_lines = false,
-                });
+        tokens,
+        compound_literal(
+            token_transformer_options_t,
+            {
+                .keep_whitespace = FLAG_print_tokens_include_whitespace,
+                .keep_comments = FLAG_print_tokens_include_comments,
+                .keep_javadoc_comments = FLAG_print_tokens_include_comments,
+                .keep_c_preprocessor_lines = false,
+            }));
 
     do_print_tokens(tokens, "after xform tokens");
 
     if (FLAG_print_tokens_parse_and_print) {
-      pstate_t pstate = (pstate_t){
-          .tokens = tokens, .use_statement_parser = FLAG_use_statement_parser};
+      pstate_t pstate = compound_literal(
+          pstate_t, {.tokens = tokens,
+                     .use_statement_parser = FLAG_use_statement_parser});
+      ;
       if (!parse_declarations(&pstate)) {
         pstate.error.file_name = file->file_name;
         buffer_t* buffer = make_buffer(1);
@@ -137,7 +142,7 @@ void extract_command(char* command) {
       buffer_clear(prototype_outputs);
     }
 
-    file_t* file = value_array_get_ptr(files, i, file_t*);
+    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
     prototype_outputs
         = buffer_printf(prototype_outputs,
                         "/* Automatically extracted prototypes from %s */\n\n",
@@ -162,21 +167,25 @@ void extract_command(char* command) {
     symbol_table_t* symbol_table = make_symbol_table();
 
     handle_c_preprocessor_directives(
-        (c_preprocess_options_t){
-            .keep_system_includes = false,
-            .keep_user_includes = false,
-        },
+        compound_literal(c_preprocess_options_t,
+                         {
+                             .keep_system_includes = false,
+                             .keep_user_includes = false,
+                         }),
         symbol_table, tokens);
 
-    tokens = transform_tokens(tokens, (token_transformer_options_t){
-                                          .keep_whitespace = false,
-                                          .keep_comments = false,
-                                          .keep_javadoc_comments = false,
-                                          .keep_c_preprocessor_lines = false,
-                                      });
+    tokens = transform_tokens(
+        tokens, compound_literal(token_transformer_options_t,
+                                 {
+                                     .keep_whitespace = false,
+                                     .keep_comments = false,
+                                     .keep_javadoc_comments = false,
+                                     .keep_c_preprocessor_lines = false,
+                                 }));
 
-    pstate_t pstate = (pstate_t){
-        .tokens = tokens, .use_statement_parser = FLAG_use_statement_parser};
+    pstate_t pstate = compound_literal(
+        pstate_t,
+        {.tokens = tokens, .use_statement_parser = FLAG_use_statement_parser});
     if (!parse_declarations(&pstate)) {
       pstate.error.file_name = file->file_name;
       buffer_t* buffer = make_buffer(1);
@@ -360,7 +369,7 @@ void generate_c_output_file(boolean_t is_library) {
   for (uint64_t i = 0; i < symbol_table->system_includes->length; i++) {
     append_newline_after_system_includes = true;
     cpp_include_node_t* node = value_array_get_ptr(
-        symbol_table->system_includes, i, cpp_include_node_t*);
+        symbol_table->system_includes, i, typeof(cpp_include_node_t*));
     char* include_statement = include_node_to_string(node);
     if (!is_ok(string_ht_find(system_includes_set, include_statement))) {
       system_includes_set = string_ht_insert(
@@ -376,8 +385,8 @@ void generate_c_output_file(boolean_t is_library) {
 
   buffer_append_string(buffer, "// ========== defines ==========\n\n");
   for (uint64_t i = 0; i < symbol_table->defines->length; i++) {
-    cpp_define_node_t* node
-        = value_array_get_ptr(symbol_table->defines, i, cpp_define_node_t*);
+    cpp_define_node_t* node = value_array_get_ptr(symbol_table->defines, i,
+                                                  typeof(cpp_define_node_t*));
     append_cpp_define_node(printer, node);
     append_string(printer, "\n");
   }
@@ -385,18 +394,20 @@ void generate_c_output_file(boolean_t is_library) {
   buffer_append_string(buffer, "// ========== enums ==========\n\n");
 
   for (int i = 0; i < symbol_table->enums->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table->enums->ordered_bindings, i, symbol_table_binding_t*);
-    enum_node_t* enum_node = to_enum_node(
-        value_array_get_ptr(binding->definition_nodes, 0, parse_node_t*));
+    symbol_table_binding_t* binding
+        = value_array_get_ptr(symbol_table->enums->ordered_bindings, i,
+                              typeof(symbol_table_binding_t*));
+    enum_node_t* enum_node = to_enum_node(value_array_get_ptr(
+        binding->definition_nodes, 0, typeof(parse_node_t*)));
     append_enum_node(printer, enum_node);
     append_string(printer, ";\n\n");
   }
 
   buffer_append_string(buffer, "// ========== typedefs ==========\n\n");
   for (int i = 0; i < symbol_table->typedefs->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table->typedefs->ordered_bindings, i, symbol_table_binding_t*);
+    symbol_table_binding_t* binding
+        = value_array_get_ptr(symbol_table->typedefs->ordered_bindings, i,
+                              typeof(symbol_table_binding_t*));
     typedef_node_t* typedef_node = to_typedef_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     append_typedef_node(printer, typedef_node);
@@ -405,12 +416,13 @@ void generate_c_output_file(boolean_t is_library) {
 
   buffer_append_string(buffer, "// ========== stuctures/unions ==========\n\n");
   for (int i = 0; i < symbol_table->structures->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table->structures->ordered_bindings, i, symbol_table_binding_t*);
+    symbol_table_binding_t* binding
+        = value_array_get_ptr(symbol_table->structures->ordered_bindings, i,
+                              typeof(symbol_table_binding_t*));
     struct_node_t* struct_node = get_full_structure_definition_node(binding);
     if (struct_node == NULL) {
-      struct_node
-          = value_array_get_ptr(binding->definition_nodes, 0, struct_node_t*);
+      struct_node = value_array_get_ptr(binding->definition_nodes, 0,
+                                        typeof(struct_node_t*));
     }
     append_struct_node(printer, struct_node);
     append_string(printer, ";\n\n");
@@ -419,12 +431,13 @@ void generate_c_output_file(boolean_t is_library) {
   boolean_t append_newline_after_variables = false;
   buffer_append_string(buffer, "// ========== global variables ==========\n\n");
   for (int i = 0; i < symbol_table->variables->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table->variables->ordered_bindings, i, symbol_table_binding_t*);
+    symbol_table_binding_t* binding
+        = value_array_get_ptr(symbol_table->variables->ordered_bindings, i,
+                              typeof(symbol_table_binding_t*));
     append_variable_definition_node(
         printer,
         value_array_get_ptr(binding->definition_nodes, 0,
-                            variable_definition_node_t*),
+                            typeof(variable_definition_node_t*)),
         is_library);
     append_string(printer, "\n");
   }
@@ -437,8 +450,9 @@ void generate_c_output_file(boolean_t is_library) {
   buffer_append_string(buffer,
                        "// ========== function prototypes ==========\n\n");
   for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table->functions->ordered_bindings, i, symbol_table_binding_t*);
+    symbol_table_binding_t* binding
+        = value_array_get_ptr(symbol_table->functions->ordered_bindings, i,
+                              typeof(symbol_table_binding_t*));
     function_node_t* function_node = to_function_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     if (!is_inlined_function(function_node)) {
@@ -454,8 +468,9 @@ void generate_c_output_file(boolean_t is_library) {
   buffer_append_string(buffer,
                        "// ========== inlined functions ==========\n\n");
   for (int i = 0; i < symbol_table->functions->ordered_bindings->length; i++) {
-    symbol_table_binding_t* binding = value_array_get_ptr(
-        symbol_table->functions->ordered_bindings, i, symbol_table_binding_t*);
+    symbol_table_binding_t* binding
+        = value_array_get_ptr(symbol_table->functions->ordered_bindings, i,
+                              typeof(symbol_table_binding_t*));
     function_node_t* function_node = to_function_node(
         cast(parse_node_t*, value_array_get(binding->definition_nodes, 0).ptr));
     if (is_inlined_function(function_node)) {
@@ -475,7 +490,7 @@ void generate_c_output_file(boolean_t is_library) {
          i++) {
       symbol_table_binding_t* binding
           = value_array_get_ptr(symbol_table->functions->ordered_bindings, i,
-                                symbol_table_binding_t*);
+                                typeof(symbol_table_binding_t*));
       for (int j = 0; j < binding->definition_nodes->length; j++) {
         function_node_t* function_node = to_function_node(cast(
             parse_node_t*, value_array_get(binding->definition_nodes, j).ptr));
@@ -515,14 +530,16 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
   value_array_t* tokens = tokenizer_result.tokens;
-  tokens = transform_tokens(tokens, (token_transformer_options_t){
-                                        .keep_whitespace = false,
-                                        .keep_comments = false,
-                                        .keep_javadoc_comments = false,
-                                        .keep_c_preprocessor_lines = false,
-                                    });
+  tokens = transform_tokens(
+      tokens, compound_literal(token_transformer_options_t,
+                               {
+                                   .keep_whitespace = false,
+                                   .keep_comments = false,
+                                   .keep_javadoc_comments = false,
+                                   .keep_c_preprocessor_lines = false,
+                               }));
 
-  pstate_t pstate = (pstate_t){0};
+  pstate_t pstate = compound_literal(pstate_t, {0});
   pstate.use_statement_parser = true;
   pstate.tokens = tokens;
   if (!parse_expression(&pstate)) {
@@ -551,13 +568,15 @@ void parse_statement_string_and_print_parse_tree(char* expression) {
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
   value_array_t* tokens = tokenizer_result.tokens;
-  tokens = transform_tokens(tokens, (token_transformer_options_t){
-                                        .keep_whitespace = false,
-                                        .keep_comments = false,
-                                        .keep_javadoc_comments = false,
-                                        .keep_c_preprocessor_lines = false,
-                                    });
-  pstate_t state = (pstate_t){0};
+  tokens = transform_tokens(
+      tokens, compound_literal(token_transformer_options_t,
+                               {
+                                   .keep_whitespace = false,
+                                   .keep_comments = false,
+                                   .keep_javadoc_comments = false,
+                                   .keep_c_preprocessor_lines = false,
+                               }));
+  pstate_t state = compound_literal(pstate_t, {0});
   state.use_statement_parser = true;
   state.tokens = tokens;
   pstatus_t status = parse_statement(&state);
@@ -575,9 +594,10 @@ void parse_statement_string_and_print_parse_tree(char* expression) {
 }
 
 int main(int argc, char** argv) {
-  configure_fatal_errors((fatal_error_config_t){
-      .catch_sigsegv = true,
-  });
+  configure_fatal_errors(
+      compound_literal(fatal_error_config_t, {
+                                                 .catch_sigsegv = true,
+                                             }));
   logger_init();
 
   configure_flags();

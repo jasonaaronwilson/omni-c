@@ -192,6 +192,14 @@ static inline conditional_node_t* to_conditional_node(parse_node_t* ptr) {
   return cast(conditional_node_t*, ptr);
 }
 
+static inline pratt_parser_instruction_t
+    make_parser_instruction(token_t* token, pratt_parser_operation_t operation,
+                            precedence_t precedence) {
+  return compound_literal(
+      pratt_parser_instruction_t,
+      {.token = token, .operation = operation, .precedence = precedence});
+}
+
 #include "pratt-parser.c.generated.h"
 
 #endif /* _PRATT_PARSER_H_ */
@@ -281,7 +289,6 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
   case PRATT_PARSE_PREFIX_OPERATOR:
     do {
       pstate_advance(pstate);
-      [[gnu::unused]] int recursive_precedence = instruction.precedence;
       if (!pratt_parse_expression(pstate, instruction.precedence)) {
         return pstate_propagate_error(pstate, saved_position);
       }
@@ -485,66 +492,42 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
 
   case TOKEN_TYPE_IDENTIFIER:
     if (token_matches(token, "sizeof")) {
-      return (pratt_parser_instruction_t){
-          .token = token,
-          .operation = PRATT_PARSE_SIZEOF,
-          .precedence = PRECEDENCE_UNARY,
-      };
+      return make_parser_instruction(token, PRATT_PARSE_SIZEOF,
+                                     PRECEDENCE_UNARY);
     }
     if (token_matches(token, "cast")) {
-      return (pratt_parser_instruction_t){
-          .token = token,
-          .operation = PRATT_PARSE_CAST_MACRO,
-          .precedence = PRECEDENCE_UNARY,
-      };
+      return make_parser_instruction(token, PRATT_PARSE_CAST_MACRO,
+                                     PRECEDENCE_UNARY);
     }
     if (token_matches(token, "typeof")) {
-      return (pratt_parser_instruction_t){
-          .token = token,
-          .operation = PRATT_PARSE_TYPE_OF,
-          .precedence = PRECEDENCE_UNARY,
-      };
+      return make_parser_instruction(token, PRATT_PARSE_TYPE_OF,
+                                     PRECEDENCE_UNARY);
     }
     if (token_matches(token, "compound_literal")) {
-      return (pratt_parser_instruction_t){
-          .token = token,
-          .operation = PRATT_PARSE_LITERAL,
-          .precedence = PRECEDENCE_UNARY,
-      };
+      return make_parser_instruction(token, PRATT_PARSE_LITERAL,
+                                     PRECEDENCE_UNARY);
     }
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_IDENTIFIER,
-        .precedence = PRECEDENCE_PRIMARY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_IDENTIFIER,
+                                   PRECEDENCE_PRIMARY);
 
   case TOKEN_TYPE_INTEGER_LITERAL:
   case TOKEN_TYPE_FLOAT_LITERAL:
   case TOKEN_TYPE_STRING_LITERAL:
   case TOKEN_TYPE_CHARACTER_LITERAL:
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_LITERAL,
-        .precedence = PRECEDENCE_PRIMARY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_LITERAL,
+                                   PRECEDENCE_PRIMARY);
 
   case TOKEN_TYPE_PUNCTUATION:
     break;
 
   default:
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_UNKNOWN,
-        .precedence = PRECEDENCE_UNKNOWN,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_UNKNOWN,
+                                   PRECEDENCE_UNKNOWN);
   }
 
   if (token_matches(token, "(")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_SUB_EXPRESSION,
-        .precedence = PRECEDENCE_PRIMARY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_SUB_EXPRESSION,
+                                   PRECEDENCE_PRIMARY);
   }
 
   // also need (cast)
@@ -553,13 +536,11 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
       || token_matches(token, "!") || token_matches(token, "++")
       || token_matches(token, "--") || token_matches(token, "*")
       || token_matches(token, "&")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_PREFIX_OPERATOR,
-        .precedence = PRECEDENCE_UNARY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_PREFIX_OPERATOR,
+                                   PRECEDENCE_UNARY);
   }
-  return (pratt_parser_instruction_t){0};
+
+  return compound_literal(pratt_parser_instruction_t, {0});
 }
 
 /**
@@ -571,90 +552,54 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
  */
 pratt_parser_instruction_t get_infix_instruction(token_t* token) {
   if (token_matches(token, "+") || token_matches(token, "-")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_ADDITIVE,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_ADDITIVE);
   }
   if (token_matches(token, "*") || token_matches(token, "/")
       || token_matches(token, "%")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_MULTIPICITIVE,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_MULTIPICITIVE);
   }
   if (token_matches(token, "<<") || token_matches(token, ">>")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_SHIFT,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_SHIFT);
   }
   if (token_matches(token, "||")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_LOGICAL_OR,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_LOGICAL_OR);
   }
   if (token_matches(token, "&&")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_LOGICAL_AND,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_LOGICAL_AND);
   }
   if (token_matches(token, "|")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_OR,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_OR);
   }
   if (token_matches(token, "^")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_XOR,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_XOR);
   }
   if (token_matches(token, "&")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_AND,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_AND);
   }
   if (token_matches(token, "==") || token_matches(token, "!=")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_EQUALITY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_EQUALITY);
   }
   if (token_matches(token, "<") || token_matches(token, "<=")
       || token_matches(token, ">") || token_matches(token, ">=")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_RELATIONAL,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_RELATIONAL);
   }
   if (token_matches(token, "->") || token_matches(token, ".")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_PRIMARY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_PRIMARY);
   }
   if (token_matches(token, "++") || token_matches(token, "--")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_POSTFIX_OPERATOR,
-        .precedence = PRECEDENCE_UNARY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_POSTFIX_OPERATOR,
+                                   PRECEDENCE_UNARY);
   }
   if (token_matches(token, "=") || token_matches(token, "+=")
       || token_matches(token, "-=") || token_matches(token, "*=")
@@ -662,32 +607,19 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token) {
       || token_matches(token, "&=") || token_matches(token, "^=")
       || token_matches(token, "|=") || token_matches(token, "<<=")
       || token_matches(token, ">>=")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_BINARY_OPERATOR,
-        .precedence = PRECEDENCE_ASSIGNMENT,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
+                                   PRECEDENCE_ASSIGNMENT);
   }
   if (token_matches(token, "[")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_INDEX_EXPRESSION,
-        .precedence = PRECEDENCE_PRIMARY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_INDEX_EXPRESSION,
+                                   PRECEDENCE_PRIMARY);
   }
   if (token_matches(token, "(")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_CALL,
-        .precedence = PRECEDENCE_PRIMARY,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_CALL, PRECEDENCE_PRIMARY);
   }
   if (token_matches(token, "?")) {
-    return (pratt_parser_instruction_t){
-        .token = token,
-        .operation = PRATT_PARSE_CONDITIONAL,
-        .precedence = PRECEDENCE_CONDITIONAL,
-    };
+    return make_parser_instruction(token, PRATT_PARSE_CONDITIONAL,
+                                   PRECEDENCE_CONDITIONAL);
   }
 
   return compound_literal(pratt_parser_instruction_t, {0});

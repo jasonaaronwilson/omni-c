@@ -27,7 +27,7 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
                                          boolean_t use_statement_parser) {
   value_array_t* files = read_files(file_names);
   for (int i = 0; i < files->length; i++) {
-    file_t* file = (file_t*) value_array_get(files, i).ptr;
+    file_t* file = cast(file_t*, value_array_get(files, i).ptr);
     symbol_table_parse_buffer(symbol_table, file->data, file->file_name,
                               use_statement_parser);
   }
@@ -56,20 +56,24 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer,
   value_array_t* tokens = tokenizer_result.tokens;
 
   handle_c_preprocessor_directives(
-      (c_preprocess_options_t){
-          .keep_system_includes = true,
-          .keep_user_includes = false,
-      },
+      compound_literal(c_preprocess_options_t,
+                       {
+                           .keep_system_includes = true,
+                           .keep_user_includes = false,
+                       }),
       symbol_table, tokens);
 
-  tokens = transform_tokens(tokens, (token_transformer_options_t){
-                                        .keep_whitespace = false,
-                                        .keep_comments = false,
-                                        .keep_javadoc_comments = false,
-                                        .keep_c_preprocessor_lines = false,
-                                    });
-  pstate_t pstate = (pstate_t){.tokens = tokens,
-                               .use_statement_parser = use_statement_parser};
+  tokens = transform_tokens(
+      tokens, compound_literal(token_transformer_options_t,
+                               {
+                                   .keep_whitespace = false,
+                                   .keep_comments = false,
+                                   .keep_javadoc_comments = false,
+                                   .keep_c_preprocessor_lines = false,
+                               }));
+  pstate_t pstate = compound_literal(
+      pstate_t,
+      {.tokens = tokens, .use_statement_parser = use_statement_parser});
   if (!parse_declarations(&pstate)) {
     pstate.error.file_name = file_name;
     buffer_t* buffer = make_buffer(1);
