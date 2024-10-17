@@ -199,7 +199,7 @@ void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens,
   cdl_start_array(printer);
   uint64_t length = tokens->length;
   for (uint64_t i = 0; i < length; i++) {
-    token_t* token = value_array_get_ptr(tokens, i, token_t*);
+    token_t* token = value_array_get_ptr(tokens, i, typeof(token_t*));
     cdl_string(printer, token_to_string(token));
   }
   cdl_end_array(printer);

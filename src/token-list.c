@@ -66,7 +66,7 @@ static inline token_t* token_list_get(token_list_t token_list, uint64_t index) {
   if (token_list.list == NULL) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
-  return value_array_get_ptr(token_list.list, index, token_t*);
+  return value_array_get_ptr(token_list.list, index, typeof(token_t*));
 }
 
 /**
