@@ -1,0 +1,22 @@
+{
+    tag = PARSE_NODE_CONDITIONAL
+    condition = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = true
+    }
+    expr_if_true = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            "1"
+        ]
+    }
+    expr_if_false = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            "0"
+        ]
+    }
+}
+
+// C Output
+(true ? 1 : 0)

@@ -64,6 +64,8 @@ void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* no
 
 void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node);
 
+void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node_t* node);
+
 void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node_t* node);
 
 void debug_append_tokens(buffer_t* buffer, value_array_t* tokens);

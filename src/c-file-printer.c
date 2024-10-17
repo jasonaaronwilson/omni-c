@@ -128,6 +128,9 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_OPERATOR:
     return append_operator_node(printer, to_operator_node(node));
 
+  case PARSE_NODE_CONDITIONAL:
+    return append_conditional_node(printer, to_conditional_node(node));
+
   case PARSE_NODE_CALL:
     return append_call_node(printer, to_call_node(node));
 
@@ -821,6 +824,27 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
     append_string(printer, ")");
   } else if (token_matches(node->operator, "[")) {
     append_string(printer, "]");
+  }
+  append_string(printer, ")");
+  return printer;
+}
+
+/**
+ * @function append_conditional_node
+ */
+printer_t* append_conditional_node(printer_t* printer,
+                                   conditional_node_t* node) {
+  append_string(printer, "(");
+  if (node->condition != NULL) {
+    append_parse_node(printer, node->condition);
+  }
+  append_string(printer, " ? ");
+  if (node->expr_if_true != NULL) {
+    append_parse_node(printer, node->expr_if_true);
+  }
+  append_string(printer, " : ");
+  if (node->expr_if_false != NULL) {
+    append_parse_node(printer, node->expr_if_false);
   }
   append_string(printer, ")");
   return printer;

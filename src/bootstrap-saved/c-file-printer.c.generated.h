@@ -74,6 +74,8 @@ printer_t* append_return_statement_node(printer_t* printer, return_statement_nod
 
 printer_t* append_operator_node(printer_t* printer, operator_node_t* node);
 
+printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node);
+
 printer_t* append_call_node(printer_t* printer, call_node_t* node);
 
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string);

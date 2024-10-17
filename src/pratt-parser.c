@@ -104,6 +104,18 @@ typedef struct {
   node_list_t args;
 } call_node_t;
 
+/**
+ * @structure conditional_node_t
+ *
+ * Represents a conditional (ternary) operator.
+ */
+typedef struct {
+  parse_node_type_t tag;
+  parse_node_t* condition;
+  parse_node_t* expr_if_true;
+  parse_node_t* expr_if_false;
+} conditional_node_t;
+
 static inline operator_node_t* malloc_operator_node(void) {
   operator_node_t* result = malloc_struct(operator_node_t);
   result->tag = PARSE_NODE_OPERATOR;
@@ -119,6 +131,12 @@ static inline identifier_node_t* malloc_identifier_node(void) {
 static inline call_node_t* malloc_call_node(void) {
   call_node_t* result = malloc_struct(call_node_t);
   result->tag = PARSE_NODE_CALL;
+  return result;
+}
+
+static inline conditional_node_t* malloc_conditional_node(void) {
+  conditional_node_t* result = malloc_struct(conditional_node_t);
+  result->tag = PARSE_NODE_CONDITIONAL;
   return result;
 }
 
@@ -159,6 +177,19 @@ static inline call_node_t* to_call_node(parse_node_t* ptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(call_node_t*, ptr);
+}
+
+/**
+ * @function to_conditional_node
+ *
+ * Safely cast a generic node to a conditional node after examining
+ * it's tag.
+ */
+static inline conditional_node_t* to_conditional_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_CONDITIONAL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(conditional_node_t*, ptr);
 }
 
 #include "pratt-parser.c.generated.h"
@@ -411,6 +442,26 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
     } while (0);
     break;
 
+  case PRATT_PARSE_CONDITIONAL:
+    do {
+      pstate_advance(pstate);
+      int recursive_precedence = instruction.precedence;
+      if (!pratt_parse_expression(pstate, recursive_precedence)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* expr_if_true = pstate_get_result_node(pstate);
+      if (!pstate_expect_token_string(pstate, ":")
+          || !pratt_parse_expression(pstate, recursive_precedence)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* expr_if_false = pstate_get_result_node(pstate);
+      conditional_node_t* result = malloc_conditional_node();
+      result->condition = left;
+      result->expr_if_true = expr_if_true;
+      result->expr_if_false = expr_if_false;
+      return pstate_set_result_node(pstate, to_node(result));
+    } while (0);
+
   default:
     break;
   }
@@ -631,8 +682,15 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token) {
         .precedence = PRECEDENCE_PRIMARY,
     };
   }
+  if (token_matches(token, "?")) {
+    return (pratt_parser_instruction_t){
+        .token = token,
+        .operation = PRATT_PARSE_CONDITIONAL,
+        .precedence = PRECEDENCE_CONDITIONAL,
+    };
+  }
 
-  return (pratt_parser_instruction_t){0};
+  return compound_literal(pratt_parser_instruction_t, {0});
 }
 
 /**
