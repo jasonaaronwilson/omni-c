@@ -2,13 +2,13 @@
     tag = PARSE_NODE_OPERATOR
     operator = "+"
     left = {
-        tag = PARSE_NODE_IDENTIFIER
-        token = a
-    }
-    right = {
         tag = PARSE_NODE_OPERATOR
         operator = "+"
         left = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = a
+        }
+        right = {
             tag = PARSE_NODE_OPERATOR
             operator = "*"
             left = {
@@ -20,12 +20,12 @@
                 token = c
             }
         }
-        right = {
-            tag = PARSE_NODE_IDENTIFIER
-            token = d
-        }
+    }
+    right = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = d
     }
 }
 
 // C Output
-(a+((b*c)+d))
+((a+(b*c))+d)

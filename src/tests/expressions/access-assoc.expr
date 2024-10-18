@@ -1,0 +1,9 @@
+// This commit gets it wrong:
+// dd65554df92cc7ae52a9194fdaa18d6dca39480d
+//
+// (token_list.(list->length))
+//
+// Luckily we can see this is kind of dumb since token_list.NUMBER
+// wouldn't make sense and we know if real life this code works.
+
+token_list.list->length;

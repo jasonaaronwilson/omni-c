@@ -1,23 +1,23 @@
 {
     tag = PARSE_NODE_OPERATOR
-    operator = ">="
+    operator = "->"
     left = {
         tag = PARSE_NODE_OPERATOR
-        operator = ">="
+        operator = "."
         left = {
             tag = PARSE_NODE_IDENTIFIER
-            token = a
+            token = token_list
         }
         right = {
             tag = PARSE_NODE_IDENTIFIER
-            token = b
+            token = list
         }
     }
     right = {
         tag = PARSE_NODE_IDENTIFIER
-        token = c
+        token = length
     }
 }
 
 // C Output
-((a>=b)>=c)
+((token_list.list)->length)
