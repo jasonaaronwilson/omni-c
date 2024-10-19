@@ -99,8 +99,8 @@ self: omni-c
 
 
 selfself: omni-c self
-	/usr/bin/time --portability build/bin/self generate-library --dump-symbol-table=false --output-file=build/selfself.c ${SRC_C_SELF}
-	gcc -o build/bin/selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} selfself.c armyknife-lib-impl.c reflection-header.c
+	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --dump-symbol-table=false --output-file=build/selfself.c ${SRC_C_SELF}
+	gcc -o build/bin/selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/selfself.c armyknife-lib-impl.c reflection-header.c
 
 
 bisect-self: omni-c
