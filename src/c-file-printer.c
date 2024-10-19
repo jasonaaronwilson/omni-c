@@ -551,7 +551,7 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node) {
     if (node->initializer_type != NULL) {
       append_string(printer, "((");
       append_parse_node(printer, node->initializer_type);
-      append_string(printer, "), ");
+      append_string(printer, ") ");
     }
     append_balanced_construct_node(
         printer, to_balanced_construct_node(node->initializer_node));
