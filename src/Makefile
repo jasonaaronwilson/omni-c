@@ -111,7 +111,7 @@ bisect-self: omni-c
 ##	./omni-c generate-header-file --output-file=$@ $<
 
 TESTS := $(wildcard tests/*.c tests/expressions/*.e tests/expressions/*.expr tests/statements/*.stmt)
-SUITE_TESTS := $(wildcard ../../c-testsuite/tests/single-exec/*.c)
+SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
 
 test: omni-c
 	tools/run-tests.lua ${TESTS}

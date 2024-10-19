@@ -150,12 +150,27 @@ if success > 0 then
   print("Passed " .. success .. " tests.")
 end
 
+local number_failures_shown = 0
+
+function indent_lines(text, num_spaces)
+  local indented_text = ""
+  for line in string.gmatch(text, "([^\n]*)\n?") do
+    indented_text = indented_text .. string.rep(" ", num_spaces) .. line .. "\n"
+  end
+  return indented_text
+end
+
 if failure == 0 then
   os.exit(0)
 else
   print("Failed " .. failure .. " tests:")
   for _, test in ipairs(failed_tests) do
     print("    " .. test)
+    number_failures_shown = number_failures_shown + 1
+    if number_failures_shown < 5 then
+      local contents = read_file(test)
+      print(indent_lines(contents, 10))
+    end
   end
   os.exit(1) 
 end

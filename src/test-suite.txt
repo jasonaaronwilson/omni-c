@@ -1,0 +1,220 @@
+../../c-testsuite/tests/single-exec/00001.c
+../../c-testsuite/tests/single-exec/00002.c
+../../c-testsuite/tests/single-exec/00003.c
+../../c-testsuite/tests/single-exec/00004.c
+../../c-testsuite/tests/single-exec/00005.c
+../../c-testsuite/tests/single-exec/00006.c
+../../c-testsuite/tests/single-exec/00007.c
+../../c-testsuite/tests/single-exec/00008.c
+../../c-testsuite/tests/single-exec/00009.c
+# ../../c-testsuite/tests/single-exec/00010.c -- declarators
+../../c-testsuite/tests/single-exec/00011.c
+../../c-testsuite/tests/single-exec/00012.c
+../../c-testsuite/tests/single-exec/00013.c
+../../c-testsuite/tests/single-exec/00014.c
+../../c-testsuite/tests/single-exec/00015.c
+../../c-testsuite/tests/single-exec/00016.c
+../../c-testsuite/tests/single-exec/00017.c
+../../c-testsuite/tests/single-exec/00018.c
+../../c-testsuite/tests/single-exec/00019.c
+# ../../c-testsuite/tests/single-exec/00020.c -- declarators
+../../c-testsuite/tests/single-exec/00021.c
+../../c-testsuite/tests/single-exec/00022.c
+../../c-testsuite/tests/single-exec/00023.c
+../../c-testsuite/tests/single-exec/00024.c
+# ../../c-testsuite/tests/single-exec/00025.c -- strlen prototype
+../../c-testsuite/tests/single-exec/00026.c
+../../c-testsuite/tests/single-exec/00027.c
+../../c-testsuite/tests/single-exec/00028.c
+../../c-testsuite/tests/single-exec/00029.c
+../../c-testsuite/tests/single-exec/00030.c
+../../c-testsuite/tests/single-exec/00031.c
+../../c-testsuite/tests/single-exec/00032.c
+../../c-testsuite/tests/single-exec/00033.c
+../../c-testsuite/tests/single-exec/00034.c
+../../c-testsuite/tests/single-exec/00035.c
+../../c-testsuite/tests/single-exec/00036.c
+../../c-testsuite/tests/single-exec/00037.c
+# ../../c-testsuite/tests/single-exec/00038.c -- declarators
+# ../../c-testsuite/tests/single-exec/00039.c -- cast
+../../c-testsuite/tests/single-exec/00040.c
+../../c-testsuite/tests/single-exec/00041.c
+../../c-testsuite/tests/single-exec/00042.c
+../../c-testsuite/tests/single-exec/00043.c
+# ../../c-testsuite/tests/single-exec/00044.c -- strange
+../../c-testsuite/tests/single-exec/00045.c
+../../c-testsuite/tests/single-exec/00046.c
+../../c-testsuite/tests/single-exec/00047.c
+../../c-testsuite/tests/single-exec/00048.c
+../../c-testsuite/tests/single-exec/00049.c
+../../c-testsuite/tests/single-exec/00050.c
+# ../../c-testsuite/tests/single-exec/00051.c -- goto
+# ../../c-testsuite/tests/single-exec/00052.c -- struct
+../../c-testsuite/tests/single-exec/00053.c
+../../c-testsuite/tests/single-exec/00054.c
+../../c-testsuite/tests/single-exec/00055.c
+# ../../c-testsuite/tests/single-exec/00056.c -- declarators
+# ../../c-testsuite/tests/single-exec/00057.c -- declarators
+../../c-testsuite/tests/single-exec/00058.c
+../../c-testsuite/tests/single-exec/00059.c
+../../c-testsuite/tests/single-exec/00060.c
+../../c-testsuite/tests/single-exec/00061.c
+# ../../c-testsuite/tests/single-exec/00062.c -- preprocessor
+# ../../c-testsuite/tests/single-exec/00063.c -- preprocessor
+# ../../c-testsuite/tests/single-exec/00064.c -- preprocessor
+../../c-testsuite/tests/single-exec/00065.c
+# ../../c-testsuite/tests/single-exec/00066.c -- preprocessor
+# ../../c-testsuite/tests/single-exec/00067.c -- preprocessor
+# ../../c-testsuite/tests/single-exec/00068.c -- preprocessor
+# ../../c-testsuite/tests/single-exec/00069.c -- preprocessor
+# ../../c-testsuite/tests/single-exec/00070.c -- preprocessor
+# ../../c-testsuite/tests/single-exec/00071.c -- preprocessor
+../../c-testsuite/tests/single-exec/00072.c
+../../c-testsuite/tests/single-exec/00073.c
+# ../../c-testsuite/tests/single-exec/00074.c -- preprocessor
+../../c-testsuite/tests/single-exec/00075.c
+../../c-testsuite/tests/single-exec/00076.c
+# ../../c-testsuite/tests/single-exec/00077.c -- array
+# ../../c-testsuite/tests/single-exec/00078.c -- array
+../../c-testsuite/tests/single-exec/00079.c
+../../c-testsuite/tests/single-exec/00080.c
+../../c-testsuite/tests/single-exec/00081.c
+# ../../c-testsuite/tests/single-exec/00082.c -- FIXME?
+../../c-testsuite/tests/single-exec/00083.c
+../../c-testsuite/tests/single-exec/00084.c
+../../c-testsuite/tests/single-exec/00085.c
+../../c-testsuite/tests/single-exec/00086.c
+# ../../c-testsuite/tests/single-exec/00087.c -- function-pointer
+# ../../c-testsuite/tests/single-exec/00088.c -- function-pointer
+# ../../c-testsuite/tests/single-exec/00089.c -- function-pointer
+../../c-testsuite/tests/single-exec/00090.c
+# ../../c-testsuite/tests/single-exec/00091.c -- array + compound literal
+../../c-testsuite/tests/single-exec/00092.c
+../../c-testsuite/tests/single-exec/00093.c
+../../c-testsuite/tests/single-exec/00094.c
+../../c-testsuite/tests/single-exec/00095.c
+# ../../c-testsuite/tests/single-exec/00096.c -- declarators
+../../c-testsuite/tests/single-exec/00097.c
+# ../../c-testsuite/tests/single-exec/00098.c -- L'\0'
+../../c-testsuite/tests/single-exec/00099.c
+../../c-testsuite/tests/single-exec/00100.c
+../../c-testsuite/tests/single-exec/00101.c
+../../c-testsuite/tests/single-exec/00102.c
+# ../../c-testsuite/tests/single-exec/00103.c -- cast
+../../c-testsuite/tests/single-exec/00104.c
+../../c-testsuite/tests/single-exec/00105.c
+../../c-testsuite/tests/single-exec/00106.c
+# ../../c-testsuite/tests/single-exec/00107.c -- cast
+../../c-testsuite/tests/single-exec/00108.c
+../../c-testsuite/tests/single-exec/00109.c
+../../c-testsuite/tests/single-exec/00110.c
+../../c-testsuite/tests/single-exec/00111.c
+# ../../c-testsuite/tests/single-exec/00112.c -- cast
+../../c-testsuite/tests/single-exec/00113.c
+../../c-testsuite/tests/single-exec/00114.c
+# ../../c-testsuite/tests/single-exec/00115.c -- array + preprocessor
+../../c-testsuite/tests/single-exec/00116.c
+../../c-testsuite/tests/single-exec/00117.c
+../../c-testsuite/tests/single-exec/00118.c
+../../c-testsuite/tests/single-exec/00119.c
+../../c-testsuite/tests/single-exec/00120.c
+# ../../c-testsuite/tests/single-exec/00121.c -- declarators
+# ../../c-testsuite/tests/single-exec/00122.c -- preprocessor
+../../c-testsuite/tests/single-exec/00123.c
+# ../../c-testsuite/tests/single-exec/00124.c -- declarators
+../../c-testsuite/tests/single-exec/00125.c
+../../c-testsuite/tests/single-exec/00126.c
+../../c-testsuite/tests/single-exec/00127.c
+# ../../c-testsuite/tests/single-exec/00128.c -- FIXME
+# ../../c-testsuite/tests/single-exec/00129.c -- preprocessor + goto
+# ../../c-testsuite/tests/single-exec/00130.c -- array + declarators
+../../c-testsuite/tests/single-exec/00131.c
+../../c-testsuite/tests/single-exec/00132.c
+# ../../c-testsuite/tests/single-exec/00133.c -- cast + ?
+# ../../c-testsuite/tests/single-exec/00134.c -- cast
+# ../../c-testsuite/tests/single-exec/00135.c -- FIXME
+../../c-testsuite/tests/single-exec/00136.c
+# ../../c-testsuite/tests/single-exec/00137.c -- preprocessor
+../../c-testsuite/tests/single-exec/00138.c
+../../c-testsuite/tests/single-exec/00139.c
+# ../../c-testsuite/tests/single-exec/00140.c -- declarators
+# ../../c-testsuite/tests/single-exec/00141.c -- preprocessor
+../../c-testsuite/tests/single-exec/00142.c
+# ../../c-testsuite/tests/single-exec/00143.c -- arrays, declarators, duff's device
+# ../../c-testsuite/tests/single-exec/00144.c -- declarators
+../../c-testsuite/tests/single-exec/00145.c
+../../c-testsuite/tests/single-exec/00146.c
+../../c-testsuite/tests/single-exec/00147.c
+../../c-testsuite/tests/single-exec/00148.c
+# ../../c-testsuite/tests/single-exec/00149.c -- compound literal
+# ../../c-testsuite/tests/single-exec/00150.c -- array
+../../c-testsuite/tests/single-exec/00151.c
+../../c-testsuite/tests/single-exec/00152.c
+# ../../c-testsuite/tests/single-exec/00153.c -- preprocessor
+../../c-testsuite/tests/single-exec/00154.c
+# ../../c-testsuite/tests/single-exec/00155.c -- cast
+../../c-testsuite/tests/single-exec/00156.c
+../../c-testsuite/tests/single-exec/00157.c
+../../c-testsuite/tests/single-exec/00158.c
+# ../../c-testsuite/tests/single-exec/00159.c -- cast
+../../c-testsuite/tests/single-exec/00160.c
+../../c-testsuite/tests/single-exec/00161.c
+# ../../c-testsuite/tests/single-exec/00162.c -- array
+../../c-testsuite/tests/single-exec/00163.c
+../../c-testsuite/tests/single-exec/00164.c
+../../c-testsuite/tests/single-exec/00165.c
+../../c-testsuite/tests/single-exec/00166.c
+../../c-testsuite/tests/single-exec/00167.c
+../../c-testsuite/tests/single-exec/00168.c
+# ../../c-testsuite/tests/single-exec/00169.c -- declarators
+# ../../c-testsuite/tests/single-exec/00170.c -- declarators + function-pointer
+../../c-testsuite/tests/single-exec/00171.c
+../../c-testsuite/tests/single-exec/00172.c
+# ../../c-testsuite/tests/single-exec/00173.c -- array
+../../c-testsuite/tests/single-exec/00174.c
+../../c-testsuite/tests/single-exec/00175.c
+../../c-testsuite/tests/single-exec/00176.c
+../../c-testsuite/tests/single-exec/00177.c
+../../c-testsuite/tests/single-exec/00178.c
+../../c-testsuite/tests/single-exec/00179.c
+../../c-testsuite/tests/single-exec/00180.c
+# ../../c-testsuite/tests/single-exec/00181.c -- array
+# ../../c-testsuite/tests/single-exec/00182.c -- array?
+../../c-testsuite/tests/single-exec/00183.c
+../../c-testsuite/tests/single-exec/00184.c
+../../c-testsuite/tests/single-exec/00185.c
+../../c-testsuite/tests/single-exec/00186.c
+../../c-testsuite/tests/single-exec/00187.c
+../../c-testsuite/tests/single-exec/00188.c
+# ../../c-testsuite/tests/single-exec/00189.c -- ???
+../../c-testsuite/tests/single-exec/00190.c
+../../c-testsuite/tests/single-exec/00191.c
+../../c-testsuite/tests/single-exec/00192.c
+../../c-testsuite/tests/single-exec/00193.c
+../../c-testsuite/tests/single-exec/00194.c
+../../c-testsuite/tests/single-exec/00195.c
+../../c-testsuite/tests/single-exec/00196.c
+../../c-testsuite/tests/single-exec/00197.c
+# ../../c-testsuite/tests/single-exec/00198.c -- interior typedef
+# ../../c-testsuite/tests/single-exec/00199.c -- goto
+# ../../c-testsuite/tests/single-exec/00200.c -- preprocessor?
+../../c-testsuite/tests/single-exec/00201.c
+# ../../c-testsuite/tests/single-exec/00202.c -- preprocessor + declarators
+# ../../c-testsuite/tests/single-exec/00203.c -- FIXME
+# ../../c-testsuite/tests/single-exec/00204.c -- compound literal
+# ../../c-testsuite/tests/single-exec/00205.c -- array
+../../c-testsuite/tests/single-exec/00206.c
+# ../../c-testsuite/tests/single-exec/00207.c -- array + goto
+# ../../c-testsuite/tests/single-exec/00208.c -- array
+# ../../c-testsuite/tests/single-exec/00209.c -- function-pointer
+# ../../c-testsuite/tests/single-exec/00210.c -- unknown
+../../c-testsuite/tests/single-exec/00211.c
+# ../../c-testsuite/tests/single-exec/00212.c -- preprocessor
+# ../../c-testsuite/tests/single-exec/00213.c -- goto etc.?
+# ../../c-testsuite/tests/single-exec/00214.c -- declarators
+# ../../c-testsuite/tests/single-exec/00215.c -- varargs?
+# ../../c-testsuite/tests/single-exec/00216.c -- compound literal
+# ../../c-testsuite/tests/single-exec/00217.c -- cast + array
+# ../../c-testsuite/tests/single-exec/00218.c -- cast + varargs
+# ../../c-testsuite/tests/single-exec/00219.c -- function-pointer
+# ../../c-testsuite/tests/single-exec/00220.c -- cast + L""
