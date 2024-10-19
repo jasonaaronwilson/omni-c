@@ -44,21 +44,21 @@ typedef enum {
 // clang-format off
 typedef enum {
   PRECEDENCE_UNKNOWN = 0,
-  PRECEDENCE_COMMA = 2,          // LEFT_TO_RIGHT ---- ,
-  PRECEDENCE_ASSIGNMENT = 4,     // RIGHT_TO_LEFT ---- = += -= *= /= %= &= ^= |= <<= >>=
-  PRECEDENCE_CONDITIONAL = 6,    // RIGHT_TO_LEFT ---- ?:
-  PRECEDENCE_LOGICAL_OR = 8,     // LEFT_TO_RIGHT ---- ||
-  PRECEDENCE_LOGICAL_AND = 10,   // LEFT_TO_RIGHT ---- &&
-  PRECEDENCE_OR = 12,            // LEFT_TO_RIGHT ---- |
-  PRECEDENCE_XOR = 14,           // LEFT_TO_RIGHT ---- ^
-  PRECEDENCE_AND = 16,           // LEFT_TO_RIGHT ---- &
-  PRECEDENCE_EQUALITY = 18,      // LEFT_TO_RIGHT ---- == !=
-  PRECEDENCE_RELATIONAL = 20,    // LEFT_TO_RIGHT ---- < <= > >=
-  PRECEDENCE_SHIFT = 22,         // LEFT_TO_RIGHT ---- << >>
-  PRECEDENCE_ADDITIVE = 24,      // LEFT_TO_RIGHT ---- + -
-  PRECEDENCE_MULTIPICITIVE = 26, // LEFT_TO_RIGHT ---- * / %
-  PRECEDENCE_UNARY = 28,         // RIGHT_TO_LEFT ---- ! ~ ++ -- + - * & (cast) sizeof
-  PRECEDENCE_PRIMARY = 30,       // LEFT_TO_RIGHT ---- () [] -> . (literals and identifiers)
+  PRECEDENCE_COMMA = 10,          // LEFT_TO_RIGHT ---- ,
+  PRECEDENCE_ASSIGNMENT = 20,     // RIGHT_TO_LEFT ---- = += -= *= /= %= &= ^= |= <<= >>=
+  PRECEDENCE_CONDITIONAL = 30,    // RIGHT_TO_LEFT ---- ?:
+  PRECEDENCE_LOGICAL_OR = 40,     // LEFT_TO_RIGHT ---- ||
+  PRECEDENCE_LOGICAL_AND = 50,    // LEFT_TO_RIGHT ---- &&
+  PRECEDENCE_OR = 60,             // LEFT_TO_RIGHT ---- |
+  PRECEDENCE_XOR = 70,            // LEFT_TO_RIGHT ---- ^
+  PRECEDENCE_AND = 80,            // LEFT_TO_RIGHT ---- &
+  PRECEDENCE_EQUALITY = 90,       // LEFT_TO_RIGHT ---- == !=
+  PRECEDENCE_RELATIONAL = 100,    // LEFT_TO_RIGHT ---- < <= > >=
+  PRECEDENCE_SHIFT = 110,         // LEFT_TO_RIGHT ---- << >>
+  PRECEDENCE_ADDITIVE = 120,      // LEFT_TO_RIGHT ---- + -
+  PRECEDENCE_MULTIPICITIVE = 130, // LEFT_TO_RIGHT ---- * / %
+  PRECEDENCE_UNARY = 140,         // RIGHT_TO_LEFT ---- ! ~ ++ -- + - * & (cast) sizeof
+  PRECEDENCE_PRIMARY = 150,       // LEFT_TO_RIGHT ---- () [] -> . (literals and identifiers)
 } precedence_t;
 // clang-format on
 
@@ -264,6 +264,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       int recursive_precedence = instruction.precedence;
       if (precedence_to_associativity(recursive_precedence) == LEFT_TO_RIGHT) {
         recursive_precedence++;
+      } else {
+        recursive_precedence--;
       }
       if (!pratt_parse_expression(pstate, recursive_precedence)) {
         return pstate_propagate_error(pstate, saved_position);
