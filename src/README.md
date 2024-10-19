@@ -19,9 +19,9 @@ If you just want to use Omni C, currently just do this:
 1. `(cd omni-c/src/ ; make bootstrap && make)`
 
 There's no "install" for omni-c yet because it's not even reached an
-alpha level (even though it bootstraps itself!). You can do anything
-you want with the resulting binary omni-c/src/omni-c. I say kick the
-tires by throwing some programs at it.
+alpha level (even though it bootstraps itself - sort of). You can do
+anything you want with the resulting binary omni-c/src/omni-c. I say
+kick the tires by throwing some programs at it.
 
 ## Developing Omni C
 
