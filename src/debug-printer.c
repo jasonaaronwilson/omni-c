@@ -284,6 +284,24 @@ void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node) {
   cdl_string(printer, "PARSE_NODE_TYPE");
   cdl_key(printer, "type_node_kind");
   cdl_string(printer, type_node_kind_to_string(node->type_node_kind));
+
+  // No pretty way to do this with cdl even though it might be common
+  // in C.
+  if (node->qualifiers > 0) {
+    cdl_key(printer, "qualifiers");
+    cdl_start_array(printer);
+    if ((node->qualifiers & TYPE_QUALIFIER_CONST) == TYPE_QUALIFIER_CONST) {
+      cdl_string(printer, "const");
+    }
+    if ((node->qualifiers & TYPE_QUALIFIER_VOLATILE) == TYPE_QUALIFIER_VOLATILE) {
+      cdl_string(printer, "volatile");
+    }
+    if ((node->qualifiers & TYPE_QUALIFIER_RESTRICT) == TYPE_QUALIFIER_RESTRICT) {
+      cdl_string(printer, "restrict");
+    }
+    cdl_end_array(printer);
+  }
+
   if (node->type_name != NULL) {
     cdl_key(printer, "type_name");
     cdl_string(printer, token_to_string(node->type_name));

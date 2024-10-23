@@ -125,3 +125,18 @@ char* type_node_kind_to_string(type_node_kind_t kind) {
   }
   return "**NOT REACHED**";
 }
+
+char* type_qualifier_to_string(type_qualifier_t value) {
+  switch (value) {
+  case TYPE_QUALIFIER_NONE:
+    return "TYPE_QUALIFIER_NONE";
+  case TYPE_QUALIFIER_CONST:
+    return "TYPE_QUALIFIER_CONST";
+  case TYPE_QUALIFIER_VOLATILE:
+    return "TYPE_QUALIFIER_VOLATILE";
+  case TYPE_QUALIFIER_RESTRICT:
+    return "TYPE_QUALIFIER_RESTRICT";
+  default:
+    return "<<unknown-type_qualifier>>";
+  }
+}

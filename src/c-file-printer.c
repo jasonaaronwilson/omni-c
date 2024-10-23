@@ -229,6 +229,16 @@ printer_t* append_c_function_argument_node(printer_t* printer,
  */
 printer_t* append_type_node(printer_t* printer, type_node_t* node) {
 
+  if ((node->qualifiers & TYPE_QUALIFIER_CONST) == TYPE_QUALIFIER_CONST) {
+    append_string(printer, "const ");
+  }
+  if ((node->qualifiers & TYPE_QUALIFIER_VOLATILE) == TYPE_QUALIFIER_VOLATILE) {
+    append_string(printer, "volatile ");
+  }
+  if ((node->qualifiers & TYPE_QUALIFIER_RESTRICT) == TYPE_QUALIFIER_RESTRICT) {
+    append_string(printer, "restrict ");
+  }
+
   switch (node->type_node_kind) {
   case TYPE_NODE_KIND_POINTER:
     append_type_node(printer, to_type_node(node_list_get(node->type_args, 0)));

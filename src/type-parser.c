@@ -11,6 +11,18 @@
 #include "pstate.h"
 
 /**
+ * @enum type_qualifier_t
+ *
+ * Represents the set of qualifiers that can be assigned to a type.
+ */
+typedef enum {
+  TYPE_QUALIFIER_NONE = 0,
+  TYPE_QUALIFIER_CONST = 1,
+  TYPE_QUALIFIER_VOLATILE = 2,
+  TYPE_QUALIFIER_RESTRICT = 4,
+} type_qualifier_t;
+
+/**
  * @enum type_node_kind_t
  *
  * Sub-categorizes the various kinds of type nodes.
@@ -36,6 +48,9 @@ typedef enum {
 typedef struct type_node_S {
   parse_node_type_t tag;
   type_node_kind_t type_node_kind;
+
+  type_qualifier_t qualifiers;
+
   // This isn't set for pointer and array types since they modify
   // their first child in type_args. Think of these as being like the
   // generic types: array<T> or pointer<T>.
@@ -101,9 +116,12 @@ pstatus_t parse_type_node(pstate_t* pstate) {
 
   type_node_t* result = malloc_type_node();
 
-  // TODO(jawilson): figure out what to do about this hack!
+  type_qualifier_t qualifiers = TYPE_QUALIFIER_NONE;
+
+  // TODO(jawilson): volatile and restrict all in any order.
   if (pstate_match_token_string(pstate, "const")) {
     pstate_advance(pstate);
+    qualifiers |= TYPE_QUALIFIER_CONST;
   }
 
   // First see if we have a canonical type result...
@@ -158,6 +176,7 @@ pstatus_t parse_type_node(pstate_t* pstate) {
       break;
     }
   }
+  result->qualifiers = qualifiers;
   return pstate_set_result_node(pstate, to_node(result));
 }
 
