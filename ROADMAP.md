@@ -2,28 +2,42 @@
 
 This roadmap no longer matches the one in README.md.
 
-# Phase One (basic source file conveniences)
+# Phase One
 
-1. implement header file creator (parse top-level stuff and just
-   output .h)
-1. add some auto-generated code like enum to string and back
-   again.
-1. eventually output a single .c and .h for all files in a
-   library.
+The goal of phase one was to be able to toss a bunch of C files at
+omni-c and have it generate a single output file that combines them
+together eliminating the need for function prototypes, forward
+declarations, etc. We also wanted to autogenerate code for things like
+enum->string and string->enum.
+
+Phase one is generally complete. We can now use omni-c to generate a
+single file "self.c" that can be compiled with gcc/clang/tcc and that
+version results in the same output file. omni-c makes heavy use of
+c-armyknife-lib and that library is now generated omni-c (though it
+still can use an older mode).
+
+The big remaining issue appears to be that we don't properly reorder
+static inline functions.
+
+In terms of bootstrapping, we'd prefer to throw all of the files of
+omni-c and c-armyknife-lib together at the same time to produce a
+fully independent self.c file and use that for our "stable" binary. At
+that point, we may be able to start removing certain legacy stuff like
+prototypes, etc.
 
 # Phase Two (non template features)
 
-1. fully parse function bodies
-1. compute types of everything
-   * "auto" in C23 can be provided but more importantly we can query
-     it's actual type from an editor, tool, etc.
-1. overloaded functions
-1. [] in expressions are syntactic sugure for
-   index_get_operation/index_set_operation
-1. method syntax
-7. namespaces
+The goal of this phase is to fully parse everything inside of function
+bodies, perform type checking/annotation, allow overloading even when
+outputting C code, allow [] in expressions as syntatic sugar, allow
+visibility annotations as well as automatically added prefixes for
+"poorman's namespaces", and syntactic sugar for method call syntax,
+etc.
 
-# Phase Three (templates)
+# Phase Three (templates/macros/comptime)
+
+The overall goal of this phase is to eliminate the need for the C
+pre-processor.
 
 # Phase Four (advanced features like exceptions, gc support, closures,
   etc.)
