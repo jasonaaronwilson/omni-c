@@ -332,6 +332,9 @@ char* include_node_to_string(cpp_include_node_t* node) {
 
 /**
  * @function generate_c_output_file
+ *
+ * This is effectively the "main" routine of the Omni C to C
+ * transpiler.
  */
 void generate_c_output_file(boolean_t is_library) {
 
