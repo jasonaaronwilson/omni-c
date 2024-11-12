@@ -1,0 +1,17 @@
+{
+    tag = PARSE_NODE_EXPRESSION_STATEMENT
+    expression = {
+        tag = PARSE_NODE_OPERATOR
+        operator = "-"
+        right = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                "1ULL"
+            ]
+        }
+    }
+}
+
+// C Output
+(-1ULL);
+
