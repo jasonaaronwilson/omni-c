@@ -365,10 +365,10 @@ boolean_t can_extend_number(numeric_literal_encoding_t encoding,
                             uint32_t code_point, uint32_t previous_code_point) {
   switch (encoding) {
   case NUMERIC_LITERAL_ENCODING_UNDECIDED:
-    return string_contains_char("0123456789.eEobxLluUFf", code_point);
+    return string_contains_char("0123456789.eEobxLlUuFf", code_point);
 
   case NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL:
-    return string_contains_char("0123456789.eE", code_point);
+    return string_contains_char("0123456789.eELlUuFf", code_point);
 
   case NUMERIC_LITERAL_ENCODING_BINARY:
     return string_contains_char("01LlUu", code_point);

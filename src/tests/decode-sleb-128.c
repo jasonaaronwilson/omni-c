@@ -11,8 +11,7 @@ typedef struct {
  *
  * Decode a SLEB128 value (up to 64bits)
  */
-signed_decode_result decode_sleb_128(/* const */ uint8_t* p, /* const */ uint8_t* end) {
-  /*
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
   const uint8_t* orig_p = p;
   int64_t Value = 0;
   unsigned Shift = 0;
@@ -38,10 +37,10 @@ signed_decode_result decode_sleb_128(/* const */ uint8_t* p, /* const */ uint8_t
     ++p;
   } while (Byte >= 128);
   // Sign extend negative numbers if needed.
-  if (Shift < 64 && (Byte & 0x40))
+  if (Shift < 64 && (Byte & 0x40)) {
     Value |= (-1ULL) << Shift;
+  }
   signed_decode_result result
       = compound_literal(signed_decode_result, {Value, (p - orig_p)});
-  */
   return result;
 }
