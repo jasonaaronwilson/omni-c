@@ -1,0 +1,34 @@
+{
+    tag = PARSE_NODE_VARIABLE_DEFINITION
+    name = result
+    type = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_POINTER
+        type_args = [
+            {
+                tag = PARSE_NODE_TYPE
+                type_node_kind = TYPE_NODE_KIND_TYPENAME
+                type_name = value_hashtable_t
+                type_args = [
+                ]
+            }
+        ]
+    }
+    value = {
+        tag = PARSE_NODE_CALL
+        function = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = malloc_struct
+        }
+        args = [
+            {
+                tag = PARSE_NODE_IDENTIFIER
+                token = value_hashtable_t
+            }
+        ]
+    }
+}
+
+// C Output
+value_hashtable_t* result = malloc_struct(value_hashtable_t);
+
