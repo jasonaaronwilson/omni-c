@@ -44,6 +44,7 @@ char* FLAG_statement = NULL;
 boolean_t FLAG_dump_symbol_table = false;
 boolean_t FLAG_use_statement_parser = false;
 boolean_t FLAG_to_c = false;
+boolean_t FLAG_omit_c_armyknife_include = false;
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
@@ -287,6 +288,8 @@ void configure_generate_c_output_file(void) {
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
+  flag_boolean("--omit-c-armyknife-include", &FLAG_omit_c_armyknife_include);
+
   flag_file_args(&FLAG_files);
 
   flag_command("generate-library", &FLAG_command);
@@ -294,6 +297,7 @@ void configure_generate_c_output_file(void) {
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
+  flag_boolean("--omit-c-armyknife-include", &FLAG_omit_c_armyknife_include);
   flag_file_args(&FLAG_files);
 }
 
@@ -374,6 +378,11 @@ void generate_c_output_file(boolean_t is_library) {
     cpp_include_node_t* node = value_array_get_ptr(
         symbol_table->system_includes, i, typeof(cpp_include_node_t*));
     char* include_statement = include_node_to_string(node);
+    if (FLAG_omit_c_armyknife_include
+        && string_starts_with(include_statement,
+                              "#include <c-armyknife-lib.h>")) {
+      continue;
+    }
     if (!is_ok(string_ht_find(system_includes_set, include_statement))) {
       system_includes_set = string_ht_insert(
           system_includes_set, include_statement, boolean_to_value(true));

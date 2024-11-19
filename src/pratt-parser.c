@@ -358,6 +358,11 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pstate_expect_token_string(pstate, "(")) {
         return pstate_propagate_error(pstate, saved_position);
       }
+      /*
+      if (!parse_type_node(pstate)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      */
       if (!pratt_parse_expression(pstate, 0)) {
         return pstate_propagate_error(pstate, saved_position);
       }

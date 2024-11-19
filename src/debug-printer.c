@@ -293,10 +293,12 @@ void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node) {
     if ((node->qualifiers & TYPE_QUALIFIER_CONST) == TYPE_QUALIFIER_CONST) {
       cdl_string(printer, "const");
     }
-    if ((node->qualifiers & TYPE_QUALIFIER_VOLATILE) == TYPE_QUALIFIER_VOLATILE) {
+    if ((node->qualifiers & TYPE_QUALIFIER_VOLATILE)
+        == TYPE_QUALIFIER_VOLATILE) {
       cdl_string(printer, "volatile");
     }
-    if ((node->qualifiers & TYPE_QUALIFIER_RESTRICT) == TYPE_QUALIFIER_RESTRICT) {
+    if ((node->qualifiers & TYPE_QUALIFIER_RESTRICT)
+        == TYPE_QUALIFIER_RESTRICT) {
       cdl_string(printer, "restrict");
     }
     cdl_end_array(printer);

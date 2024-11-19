@@ -11,7 +11,6 @@
 typedef struct {
   boolean_t keep_system_includes;
   boolean_t keep_user_includes;
-
 } c_preprocess_options_t;
 
 typedef struct {

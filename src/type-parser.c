@@ -14,6 +14,10 @@
  * @enum type_qualifier_t
  *
  * Represents the set of qualifiers that can be assigned to a type.
+ *
+ * TODO(jawilson): maybe _Atomic is a qualifier? Gemni claims that
+ * typeof_unqual strips this from typeof so it's probably going to pop
+ * up.
  */
 typedef enum {
   TYPE_QUALIFIER_NONE = 0,
