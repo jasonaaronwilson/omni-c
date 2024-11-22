@@ -1,0 +1,2 @@
+cast(typeof(value_alist_t**), NULL);
+

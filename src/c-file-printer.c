@@ -270,6 +270,12 @@ printer_t* append_type_node(printer_t* printer, type_node_t* node) {
     append_string(printer, "[])");
     break;
 
+  case TYPE_NODE_KIND_TYPEOF:
+    append_string(printer, "typeof(");
+    append_type_node(printer, to_type_node(node->user_type));
+    append_string(printer, ")");
+    break;
+
   default:
     log_fatal("type_node_kind is not expected %s",
               type_node_kind_to_string(node->type_node_kind));

@@ -12,14 +12,15 @@
 /**
  * @file pratt-parser.c
  *
- * This file implements expression parsing, typically a source of some
- * amount of inefficiency in some compilers. Instead we use the Pratt
- * parsing algorithm (similar to shunting yard) to parse expressions.
+ * This file implements "expression" parsing for our compiler.
  *
  * See:
  * https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
  */
 
+/**
+ * @typedef pratt_parser_operation_t
+ */
 typedef enum {
   PRATT_PARSE_UNKNOWN,
   PRATT_PARSE_PREFIX_OPERATOR,
@@ -405,6 +406,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
     } while (0);
     break;
 
+    // Does this really belong as an expression since it results in a
+    // type?
   case PRATT_PARSE_TYPE_OF:
     do {
       if (!pstate_expect_token_string(pstate, "typeof")) {

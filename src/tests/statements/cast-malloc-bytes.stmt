@@ -1,0 +1,1 @@
+cast(typeof(value_alist_t**), malloc_bytes(sizeof(typeof(value_alist_t*)) * n_buckets));

@@ -40,6 +40,7 @@ typedef enum {
   TYPE_NODE_KIND_PRIMITIVE_TYPENAME,
   TYPE_NODE_KIND_TYPENAME,
   TYPE_NODE_KIND_TYPE_EXPRESSION,
+  TYPE_NODE_KIND_TYPEOF,
 } type_node_kind_t;
 
 /**
@@ -99,6 +100,7 @@ typedef struct canonical_type_result_s {
 
 #include "type-parser.c.generated.h"
 
+pstatus_t parse_typeof_node(pstate_t* pstate);
 pstatus_t parse_user_type_node(pstate_t* pstate);
 pstatus_t parse_enum_node(pstate_t* pstate);
 pstatus_t parse_structure_node(pstate_t* pstate);
@@ -114,7 +116,7 @@ pstatus_t parse_union_node(pstate_t* pstate);
 pstatus_t parse_type_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
 
-  if (parse_function_type(pstate)) {
+  if (parse_typeof_node(pstate) || parse_function_type(pstate)) {
     return true;
   }
 
@@ -193,6 +195,28 @@ canonical_type_result_t make_type_token_result(char* str, int consumed_tokens) {
   return compound_literal(
       canonical_type_result_t,
       {.canonical_type = canonical_token, .consumed_tokens = consumed_tokens});
+}
+
+pstatus_t parse_typeof_node(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  if (!pstate_expect_token_string(pstate, "typeof")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if (!pstate_expect_token_string(pstate, "(")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if (!parse_type_node(pstate)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  parse_node_t* type_node = pstate_get_result_node(pstate);
+  if (!pstate_expect_token_string(pstate, ")")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  type_node_t* result = malloc_type_node();
+  result->type_node_kind = TYPE_NODE_KIND_TYPEOF;
+  result->user_type = type_node;
+  return pstate_set_result_node(pstate, to_node(result));
 }
 
 /**

@@ -1,0 +1,74 @@
+{
+    tag = PARSE_NODE_EXPRESSION_STATEMENT
+    expression = {
+        tag = PARSE_NODE_OPERATOR
+        operator = cast
+        left = {
+            tag = PARSE_NODE_TYPE
+            type_node_kind = TYPE_NODE_KIND_TYPEOF
+            user_type = {
+                tag = PARSE_NODE_TYPE
+                type_node_kind = TYPE_NODE_KIND_POINTER
+                type_args = [
+                    {
+                        tag = PARSE_NODE_TYPE
+                        type_node_kind = TYPE_NODE_KIND_POINTER
+                        type_args = [
+                            {
+                                tag = PARSE_NODE_TYPE
+                                type_node_kind = TYPE_NODE_KIND_TYPENAME
+                                type_name = value_alist_t
+                                type_args = [
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+            type_args = [
+            ]
+        }
+        right = {
+            tag = PARSE_NODE_CALL
+            function = {
+                tag = PARSE_NODE_IDENTIFIER
+                token = malloc_bytes
+            }
+            args = [
+                {
+                    tag = PARSE_NODE_OPERATOR
+                    operator = "*"
+                    left = {
+                        tag = PARSE_NODE_OPERATOR
+                        operator = sizeof
+                        right = {
+                            tag = PARSE_NODE_OPERATOR
+                            operator = typeof
+                            left = {
+                                tag = PARSE_NODE_TYPE
+                                type_node_kind = TYPE_NODE_KIND_POINTER
+                                type_args = [
+                                    {
+                                        tag = PARSE_NODE_TYPE
+                                        type_node_kind = TYPE_NODE_KIND_TYPENAME
+                                        type_name = value_alist_t
+                                        type_args = [
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                    right = {
+                        tag = PARSE_NODE_IDENTIFIER
+                        token = n_buckets
+                    }
+                }
+            ]
+        }
+    }
+}
+
+// C Output
+(/*CAST*/(typeof(value_alist_t**)) malloc_bytes(((sizeof(typeof(value_alist_t*)))*n_buckets)));
+
