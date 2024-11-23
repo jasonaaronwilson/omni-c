@@ -34,6 +34,7 @@ typedef enum {
   PRATT_PARSE_SIZEOF,
   PRATT_PARSE_CAST_MACRO,
   PRATT_PARSE_TYPE_OF,
+  PRATT_PARSE_BLOCK_EXPR,
   PRATT_PARSE_CALL,
 } pratt_parser_operation_t;
 
@@ -204,6 +205,8 @@ static inline pratt_parser_instruction_t
 #include "pratt-parser.c.generated.h"
 
 #endif /* _PRATT_PARSER_H_ */
+
+pstatus_t parse_block(pstate_t* pstate);
 
 /**
  * @function pratt_parse_expression
@@ -408,6 +411,30 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
 
     // Does this really belong as an expression since it results in a
     // type?
+  case PRATT_PARSE_BLOCK_EXPR:
+    do {
+      if (!pstate_expect_token_string(pstate, "block_expr")) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      if (!pstate_expect_token_string(pstate, "(")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      if (!parse_block(pstate)) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* block_node = pstate_get_result_node(pstate);
+      if (!pstate_expect_token_string(pstate, ")")) {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      operator_node_t* result = malloc_operator_node();
+      result->operator= token;
+      result->left = block_node;
+      return pstate_set_result_node(pstate, to_node(result));
+    } while (0);
+    break;
+
+    // Does this really belong as an expression since it results in a
+    // type?
   case PRATT_PARSE_TYPE_OF:
     do {
       if (!pstate_expect_token_string(pstate, "typeof")) {
@@ -429,7 +456,6 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       return pstate_set_result_node(pstate, to_node(result));
     } while (0);
     break;
-
 
   case PRATT_PARSE_CALL:
     do {
@@ -511,6 +537,10 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
     }
     if (token_matches(token, "typeof")) {
       return make_parser_instruction(token, PRATT_PARSE_TYPE_OF,
+                                     PRECEDENCE_UNARY);
+    }
+    if (token_matches(token, "block_expr")) {
+      return make_parser_instruction(token, PRATT_PARSE_BLOCK_EXPR,
                                      PRECEDENCE_UNARY);
     }
     if (token_matches(token, "compound_literal")) {

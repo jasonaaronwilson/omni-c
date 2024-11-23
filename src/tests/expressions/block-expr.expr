@@ -1,0 +1,1 @@
+block_expr({ uint64_t x = 1 + 2 * 3; });
