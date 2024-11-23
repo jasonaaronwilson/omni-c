@@ -152,7 +152,7 @@ typedef struct {
 #endif /* _STATEMENT_PARSER_H_ */
 
 /**
- * @parse parse_statement
+ * @function parse_statement
  *
  * Parse the next statement and return true leaving a node in pstate
  * or else return false and leave an eror in pstate.
@@ -188,7 +188,7 @@ pstatus_t parse_statement(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_block
+ * @function parse_block
  */
 pstatus_t parse_block(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -206,7 +206,7 @@ pstatus_t parse_block(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_return_statement
+ * @function parse_return_statement
  */
 pstatus_t parse_return_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -222,7 +222,7 @@ pstatus_t parse_return_statement(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_if_statement
+ * @function parse_if_statement
  */
 pstatus_t parse_if_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -249,7 +249,7 @@ pstatus_t parse_if_statement(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_while_statement
+ * @function parse_while_statement
  */
 pstatus_t parse_while_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -268,7 +268,7 @@ pstatus_t parse_while_statement(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_do_statement
+ * @function parse_do_statement
  */
 pstatus_t parse_do_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -293,7 +293,7 @@ pstatus_t parse_do_statement(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_for_statement
+ * @function parse_for_statement
  */
 pstatus_t parse_for_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -329,7 +329,7 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_switch_statement
+ * @function parse_switch_statement
  */
 pstatus_t parse_switch_statement(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -348,7 +348,7 @@ pstatus_t parse_switch_statement(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_case_label
+ * @function parse_case_label
  */
 pstatus_t parse_case_label(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -364,7 +364,7 @@ pstatus_t parse_case_label(pstate_t* pstate) {
 }
 
 /**
- * @parse parse_expresion_statement
+ * @function parse_expresion_statement
  *
  * This includes assignment expressions unless we are declaring a
  * variable.
