@@ -1,0 +1,52 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = block_expr
+    left = {
+        tag = PARSE_NODE_BLOCK
+        statements = [
+            {
+                tag = PARSE_NODE_VARIABLE_DEFINITION
+                name = x
+                type = {
+                    tag = PARSE_NODE_TYPE
+                    type_node_kind = TYPE_NODE_KIND_TYPENAME
+                    type_name = uint64_t
+                    type_args = [
+                    ]
+                }
+                value = {
+                    tag = PARSE_NODE_OPERATOR
+                    operator = "+"
+                    left = {
+                        tag = PARSE_NODE_LITERAL
+                        tokens = [
+                            "1"
+                        ]
+                    }
+                    right = {
+                        tag = PARSE_NODE_OPERATOR
+                        operator = "*"
+                        left = {
+                            tag = PARSE_NODE_LITERAL
+                            tokens = [
+                                "2"
+                            ]
+                        }
+                        right = {
+                            tag = PARSE_NODE_LITERAL
+                            tokens = [
+                                "3"
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+
+// C Output
+{
+  uint64_t x = (1+(2*3));
+}
+

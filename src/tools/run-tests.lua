@@ -1,5 +1,8 @@
 #!/usr/bin/env lua
 
+-- sudo apt-get install lua-filesystem
+local lfs = require("lfs") 
+
 local function file_exists(filename)
     local file = io.open(filename, "r")
     if file then
@@ -68,6 +71,25 @@ local function escape_and_quote(str)
   return '"' .. str:gsub('"', '\\"') .. '"'
 end
 
+-- Function to determine which omni-c executable to use
+local function get_file_mtime(filename)
+    local attr = lfs.attributes(filename)
+    if attr then return attr.modification
+    else return 0 end
+end
+
+local function get_omni_c_executable()
+    local omni_c_path = "./build/bin/omni-c"
+    local self_path = "./build/bin/self"
+
+    -- and get_file_mtime(self_path) > get_file_mtime(omni_c_path) then
+    if file_exists(self_path) then
+        return self_path
+    else
+        return omni_c_path
+    end
+end
+
 local success = 0
 local failure = 0
 local failed_tests = {}
@@ -86,6 +108,7 @@ for _, arg in ipairs(arg) do
 
   local exit_status = false
   local test_type = get_test_type(arg)
+  local omni_c_exec = get_omni_c_executable()
 
   if test_type == TestType.SCRIPT then
      exit_status = os.execute(arg)
@@ -101,7 +124,7 @@ for _, arg in ipairs(arg) do
      if test_type == TestType.PARSE_EXPRESSION_TO_C then
      	to_c = "--to-c=true"
      end
-     exit_status = os.execute("./build/bin/omni-c parse-expression " .. to_c ..
+     exit_status = os.execute(omni_c_exec .. " parse-expression " .. to_c ..
        " --expression " .. contents .. " >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
@@ -113,7 +136,7 @@ for _, arg in ipairs(arg) do
      local contents = escape_and_quote(read_file(arg))
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
-     exit_status = os.execute("./build/bin/omni-c parse-statement --statement " .. contents .. " >" .. output_file)
+     exit_status = os.execute(omni_c_exec .. " parse-statement --statement " .. contents .. " >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else

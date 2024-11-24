@@ -60,7 +60,8 @@ typedef enum {
   PRECEDENCE_ADDITIVE = 120,      // LEFT_TO_RIGHT ---- + -
   PRECEDENCE_MULTIPICITIVE = 130, // LEFT_TO_RIGHT ---- * / %
   PRECEDENCE_UNARY = 140,         // RIGHT_TO_LEFT ---- ! ~ ++ -- + - * & (cast) sizeof
-  PRECEDENCE_PRIMARY = 150,       // LEFT_TO_RIGHT ---- () [] -> . (literals and identifiers)
+  PRECEDENCE_POSTFIX = 150,       // LEFT_TO_RIGHT ---- () [] -> . ++ --
+  PRECEDENCE_PRIMARY = 160,       // LEFT_TO_RIGHT ---- literals and identifiers
 } precedence_t;
 // clang-format on
 
@@ -635,11 +636,11 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token) {
   }
   if (token_matches(token, "->") || token_matches(token, ".")) {
     return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR,
-                                   PRECEDENCE_PRIMARY);
+                                   PRECEDENCE_POSTFIX);
   }
   if (token_matches(token, "++") || token_matches(token, "--")) {
     return make_parser_instruction(token, PRATT_PARSE_POSTFIX_OPERATOR,
-                                   PRECEDENCE_UNARY);
+                                   PRECEDENCE_POSTFIX);
   }
   if (token_matches(token, "=") || token_matches(token, "+=")
       || token_matches(token, "-=") || token_matches(token, "*=")
@@ -652,10 +653,10 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token) {
   }
   if (token_matches(token, "[")) {
     return make_parser_instruction(token, PRATT_PARSE_INDEX_EXPRESSION,
-                                   PRECEDENCE_PRIMARY);
+                                   PRECEDENCE_POSTFIX);
   }
   if (token_matches(token, "(")) {
-    return make_parser_instruction(token, PRATT_PARSE_CALL, PRECEDENCE_PRIMARY);
+    return make_parser_instruction(token, PRATT_PARSE_CALL, PRECEDENCE_POSTFIX);
   }
   if (token_matches(token, "?")) {
     return make_parser_instruction(token, PRATT_PARSE_CONDITIONAL,
@@ -679,6 +680,8 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token) {
 associativity_t precedence_to_associativity(precedence_t precedence) {
   switch (precedence) {
   case PRECEDENCE_PRIMARY:
+    return LEFT_TO_RIGHT;
+  case PRECEDENCE_POSTFIX:
     return LEFT_TO_RIGHT;
   case PRECEDENCE_UNARY:
     return RIGHT_TO_LEFT;

@@ -1,5 +1,11 @@
 all: omni-c
 
+# Import
+include ../../c-armyknife-lib/Makefile.sources
+
+C_ARMYKNIFE_SRC_C := $(addprefix ../../c-armyknife-lib/, $(SRC_C))
+
+
 # Google Gemini tells me this is a bad idea but I'm trying it out anyways.
 BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/tests/statements build/tests/expressions ; echo `pwd`/build)
 
@@ -15,11 +21,11 @@ OMNI_C := build/bin/omni-c
 asdf:
 	echo ${BUILD_DIR} -- ${STABLE_BINARY_PATH}
 
-WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format
+WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr
 CC_FLAGS := -g -rdynamic -I ${WARN_FLAGS}
 CC_FLAGS_OPT := ${CC_FLAGS} -O3 
 
-SRC_C_SELF = \
+SRC_C_SELF := \
 	mode.c \
 	keywords.c \
 	file.c \
@@ -51,7 +57,6 @@ SRC_C_SELF = \
 	main.c
 
 SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c reflection-header.c $(SRC_C_SELF)
-
 
 # Derived list of header file names
 SRC_H = $(SRC_C:.c=.h)
@@ -92,15 +97,15 @@ do-generate-header-file: omni-c
 	/usr/bin/time --portability ${OMNI_C} generate-header-file --output-file=global-header-file.h ${SRC_C}
 	gcc -c -Wall -Werror -std=c99 global-header-file.h
 
-# TODO(jawilson): -Werror 
+# TODO(jawilson): -Werror / gcc armyknife-lib-impl.c 
 self: omni-c
-	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --dump-symbol-table=false --output-file=build/self.c ${SRC_C_SELF}
-	gcc -o build/bin/self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/self.c armyknife-lib-impl.c reflection-header.c
+	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
+	gcc -o build/bin/self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/self.c reflection-header.c
 
 
 selfself: omni-c self
-	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --dump-symbol-table=false --output-file=build/selfself.c ${SRC_C_SELF}
-	gcc -o build/bin/selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/selfself.c armyknife-lib-impl.c reflection-header.c
+	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
+	gcc -o build/bin/selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/selfself.c reflection-header.c
 
 
 bisect-self: omni-c
