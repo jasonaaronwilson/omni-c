@@ -120,6 +120,14 @@ move semantics, etc.)
 
 ## Status
 
+* (2024-11-24) We can now parse both omni-c + c-armyknife-lib at the
+  full statement/expression level! This promises to make bootstrapping
+  much easier as a single extra file can serve as the (stable)
+  bootstrap compiler. Once bootstrapping is fully supported, we can
+  remove some annoying cruft from C files and truly stop worrying about
+  header files and begin using features like code generation right
+  away. We'll still require a type-annotation phase to really be able
+  to add some of the cooler features promised above.
 * (2024-08-27) We now use "cson" (JSON without commas and "opened-up"
   using " = " instead of ":" - it just *looks* better) for parse-tree
   debug output. Golden files have been added (based on cson) so we are
