@@ -1,0 +1,1 @@
+int stdin_pipe[2] = {0};

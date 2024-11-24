@@ -1,12 +1,17 @@
 {
     tag = PARSE_NODE_VARIABLE_DEFINITION
-    name = buf
+    name = stdin_pipe
     type = {
         tag = PARSE_NODE_TYPE
         type_node_kind = TYPE_NODE_KIND_PRIMITIVE_TYPENAME
-        type_name = char
+        type_name = int
         type_args = [
         ]
+    }
+    value = {
+        tag = PARSE_NODE_BALANCED_CONSTRUCT
+        start_token = "{"
+        end_token = "}"
     }
     suffixes = [
         {
@@ -18,5 +23,5 @@
 }
 
 // C Output
-char buf[4096];
+int stdin_pipe[2] = {0};
 
