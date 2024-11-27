@@ -57,40 +57,6 @@ omni-c-stable: omni-c-stable.c
 generate-reflection-embedding: runtime/reflection.h
 	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
-#generate-header-files: ${SRC_C}
-#	cp -p ${SRC_C} ${BUILD_DIR}
-#	(cd ${BUILD_DIR} && ../../../c-single-source-file/generate-header-file ${SRC_C})
-#
-#omni-c: ${SRC_C} generate-header-files
-#	gcc ${CC_FLAGS} -Ibuild -I. -o build/bin/omni-c ${SRC_C}
-#
-#omni-c-opt: omni-c ${SRC_C} generate-header-files
-#	gcc ${CC_FLAGS_OPT} -Ibuild -I. -o build/bin/omni-c-opt ${SRC_C}
-#
-#test-print-tokens: omni-c
-#	${OMNI_C} print-tokens --parse-and-print=true \
-#		../examples/structures.oc \
-#		../examples/functions.oc \
-#		../examples/typedefs.oc \
-#		../examples/global-variables.oc \
-#		../examples/simple-c-proprocess.oc \
-#		../examples/enum.oc
-#
-#extract-enums: omni-c-opt
-#	/usr/bin/time --portability ./omni-c-opt extract-enums --unique-prototype-header-files=true ${SRC_C}
-#	./omni-c-opt extract-enums --unique-prototype-header-files=true ../examples/enum.oc
-#	wc --lines ${SRC_C}
-#
-#extract-prototypes:
-#	$(STABLE_BINARY_PATH) extract-prototypes --unique-prototype-header-files=true ${SRC_C}
-#	mv *.c.generated.h build/
-#	wc --lines ${SRC_C}
-#
-#do-generate-header-file: omni-c
-#	/usr/bin/time --portability ${OMNI_C} generate-header-file --output-file=global-header-file.h ${SRC_C}
-#	gcc -c -Wall -Werror -std=c99 global-header-file.h
-
-# TODO(jawilson): -Werror / gcc armyknife-lib-impl.c 
 omni-c: omni-c-stable
 	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
 	gcc -o build/bin/omni-c -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/omni-c.c reflection-header.c
@@ -102,7 +68,6 @@ self: omni-c
 selfself: omni-c self
 	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
 	gcc -o build/bin/selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/selfself.c reflection-header.c
-
 
 bisect-self: omni-c
 	tools/bisect.sh ${SRC_C_SELF}
@@ -134,7 +99,7 @@ tags:
 	etags *.c bootstrap-saved/*.h
 
 clean:
-	rm -f omni-c omni-c-opt
+	rm -f omni-c-stable omni-c omni-c-opt
 	find . -name '*.h' -not -path './bootstrap-saved/*' -not -path './runtime/*' | xargs -n 1 rm -f
 	find . -name '*~' | xargs -n 1 rm -f
 	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
