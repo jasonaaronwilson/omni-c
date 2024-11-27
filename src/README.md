@@ -6,65 +6,26 @@ This is the Omni C transpiler source code.
 
 If you just want to use Omni C, currently just do this:
 
-1. sudo apt install <prerequisites> (including gcc, clang and
-   lua5.4). Obviously this is specific to your linux flavor.
+1. sudo apt install <prerequisites> (including gcc, clang and lua5.4,
+   lua-filesystem). Obviously this is specific to your linux flavor.
 1. cd ~
 1. mkdir src
 1. cd src
-1. `git clone https://github.com/jasonaaronwilson/c-single-source-file`
-1. `(cd c-single-source-file ; make && make test && make install)`
 1. `git clone https://github.com/jasonaaronwilson/c-armyknife-lib.git`
-1. `(cd c-armyknife-lib ; make && make test && make install)`
 1. `git clone https://github.com/jasonaaronwilson/omni-c.git`
-1. `(cd omni-c/src/ ; make bootstrap && make)`
+1. `(cd omni-c/src/ ; make && make test)`
 
-There's no "install" for omni-c yet because it's not even reached an
-alpha level (even though it bootstraps itself - sort of). You can do
-anything you want with the resulting binary omni-c/src/omni-c. I say
-kick the tires by throwing some programs at it.
+There's no "install" for omni-c yet because it's mostly only
+appropriate for compiling itself.
 
 ## Developing Omni C
 
-If you want to modify Omni C, it's just a bit harder to set everything
-up. I resisted for far too long having a stable and development branch
-but such a set up is much easier for development.
+Now that omni-c is self-hosting via omni-c-stable.c, you can pretty
+much just start modifying files and run make.
 
-In the future we will probably transition to using a pre-translated
-"single source file" version of the source code and maybe figure out
-how to do development from a single tree.
-
-What we want is essentially we need both a "stable" tree and
-development tree. The Makefile should automatically try to figure this
-out if a sibling omni-c source directory called omni-c-stable exists
-and contains an omni-c binary.
-
-So do the above AND then also do this:
-
-1. `cd ~/src/`
-1. `git clone https://github.com/jasonaaronwilson/omni-c.git omni-c-stable`
-1. `(cd omni-c-stable/src/ ; make bootstrap && make)`
-
-Now just leave the "omni-c-stable" directory like it is. Only update
-it when you believe it's a "good" release.
-
-THEN, while developing I typically do something like:
-
-1. `make clean && make extract-prototypes && make && make test`
-
-Before checkin, for now I do:
-
-1. `make test`
-1. `make save-bootstrap-prototypes`
-1. `make cf`
-
-Go ahead and commit the files underneath bootstrap that actually
-changed as part of the same commit.
-
-At some point I'm going only going to only keep the semi-readable
-"self.c" file around and that will be all that is in the bootstrap
-directory. Something as simple as `gcc -o omni-c-stable
-bootstrap/self.c` will be the bootstrap step. Sorry it's messy right
-now.
+Occasionally we will want to update omni-c-stable.c. The key is to
+never add a feature and use it within omni-c until you've checked in
+sufficient tests for a new feature.
 
 ## Automatically Testing Omni C
 
