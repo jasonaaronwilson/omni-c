@@ -48,6 +48,8 @@ typedef enum {
   PARSE_ERROR_UNHANDLED_INSTRUCTION,
 } parse_error_code_t;
 
+// TODO(jawilson): Do we need this forward declaration anymore now
+// that we have typedef splitting and forward declarations via
 struct token_S;
 
 /**
