@@ -1,29 +1,15 @@
 all: omni-c
 
-bootstrap: omni-c-stable.c
-	gcc -o omni-c-stable -std=gnu99 -DOMNI_C_SELF_GENERATED -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr omni-c-stable.c reflection-header.c	
-
 # Import
 include ../../c-armyknife-lib/Makefile.sources
 
 C_ARMYKNIFE_SRC_C := $(addprefix ../../c-armyknife-lib/, $(SRC_C))
 
-
 # Google Gemini tells me this is a bad idea but I'm trying it out anyways.
 BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/tests/statements build/tests/expressions ; echo `pwd`/build)
 
-# The commented out STABLE_BINARY_PATH looks wrong. The wild-card
-# should look for ../../omni-c-stable/src/omni-c-stable and use that
-# if available though warn if that directory exists without a omni-c
-# executable...
-#
-# STABLE_BINARY_PATH := $(if $(wildcard ${BUILD_DIR}/bin/omni-c),${BUILD_DIR}/bin//omni-c,../../omni-c-stable/src/omni-c)
-# STABLE_BINARY_PATH := ../../omni-c-stable/src/omni-c
 STABLE_BINARY_PATH := ./omni-c-stable
 OMNI_C := build/bin/omni-c
-
-asdf:
-	echo ${BUILD_DIR} -- ${STABLE_BINARY_PATH}
 
 WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr
 CC_FLAGS := -g -rdynamic -I ${WARN_FLAGS}
@@ -65,47 +51,53 @@ SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c refle
 # Derived list of header file names
 SRC_H = $(SRC_C:.c=.h)
 
+omni-c-stable: omni-c-stable.c
+	gcc -o omni-c-stable -std=gnu99 -DOMNI_C_SELF_GENERATED -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr omni-c-stable.c reflection-header.c
+
 generate-reflection-embedding: runtime/reflection.h
 	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
-generate-header-files: ${SRC_C}
-	cp -p ${SRC_C} ${BUILD_DIR}
-	(cd ${BUILD_DIR} && ../../../c-single-source-file/generate-header-file ${SRC_C})
-
-omni-c: ${SRC_C} generate-header-files
-	gcc ${CC_FLAGS} -Ibuild -I. -o build/bin/omni-c ${SRC_C}
-
-omni-c-opt: omni-c ${SRC_C} generate-header-files
-	gcc ${CC_FLAGS_OPT} -Ibuild -I. -o build/bin/omni-c-opt ${SRC_C}
-
-test-print-tokens: omni-c
-	${OMNI_C} print-tokens --parse-and-print=true \
-		../examples/structures.oc \
-		../examples/functions.oc \
-		../examples/typedefs.oc \
-		../examples/global-variables.oc \
-		../examples/simple-c-proprocess.oc \
-		../examples/enum.oc
-
-extract-enums: omni-c-opt
-	/usr/bin/time --portability ./omni-c-opt extract-enums --unique-prototype-header-files=true ${SRC_C}
-	./omni-c-opt extract-enums --unique-prototype-header-files=true ../examples/enum.oc
-	wc --lines ${SRC_C}
-
-extract-prototypes:
-	$(STABLE_BINARY_PATH) extract-prototypes --unique-prototype-header-files=true ${SRC_C}
-	mv *.c.generated.h build/
-	wc --lines ${SRC_C}
-
-do-generate-header-file: omni-c
-	/usr/bin/time --portability ${OMNI_C} generate-header-file --output-file=global-header-file.h ${SRC_C}
-	gcc -c -Wall -Werror -std=c99 global-header-file.h
+#generate-header-files: ${SRC_C}
+#	cp -p ${SRC_C} ${BUILD_DIR}
+#	(cd ${BUILD_DIR} && ../../../c-single-source-file/generate-header-file ${SRC_C})
+#
+#omni-c: ${SRC_C} generate-header-files
+#	gcc ${CC_FLAGS} -Ibuild -I. -o build/bin/omni-c ${SRC_C}
+#
+#omni-c-opt: omni-c ${SRC_C} generate-header-files
+#	gcc ${CC_FLAGS_OPT} -Ibuild -I. -o build/bin/omni-c-opt ${SRC_C}
+#
+#test-print-tokens: omni-c
+#	${OMNI_C} print-tokens --parse-and-print=true \
+#		../examples/structures.oc \
+#		../examples/functions.oc \
+#		../examples/typedefs.oc \
+#		../examples/global-variables.oc \
+#		../examples/simple-c-proprocess.oc \
+#		../examples/enum.oc
+#
+#extract-enums: omni-c-opt
+#	/usr/bin/time --portability ./omni-c-opt extract-enums --unique-prototype-header-files=true ${SRC_C}
+#	./omni-c-opt extract-enums --unique-prototype-header-files=true ../examples/enum.oc
+#	wc --lines ${SRC_C}
+#
+#extract-prototypes:
+#	$(STABLE_BINARY_PATH) extract-prototypes --unique-prototype-header-files=true ${SRC_C}
+#	mv *.c.generated.h build/
+#	wc --lines ${SRC_C}
+#
+#do-generate-header-file: omni-c
+#	/usr/bin/time --portability ${OMNI_C} generate-header-file --output-file=global-header-file.h ${SRC_C}
+#	gcc -c -Wall -Werror -std=c99 global-header-file.h
 
 # TODO(jawilson): -Werror / gcc armyknife-lib-impl.c 
+omni-c: omni-c-stable
+	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
+	gcc -o build/bin/omni-c -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/omni-c.c reflection-header.c
+
 self: omni-c
 	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
 	gcc -o build/bin/self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/self.c reflection-header.c
-
 
 selfself: omni-c self
 	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
