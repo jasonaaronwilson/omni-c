@@ -1,5 +1,8 @@
 all: omni-c
 
+bootstrap: omni-c-stable.c
+	gcc -o omni-c-stable -std=gnu99 -DOMNI_C_SELF_GENERATED -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr omni-c-stable.c reflection-header.c	
+
 # Import
 include ../../c-armyknife-lib/Makefile.sources
 
@@ -15,7 +18,8 @@ BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/
 # executable...
 #
 # STABLE_BINARY_PATH := $(if $(wildcard ${BUILD_DIR}/bin/omni-c),${BUILD_DIR}/bin//omni-c,../../omni-c-stable/src/omni-c)
-STABLE_BINARY_PATH := ../../omni-c-stable/src/omni-c
+# STABLE_BINARY_PATH := ../../omni-c-stable/src/omni-c
+STABLE_BINARY_PATH := ./omni-c-stable
 OMNI_C := build/bin/omni-c
 
 asdf:
@@ -124,8 +128,8 @@ test: omni-c
 test-suite: omni-c
 	tools/run-tests.lua ${SUITE_TESTS}
 
-bootstrap:
-	./bootstrap.sh
+# bootstrap:
+#	./bootstrap.sh
 
 save-bootstrap-prototypes: extract-prototypes
 	cp -upv --target=bootstrap-saved/ build/*.c.generated.h
