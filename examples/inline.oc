@@ -1,8 +1,9 @@
+// C traditionally uses this so naturally it is still allowed
 static inline uint64_t add(uint64_t a, uint64_t b) {
   return a + b;
 }
 
-// static should get added automatically
+// However we should be easily be able to add static automatically
 inline uint64_t add(uint64_t a, uint64_t b) {
   return a + b;
 }
