@@ -51,3 +51,5 @@
 1. make sure parser can handle more of unicode?
 
 1. parse system includes after running through the cpp?
+
+1. add build command that will automatically invoke a C compiler.

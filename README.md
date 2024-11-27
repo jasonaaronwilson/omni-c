@@ -1,8 +1,7 @@
 # Omni-C
 
-A C derived programming language so similar to C you may not even
-realize it's different. If you already know C, you can start using
-omni-c right away.
+A C derived programming language so similar to C you can start using
+omni-c right away if you already know C.
 
 The main feature is that you'll enjoy a fully independent declaration
 order (so you never have to write a header file again), an enhanced
@@ -14,8 +13,8 @@ a string or vice-versa).
 
 Since Omni C is a transpiler you will get the same code quality as
 your favorite C compiler such as gcc, clang, tcc, msvc, and custom
-compilers for embedded development work (we will "poly-fill" to
-ancient C compilers because we can).
+compilers for embedded development work (we will eventually
+"poly-fill" to ancient C compilers because we can).
 
 ## Using Omni C
 
@@ -82,11 +81,14 @@ move semantics, etc.)
 1. consistent naming of types uint64_t, etc. This promotes the same
    behavior across all platforms and IMHO looks nice (especially with
    the right syntax highlighting). Unlike Java, we don't arbitrarily
-   decide to not allow unsigned types.
-1. raw arrays without length are depcrecated as is other forms of
-   pointer arithmetic. This will lead to a much safer language (though
-   still not as safe as languages like Go which hide this
-   functionality even though they still have it).
+   decide to not allow unsigned types and pointer vs. values are still
+   available.
+1. raw arrays without length are depcrecated as are other forms of
+   pointer arithmetic (though we are tracking Fil-C as a target C
+   compiler which may allows these to be safe again). This will lead
+   to a much safer language (though still not as safe as languages
+   like Go which hide this functionality even though they still have
+   it).
 1. interpolated strings are simply nicer than printf functions being
    easier to read in many cases.
 1. scheme like "let" *expressions* allows statements to be executed in
@@ -94,10 +96,10 @@ move semantics, etc.)
    inline functions though this allows these statements to side-effect
    variables and even "loop" or otherwise change control flow). gcc
    may already allow this but it's not standard C yet.
-1. fluid_let - this makes thread local variables "cool" again and
-   inverts dependency injection back to just having
-   dependencies. (global variables that are fluid must have the
-   `fluid` anntoation applied to them).
+1. fluid_let - this makes thread local variables very useful inverting
+   dependency injection back to just having dependencies. (global
+   variables that are fluid must have the `fluid` anntoation applied
+   to them).
 1. C++ style templates as a basis for generic programming. No "OOP"
    required. You can write your own generic container and since there
    is no inheritance (because there is no OOP), I can't see the reason
