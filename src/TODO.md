@@ -1,17 +1,10 @@
 # TODO
 
-1. Tag the release
-
 1. Move all includes into a single files (at least in the compiler
    source directory).
 
-1. Remove armyknife-lib-impl.c (this isn't need since we compile
-   c-armyknife-lib directly from source into our single C output file.
-
-1. Remove bootstrap-saved since we don't need header files anymore
-   (though we should add a test to make sure this code still works)
-   and configure.sh and lexer-to-string-helper.c. I think type.c is
-   also dead but I'm not 100% sure.
+1. Remove lexer-to-string-helper.c. I think type.c is also dead but
+   I'm not 100% sure.
 
 1. Properly/fully parse struct_literals
 
