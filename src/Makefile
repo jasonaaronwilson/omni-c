@@ -119,3 +119,10 @@ how-big: clean
 	cat ${SRC_C} | wc --lines
 
 cf: format clean
+
+# This isn't a serious benchmark but it kind of gets at the
+# compile/run-tests nature of omni-c development so it's interesting
+# to me.
+benchmark:
+	/bin/bash -c 'time (make clean && make && make test)'
+
