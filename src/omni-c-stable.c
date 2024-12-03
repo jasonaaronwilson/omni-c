@@ -8983,7 +8983,7 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table){
     {
       enum_node_t* enum_node = to_enum_node(((typedef_node->type_node)->user_type));
       char* enum_node_name = token_to_string((typedef_node->name));
-      log_warn("Generating converters for %s", enum_node_name);
+      log_debug("Generating converters for %s", enum_node_name);
       char* to_string_prefix = remove_type_suffix_1(enum_node_name);
       char* enum_node_type_string = enum_node_name;
       append_enum_to_string(printer, enum_node, to_string_prefix, enum_node_type_string);
