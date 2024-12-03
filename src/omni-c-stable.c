@@ -6874,7 +6874,7 @@ pstatus_t parse_function_argument_node(pstate_t* pstate){
 pstatus_t parse_function_body_node(pstate_t* pstate){
   if ((pstate->use_statement_parser))
   {
-    log_warn("USING STATEMENT PARSER");
+    log_info("USING STATEMENT PARSER");
     return parse_block(pstate);
   }
   else
@@ -9041,12 +9041,12 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence){
   pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(token);
   if (((prefix_instruction.operation)==PRATT_PARSE_UNKNOWN))
   {
-    log_info("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
+    log_debug("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
     return pstate_error(pstate, saved_position, PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL);
   }
   if ((!pratt_handle_instruction(pstate, prefix_instruction, NULL)))
   {
-    log_info("(RETURNING ERROR) handle instruction\n", token_to_string(token));
+    log_debug("(RETURNING ERROR) handle instruction\n", token_to_string(token));
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* left = pstate_get_result_node(pstate);
