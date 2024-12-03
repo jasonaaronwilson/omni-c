@@ -6481,7 +6481,7 @@ pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node){
 token_t* pstate_get_result_token(pstate_t* pstate){
   if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
   {
-    log_warn("error code is not zero");
+    log_debug("error code is not zero");
     ((pstate->error)=((compiler_error_t) {0}));
   }
   token_t* token = (pstate->result_token);
@@ -6493,7 +6493,7 @@ token_t* pstate_get_result_token(pstate_t* pstate){
 parse_node_t* pstate_get_result_node(pstate_t* pstate){
   if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
   {
-    log_warn("error code is not zero");
+    log_debug("error code is not zero");
     ((pstate->error)=((compiler_error_t) {0}));
   }
   parse_node_t* result = (pstate->result_node);
@@ -6522,7 +6522,7 @@ token_t* pstate_peek(pstate_t* pstate, int offset){
 token_t* pstate_advance(pstate_t* pstate){
   if (((pstate->error).parse_error_code))
   {
-    log_warn("error code is not zero");
+    log_debug("error code is not zero");
     ((pstate->error)=((compiler_error_t) {0}));
   }
   token_t* token = pstate_peek(pstate, 0);
@@ -8581,7 +8581,7 @@ void split_structure_typedefs(symbol_table_t* symbol_table){
         {
           ((struct_node->name)=generate_struct_name_from_typedef_name((node->name)));
         }
-        log_info("Splitting %s off from %s", token_to_string((node->name)), token_to_string((struct_node->name)));
+        log_debug("Splitting %s off from %s", token_to_string((node->name)), token_to_string((struct_node->name)));
         struct_node_t* partial_definition = malloc_struct_node();
         ((partial_definition->partial_definition)=true);
         ((partial_definition->name)=(struct_node->name));
@@ -8609,7 +8609,7 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table){
 
 /* i=385 j=0 */
 void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings){
-  log_info("processing binding %s", (binding->key_string));
+  log_debug("processing binding %s", (binding->key_string));
   if ((!(binding->visited)))
   {
     if ((((binding->definition_nodes)->length)!=1))
@@ -8641,7 +8641,7 @@ void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs
     {
       fatal_error(ERROR_ILLEGAL_STATE);
     }
-    log_info("adding binding %s at position %d", (binding->key_string), (reordered_bindings->length));
+    log_debug("adding binding %s at position %d", (binding->key_string), (reordered_bindings->length));
     value_array_add(reordered_bindings, ptr_to_value(binding));
     ((binding->visited)=true);
   }
@@ -8668,7 +8668,7 @@ struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* bindin
 symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* symbol_table, type_node_t* type_node){
   if (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
   {
-    log_info("resolve_typename_to_structure_binding -- not looking through pointers " "%p", type_node);
+    log_debug("resolve_typename_to_structure_binding -- not looking through pointers " "%p", type_node);
     return NULL;
   }
   if (((type_node->type_node_kind)==TYPE_NODE_KIND_TYPE_EXPRESSION))
@@ -8682,14 +8682,14 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
         char* key_name = token_to_string((struct_node->name));
         symbol_table_binding_t* binding = symbol_table_map_get((symbol_table->structures), key_name);
         char* dbg_binding = buffer_to_c_string(buffer_append_dgb_binding(make_buffer(10), binding));
-        log_info("resolve_typename_to_structure_binding -- returning binding %p %s", binding, dbg_binding);
+        log_debug("resolve_typename_to_structure_binding -- returning binding %p %s", binding, dbg_binding);
         return binding;
       }
     }
     return NULL;
   }
   char* key_string = token_to_string((type_node->type_name));
-  log_info("resolve_typename_to_structure_binding -- %d %s", (type_node->tag), key_string);
+  log_debug("resolve_typename_to_structure_binding -- %d %s", (type_node->tag), key_string);
   symbol_table_binding_t* typedef_binding = symbol_table_map_get((symbol_table->typedefs), key_string);
   if ((typedef_binding!=NULL))
   {
@@ -8708,7 +8708,7 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
 
 /* i=388 j=0 */
 void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_table, symbol_table_binding_t* binding, value_array_t* reordered_bindings){
-  log_info("processing %s", (binding->key_string));
+  log_debug("processing %s", (binding->key_string));
   if ((!(binding->visited)))
   {
     ((binding->visited)=true);
