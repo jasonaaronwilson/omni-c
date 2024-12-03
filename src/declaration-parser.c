@@ -569,7 +569,7 @@ pstatus_t parse_function_argument_node(pstate_t* pstate) {
  */
 pstatus_t parse_function_body_node(pstate_t* pstate) {
   if (pstate->use_statement_parser) {
-    log_warn("USING STATEMENT PARSER");
+    log_info("USING STATEMENT PARSER");
     return parse_block(pstate);
   } else {
     return parse_balanced_construct(pstate);

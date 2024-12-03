@@ -1,5 +1,7 @@
 all: omni-c
 
+export ARMYKNIFE_LIB_LOG_LEVEL = WARN
+
 # Import
 include ../../c-armyknife-lib/Makefile.sources
 
