@@ -448,7 +448,8 @@ void buffer_append_dbg_variable_definition_node(
     cdl_key(printer, "suffixes");
     cdl_start_array(printer);
     for (uint64_t i = 0; i < node->suffixes->length; i++) {
-      parse_node_t* suffix = value_array_get_ptr(node->suffixes, i, typeof(parse_node_t*));
+      parse_node_t* suffix
+          = value_array_get_ptr(node->suffixes, i, typeof(parse_node_t*));
       buffer_append_dbg_parse_node(printer, suffix);
     }
     cdl_end_array(printer);

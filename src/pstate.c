@@ -96,7 +96,7 @@ pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node) {
  */
 token_t* pstate_get_result_token(pstate_t* pstate) {
   if (pstate->error.parse_error_code != PARSE_ERROR_UNKNOWN) {
-    log_warn("error code is not zero");
+    log_debug("error code is not zero");
     pstate->error = compound_literal(compiler_error_t, {0});
     // fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -113,7 +113,7 @@ token_t* pstate_get_result_token(pstate_t* pstate) {
  */
 parse_node_t* pstate_get_result_node(pstate_t* pstate) {
   if (pstate->error.parse_error_code != PARSE_ERROR_UNKNOWN) {
-    log_warn("error code is not zero");
+    log_debug("error code is not zero");
     pstate->error = compound_literal(compiler_error_t, {0});
     // fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -157,7 +157,7 @@ token_t* pstate_peek(pstate_t* pstate, int offset) {
  */
 token_t* pstate_advance(pstate_t* pstate) {
   if (pstate->error.parse_error_code) {
-    log_warn("error code is not zero");
+    log_debug("error code is not zero");
     pstate->error = compound_literal(compiler_error_t, {0});
     // fatal_error(ERROR_ILLEGAL_STATE);
   }

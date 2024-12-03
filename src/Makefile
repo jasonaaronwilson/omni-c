@@ -52,23 +52,26 @@ SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c refle
 SRC_H = $(SRC_C:.c=.h)
 
 omni-c-stable: omni-c-stable.c
-	gcc -o omni-c-stable -std=gnu99 -DOMNI_C_SELF_GENERATED -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr omni-c-stable.c reflection-header.c
+	gcc ${CC_FLAGS_OPT} -o omni-c-stable -std=gnu99 -DOMNI_C_SELF_GENERATED omni-c-stable.c reflection-header.c
 
 generate-reflection-embedding: runtime/reflection.h
 	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
 omni-c: omni-c-stable
 	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
-	gcc -o build/bin/omni-c -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/omni-c.c reflection-header.c
+	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c -std=gnu99 -DOMNI_C_SELF_GENERATED build/omni-c.c reflection-header.c
 
 self: omni-c
 	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
-	gcc -o build/bin/self -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/self.c reflection-header.c
+	gcc ${CC_FLAGS_OPT} -o build/bin/self -DOMNI_C_SELF_GENERATED build/self.c reflection-header.c
 
 selfself: omni-c self
 	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
-	gcc -o build/bin/selfself -std=gnu99 -DOMNI_C_SELF_GENERATED ${WARN_FLAGS} build/selfself.c reflection-header.c
+	gcc ${CC_FLAGS_OPT} -o build/bin/selfself -std=gnu99 -DOMNI_C_SELF_GENERATED build/selfself.c reflection-header.c
 
+# This feels outdated and was probably more centered on finding bugs
+# we could have found more easily if we simply have better error
+# messages. Consider this dead.
 bisect-self: omni-c
 	tools/bisect.sh ${SRC_C_SELF}
 

@@ -73,8 +73,8 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
               = generate_struct_name_from_typedef_name(node->name);
         }
 
-        log_info("Splitting %s off from %s", token_to_string(node->name),
-                 token_to_string(struct_node->name));
+        log_debug("Splitting %s off from %s", token_to_string(node->name),
+                  token_to_string(struct_node->name));
 
         // Below the few lines that do the actual transformation I've
         // left kind of like what the transformation looks like in
@@ -196,7 +196,7 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table) {
 void reorder_symbol_table_typedefs__process_binding(
     symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
-  log_info("processing binding %s", binding->key_string);
+  log_debug("processing binding %s", binding->key_string);
   if (!binding->visited) {
     if (binding->definition_nodes->length != 1) {
       fatal_error(ERROR_ILLEGAL_STATE);
@@ -227,8 +227,8 @@ void reorder_symbol_table_typedefs__process_binding(
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-    log_info("adding binding %s at position %d", binding->key_string,
-             reordered_bindings->length);
+    log_debug("adding binding %s at position %d", binding->key_string,
+              reordered_bindings->length);
     // TODO(jawilson): actually try to process dependencies first!
     value_array_add(reordered_bindings, ptr_to_value(binding));
     binding->visited = true;
@@ -256,7 +256,7 @@ symbol_table_binding_t*
     resolve_typename_to_structure_binding(symbol_table_t* symbol_table,
                                           type_node_t* type_node) {
   if (type_node->type_node_kind == TYPE_NODE_KIND_POINTER) {
-    log_info(
+    log_debug(
         "resolve_typename_to_structure_binding -- not looking through pointers "
         "%p",
         type_node);
@@ -273,7 +273,7 @@ symbol_table_binding_t*
             = symbol_table_map_get(symbol_table->structures, key_name);
         char* dbg_binding = buffer_to_c_string(
             buffer_append_dgb_binding(make_buffer(10), binding));
-        log_info(
+        log_debug(
             "resolve_typename_to_structure_binding -- returning binding %p %s",
             binding, dbg_binding);
         return binding;
@@ -285,8 +285,8 @@ symbol_table_binding_t*
 
   // TODO(jawilson): recurse on any ARRAY type.
   char* key_string = token_to_string(type_node->type_name);
-  log_info("resolve_typename_to_structure_binding -- %d %s", type_node->tag,
-           key_string);
+  log_debug("resolve_typename_to_structure_binding -- %d %s", type_node->tag,
+            key_string);
   symbol_table_binding_t* typedef_binding
       = symbol_table_map_get(symbol_table->typedefs, key_string);
   if (typedef_binding != NULL) {
@@ -305,7 +305,7 @@ symbol_table_binding_t*
 void reorder_symbol_table_structures_process_binding(
     symbol_table_t* symbol_table, symbol_table_binding_t* binding,
     value_array_t* reordered_bindings) {
-  log_info("processing %s", binding->key_string);
+  log_debug("processing %s", binding->key_string);
   if (!binding->visited) {
     binding->visited = true;
     struct_node_t* structure_node = get_full_structure_definition_node(binding);
