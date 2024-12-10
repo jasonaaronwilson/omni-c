@@ -1,14 +1,3 @@
-#line 2 "keywords.c"
-#ifndef _KEYWORDS_H_
-#define _KEYWORDS_H_
-
-#include "mode.h"
-#include <c-armyknife-lib.h>
-
-#include "keywords.c.generated.h"
-
-#endif /* _KEYWORDS_H_ */
-
 char* c_keywords_array[] = {
     /* C89/C90 Keywords */
     "auto", "break", "case", "char", "const", "continue", "default", "do",

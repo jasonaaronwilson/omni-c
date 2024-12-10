@@ -1,12 +1,3 @@
-#line 2 "lexer.c"
-#ifndef _LEXER_H_
-#define _LEXER_H_
-
-#include "compiler-errors.h"
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
 /**
  * @file lexer
  *
@@ -84,8 +75,6 @@ struct token_or_error_S {
 
 typedef struct token_or_error_S token_or_error_t;
 
-char* token_type_to_string(token_type_t type);
-
 /**
  * @enum numeric_literal_encoding_t
  *
@@ -103,10 +92,6 @@ typedef enum {
   NUMERIC_LITERAL_ENCODING_DECIMAL,
   NUMERIC_LITERAL_ENCODING_FLOAT,
 } numeric_literal_encoding_t;
-
-#include "lexer.c.generated.h"
-
-#endif /* _LEXER_H_ */
 
 /**
  * @function token_to_string
