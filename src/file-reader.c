@@ -1,20 +1,9 @@
-#line 2 "file-reader.c"
-
 /**
  * @file file-reader.c
  *
  * Handles reading "oc_file"'s (into memory - eventually memory
  * mapping might work...)
  */
-
-#ifndef _FILE_READER_H_
-#define _FILE_READER_H_
-
-#include "file.h"
-
-#include "file-reader.c.generated.h"
-
-#endif /* _FILE_READER_H_ */
 
 /**
  * @function read_files

@@ -1,19 +1,3 @@
-#line 2 "debug-printer.c"
-#ifndef _DEBUG_PRINTER_H_
-#define _DEBUG_PRINTER_H_
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
-#include "declaration-parser.h"
-#include "lexer.h"
-#include "parser.h"
-#include "pratt-parser.h"
-#include "statement-parser.h"
-#include "type-parser.h"
-#include "user-type-parser.h"
-#include "variable-definition-parser.h"
-
 /**
  * @file debug-printer.c
  *
@@ -24,10 +8,6 @@
  * be interesting. (We did something a bit similar with TSNode's when
  * we were using tree-sitter).
  */
-
-#include "debug-printer.c.generated.h"
-
-#endif /* _DEBUG_PRINTER_H_ */
 
 /**
  * @function buffer_append_dbg_parse_node

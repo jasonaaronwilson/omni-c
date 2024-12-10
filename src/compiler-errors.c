@@ -1,9 +1,3 @@
-#line 2 "compiler-errors.c"
-#ifndef _COMPILER_ERRORS_H_
-#define _COMPILER_ERRORS_H_
-
-#include <c-armyknife-lib.h>
-
 /**
  * @enum tokenizer_error_t
  *
@@ -70,14 +64,6 @@ typedef struct {
   char* current_line;
   char* next_lines;
 } src_code_snippets_t;
-
-// Reinclude generated prototypes...
-#include "compiler-errors.c.generated.h"
-
-#endif /* _COMPILER_ERRORS_H_ */
-
-
-#include "lexer.h"
 
 /**
  * @function buffer_append_human_readable_error

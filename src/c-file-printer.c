@@ -1,18 +1,3 @@
-#line 2 "c-file-printer.c"
-#ifndef _C_FILE_PRINTER_H_
-#define _C_FILE_PRINTER_H_
-
-#include "declaration-parser.h"
-#include "lexer.h"
-#include "parser.h"
-#include "printer.h"
-#include "statement-parser.h"
-#include "type-parser.h"
-#include "user-type-parser.h"
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
 /**
  * @file c-file-printer.c
  *
@@ -31,10 +16,6 @@
  * The primitives are not smart enough to make decisions about the
  * order things should appear in the header file, etc.
  */
-
-#include "c-file-printer.c.generated.h"
-
-#endif /* _C_FILE_PRINTER_H_ */
 
 /**
  * @function append_parse_node

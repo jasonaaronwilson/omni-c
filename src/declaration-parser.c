@@ -1,21 +1,3 @@
-#line 2 "declaration-parser.c"
-#ifndef _DECLARATION_PARSER_H_
-#define _DECLARATION_PARSER_H_
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
-#include "balanced-construct-parser.h"
-#include "compiler-errors.h"
-#include "lexer.h"
-#include "literal-parser.h"
-#include "node-list.h"
-#include "parser.h"
-#include "pstate.h"
-#include "token-list.h"
-#include "type-parser.h"
-#include "variable-definition-parser.h"
-
 /**
  * @file declaration-parser.c
  *
@@ -141,12 +123,6 @@ typedef struct {
   parse_node_type_t tag;
   char* text;
 } cpp_define_node_t;
-
-// PARSE_NODE_UNPARSED_EXPRESSION
-
-/* ====================================================================== */
-/* General inlined accessors, helpers, and macros */
-/* ====================================================================== */
 
 /* ====================================================================== */
 /* These feel like they can be automatically generated or become a C

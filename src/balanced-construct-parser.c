@@ -1,14 +1,3 @@
-#line 2 "balanced-construct-parser.c"
-#ifndef _BALANCED_CONSTRUCT_PARSER_H_
-#define _BALANCED_CONSTRUCT_PARSER_H_
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
-#include "compiler-errors.h"
-#include "parser.h"
-#include "pstate.h"
-
 /**
  * @structure balanced_construct_node_t
  *
@@ -48,10 +37,6 @@ static inline balanced_construct_node_t* malloc_balanced_construct_node() {
   result->tag = PARSE_NODE_BALANCED_CONSTRUCT;
   return result;
 }
-
-#include "balanced-construct-parser.c.generated.h"
-
-#endif /* _BALANCED_CONSTRUCT_PARSER_H_ */
 
 /**
  * @function parse_balanced_construct
