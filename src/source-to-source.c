@@ -1,19 +1,3 @@
-#line 2 "source-to-source.c"
-#ifndef _SOURCE_TO_SOURCE_H_
-#define _SOURCE_TO_SOURCE_H_
-
-#include "parser.h"
-#include "symbol-table.h"
-#include <c-armyknife-lib.h>
-
-// Make sure this include comes after symbol-table.h. We've gotten
-// lucky so far because most files define something between the
-// includes and the inclusion of the generated header file.
-
-#include "source-to-source.c.generated.h"
-
-#endif /* _SOURCE_TO_SOURCE_H_ */
-
 /**
  * @file source-to-source.c
  *

@@ -6,18 +6,6 @@
  * various kinds of metadata, etc.
  */
 
-#ifndef _SRCGEN_H_
-#define _SRCGEN_H_
-
-#include "c-file-printer.h"
-#include "parser.h"
-#include "symbol-table-builder.h"
-#include <c-armyknife-lib.h>
-
-#include "srcgen.c.generated.h"
-
-#endif /* _SRCGEN_H_ */
-
 static inline char* remove_type_suffix_1(char* typename) {
   if (string_ends_with(typename, "_t")) {
     return string_substring(typename, 0, strlen(typename) - 2);

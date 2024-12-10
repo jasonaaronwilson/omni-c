@@ -1,15 +1,3 @@
-#line 2 "pstate.c"
-#ifndef _PSTATE_H_
-#define _PSTATE_H_
-
-#include "parser.h"
-
-// Must come last
-
-#include "pstate.c.generated.h"
-
-#endif /* _PSTATE_H_ */
-
 /**
  * @function pstate_error
  *

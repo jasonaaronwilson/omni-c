@@ -1,12 +1,3 @@
-#line 2 "statement-parser.c"
-#ifndef _STATEMNET_PARSER_H_
-#define _STATEMNET_PARSER_H_
-
-#include "parser.h"
-#include "pratt-parser.h"
-#include "pstate.h"
-#include "variable-definition-parser.h"
-
 /**
  * @structure if_statement_node_t
  */
@@ -144,12 +135,6 @@ typedef struct {
   parse_node_type_t tag;
   parse_node_t* expression;
 } expression_statement_node_t;
-
-// Should come after any includes that provide types.
-
-#include "statement-parser.c.generated.h"
-
-#endif /* _STATEMENT_PARSER_H_ */
 
 /**
  * @function parse_statement
