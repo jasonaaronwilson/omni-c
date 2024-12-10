@@ -1,15 +1,3 @@
-#line 2 "literal-parser.c"
-#ifndef _LITERAL_PARSER_H_
-#define _LITERAL_PARSER_H_
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
-#include "balanced-construct-parser.h"
-#include "compiler-errors.h"
-#include "parser.h"
-#include "pstate.h"
-
 /**
  * @structure literal_node_t
  *
@@ -33,12 +21,6 @@ static inline literal_node_t* malloc_literal_node(void) {
   result->tag = PARSE_NODE_LITERAL;
   return result;
 }
-
-#include "literal-parser.c.generated.h"
-
-#endif /* _LITERAL_PARSER_H_ */
-
-#include "type-parser.h"
 
 pstatus_t parse_literal_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;

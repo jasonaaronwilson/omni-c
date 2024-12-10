@@ -1,11 +1,3 @@
-#line 2 "node-list.c"
-#ifndef _NODE_LIST_H_
-#define _NODE_LIST_H_
-
-#include <c-armyknife-lib.h>
-
-struct parse_node_S;
-
 /**
  * @structure node_list_t
  *
@@ -71,7 +63,3 @@ static inline struct parse_node_S* node_list_get(node_list_t node_list,
   return value_array_get_ptr(node_list.list, index,
                              typeof(struct parse_node_S*));
 }
-
-#include "node-list.c.generated.h"
-
-#endif /* _NODE_LIST_H_ */

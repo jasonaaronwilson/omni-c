@@ -1,7 +1,3 @@
-#line 2 "mode.c"
-#ifndef _MODE_H_
-#define _MODE_H_
-
 /**
  * @enum input_mode_t
  *
@@ -38,7 +34,3 @@ typedef enum {
   OUTPUT_MODE_STANDARD_C,
   OUTPUT_MODE_C_PLUS_PLUS,
 } output_mode_t;
-
-#include "mode.c.generated.h"
-
-#endif /* _MODE_H_ */

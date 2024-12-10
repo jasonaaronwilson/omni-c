@@ -6,28 +6,6 @@
  * C and omni-c users.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "c-file-printer.h"
-#include "debug-printer.h"
-#include "file-reader.h"
-#include "lexer.h"
-#include "parser.h"
-#include "pratt-parser.h"
-#include "runtime/reflection.h"
-#include "source-to-source.h"
-#include "srcgen.h"
-#include "statement-parser.h"
-#include "symbol-table-builder.h"
-#include "symbol-table.h"
-#include "token-transformer.h"
-
-#include <c-armyknife-lib.h>
-
-#include "header-file-extractor.c.generated.h"
-#include "main.c.generated.h"
-
 value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
 boolean_t FLAG_print_command_line = true;
