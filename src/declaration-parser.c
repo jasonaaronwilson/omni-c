@@ -319,13 +319,6 @@ static inline cpp_define_node_t* malloc_cpp_define_node(void) {
 }
 
 /* ====================================================================== */
-/* Enumeration to string */
-/* ====================================================================== */
-
-char* parse_node_type_to_string(parse_node_type_t type);
-char* type_node_kind_to_string(type_node_kind_t kind);
-
-/* ====================================================================== */
 /* Forward declarations all the other routines. */
 /* ====================================================================== */
 

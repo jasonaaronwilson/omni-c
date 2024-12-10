@@ -2,13 +2,6 @@
 
 ## Cleanup & Build
 
-1. deal with reflection header differently. Currently it secretly
-   addss an extra include of c-armyknife-lib in order to get access to
-   buffer_t and a few routines.
-
-1. Move all includes into a single files (at least in the compiler
-   source directory).
-
 1. less noisy logging (mostly done just by changing logging levels),
    we still need to examine why error code doesn't get reset, maybe
    come up with a way to clear it automatically
@@ -16,7 +9,8 @@
 1. remove all of the C single header file stuff (at least from omni-c
    maybe leave as is in c-armyknife-lib for now).
 
-1. remove all enum to_string functions
+1. Move all includes into a single files (at least in the compiler
+   source directory).
 
 ## Simple Compile Improvements
 

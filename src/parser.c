@@ -182,6 +182,10 @@ typedef struct {
 
 #endif /* _PARSER_H_ */
 
+/*
+
+REMOVE ME
+
 char* parse_error_code_to_string_1(parse_error_code_t value) {
   switch (value) {
   case PARSE_ERROR_UNKNOWN:
@@ -219,3 +223,4 @@ char* parse_error_code_to_string_1(parse_error_code_t value) {
     return "<<unknown-parse_error_code>>";
   }
 }
+*/
