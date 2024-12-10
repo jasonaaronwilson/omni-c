@@ -54,7 +54,7 @@ SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c refle
 SRC_H = $(SRC_C:.c=.h)
 
 omni-c-stable: omni-c-stable.c
-	gcc ${CC_FLAGS_OPT} -o omni-c-stable -std=gnu99 -DOMNI_C_SELF_GENERATED omni-c-stable.c reflection-header-stable.c
+	gcc ${CC_FLAGS_OPT} -o omni-c-stable -std=gnu99 -DOMNI_C_SELF_GENERATED omni-c-stable.c
 
 generate-reflection-embedding: runtime/reflection.h
 	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
