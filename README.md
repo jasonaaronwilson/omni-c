@@ -122,6 +122,14 @@ move semantics, etc.)
 
 ## Status
 
+* (2024-12-10) Tested on an Orange Pi Zero 2 (1GB, Debian Bookworm
+  based OS provided by Orange Pi, Quad Core ARM Cortex-A53 64-bit
+  1.5GHz processor) a less than $40 computer. Building is much slower
+  than my usual baseline machine (N100 based mini-pc with 16GB) though
+  the vast bulk of that time is spent in steps involving gcc
+  invocation. This uncovered at least one remaining bootstrapping
+  problem related to c-armyknife-lib (the solution is to still do make
+  install in c-armyknife-lib).
 * (2024-11-24) We can now parse both omni-c + c-armyknife-lib at the
   full statement/expression level! This promises to make bootstrapping
   much easier as a single extra file can serve as the (stable)

@@ -6,8 +6,9 @@ This is the Omni C transpiler source code.
 
 If you just want to use Omni C, currently just do this:
 
-1. sudo apt install <prerequisites> (including gcc, clang and lua5.4,
-   lua-filesystem). Obviously this is specific to your linux flavor.
+1. sudo apt install <prerequisites> (including gcc, tcc, clang and
+   lua5.4, lua-filesystem). Obviously this is specific to your linux
+   flavor.
 1. cd ~
 1. mkdir src
 1. cd src
