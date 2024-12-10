@@ -1,12 +1,3 @@
-#line 2 "printer.c"
-#ifndef _PRINTER_H_
-#define _PRINTER_H_
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
-#include "lexer.h"
-
 /**
  * @file printer.c
  *
@@ -21,10 +12,6 @@ typedef struct printer_S {
   uint32_t indent_level;
   // TODO(jawilson): add is_header_file
 } printer_t;
-
-#include "printer.c.generated.h"
-
-#endif /* _PRINTER_H_ */
 
 printer_t* make_printer(buffer_t* buffer, int indent_width) {
   printer_t* result = malloc_struct(printer_t);

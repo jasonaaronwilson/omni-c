@@ -1,14 +1,3 @@
-#line 2 "pratt-parser.c"
-#ifndef _PRATT_PARSER_H_
-#define _PRATT_PARSER_H_
-
-#include <c-armyknife-lib.h>
-
-#include "compiler-errors.h"
-#include "literal-parser.h"
-#include "parser.h"
-#include "type-parser.h"
-
 /**
  * @file pratt-parser.c
  *
@@ -202,12 +191,6 @@ static inline pratt_parser_instruction_t
       pratt_parser_instruction_t,
       {.token = token, .operation = operation, .precedence = precedence});
 }
-
-#include "pratt-parser.c.generated.h"
-
-#endif /* _PRATT_PARSER_H_ */
-
-pstatus_t parse_block(pstate_t* pstate);
 
 /**
  * @function pratt_parse_expression

@@ -1,13 +1,3 @@
-#line 2 "preprocessor.c"
-#ifndef _PREPROCESSOR_H_
-#define _PREPROCESSOR_H_
-
-#include "lexer.h"
-#include "parser.h"
-#include "symbol-table.h"
-
-#include <c-armyknife-lib.h>
-
 typedef struct {
   boolean_t keep_system_includes;
   boolean_t keep_user_includes;
@@ -20,10 +10,6 @@ typedef struct {
   uint64_t buffer_end_position;
   buffer_t* buffer;
 } c_preprocessor_directive_range_t;
-
-#include "preprocessor.c.generated.h"
-
-#endif /* _PREPROCESSOR_H_ */
 
 /**
  * @file preprocessor.c
