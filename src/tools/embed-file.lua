@@ -24,9 +24,7 @@ local function file_to_c_code()
     -- Generate C code
     local num_bytes = #bytes
     local c_code = ""
-    c_code = c_code .. "#include <c-armyknife-lib.h>\n\n"
-    c_code = c_code .. string.format("buffer_t* get_%s_buffer(void) {\n", var_name);
-
+    c_code = c_code .. string.format("buffer_t* get_%s_array(void) {\n", var_name);
     c_code = c_code .. string.format("  static uint8_t %s[] = {\n    ", var_name)
 
     for i = 1, num_bytes do

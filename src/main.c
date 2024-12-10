@@ -380,7 +380,7 @@ void generate_c_output_file(boolean_t is_library) {
     char* include_statement = include_node_to_string(node);
     if (FLAG_omit_c_armyknife_include
         && string_starts_with(include_statement,
-                              "#include <c-armyknife-lib.h>")) {
+                              "#include <c-armyknife-lib")) {
       continue;
     }
     if (!is_ok(string_ht_find(system_includes_set, include_statement))) {
