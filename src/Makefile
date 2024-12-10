@@ -46,6 +46,7 @@ SRC_C_SELF := \
 	literal-parser.c \
 	balanced-construct-parser.c \
 	printer.c \
+	global-includes.c \
 	main.c
 
 SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c reflection-header.c $(SRC_C_SELF)

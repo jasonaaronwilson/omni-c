@@ -10,7 +10,7 @@
    maybe leave as is in c-armyknife-lib for now).
 
 1. Move all includes into a single files (at least in the compiler
-   source directory).
+   source directory). (Half done now...)
 
 ## Simple Compile Improvements
 
