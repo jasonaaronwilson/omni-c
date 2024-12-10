@@ -1,11 +1,3 @@
-#line 2 "token-list.c"
-#ifndef _TOKEN_LIST_H_
-#define _TOKEN_LIST_H_
-
-#include <c-armyknife-lib.h>
-
-#include "lexer.h"
-
 /**
  * @structure token_list_t
  *
@@ -83,7 +75,3 @@ static inline boolean_t token_list_contains(token_list_t token_list,
   }
   return false;
 }
-
-#include "token-list.c.generated.h"
-
-#endif /* _TOKEN_LIST_H_ */

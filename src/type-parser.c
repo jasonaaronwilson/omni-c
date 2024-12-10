@@ -1,15 +1,3 @@
-#line 2 "type-parser.c"
-#ifndef _TYPE_PARSER_H_
-#define _TYPE_PARSER_H_
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
-#include "compiler-errors.h"
-#include "literal-parser.h"
-#include "parser.h"
-#include "pstate.h"
-
 /**
  * @enum type_qualifier_t
  *
@@ -97,16 +85,6 @@ typedef struct canonical_type_result_s {
   token_t* canonical_type;
   int consumed_tokens;
 } canonical_type_result_t;
-
-#include "type-parser.c.generated.h"
-
-pstatus_t parse_typeof_node(pstate_t* pstate);
-pstatus_t parse_user_type_node(pstate_t* pstate);
-pstatus_t parse_enum_node(pstate_t* pstate);
-pstatus_t parse_structure_node(pstate_t* pstate);
-pstatus_t parse_union_node(pstate_t* pstate);
-
-#endif /* _TYPE_PARSER_H_ */
 
 /**
  * @function parse_type_node

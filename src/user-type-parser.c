@@ -1,15 +1,3 @@
-#line 2 "user-type-parser.c"
-#ifndef _USER_TYPE_PARSER_H_
-#define _USER_TYPE_PARSER_H_
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
-#include "compiler-errors.h"
-#include "parser.h"
-#include "pstate.h"
-#include "type-parser.h"
-
 /**
  * @structure struct_node_t
  *

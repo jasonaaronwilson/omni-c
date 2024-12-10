@@ -1,10 +1,3 @@
-#line 2 "token-transformer.c"
-#ifndef _TOKEN_TRANSFORMER_H_
-#define _TOKEN_TRANSFORMER_H_
-
-#include "lexer.h"
-#include <c-armyknife-lib.h>
-
 /**
  * @file token-transformer
  *
@@ -32,10 +25,6 @@ typedef struct token_transformer_options_S {
   boolean_t keep_comments;
   boolean_t keep_c_preprocessor_lines;
 } token_transformer_options_t;
-
-#include "token-transformer.c.generated.h"
-
-#endif /* _TOKEN_TRANSFORMER_H_ */
 
 /**
  * @function transform_tokens

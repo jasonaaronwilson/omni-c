@@ -1,16 +1,3 @@
-#line 2 "symbol-table-builder.c"
-#ifndef _SYMBOL_TABLE_BUILDER_H_
-#define _SYMBOL_TABLE_BUILDER_H_
-
-#include "preprocessor.h"
-#include "symbol-table.h"
-
-// Nothing besides protos and includes
-
-#include "symbol-table-builder.c.generated.h"
-
-#endif /* _SYMBOL_TABLE_BUILDER_H_ */
-
 /**
  * @function parse_and_add_top_level_definitions
  *

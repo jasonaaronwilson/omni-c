@@ -1,13 +1,3 @@
-#line 2 "symbol-table.c"
-#ifndef _SYMBOL_TABLE_H_
-#define _SYMBOL_TABLE_H_
-
-#include "debug-printer.h"
-#include "file-reader.h"
-#include "parser.h"
-#include "token-transformer.h"
-#include <c-armyknife-lib.h>
-
 /**
  * @struct symbol_table_binding_t
  *
@@ -90,10 +80,6 @@ typedef struct symbol_table_S {
   symbol_table_map_t* variables;
   symbol_table_map_t* functions;
 } symbol_table_t;
-
-#include "symbol-table.c.generated.h"
-
-#endif /* _SYMBOL_TABLE_H_ */
 
 symbol_table_map_t* make_symbol_table_map(void) {
   symbol_table_map_t* result = malloc_struct(symbol_table_map_t);

@@ -1,17 +1,3 @@
-#line 2 "variable-definition-parser.c"
-#ifndef _VARIABLE_DEFINITION_PARSER_H_
-#define _VARIABLE_DEFINITION_PARSER_H_
-
-#include <c-armyknife-lib.h>
-#include <ctype.h>
-
-#include "balanced-construct-parser.h"
-#include "compiler-errors.h"
-#include "parser.h"
-#include "pratt-parser.h"
-#include "pstate.h"
-#include "type-parser.h"
-
 /**
  * @structure definition_definition_node_t
  *
@@ -50,10 +36,6 @@ static inline variable_definition_node_t*
   result->tag = PARSE_NODE_VARIABLE_DEFINITION;
   return result;
 }
-
-#include "variable-definition-parser.c.generated.h"
-
-#endif /* _VARIABLE_DEFINITION_PARSER_H_ */
 
 /**
  * @function parse_expression
