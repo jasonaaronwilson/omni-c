@@ -91,28 +91,40 @@ test: omni-c
 test-suite: omni-c
 	tools/run-tests.lua ${SUITE_TESTS}
 
-# bootstrap:
-#	./bootstrap.sh
-
-save-bootstrap-prototypes: extract-prototypes
-	cp -upv --target=bootstrap-saved/ build/*.c.generated.h
-
 format:
 	clang-format -i ${SRC_C}
 	clang-format -i tools/random-code-generator.c
 
+# jawilson(fixme): not omni-c-stable
 tags:
-	etags *.c bootstrap-saved/*.h
+	etags *.c
+
 
 clean:
-	rm -f omni-c-stable omni-c omni-c-opt
-	find . -name '*.h' -not -path './bootstrap-saved/*' -not -path './runtime/*' | xargs -n 1 rm -f
+	# This is all that should be necessary for a clean build
+	rm -rf omni-c-stable build/
+	# I would rather a "presubmit" rule such as no files named
+	# "a.out" to capture certain junk like this I've been known to
+	# create.  TODO(jawilson): make a warning
+	rm -f a.out tests/a.out tools/a.out
+	# Again, this would be better as a presubmit rule.
+	# 
+	# You shouldn't be creating .h files here - this will possibly
+	# end in tears and we should be more polite. I'm probably
+	# going to rename runtime/reflection.h just to avoid a strange
+	# special case.
+	#
+	find . -name '*.h' -not -path './runtime/*' | xargs -n 1 rm -f
+	# Emacs backup files, my speciality! If you had an issue with
+	# your text editor crashing and your leaving these behind,
+	# then make clean is not your friend here. This 
 	find . -name '*~' | xargs -n 1 rm -f
+	# Unknown
 	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
-	rm -rf  build/
+	# Figure out if still needed
 	rm -f tools/syntax-c
-	rm -f test-out.c test-out.o self self.c selfself selfself.c global-header-file.h.gch a.out tools/a.out
-	rm -f tests/a.out tmp.c
+	rm -f test-out.c test-out.o
+	rm -f self self.c selfself selfself.c global-header-file.h.gch
 	rm -f tests/*.out tests/expressions/*.out tests/statements/*.out
 
 diff: clean
