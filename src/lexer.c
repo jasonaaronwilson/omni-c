@@ -407,8 +407,8 @@ static char* c_punctuation[] = {
     "<<",
     ">>",
 
-    // Single character tokens should come after any two character
-    // token that starts with the same character.
+    // Since we match from top-to-bottom, we generally want the
+    // longest tokens first.
 
     "!",
     "%",

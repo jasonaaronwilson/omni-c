@@ -1,4 +1,14 @@
 /**
+ * @file node-list.c
+ *
+ * Because omni-c's growable arrays aren't generic, this provides a
+ * handy wrapper that consolidates some annoying type-casting to one
+ * place and also works better as a structure member since we delay
+ * the creation of a backing value_array_t* until something is added
+ * to the node-list.
+ */
+
+/**
  * @structure node_list_t
  *
  * A list of of parse_node_t*
