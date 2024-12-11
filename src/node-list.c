@@ -29,7 +29,7 @@ typedef struct node_list_S {
  * reading is done without the extra address.
  */
 static inline void node_list_add_node(node_list_t* node_list,
-                                      struct parse_node_S* oc_node) {
+                                      parse_node_t* oc_node) {
   if (oc_node == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -65,11 +65,10 @@ static inline boolean_t node_list_is_empty(node_list_t node_list) {
  *
  * Return the n-th element of the node list.
  */
-static inline struct parse_node_S* node_list_get(node_list_t node_list,
+static inline parse_node_t* node_list_get(node_list_t node_list,
                                                  uint64_t index) {
   if (node_list.list == NULL) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
-  return value_array_get_ptr(node_list.list, index,
-                             typeof(struct parse_node_S*));
+  return value_array_get_ptr(node_list.list, index, typeof(parse_node_t*));
 }
