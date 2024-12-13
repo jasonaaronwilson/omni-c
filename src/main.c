@@ -1,9 +1,7 @@
 /**
  * @file main.c
  *
- * This is the main routine for the omni-c C header-file extractor,
- * the eventual omni-c language transpiler, and other tools helpful to
- * C and omni-c users.
+ * This is the main routine for the omni-c transpiler.
  */
 
 value_array_t* FLAG_files = NULL;
@@ -107,103 +105,6 @@ void print_tokens(void) {
   }
 }
 
-boolean_t FLAG_unique_prototype_header_files = false;
-
-void extract_command(char* command) {
-  log_info("extract_prototypes(%s)", command);
-
-  buffer_t* prototype_outputs = make_buffer(16 * 1024);
-  buffer_t* enum_outputs = make_buffer(16 * 1024);
-
-  value_array_t* files = read_files(FLAG_files);
-  for (int i = 0; i < FLAG_files->length; i++) {
-    if (FLAG_unique_prototype_header_files) {
-      buffer_clear(prototype_outputs);
-    }
-
-    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
-    prototype_outputs
-        = buffer_printf(prototype_outputs,
-                        "/* Automatically extracted prototypes from %s */\n\n",
-                        file->file_name);
-
-    fprintf(stdout, "====================================================\n");
-    fprintf(stdout, "====> Processing %s\n", file->file_name);
-    fprintf(stdout, "====================================================\n");
-
-    tokenizer_result_t tokenizer_result = tokenize(file->data);
-
-    if (tokenizer_result.tokenizer_error_code) {
-      log_warn("Tokenizer error: \"%s\"::%d -- %d",
-               value_array_get(FLAG_files, i).str,
-               tokenizer_result.tokenizer_error_position,
-               tokenizer_result.tokenizer_error_code);
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-
-    value_array_t* tokens = tokenizer_result.tokens;
-
-    symbol_table_t* symbol_table = make_symbol_table();
-
-    handle_c_preprocessor_directives(
-        compound_literal(c_preprocess_options_t,
-                         {
-                             .keep_system_includes = false,
-                             .keep_user_includes = false,
-                         }),
-        symbol_table, tokens);
-
-    tokens = transform_tokens(
-        tokens, compound_literal(token_transformer_options_t,
-                                 {
-                                     .keep_whitespace = false,
-                                     .keep_comments = false,
-                                     .keep_javadoc_comments = false,
-                                     .keep_c_preprocessor_lines = false,
-                                 }));
-
-    pstate_t pstate = compound_literal(
-        pstate_t,
-        {.tokens = tokens, .use_statement_parser = FLAG_use_statement_parser});
-    if (!parse_declarations(&pstate)) {
-      pstate.error.file_name = file->file_name;
-      buffer_t* buffer = make_buffer(1);
-      buffer = buffer_append_human_readable_error(buffer, &(pstate.error));
-      log_fatal("%s", buffer_to_c_string(buffer));
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-
-    declarations_node_t* root
-        = to_declarations_node(pstate_get_result_node(&pstate));
-
-    if (string_equal("extract-prototypes", command)) {
-      prototype_outputs
-          = extract_prototypes_process_declarations(prototype_outputs, root);
-    } else if (string_equal("extract-enums", command)) {
-      enum_outputs = extract_enums_process_declarations(enum_outputs, root);
-    }
-
-    if (FLAG_unique_prototype_header_files) {
-      if (string_equal("extract-prototypes", command)) {
-        char* prototype_outputs_file_name
-            = string_printf("%s.generated.h", file->file_name);
-        buffer_write_file(prototype_outputs, prototype_outputs_file_name);
-        free_bytes(prototype_outputs_file_name);
-      } else if (string_equal("extract-enums", command)) {
-        char* enum_outputs_file_name
-            = string_printf("%s.enum-generated.h", file->file_name);
-        buffer_write_file(enum_outputs, enum_outputs_file_name);
-        free_bytes(enum_outputs_file_name);
-      }
-    }
-  }
-
-  if (!FLAG_unique_prototype_header_files) {
-    // TODO(jawilson): prototype_outputs to --prototype_outputs...
-    fprintf(stdout, "%s", buffer_to_c_string(prototype_outputs));
-  }
-}
-
 void configure_flags(void) {
   flag_program_name("omni-c");
   flag_description(
@@ -215,8 +116,6 @@ void configure_flags(void) {
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
 
   configure_print_tokens_command();
-  configure_extract_prototypes_command();
-  configure_extract_enums_command();
   configure_generate_c_output_file();
   configure_parse_expression();
   configure_parse_statement();
@@ -241,22 +140,6 @@ void configure_print_tokens_command(void) {
   flag_boolean("--parse-and-print", &FLAG_print_tokens_parse_and_print);
   flag_boolean("--show-appended-tokens",
                &FLAG_print_tokens_show_appended_tokens);
-  flag_file_args(&FLAG_files);
-}
-
-void configure_extract_enums_command(void) {
-  flag_command("extract-enums", &FLAG_command);
-  flag_string("--output-file", &FLAG_ouput_file);
-  flag_boolean("--unique-prototype-header-files",
-               &FLAG_unique_prototype_header_files);
-  flag_file_args(&FLAG_files);
-}
-
-void configure_extract_prototypes_command(void) {
-  flag_command("extract-prototypes", &FLAG_command);
-  flag_string("--output-file", &FLAG_ouput_file);
-  flag_boolean("--unique-prototype-header-files",
-               &FLAG_unique_prototype_header_files);
   flag_file_args(&FLAG_files);
 }
 
@@ -625,9 +508,6 @@ int main(int argc, char** argv) {
     parse_statement_string_and_print_parse_tree(FLAG_statement);
   } else if (string_equal("print-tokens", FLAG_command)) {
     print_tokens();
-  } else if (string_equal("extract-enums", FLAG_command)
-             || string_equal("extract-prototypes", FLAG_command)) {
-    extract_command(FLAG_command);
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }
