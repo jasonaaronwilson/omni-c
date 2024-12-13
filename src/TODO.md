@@ -2,19 +2,9 @@
 
 ## Cleanup & Build
 
-1. less noisy logging (mostly done just by changing logging levels),
-   we still need to examine why error code doesn't get reset, maybe
-   come up with a way to clear it automatically
-
-1. remove all of the C single header file stuff (at least from omni-c
-   maybe leave as is in c-armyknife-lib for now).
-
-1. Move all includes into a single files (at least in the compiler
-   source directory). (Half done now...)
-
 1. Get rid of -DOMNI_C_SELF_GENERATED
 
-## Simple Compile Improvements
+## Simple Compiler Improvements
 
 1. Put out a header with command line used for the build and possibly
    checksums of source files.
@@ -25,12 +15,13 @@
 
 ## Compiler Improvements
 
-1. Properly/fully parse struct_literals
+1. better error messages on parse failures - clear errors better and
+   also store furthest progress.
+
+1. Properly/fully parse struct_literals (and other initializers)
 
 1. Document and implement multi-level parsing and C macro expansion
    via "cpp".
-
-1. better error messages on parse failures
 
 ## Other
 
@@ -53,4 +44,3 @@
 1. make sure parser can handle more of unicode?
 
 1. parse system includes?
-
