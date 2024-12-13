@@ -2,8 +2,6 @@
 
 ## Cleanup & Build
 
-1. Get rid of -DOMNI_C_SELF_GENERATED
-
 ## Simple Compiler Improvements
 
 1. Put out a header with command line used for the build and possibly
