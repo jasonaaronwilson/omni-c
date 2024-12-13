@@ -2,6 +2,8 @@
 
 ## Cleanup & Build
 
+1. make format -- "No such file or directory"
+
 ## Simple Compiler Improvements
 
 1. Put out a header with command line used for the build and possibly
