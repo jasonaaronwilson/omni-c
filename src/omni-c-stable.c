@@ -627,18 +627,6 @@ typedef struct {
     }                                                                           \
   } while (0)
 
-#define _MODE_H_
-
-#define _KEYWORDS_H_
-
-#define _FILE_H_
-
-#define _FILE_READER_H_
-
-#define _COMPILER_ERRORS_H_
-
-#define _LEXER_H_
-
 #define read_token(token_reader_function_name)                                 \
   do {                                                                         \
     token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
@@ -652,48 +640,6 @@ typedef struct {
     value_array_add(result_tokens, ptr_to_value(token));                       \
     pos = token_or_error.token.end;                                            \
   } while (0)
-
-#define _TOKEN_LIST_H_
-
-#define _TOKEN_TRANSFORMER_H_
-
-#define _PARSER_H_
-
-#define _PSTATE_H_
-
-#define _DECLARATION_PARSER_H_
-
-#define _NODE_LIST_H_
-
-#define _DEBUG_PRINTER_H_
-
-#define _C_FILE_PRINTER_H_
-
-#define _SYMBOL_TABLE_H_
-
-#define _SOURCE_TO_SOURCE_H_
-
-#define _PREPROCESSOR_H_
-
-#define _SYMBOL_TABLE_BUILDER_H_
-
-#define _SRCGEN_H_
-
-#define _PRATT_PARSER_H_
-
-#define _STATEMNET_PARSER_H_
-
-#define _TYPE_PARSER_H_
-
-#define _USER_TYPE_PARSER_H_
-
-#define _VARIABLE_DEFINITION_PARSER_H_
-
-#define _LITERAL_PARSER_H_
-
-#define _BALANCED_CONSTRUCT_PARSER_H_
-
-#define _PRINTER_H_
 
 // ========== enums ==========
 
@@ -1250,10 +1196,6 @@ struct token_or_error_S {
   uint64_t error_position;
 };
 
-struct parse_node_S {
-  parse_node_type_t tag;
-};
-
 struct unsigned_decode_result__generated_S {
   uint64_t number;
   int size;
@@ -1333,6 +1275,10 @@ struct token_transformer_options_S {
   boolean_t keep_javadoc_comments;
   boolean_t keep_comments;
   boolean_t keep_c_preprocessor_lines;
+};
+
+struct parse_node_S {
+  parse_node_type_t tag;
 };
 
 struct pstate_t__generated_S {
@@ -1793,8 +1739,8 @@ char* c_punctuation[] = {
     "<<",
     ">>",
 
-    // Single character tokens should come after any two character
-    // token that starts with the same character.
+    // Since we match from top-to-bottom, we generally want the
+    // longest tokens first.
 
     "!",
     "%",
@@ -1865,8 +1811,6 @@ boolean_t FLAG_use_statement_parser = false;
 boolean_t FLAG_to_c = false;
 
 boolean_t FLAG_omit_c_armyknife_include = false;
-
-boolean_t FLAG_unique_prototype_header_files = false;
 
 // ========== function prototypes ==========
 
@@ -2063,7 +2007,6 @@ src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location,
 char* do_common_replacements(char* template, compiler_error_t* error);
 buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer, compiler_error_t* error);
 buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_error_t* error);
-char* token_type_to_string(token_type_t type);
 char* token_to_string(token_t* token);
 token_t* make_derived_token(token_t* source_token);
 __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, token_t token);
@@ -2208,13 +2151,13 @@ __attribute__((warn_unused_result)) buffer_t* extract_prototypes_process_declara
 void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names, boolean_t use_statement_parser);
 void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, char* file_name, boolean_t use_statement_parser);
 void srcgen_enum_to_string_converters(symbol_table_t* symbol_table);
-pstatus_t parse_block(pstate_t* pstate);
 pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence);
 pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left);
 pratt_parser_instruction_t get_prefix_instruction(token_t* token);
 pratt_parser_instruction_t get_infix_instruction(token_t* token);
 associativity_t precedence_to_associativity(precedence_t precedence);
 pstatus_t parse_statement(pstate_t* pstate);
+pstatus_t parse_block(pstate_t* pstate);
 pstatus_t parse_return_statement(pstate_t* pstate);
 pstatus_t parse_if_statement(pstate_t* pstate);
 pstatus_t parse_while_statement(pstate_t* pstate);
@@ -2259,17 +2202,17 @@ while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node
 while_statement_node_t* to_while_statement_node(parse_node_t* ptr);
 do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* condition);
 do_statement_node_t* to_do_statement_node(parse_node_t* ptr);
-pstatus_t parse_typeof_node(pstate_t* pstate);
-pstatus_t parse_user_type_node(pstate_t* pstate);
-pstatus_t parse_enum_node(pstate_t* pstate);
-pstatus_t parse_structure_node(pstate_t* pstate);
-pstatus_t parse_union_node(pstate_t* pstate);
 pstatus_t parse_type_node(pstate_t* pstate);
 canonical_type_result_t make_type_token_result(char* str, int consumed_tokens);
+pstatus_t parse_typeof_node(pstate_t* pstate);
 canonical_type_result_t parse_canonical_type(pstate_t* pstate);
 pstatus_t parse_function_type(pstate_t* pstate);
 pstatus_t parse_function_type_argument(pstate_t* pstate);
+pstatus_t parse_structure_node(pstate_t* pstate);
 pstatus_t parse_field_node(pstate_t* pstate);
+pstatus_t parse_union_node(pstate_t* pstate);
+pstatus_t parse_user_type_node(pstate_t* pstate);
+pstatus_t parse_enum_node(pstate_t* pstate);
 pstatus_t parse_enum_element_node(pstate_t* pstate);
 pstatus_t parse_expression(pstate_t* pstate);
 pstatus_t parse_initializer(pstate_t* pstate);
@@ -2286,13 +2229,10 @@ printer_t* printer_increase_indent(printer_t* printer);
 printer_t* printer_decrease_indent(printer_t* printer);
 void do_print_tokens(value_array_t* tokens, char* message);
 void print_tokens(void);
-void extract_command(char* command);
 void configure_flags(void);
 void configure_parse_expression(void);
 void configure_parse_statement(void);
 void configure_print_tokens_command(void);
-void configure_extract_enums_command(void);
-void configure_extract_prototypes_command(void);
 void configure_generate_c_output_file(void);
 boolean_t is_inlined_function(function_node_t* node);
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table);
@@ -2329,6 +2269,7 @@ enum_metadata_t* tokenizer_error_metadata();
 char* parse_error_code_to_string(parse_error_code_t value);
 parse_error_code_t string_to_parse_error_code(char* value);
 enum_metadata_t* parse_error_code_metadata();
+char* token_type_to_string(token_type_t value);
 token_type_t string_to_token_type(char* value);
 enum_metadata_t* token_type_metadata();
 char* numeric_literal_encoding_to_string(numeric_literal_encoding_t value);
@@ -2679,7 +2620,7 @@ static inline cpp_define_node_t* malloc_cpp_define_node(void){
   return result;
 }
 
-static inline void node_list_add_node(node_list_t* node_list, struct parse_node_S* oc_node){
+static inline void node_list_add_node(node_list_t* node_list, parse_node_t* oc_node){
   if ((oc_node==NULL))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -2703,12 +2644,12 @@ static inline boolean_t node_list_is_empty(node_list_t node_list){
   return (node_list_length(node_list)==0);
 }
 
-static inline struct parse_node_S* node_list_get(node_list_t node_list, uint64_t index){
+static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index){
   if (((node_list.list)==NULL))
   {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
-  return value_array_get_ptr((node_list.list), index, typeof(struct parse_node_S*));
+  return value_array_get_ptr((node_list.list), index, typeof(parse_node_t*));
 }
 
 static inline char* remove_type_suffix(char* typename){
@@ -5947,37 +5888,12 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_e
   return buffer_append_string(buffer, template_string);
 }
 
-/* i=224 j=1 */
-char* token_type_to_string(token_type_t value){
-  switch (value) {
-    case TOKEN_TYPE_UNKNOWN:
-return "TOKEN_TYPE_UNKNOWN";
-  case TOKEN_TYPE_WHITESPACE:
-return "TOKEN_TYPE_WHITESPACE";
-  case TOKEN_TYPE_COMMENT:
-return "TOKEN_TYPE_COMMENT";
-  case TOKEN_TYPE_IDENTIFIER:
-return "TOKEN_TYPE_IDENTIFIER";
-  case TOKEN_TYPE_PUNCTUATION:
-return "TOKEN_TYPE_PUNCTUATION";
-  case TOKEN_TYPE_INTEGER_LITERAL:
-return "TOKEN_TYPE_INTEGER_LITERAL";
-  case TOKEN_TYPE_FLOAT_LITERAL:
-return "TOKEN_TYPE_FLOAT_LITERAL";
-  case TOKEN_TYPE_STRING_LITERAL:
-return "TOKEN_TYPE_STRING_LITERAL";
-  case TOKEN_TYPE_CHARACTER_LITERAL:
-return "TOKEN_TYPE_CHARACTER_LITERAL";
-  default:
-    return "<<unknown-token_type>>";
-  }
-}
-/* i=225 j=0 */
+/* i=224 j=0 */
 char* token_to_string(token_t* token){
   return buffer_c_substring((token->buffer), (token->start), (token->end));
 }
 
-/* i=226 j=0 */
+/* i=225 j=0 */
 token_t* make_derived_token(token_t* source_token){
   token_t* result = (/*CAST*/(token_t*) malloc_copy_of((/*CAST*/(uint8_t*) source_token), (sizeof(token_t))));
   buffer_t* buffer = make_buffer(((source_token->end)-(source_token->start)));
@@ -5988,7 +5904,7 @@ token_t* make_derived_token(token_t* source_token){
   return result;
 }
 
-/* i=227 j=0 */
+/* i=226 j=0 */
 __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, token_t token){
   char* str = token_to_string((&token));
   (buffer=buffer_printf(buffer, "type: %s start: %d end: %d line=%d column=%d str: %s", token_type_to_string((token.type)), (token.start), (token.end), (token.line_number), (token.column_number), str));
@@ -5996,7 +5912,7 @@ __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t
   return buffer;
 }
 
-/* i=228 j=0 */
+/* i=227 j=0 */
 buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token){
   char* str = token_to_string(token);
   (buffer=buffer_printf(buffer, "%s", str));
@@ -6004,7 +5920,7 @@ buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token){
   return buffer;
 }
 
-/* i=229 j=0 */
+/* i=228 j=0 */
 token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position){
   uint64_t pos = start_position;
   while ((pos<buffer_length(buffer)))
@@ -6032,7 +5948,7 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position){
                                            .end = pos})});
 }
 
-/* i=230 j=0 */
+/* i=229 j=0 */
 boolean_t is_identifier_start(uint32_t code_point){
   switch (code_point)
   {
@@ -6045,7 +5961,7 @@ boolean_t is_identifier_start(uint32_t code_point){
   }
 }
 
-/* i=231 j=0 */
+/* i=230 j=0 */
 token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position){
   uint64_t pos = start_position;
   while ((pos<buffer_length(buffer)))
@@ -6069,7 +5985,7 @@ token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position){
                                            .end = pos})});
 }
 
-/* i=232 j=0 */
+/* i=231 j=0 */
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position){
   numeric_literal_encoding_t encoding = NUMERIC_LITERAL_ENCODING_UNDECIDED;
   uint32_t previous_code_point = 0;
@@ -6140,7 +6056,7 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position){
                                            .end = pos})});
 }
 
-/* i=233 j=0 */
+/* i=232 j=0 */
 boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_point, uint32_t previous_code_point){
   switch (encoding)
   {
@@ -6165,7 +6081,7 @@ boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_p
   return false;
 }
 
-/* i=234 j=0 */
+/* i=233 j=0 */
 token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position){
   int num_elements = ((sizeof(c_punctuation))/(sizeof((c_punctuation[0]))));
   for (
@@ -6186,12 +6102,12 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position)
                          .error_position = start_position});
 }
 
-/* i=235 j=0 */
+/* i=234 j=0 */
 boolean_t is_comment_start(buffer_t* buffer, uint64_t position){
   return (buffer_match_string_at(buffer, position, "//")||buffer_match_string_at(buffer, position, "/*"));
 }
 
-/* i=236 j=0 */
+/* i=235 j=0 */
 token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position){
   if (buffer_match_string_at(buffer, start_position, "//"))
   {
@@ -6229,12 +6145,12 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position){
                            .error_position = start_position});
 }
 
-/* i=237 j=0 */
+/* i=236 j=0 */
 boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position){
   return buffer_match_string_at(buffer, position, "\"");
 }
 
-/* i=238 j=0 */
+/* i=237 j=0 */
 token_or_error_t tokenize_quoted_literal_common(buffer_t* buffer, uint64_t start_position, char* opening_sequence, char* quoted_closing_sequence, char* closing_sequence, token_type_t token_type, tokenizer_error_t unterminated_error_code){
   if ((!buffer_match_string_at(buffer, start_position, opening_sequence)))
   {
@@ -6267,22 +6183,22 @@ token_or_error_t tokenize_quoted_literal_common(buffer_t* buffer, uint64_t start
                            .error_position = start_position});
 }
 
-/* i=239 j=0 */
+/* i=238 j=0 */
 token_or_error_t tokenize_string_literal(buffer_t* buffer, uint64_t start_position){
   return tokenize_quoted_literal_common(buffer, start_position, "\"", "\\\"", "\"", TOKEN_TYPE_STRING_LITERAL, TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
 }
 
-/* i=240 j=0 */
+/* i=239 j=0 */
 boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position){
   return buffer_match_string_at(buffer, position, "'");
 }
 
-/* i=241 j=0 */
+/* i=240 j=0 */
 token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position){
   return tokenize_quoted_literal_common(buffer, start_position, "'", "\\'", "'", TOKEN_TYPE_CHARACTER_LITERAL, TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL);
 }
 
-/* i=243 j=0 */
+/* i=242 j=0 */
 tokenizer_result_t tokenize(buffer_t* buffer){
   tokenizer_result_t result = {0};
   value_array_t* result_tokens = make_value_array(1024);
@@ -6357,7 +6273,7 @@ tokenizer_result_t tokenize(buffer_t* buffer){
   return result;
 }
 
-/* i=249 j=0 */
+/* i=248 j=0 */
 value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options_t xform_options){
   value_array_t* result = make_value_array((tokens->length));
   for (
@@ -6394,7 +6310,7 @@ value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options
   return result;
 }
 
-/* i=251 j=0 */
+/* i=250 j=0 */
 pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code){
   ((pstate->result_token)=NULL);
   ((pstate->result_node)=NULL);
@@ -6405,13 +6321,13 @@ pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_co
   return false;
 }
 
-/* i=252 j=0 */
+/* i=251 j=0 */
 pstate_t* pstate_ignore_error(pstate_t* pstate){
   ((pstate->error)=((compiler_error_t) {0}));
   return pstate;
 }
 
-/* i=253 j=0 */
+/* i=252 j=0 */
 pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position){
   ((pstate->position)=saved_position);
   if ((!((pstate->error).parse_error_code)))
@@ -6421,7 +6337,7 @@ pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position){
   return false;
 }
 
-/* i=254 j=0 */
+/* i=253 j=0 */
 pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token){
   ((pstate->error)=((compiler_error_t) {0}));
   ((pstate->result_node)=NULL);
@@ -6429,7 +6345,7 @@ pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token){
   return true;
 }
 
-/* i=255 j=0 */
+/* i=254 j=0 */
 pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node){
   ((pstate->error)=((compiler_error_t) {0}));
   ((pstate->result_node)=node);
@@ -6437,7 +6353,7 @@ pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node){
   return true;
 }
 
-/* i=256 j=0 */
+/* i=255 j=0 */
 token_t* pstate_get_result_token(pstate_t* pstate){
   if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
   {
@@ -6449,7 +6365,7 @@ token_t* pstate_get_result_token(pstate_t* pstate){
   return token;
 }
 
-/* i=257 j=0 */
+/* i=256 j=0 */
 parse_node_t* pstate_get_result_node(pstate_t* pstate){
   if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
   {
@@ -6465,7 +6381,7 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate){
   return result;
 }
 
-/* i=258 j=0 */
+/* i=257 j=0 */
 parse_node_t* pstate_get_optional_result_node(pstate_t* pstate){
   ((pstate->error)=((compiler_error_t) {0}));
   parse_node_t* result = (pstate->result_node);
@@ -6473,12 +6389,12 @@ parse_node_t* pstate_get_optional_result_node(pstate_t* pstate){
   return result;
 }
 
-/* i=259 j=0 */
+/* i=258 j=0 */
 token_t* pstate_peek(pstate_t* pstate, int offset){
   return token_at((pstate->tokens), ((pstate->position)+offset));
 }
 
-/* i=260 j=0 */
+/* i=259 j=0 */
 token_t* pstate_advance(pstate_t* pstate){
   if (((pstate->error).parse_error_code))
   {
@@ -6490,13 +6406,13 @@ token_t* pstate_advance(pstate_t* pstate){
   return token;
 }
 
-/* i=261 j=0 */
+/* i=260 j=0 */
 boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string){
   token_t* token = pstate_peek(pstate, 0);
   return token_matches(token, token_string);
 }
 
-/* i=262 j=0 */
+/* i=261 j=0 */
 pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string){
   token_t* token = pstate_peek(pstate, 0);
   if (token_matches(token, token_string))
@@ -6510,7 +6426,7 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string){
   return false;
 }
 
-/* i=263 j=0 */
+/* i=262 j=0 */
 pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type){
   token_t* token = pstate_peek(pstate, 0);
   if ((token_type==(token->type)))
@@ -6524,7 +6440,7 @@ pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type){
   return false;
 }
 
-/* i=280 j=0 */
+/* i=279 j=0 */
 pstatus_t parse_declarations(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   declarations_node_t* result = malloc_declarations();
@@ -6539,7 +6455,7 @@ pstatus_t parse_declarations(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=281 j=0 */
+/* i=280 j=0 */
 pstatus_t parse_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((((parse_function_node(pstate)||parse_typedef_node(pstate_ignore_error(pstate)))||parse_enum_node_declaration(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_structure_node_declaration(pstate_ignore_error(pstate)))||parse_union_node_declaration(pstate_ignore_error(pstate))))
@@ -6549,7 +6465,7 @@ pstatus_t parse_declaration(pstate_t* pstate){
   return pstate_error(pstate, saved_position, PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION);
 }
 
-/* i=282 j=0 */
+/* i=281 j=0 */
 pstatus_t parse_enum_node_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_enum_node(pstate)))
@@ -6564,7 +6480,7 @@ pstatus_t parse_enum_node_declaration(pstate_t* pstate){
   return pstate_set_result_node(pstate, result);
 }
 
-/* i=283 j=0 */
+/* i=282 j=0 */
 pstatus_t parse_structure_node_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_structure_node(pstate)))
@@ -6579,7 +6495,7 @@ pstatus_t parse_structure_node_declaration(pstate_t* pstate){
   return pstate_set_result_node(pstate, result);
 }
 
-/* i=284 j=0 */
+/* i=283 j=0 */
 pstatus_t parse_union_node_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_union_node(pstate)))
@@ -6594,7 +6510,7 @@ pstatus_t parse_union_node_declaration(pstate_t* pstate){
   return pstate_set_result_node(pstate, result);
 }
 
-/* i=285 j=0 */
+/* i=284 j=0 */
 pstatus_t parse_attribute_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "__attribute__"))||(!parse_balanced_construct(pstate))))
@@ -6607,7 +6523,7 @@ pstatus_t parse_attribute_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=286 j=0 */
+/* i=285 j=0 */
 pstatus_t parse_function_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* storage_class_specifier = NULL;
@@ -6686,7 +6602,7 @@ pstatus_t parse_function_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(fn_node));
 }
 
-/* i=287 j=0 */
+/* i=286 j=0 */
 pstatus_t parse_function_argument_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   function_argument_node_t* result = malloc_function_argument_node();
@@ -6718,7 +6634,7 @@ pstatus_t parse_function_argument_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=288 j=0 */
+/* i=287 j=0 */
 pstatus_t parse_function_body_node(pstate_t* pstate){
   if ((pstate->use_statement_parser))
   {
@@ -6731,7 +6647,7 @@ pstatus_t parse_function_body_node(pstate_t* pstate){
   }
 }
 
-/* i=289 j=0 */
+/* i=288 j=0 */
 pstatus_t parse_typedef_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "typedef")))
@@ -6758,7 +6674,7 @@ pstatus_t parse_typedef_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=294 j=0 */
+/* i=293 j=0 */
 void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node){
   switch ((node->tag))
   {
@@ -6863,7 +6779,7 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node){
   }
 }
 
-/* i=295 j=0 */
+/* i=294 j=0 */
 void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list){
   cdl_start_array(printer);
   uint64_t length = node_list_length(list);
@@ -6877,7 +6793,7 @@ void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list){
   cdl_end_array(printer);
 }
 
-/* i=296 j=0 */
+/* i=295 j=0 */
 void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, char* field_name){
   cdl_key(printer, field_name);
   cdl_start_array(printer);
@@ -6893,12 +6809,12 @@ void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, cha
   cdl_end_array(printer);
 }
 
-/* i=297 j=0 */
+/* i=296 j=0 */
 void buffer_append_dbg_declarations(cdl_printer_t* printer, declarations_node_t* node){
   buffer_append_dbg_node_list(printer, (node->declarations));
 }
 
-/* i=298 j=0 */
+/* i=297 j=0 */
 void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6915,7 +6831,7 @@ void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node){
   cdl_end_table(printer);
 }
 
-/* i=299 j=0 */
+/* i=298 j=0 */
 void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6932,7 +6848,7 @@ void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node){
   cdl_end_table(printer);
 }
 
-/* i=300 j=0 */
+/* i=299 j=0 */
 void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6950,7 +6866,7 @@ void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node
   cdl_end_table(printer);
 }
 
-/* i=301 j=0 */
+/* i=300 j=0 */
 void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6968,7 +6884,7 @@ void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node){
   cdl_end_table(printer);
 }
 
-/* i=302 j=0 */
+/* i=301 j=0 */
 void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7008,7 +6924,7 @@ void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node){
   cdl_end_table(printer);
 }
 
-/* i=303 j=0 */
+/* i=302 j=0 */
 void buffer_append_dbg_literal_node(cdl_printer_t* printer, literal_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7035,7 +6951,7 @@ void buffer_append_dbg_literal_node(cdl_printer_t* printer, literal_node_t* node
   cdl_end_table(printer);
 }
 
-/* i=304 j=0 */
+/* i=303 j=0 */
 void buffer_append_dbg_function_node(cdl_printer_t* printer, function_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7067,7 +6983,7 @@ void buffer_append_dbg_function_node(cdl_printer_t* printer, function_node_t* no
   cdl_end_table(printer);
 }
 
-/* i=305 j=0 */
+/* i=304 j=0 */
 void buffer_append_dbg_function_argument_node(cdl_printer_t* printer, function_argument_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7085,7 +7001,7 @@ void buffer_append_dbg_function_argument_node(cdl_printer_t* printer, function_a
   cdl_end_table(printer);
 }
 
-/* i=306 j=0 */
+/* i=305 j=0 */
 void buffer_append_dbg_balanced_construct_node(cdl_printer_t* printer, balanced_construct_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7103,7 +7019,7 @@ void buffer_append_dbg_balanced_construct_node(cdl_printer_t* printer, balanced_
   cdl_end_table(printer);
 }
 
-/* i=307 j=0 */
+/* i=306 j=0 */
 void buffer_append_dbg_typedef_node(cdl_printer_t* printer, typedef_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7121,7 +7037,7 @@ void buffer_append_dbg_typedef_node(cdl_printer_t* printer, typedef_node_t* node
   cdl_end_table(printer);
 }
 
-/* i=308 j=0 */
+/* i=307 j=0 */
 void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable_definition_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7163,7 +7079,7 @@ void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable
   cdl_end_table(printer);
 }
 
-/* i=309 j=0 */
+/* i=308 j=0 */
 void buffer_append_dbg_attribute_node(cdl_printer_t* printer, attribute_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7181,7 +7097,7 @@ void buffer_append_dbg_attribute_node(cdl_printer_t* printer, attribute_node_t* 
   cdl_end_table(printer);
 }
 
-/* i=310 j=0 */
+/* i=309 j=0 */
 void buffer_append_dbg_empty_statement_node(cdl_printer_t* printer, empty_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7189,7 +7105,7 @@ void buffer_append_dbg_empty_statement_node(cdl_printer_t* printer, empty_statem
   cdl_end_table(printer);
 }
 
-/* i=311 j=0 */
+/* i=310 j=0 */
 void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7199,7 +7115,7 @@ void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node){
   cdl_end_table(printer);
 }
 
-/* i=312 j=0 */
+/* i=311 j=0 */
 void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7222,7 +7138,7 @@ void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node
   cdl_end_table(printer);
 }
 
-/* i=313 j=0 */
+/* i=312 j=0 */
 void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7240,7 +7156,7 @@ void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t
   cdl_end_table(printer);
 }
 
-/* i=314 j=0 */
+/* i=313 j=0 */
 void buffer_append_dbg_for_node(cdl_printer_t* printer, for_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7268,7 +7184,7 @@ void buffer_append_dbg_for_node(cdl_printer_t* printer, for_statement_node_t* no
   cdl_end_table(printer);
 }
 
-/* i=315 j=0 */
+/* i=314 j=0 */
 void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7286,7 +7202,7 @@ void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node
   cdl_end_table(printer);
 }
 
-/* i=316 j=0 */
+/* i=315 j=0 */
 void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7299,7 +7215,7 @@ void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statem
   cdl_end_table(printer);
 }
 
-/* i=317 j=0 */
+/* i=316 j=0 */
 void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7312,7 +7228,7 @@ void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_
   cdl_end_table(printer);
 }
 
-/* i=318 j=0 */
+/* i=317 j=0 */
 void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7325,7 +7241,7 @@ void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statem
   cdl_end_table(printer);
 }
 
-/* i=319 j=0 */
+/* i=318 j=0 */
 void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7338,7 +7254,7 @@ void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t
   cdl_end_table(printer);
 }
 
-/* i=320 j=0 */
+/* i=319 j=0 */
 void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7346,7 +7262,7 @@ void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_
   cdl_end_table(printer);
 }
 
-/* i=321 j=0 */
+/* i=320 j=0 */
 void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7359,7 +7275,7 @@ void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_stat
   cdl_end_table(printer);
 }
 
-/* i=322 j=0 */
+/* i=321 j=0 */
 void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, expression_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7372,7 +7288,7 @@ void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, express
   cdl_end_table(printer);
 }
 
-/* i=323 j=0 */
+/* i=322 j=0 */
 void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7382,7 +7298,7 @@ void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t
   cdl_end_table(printer);
 }
 
-/* i=324 j=0 */
+/* i=323 j=0 */
 void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7402,7 +7318,7 @@ void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* no
   cdl_end_table(printer);
 }
 
-/* i=325 j=0 */
+/* i=324 j=0 */
 void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7414,7 +7330,7 @@ void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node){
   cdl_end_table(printer);
 }
 
-/* i=326 j=0 */
+/* i=325 j=0 */
 void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7437,7 +7353,7 @@ void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node
   cdl_end_table(printer);
 }
 
-/* i=327 j=0 */
+/* i=326 j=0 */
 void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7455,7 +7371,7 @@ void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node
   cdl_end_table(printer);
 }
 
-/* i=328 j=0 */
+/* i=327 j=0 */
 void debug_append_tokens(buffer_t* buffer, value_array_t* tokens){
   for (
     int i = 0;
@@ -7467,7 +7383,7 @@ void debug_append_tokens(buffer_t* buffer, value_array_t* tokens){
   }
 }
 
-/* i=329 j=0 */
+/* i=328 j=0 */
 printer_t* append_parse_node(printer_t* printer, parse_node_t* node){
   switch ((node->tag))
   {
@@ -7529,7 +7445,7 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node){
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
-/* i=330 j=0 */
+/* i=329 j=0 */
 printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* node){
   for (
     int i = 0;
@@ -7572,14 +7488,14 @@ printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* no
   return printer;
 }
 
-/* i=331 j=0 */
+/* i=330 j=0 */
 printer_t* append_c_function_node_prototype(printer_t* printer, function_node_t* node){
   append_c_function_node_prefix(printer, node);
   append_string(printer, ";\n");
   return printer;
 }
 
-/* i=332 j=0 */
+/* i=331 j=0 */
 printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct_node_t* node){
   uint64_t start = ((node->start_token)->start);
   uint64_t end = ((node->end_token)->end);
@@ -7587,7 +7503,7 @@ printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct
   return printer;
 }
 
-/* i=333 j=0 */
+/* i=332 j=0 */
 printer_t* append_c_function_node_and_body(printer_t* printer, function_node_t* node){
   append_c_function_node_prefix(printer, node);
   append_parse_node(printer, (node->body));
@@ -7595,7 +7511,7 @@ printer_t* append_c_function_node_and_body(printer_t* printer, function_node_t* 
   return printer;
 }
 
-/* i=334 j=0 */
+/* i=333 j=0 */
 printer_t* append_c_function_argument_node(printer_t* printer, function_argument_node_t* node){
   if ((node->is_var_args))
   {
@@ -7613,7 +7529,7 @@ printer_t* append_c_function_argument_node(printer_t* printer, function_argument
   return printer;
 }
 
-/* i=335 j=0 */
+/* i=334 j=0 */
 printer_t* append_type_node(printer_t* printer, type_node_t* node){
   if ((((node->qualifiers)&TYPE_QUALIFIER_CONST)==TYPE_QUALIFIER_CONST))
   {
@@ -7668,7 +7584,7 @@ printer_t* append_type_node(printer_t* printer, type_node_t* node){
   return printer;
 }
 
-/* i=336 j=0 */
+/* i=335 j=0 */
 printer_t* append_fn_type_node(printer_t* printer, type_node_t* node){
   append_token(printer, (node->type_name));
   append_string(printer, "(");
@@ -7687,13 +7603,13 @@ printer_t* append_fn_type_node(printer_t* printer, type_node_t* node){
   return printer;
 }
 
-/* i=337 j=0 */
+/* i=336 j=0 */
 printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node){
   append_c_raw_token_span(printer, (node->inner_start_token), (node->inner_end_token));
   return printer;
 }
 
-/* i=338 j=0 */
+/* i=337 j=0 */
 printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, token_t* end_token){
   if (((start_token->buffer)!=(end_token->buffer)))
   {
@@ -7703,7 +7619,7 @@ printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, tok
   return printer;
 }
 
-/* i=339 j=0 */
+/* i=338 j=0 */
 printer_t* append_enum_node(printer_t* printer, enum_node_t* node){
   append_string(printer, "enum ");
   if (((node->name)!=NULL))
@@ -7731,7 +7647,7 @@ printer_t* append_enum_node(printer_t* printer, enum_node_t* node){
   return printer;
 }
 
-/* i=340 j=0 */
+/* i=339 j=0 */
 printer_t* append_enum_element(printer_t* printer, enum_element_t* node){
   append_token(printer, (node->name));
   if (((node->value)!=NULL))
@@ -7742,7 +7658,7 @@ printer_t* append_enum_element(printer_t* printer, enum_element_t* node){
   return printer;
 }
 
-/* i=341 j=0 */
+/* i=340 j=0 */
 printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string){
   append_string(printer, "char* ");
   append_string(printer, to_string_fn_prefix);
@@ -7784,7 +7700,7 @@ printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to
   return printer;
 }
 
-/* i=342 j=0 */
+/* i=341 j=0 */
 printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string){
   append_string(printer, type_string);
   append_string(printer, " string_to_");
@@ -7816,7 +7732,7 @@ printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to
   return printer;
 }
 
-/* i=343 j=0 */
+/* i=342 j=0 */
 printer_t* append_field_node(printer_t* printer, field_node_t* node){
   append_type_node(printer, (node->type));
   append_string(printer, " ");
@@ -7827,7 +7743,7 @@ printer_t* append_field_node(printer_t* printer, field_node_t* node){
   return printer;
 }
 
-/* i=344 j=0 */
+/* i=343 j=0 */
 printer_t* append_struct_node(printer_t* printer, struct_node_t* node){
   append_string(printer, (((node->tag)==PARSE_NODE_UNION) ? "union " : "struct "));
   if (((node->name)!=NULL))
@@ -7853,7 +7769,7 @@ printer_t* append_struct_node(printer_t* printer, struct_node_t* node){
   return printer;
 }
 
-/* i=345 j=0 */
+/* i=344 j=0 */
 printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node){
   append_string(printer, "typedef ");
   append_type_node(printer, (node->type_node));
@@ -7863,19 +7779,19 @@ printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node){
   return printer;
 }
 
-/* i=346 j=0 */
+/* i=345 j=0 */
 printer_t* append_cpp_include_node(printer_t* printer, cpp_include_node_t* node){
   append_string(printer, (node->text));
   return printer;
 }
 
-/* i=347 j=0 */
+/* i=346 j=0 */
 printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node){
   append_string(printer, (node->text));
   return printer;
 }
 
-/* i=348 j=0 */
+/* i=347 j=0 */
 printer_t* append_variable_definition_node(printer_t* printer, variable_definition_node_t* node, boolean_t is_library){
   printer_indent(printer);
   boolean_t is_header_file = (!is_library);
@@ -7911,7 +7827,7 @@ printer_t* append_variable_definition_node(printer_t* printer, variable_definiti
   return printer;
 }
 
-/* i=349 j=0 */
+/* i=348 j=0 */
 printer_t* append_literal_node(printer_t* printer, literal_node_t* node){
   if (((node->token)!=NULL))
   {
@@ -7955,7 +7871,7 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node){
   return printer;
 }
 
-/* i=350 j=0 */
+/* i=349 j=0 */
 printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node){
   if (((node->token)==NULL))
   {
@@ -7965,28 +7881,28 @@ printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node){
   return printer;
 }
 
-/* i=351 j=0 */
+/* i=350 j=0 */
 printer_t* append_empty_statement_node(printer_t* printer, empty_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, ";\n");
   return printer;
 }
 
-/* i=352 j=0 */
+/* i=351 j=0 */
 printer_t* append_break_statement_node(printer_t* printer, break_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "break;\n");
   return printer;
 }
 
-/* i=353 j=0 */
+/* i=352 j=0 */
 printer_t* append_continue_statement_node(printer_t* printer, continue_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "continue;\n");
   return printer;
 }
 
-/* i=354 j=0 */
+/* i=353 j=0 */
 printer_t* append_label_statement_node(printer_t* printer, label_statement_node_t* node){
   printer_indent(printer);
   append_token(printer, (node->label));
@@ -7994,7 +7910,7 @@ printer_t* append_label_statement_node(printer_t* printer, label_statement_node_
   return printer;
 }
 
-/* i=355 j=0 */
+/* i=354 j=0 */
 printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node){
   printer_indent(printer);
   append_string(printer, "case ");
@@ -8003,14 +7919,14 @@ printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node){
   return printer;
 }
 
-/* i=356 j=0 */
+/* i=355 j=0 */
 printer_t* append_default_label_node(printer_t* printer, default_label_node_t* node){
   printer_indent(printer);
   append_string(printer, "default:\n");
   return printer;
 }
 
-/* i=357 j=0 */
+/* i=356 j=0 */
 printer_t* append_expression_statement_node(printer_t* printer, expression_statement_node_t* node){
   printer_indent(printer);
   append_parse_node(printer, (node->expression));
@@ -8018,7 +7934,7 @@ printer_t* append_expression_statement_node(printer_t* printer, expression_state
   return printer;
 }
 
-/* i=358 j=0 */
+/* i=357 j=0 */
 printer_t* append_block_node(printer_t* printer, block_node_t* node){
   printer_indent(printer);
   append_string(printer, "{\n");
@@ -8037,7 +7953,7 @@ printer_t* append_block_node(printer_t* printer, block_node_t* node){
   return printer;
 }
 
-/* i=359 j=0 */
+/* i=358 j=0 */
 printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "if (");
@@ -8053,7 +7969,7 @@ printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* nod
   return printer;
 }
 
-/* i=360 j=0 */
+/* i=359 j=0 */
 printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "while (");
@@ -8063,7 +7979,7 @@ printer_t* append_while_statement_node(printer_t* printer, while_statement_node_
   return printer;
 }
 
-/* i=361 j=0 */
+/* i=360 j=0 */
 printer_t* append_switch_statement_node(printer_t* printer, switch_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "switch (");
@@ -8073,7 +7989,7 @@ printer_t* append_switch_statement_node(printer_t* printer, switch_statement_nod
   return printer;
 }
 
-/* i=362 j=0 */
+/* i=361 j=0 */
 printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "for (\n");
@@ -8105,7 +8021,7 @@ printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* n
   return printer;
 }
 
-/* i=363 j=0 */
+/* i=362 j=0 */
 printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "do");
@@ -8116,7 +8032,7 @@ printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* nod
   return printer;
 }
 
-/* i=364 j=0 */
+/* i=363 j=0 */
 printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "return");
@@ -8129,7 +8045,7 @@ printer_t* append_return_statement_node(printer_t* printer, return_statement_nod
   return printer;
 }
 
-/* i=365 j=0 */
+/* i=364 j=0 */
 printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
   if (token_matches((node->operator), "cast"))
   {
@@ -8178,7 +8094,7 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
   return printer;
 }
 
-/* i=366 j=0 */
+/* i=365 j=0 */
 printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node){
   append_string(printer, "(");
   if (((node->condition)!=NULL))
@@ -8199,7 +8115,7 @@ printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node)
   return printer;
 }
 
-/* i=367 j=0 */
+/* i=366 j=0 */
 printer_t* append_call_node(printer_t* printer, call_node_t* node){
   append_parse_node(printer, (node->function));
   append_string(printer, "(");
@@ -8218,7 +8134,7 @@ printer_t* append_call_node(printer_t* printer, call_node_t* node){
   return printer;
 }
 
-/* i=368 j=0 */
+/* i=367 j=0 */
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string){
   char* code_template = "enum_metadata_t* ${fn_prefix}_metadata() {\n" "${element_constructions}" "    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {\n" "        .name = \"${enum_name}\",\n" "        .elements = ${previous_var_address}\n" "    };\n" "    return &enum_metadata_result;\n" "}\n\n";
   char* field_template = "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n" "        .next = ${previous_var_address},\n" "        .name = \"${element_name}\",\n" "        .value = ${element_name}\n" "    };\n";
@@ -8249,7 +8165,7 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char*
   return buffer_append_buffer(buffer, code);
 }
 
-/* i=369 j=0 */
+/* i=368 j=0 */
 symbol_table_map_t* make_symbol_table_map(void){
   symbol_table_map_t* result = malloc_struct(symbol_table_map_t);
   ((result->ht)=make_string_hashtable(16));
@@ -8257,7 +8173,7 @@ symbol_table_map_t* make_symbol_table_map(void){
   return result;
 }
 
-/* i=370 j=0 */
+/* i=369 j=0 */
 symbol_table_t* make_symbol_table(void){
   symbol_table_t* result = malloc_struct(symbol_table_t);
   ((result->system_includes)=make_value_array(16));
@@ -8271,7 +8187,7 @@ symbol_table_t* make_symbol_table(void){
   return result;
 }
 
-/* i=371 j=0 */
+/* i=370 j=0 */
 symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_string){
   value_result_t result = string_ht_find((map->ht), key_string);
   if (is_ok(result))
@@ -8281,7 +8197,7 @@ symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_
   return NULL;
 }
 
-/* i=372 j=0 */
+/* i=371 j=0 */
 parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char* key_string){
   value_result_t result = string_ht_find((map->ht), key_string);
   if (is_ok(result))
@@ -8296,7 +8212,7 @@ parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char
   return NULL;
 }
 
-/* i=373 j=0 */
+/* i=372 j=0 */
 void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string, parse_node_t* node){
   value_result_t previous_binding = string_ht_find((map->ht), key_string);
   if (is_ok(previous_binding))
@@ -8313,7 +8229,7 @@ void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string
   value_array_add((map->ordered_bindings), ptr_to_value(binding));
 }
 
-/* i=374 j=0 */
+/* i=373 j=0 */
 void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_node_t* root){
   uint64_t length = node_list_length((root->declarations));
   for (
@@ -8347,7 +8263,7 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_nod
   }
 }
 
-/* i=375 j=0 */
+/* i=374 j=0 */
 buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table){
   (buffer=buffer_printf(buffer, "Symbol Table Stats\n"));
   (buffer=buffer_printf(buffer, "#enums %d\n", string_ht_num_entries(((symbol_table->enums)->ht))));
@@ -8358,14 +8274,14 @@ buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table){
   return buffer;
 }
 
-/* i=376 j=0 */
+/* i=375 j=0 */
 buffer_t* buffer_append_dgb_binding(buffer_t* buffer, symbol_table_binding_t* binding){
   buffer_printf(buffer, "%s:\n", (binding->key_string));
   buffer_append_dbg_parse_node(make_cdl_printer(buffer), value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
   return buffer;
 }
 
-/* i=377 j=0 */
+/* i=376 j=0 */
 buffer_t* buffer_appennd_dbg_symbol_table_map(buffer_t* buffer, symbol_table_map_t* symbol_table_map){
   for (
     int i = 0;
@@ -8382,7 +8298,7 @@ buffer_t* buffer_appennd_dbg_symbol_table_map(buffer_t* buffer, symbol_table_map
   return buffer;
 }
 
-/* i=378 j=0 */
+/* i=377 j=0 */
 buffer_t* buffer_append_dgb_symbol_table(buffer_t* buffer, symbol_table_t* symbol_table){
   (buffer=buffer_printf(buffer, "\n========================= Begin Symbol Table " "=========================\n"));
   (buffer=buffer_printf(buffer, "*** Symbol Table Enumerations ***\n"));
@@ -8399,7 +8315,7 @@ buffer_t* buffer_append_dgb_symbol_table(buffer_t* buffer, symbol_table_t* symbo
   return buffer;
 }
 
-/* i=379 j=0 */
+/* i=378 j=0 */
 token_t* generate_struct_name_from_typedef_name(token_t* name){
   token_t* generated = make_derived_token(name);
   buffer_append_string((generated->buffer), "__generated_S");
@@ -8407,7 +8323,7 @@ token_t* generate_struct_name_from_typedef_name(token_t* name){
   return generated;
 }
 
-/* i=380 j=0 */
+/* i=379 j=0 */
 void split_structure_typedefs(symbol_table_t* symbol_table){
   for (
     int i = 0;
@@ -8440,7 +8356,7 @@ void split_structure_typedefs(symbol_table_t* symbol_table){
   }
 }
 
-/* i=381 j=0 */
+/* i=380 j=0 */
 void reorder_symbol_table_typedefs(symbol_table_t* symbol_table){
   value_array_t* bindings = ((symbol_table->typedefs)->ordered_bindings);
   value_array_t* reordered_bindings = make_value_array((bindings->length));
@@ -8455,7 +8371,7 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table){
   (((symbol_table->typedefs)->ordered_bindings)=reordered_bindings);
 }
 
-/* i=382 j=0 */
+/* i=381 j=0 */
 void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings){
   log_debug("processing binding %s", (binding->key_string));
   if ((!(binding->visited)))
@@ -8495,7 +8411,7 @@ void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs
   }
 }
 
-/* i=383 j=0 */
+/* i=382 j=0 */
 struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* binding){
   for (
     uint64_t i = 0;
@@ -8512,7 +8428,7 @@ struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* bindin
   return NULL;
 }
 
-/* i=384 j=0 */
+/* i=383 j=0 */
 symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* symbol_table, type_node_t* type_node){
   if (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
   {
@@ -8554,7 +8470,7 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
   }
 }
 
-/* i=385 j=0 */
+/* i=384 j=0 */
 void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_table, symbol_table_binding_t* binding, value_array_t* reordered_bindings){
   log_debug("processing %s", (binding->key_string));
   if ((!(binding->visited)))
@@ -8586,7 +8502,7 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
   }
 }
 
-/* i=386 j=0 */
+/* i=385 j=0 */
 void reorder_symbol_table_structures(symbol_table_t* symbol_table){
   value_array_t* bindings = ((symbol_table->structures)->ordered_bindings);
   value_array_t* reordered_bindings = make_value_array((bindings->length));
@@ -8601,7 +8517,7 @@ void reorder_symbol_table_structures(symbol_table_t* symbol_table){
   (((symbol_table->structures)->ordered_bindings)=reordered_bindings);
 }
 
-/* i=387 j=0 */
+/* i=386 j=0 */
 void convert_nullptr_to_null(value_array_t* tokens){
   buffer_t* null_token = buffer_append_string(make_buffer(1), "NULL");
   for (
@@ -8619,7 +8535,7 @@ void convert_nullptr_to_null(value_array_t* tokens){
   }
 }
 
-/* i=388 j=0 */
+/* i=387 j=0 */
 c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position){
   c_preprocessor_directive_range_t result = {0};
   uint64_t position = start_position;
@@ -8650,7 +8566,7 @@ c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_opti
   return result;
 }
 
-/* i=389 j=0 */
+/* i=388 j=0 */
 uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens, uint64_t start_position){
   c_preprocessor_directive_range_t range = mark_c_preprocessor_directive(options, tokens, start_position);
   token_t* directive_name = token_at(tokens, (start_position+1));
@@ -8677,7 +8593,7 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_
   return (range.token_end_position);
 }
 
-/* i=390 j=0 */
+/* i=389 j=0 */
 void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens){
   for (
     uint64_t position = 0;
@@ -8696,7 +8612,7 @@ void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_tab
   }
 }
 
-/* i=392 j=0 */
+/* i=391 j=0 */
 __attribute__((warn_unused_result)) buffer_t* extract_enums_process_declarations(buffer_t* output, declarations_node_t* root){
   printer_t* printer = make_printer(output, 2);
   uint64_t length = node_list_length((root->declarations));
@@ -8739,7 +8655,7 @@ __attribute__((warn_unused_result)) buffer_t* extract_enums_process_declarations
   return output;
 }
 
-/* i=393 j=0 */
+/* i=392 j=0 */
 __attribute__((warn_unused_result)) buffer_t* extract_prototypes_process_declarations(buffer_t* output, declarations_node_t* root){
   printer_t* printer = make_printer(output, 2);
   uint64_t length = node_list_length((root->declarations));
@@ -8771,7 +8687,7 @@ __attribute__((warn_unused_result)) buffer_t* extract_prototypes_process_declara
   return output;
 }
 
-/* i=394 j=0 */
+/* i=393 j=0 */
 void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names, boolean_t use_statement_parser){
   value_array_t* files = read_files(file_names);
   for (
@@ -8784,7 +8700,7 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_arr
   }
 }
 
-/* i=395 j=0 */
+/* i=394 j=0 */
 void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, char* file_name, boolean_t use_statement_parser){
   tokenizer_result_t tokenizer_result = tokenize(buffer);
   if ((tokenizer_result.tokenizer_error_code))
@@ -8816,7 +8732,7 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, c
   symbol_table_add_declartions(symbol_table, root);
 }
 
-/* i=397 j=0 */
+/* i=396 j=0 */
 void srcgen_enum_to_string_converters(symbol_table_t* symbol_table){
   buffer_t* buffer = make_buffer(1);
   printer_t* printer = make_printer(buffer, 2);
@@ -8859,26 +8775,7 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table){
   }
 }
 
-/* i=407 j=1 */
-pstatus_t parse_block(pstate_t* pstate){
-  uint64_t saved_position = (pstate->position);
-  if ((!pstate_expect_token_string(pstate, "{")))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  block_node_t* result = make_block_node();
-  while (parse_statement(pstate))
-  {
-    node_list_add_node((&(result->statements)), pstate_get_result_node(pstate));
-  }
-  if ((!pstate_expect_token_string(pstate, "}")))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  return pstate_set_result_node(pstate, to_node(result));
-}
-
-/* i=408 j=0 */
+/* i=406 j=0 */
 pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence){
   uint64_t saved_position = (pstate->position);
   token_t* token = pstate_peek(pstate, 0);
@@ -8914,7 +8811,7 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence){
   return NULL;
 }
 
-/* i=409 j=0 */
+/* i=407 j=0 */
 pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left){
   uint64_t saved_position = (pstate->position);
   token_t* token = pstate_peek(pstate, 0);
@@ -9196,7 +9093,7 @@ while (0);
   return pstate_error(pstate, saved_position, PARSE_ERROR_UNHANDLED_INSTRUCTION);
 }
 
-/* i=410 j=0 */
+/* i=408 j=0 */
 pratt_parser_instruction_t get_prefix_instruction(token_t* token){
   switch ((token->type))
   {
@@ -9243,7 +9140,7 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token){
   return ((pratt_parser_instruction_t) {0});
 }
 
-/* i=411 j=0 */
+/* i=409 j=0 */
 pratt_parser_instruction_t get_infix_instruction(token_t* token){
   if ((token_matches(token, "+")||token_matches(token, "-")))
   {
@@ -9312,7 +9209,7 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token){
   return ((pratt_parser_instruction_t) {0});
 }
 
-/* i=412 j=0 */
+/* i=410 j=0 */
 associativity_t precedence_to_associativity(precedence_t precedence){
   switch (precedence)
   {
@@ -9354,7 +9251,7 @@ associativity_t precedence_to_associativity(precedence_t precedence){
   return 0;
 }
 
-/* i=413 j=0 */
+/* i=411 j=0 */
 pstatus_t parse_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((((((((((((((parse_block(pstate)||parse_break_statement(pstate_ignore_error(pstate)))||parse_return_statement(pstate_ignore_error(pstate)))||parse_if_statement(pstate_ignore_error(pstate)))||parse_while_statement(pstate_ignore_error(pstate)))||parse_do_statement(pstate_ignore_error(pstate)))||parse_for_statement(pstate_ignore_error(pstate)))||parse_switch_statement(pstate_ignore_error(pstate)))||parse_case_label(pstate_ignore_error(pstate)))||parse_default_label(pstate_ignore_error(pstate)))||parse_continue_statement(pstate_ignore_error(pstate)))||parse_goto_statement(pstate_ignore_error(pstate)))||parse_label_statement(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_expression_statement(pstate_ignore_error(pstate)))||parse_empty_statement(pstate_ignore_error(pstate))))
@@ -9364,7 +9261,26 @@ pstatus_t parse_statement(pstate_t* pstate){
   return pstate_error(pstate, saved_position, PARSE_ERROR_EXPECTED_STATEMENT);
 }
 
-/* i=414 j=0 */
+/* i=412 j=0 */
+pstatus_t parse_block(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if ((!pstate_expect_token_string(pstate, "{")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  block_node_t* result = make_block_node();
+  while (parse_statement(pstate))
+  {
+    node_list_add_node((&(result->statements)), pstate_get_result_node(pstate));
+  }
+  if ((!pstate_expect_token_string(pstate, "}")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+/* i=413 j=0 */
 pstatus_t parse_return_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "return")))
@@ -9380,7 +9296,7 @@ pstatus_t parse_return_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_return_statement(expr)));
 }
 
-/* i=415 j=0 */
+/* i=414 j=0 */
 pstatus_t parse_if_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "if"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -9406,7 +9322,7 @@ pstatus_t parse_if_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_if_statement(if_test, if_true, if_false)));
 }
 
-/* i=416 j=0 */
+/* i=415 j=0 */
 pstatus_t parse_while_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "while"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -9422,7 +9338,7 @@ pstatus_t parse_while_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_while_statement(while_test, while_body)));
 }
 
-/* i=417 j=0 */
+/* i=416 j=0 */
 pstatus_t parse_do_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "do"))||(!parse_statement(pstate))))
@@ -9446,7 +9362,7 @@ pstatus_t parse_do_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_do_statement(do_while_body, do_while_condition)));
 }
 
-/* i=418 j=0 */
+/* i=417 j=0 */
 pstatus_t parse_for_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "for"))||(!pstate_expect_token_string(pstate, "("))))
@@ -9484,7 +9400,7 @@ pstatus_t parse_for_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_for_statement(for_init, for_test, for_increment, for_body)));
 }
 
-/* i=419 j=0 */
+/* i=418 j=0 */
 pstatus_t parse_switch_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "switch"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -9500,7 +9416,7 @@ pstatus_t parse_switch_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_switch_statement(switch_item, block)));
 }
 
-/* i=420 j=0 */
+/* i=419 j=0 */
 pstatus_t parse_case_label(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "case"))||(!parse_expression(pstate))))
@@ -9515,7 +9431,7 @@ pstatus_t parse_case_label(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_case_label(case_expr)));
 }
 
-/* i=421 j=0 */
+/* i=420 j=0 */
 pstatus_t parse_expression_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_expression(pstate)))
@@ -9530,7 +9446,7 @@ pstatus_t parse_expression_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_expression_statement_node(expr)));
 }
 
-/* i=422 j=0 */
+/* i=421 j=0 */
 pstatus_t parse_goto_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* label_token = pstate_peek(pstate, 1);
@@ -9541,7 +9457,7 @@ pstatus_t parse_goto_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_goto_statement(label_token)));
 }
 
-/* i=423 j=0 */
+/* i=422 j=0 */
 pstatus_t parse_break_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* keyword_token = pstate_peek(pstate, 0);
@@ -9552,7 +9468,7 @@ pstatus_t parse_break_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_break_statement(keyword_token)));
 }
 
-/* i=424 j=0 */
+/* i=423 j=0 */
 pstatus_t parse_continue_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* keyword_token = pstate_peek(pstate, 0);
@@ -9563,7 +9479,7 @@ pstatus_t parse_continue_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_continue_statement(keyword_token)));
 }
 
-/* i=425 j=0 */
+/* i=424 j=0 */
 pstatus_t parse_label_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* label_token = pstate_peek(pstate, 0);
@@ -9574,7 +9490,7 @@ pstatus_t parse_label_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_label_statement(label_token)));
 }
 
-/* i=426 j=0 */
+/* i=425 j=0 */
 pstatus_t parse_default_label(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* default_token = pstate_peek(pstate, 0);
@@ -9585,7 +9501,7 @@ pstatus_t parse_default_label(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_default_label(default_token)));
 }
 
-/* i=427 j=0 */
+/* i=426 j=0 */
 pstatus_t parse_empty_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* semi_colon_token = pstate_peek(pstate, 0);
@@ -9596,7 +9512,7 @@ pstatus_t parse_empty_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_empty_statement(semi_colon_token)));
 }
 
-/* i=428 j=0 */
+/* i=427 j=0 */
 break_statement_node_t* make_break_statement(token_t* break_keyword_token){
   break_statement_node_t* result = malloc_struct(break_statement_node_t);
   ((result->tag)=PARSE_NODE_BREAK_STATEMENT);
@@ -9604,7 +9520,7 @@ break_statement_node_t* make_break_statement(token_t* break_keyword_token){
   return result;
 }
 
-/* i=429 j=0 */
+/* i=428 j=0 */
 break_statement_node_t* to_break_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_BREAK_STATEMENT)))
   {
@@ -9613,7 +9529,7 @@ break_statement_node_t* to_break_statement_node(parse_node_t* ptr){
   return (/*CAST*/(break_statement_node_t*) ptr);
 }
 
-/* i=430 j=0 */
+/* i=429 j=0 */
 continue_statement_node_t* make_continue_statement(token_t* keyword_token){
   continue_statement_node_t* result = malloc_struct(continue_statement_node_t);
   ((result->tag)=PARSE_NODE_CONTINUE_STATEMENT);
@@ -9621,7 +9537,7 @@ continue_statement_node_t* make_continue_statement(token_t* keyword_token){
   return result;
 }
 
-/* i=431 j=0 */
+/* i=430 j=0 */
 continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CONTINUE_STATEMENT)))
   {
@@ -9630,7 +9546,7 @@ continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr){
   return (/*CAST*/(continue_statement_node_t*) ptr);
 }
 
-/* i=432 j=0 */
+/* i=431 j=0 */
 label_statement_node_t* make_label_statement(token_t* label){
   label_statement_node_t* result = malloc_struct(label_statement_node_t);
   ((result->tag)=PARSE_NODE_LABEL_STATEMENT);
@@ -9638,7 +9554,7 @@ label_statement_node_t* make_label_statement(token_t* label){
   return result;
 }
 
-/* i=433 j=0 */
+/* i=432 j=0 */
 label_statement_node_t* to_label_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_LABEL_STATEMENT)))
   {
@@ -9647,7 +9563,7 @@ label_statement_node_t* to_label_statement_node(parse_node_t* ptr){
   return (/*CAST*/(label_statement_node_t*) ptr);
 }
 
-/* i=434 j=0 */
+/* i=433 j=0 */
 goto_statement_node_t* make_goto_statement(token_t* label){
   goto_statement_node_t* result = malloc_struct(goto_statement_node_t);
   ((result->tag)=PARSE_NODE_GOTO_STATEMENT);
@@ -9655,7 +9571,7 @@ goto_statement_node_t* make_goto_statement(token_t* label){
   return result;
 }
 
-/* i=435 j=0 */
+/* i=434 j=0 */
 goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_GOTO_STATEMENT)))
   {
@@ -9664,7 +9580,7 @@ goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr){
   return (/*CAST*/(goto_statement_node_t*) ptr);
 }
 
-/* i=436 j=0 */
+/* i=435 j=0 */
 empty_statement_node_t* make_empty_statement(token_t* semi_colon_token){
   empty_statement_node_t* result = malloc_struct(empty_statement_node_t);
   ((result->tag)=PARSE_NODE_EMPTY_STATEMENT);
@@ -9672,7 +9588,7 @@ empty_statement_node_t* make_empty_statement(token_t* semi_colon_token){
   return result;
 }
 
-/* i=437 j=0 */
+/* i=436 j=0 */
 empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_EMPTY_STATEMENT)))
   {
@@ -9681,7 +9597,7 @@ empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr){
   return (/*CAST*/(empty_statement_node_t*) ptr);
 }
 
-/* i=438 j=0 */
+/* i=437 j=0 */
 switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_node_t* block){
   switch_statement_node_t* result = malloc_struct(switch_statement_node_t);
   ((result->tag)=PARSE_NODE_SWITCH_STATEMENT);
@@ -9690,7 +9606,7 @@ switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_n
   return result;
 }
 
-/* i=439 j=0 */
+/* i=438 j=0 */
 switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_SWITCH_STATEMENT)))
   {
@@ -9699,7 +9615,7 @@ switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr){
   return (/*CAST*/(switch_statement_node_t*) ptr);
 }
 
-/* i=440 j=0 */
+/* i=439 j=0 */
 case_label_node_t* make_case_label(parse_node_t* expression){
   case_label_node_t* result = malloc_struct(case_label_node_t);
   ((result->tag)=PARSE_NODE_CASE_LABEL);
@@ -9707,7 +9623,7 @@ case_label_node_t* make_case_label(parse_node_t* expression){
   return result;
 }
 
-/* i=441 j=0 */
+/* i=440 j=0 */
 case_label_node_t* to_case_label_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CASE_LABEL)))
   {
@@ -9716,7 +9632,7 @@ case_label_node_t* to_case_label_node(parse_node_t* ptr){
   return (/*CAST*/(case_label_node_t*) ptr);
 }
 
-/* i=442 j=0 */
+/* i=441 j=0 */
 default_label_node_t* make_default_label(token_t* default_token){
   default_label_node_t* result = malloc_struct(default_label_node_t);
   ((result->tag)=PARSE_NODE_DEFAULT_LABEL);
@@ -9724,7 +9640,7 @@ default_label_node_t* make_default_label(token_t* default_token){
   return result;
 }
 
-/* i=443 j=0 */
+/* i=442 j=0 */
 default_label_node_t* to_default_label_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_DEFAULT_LABEL)))
   {
@@ -9733,14 +9649,14 @@ default_label_node_t* to_default_label_node(parse_node_t* ptr){
   return (/*CAST*/(default_label_node_t*) ptr);
 }
 
-/* i=444 j=0 */
+/* i=443 j=0 */
 block_node_t* make_block_node(){
   block_node_t* result = malloc_struct(block_node_t);
   ((result->tag)=PARSE_NODE_BLOCK);
   return result;
 }
 
-/* i=445 j=0 */
+/* i=444 j=0 */
 block_node_t* to_block_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_BLOCK)))
   {
@@ -9749,7 +9665,7 @@ block_node_t* to_block_node(parse_node_t* ptr){
   return (/*CAST*/(block_node_t*) ptr);
 }
 
-/* i=446 j=0 */
+/* i=445 j=0 */
 for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body){
   for_statement_node_t* result = malloc_struct(for_statement_node_t);
   ((result->tag)=PARSE_NODE_FOR_STATEMENT);
@@ -9760,7 +9676,7 @@ for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* f
   return result;
 }
 
-/* i=447 j=0 */
+/* i=446 j=0 */
 for_statement_node_t* to_for_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FOR_STATEMENT)))
   {
@@ -9769,7 +9685,7 @@ for_statement_node_t* to_for_statement_node(parse_node_t* ptr){
   return (/*CAST*/(for_statement_node_t*) ptr);
 }
 
-/* i=448 j=0 */
+/* i=447 j=0 */
 if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else){
   if_statement_node_t* result = malloc_struct(if_statement_node_t);
   ((result->tag)=PARSE_NODE_IF_STATEMENT);
@@ -9779,7 +9695,7 @@ if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t*
   return result;
 }
 
-/* i=449 j=0 */
+/* i=448 j=0 */
 if_statement_node_t* to_if_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_IF_STATEMENT)))
   {
@@ -9788,7 +9704,7 @@ if_statement_node_t* to_if_statement_node(parse_node_t* ptr){
   return (/*CAST*/(if_statement_node_t*) ptr);
 }
 
-/* i=450 j=0 */
+/* i=449 j=0 */
 expression_statement_node_t* make_expression_statement_node(parse_node_t* expression){
   expression_statement_node_t* result = malloc_struct(expression_statement_node_t);
   ((result->tag)=PARSE_NODE_EXPRESSION_STATEMENT);
@@ -9796,7 +9712,7 @@ expression_statement_node_t* make_expression_statement_node(parse_node_t* expres
   return result;
 }
 
-/* i=451 j=0 */
+/* i=450 j=0 */
 expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_EXPRESSION_STATEMENT)))
   {
@@ -9805,7 +9721,7 @@ expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr){
   return (/*CAST*/(expression_statement_node_t*) ptr);
 }
 
-/* i=452 j=0 */
+/* i=451 j=0 */
 return_statement_node_t* make_return_statement(parse_node_t* expression){
   return_statement_node_t* result = malloc_struct(return_statement_node_t);
   ((result->tag)=PARSE_NODE_RETURN_STATEMENT);
@@ -9813,7 +9729,7 @@ return_statement_node_t* make_return_statement(parse_node_t* expression){
   return result;
 }
 
-/* i=453 j=0 */
+/* i=452 j=0 */
 return_statement_node_t* to_return_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_RETURN_STATEMENT)))
   {
@@ -9822,7 +9738,7 @@ return_statement_node_t* to_return_statement_node(parse_node_t* ptr){
   return (/*CAST*/(return_statement_node_t*) ptr);
 }
 
-/* i=454 j=0 */
+/* i=453 j=0 */
 while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node_t* body){
   while_statement_node_t* result = malloc_struct(while_statement_node_t);
   ((result->tag)=PARSE_NODE_WHILE_STATEMENT);
@@ -9831,7 +9747,7 @@ while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node
   return result;
 }
 
-/* i=455 j=0 */
+/* i=454 j=0 */
 while_statement_node_t* to_while_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_WHILE_STATEMENT)))
   {
@@ -9840,7 +9756,7 @@ while_statement_node_t* to_while_statement_node(parse_node_t* ptr){
   return (/*CAST*/(while_statement_node_t*) ptr);
 }
 
-/* i=456 j=0 */
+/* i=455 j=0 */
 do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* condition){
   do_statement_node_t* result = malloc_struct(do_statement_node_t);
   ((result->tag)=PARSE_NODE_DO_STATEMENT);
@@ -9849,7 +9765,7 @@ do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* conditi
   return result;
 }
 
-/* i=457 j=0 */
+/* i=456 j=0 */
 do_statement_node_t* to_do_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_DO_STATEMENT)))
   {
@@ -9858,166 +9774,7 @@ do_statement_node_t* to_do_statement_node(parse_node_t* ptr){
   return (/*CAST*/(do_statement_node_t*) ptr);
 }
 
-/* i=460 j=1 */
-pstatus_t parse_typeof_node(pstate_t* pstate){
-  uint64_t saved_position = (pstate->position);
-  if ((!pstate_expect_token_string(pstate, "typeof")))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  if ((!pstate_expect_token_string(pstate, "(")))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  if ((!parse_type_node(pstate)))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  parse_node_t* type_node = pstate_get_result_node(pstate);
-  if ((!pstate_expect_token_string(pstate, ")")))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  type_node_t* result = malloc_type_node();
-  ((result->type_node_kind)=TYPE_NODE_KIND_TYPEOF);
-  ((result->user_type)=type_node);
-  return pstate_set_result_node(pstate, to_node(result));
-}
-
-/* i=461 j=1 */
-pstatus_t parse_user_type_node(pstate_t* pstate){
-  uint64_t saved_position = (pstate->position);
-  if (((parse_enum_node(pstate)||parse_structure_node(pstate_ignore_error(pstate)))||parse_union_node(pstate_ignore_error(pstate))))
-  {
-    return true;
-  }
-  else
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-}
-
-/* i=462 j=1 */
-pstatus_t parse_enum_node(pstate_t* pstate){
-  uint64_t saved_position = (pstate->position);
-  if ((!pstate_expect_token_string(pstate, "enum")))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  enum_node_t* result = malloc_enum_node();
-  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
-  {
-    ((result->name)=pstate_get_result_token(pstate));
-  }
-  else
-  {
-    pstate_ignore_error(pstate);
-  }
-  if ((!pstate_expect_token_string(pstate, "{")))
-  {
-    pstate_ignore_error(pstate);
-    ((result->partial_definition)=true);
-    return pstate_set_result_node(pstate, to_node(result));
-  }
-  while (true)
-  {
-    if (pstate_expect_token_string(pstate, "}"))
-    {
-      break;
-    }
-    pstate_ignore_error(pstate);
-    if ((!parse_enum_element_node(pstate)))
-    {
-      return pstate_propagate_error(pstate, saved_position);
-    }
-    node_list_add_node((&(result->elements)), pstate_get_result_node(pstate));
-  }
-  return pstate_set_result_node(pstate, to_node(result));
-}
-
-/* i=463 j=1 */
-pstatus_t parse_structure_node(pstate_t* pstate){
-  uint64_t saved_position = (pstate->position);
-  if ((!pstate_expect_token_string(pstate, "struct")))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  struct_node_t* result = malloc_struct_node();
-  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
-  {
-    ((result->name)=pstate_get_result_token(pstate));
-  }
-  else
-  {
-    pstate_ignore_error(pstate);
-  }
-  if (pstate_expect_token_string(pstate, "{"))
-  {
-    ((result->partial_definition)=false);
-    while (true)
-    {
-      if (pstate_expect_token_string(pstate, "}"))
-      {
-        break;
-      }
-      pstate_ignore_error(pstate);
-      if ((!parse_field_node(pstate)))
-      {
-        return pstate_propagate_error(pstate, saved_position);
-      }
-      node_list_add_node((&(result->fields)), pstate_get_result_node(pstate));
-    }
-  }
-  else
-  {
-    ((result->partial_definition)=true);
-    pstate_ignore_error(pstate);
-  }
-  return pstate_set_result_node(pstate, to_node(result));
-}
-
-/* i=464 j=1 */
-pstatus_t parse_union_node(pstate_t* pstate){
-  uint64_t saved_position = (pstate->position);
-  if ((!pstate_expect_token_string(pstate, "union")))
-  {
-    return pstate_propagate_error(pstate, saved_position);
-  }
-  union_node_t* result = malloc_union_node();
-  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
-  {
-    ((result->name)=pstate_get_result_token(pstate));
-  }
-  else
-  {
-    pstate_ignore_error(pstate);
-  }
-  if (pstate_expect_token_string(pstate, "{"))
-  {
-    ((result->partial_definition)=false);
-    while (true)
-    {
-      if (pstate_expect_token_string(pstate, "}"))
-      {
-        break;
-      }
-      pstate_ignore_error(pstate);
-      if ((!parse_field_node(pstate)))
-      {
-        return pstate_propagate_error(pstate, saved_position);
-      }
-      node_list_add_node((&(result->fields)), pstate_get_result_node(pstate));
-    }
-  }
-  else
-  {
-    ((result->partial_definition)=true);
-    pstate_ignore_error(pstate);
-  }
-  return pstate_set_result_node(pstate, to_node(result));
-}
-
-/* i=465 j=0 */
+/* i=459 j=0 */
 pstatus_t parse_type_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((parse_typeof_node(pstate)||parse_function_type(pstate)))
@@ -10102,7 +9859,7 @@ pstatus_t parse_type_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=466 j=0 */
+/* i=460 j=0 */
 canonical_type_result_t make_type_token_result(char* str, int consumed_tokens){
   token_t* canonical_token = malloc_struct(typeof(token_t));
   ((canonical_token->type)=TOKEN_TYPE_IDENTIFIER);
@@ -10112,7 +9869,33 @@ canonical_type_result_t make_type_token_result(char* str, int consumed_tokens){
   return ((canonical_type_result_t) {.canonical_type = canonical_token, .consumed_tokens = consumed_tokens});
 }
 
-/* i=467 j=0 */
+/* i=461 j=0 */
+pstatus_t parse_typeof_node(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if ((!pstate_expect_token_string(pstate, "typeof")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if ((!pstate_expect_token_string(pstate, "(")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if ((!parse_type_node(pstate)))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  parse_node_t* type_node = pstate_get_result_node(pstate);
+  if ((!pstate_expect_token_string(pstate, ")")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  type_node_t* result = malloc_type_node();
+  ((result->type_node_kind)=TYPE_NODE_KIND_TYPEOF);
+  ((result->user_type)=type_node);
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+/* i=462 j=0 */
 canonical_type_result_t parse_canonical_type(pstate_t* pstate){
   token_t* a = pstate_peek(pstate, 0);
   token_t* b = pstate_peek(pstate, 1);
@@ -10208,7 +9991,7 @@ canonical_type_result_t parse_canonical_type(pstate_t* pstate){
   return ((canonical_type_result_t) {.canonical_type = NULL, .consumed_tokens = 0});
 }
 
-/* i=468 j=0 */
+/* i=463 j=0 */
 pstatus_t parse_function_type(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* fn_t_token = pstate_peek(pstate, 0);
@@ -10235,7 +10018,7 @@ pstatus_t parse_function_type(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=469 j=0 */
+/* i=464 j=0 */
 pstatus_t parse_function_type_argument(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, ",")))
@@ -10254,7 +10037,48 @@ pstatus_t parse_function_type_argument(pstate_t* pstate){
   return true;
 }
 
-/* i=481 j=0 */
+/* i=476 j=0 */
+pstatus_t parse_structure_node(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if ((!pstate_expect_token_string(pstate, "struct")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  struct_node_t* result = malloc_struct_node();
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
+  {
+    ((result->name)=pstate_get_result_token(pstate));
+  }
+  else
+  {
+    pstate_ignore_error(pstate);
+  }
+  if (pstate_expect_token_string(pstate, "{"))
+  {
+    ((result->partial_definition)=false);
+    while (true)
+    {
+      if (pstate_expect_token_string(pstate, "}"))
+      {
+        break;
+      }
+      pstate_ignore_error(pstate);
+      if ((!parse_field_node(pstate)))
+      {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      node_list_add_node((&(result->fields)), pstate_get_result_node(pstate));
+    }
+  }
+  else
+  {
+    ((result->partial_definition)=true);
+    pstate_ignore_error(pstate);
+  }
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+/* i=477 j=0 */
 pstatus_t parse_field_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_type_node(pstate)))
@@ -10286,7 +10110,99 @@ pstatus_t parse_field_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=482 j=0 */
+/* i=478 j=0 */
+pstatus_t parse_union_node(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if ((!pstate_expect_token_string(pstate, "union")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  union_node_t* result = malloc_union_node();
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
+  {
+    ((result->name)=pstate_get_result_token(pstate));
+  }
+  else
+  {
+    pstate_ignore_error(pstate);
+  }
+  if (pstate_expect_token_string(pstate, "{"))
+  {
+    ((result->partial_definition)=false);
+    while (true)
+    {
+      if (pstate_expect_token_string(pstate, "}"))
+      {
+        break;
+      }
+      pstate_ignore_error(pstate);
+      if ((!parse_field_node(pstate)))
+      {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      node_list_add_node((&(result->fields)), pstate_get_result_node(pstate));
+    }
+  }
+  else
+  {
+    ((result->partial_definition)=true);
+    pstate_ignore_error(pstate);
+  }
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+/* i=479 j=0 */
+pstatus_t parse_user_type_node(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if (((parse_enum_node(pstate)||parse_structure_node(pstate_ignore_error(pstate)))||parse_union_node(pstate_ignore_error(pstate))))
+  {
+    return true;
+  }
+  else
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+}
+
+/* i=480 j=0 */
+pstatus_t parse_enum_node(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if ((!pstate_expect_token_string(pstate, "enum")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  enum_node_t* result = malloc_enum_node();
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
+  {
+    ((result->name)=pstate_get_result_token(pstate));
+  }
+  else
+  {
+    pstate_ignore_error(pstate);
+  }
+  if ((!pstate_expect_token_string(pstate, "{")))
+  {
+    pstate_ignore_error(pstate);
+    ((result->partial_definition)=true);
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+  while (true)
+  {
+    if (pstate_expect_token_string(pstate, "}"))
+    {
+      break;
+    }
+    pstate_ignore_error(pstate);
+    if ((!parse_enum_element_node(pstate)))
+    {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    node_list_add_node((&(result->elements)), pstate_get_result_node(pstate));
+  }
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+/* i=481 j=0 */
 pstatus_t parse_enum_element_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
@@ -10313,12 +10229,12 @@ pstatus_t parse_enum_element_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=485 j=0 */
+/* i=484 j=0 */
 pstatus_t parse_expression(pstate_t* pstate){
   return pratt_parse_expression(pstate, 0);
 }
 
-/* i=486 j=0 */
+/* i=485 j=0 */
 pstatus_t parse_initializer(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (token_matches(pstate_peek(pstate, 0), "{"))
@@ -10328,7 +10244,7 @@ pstatus_t parse_initializer(pstate_t* pstate){
   return pstate_error(pstate, saved_position, PARSE_ERROR_CLOSE_BRACKET_EXPECTED);
 }
 
-/* i=487 j=0 */
+/* i=486 j=0 */
 pstatus_t parse_variable_definition_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* storage_class_specifier = NULL;
@@ -10388,7 +10304,7 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=489 j=0 */
+/* i=488 j=0 */
 pstatus_t parse_literal_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_STRING_LITERAL))
@@ -10459,7 +10375,7 @@ pstatus_t parse_literal_node(pstate_t* pstate){
   return pstate_error(pstate, saved_position, PARSE_ERROR_NOT_LITERAL_NODE);
 }
 
-/* i=492 j=0 */
+/* i=491 j=0 */
 pstatus_t parse_balanced_construct(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   int open_parens = 0;
@@ -10511,7 +10427,7 @@ while (((((open_parens+open_brackets)+open_braces)>0)&&((pstate->position)<((pst
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-/* i=493 j=0 */
+/* i=492 j=0 */
 printer_t* make_printer(buffer_t* buffer, int indent_width){
   printer_t* result = malloc_struct(printer_t);
   ((result->buffer)=buffer);
@@ -10519,49 +10435,49 @@ printer_t* make_printer(buffer_t* buffer, int indent_width){
   return result;
 }
 
-/* i=494 j=0 */
+/* i=493 j=0 */
 printer_t* append_string(printer_t* printer, char* string){
   buffer_append_string((printer->buffer), string);
   return printer;
 }
 
-/* i=495 j=0 */
+/* i=494 j=0 */
 printer_t* append_token(printer_t* printer, token_t* token){
   buffer_append_sub_buffer((printer->buffer), (token->start), (token->end), (token->buffer));
   return printer;
 }
 
-/* i=496 j=0 */
+/* i=495 j=0 */
 printer_t* printer_newline(printer_t* printer){
   buffer_append_byte((printer->buffer), '\n');
   return printer;
 }
 
-/* i=497 j=0 */
+/* i=496 j=0 */
 printer_t* printer_space(printer_t* printer){
   buffer_append_byte((printer->buffer), ' ');
   return printer;
 }
 
-/* i=498 j=0 */
+/* i=497 j=0 */
 printer_t* printer_indent(printer_t* printer){
   buffer_append_repeated_byte((printer->buffer), ' ', ((printer->indent_width)*(printer->indent_level)));
   return printer;
 }
 
-/* i=499 j=0 */
+/* i=498 j=0 */
 printer_t* printer_increase_indent(printer_t* printer){
   ((printer->indent_level)++);
   return printer;
 }
 
-/* i=500 j=0 */
+/* i=499 j=0 */
 printer_t* printer_decrease_indent(printer_t* printer){
   ((printer->indent_level)--);
   return printer;
 }
 
-/* i=501 j=0 */
+/* i=500 j=0 */
 void do_print_tokens(value_array_t* tokens, char* message){
   if (FLAG_print_tokens_show_tokens)
   {
@@ -10579,7 +10495,7 @@ void do_print_tokens(value_array_t* tokens, char* message){
   }
 }
 
-/* i=502 j=0 */
+/* i=501 j=0 */
 void print_tokens(void){
   log_info("print_tokens()");
   value_array_t* files = read_files(FLAG_files);
@@ -10637,114 +10553,32 @@ void print_tokens(void){
   }
 }
 
-/* i=503 j=0 */
-void extract_command(char* command){
-  log_info("extract_prototypes(%s)", command);
-  buffer_t* prototype_outputs = make_buffer((16*1024));
-  buffer_t* enum_outputs = make_buffer((16*1024));
-  value_array_t* files = read_files(FLAG_files);
-  for (
-    int i = 0;
-    (i<(FLAG_files->length));
-    (i++))
-  {
-    if (FLAG_unique_prototype_header_files)
-    {
-      buffer_clear(prototype_outputs);
-    }
-    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
-    (prototype_outputs=buffer_printf(prototype_outputs, "/* Automatically extracted prototypes from %s */\n\n", (file->file_name)));
-    fprintf(stdout, "====================================================\n");
-    fprintf(stdout, "====> Processing %s\n", (file->file_name));
-    fprintf(stdout, "====================================================\n");
-    tokenizer_result_t tokenizer_result = tokenize((file->data));
-    if ((tokenizer_result.tokenizer_error_code))
-    {
-      log_warn("Tokenizer error: \"%s\"::%d -- %d", (value_array_get(FLAG_files, i).str), (tokenizer_result.tokenizer_error_position), (tokenizer_result.tokenizer_error_code));
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-    value_array_t* tokens = (tokenizer_result.tokens);
-    symbol_table_t* symbol_table = make_symbol_table();
-    handle_c_preprocessor_directives(((c_preprocess_options_t) {
-                             .keep_system_includes = false,
-                             .keep_user_includes = false,
-                         }), symbol_table, tokens);
-    (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
-                                     .keep_whitespace = false,
-                                     .keep_comments = false,
-                                     .keep_javadoc_comments = false,
-                                     .keep_c_preprocessor_lines = false,
-                                 })));
-    pstate_t pstate = ((pstate_t) {.tokens = tokens, .use_statement_parser = FLAG_use_statement_parser});
-    if ((!parse_declarations((&pstate))))
-    {
-      (((pstate.error).file_name)=(file->file_name));
-      buffer_t* buffer = make_buffer(1);
-      (buffer=buffer_append_human_readable_error(buffer, (&(pstate.error))));
-      log_fatal("%s", buffer_to_c_string(buffer));
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-    declarations_node_t* root = to_declarations_node(pstate_get_result_node((&pstate)));
-    if (string_equal("extract-prototypes", command))
-    {
-      (prototype_outputs=extract_prototypes_process_declarations(prototype_outputs, root));
-    }
-    else
-    if (string_equal("extract-enums", command))
-    {
-      (enum_outputs=extract_enums_process_declarations(enum_outputs, root));
-    }
-    if (FLAG_unique_prototype_header_files)
-    {
-      if (string_equal("extract-prototypes", command))
-      {
-        char* prototype_outputs_file_name = string_printf("%s.generated.h", (file->file_name));
-        buffer_write_file(prototype_outputs, prototype_outputs_file_name);
-        free_bytes(prototype_outputs_file_name);
-      }
-      else
-      if (string_equal("extract-enums", command))
-      {
-        char* enum_outputs_file_name = string_printf("%s.enum-generated.h", (file->file_name));
-        buffer_write_file(enum_outputs, enum_outputs_file_name);
-        free_bytes(enum_outputs_file_name);
-      }
-    }
-  }
-  if ((!FLAG_unique_prototype_header_files))
-  {
-    fprintf(stdout, "%s", buffer_to_c_string(prototype_outputs));
-  }
-}
-
-/* i=504 j=0 */
+/* i=502 j=0 */
 void configure_flags(void){
   flag_program_name("omni-c");
   flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
   flag_boolean("--print-command-line", (&FLAG_print_command_line));
   flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
   configure_print_tokens_command();
-  configure_extract_prototypes_command();
-  configure_extract_enums_command();
   configure_generate_c_output_file();
   configure_parse_expression();
   configure_parse_statement();
 }
 
-/* i=505 j=0 */
+/* i=503 j=0 */
 void configure_parse_expression(void){
   flag_command("parse-expression", (&FLAG_command));
   flag_string("--expression", (&FLAG_expression));
   flag_boolean("--to-c", (&FLAG_to_c));
 }
 
-/* i=506 j=0 */
+/* i=504 j=0 */
 void configure_parse_statement(void){
   flag_command("parse-statement", (&FLAG_command));
   flag_string("--statement", (&FLAG_statement));
 }
 
-/* i=507 j=0 */
+/* i=505 j=0 */
 void configure_print_tokens_command(void){
   flag_command("print-tokens", (&FLAG_command));
   flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
@@ -10755,23 +10589,7 @@ void configure_print_tokens_command(void){
   flag_file_args((&FLAG_files));
 }
 
-/* i=508 j=0 */
-void configure_extract_enums_command(void){
-  flag_command("extract-enums", (&FLAG_command));
-  flag_string("--output-file", (&FLAG_ouput_file));
-  flag_boolean("--unique-prototype-header-files", (&FLAG_unique_prototype_header_files));
-  flag_file_args((&FLAG_files));
-}
-
-/* i=509 j=0 */
-void configure_extract_prototypes_command(void){
-  flag_command("extract-prototypes", (&FLAG_command));
-  flag_string("--output-file", (&FLAG_ouput_file));
-  flag_boolean("--unique-prototype-header-files", (&FLAG_unique_prototype_header_files));
-  flag_file_args((&FLAG_files));
-}
-
-/* i=510 j=0 */
+/* i=506 j=0 */
 void configure_generate_c_output_file(void){
   flag_command("generate-header-file", (&FLAG_command));
   flag_string("--output-file", (&FLAG_ouput_file));
@@ -10789,12 +10607,12 @@ void configure_generate_c_output_file(void){
   flag_file_args((&FLAG_files));
 }
 
-/* i=511 j=0 */
+/* i=507 j=0 */
 boolean_t is_inlined_function(function_node_t* node){
   return (token_matches((node->storage_class_specifier), "static")&&token_list_contains((node->function_specifiers), "inline"));
 }
 
-/* i=512 j=0 */
+/* i=508 j=0 */
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table){
   if (FLAG_dump_symbol_table)
   {
@@ -10808,7 +10626,7 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table){
   }
 }
 
-/* i=513 j=1 */
+/* i=509 j=1 */
 buffer_t* get_reflection_header_buffer(void){
   uint8_t reflection_header[] = {
     0x23, 0x69, 0x66, 0x6E, 0x64, 0x65, 0x66, 0x20,
@@ -11122,7 +10940,7 @@ buffer_t* get_reflection_header_buffer(void){
   return result;
 }
 
-/* i=514 j=0 */
+/* i=510 j=0 */
 char* include_node_to_string(cpp_include_node_t* node){
   buffer_t* buffer = make_buffer(32);
   printer_t* printer = make_printer(buffer, 2);
@@ -11131,7 +10949,7 @@ char* include_node_to_string(cpp_include_node_t* node){
   return include_statement;
 }
 
-/* i=515 j=0 */
+/* i=511 j=0 */
 void generate_c_output_file(boolean_t is_library){
   boolean_t is_header_file = (!is_library);
   symbol_table_t* symbol_table = make_symbol_table();
@@ -11325,7 +11143,7 @@ void generate_c_output_file(boolean_t is_library){
   }
 }
 
-/* i=516 j=0 */
+/* i=512 j=0 */
 void parse_expression_string_and_print_parse_tree(char* expression){
   if ((expression==NULL))
   {
@@ -11369,7 +11187,7 @@ void parse_expression_string_and_print_parse_tree(char* expression){
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
-/* i=517 j=0 */
+/* i=513 j=0 */
 void parse_statement_string_and_print_parse_tree(char* expression){
   tokenizer_result_t tokenizer_result = tokenize(buffer_append_string(make_buffer(1), expression));
   if ((tokenizer_result.tokenizer_error_code))
@@ -11401,7 +11219,7 @@ void parse_statement_string_and_print_parse_tree(char* expression){
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
-/* i=518 j=0 */
+/* i=514 j=0 */
 int main(int argc, char** argv){
   configure_fatal_errors(((fatal_error_config_t) {
                                                  .catch_sigsegv = true,
@@ -11460,18 +11278,13 @@ int main(int argc, char** argv){
     print_tokens();
   }
   else
-  if ((string_equal("extract-enums", FLAG_command)||string_equal("extract-prototypes", FLAG_command)))
-  {
-    extract_command(FLAG_command);
-  }
-  else
   {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }
   exit(0);
 }
 
-/* i=519 j=0 */
+/* i=515 j=0 */
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
@@ -11532,7 +11345,7 @@ return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
     return "<<unknown-error_code>>";
   }
 }
-/* i=520 j=0 */
+/* i=516 j=0 */
 error_code_t string_to_error_code(char* value){
   if (strcmp(value, "ERROR_UKNOWN") == 0) {
 return ERROR_UKNOWN;
@@ -11617,7 +11430,7 @@ return ERROR_ILLEGAL_TERMINAL_COORDINATES;
   }
   return 0;
 }
-/* i=521 j=0 */
+/* i=517 j=0 */
 enum_metadata_t* error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11760,7 +11573,7 @@ enum_metadata_t* error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=522 j=0 */
+/* i=518 j=0 */
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
   switch (value) {
     case NF_OK:
@@ -11775,7 +11588,7 @@ return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
     return "<<unknown-non_fatal_error_code>>";
   }
 }
-/* i=523 j=0 */
+/* i=519 j=0 */
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
   if (strcmp(value, "NF_OK") == 0) {
 return NF_OK;
@@ -11791,7 +11604,7 @@ return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
   }
   return 0;
 }
-/* i=524 j=0 */
+/* i=520 j=0 */
 enum_metadata_t* non_fatal_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11819,7 +11632,7 @@ enum_metadata_t* non_fatal_error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=525 j=0 */
+/* i=521 j=0 */
 char* flag_type_to_string(flag_type_t value){
   switch (value) {
     case flag_type_none:
@@ -11842,7 +11655,7 @@ return "flag_type_custom";
     return "<<unknown-flag_type>>";
   }
 }
-/* i=526 j=0 */
+/* i=522 j=0 */
 flag_type_t string_to_flag_type(char* value){
   if (strcmp(value, "flag_type_none") == 0) {
 return flag_type_none;
@@ -11870,7 +11683,7 @@ return flag_type_custom;
   }
   return 0;
 }
-/* i=527 j=0 */
+/* i=523 j=0 */
 enum_metadata_t* flag_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11918,7 +11731,7 @@ enum_metadata_t* flag_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=528 j=0 */
+/* i=524 j=0 */
 char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
   switch (value) {
     case EXIT_STATUS_UNKNOWN:
@@ -11933,7 +11746,7 @@ return "EXIT_STATUS_ABNORMAL";
     return "<<unknown-sub_process_exit_status>>";
   }
 }
-/* i=529 j=0 */
+/* i=525 j=0 */
 sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
   if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
 return EXIT_STATUS_UNKNOWN;
@@ -11949,7 +11762,7 @@ return EXIT_STATUS_ABNORMAL;
   }
   return 0;
 }
-/* i=530 j=0 */
+/* i=526 j=0 */
 enum_metadata_t* sub_process_exit_status_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11977,7 +11790,7 @@ enum_metadata_t* sub_process_exit_status_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=531 j=0 */
+/* i=527 j=0 */
 char* input_mode_to_string(input_mode_t value){
   switch (value) {
     case INPUT_MODE_OMNI_C:
@@ -11990,7 +11803,7 @@ return "INPUT_MODE_C_PLUS_PLUS";
     return "<<unknown-input_mode>>";
   }
 }
-/* i=532 j=0 */
+/* i=528 j=0 */
 input_mode_t string_to_input_mode(char* value){
   if (strcmp(value, "INPUT_MODE_OMNI_C") == 0) {
 return INPUT_MODE_OMNI_C;
@@ -12003,7 +11816,7 @@ return INPUT_MODE_C_PLUS_PLUS;
   }
   return 0;
 }
-/* i=533 j=0 */
+/* i=529 j=0 */
 enum_metadata_t* input_mode_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12026,7 +11839,7 @@ enum_metadata_t* input_mode_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=534 j=0 */
+/* i=530 j=0 */
 char* output_mode_to_string(output_mode_t value){
   switch (value) {
     case OUTPUT_MODE_STANDARD_C:
@@ -12037,7 +11850,7 @@ return "OUTPUT_MODE_C_PLUS_PLUS";
     return "<<unknown-output_mode>>";
   }
 }
-/* i=535 j=0 */
+/* i=531 j=0 */
 output_mode_t string_to_output_mode(char* value){
   if (strcmp(value, "OUTPUT_MODE_STANDARD_C") == 0) {
 return OUTPUT_MODE_STANDARD_C;
@@ -12047,7 +11860,7 @@ return OUTPUT_MODE_C_PLUS_PLUS;
   }
   return 0;
 }
-/* i=536 j=0 */
+/* i=532 j=0 */
 enum_metadata_t* output_mode_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12065,7 +11878,7 @@ enum_metadata_t* output_mode_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=537 j=0 */
+/* i=533 j=0 */
 char* file_tag_to_string(file_tag_t value){
   switch (value) {
     case OMNI_C_SOURCE_FILE:
@@ -12078,7 +11891,7 @@ return "DATA_FILE";
     return "<<unknown-file_tag>>";
   }
 }
-/* i=538 j=0 */
+/* i=534 j=0 */
 file_tag_t string_to_file_tag(char* value){
   if (strcmp(value, "OMNI_C_SOURCE_FILE") == 0) {
 return OMNI_C_SOURCE_FILE;
@@ -12091,7 +11904,7 @@ return DATA_FILE;
   }
   return 0;
 }
-/* i=539 j=0 */
+/* i=535 j=0 */
 enum_metadata_t* file_tag_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12114,7 +11927,7 @@ enum_metadata_t* file_tag_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=540 j=0 */
+/* i=536 j=0 */
 char* tokenizer_error_to_string(tokenizer_error_t value){
   switch (value) {
     case TOKENIZER_ERROR_UNKNOWN:
@@ -12133,7 +11946,7 @@ return "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL";
     return "<<unknown-tokenizer_error>>";
   }
 }
-/* i=541 j=0 */
+/* i=537 j=0 */
 tokenizer_error_t string_to_tokenizer_error(char* value){
   if (strcmp(value, "TOKENIZER_ERROR_UNKNOWN") == 0) {
 return TOKENIZER_ERROR_UNKNOWN;
@@ -12155,7 +11968,7 @@ return TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL;
   }
   return 0;
 }
-/* i=542 j=0 */
+/* i=538 j=0 */
 enum_metadata_t* tokenizer_error_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12193,7 +12006,7 @@ enum_metadata_t* tokenizer_error_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=543 j=0 */
+/* i=539 j=0 */
 char* parse_error_code_to_string(parse_error_code_t value){
   switch (value) {
     case PARSE_ERROR_UNKNOWN:
@@ -12242,7 +12055,7 @@ return "PARSE_ERROR_UNHANDLED_INSTRUCTION";
     return "<<unknown-parse_error_code>>";
   }
 }
-/* i=544 j=0 */
+/* i=540 j=0 */
 parse_error_code_t string_to_parse_error_code(char* value){
   if (strcmp(value, "PARSE_ERROR_UNKNOWN") == 0) {
 return PARSE_ERROR_UNKNOWN;
@@ -12309,7 +12122,7 @@ return PARSE_ERROR_UNHANDLED_INSTRUCTION;
   }
   return 0;
 }
-/* i=545 j=0 */
+/* i=541 j=0 */
 enum_metadata_t* parse_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12422,7 +12235,32 @@ enum_metadata_t* parse_error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=546 j=0 */
+/* i=542 j=0 */
+char* token_type_to_string(token_type_t value){
+  switch (value) {
+    case TOKEN_TYPE_UNKNOWN:
+return "TOKEN_TYPE_UNKNOWN";
+  case TOKEN_TYPE_WHITESPACE:
+return "TOKEN_TYPE_WHITESPACE";
+  case TOKEN_TYPE_COMMENT:
+return "TOKEN_TYPE_COMMENT";
+  case TOKEN_TYPE_IDENTIFIER:
+return "TOKEN_TYPE_IDENTIFIER";
+  case TOKEN_TYPE_PUNCTUATION:
+return "TOKEN_TYPE_PUNCTUATION";
+  case TOKEN_TYPE_INTEGER_LITERAL:
+return "TOKEN_TYPE_INTEGER_LITERAL";
+  case TOKEN_TYPE_FLOAT_LITERAL:
+return "TOKEN_TYPE_FLOAT_LITERAL";
+  case TOKEN_TYPE_STRING_LITERAL:
+return "TOKEN_TYPE_STRING_LITERAL";
+  case TOKEN_TYPE_CHARACTER_LITERAL:
+return "TOKEN_TYPE_CHARACTER_LITERAL";
+  default:
+    return "<<unknown-token_type>>";
+  }
+}
+/* i=543 j=0 */
 token_type_t string_to_token_type(char* value){
   if (strcmp(value, "TOKEN_TYPE_UNKNOWN") == 0) {
 return TOKEN_TYPE_UNKNOWN;
@@ -12453,7 +12291,7 @@ return TOKEN_TYPE_CHARACTER_LITERAL;
   }
   return 0;
 }
-/* i=547 j=0 */
+/* i=544 j=0 */
 enum_metadata_t* token_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12506,7 +12344,7 @@ enum_metadata_t* token_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=548 j=0 */
+/* i=545 j=0 */
 char* numeric_literal_encoding_to_string(numeric_literal_encoding_t value){
   switch (value) {
     case NUMERIC_LITERAL_ENCODING_UNDECIDED:
@@ -12527,7 +12365,7 @@ return "NUMERIC_LITERAL_ENCODING_FLOAT";
     return "<<unknown-numeric_literal_encoding>>";
   }
 }
-/* i=549 j=0 */
+/* i=546 j=0 */
 numeric_literal_encoding_t string_to_numeric_literal_encoding(char* value){
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_UNDECIDED") == 0) {
 return NUMERIC_LITERAL_ENCODING_UNDECIDED;
@@ -12552,7 +12390,7 @@ return NUMERIC_LITERAL_ENCODING_FLOAT;
   }
   return 0;
 }
-/* i=550 j=0 */
+/* i=547 j=0 */
 enum_metadata_t* numeric_literal_encoding_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12595,7 +12433,7 @@ enum_metadata_t* numeric_literal_encoding_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=551 j=0 */
+/* i=548 j=0 */
 char* parse_node_type_to_string(parse_node_type_t value){
   switch (value) {
     case PARSE_NODE_UNKNOWN:
@@ -12682,7 +12520,7 @@ return "PARSE_NODE_CONDITIONAL";
     return "<<unknown-parse_node_type>>";
   }
 }
-/* i=552 j=0 */
+/* i=549 j=0 */
 parse_node_type_t string_to_parse_node_type(char* value){
   if (strcmp(value, "PARSE_NODE_UNKNOWN") == 0) {
 return PARSE_NODE_UNKNOWN;
@@ -12806,7 +12644,7 @@ return PARSE_NODE_CONDITIONAL;
   }
   return 0;
 }
-/* i=553 j=0 */
+/* i=550 j=0 */
 enum_metadata_t* parse_node_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13014,7 +12852,7 @@ enum_metadata_t* parse_node_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=554 j=0 */
+/* i=551 j=0 */
 char* pratt_parser_operation_to_string(pratt_parser_operation_t value){
   switch (value) {
     case PRATT_PARSE_UNKNOWN:
@@ -13049,7 +12887,7 @@ return "PRATT_PARSE_CALL";
     return "<<unknown-pratt_parser_operation>>";
   }
 }
-/* i=555 j=0 */
+/* i=552 j=0 */
 pratt_parser_operation_t string_to_pratt_parser_operation(char* value){
   if (strcmp(value, "PRATT_PARSE_UNKNOWN") == 0) {
 return PRATT_PARSE_UNKNOWN;
@@ -13095,7 +12933,7 @@ return PRATT_PARSE_CALL;
   }
   return 0;
 }
-/* i=556 j=0 */
+/* i=553 j=0 */
 enum_metadata_t* pratt_parser_operation_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13173,7 +13011,7 @@ enum_metadata_t* pratt_parser_operation_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=557 j=0 */
+/* i=554 j=0 */
 char* associativity_to_string(associativity_t value){
   switch (value) {
     case LEFT_TO_RIGHT:
@@ -13184,7 +13022,7 @@ return "RIGHT_TO_LEFT";
     return "<<unknown-associativity>>";
   }
 }
-/* i=558 j=0 */
+/* i=555 j=0 */
 associativity_t string_to_associativity(char* value){
   if (strcmp(value, "LEFT_TO_RIGHT") == 0) {
 return LEFT_TO_RIGHT;
@@ -13194,7 +13032,7 @@ return RIGHT_TO_LEFT;
   }
   return 0;
 }
-/* i=559 j=0 */
+/* i=556 j=0 */
 enum_metadata_t* associativity_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13212,7 +13050,7 @@ enum_metadata_t* associativity_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=560 j=0 */
+/* i=557 j=0 */
 char* precedence_to_string(precedence_t value){
   switch (value) {
     case PRECEDENCE_UNKNOWN:
@@ -13253,7 +13091,7 @@ return "PRECEDENCE_PRIMARY";
     return "<<unknown-precedence>>";
   }
 }
-/* i=561 j=0 */
+/* i=558 j=0 */
 precedence_t string_to_precedence(char* value){
   if (strcmp(value, "PRECEDENCE_UNKNOWN") == 0) {
 return PRECEDENCE_UNKNOWN;
@@ -13308,7 +13146,7 @@ return PRECEDENCE_PRIMARY;
   }
   return 0;
 }
-/* i=562 j=0 */
+/* i=559 j=0 */
 enum_metadata_t* precedence_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13401,7 +13239,7 @@ enum_metadata_t* precedence_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=563 j=0 */
+/* i=560 j=0 */
 char* type_qualifier_to_string(type_qualifier_t value){
   switch (value) {
     case TYPE_QUALIFIER_NONE:
@@ -13416,7 +13254,7 @@ return "TYPE_QUALIFIER_RESTRICT";
     return "<<unknown-type_qualifier>>";
   }
 }
-/* i=564 j=0 */
+/* i=561 j=0 */
 type_qualifier_t string_to_type_qualifier(char* value){
   if (strcmp(value, "TYPE_QUALIFIER_NONE") == 0) {
 return TYPE_QUALIFIER_NONE;
@@ -13432,7 +13270,7 @@ return TYPE_QUALIFIER_RESTRICT;
   }
   return 0;
 }
-/* i=565 j=0 */
+/* i=562 j=0 */
 enum_metadata_t* type_qualifier_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13460,7 +13298,7 @@ enum_metadata_t* type_qualifier_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=566 j=0 */
+/* i=563 j=0 */
 char* type_node_kind_to_string(type_node_kind_t value){
   switch (value) {
     case TYPE_NODE_KIND_UNKNOWN:
@@ -13485,7 +13323,7 @@ return "TYPE_NODE_KIND_TYPEOF";
     return "<<unknown-type_node_kind>>";
   }
 }
-/* i=567 j=0 */
+/* i=564 j=0 */
 type_node_kind_t string_to_type_node_kind(char* value){
   if (strcmp(value, "TYPE_NODE_KIND_UNKNOWN") == 0) {
 return TYPE_NODE_KIND_UNKNOWN;
@@ -13516,7 +13354,7 @@ return TYPE_NODE_KIND_TYPEOF;
   }
   return 0;
 }
-/* i=568 j=0 */
+/* i=565 j=0 */
 enum_metadata_t* type_node_kind_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
