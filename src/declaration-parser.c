@@ -295,16 +295,6 @@ static inline cpp_define_node_t* malloc_cpp_define_node(void) {
 }
 
 /* ====================================================================== */
-/* Forward declarations all the other routines. */
-/* ====================================================================== */
-
-#include "declaration-parser.c.generated.h"
-
-#endif /* _DECLARATION_PARSER_H_ */
-
-#include "statement-parser.h"
-
-/* ====================================================================== */
 /* Implementation of non-inlined functions */
 /* ====================================================================== */
 

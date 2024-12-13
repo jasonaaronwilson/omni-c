@@ -79,45 +79,6 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
         symbol_table_add_declaration_node(symbol_table->structures,
                                           token_to_string(struct_node->name),
                                           cast(parse_node_t*, struct_node));
-
-        // declaration[4]:
-        //     tag: PARSE_NODE_TYPEDEF
-        //     name: before_split_t
-        //     type_node:
-        //         tag: PARSE_NODE_TYPE
-        //         type_node_kind: TYPE_NODE_KIND_TYPE_EXPRESSION
-        //         user_type:
-        //             tag: PARSE_NODE_STRUCT
-        //             name: before_split_S
-        //             partial_definition: false
-        //             field[0]:
-        //                 tag: PARSE_NODE_FIELD
-        //                 name: int64_field
-        //                 type:
-        //                     tag: PARSE_NODE_TYPE
-        //                     type_node_kind: TYPE_NODE_KIND_TYPENAME
-        //                     type_name: uint64_t
-        // declaration[5]:
-        //     tag: PARSE_NODE_STRUCT
-        //     name: after_split_S
-        //     partial_definition: false
-        //     field[0]:
-        //         tag: PARSE_NODE_FIELD
-        //         name: int64_field
-        //         type:
-        //             tag: PARSE_NODE_TYPE
-        //             type_node_kind: TYPE_NODE_KIND_TYPENAME
-        //             type_name: uint64_t
-        // declaration[6]:
-        //     tag: PARSE_NODE_TYPEDEF
-        //     name: after_split_t
-        //     type_node:
-        //         tag: PARSE_NODE_TYPE
-        //         type_node_kind: TYPE_NODE_KIND_TYPE_EXPRESSION
-        //         user_type:
-        //             tag: PARSE_NODE_STRUCT
-        //             name: after_split_S
-        //             partial_definition: true
       }
     }
   }

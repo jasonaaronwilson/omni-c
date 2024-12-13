@@ -66,7 +66,7 @@ static inline boolean_t node_list_is_empty(node_list_t node_list) {
  * Return the n-th element of the node list.
  */
 static inline parse_node_t* node_list_get(node_list_t node_list,
-                                                 uint64_t index) {
+                                          uint64_t index) {
   if (node_list.list == NULL) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }

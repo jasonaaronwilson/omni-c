@@ -1,5 +1,5 @@
 /**
- * @structure definition_definition_node_t
+ * @structure variable_definition_node_t
  *
  * Represents a variable definition/declaration at the top-level or
  * inside of a function.
@@ -52,6 +52,7 @@ pstatus_t parse_expression(pstate_t* pstate) {
  * Parses an initializer like {0, 1, 3}
  */
 pstatus_t parse_initializer(pstate_t* pstate) {
+  // TODO(jawilson): implement full parsing of initializers
   uint64_t saved_position = pstate->position;
   if (token_matches(pstate_peek(pstate, 0), "{")) {
     return parse_balanced_construct(pstate);

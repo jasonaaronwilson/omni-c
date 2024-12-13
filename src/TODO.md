@@ -12,6 +12,8 @@
 1. Move all includes into a single files (at least in the compiler
    source directory). (Half done now...)
 
+1. Get rid of -DOMNI_C_SELF_GENERATED
+
 ## Simple Compile Improvements
 
 1. Put out a header with command line used for the build and possibly

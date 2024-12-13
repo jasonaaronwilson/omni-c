@@ -27,8 +27,8 @@ typedef struct union_node_S {
  *
  * Represents a field in a structure or union definition.
  *
- * When bit_field_width is non-zero, the field is a bit field (this is
- * not legal with a union nodes).
+ * When bit_field_width is non-zero, the field is a bit field (is this
+ * legal with a union nodes?).
  */
 typedef struct field_node_S {
   parse_node_type_t tag;
@@ -166,10 +166,6 @@ static inline field_node_t* malloc_field_node(void) {
   result->tag = PARSE_NODE_FIELD;
   return result;
 }
-
-#include "user-type-parser.c.generated.h"
-
-#endif /* _USER_TYPE_PARSER_H_ */
 
 /**
  * @function parse_structure_node

@@ -4,11 +4,6 @@
  * even a library.
  */
 
-#ifndef _FILE_H_
-#define _FILE_H_
-
-#include <c-armyknife-lib.h>
-
 typedef enum {
   OMNI_C_SOURCE_FILE,
   STD_C_SOURCE_FILE,
@@ -20,7 +15,3 @@ typedef struct file_S {
   char* file_name;
   buffer_t* data;
 } file_t;
-
-#include "file.c.generated.h"
-
-#endif /* _FILE_H_ */

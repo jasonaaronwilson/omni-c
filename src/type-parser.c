@@ -350,7 +350,6 @@ pstatus_t parse_function_type(pstate_t* pstate) {
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-
 /**
  * @function parse_function_type_argument
  *
