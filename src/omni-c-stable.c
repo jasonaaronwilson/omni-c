@@ -2238,9 +2238,11 @@ boolean_t is_inlined_function(function_node_t* node);
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table);
 buffer_t* get_reflection_header_buffer(void);
 char* include_node_to_string(cpp_include_node_t* node);
-void generate_c_output_file(boolean_t is_library);
+void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment);
 void parse_expression_string_and_print_parse_tree(char* expression);
 void parse_statement_string_and_print_parse_tree(char* expression);
+buffer_t* git_hash_object(char* filename);
+buffer_t* command_line_args_to_buffer(int argc, char** argv);
 int main(int argc, char** argv);
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
@@ -10950,7 +10952,7 @@ char* include_node_to_string(cpp_include_node_t* node){
 }
 
 /* i=511 j=0 */
-void generate_c_output_file(boolean_t is_library){
+void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment){
   boolean_t is_header_file = (!is_library);
   symbol_table_t* symbol_table = make_symbol_table();
   parse_and_add_top_level_definitions(symbol_table, FLAG_files, FLAG_use_statement_parser);
@@ -11132,6 +11134,7 @@ void generate_c_output_file(boolean_t is_library){
   {
     buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
   }
+  buffer_append_buffer(buffer, command_line_overview_comment);
   if ((FLAG_ouput_file==NULL))
   {
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
@@ -11220,6 +11223,53 @@ void parse_statement_string_and_print_parse_tree(char* expression){
 }
 
 /* i=514 j=0 */
+buffer_t* git_hash_object(char* filename){
+  value_array_t* argv = make_value_array(2);
+  value_array_add(argv, str_to_value("git"));
+  value_array_add(argv, str_to_value("hash-object"));
+  value_array_add(argv, str_to_value(filename));
+  sub_process_t* sub_process = make_sub_process(argv);
+  sub_process_launch(sub_process);
+  buffer_t* buffer = make_buffer(1);
+  do  {
+    sub_process_read(sub_process, buffer, NULL);
+    usleep(5);
+  }
+while (is_sub_process_running(sub_process));
+  sub_process_read(sub_process, buffer, NULL);
+  sub_process_wait(sub_process);
+  return buffer;
+}
+
+/* i=515 j=0 */
+buffer_t* command_line_args_to_buffer(int argc, char** argv){
+  buffer_t* output = make_buffer((argc*5));
+  buffer_printf(output, "// Full Compiler Command Line:\n//\n");
+  for (
+    int i = 0;
+    (i<argc);
+    (i++))
+  {
+    buffer_printf(output, "//%s%s\n", ((i>0) ? "    " : " "), (argv[i]));
+  }
+  buffer_append_string(output, "\n");
+  buffer_append_string(output, "// These checksums are currently easy to fake for example by using a\n");
+  buffer_append_string(output, "// hacked git in the PATH at the time this compile was run.\n");
+  buffer_append_string(output, "//\n");
+  for (
+    int i = 0;
+    (i<(FLAG_files->length));
+    (i++))
+  {
+    char* filename = (value_array_get(FLAG_files, i).str);
+    buffer_t* sha256 = git_hash_object(filename);
+    buffer_append_string(output, "// git cat-file -p ");
+    buffer_append_buffer(output, sha256);
+  }
+  return output;
+}
+
+/* i=516 j=0 */
 int main(int argc, char** argv){
   configure_fatal_errors(((fatal_error_config_t) {
                                                  .catch_sigsegv = true,
@@ -11251,14 +11301,14 @@ int main(int argc, char** argv){
   else
   if (string_equal("generate-header-file", FLAG_command))
   {
-    generate_c_output_file(false);
+    generate_c_output_file(false, command_line_args_to_buffer(argc, argv));
     log_info("Exiting normally.");
     exit(0);
   }
   else
   if (string_equal("generate-library", FLAG_command))
   {
-    generate_c_output_file(true);
+    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
     log_info("Exiting normally.");
     exit(0);
   }
@@ -11284,7 +11334,7 @@ int main(int argc, char** argv){
   exit(0);
 }
 
-/* i=515 j=0 */
+/* i=517 j=0 */
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
@@ -11345,7 +11395,7 @@ return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
     return "<<unknown-error_code>>";
   }
 }
-/* i=516 j=0 */
+/* i=518 j=0 */
 error_code_t string_to_error_code(char* value){
   if (strcmp(value, "ERROR_UKNOWN") == 0) {
 return ERROR_UKNOWN;
@@ -11430,7 +11480,7 @@ return ERROR_ILLEGAL_TERMINAL_COORDINATES;
   }
   return 0;
 }
-/* i=517 j=0 */
+/* i=519 j=0 */
 enum_metadata_t* error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11573,7 +11623,7 @@ enum_metadata_t* error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=518 j=0 */
+/* i=520 j=0 */
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
   switch (value) {
     case NF_OK:
@@ -11588,7 +11638,7 @@ return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
     return "<<unknown-non_fatal_error_code>>";
   }
 }
-/* i=519 j=0 */
+/* i=521 j=0 */
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
   if (strcmp(value, "NF_OK") == 0) {
 return NF_OK;
@@ -11604,7 +11654,7 @@ return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
   }
   return 0;
 }
-/* i=520 j=0 */
+/* i=522 j=0 */
 enum_metadata_t* non_fatal_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11632,7 +11682,7 @@ enum_metadata_t* non_fatal_error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=521 j=0 */
+/* i=523 j=0 */
 char* flag_type_to_string(flag_type_t value){
   switch (value) {
     case flag_type_none:
@@ -11655,7 +11705,7 @@ return "flag_type_custom";
     return "<<unknown-flag_type>>";
   }
 }
-/* i=522 j=0 */
+/* i=524 j=0 */
 flag_type_t string_to_flag_type(char* value){
   if (strcmp(value, "flag_type_none") == 0) {
 return flag_type_none;
@@ -11683,7 +11733,7 @@ return flag_type_custom;
   }
   return 0;
 }
-/* i=523 j=0 */
+/* i=525 j=0 */
 enum_metadata_t* flag_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11731,7 +11781,7 @@ enum_metadata_t* flag_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=524 j=0 */
+/* i=526 j=0 */
 char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
   switch (value) {
     case EXIT_STATUS_UNKNOWN:
@@ -11746,7 +11796,7 @@ return "EXIT_STATUS_ABNORMAL";
     return "<<unknown-sub_process_exit_status>>";
   }
 }
-/* i=525 j=0 */
+/* i=527 j=0 */
 sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
   if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
 return EXIT_STATUS_UNKNOWN;
@@ -11762,7 +11812,7 @@ return EXIT_STATUS_ABNORMAL;
   }
   return 0;
 }
-/* i=526 j=0 */
+/* i=528 j=0 */
 enum_metadata_t* sub_process_exit_status_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11790,7 +11840,7 @@ enum_metadata_t* sub_process_exit_status_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=527 j=0 */
+/* i=529 j=0 */
 char* input_mode_to_string(input_mode_t value){
   switch (value) {
     case INPUT_MODE_OMNI_C:
@@ -11803,7 +11853,7 @@ return "INPUT_MODE_C_PLUS_PLUS";
     return "<<unknown-input_mode>>";
   }
 }
-/* i=528 j=0 */
+/* i=530 j=0 */
 input_mode_t string_to_input_mode(char* value){
   if (strcmp(value, "INPUT_MODE_OMNI_C") == 0) {
 return INPUT_MODE_OMNI_C;
@@ -11816,7 +11866,7 @@ return INPUT_MODE_C_PLUS_PLUS;
   }
   return 0;
 }
-/* i=529 j=0 */
+/* i=531 j=0 */
 enum_metadata_t* input_mode_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11839,7 +11889,7 @@ enum_metadata_t* input_mode_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=530 j=0 */
+/* i=532 j=0 */
 char* output_mode_to_string(output_mode_t value){
   switch (value) {
     case OUTPUT_MODE_STANDARD_C:
@@ -11850,7 +11900,7 @@ return "OUTPUT_MODE_C_PLUS_PLUS";
     return "<<unknown-output_mode>>";
   }
 }
-/* i=531 j=0 */
+/* i=533 j=0 */
 output_mode_t string_to_output_mode(char* value){
   if (strcmp(value, "OUTPUT_MODE_STANDARD_C") == 0) {
 return OUTPUT_MODE_STANDARD_C;
@@ -11860,7 +11910,7 @@ return OUTPUT_MODE_C_PLUS_PLUS;
   }
   return 0;
 }
-/* i=532 j=0 */
+/* i=534 j=0 */
 enum_metadata_t* output_mode_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11878,7 +11928,7 @@ enum_metadata_t* output_mode_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=533 j=0 */
+/* i=535 j=0 */
 char* file_tag_to_string(file_tag_t value){
   switch (value) {
     case OMNI_C_SOURCE_FILE:
@@ -11891,7 +11941,7 @@ return "DATA_FILE";
     return "<<unknown-file_tag>>";
   }
 }
-/* i=534 j=0 */
+/* i=536 j=0 */
 file_tag_t string_to_file_tag(char* value){
   if (strcmp(value, "OMNI_C_SOURCE_FILE") == 0) {
 return OMNI_C_SOURCE_FILE;
@@ -11904,7 +11954,7 @@ return DATA_FILE;
   }
   return 0;
 }
-/* i=535 j=0 */
+/* i=537 j=0 */
 enum_metadata_t* file_tag_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -11927,7 +11977,7 @@ enum_metadata_t* file_tag_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=536 j=0 */
+/* i=538 j=0 */
 char* tokenizer_error_to_string(tokenizer_error_t value){
   switch (value) {
     case TOKENIZER_ERROR_UNKNOWN:
@@ -11946,7 +11996,7 @@ return "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL";
     return "<<unknown-tokenizer_error>>";
   }
 }
-/* i=537 j=0 */
+/* i=539 j=0 */
 tokenizer_error_t string_to_tokenizer_error(char* value){
   if (strcmp(value, "TOKENIZER_ERROR_UNKNOWN") == 0) {
 return TOKENIZER_ERROR_UNKNOWN;
@@ -11968,7 +12018,7 @@ return TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL;
   }
   return 0;
 }
-/* i=538 j=0 */
+/* i=540 j=0 */
 enum_metadata_t* tokenizer_error_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12006,7 +12056,7 @@ enum_metadata_t* tokenizer_error_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=539 j=0 */
+/* i=541 j=0 */
 char* parse_error_code_to_string(parse_error_code_t value){
   switch (value) {
     case PARSE_ERROR_UNKNOWN:
@@ -12055,7 +12105,7 @@ return "PARSE_ERROR_UNHANDLED_INSTRUCTION";
     return "<<unknown-parse_error_code>>";
   }
 }
-/* i=540 j=0 */
+/* i=542 j=0 */
 parse_error_code_t string_to_parse_error_code(char* value){
   if (strcmp(value, "PARSE_ERROR_UNKNOWN") == 0) {
 return PARSE_ERROR_UNKNOWN;
@@ -12122,7 +12172,7 @@ return PARSE_ERROR_UNHANDLED_INSTRUCTION;
   }
   return 0;
 }
-/* i=541 j=0 */
+/* i=543 j=0 */
 enum_metadata_t* parse_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12235,7 +12285,7 @@ enum_metadata_t* parse_error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=542 j=0 */
+/* i=544 j=0 */
 char* token_type_to_string(token_type_t value){
   switch (value) {
     case TOKEN_TYPE_UNKNOWN:
@@ -12260,7 +12310,7 @@ return "TOKEN_TYPE_CHARACTER_LITERAL";
     return "<<unknown-token_type>>";
   }
 }
-/* i=543 j=0 */
+/* i=545 j=0 */
 token_type_t string_to_token_type(char* value){
   if (strcmp(value, "TOKEN_TYPE_UNKNOWN") == 0) {
 return TOKEN_TYPE_UNKNOWN;
@@ -12291,7 +12341,7 @@ return TOKEN_TYPE_CHARACTER_LITERAL;
   }
   return 0;
 }
-/* i=544 j=0 */
+/* i=546 j=0 */
 enum_metadata_t* token_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12344,7 +12394,7 @@ enum_metadata_t* token_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=545 j=0 */
+/* i=547 j=0 */
 char* numeric_literal_encoding_to_string(numeric_literal_encoding_t value){
   switch (value) {
     case NUMERIC_LITERAL_ENCODING_UNDECIDED:
@@ -12365,7 +12415,7 @@ return "NUMERIC_LITERAL_ENCODING_FLOAT";
     return "<<unknown-numeric_literal_encoding>>";
   }
 }
-/* i=546 j=0 */
+/* i=548 j=0 */
 numeric_literal_encoding_t string_to_numeric_literal_encoding(char* value){
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_UNDECIDED") == 0) {
 return NUMERIC_LITERAL_ENCODING_UNDECIDED;
@@ -12390,7 +12440,7 @@ return NUMERIC_LITERAL_ENCODING_FLOAT;
   }
   return 0;
 }
-/* i=547 j=0 */
+/* i=549 j=0 */
 enum_metadata_t* numeric_literal_encoding_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12433,7 +12483,7 @@ enum_metadata_t* numeric_literal_encoding_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=548 j=0 */
+/* i=550 j=0 */
 char* parse_node_type_to_string(parse_node_type_t value){
   switch (value) {
     case PARSE_NODE_UNKNOWN:
@@ -12520,7 +12570,7 @@ return "PARSE_NODE_CONDITIONAL";
     return "<<unknown-parse_node_type>>";
   }
 }
-/* i=549 j=0 */
+/* i=551 j=0 */
 parse_node_type_t string_to_parse_node_type(char* value){
   if (strcmp(value, "PARSE_NODE_UNKNOWN") == 0) {
 return PARSE_NODE_UNKNOWN;
@@ -12644,7 +12694,7 @@ return PARSE_NODE_CONDITIONAL;
   }
   return 0;
 }
-/* i=550 j=0 */
+/* i=552 j=0 */
 enum_metadata_t* parse_node_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -12852,7 +12902,7 @@ enum_metadata_t* parse_node_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=551 j=0 */
+/* i=553 j=0 */
 char* pratt_parser_operation_to_string(pratt_parser_operation_t value){
   switch (value) {
     case PRATT_PARSE_UNKNOWN:
@@ -12887,7 +12937,7 @@ return "PRATT_PARSE_CALL";
     return "<<unknown-pratt_parser_operation>>";
   }
 }
-/* i=552 j=0 */
+/* i=554 j=0 */
 pratt_parser_operation_t string_to_pratt_parser_operation(char* value){
   if (strcmp(value, "PRATT_PARSE_UNKNOWN") == 0) {
 return PRATT_PARSE_UNKNOWN;
@@ -12933,7 +12983,7 @@ return PRATT_PARSE_CALL;
   }
   return 0;
 }
-/* i=553 j=0 */
+/* i=555 j=0 */
 enum_metadata_t* pratt_parser_operation_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13011,7 +13061,7 @@ enum_metadata_t* pratt_parser_operation_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=554 j=0 */
+/* i=556 j=0 */
 char* associativity_to_string(associativity_t value){
   switch (value) {
     case LEFT_TO_RIGHT:
@@ -13022,7 +13072,7 @@ return "RIGHT_TO_LEFT";
     return "<<unknown-associativity>>";
   }
 }
-/* i=555 j=0 */
+/* i=557 j=0 */
 associativity_t string_to_associativity(char* value){
   if (strcmp(value, "LEFT_TO_RIGHT") == 0) {
 return LEFT_TO_RIGHT;
@@ -13032,7 +13082,7 @@ return RIGHT_TO_LEFT;
   }
   return 0;
 }
-/* i=556 j=0 */
+/* i=558 j=0 */
 enum_metadata_t* associativity_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13050,7 +13100,7 @@ enum_metadata_t* associativity_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=557 j=0 */
+/* i=559 j=0 */
 char* precedence_to_string(precedence_t value){
   switch (value) {
     case PRECEDENCE_UNKNOWN:
@@ -13091,7 +13141,7 @@ return "PRECEDENCE_PRIMARY";
     return "<<unknown-precedence>>";
   }
 }
-/* i=558 j=0 */
+/* i=560 j=0 */
 precedence_t string_to_precedence(char* value){
   if (strcmp(value, "PRECEDENCE_UNKNOWN") == 0) {
 return PRECEDENCE_UNKNOWN;
@@ -13146,7 +13196,7 @@ return PRECEDENCE_PRIMARY;
   }
   return 0;
 }
-/* i=559 j=0 */
+/* i=561 j=0 */
 enum_metadata_t* precedence_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13239,7 +13289,7 @@ enum_metadata_t* precedence_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=560 j=0 */
+/* i=562 j=0 */
 char* type_qualifier_to_string(type_qualifier_t value){
   switch (value) {
     case TYPE_QUALIFIER_NONE:
@@ -13254,7 +13304,7 @@ return "TYPE_QUALIFIER_RESTRICT";
     return "<<unknown-type_qualifier>>";
   }
 }
-/* i=561 j=0 */
+/* i=563 j=0 */
 type_qualifier_t string_to_type_qualifier(char* value){
   if (strcmp(value, "TYPE_QUALIFIER_NONE") == 0) {
 return TYPE_QUALIFIER_NONE;
@@ -13270,7 +13320,7 @@ return TYPE_QUALIFIER_RESTRICT;
   }
   return 0;
 }
-/* i=562 j=0 */
+/* i=564 j=0 */
 enum_metadata_t* type_qualifier_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13298,7 +13348,7 @@ enum_metadata_t* type_qualifier_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=563 j=0 */
+/* i=565 j=0 */
 char* type_node_kind_to_string(type_node_kind_t value){
   switch (value) {
     case TYPE_NODE_KIND_UNKNOWN:
@@ -13323,7 +13373,7 @@ return "TYPE_NODE_KIND_TYPEOF";
     return "<<unknown-type_node_kind>>";
   }
 }
-/* i=564 j=0 */
+/* i=566 j=0 */
 type_node_kind_t string_to_type_node_kind(char* value){
   if (strcmp(value, "TYPE_NODE_KIND_UNKNOWN") == 0) {
 return TYPE_NODE_KIND_UNKNOWN;
@@ -13354,7 +13404,7 @@ return TYPE_NODE_KIND_TYPEOF;
   }
   return 0;
 }
-/* i=565 j=0 */
+/* i=567 j=0 */
 enum_metadata_t* type_node_kind_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -13408,3 +13458,134 @@ enum_metadata_t* type_node_kind_metadata(){
     return &enum_metadata_result;
 }
 
+// Full Compiler Command Line:
+//
+// build/bin/omni-c
+//    generate-library
+//    --use-statement-parser=true
+//    --omit-c-armyknife-include=true
+//    --output-file=build/self.c
+//    ../../c-armyknife-lib/omni-c.c
+//    ../../c-armyknife-lib/min-max.c
+//    ../../c-armyknife-lib/boolean.c
+//    ../../c-armyknife-lib/compound-literal.c
+//    ../../c-armyknife-lib/fn.c
+//    ../../c-armyknife-lib/leb128.c
+//    ../../c-armyknife-lib/fatal-error.c
+//    ../../c-armyknife-lib/value.c
+//    ../../c-armyknife-lib/allocate.c
+//    ../../c-armyknife-lib/uint64.c
+//    ../../c-armyknife-lib/string-util.c
+//    ../../c-armyknife-lib/logger.c
+//    ../../c-armyknife-lib/utf8-decoder.c
+//    ../../c-armyknife-lib/buffer.c
+//    ../../c-armyknife-lib/value-array.c
+//    ../../c-armyknife-lib/value-alist.c
+//    ../../c-armyknife-lib/string-alist.c
+//    ../../c-armyknife-lib/value-hashtable.c
+//    ../../c-armyknife-lib/string-hashtable.c
+//    ../../c-armyknife-lib/value-tree.c
+//    ../../c-armyknife-lib/string-tree.c
+//    ../../c-armyknife-lib/flag.c
+//    ../../c-armyknife-lib/io.c
+//    ../../c-armyknife-lib/terminal.c
+//    ../../c-armyknife-lib/tokenizer.c
+//    ../../c-armyknife-lib/random.c
+//    ../../c-armyknife-lib/cdl-printer.c
+//    ../../c-armyknife-lib/sub-process.c
+//    ../../c-armyknife-lib/test.c
+//    mode.c
+//    keywords.c
+//    file.c
+//    file-reader.c
+//    compiler-errors.c
+//    lexer.c
+//    token-list.c
+//    token-transformer.c
+//    parser.c
+//    pstate.c
+//    declaration-parser.c
+//    node-list.c
+//    debug-printer.c
+//    c-file-printer.c
+//    symbol-table.c
+//    source-to-source.c
+//    preprocessor.c
+//    header-file-extractor.c
+//    symbol-table-builder.c
+//    srcgen.c
+//    pratt-parser.c
+//    statement-parser.c
+//    type-parser.c
+//    user-type-parser.c
+//    variable-definition-parser.c
+//    literal-parser.c
+//    balanced-construct-parser.c
+//    printer.c
+//    global-includes.c
+//    main.c
+//    build/gen-files/reflection-header.c
+
+// These checksums are currently easy to fake for example by using a
+// hacked git in the PATH at the time this compile was run.
+//
+// git cat-file -p 613ecb5073e9f6b8b3d2a2deb77a3040a0388d62
+// git cat-file -p 58637a0049c50cf56fe40e9b2a9de543c095785a
+// git cat-file -p cacfd0298651cd99521238583295319513a7c311
+// git cat-file -p 11f959d626cae14fb73a67898a35ea9d599a9e00
+// git cat-file -p 410a738d9b347300ac5cb091d8ebe87c5d9c7588
+// git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053
+// git cat-file -p 3c5dd5db0882383f07e78c584268392c1af4b604
+// git cat-file -p dfd7821b93a59d56306ce0efafb4f1deb16a35f9
+// git cat-file -p ddd0822e40ee0eb337c77637b9b0179aac2a7909
+// git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab
+// git cat-file -p 958d3082cdffbd52b6bb56dbd591c533902112f4
+// git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37
+// git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0
+// git cat-file -p 2efd1e5e3fddefbff312fa50684285083ee5613a
+// git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2
+// git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4
+// git cat-file -p c560ad207e743ce3b364b58540b81a7051072f0a
+// git cat-file -p bf32abd63596c839f264477dd15c71e9d5ffe30e
+// git cat-file -p 741b85af593dda43aeb84bd32ec3ed36c8f85c55
+// git cat-file -p 1d0266094b9c0915098e1352edbc8d62ee77abb0
+// git cat-file -p 8d8502036da69d42e740206185219ba74887f34a
+// git cat-file -p 1ccb428c8923e3d6aad2473fcf93f08c66c0f7db
+// git cat-file -p 8c46fe6d74bf287d49e00e7f6083721ff2cee458
+// git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976
+// git cat-file -p c6ed69dce8a057ab5b796554a0e1d0ba46ef4e3f
+// git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd
+// git cat-file -p 0f23a36a03d88e8f35306d521483569012b2a914
+// git cat-file -p 56ca72ea3aeecb102bc017e02a056a41c8412f0f
+// git cat-file -p fa11c50add7d9d42d7c6dc386c874cac9d8ec8b2
+// git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136
+// git cat-file -p 429d5f51b04668f5bd89b347ef1beb577491cd52
+// git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb
+// git cat-file -p 254dd1272f89c5a0757be2130477a1634150324b
+// git cat-file -p 18d8db7f97490957c3377100f879efaaa0b03d7c
+// git cat-file -p 470244d22f140656bdb0b91e477560ca2d9104b4
+// git cat-file -p f06d191346d1e27ecadd9b61a2e2ad7be472705d
+// git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c
+// git cat-file -p 6c86f8d6c5d20f4fffae42fa6ac88b804e4d8f6e
+// git cat-file -p 0b55fcac19e62809336c191ff4b1feeccf79f121
+// git cat-file -p ff4895451271acc0c78aec469145b55e3b4b4b52
+// git cat-file -p 9eb13062725ddd77e88cfd0102e76f45d00cb781
+// git cat-file -p 95eaa4fbd394282318d3f068bddddc2fc02f6d6b
+// git cat-file -p 38f57f93ad5a0ab3a0cce28e4824e419c5cc7097
+// git cat-file -p 7685f26465480ccb3c1abd2f889544ad25ee37b1
+// git cat-file -p e7f7a4f3593b9b8d6670aa68c0fb0e4b24077ea9
+// git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af
+// git cat-file -p 6146b1de14ef9de1aab45db08dffee4731e4ad64
+// git cat-file -p 947f2b247995006fb0565973d63d5a71ddad85cc
+// git cat-file -p a617d38e299c401bca599467639d1338e9732594
+// git cat-file -p f263f55f50cea1052ffa613e539b1033249a9dbb
+// git cat-file -p 468303a3dbe5e25f045f1ffbefc3509eb2e7d462
+// git cat-file -p 3dfa38a859552333bb6e961a76974c6d3a3f5c7d
+// git cat-file -p dbc507a515c8859e8be9696b3267f8dba87ff0a7
+// git cat-file -p 84ca8b733bbe26047a4b1ef72bd73f2e0ed65f80
+// git cat-file -p 0a60637302a1720474efbd538777232352d15a37
+// git cat-file -p da5d06ce2e4ff926c65f532bfcfa6f106fbbc90b
+// git cat-file -p 282faf39e534070f851b3ce87f88e7ea79b4daee
+// git cat-file -p 9ca05c9db93267094539835e4e48896a4a8805c8
+// git cat-file -p a0090d65f467f75830bbf9c961a53982050381ca
+// git cat-file -p 62dd703ecf2abfa1974d804fb74f30dc8443160c
