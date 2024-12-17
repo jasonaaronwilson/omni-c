@@ -49,10 +49,7 @@ SRC_C_SELF := \
 	global-includes.c \
 	main.c
 
-SRC_C := armyknife-lib-impl.c lexer-to-string-helper.c to-string-helpers.c reflection-header.c $(SRC_C_SELF)
-
-# Derived list of header file names
-SRC_H = $(SRC_C:.c=.h)
+SRC_C := $(SRC_C_SELF)
 
 omni-c-stable: omni-c-stable.c
 	gcc ${CC_FLAGS_OPT} -o omni-c-stable -std=gnu99 omni-c-stable.c
@@ -91,9 +88,13 @@ test: omni-c
 test-suite: omni-c
 	tools/run-tests.lua ${SUITE_TESTS}
 
+# clang-format will take multiple files but if a file is missing it
+# doesn't tell you which file is missing.
 format:
-	clang-format -i ${SRC_C}
-	clang-format -i tools/random-code-generator.c
+	@for file in ${SRC_C} tools/random-code-generator.c; do \
+		echo "Formatting $$file"; \
+		clang-format -i $$file; \
+	done
 
 # jawilson(fixme): not omni-c-stable
 tags:
