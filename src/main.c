@@ -1,8 +1,16 @@
 /**
  * @file main.c
  *
- * This is the main routine for the omni-c transpiler.
+ * "main.c" acts as the entry point to the omni-c transpiler. It
+ * registers flags for the command line processor library, calls that
+ * library to parse the command line, and then dispatch to the
+ * top-level entry points for each "git style" sub-command
+ * (generate-header-file, generate-library, etc.)
  */
+
+/* ====================================================================== */
+// Here are is the combined set of flags we parse.
+/* ====================================================================== */
 
 value_array_t* FLAG_files = NULL;
 char* FLAG_command = NULL;
@@ -18,6 +26,7 @@ boolean_t FLAG_generate_enum_convertors = true;
 char* FLAG_expression = NULL;
 char* FLAG_statement = NULL;
 boolean_t FLAG_dump_symbol_table = false;
+// TODO(jawilson): make this the default or even remove?
 boolean_t FLAG_use_statement_parser = false;
 boolean_t FLAG_to_c = false;
 boolean_t FLAG_omit_c_armyknife_include = false;
@@ -201,7 +210,8 @@ char* include_node_to_string(cpp_include_node_t* node) {
  * This is effectively the "main" routine of the Omni C to C
  * transpiler.
  */
-void generate_c_output_file(boolean_t is_library) {
+void generate_c_output_file(boolean_t is_library,
+                            buffer_t* command_line_overview_comment) {
 
   boolean_t is_header_file = !is_library;
 
@@ -383,6 +393,8 @@ void generate_c_output_file(boolean_t is_library) {
     buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
   }
 
+  buffer_append_buffer(buffer, command_line_overview_comment);
+
   if (FLAG_ouput_file == NULL) {
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
   } else {
@@ -465,6 +477,81 @@ void parse_statement_string_and_print_parse_tree(char* expression) {
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
+/**
+ * @function git_hash_object
+ *
+ * Hash the contents of a source file the way git would do it so that
+ * `git cat-file -p HASH` will generally find the appropriate source
+ * file contents. There should be other benefits like looking through
+ * logs to find the exact file using these hashes.
+ *
+ * This may seem a bit like "signing", and while it may be a step in
+ * that direction, it shouldn't been seen as so. There may be
+ * interesting forensic steps could be done, based only on this data
+ * and "official" repositories, that could help trace back issues.
+ *
+ * For files that come from other repositories (our builds depend on
+ * c-armyknife-lib which IS in a different repo), I'm not sure what
+ * will happen attempting to use these hashes. git hash-object seems
+ * to be willing to hash anything even if not under git control and it
+ * *probably* defaults (or always) uses the hash algorithm of the repo
+ * it sees as "cwd" rather than the file it comes from though I could
+ * be very wrong.
+ */
+buffer_t* git_hash_object(char* filename) {
+  value_array_t* argv = make_value_array(2);
+  value_array_add(argv, str_to_value("git"));
+  value_array_add(argv, str_to_value("hash-object"));
+  value_array_add(argv, str_to_value(filename));
+
+  sub_process_t* sub_process = make_sub_process(argv);
+  sub_process_launch(sub_process);
+
+  buffer_t* buffer = make_buffer(1);
+  do {
+    sub_process_read(sub_process, buffer, NULL);
+    usleep(5);
+  } while (is_sub_process_running(sub_process));
+  sub_process_read(sub_process, buffer, NULL);
+  sub_process_wait(sub_process);
+
+  return buffer;
+}
+
+/**
+ * @function command_line_args_to_buffer
+ *
+ * The basic idea is to capture enough information to be able to
+ * reproduce builds for both debugging purposes and to show that
+ * omni-c-stable.c didn't come out of thin air. Folks might want to
+ * look "forensically backwards", and this could help a bit.
+ */
+buffer_t* command_line_args_to_buffer(int argc, char** argv) {
+  buffer_t* output = make_buffer(argc * 5);
+
+  buffer_printf(output, "// Full Compiler Command Line:\n//\n");
+  for (int i = 0; i < argc; i++) {
+    buffer_printf(output, "//%s%s\n", i > 0 ? "    " : " ", argv[i]);
+  }
+
+  buffer_append_string(output, "\n");
+  buffer_append_string(
+      output,
+      "// These checksums are currently easy to fake for example by using a\n");
+  buffer_append_string(
+      output, "// hacked git in the PATH at the time this compile was run.\n");
+  buffer_append_string(output, "//\n");
+
+  for (int i = 0; i < FLAG_files->length; i++) {
+    char* filename = value_array_get(FLAG_files, i).str;
+    buffer_t* sha256 = git_hash_object(filename);
+    buffer_append_string(output, "// git cat-file -p ");
+    buffer_append_buffer(output, sha256);
+  }
+
+  return output;
+}
+
 int main(int argc, char** argv) {
   configure_fatal_errors(
       compound_literal(fatal_error_config_t, {
@@ -495,11 +582,11 @@ int main(int argc, char** argv) {
     // paranoid code can be easier to debug.
     fatal_error(ERROR_BAD_COMMAND_LINE);
   } else if (string_equal("generate-header-file", FLAG_command)) {
-    generate_c_output_file(false);
+    generate_c_output_file(false, command_line_args_to_buffer(argc, argv));
     log_info("Exiting normally.");
     exit(0);
   } else if (string_equal("generate-library", FLAG_command)) {
-    generate_c_output_file(true);
+    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
     log_info("Exiting normally.");
     exit(0);
   } else if (string_equal("parse-expression", FLAG_command)) {
