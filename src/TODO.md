@@ -2,14 +2,13 @@
 
 ## Cleanup & Build
 
-1. make format -- "No such file or directory"
-
 ## Simple Compiler Improvements
 
-1. Put out a header with command line used for the build and possibly
-   checksums of source files.
-
 1. add build command that will automatically invoke a C compiler.
+
+1. start optionally putting out line directives and see what happens
+   during debugging. This should be better than the current comments
+   we put out.
 
 1. use a proper stack in balanced construct parser.
 
@@ -25,11 +24,9 @@
 
 ## Other
 
-1. macro and other overrides
+1. improve typedef by allowing "=" and making it simple to typedef.
 
-1. start optionally putting out line directives and see what happens
-   during debugging (we could start by making our existing comments
-   better?)
+1. macro and other overrides
 
 1. option to keep cast and block_expr in place so we can parse our own
    output
