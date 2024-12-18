@@ -7,7 +7,7 @@ echo "Running omni-c on each file individually to isolate some failures for debu
 
 for file in "$@"; do  # Iterate over all command-line arguments
     echo "Processing $file..."
-    $ORIGIN/omni-c generate-library --dump-symbol-table=false --output-file=/tmp/foo.c "$file"
+    $ORIGIN/omni-c generate-library --dump-symbol-table=false --c-output-file=/tmp/foo.c "$file"
     if [ $? -ne 0 ]; then
         echo "Error processing $file"
         exit 1 

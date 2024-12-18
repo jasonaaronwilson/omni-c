@@ -156,7 +156,7 @@ void configure_print_tokens_command(void) {
 
 void configure_regular_commands(void) {
   flag_command("generate-header-file", &FLAG_command);
-  flag_string("--output-file", &FLAG_c_output_file);
+  flag_string("--c-output-file", &FLAG_c_output_file);
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
@@ -165,7 +165,7 @@ void configure_regular_commands(void) {
   flag_file_args(&FLAG_files);
 
   flag_command("generate-library", &FLAG_command);
-  flag_string("--output-file", &FLAG_c_output_file);
+  flag_string("--c-output-file", &FLAG_c_output_file);
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
@@ -173,9 +173,8 @@ void configure_regular_commands(void) {
   flag_file_args(&FLAG_files);
 
   flag_command("build", &FLAG_command);
-  flag_string("--output-file", &FLAG_c_output_file);
-  flag_string("--binary-file", &FLAG_binary_output_file);
-
+  flag_string("--c-output-file", &FLAG_c_output_file);
+  flag_string("--binary-output-file", &FLAG_binary_output_file);
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);

@@ -62,11 +62,11 @@ omni-c: omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c -std=gnu99 build/omni-c.c
 
 self: omni-c
-	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
+	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/self build/self.c
 
 selfself: omni-c self
-	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
+	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/selfself -std=gnu99 build/selfself.c
 
 # This feels outdated and was probably more centered on finding bugs
@@ -77,7 +77,7 @@ bisect-self: omni-c
 
 ## # Pattern rule for generating header files
 ## %.h: %.c
-##	./omni-c generate-header-file --output-file=$@ $<
+##	./omni-c generate-header-file --c-output-file=$@ $<
 
 TESTS := $(wildcard tests/*.c tests/expressions/*.e tests/expressions/*.expr tests/statements/*.stmt)
 SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)

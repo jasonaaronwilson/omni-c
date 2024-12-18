@@ -17,7 +17,7 @@ fi
 export ARMYKNIFE_LIB_LOG_LEVEL=info
 
 echo "=====> Invoking omni-c..."
-"$OMNI_C_PATH" generate-header-file "--output-file=${TARGET_FILE}" --use-statement-parser=true ${FILE}
+"$OMNI_C_PATH" generate-header-file "--c-output-file=${TARGET_FILE}" --use-statement-parser=true ${FILE}
 if [ $? -ne 0 ] ; then
   echo "FAIL: generate-header-file failed to generate output file for ${FILE}" >&2
   exit 1
