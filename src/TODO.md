@@ -2,6 +2,11 @@
 
 ## Cleanup & Build
 
+1. refactor common sub_process invocations into c-armyknife-lib
+
+1. rename output-file, add multiple C compilers, use in the test
+   harness, etc.
+
 ## Simple Compiler Improvements
 
 1. add build command that will automatically invoke a C compiler.

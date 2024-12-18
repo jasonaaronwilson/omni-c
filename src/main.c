@@ -21,7 +21,8 @@ boolean_t FLAG_print_tokens_include_whitespace = false;
 boolean_t FLAG_print_tokens_include_comments = false;
 boolean_t FLAG_print_tokens_parse_and_print = true;
 boolean_t FLAG_print_tokens_show_appended_tokens = true;
-char* FLAG_ouput_file = NULL;
+char* FLAG_c_output_file = NULL;
+char* FLAG_binary_output_file = NULL;
 boolean_t FLAG_generate_enum_convertors = true;
 char* FLAG_expression = NULL;
 char* FLAG_statement = NULL;
@@ -124,8 +125,9 @@ void configure_flags(void) {
   flag_boolean("--print-command-line", &FLAG_print_command_line);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
 
+  configure_regular_commands();
+
   configure_print_tokens_command();
-  configure_generate_c_output_file();
   configure_parse_expression();
   configure_parse_statement();
 }
@@ -152,9 +154,9 @@ void configure_print_tokens_command(void) {
   flag_file_args(&FLAG_files);
 }
 
-void configure_generate_c_output_file(void) {
+void configure_regular_commands(void) {
   flag_command("generate-header-file", &FLAG_command);
-  flag_string("--output-file", &FLAG_ouput_file);
+  flag_string("--output-file", &FLAG_c_output_file);
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
@@ -163,7 +165,17 @@ void configure_generate_c_output_file(void) {
   flag_file_args(&FLAG_files);
 
   flag_command("generate-library", &FLAG_command);
-  flag_string("--output-file", &FLAG_ouput_file);
+  flag_string("--output-file", &FLAG_c_output_file);
+  flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
+  flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
+  flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
+  flag_boolean("--omit-c-armyknife-include", &FLAG_omit_c_armyknife_include);
+  flag_file_args(&FLAG_files);
+
+  flag_command("build", &FLAG_command);
+  flag_string("--output-file", &FLAG_c_output_file);
+  flag_string("--binary-file", &FLAG_binary_output_file);
+
   flag_boolean("--generate-enum-convertors", &FLAG_generate_enum_convertors);
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
@@ -395,11 +407,11 @@ void generate_c_output_file(boolean_t is_library,
 
   buffer_append_buffer(buffer, command_line_overview_comment);
 
-  if (FLAG_ouput_file == NULL) {
+  if (FLAG_c_output_file == NULL) {
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
   } else {
-    log_info("Attempting to write buffer to %s", FLAG_ouput_file);
-    buffer_write_file(buffer, FLAG_ouput_file);
+    log_info("Attempting to write buffer to %s", FLAG_c_output_file);
+    buffer_write_file(buffer, FLAG_c_output_file);
   }
 }
 
@@ -552,6 +564,36 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv) {
   return output;
 }
 
+int invoke_c_compiler(char* input_file, char* output_file) {
+  value_array_t* argv = make_value_array(2);
+  value_array_add(argv, str_to_value("clang"));
+  value_array_add(argv, str_to_value("-g"));
+  value_array_add(argv, str_to_value("-rdynamic"));
+  value_array_add(argv, str_to_value("-O3"));
+  value_array_add(argv, str_to_value("-std=gnu99"));
+  value_array_add(argv, str_to_value("-o"));
+  value_array_add(argv, str_to_value(output_file));
+  value_array_add(argv, str_to_value(input_file));
+
+  log_warn("Invoking C compiler with these arguments: %s",
+           buffer_to_c_string(join_array_of_strings(argv, " ")));
+  sub_process_t* sub_process = make_sub_process(argv);
+  sub_process_launch(sub_process);
+
+  buffer_t* buffer = make_buffer(1);
+  do {
+    sub_process_read(sub_process, buffer, NULL);
+    usleep(5);
+  } while (is_sub_process_running(sub_process));
+  sub_process_read(sub_process, buffer, NULL);
+  sub_process_wait(sub_process);
+
+  log_warn(">>> Exit Status <<< %d\n%s", sub_process->exit_code,
+           buffer_to_c_string(buffer));
+
+  return sub_process->exit_code;
+}
+
 int main(int argc, char** argv) {
   configure_fatal_errors(
       compound_literal(fatal_error_config_t, {
@@ -589,6 +631,16 @@ int main(int argc, char** argv) {
     generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
     log_info("Exiting normally.");
     exit(0);
+  } else if (string_equal("build", FLAG_command)) {
+    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
+    int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
+    if (status == 0) {
+      log_info("Exiting normally.");
+      exit(0);
+    } else {
+      log_warn("Exiting abnormally.");
+      exit(status);
+    }
   } else if (string_equal("parse-expression", FLAG_command)) {
     parse_expression_string_and_print_parse_tree(FLAG_expression);
   } else if (string_equal("parse-statement", FLAG_command)) {
