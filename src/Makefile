@@ -58,7 +58,7 @@ ${BUILD_DIR}/gen-files/reflection-header.c: runtime/reflection.h
 	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
 omni-c: omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c
-	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --output-file=build/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
+	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c -std=gnu99 build/omni-c.c
 
 self: omni-c
