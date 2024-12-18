@@ -4,12 +4,16 @@
 
 1. refactor common sub_process invocations into c-armyknife-lib
 
-1. rename output-file, add multiple C compilers, use in the test
-   harness, etc.
+1. use new build command in tests
+
+1. refactor c-armyknife-lib so that the few overrides we need for
+   tests can be specified which is a pre-requisite for moving
+   c-armyknife-lib into the omni-c directory.
 
 ## Simple Compiler Improvements
 
-1. add build command that will automatically invoke a C compiler.
+1. add C compiler flag and command lines for clang, gcc, and tcc to
+   build command. do probing to make sure the C compiler is available?
 
 1. start optionally putting out line directives and see what happens
    during debugging. This should be better than the current comments
@@ -17,10 +21,13 @@
 
 1. use a proper stack in balanced construct parser.
 
+1. automatic test main file generation
+
 ## Compiler Improvements
 
 1. better error messages on parse failures - clear errors better and
-   also store furthest progress.
+   also store furthest progress. maybe make save points more explicit
+   with a name stack?
 
 1. Properly/fully parse struct_literals (and other initializers)
 
