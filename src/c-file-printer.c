@@ -382,6 +382,7 @@ printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node,
     append_token(printer, element->name);
     append_string(printer, ":\n");
     printer_increase_indent(printer);
+    printer_indent(printer);
     append_string(printer, "return \"");
     append_token(printer, element->name);
     append_string(printer, "\";\n");
@@ -427,6 +428,7 @@ printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node,
     append_token(printer, element->name);
     append_string(printer, "\") == 0) {\n");
     printer_increase_indent(printer);
+    printer_indent(printer);
     append_string(printer, "return ");
     append_token(printer, element->name);
     append_string(printer, ";\n");
