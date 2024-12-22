@@ -1,4 +1,30 @@
-all: omni-c
+# ======================================================================
+#
+# Just run: "make" from this directory
+#
+# (Eventually we'll have an "install" target.)
+#
+# ======================================================================
+
+.PHONY: all clean format tags test test-suite diff cfd how-big cf benchmark omni-c-stable omni-c self selfself
+
+# ----------------------------------------------------------------------
+# Aliases
+# ----------------------------------------------------------------------
+
+all: build/bin/omni-c
+
+omni-c-stable: build/bin/omni-c-stable
+
+omni-c: build/bin/omni-c
+
+self: build/bin/self
+
+selfself: build/bin/selfself
+
+# ----------------------------------------------------------------------
+# Variable Definitions
+# ----------------------------------------------------------------------
 
 export ARMYKNIFE_LIB_LOG_LEVEL = WARN
 
@@ -10,11 +36,11 @@ C_ARMYKNIFE_SRC_C := $(addprefix ../../c-armyknife-lib/, $(SRC_C))
 # Google Gemini tells me this is a bad idea but I'm trying it out anyways.
 BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/tests/statements build/tests/expressions ; echo `pwd`/build)
 
-STABLE_BINARY_PATH := ./omni-c-stable
+STABLE_BINARY_PATH := build/bin/omni-c-stable
 OMNI_C := build/bin/omni-c
 
 WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr
-CC_FLAGS := -g -rdynamic -I ${WARN_FLAGS}
+CC_FLAGS := -g -rdynamic ${WARN_FLAGS}
 CC_FLAGS_OPT := ${CC_FLAGS} -O3 
 
 SRC_C_SELF := \
@@ -51,41 +77,36 @@ SRC_C_SELF := \
 
 SRC_C := $(SRC_C_SELF)
 
-omni-c-stable: omni-c-stable.c
-	gcc ${CC_FLAGS_OPT} -o omni-c-stable -std=gnu99 omni-c-stable.c
+TESTS := $(wildcard tests/*.c tests/expressions/*.e tests/expressions/*.expr tests/statements/*.stmt)
 
-${BUILD_DIR}/gen-files/reflection-header.c: runtime/reflection.h
-	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
+SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
 
-omni-c: omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c
+# ----------------------------------------------------------------------
+# Target Definitions
+# ----------------------------------------------------------------------
+
+build/bin/omni-c-stable: omni-c-stable.c
+	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c-stable -std=gnu99 omni-c-stable.c
+
+build/gen-files/reflection-header.c: runtime/reflection.h
+	tools/embed-file.lua reflection_header runtime/reflection.h > build/gen-files/reflection-header.c
+
+build/bin/omni-c: build/bin/omni-c-stable build/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
 	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c -std=gnu99 build/omni-c.c
 
-self: omni-c
+build/bin/self: build/bin/omni-c
 	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/self build/self.c
 
-selfself: omni-c self
+build/bin/selfself: build/bin/omni-c build/bin/self
 	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/selfself -std=gnu99 build/selfself.c
 
-# This feels outdated and was probably more centered on finding bugs
-# we could have found more easily if we simply have better error
-# messages. Consider this dead.
-bisect-self: omni-c
-	tools/bisect.sh ${SRC_C_SELF}
-
-## # Pattern rule for generating header files
-## %.h: %.c
-##	./omni-c generate-header-file --c-output-file=$@ $<
-
-TESTS := $(wildcard tests/*.c tests/expressions/*.e tests/expressions/*.expr tests/statements/*.stmt)
-SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
-
-test: omni-c
+test: build/bin/omni-c
 	tools/run-tests.lua ${TESTS}
 
-test-suite: omni-c
+test-suite: build/bin/omni-c
 	tools/run-tests.lua ${SUITE_TESTS}
 
 # clang-format will take multiple files but if a file is missing it
@@ -96,14 +117,12 @@ format:
 		clang-format -i $$file; \
 	done
 
-# jawilson(fixme): not omni-c-stable
 tags:
 	etags *.c
 
-
 clean:
 	# This is all that should be necessary for a clean build
-	rm -rf omni-c-stable build/
+	rm -rf build/
 	# I would rather a "presubmit" rule such as no files named
 	# "a.out" to capture certain junk like this I've been known to
 	# create.  TODO(jawilson): make a warning
@@ -115,13 +134,13 @@ clean:
 	# going to rename runtime/reflection.h just to avoid a strange
 	# special case.
 	#
-	find . -name '*.h' -not -path './runtime/*' | xargs -n 1 rm -f
+	find . -name '*.h' -not -path './runtime/*' -delete || true
 	# Emacs backup files, my speciality! If you had an issue with
 	# your text editor crashing and your leaving these behind,
 	# then make clean is not your friend here. This 
-	find . -name '*~' | xargs -n 1 rm -f
+	find . -name '*~' -delete || true
 	# Unknown
-	find ../examples/*.enum-generated.h | xargs -n 1 rm -f
+	find ../examples/*.enum-generated.h -delete || true
 	# Figure out if still needed
 	rm -f tools/syntax-c
 	rm -f test-out.c test-out.o

@@ -390,9 +390,9 @@ void generate_c_output_file(boolean_t is_library,
         if (!is_inlined_function(function_node)
             && function_node->body != NULL) {
           append_newline_after_functions = true;
-	  if (false) {
-	    buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
-	  }
+          if (false) {
+            buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
+          }
           append_c_function_node_and_body(printer, function_node);
         }
       }
@@ -557,9 +557,12 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv) {
 
   for (int i = 0; i < FLAG_files->length; i++) {
     char* filename = value_array_get(FLAG_files, i).str;
-    buffer_t* sha256 = git_hash_object(filename);
+    // Strip the trailing newline!
+    buffer_t* git_hash = git_hash_object(filename);
+    buffer_replace_all(git_hash, "\n", "");
     buffer_append_string(output, "// git cat-file -p ");
-    buffer_append_buffer(output, sha256);
+    buffer_append_buffer(output, git_hash);
+    buffer_printf(output, " > %s\n", filename);
   }
 
   return output;

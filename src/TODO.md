@@ -2,7 +2,7 @@
 
 ## Cleanup & Build
 
-1. refactor common sub_process invocations into c-armyknife-lib
+1. make "intermediate files" read only
 
 1. use new build command in tests
 
