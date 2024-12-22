@@ -6,7 +6,7 @@
 #
 # ======================================================================
 
-.PHONY: all clean format tags test test-suite diff cfd how-big cf benchmark omni-c-stable omni-c self selfself
+.PHONY: all clean format tags test test-suite diff cfd how-big cf benchmark omni-c-stable omni-c self selfself selftest
 
 # ----------------------------------------------------------------------
 # Aliases
@@ -105,6 +105,9 @@ build/bin/selfself: build/bin/omni-c build/bin/self
 
 test: build/bin/omni-c
 	tools/run-tests.lua ${TESTS}
+
+selftest: build/bin/self
+	OMNI_C_EXECUTABLE=build/bin/self tools/run-tests.lua ${TESTS}
 
 test-suite: build/bin/omni-c
 	tools/run-tests.lua ${SUITE_TESTS}

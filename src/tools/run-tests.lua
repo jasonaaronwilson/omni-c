@@ -91,7 +91,12 @@ end
 --- end
 
 local function get_omni_c_executable()
-  return "./build/bin/omni-c"
+  local exe = os.getenv("OMNI_C_EXECUTABLE")
+  if exe then
+     return exe
+  else
+     return "./build/bin/omni-c"
+  end
 end
 
 local success = 0
