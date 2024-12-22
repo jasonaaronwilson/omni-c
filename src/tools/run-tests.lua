@@ -78,16 +78,20 @@ local function get_file_mtime(filename)
     else return 0 end
 end
 
-local function get_omni_c_executable()
-    local omni_c_path = "./build/bin/omni-c"
-    local self_path = "./build/bin/self"
+--- local function get_omni_c_executable()
+---     local omni_c_path = "./build/bin/omni-c"
+---     local self_path = "./build/bin/self"
+--- 
+---     -- and get_file_mtime(self_path) > get_file_mtime(omni_c_path) then
+---     if file_exists(self_path) then
+---         return self_path
+---     else
+---         return omni_c_path
+---     end
+--- end
 
-    -- and get_file_mtime(self_path) > get_file_mtime(omni_c_path) then
-    if file_exists(self_path) then
-        return self_path
-    else
-        return omni_c_path
-    end
+local function get_omni_c_executable()
+  return "./build/bin/omni-c"
 end
 
 local success = 0
