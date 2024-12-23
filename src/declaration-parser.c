@@ -323,6 +323,7 @@ pstatus_t parse_declarations(pstate_t* pstate) {
 pstatus_t parse_declaration(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (parse_function_node(pstate)
+      || parse_improved_typedef_node(pstate_ignore_error(pstate))
       || parse_typedef_node(pstate_ignore_error(pstate))
       || parse_enum_node_declaration(pstate_ignore_error(pstate))
       || parse_variable_definition_node(pstate_ignore_error(pstate))
@@ -556,6 +557,40 @@ pstatus_t parse_typedef_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   token_t* name = pstate_get_result_token(pstate);
+  if (!pstate_expect_token_string(pstate, ";")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  typedef_node_t* result = malloc_typedef_node();
+  result->type_node = type_node;
+  result->name = name;
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+/**
+ * @function parse_improved_typedef_node
+ *
+ * Parses a typedef such as "typedef name = int**;"
+ */
+pstatus_t parse_improved_typedef_node(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  if (!pstate_expect_token_string(pstate, "typedef")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if (!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  token_t* name = pstate_get_result_token(pstate);
+
+  if (!pstate_expect_token_string(pstate, "=")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  if (!parse_type_node(pstate)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
+
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }

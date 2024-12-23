@@ -4,12 +4,6 @@
 
 1. make "intermediate files" read only
 
-1. use new build command in tests
-
-1. refactor c-armyknife-lib so that the few overrides we need for
-   tests can be specified which is a pre-requisite for moving
-   c-armyknife-lib into the omni-c directory.
-
 ## Simple Compiler Improvements
 
 1. add C compiler flag and command lines for clang, gcc, and tcc to
@@ -35,6 +29,12 @@
    via "cpp".
 
 ## Other
+
+1. use new build command in tests
+
+1. refactor c-armyknife-lib so that the few overrides we need for
+   tests can be specified which is a pre-requisite for moving
+   c-armyknife-lib into the omni-c directory.
 
 1. improve typedef by allowing "=" and making it simple to typedef.
 
