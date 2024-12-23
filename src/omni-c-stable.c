@@ -1990,7 +1990,7 @@ void cdl_start_table(cdl_printer_t* printer);
 void cdl_key(cdl_printer_t* printer, char* key);
 void cdl_end_table(cdl_printer_t* printer);
 void cdl_indent(cdl_printer_t* printer);
-boolean_t is_symbol(char* string);
+boolean_t is_safe_string(char* string);
 void cdl_output_token(cdl_printer_t* printer, char* string);
 sub_process_t* make_sub_process(value_array_t* argv);
 boolean_t sub_process_launch(sub_process_t* sub_process);
@@ -1998,6 +1998,7 @@ uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t 
 void sub_process_close_stdin(sub_process_t* sub_process);
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
 void sub_process_wait(sub_process_t* sub_process);
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
 boolean_t is_sub_process_running(sub_process_t* sub_process);
 buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
@@ -2054,6 +2055,7 @@ pstatus_t parse_function_node(pstate_t* pstate);
 pstatus_t parse_function_argument_node(pstate_t* pstate);
 pstatus_t parse_function_body_node(pstate_t* pstate);
 pstatus_t parse_typedef_node(pstate_t* pstate);
+pstatus_t parse_improved_typedef_node(pstate_t* pstate);
 void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node);
 void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list);
 void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, char* field_name);
@@ -5259,7 +5261,7 @@ void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
 }
 
 void cdl_string(cdl_printer_t* printer, char* string){
-  if ((!is_symbol(string)))
+  if ((!is_safe_string(string)))
   {
     cdl_output_token(printer, string_printf("\"%s\"", string));
   }
@@ -5309,26 +5311,41 @@ void cdl_indent(cdl_printer_t* printer){
   buffer_append_repeated_byte((printer->buffer), ' ', (4*(printer->indention_level)));
 }
 
-boolean_t is_symbol(char* string){
+boolean_t is_safe_string(char* string){
+  buffer_t* buffer = buffer_from_string(string);
   for (
-    int i = 0;
-    ((string[i])!=0);
-    (i++))
+    int pos = 0;
+    (pos<buffer_length(buffer));
+    )
   {
-    if ((i==0))
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+    if ((decode_result.error))
     {
-      if ((!isalpha((string[i]))))
-      {
-        return false;
-      }
+      fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
     }
-    else
+    uint32_t code_point = (decode_result.code_point);
+    if ((code_point<=32))
     {
-      if ((!(isalnum((string[i]))||((string[i])=='_'))))
-      {
-        return false;
-      }
+      return false;
     }
+    switch (code_point)
+    {
+      case '"':
+      case '#':
+      case '(':
+      case ')':
+      case ',':
+      case ':':
+      case '=':
+      case '[':
+      case '\'':
+      case ']':
+      case '`':
+      case '{':
+      case '}':
+      return false;
+    }
+    (pos+=(decode_result.num_bytes));
   }
   return true;
 }
@@ -5465,6 +5482,26 @@ void sub_process_wait(sub_process_t* sub_process){
     pid_t result = waitpid((sub_process->pid), (&status), 0);
     sub_process_record_exit_status(sub_process, result, status);
   }
+}
+
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr){
+  sub_process_launch(sub_process);
+  uint64_t written = 0;
+  do  {
+    if (((child_stdin!=NULL)&&(written<(child_stdin->length))))
+    {
+      (written+=sub_process_write(sub_process, child_stdin, written));
+      if ((written>=(child_stdin->length)))
+      {
+        sub_process_close_stdin(sub_process);
+      }
+    }
+    sub_process_read(sub_process, child_stdout, child_stderr);
+    usleep(5);
+  }
+while (is_sub_process_running(sub_process));
+  sub_process_read(sub_process, child_stdout, child_stderr);
+  sub_process_wait(sub_process);
 }
 
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status){
@@ -6256,7 +6293,7 @@ pstatus_t parse_declarations(pstate_t* pstate){
 
 pstatus_t parse_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
-  if ((((((parse_function_node(pstate)||parse_typedef_node(pstate_ignore_error(pstate)))||parse_enum_node_declaration(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_structure_node_declaration(pstate_ignore_error(pstate)))||parse_union_node_declaration(pstate_ignore_error(pstate))))
+  if (((((((parse_function_node(pstate)||parse_improved_typedef_node(pstate_ignore_error(pstate)))||parse_typedef_node(pstate_ignore_error(pstate)))||parse_enum_node_declaration(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_structure_node_declaration(pstate_ignore_error(pstate)))||parse_union_node_declaration(pstate_ignore_error(pstate))))
   {
     return true;
   }
@@ -6454,6 +6491,36 @@ pstatus_t parse_typedef_node(pstate_t* pstate){
     return pstate_propagate_error(pstate, saved_position);
   }
   token_t* name = pstate_get_result_token(pstate);
+  if ((!pstate_expect_token_string(pstate, ";")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  typedef_node_t* result = malloc_typedef_node();
+  ((result->type_node)=type_node);
+  ((result->name)=name);
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+pstatus_t parse_improved_typedef_node(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if ((!pstate_expect_token_string(pstate, "typedef")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  token_t* name = pstate_get_result_token(pstate);
+  if ((!pstate_expect_token_string(pstate, "=")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if ((!parse_type_node(pstate)))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
   if ((!pstate_expect_token_string(pstate, ";")))
   {
     return pstate_propagate_error(pstate, saved_position);
@@ -7422,6 +7489,7 @@ printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to
     append_token(printer, (element->name));
     append_string(printer, ":\n");
     printer_increase_indent(printer);
+    printer_indent(printer);
     append_string(printer, "return \"");
     append_token(printer, (element->name));
     append_string(printer, "\";\n");
@@ -7459,6 +7527,7 @@ printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to
     append_token(printer, (element->name));
     append_string(printer, "\") == 0) {\n");
     printer_increase_indent(printer);
+    printer_indent(printer);
     append_string(printer, "return ");
     append_token(printer, (element->name));
     append_string(printer, ";\n");
@@ -10867,9 +10936,11 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv){
     (i++))
   {
     char* filename = (value_array_get(FLAG_files, i).str);
-    buffer_t* sha256 = git_hash_object(filename);
+    buffer_t* git_hash = git_hash_object(filename);
+    buffer_replace_all(git_hash, "\n", "");
     buffer_append_string(output, "// git cat-file -p ");
-    buffer_append_buffer(output, sha256);
+    buffer_append_buffer(output, git_hash);
+    buffer_printf(output, " > %s\n", filename);
   }
   return output;
 }
@@ -13054,11 +13125,11 @@ enum_metadata_t* type_node_kind_metadata(){
 
 // Full Compiler Command Line:
 //
-// build/bin/omni-c
+// build/bin/omni-c-stable
 //    generate-library
 //    --use-statement-parser=true
 //    --omit-c-armyknife-include=true
-//    --c-output-file=build/self.c
+//    --c-output-file=build/omni-c.c
 //    ../../c-armyknife-lib/omni-c.c
 //    ../../c-armyknife-lib/min-max.c
 //    ../../c-armyknife-lib/boolean.c
@@ -13150,8 +13221,8 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976
 // git cat-file -p c6ed69dce8a057ab5b796554a0e1d0ba46ef4e3f
 // git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd
-// git cat-file -p 0f23a36a03d88e8f35306d521483569012b2a914
-// git cat-file -p 56ca72ea3aeecb102bc017e02a056a41c8412f0f
+// git cat-file -p 3d846c37fb156c312b278111e7b2fad26c2e03a2
+// git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05
 // git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d
 // git cat-file -p fa11c50add7d9d42d7c6dc386c874cac9d8ec8b2
 // git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136
@@ -13164,10 +13235,10 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c
 // git cat-file -p 6c86f8d6c5d20f4fffae42fa6ac88b804e4d8f6e
 // git cat-file -p 0b55fcac19e62809336c191ff4b1feeccf79f121
-// git cat-file -p ff4895451271acc0c78aec469145b55e3b4b4b52
+// git cat-file -p b453674f99972033ef9db514b94a8c8a827c1cb6
 // git cat-file -p 9eb13062725ddd77e88cfd0102e76f45d00cb781
 // git cat-file -p 95eaa4fbd394282318d3f068bddddc2fc02f6d6b
-// git cat-file -p 38f57f93ad5a0ab3a0cce28e4824e419c5cc7097
+// git cat-file -p b7baad67f45ea2963c8552254da995238fa09378
 // git cat-file -p 7685f26465480ccb3c1abd2f889544ad25ee37b1
 // git cat-file -p e7f7a4f3593b9b8d6670aa68c0fb0e4b24077ea9
 // git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af
@@ -13183,5 +13254,5 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p da5d06ce2e4ff926c65f532bfcfa6f106fbbc90b
 // git cat-file -p 282faf39e534070f851b3ce87f88e7ea79b4daee
 // git cat-file -p 9ca05c9db93267094539835e4e48896a4a8805c8
-// git cat-file -p 66baee8ca2344465359d0350bb3bdd84405466f6
+// git cat-file -p 9db0df425f01f3369cb728855278b0c89530467a
 // git cat-file -p 62dd703ecf2abfa1974d804fb74f30dc8443160c
