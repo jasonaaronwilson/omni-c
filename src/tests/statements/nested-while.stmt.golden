@@ -3,7 +3,7 @@
     condition = {
         tag = PARSE_NODE_LITERAL
         tokens = [
-            "1"
+            1
         ]
     }
     body = {
@@ -14,7 +14,7 @@
                 condition = {
                     tag = PARSE_NODE_LITERAL
                     tokens = [
-                        "1"
+                        1
                     ]
                 }
                 body = {

@@ -1,6 +1,6 @@
 {
     tag = PARSE_NODE_OPERATOR
-    operator = "*"
+    operator = *
     right = {
         tag = PARSE_NODE_IDENTIFIER
         token = foo

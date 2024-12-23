@@ -32,7 +32,7 @@
     right = {
         tag = PARSE_NODE_LITERAL
         tokens = [
-            "0"
+            0
         ]
     }
 }

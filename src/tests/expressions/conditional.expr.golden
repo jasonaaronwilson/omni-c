@@ -7,13 +7,13 @@
     expr_if_true = {
         tag = PARSE_NODE_LITERAL
         tokens = [
-            "1"
+            1
         ]
     }
     expr_if_false = {
         tag = PARSE_NODE_LITERAL
         tokens = [
-            "0"
+            0
         ]
     }
 }

@@ -8,7 +8,7 @@
     condition = {
         tag = PARSE_NODE_LITERAL
         tokens = [
-            "1"
+            1
         ]
     }
 }

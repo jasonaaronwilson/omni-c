@@ -2,11 +2,11 @@
     tag = PARSE_NODE_EXPRESSION_STATEMENT
     expression = {
         tag = PARSE_NODE_OPERATOR
-        operator = "-"
+        operator = -
         right = {
             tag = PARSE_NODE_LITERAL
             tokens = [
-                "1ULL"
+                1ULL
             ]
         }
     }

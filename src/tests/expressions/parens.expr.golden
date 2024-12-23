@@ -1,19 +1,19 @@
 {
     tag = PARSE_NODE_OPERATOR
-    operator = "*"
+    operator = *
     left = {
         tag = PARSE_NODE_OPERATOR
-        operator = "+"
+        operator = +
         left = {
             tag = PARSE_NODE_LITERAL
             tokens = [
-                "1"
+                1
             ]
         }
         right = {
             tag = PARSE_NODE_LITERAL
             tokens = [
-                "2"
+                2
             ]
         }
     }

@@ -1,7 +1,7 @@
 {
     tag = PARSE_NODE_LITERAL
     tokens = [
-        "0o1234567"
+        0o1234567
     ]
 }
 

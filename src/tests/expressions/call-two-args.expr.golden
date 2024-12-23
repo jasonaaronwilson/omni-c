@@ -7,17 +7,17 @@
     args = [
         {
             tag = PARSE_NODE_OPERATOR
-            operator = "+"
+            operator = +
             left = {
                 tag = PARSE_NODE_LITERAL
                 tokens = [
-                    "123"
+                    123
                 ]
             }
             right = {
                 tag = PARSE_NODE_LITERAL
                 tokens = [
-                    "456"
+                    456
                 ]
             }
         }

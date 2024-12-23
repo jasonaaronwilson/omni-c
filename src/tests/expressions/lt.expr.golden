@@ -1,9 +1,9 @@
 {
     tag = PARSE_NODE_OPERATOR
-    operator = "<"
+    operator = <
     left = {
         tag = PARSE_NODE_OPERATOR
-        operator = "<"
+        operator = <
         left = {
             tag = PARSE_NODE_IDENTIFIER
             token = a

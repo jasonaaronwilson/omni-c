@@ -11,10 +11,11 @@
     value = {
         tag = PARSE_NODE_LITERAL
         tokens = [
-            "0"
+            0
         ]
     }
 }
 
 // C Output
 int i = 0;
+

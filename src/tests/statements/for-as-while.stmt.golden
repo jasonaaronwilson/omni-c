@@ -6,7 +6,7 @@
     for_test = {
         tag = PARSE_NODE_LITERAL
         tokens = [
-            "1"
+            1
         ]
     }
     for_body = {
