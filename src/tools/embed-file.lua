@@ -8,6 +8,13 @@ if not file_path then
     os.exit(1)
 end
 
+local function get_git_hash(file_path)
+    local handle = io.popen("git hash-object " .. file_path)
+    local result = handle:read("*a")
+    handle:close()
+    return result:gsub("\n", "") -- Remove trailing newline
+end
+
 local function file_to_c_code()
     local file = io.open(file_path, "rb")
     if not file then
@@ -24,6 +31,7 @@ local function file_to_c_code()
     -- Generate C code
     local num_bytes = #bytes
     local c_code = ""
+    c_code = c_code .. string.format("// git cat-file -p %s > %s\n", get_git_hash(file_path), file_path)
     c_code = c_code .. string.format("buffer_t* get_%s_buffer(void) {\n", var_name);
     c_code = c_code .. string.format("  static uint8_t %s[] = {\n    ", var_name)
 
