@@ -11053,144 +11053,144 @@ int main(int argc, char** argv){
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
-return "ERROR_UKNOWN";
+    return "ERROR_UKNOWN";
   case ERROR_SIGSEGV:
-return "ERROR_SIGSEGV";
+    return "ERROR_SIGSEGV";
   case ERROR_ACCESS_OUT_OF_BOUNDS:
-return "ERROR_ACCESS_OUT_OF_BOUNDS";
+    return "ERROR_ACCESS_OUT_OF_BOUNDS";
   case ERROR_BAD_COMMAND_LINE:
-return "ERROR_BAD_COMMAND_LINE";
+    return "ERROR_BAD_COMMAND_LINE";
   case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
-return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
+    return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
   case ERROR_ILLEGAL_ENUM_VALUE:
-return "ERROR_ILLEGAL_ENUM_VALUE";
+    return "ERROR_ILLEGAL_ENUM_VALUE";
   case ERROR_ILLEGAL_INITIAL_CAPACITY:
-return "ERROR_ILLEGAL_INITIAL_CAPACITY";
+    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
   case ERROR_ILLEGAL_NULL_ARGUMENT:
-return "ERROR_ILLEGAL_NULL_ARGUMENT";
+    return "ERROR_ILLEGAL_NULL_ARGUMENT";
   case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
-return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
+    return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
   case ERROR_ILLEGAL_RANGE:
-return "ERROR_ILLEGAL_RANGE";
+    return "ERROR_ILLEGAL_RANGE";
   case ERROR_MEMORY_ALLOCATION:
-return "ERROR_MEMORY_ALLOCATION";
+    return "ERROR_MEMORY_ALLOCATION";
   case ERROR_MEMORY_FREE_NULL:
-return "ERROR_MEMORY_FREE_NULL";
+    return "ERROR_MEMORY_FREE_NULL";
   case ERROR_NOT_REACHED:
-return "ERROR_NOT_REACHED";
+    return "ERROR_NOT_REACHED";
   case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
-return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
+    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
   case ERROR_UNIMPLEMENTED:
-return "ERROR_UNIMPLEMENTED";
+    return "ERROR_UNIMPLEMENTED";
   case ERROR_OPEN_LOG_FILE:
-return "ERROR_OPEN_LOG_FILE";
+    return "ERROR_OPEN_LOG_FILE";
   case ERROR_TEST:
-return "ERROR_TEST";
+    return "ERROR_TEST";
   case ERROR_INTERNAL_ASSERTION_FAILURE:
-return "ERROR_INTERNAL_ASSERTION_FAILURE";
+    return "ERROR_INTERNAL_ASSERTION_FAILURE";
   case ERROR_BAD_ALLOCATION_SIZE:
-return "ERROR_BAD_ALLOCATION_SIZE";
+    return "ERROR_BAD_ALLOCATION_SIZE";
   case ERROR_ILLEGAL_ARGUMENT:
-return "ERROR_ILLEGAL_ARGUMENT";
+    return "ERROR_ILLEGAL_ARGUMENT";
   case ERROR_MEMORY_START_PADDING_ERROR:
-return "ERROR_MEMORY_START_PADDING_ERROR";
+    return "ERROR_MEMORY_START_PADDING_ERROR";
   case ERROR_MEMORY_END_PADDING_ERROR:
-return "ERROR_MEMORY_END_PADDING_ERROR";
+    return "ERROR_MEMORY_END_PADDING_ERROR";
   case ERROR_FATAL:
-return "ERROR_FATAL";
+    return "ERROR_FATAL";
   case ERROR_ILLEGAL_STATE:
-return "ERROR_ILLEGAL_STATE";
+    return "ERROR_ILLEGAL_STATE";
   case ERROR_ILLEGAL_INPUT:
-return "ERROR_ILLEGAL_INPUT";
+    return "ERROR_ILLEGAL_INPUT";
   case ERROR_ILLEGAL_UTF_8_CODE_POINT:
-return "ERROR_ILLEGAL_UTF_8_CODE_POINT";
+    return "ERROR_ILLEGAL_UTF_8_CODE_POINT";
   case ERROR_ILLEGAL_TERMINAL_COORDINATES:
-return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
+    return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
   default:
     return "<<unknown-error_code>>";
   }
 }
 error_code_t string_to_error_code(char* value){
   if (strcmp(value, "ERROR_UKNOWN") == 0) {
-return ERROR_UKNOWN;
+    return ERROR_UKNOWN;
   }
   if (strcmp(value, "ERROR_SIGSEGV") == 0) {
-return ERROR_SIGSEGV;
+    return ERROR_SIGSEGV;
   }
   if (strcmp(value, "ERROR_ACCESS_OUT_OF_BOUNDS") == 0) {
-return ERROR_ACCESS_OUT_OF_BOUNDS;
+    return ERROR_ACCESS_OUT_OF_BOUNDS;
   }
   if (strcmp(value, "ERROR_BAD_COMMAND_LINE") == 0) {
-return ERROR_BAD_COMMAND_LINE;
+    return ERROR_BAD_COMMAND_LINE;
   }
   if (strcmp(value, "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER") == 0) {
-return ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER;
+    return ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER;
   }
   if (strcmp(value, "ERROR_ILLEGAL_ENUM_VALUE") == 0) {
-return ERROR_ILLEGAL_ENUM_VALUE;
+    return ERROR_ILLEGAL_ENUM_VALUE;
   }
   if (strcmp(value, "ERROR_ILLEGAL_INITIAL_CAPACITY") == 0) {
-return ERROR_ILLEGAL_INITIAL_CAPACITY;
+    return ERROR_ILLEGAL_INITIAL_CAPACITY;
   }
   if (strcmp(value, "ERROR_ILLEGAL_NULL_ARGUMENT") == 0) {
-return ERROR_ILLEGAL_NULL_ARGUMENT;
+    return ERROR_ILLEGAL_NULL_ARGUMENT;
   }
   if (strcmp(value, "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE") == 0) {
-return ERROR_ILLEGAL_ZERO_HASHCODE_VALUE;
+    return ERROR_ILLEGAL_ZERO_HASHCODE_VALUE;
   }
   if (strcmp(value, "ERROR_ILLEGAL_RANGE") == 0) {
-return ERROR_ILLEGAL_RANGE;
+    return ERROR_ILLEGAL_RANGE;
   }
   if (strcmp(value, "ERROR_MEMORY_ALLOCATION") == 0) {
-return ERROR_MEMORY_ALLOCATION;
+    return ERROR_MEMORY_ALLOCATION;
   }
   if (strcmp(value, "ERROR_MEMORY_FREE_NULL") == 0) {
-return ERROR_MEMORY_FREE_NULL;
+    return ERROR_MEMORY_FREE_NULL;
   }
   if (strcmp(value, "ERROR_NOT_REACHED") == 0) {
-return ERROR_NOT_REACHED;
+    return ERROR_NOT_REACHED;
   }
   if (strcmp(value, "ERROR_REFERENCE_NOT_EXPECTED_TYPE") == 0) {
-return ERROR_REFERENCE_NOT_EXPECTED_TYPE;
+    return ERROR_REFERENCE_NOT_EXPECTED_TYPE;
   }
   if (strcmp(value, "ERROR_UNIMPLEMENTED") == 0) {
-return ERROR_UNIMPLEMENTED;
+    return ERROR_UNIMPLEMENTED;
   }
   if (strcmp(value, "ERROR_OPEN_LOG_FILE") == 0) {
-return ERROR_OPEN_LOG_FILE;
+    return ERROR_OPEN_LOG_FILE;
   }
   if (strcmp(value, "ERROR_TEST") == 0) {
-return ERROR_TEST;
+    return ERROR_TEST;
   }
   if (strcmp(value, "ERROR_INTERNAL_ASSERTION_FAILURE") == 0) {
-return ERROR_INTERNAL_ASSERTION_FAILURE;
+    return ERROR_INTERNAL_ASSERTION_FAILURE;
   }
   if (strcmp(value, "ERROR_BAD_ALLOCATION_SIZE") == 0) {
-return ERROR_BAD_ALLOCATION_SIZE;
+    return ERROR_BAD_ALLOCATION_SIZE;
   }
   if (strcmp(value, "ERROR_ILLEGAL_ARGUMENT") == 0) {
-return ERROR_ILLEGAL_ARGUMENT;
+    return ERROR_ILLEGAL_ARGUMENT;
   }
   if (strcmp(value, "ERROR_MEMORY_START_PADDING_ERROR") == 0) {
-return ERROR_MEMORY_START_PADDING_ERROR;
+    return ERROR_MEMORY_START_PADDING_ERROR;
   }
   if (strcmp(value, "ERROR_MEMORY_END_PADDING_ERROR") == 0) {
-return ERROR_MEMORY_END_PADDING_ERROR;
+    return ERROR_MEMORY_END_PADDING_ERROR;
   }
   if (strcmp(value, "ERROR_FATAL") == 0) {
-return ERROR_FATAL;
+    return ERROR_FATAL;
   }
   if (strcmp(value, "ERROR_ILLEGAL_STATE") == 0) {
-return ERROR_ILLEGAL_STATE;
+    return ERROR_ILLEGAL_STATE;
   }
   if (strcmp(value, "ERROR_ILLEGAL_INPUT") == 0) {
-return ERROR_ILLEGAL_INPUT;
+    return ERROR_ILLEGAL_INPUT;
   }
   if (strcmp(value, "ERROR_ILLEGAL_UTF_8_CODE_POINT") == 0) {
-return ERROR_ILLEGAL_UTF_8_CODE_POINT;
+    return ERROR_ILLEGAL_UTF_8_CODE_POINT;
   }
   if (strcmp(value, "ERROR_ILLEGAL_TERMINAL_COORDINATES") == 0) {
-return ERROR_ILLEGAL_TERMINAL_COORDINATES;
+    return ERROR_ILLEGAL_TERMINAL_COORDINATES;
   }
   return 0;
 }
@@ -11339,29 +11339,29 @@ enum_metadata_t* error_code_metadata(){
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
   switch (value) {
     case NF_OK:
-return "NF_OK";
+    return "NF_OK";
   case NF_ERROR_NOT_FOUND:
-return "NF_ERROR_NOT_FOUND";
+    return "NF_ERROR_NOT_FOUND";
   case NF_ERROR_NOT_PARSED_AS_NUMBER:
-return "NF_ERROR_NOT_PARSED_AS_NUMBER";
+    return "NF_ERROR_NOT_PARSED_AS_NUMBER";
   case NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM:
-return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
+    return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
   default:
     return "<<unknown-non_fatal_error_code>>";
   }
 }
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
   if (strcmp(value, "NF_OK") == 0) {
-return NF_OK;
+    return NF_OK;
   }
   if (strcmp(value, "NF_ERROR_NOT_FOUND") == 0) {
-return NF_ERROR_NOT_FOUND;
+    return NF_ERROR_NOT_FOUND;
   }
   if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_NUMBER") == 0) {
-return NF_ERROR_NOT_PARSED_AS_NUMBER;
+    return NF_ERROR_NOT_PARSED_AS_NUMBER;
   }
   if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM") == 0) {
-return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
+    return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
   }
   return 0;
 }
@@ -11395,49 +11395,49 @@ enum_metadata_t* non_fatal_error_code_metadata(){
 char* flag_type_to_string(flag_type_t value){
   switch (value) {
     case flag_type_none:
-return "flag_type_none";
+    return "flag_type_none";
   case flag_type_boolean:
-return "flag_type_boolean";
+    return "flag_type_boolean";
   case flag_type_string:
-return "flag_type_string";
+    return "flag_type_string";
   case flag_type_uint64:
-return "flag_type_uint64";
+    return "flag_type_uint64";
   case flag_type_int64:
-return "flag_type_int64";
+    return "flag_type_int64";
   case flag_type_double:
-return "flag_type_double";
+    return "flag_type_double";
   case flag_type_enum:
-return "flag_type_enum";
+    return "flag_type_enum";
   case flag_type_custom:
-return "flag_type_custom";
+    return "flag_type_custom";
   default:
     return "<<unknown-flag_type>>";
   }
 }
 flag_type_t string_to_flag_type(char* value){
   if (strcmp(value, "flag_type_none") == 0) {
-return flag_type_none;
+    return flag_type_none;
   }
   if (strcmp(value, "flag_type_boolean") == 0) {
-return flag_type_boolean;
+    return flag_type_boolean;
   }
   if (strcmp(value, "flag_type_string") == 0) {
-return flag_type_string;
+    return flag_type_string;
   }
   if (strcmp(value, "flag_type_uint64") == 0) {
-return flag_type_uint64;
+    return flag_type_uint64;
   }
   if (strcmp(value, "flag_type_int64") == 0) {
-return flag_type_int64;
+    return flag_type_int64;
   }
   if (strcmp(value, "flag_type_double") == 0) {
-return flag_type_double;
+    return flag_type_double;
   }
   if (strcmp(value, "flag_type_enum") == 0) {
-return flag_type_enum;
+    return flag_type_enum;
   }
   if (strcmp(value, "flag_type_custom") == 0) {
-return flag_type_custom;
+    return flag_type_custom;
   }
   return 0;
 }
@@ -11491,29 +11491,29 @@ enum_metadata_t* flag_type_metadata(){
 char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
   switch (value) {
     case EXIT_STATUS_UNKNOWN:
-return "EXIT_STATUS_UNKNOWN";
+    return "EXIT_STATUS_UNKNOWN";
   case EXIT_STATUS_NORMAL_EXIT:
-return "EXIT_STATUS_NORMAL_EXIT";
+    return "EXIT_STATUS_NORMAL_EXIT";
   case EXIT_STATUS_SIGNAL:
-return "EXIT_STATUS_SIGNAL";
+    return "EXIT_STATUS_SIGNAL";
   case EXIT_STATUS_ABNORMAL:
-return "EXIT_STATUS_ABNORMAL";
+    return "EXIT_STATUS_ABNORMAL";
   default:
     return "<<unknown-sub_process_exit_status>>";
   }
 }
 sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
   if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
-return EXIT_STATUS_UNKNOWN;
+    return EXIT_STATUS_UNKNOWN;
   }
   if (strcmp(value, "EXIT_STATUS_NORMAL_EXIT") == 0) {
-return EXIT_STATUS_NORMAL_EXIT;
+    return EXIT_STATUS_NORMAL_EXIT;
   }
   if (strcmp(value, "EXIT_STATUS_SIGNAL") == 0) {
-return EXIT_STATUS_SIGNAL;
+    return EXIT_STATUS_SIGNAL;
   }
   if (strcmp(value, "EXIT_STATUS_ABNORMAL") == 0) {
-return EXIT_STATUS_ABNORMAL;
+    return EXIT_STATUS_ABNORMAL;
   }
   return 0;
 }
@@ -11547,24 +11547,24 @@ enum_metadata_t* sub_process_exit_status_metadata(){
 char* input_mode_to_string(input_mode_t value){
   switch (value) {
     case INPUT_MODE_OMNI_C:
-return "INPUT_MODE_OMNI_C";
+    return "INPUT_MODE_OMNI_C";
   case INPUT_MODE_STANDARD_C:
-return "INPUT_MODE_STANDARD_C";
+    return "INPUT_MODE_STANDARD_C";
   case INPUT_MODE_C_PLUS_PLUS:
-return "INPUT_MODE_C_PLUS_PLUS";
+    return "INPUT_MODE_C_PLUS_PLUS";
   default:
     return "<<unknown-input_mode>>";
   }
 }
 input_mode_t string_to_input_mode(char* value){
   if (strcmp(value, "INPUT_MODE_OMNI_C") == 0) {
-return INPUT_MODE_OMNI_C;
+    return INPUT_MODE_OMNI_C;
   }
   if (strcmp(value, "INPUT_MODE_STANDARD_C") == 0) {
-return INPUT_MODE_STANDARD_C;
+    return INPUT_MODE_STANDARD_C;
   }
   if (strcmp(value, "INPUT_MODE_C_PLUS_PLUS") == 0) {
-return INPUT_MODE_C_PLUS_PLUS;
+    return INPUT_MODE_C_PLUS_PLUS;
   }
   return 0;
 }
@@ -11593,19 +11593,19 @@ enum_metadata_t* input_mode_metadata(){
 char* output_mode_to_string(output_mode_t value){
   switch (value) {
     case OUTPUT_MODE_STANDARD_C:
-return "OUTPUT_MODE_STANDARD_C";
+    return "OUTPUT_MODE_STANDARD_C";
   case OUTPUT_MODE_C_PLUS_PLUS:
-return "OUTPUT_MODE_C_PLUS_PLUS";
+    return "OUTPUT_MODE_C_PLUS_PLUS";
   default:
     return "<<unknown-output_mode>>";
   }
 }
 output_mode_t string_to_output_mode(char* value){
   if (strcmp(value, "OUTPUT_MODE_STANDARD_C") == 0) {
-return OUTPUT_MODE_STANDARD_C;
+    return OUTPUT_MODE_STANDARD_C;
   }
   if (strcmp(value, "OUTPUT_MODE_C_PLUS_PLUS") == 0) {
-return OUTPUT_MODE_C_PLUS_PLUS;
+    return OUTPUT_MODE_C_PLUS_PLUS;
   }
   return 0;
 }
@@ -11629,24 +11629,24 @@ enum_metadata_t* output_mode_metadata(){
 char* file_tag_to_string(file_tag_t value){
   switch (value) {
     case OMNI_C_SOURCE_FILE:
-return "OMNI_C_SOURCE_FILE";
+    return "OMNI_C_SOURCE_FILE";
   case STD_C_SOURCE_FILE:
-return "STD_C_SOURCE_FILE";
+    return "STD_C_SOURCE_FILE";
   case DATA_FILE:
-return "DATA_FILE";
+    return "DATA_FILE";
   default:
     return "<<unknown-file_tag>>";
   }
 }
 file_tag_t string_to_file_tag(char* value){
   if (strcmp(value, "OMNI_C_SOURCE_FILE") == 0) {
-return OMNI_C_SOURCE_FILE;
+    return OMNI_C_SOURCE_FILE;
   }
   if (strcmp(value, "STD_C_SOURCE_FILE") == 0) {
-return STD_C_SOURCE_FILE;
+    return STD_C_SOURCE_FILE;
   }
   if (strcmp(value, "DATA_FILE") == 0) {
-return DATA_FILE;
+    return DATA_FILE;
   }
   return 0;
 }
@@ -11675,39 +11675,39 @@ enum_metadata_t* file_tag_metadata(){
 char* tokenizer_error_to_string(tokenizer_error_t value){
   switch (value) {
     case TOKENIZER_ERROR_UNKNOWN:
-return "TOKENIZER_ERROR_UNKNOWN";
+    return "TOKENIZER_ERROR_UNKNOWN";
   case TOKENIZER_ERROR_UTF_DECODE_ERROR:
-return "TOKENIZER_ERROR_UTF_DECODE_ERROR";
+    return "TOKENIZER_ERROR_UTF_DECODE_ERROR";
   case TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION:
-return "TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION";
+    return "TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION";
   case TOKENIZER_ERROR_UNTERMINATED_COMMENT:
-return "TOKENIZER_ERROR_UNTERMINATED_COMMENT";
+    return "TOKENIZER_ERROR_UNTERMINATED_COMMENT";
   case TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL:
-return "TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL";
+    return "TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL";
   case TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL:
-return "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL";
+    return "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL";
   default:
     return "<<unknown-tokenizer_error>>";
   }
 }
 tokenizer_error_t string_to_tokenizer_error(char* value){
   if (strcmp(value, "TOKENIZER_ERROR_UNKNOWN") == 0) {
-return TOKENIZER_ERROR_UNKNOWN;
+    return TOKENIZER_ERROR_UNKNOWN;
   }
   if (strcmp(value, "TOKENIZER_ERROR_UTF_DECODE_ERROR") == 0) {
-return TOKENIZER_ERROR_UTF_DECODE_ERROR;
+    return TOKENIZER_ERROR_UTF_DECODE_ERROR;
   }
   if (strcmp(value, "TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION") == 0) {
-return TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION;
+    return TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION;
   }
   if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_COMMENT") == 0) {
-return TOKENIZER_ERROR_UNTERMINATED_COMMENT;
+    return TOKENIZER_ERROR_UNTERMINATED_COMMENT;
   }
   if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL") == 0) {
-return TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL;
+    return TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL;
   }
   if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL") == 0) {
-return TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL;
+    return TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL;
   }
   return 0;
 }
@@ -11751,114 +11751,114 @@ enum_metadata_t* tokenizer_error_metadata(){
 char* parse_error_code_to_string(parse_error_code_t value){
   switch (value) {
     case PARSE_ERROR_UNKNOWN:
-return "PARSE_ERROR_UNKNOWN";
+    return "PARSE_ERROR_UNKNOWN";
   case PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED:
-return "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED";
+    return "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED";
   case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
-return "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON";
+    return "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON";
   case PARSE_ERROR_EXPECTED_SEMICOLON:
-return "PARSE_ERROR_EXPECTED_SEMICOLON";
+    return "PARSE_ERROR_EXPECTED_SEMICOLON";
   case PARSE_ERROR_IDENTIFIER_EXPECTED:
-return "PARSE_ERROR_IDENTIFIER_EXPECTED";
+    return "PARSE_ERROR_IDENTIFIER_EXPECTED";
   case PARSE_ERROR_NOT_LITERAL_NODE:
-return "PARSE_ERROR_NOT_LITERAL_NODE";
+    return "PARSE_ERROR_NOT_LITERAL_NODE";
   case PARSE_ERROR_INTEGER_LITERAL_EXPECTED:
-return "PARSE_ERROR_INTEGER_LITERAL_EXPECTED";
+    return "PARSE_ERROR_INTEGER_LITERAL_EXPECTED";
   case PARSE_ERROR_OPEN_BRACE_EXPECTED:
-return "PARSE_ERROR_OPEN_BRACE_EXPECTED";
+    return "PARSE_ERROR_OPEN_BRACE_EXPECTED";
   case PARSE_ERROR_CLOSE_BRACKET_EXPECTED:
-return "PARSE_ERROR_CLOSE_BRACKET_EXPECTED";
+    return "PARSE_ERROR_CLOSE_BRACKET_EXPECTED";
   case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
-return "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION";
+    return "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION";
   case PARSE_ERROR_SEMICOLON_EXPECTED:
-return "PARSE_ERROR_SEMICOLON_EXPECTED";
+    return "PARSE_ERROR_SEMICOLON_EXPECTED";
   case PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER:
-return "PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER";
+    return "PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER";
   case PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER:
-return "PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER";
+    return "PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER";
   case PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
-return "PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE";
+    return "PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE";
   case PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
-return "PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE";
+    return "PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE";
   case PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL:
-return "PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL";
+    return "PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL";
   case PARSE_ERROR_EXPECTED_STATEMENT:
-return "PARSE_ERROR_EXPECTED_STATEMENT";
+    return "PARSE_ERROR_EXPECTED_STATEMENT";
   case PARSE_ERROR_EXPECTED_TOKEN:
-return "PARSE_ERROR_EXPECTED_TOKEN";
+    return "PARSE_ERROR_EXPECTED_TOKEN";
   case PARSE_ERROR_EXPECTED_TOKEN_TYPE:
-return "PARSE_ERROR_EXPECTED_TOKEN_TYPE";
+    return "PARSE_ERROR_EXPECTED_TOKEN_TYPE";
   case PARSE_ERROR_EOF:
-return "PARSE_ERROR_EOF";
+    return "PARSE_ERROR_EOF";
   case PARSE_ERROR_UNHANDLED_INSTRUCTION:
-return "PARSE_ERROR_UNHANDLED_INSTRUCTION";
+    return "PARSE_ERROR_UNHANDLED_INSTRUCTION";
   default:
     return "<<unknown-parse_error_code>>";
   }
 }
 parse_error_code_t string_to_parse_error_code(char* value){
   if (strcmp(value, "PARSE_ERROR_UNKNOWN") == 0) {
-return PARSE_ERROR_UNKNOWN;
+    return PARSE_ERROR_UNKNOWN;
   }
   if (strcmp(value, "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED") == 0) {
-return PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED;
+    return PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED;
   }
   if (strcmp(value, "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON") == 0) {
-return PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON;
+    return PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON;
   }
   if (strcmp(value, "PARSE_ERROR_EXPECTED_SEMICOLON") == 0) {
-return PARSE_ERROR_EXPECTED_SEMICOLON;
+    return PARSE_ERROR_EXPECTED_SEMICOLON;
   }
   if (strcmp(value, "PARSE_ERROR_IDENTIFIER_EXPECTED") == 0) {
-return PARSE_ERROR_IDENTIFIER_EXPECTED;
+    return PARSE_ERROR_IDENTIFIER_EXPECTED;
   }
   if (strcmp(value, "PARSE_ERROR_NOT_LITERAL_NODE") == 0) {
-return PARSE_ERROR_NOT_LITERAL_NODE;
+    return PARSE_ERROR_NOT_LITERAL_NODE;
   }
   if (strcmp(value, "PARSE_ERROR_INTEGER_LITERAL_EXPECTED") == 0) {
-return PARSE_ERROR_INTEGER_LITERAL_EXPECTED;
+    return PARSE_ERROR_INTEGER_LITERAL_EXPECTED;
   }
   if (strcmp(value, "PARSE_ERROR_OPEN_BRACE_EXPECTED") == 0) {
-return PARSE_ERROR_OPEN_BRACE_EXPECTED;
+    return PARSE_ERROR_OPEN_BRACE_EXPECTED;
   }
   if (strcmp(value, "PARSE_ERROR_CLOSE_BRACKET_EXPECTED") == 0) {
-return PARSE_ERROR_CLOSE_BRACKET_EXPECTED;
+    return PARSE_ERROR_CLOSE_BRACKET_EXPECTED;
   }
   if (strcmp(value, "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION") == 0) {
-return PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION;
+    return PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION;
   }
   if (strcmp(value, "PARSE_ERROR_SEMICOLON_EXPECTED") == 0) {
-return PARSE_ERROR_SEMICOLON_EXPECTED;
+    return PARSE_ERROR_SEMICOLON_EXPECTED;
   }
   if (strcmp(value, "PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER") == 0) {
-return PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER;
+    return PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER;
   }
   if (strcmp(value, "PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER") == 0) {
-return PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER;
+    return PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER;
   }
   if (strcmp(value, "PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE") == 0) {
-return PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE;
+    return PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE;
   }
   if (strcmp(value, "PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE") == 0) {
-return PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE;
+    return PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE;
   }
   if (strcmp(value, "PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL") == 0) {
-return PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL;
+    return PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL;
   }
   if (strcmp(value, "PARSE_ERROR_EXPECTED_STATEMENT") == 0) {
-return PARSE_ERROR_EXPECTED_STATEMENT;
+    return PARSE_ERROR_EXPECTED_STATEMENT;
   }
   if (strcmp(value, "PARSE_ERROR_EXPECTED_TOKEN") == 0) {
-return PARSE_ERROR_EXPECTED_TOKEN;
+    return PARSE_ERROR_EXPECTED_TOKEN;
   }
   if (strcmp(value, "PARSE_ERROR_EXPECTED_TOKEN_TYPE") == 0) {
-return PARSE_ERROR_EXPECTED_TOKEN_TYPE;
+    return PARSE_ERROR_EXPECTED_TOKEN_TYPE;
   }
   if (strcmp(value, "PARSE_ERROR_EOF") == 0) {
-return PARSE_ERROR_EOF;
+    return PARSE_ERROR_EOF;
   }
   if (strcmp(value, "PARSE_ERROR_UNHANDLED_INSTRUCTION") == 0) {
-return PARSE_ERROR_UNHANDLED_INSTRUCTION;
+    return PARSE_ERROR_UNHANDLED_INSTRUCTION;
   }
   return 0;
 }
@@ -11977,54 +11977,54 @@ enum_metadata_t* parse_error_code_metadata(){
 char* token_type_to_string(token_type_t value){
   switch (value) {
     case TOKEN_TYPE_UNKNOWN:
-return "TOKEN_TYPE_UNKNOWN";
+    return "TOKEN_TYPE_UNKNOWN";
   case TOKEN_TYPE_WHITESPACE:
-return "TOKEN_TYPE_WHITESPACE";
+    return "TOKEN_TYPE_WHITESPACE";
   case TOKEN_TYPE_COMMENT:
-return "TOKEN_TYPE_COMMENT";
+    return "TOKEN_TYPE_COMMENT";
   case TOKEN_TYPE_IDENTIFIER:
-return "TOKEN_TYPE_IDENTIFIER";
+    return "TOKEN_TYPE_IDENTIFIER";
   case TOKEN_TYPE_PUNCTUATION:
-return "TOKEN_TYPE_PUNCTUATION";
+    return "TOKEN_TYPE_PUNCTUATION";
   case TOKEN_TYPE_INTEGER_LITERAL:
-return "TOKEN_TYPE_INTEGER_LITERAL";
+    return "TOKEN_TYPE_INTEGER_LITERAL";
   case TOKEN_TYPE_FLOAT_LITERAL:
-return "TOKEN_TYPE_FLOAT_LITERAL";
+    return "TOKEN_TYPE_FLOAT_LITERAL";
   case TOKEN_TYPE_STRING_LITERAL:
-return "TOKEN_TYPE_STRING_LITERAL";
+    return "TOKEN_TYPE_STRING_LITERAL";
   case TOKEN_TYPE_CHARACTER_LITERAL:
-return "TOKEN_TYPE_CHARACTER_LITERAL";
+    return "TOKEN_TYPE_CHARACTER_LITERAL";
   default:
     return "<<unknown-token_type>>";
   }
 }
 token_type_t string_to_token_type(char* value){
   if (strcmp(value, "TOKEN_TYPE_UNKNOWN") == 0) {
-return TOKEN_TYPE_UNKNOWN;
+    return TOKEN_TYPE_UNKNOWN;
   }
   if (strcmp(value, "TOKEN_TYPE_WHITESPACE") == 0) {
-return TOKEN_TYPE_WHITESPACE;
+    return TOKEN_TYPE_WHITESPACE;
   }
   if (strcmp(value, "TOKEN_TYPE_COMMENT") == 0) {
-return TOKEN_TYPE_COMMENT;
+    return TOKEN_TYPE_COMMENT;
   }
   if (strcmp(value, "TOKEN_TYPE_IDENTIFIER") == 0) {
-return TOKEN_TYPE_IDENTIFIER;
+    return TOKEN_TYPE_IDENTIFIER;
   }
   if (strcmp(value, "TOKEN_TYPE_PUNCTUATION") == 0) {
-return TOKEN_TYPE_PUNCTUATION;
+    return TOKEN_TYPE_PUNCTUATION;
   }
   if (strcmp(value, "TOKEN_TYPE_INTEGER_LITERAL") == 0) {
-return TOKEN_TYPE_INTEGER_LITERAL;
+    return TOKEN_TYPE_INTEGER_LITERAL;
   }
   if (strcmp(value, "TOKEN_TYPE_FLOAT_LITERAL") == 0) {
-return TOKEN_TYPE_FLOAT_LITERAL;
+    return TOKEN_TYPE_FLOAT_LITERAL;
   }
   if (strcmp(value, "TOKEN_TYPE_STRING_LITERAL") == 0) {
-return TOKEN_TYPE_STRING_LITERAL;
+    return TOKEN_TYPE_STRING_LITERAL;
   }
   if (strcmp(value, "TOKEN_TYPE_CHARACTER_LITERAL") == 0) {
-return TOKEN_TYPE_CHARACTER_LITERAL;
+    return TOKEN_TYPE_CHARACTER_LITERAL;
   }
   return 0;
 }
@@ -12083,44 +12083,44 @@ enum_metadata_t* token_type_metadata(){
 char* numeric_literal_encoding_to_string(numeric_literal_encoding_t value){
   switch (value) {
     case NUMERIC_LITERAL_ENCODING_UNDECIDED:
-return "NUMERIC_LITERAL_ENCODING_UNDECIDED";
+    return "NUMERIC_LITERAL_ENCODING_UNDECIDED";
   case NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL:
-return "NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL";
+    return "NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL";
   case NUMERIC_LITERAL_ENCODING_BINARY:
-return "NUMERIC_LITERAL_ENCODING_BINARY";
+    return "NUMERIC_LITERAL_ENCODING_BINARY";
   case NUMERIC_LITERAL_ENCODING_OCTAL:
-return "NUMERIC_LITERAL_ENCODING_OCTAL";
+    return "NUMERIC_LITERAL_ENCODING_OCTAL";
   case NUMERIC_LITERAL_ENCODING_HEX:
-return "NUMERIC_LITERAL_ENCODING_HEX";
+    return "NUMERIC_LITERAL_ENCODING_HEX";
   case NUMERIC_LITERAL_ENCODING_DECIMAL:
-return "NUMERIC_LITERAL_ENCODING_DECIMAL";
+    return "NUMERIC_LITERAL_ENCODING_DECIMAL";
   case NUMERIC_LITERAL_ENCODING_FLOAT:
-return "NUMERIC_LITERAL_ENCODING_FLOAT";
+    return "NUMERIC_LITERAL_ENCODING_FLOAT";
   default:
     return "<<unknown-numeric_literal_encoding>>";
   }
 }
 numeric_literal_encoding_t string_to_numeric_literal_encoding(char* value){
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_UNDECIDED") == 0) {
-return NUMERIC_LITERAL_ENCODING_UNDECIDED;
+    return NUMERIC_LITERAL_ENCODING_UNDECIDED;
   }
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL") == 0) {
-return NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL;
+    return NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL;
   }
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_BINARY") == 0) {
-return NUMERIC_LITERAL_ENCODING_BINARY;
+    return NUMERIC_LITERAL_ENCODING_BINARY;
   }
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_OCTAL") == 0) {
-return NUMERIC_LITERAL_ENCODING_OCTAL;
+    return NUMERIC_LITERAL_ENCODING_OCTAL;
   }
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_HEX") == 0) {
-return NUMERIC_LITERAL_ENCODING_HEX;
+    return NUMERIC_LITERAL_ENCODING_HEX;
   }
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_DECIMAL") == 0) {
-return NUMERIC_LITERAL_ENCODING_DECIMAL;
+    return NUMERIC_LITERAL_ENCODING_DECIMAL;
   }
   if (strcmp(value, "NUMERIC_LITERAL_ENCODING_FLOAT") == 0) {
-return NUMERIC_LITERAL_ENCODING_FLOAT;
+    return NUMERIC_LITERAL_ENCODING_FLOAT;
   }
   return 0;
 }
@@ -12169,209 +12169,209 @@ enum_metadata_t* numeric_literal_encoding_metadata(){
 char* parse_node_type_to_string(parse_node_type_t value){
   switch (value) {
     case PARSE_NODE_UNKNOWN:
-return "PARSE_NODE_UNKNOWN";
+    return "PARSE_NODE_UNKNOWN";
   case PARSE_NODE_DECLARATIONS:
-return "PARSE_NODE_DECLARATIONS";
+    return "PARSE_NODE_DECLARATIONS";
   case PARSE_NODE_ENUM:
-return "PARSE_NODE_ENUM";
+    return "PARSE_NODE_ENUM";
   case PARSE_NODE_ENUM_ELEMENT:
-return "PARSE_NODE_ENUM_ELEMENT";
+    return "PARSE_NODE_ENUM_ELEMENT";
   case PARSE_NODE_FIELD:
-return "PARSE_NODE_FIELD";
+    return "PARSE_NODE_FIELD";
   case PARSE_NODE_GLOBAL_FUNCTION:
-return "PARSE_NODE_GLOBAL_FUNCTION";
+    return "PARSE_NODE_GLOBAL_FUNCTION";
   case PARSE_NODE_VARIABLE_DEFINITION:
-return "PARSE_NODE_VARIABLE_DEFINITION";
+    return "PARSE_NODE_VARIABLE_DEFINITION";
   case PARSE_NODE_LIST_OF_NODES:
-return "PARSE_NODE_LIST_OF_NODES";
+    return "PARSE_NODE_LIST_OF_NODES";
   case PARSE_NODE_STRUCT:
-return "PARSE_NODE_STRUCT";
+    return "PARSE_NODE_STRUCT";
   case PARSE_NODE_UNION:
-return "PARSE_NODE_UNION";
+    return "PARSE_NODE_UNION";
   case PARSE_NODE_TYPE:
-return "PARSE_NODE_TYPE";
+    return "PARSE_NODE_TYPE";
   case PARSE_NODE_LITERAL:
-return "PARSE_NODE_LITERAL";
+    return "PARSE_NODE_LITERAL";
   case PARSE_NODE_FUNCTION:
-return "PARSE_NODE_FUNCTION";
+    return "PARSE_NODE_FUNCTION";
   case PARSE_NODE_FUNCTION_ARGUMENT:
-return "PARSE_NODE_FUNCTION_ARGUMENT";
+    return "PARSE_NODE_FUNCTION_ARGUMENT";
   case PARSE_NODE_TYPEDEF:
-return "PARSE_NODE_TYPEDEF";
+    return "PARSE_NODE_TYPEDEF";
   case PARSE_NODE_UNPARSED_EXPRESSION:
-return "PARSE_NODE_UNPARSED_EXPRESSION";
+    return "PARSE_NODE_UNPARSED_EXPRESSION";
   case PARSE_NODE_ATTRIBUTE:
-return "PARSE_NODE_ATTRIBUTE";
+    return "PARSE_NODE_ATTRIBUTE";
   case PARSE_NODE_CPP_INCLUDE:
-return "PARSE_NODE_CPP_INCLUDE";
+    return "PARSE_NODE_CPP_INCLUDE";
   case PARSE_NODE_CPP_DEFINE:
-return "PARSE_NODE_CPP_DEFINE";
+    return "PARSE_NODE_CPP_DEFINE";
   case PARSE_NODE_OPERATOR:
-return "PARSE_NODE_OPERATOR";
+    return "PARSE_NODE_OPERATOR";
   case PARSE_NODE_IDENTIFIER:
-return "PARSE_NODE_IDENTIFIER";
+    return "PARSE_NODE_IDENTIFIER";
   case PARSE_NODE_IF_STATEMENT:
-return "PARSE_NODE_IF_STATEMENT";
+    return "PARSE_NODE_IF_STATEMENT";
   case PARSE_NODE_FOR_STATEMENT:
-return "PARSE_NODE_FOR_STATEMENT";
+    return "PARSE_NODE_FOR_STATEMENT";
   case PARSE_NODE_DO_STATEMENT:
-return "PARSE_NODE_DO_STATEMENT";
+    return "PARSE_NODE_DO_STATEMENT";
   case PARSE_NODE_WHILE_STATEMENT:
-return "PARSE_NODE_WHILE_STATEMENT";
+    return "PARSE_NODE_WHILE_STATEMENT";
   case PARSE_NODE_EMPTY_STATEMENT:
-return "PARSE_NODE_EMPTY_STATEMENT";
+    return "PARSE_NODE_EMPTY_STATEMENT";
   case PARSE_NODE_BLOCK:
-return "PARSE_NODE_BLOCK";
+    return "PARSE_NODE_BLOCK";
   case PARSE_NODE_RETURN_STATEMENT:
-return "PARSE_NODE_RETURN_STATEMENT";
+    return "PARSE_NODE_RETURN_STATEMENT";
   case PARSE_NODE_SWITCH_STATEMENT:
-return "PARSE_NODE_SWITCH_STATEMENT";
+    return "PARSE_NODE_SWITCH_STATEMENT";
   case PARSE_NODE_CASE_LABEL:
-return "PARSE_NODE_CASE_LABEL";
+    return "PARSE_NODE_CASE_LABEL";
   case PARSE_NODE_DEFAULT_LABEL:
-return "PARSE_NODE_DEFAULT_LABEL";
+    return "PARSE_NODE_DEFAULT_LABEL";
   case PARSE_NODE_GOTO_STATEMENT:
-return "PARSE_NODE_GOTO_STATEMENT";
+    return "PARSE_NODE_GOTO_STATEMENT";
   case PARSE_NODE_BREAK_STATEMENT:
-return "PARSE_NODE_BREAK_STATEMENT";
+    return "PARSE_NODE_BREAK_STATEMENT";
   case PARSE_NODE_CONTINUE_STATEMENT:
-return "PARSE_NODE_CONTINUE_STATEMENT";
+    return "PARSE_NODE_CONTINUE_STATEMENT";
   case PARSE_NODE_LABEL_STATEMENT:
-return "PARSE_NODE_LABEL_STATEMENT";
+    return "PARSE_NODE_LABEL_STATEMENT";
   case PARSE_NODE_VARIABLE_STATEMENT:
-return "PARSE_NODE_VARIABLE_STATEMENT";
+    return "PARSE_NODE_VARIABLE_STATEMENT";
   case PARSE_NODE_EXPRESSION_STATEMENT:
-return "PARSE_NODE_EXPRESSION_STATEMENT";
+    return "PARSE_NODE_EXPRESSION_STATEMENT";
   case PARSE_NODE_BALANCED_CONSTRUCT:
-return "PARSE_NODE_BALANCED_CONSTRUCT";
+    return "PARSE_NODE_BALANCED_CONSTRUCT";
   case PARSE_NODE_CALL:
-return "PARSE_NODE_CALL";
+    return "PARSE_NODE_CALL";
   case PARSE_NODE_CONDITIONAL:
-return "PARSE_NODE_CONDITIONAL";
+    return "PARSE_NODE_CONDITIONAL";
   default:
     return "<<unknown-parse_node_type>>";
   }
 }
 parse_node_type_t string_to_parse_node_type(char* value){
   if (strcmp(value, "PARSE_NODE_UNKNOWN") == 0) {
-return PARSE_NODE_UNKNOWN;
+    return PARSE_NODE_UNKNOWN;
   }
   if (strcmp(value, "PARSE_NODE_DECLARATIONS") == 0) {
-return PARSE_NODE_DECLARATIONS;
+    return PARSE_NODE_DECLARATIONS;
   }
   if (strcmp(value, "PARSE_NODE_ENUM") == 0) {
-return PARSE_NODE_ENUM;
+    return PARSE_NODE_ENUM;
   }
   if (strcmp(value, "PARSE_NODE_ENUM_ELEMENT") == 0) {
-return PARSE_NODE_ENUM_ELEMENT;
+    return PARSE_NODE_ENUM_ELEMENT;
   }
   if (strcmp(value, "PARSE_NODE_FIELD") == 0) {
-return PARSE_NODE_FIELD;
+    return PARSE_NODE_FIELD;
   }
   if (strcmp(value, "PARSE_NODE_GLOBAL_FUNCTION") == 0) {
-return PARSE_NODE_GLOBAL_FUNCTION;
+    return PARSE_NODE_GLOBAL_FUNCTION;
   }
   if (strcmp(value, "PARSE_NODE_VARIABLE_DEFINITION") == 0) {
-return PARSE_NODE_VARIABLE_DEFINITION;
+    return PARSE_NODE_VARIABLE_DEFINITION;
   }
   if (strcmp(value, "PARSE_NODE_LIST_OF_NODES") == 0) {
-return PARSE_NODE_LIST_OF_NODES;
+    return PARSE_NODE_LIST_OF_NODES;
   }
   if (strcmp(value, "PARSE_NODE_STRUCT") == 0) {
-return PARSE_NODE_STRUCT;
+    return PARSE_NODE_STRUCT;
   }
   if (strcmp(value, "PARSE_NODE_UNION") == 0) {
-return PARSE_NODE_UNION;
+    return PARSE_NODE_UNION;
   }
   if (strcmp(value, "PARSE_NODE_TYPE") == 0) {
-return PARSE_NODE_TYPE;
+    return PARSE_NODE_TYPE;
   }
   if (strcmp(value, "PARSE_NODE_LITERAL") == 0) {
-return PARSE_NODE_LITERAL;
+    return PARSE_NODE_LITERAL;
   }
   if (strcmp(value, "PARSE_NODE_FUNCTION") == 0) {
-return PARSE_NODE_FUNCTION;
+    return PARSE_NODE_FUNCTION;
   }
   if (strcmp(value, "PARSE_NODE_FUNCTION_ARGUMENT") == 0) {
-return PARSE_NODE_FUNCTION_ARGUMENT;
+    return PARSE_NODE_FUNCTION_ARGUMENT;
   }
   if (strcmp(value, "PARSE_NODE_TYPEDEF") == 0) {
-return PARSE_NODE_TYPEDEF;
+    return PARSE_NODE_TYPEDEF;
   }
   if (strcmp(value, "PARSE_NODE_UNPARSED_EXPRESSION") == 0) {
-return PARSE_NODE_UNPARSED_EXPRESSION;
+    return PARSE_NODE_UNPARSED_EXPRESSION;
   }
   if (strcmp(value, "PARSE_NODE_ATTRIBUTE") == 0) {
-return PARSE_NODE_ATTRIBUTE;
+    return PARSE_NODE_ATTRIBUTE;
   }
   if (strcmp(value, "PARSE_NODE_CPP_INCLUDE") == 0) {
-return PARSE_NODE_CPP_INCLUDE;
+    return PARSE_NODE_CPP_INCLUDE;
   }
   if (strcmp(value, "PARSE_NODE_CPP_DEFINE") == 0) {
-return PARSE_NODE_CPP_DEFINE;
+    return PARSE_NODE_CPP_DEFINE;
   }
   if (strcmp(value, "PARSE_NODE_OPERATOR") == 0) {
-return PARSE_NODE_OPERATOR;
+    return PARSE_NODE_OPERATOR;
   }
   if (strcmp(value, "PARSE_NODE_IDENTIFIER") == 0) {
-return PARSE_NODE_IDENTIFIER;
+    return PARSE_NODE_IDENTIFIER;
   }
   if (strcmp(value, "PARSE_NODE_IF_STATEMENT") == 0) {
-return PARSE_NODE_IF_STATEMENT;
+    return PARSE_NODE_IF_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_FOR_STATEMENT") == 0) {
-return PARSE_NODE_FOR_STATEMENT;
+    return PARSE_NODE_FOR_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_DO_STATEMENT") == 0) {
-return PARSE_NODE_DO_STATEMENT;
+    return PARSE_NODE_DO_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_WHILE_STATEMENT") == 0) {
-return PARSE_NODE_WHILE_STATEMENT;
+    return PARSE_NODE_WHILE_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_EMPTY_STATEMENT") == 0) {
-return PARSE_NODE_EMPTY_STATEMENT;
+    return PARSE_NODE_EMPTY_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_BLOCK") == 0) {
-return PARSE_NODE_BLOCK;
+    return PARSE_NODE_BLOCK;
   }
   if (strcmp(value, "PARSE_NODE_RETURN_STATEMENT") == 0) {
-return PARSE_NODE_RETURN_STATEMENT;
+    return PARSE_NODE_RETURN_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_SWITCH_STATEMENT") == 0) {
-return PARSE_NODE_SWITCH_STATEMENT;
+    return PARSE_NODE_SWITCH_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_CASE_LABEL") == 0) {
-return PARSE_NODE_CASE_LABEL;
+    return PARSE_NODE_CASE_LABEL;
   }
   if (strcmp(value, "PARSE_NODE_DEFAULT_LABEL") == 0) {
-return PARSE_NODE_DEFAULT_LABEL;
+    return PARSE_NODE_DEFAULT_LABEL;
   }
   if (strcmp(value, "PARSE_NODE_GOTO_STATEMENT") == 0) {
-return PARSE_NODE_GOTO_STATEMENT;
+    return PARSE_NODE_GOTO_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_BREAK_STATEMENT") == 0) {
-return PARSE_NODE_BREAK_STATEMENT;
+    return PARSE_NODE_BREAK_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_CONTINUE_STATEMENT") == 0) {
-return PARSE_NODE_CONTINUE_STATEMENT;
+    return PARSE_NODE_CONTINUE_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_LABEL_STATEMENT") == 0) {
-return PARSE_NODE_LABEL_STATEMENT;
+    return PARSE_NODE_LABEL_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_VARIABLE_STATEMENT") == 0) {
-return PARSE_NODE_VARIABLE_STATEMENT;
+    return PARSE_NODE_VARIABLE_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_EXPRESSION_STATEMENT") == 0) {
-return PARSE_NODE_EXPRESSION_STATEMENT;
+    return PARSE_NODE_EXPRESSION_STATEMENT;
   }
   if (strcmp(value, "PARSE_NODE_BALANCED_CONSTRUCT") == 0) {
-return PARSE_NODE_BALANCED_CONSTRUCT;
+    return PARSE_NODE_BALANCED_CONSTRUCT;
   }
   if (strcmp(value, "PARSE_NODE_CALL") == 0) {
-return PARSE_NODE_CALL;
+    return PARSE_NODE_CALL;
   }
   if (strcmp(value, "PARSE_NODE_CONDITIONAL") == 0) {
-return PARSE_NODE_CONDITIONAL;
+    return PARSE_NODE_CONDITIONAL;
   }
   return 0;
 }
@@ -12585,79 +12585,79 @@ enum_metadata_t* parse_node_type_metadata(){
 char* pratt_parser_operation_to_string(pratt_parser_operation_t value){
   switch (value) {
     case PRATT_PARSE_UNKNOWN:
-return "PRATT_PARSE_UNKNOWN";
+    return "PRATT_PARSE_UNKNOWN";
   case PRATT_PARSE_PREFIX_OPERATOR:
-return "PRATT_PARSE_PREFIX_OPERATOR";
+    return "PRATT_PARSE_PREFIX_OPERATOR";
   case PRATT_PARSE_BINARY_OPERATOR:
-return "PRATT_PARSE_BINARY_OPERATOR";
+    return "PRATT_PARSE_BINARY_OPERATOR";
   case PRATT_PARSE_POSTFIX_OPERATOR:
-return "PRATT_PARSE_POSTFIX_OPERATOR";
+    return "PRATT_PARSE_POSTFIX_OPERATOR";
   case PRATT_PARSE_CONDITIONAL:
-return "PRATT_PARSE_CONDITIONAL";
+    return "PRATT_PARSE_CONDITIONAL";
   case PRATT_PARSE_IDENTIFIER:
-return "PRATT_PARSE_IDENTIFIER";
+    return "PRATT_PARSE_IDENTIFIER";
   case PRATT_PARSE_LITERAL:
-return "PRATT_PARSE_LITERAL";
+    return "PRATT_PARSE_LITERAL";
   case PRATT_PARSE_SUB_EXPRESSION:
-return "PRATT_PARSE_SUB_EXPRESSION";
+    return "PRATT_PARSE_SUB_EXPRESSION";
   case PRATT_PARSE_INDEX_EXPRESSION:
-return "PRATT_PARSE_INDEX_EXPRESSION";
+    return "PRATT_PARSE_INDEX_EXPRESSION";
   case PRATT_PARSE_SIZEOF:
-return "PRATT_PARSE_SIZEOF";
+    return "PRATT_PARSE_SIZEOF";
   case PRATT_PARSE_CAST_MACRO:
-return "PRATT_PARSE_CAST_MACRO";
+    return "PRATT_PARSE_CAST_MACRO";
   case PRATT_PARSE_TYPE_OF:
-return "PRATT_PARSE_TYPE_OF";
+    return "PRATT_PARSE_TYPE_OF";
   case PRATT_PARSE_BLOCK_EXPR:
-return "PRATT_PARSE_BLOCK_EXPR";
+    return "PRATT_PARSE_BLOCK_EXPR";
   case PRATT_PARSE_CALL:
-return "PRATT_PARSE_CALL";
+    return "PRATT_PARSE_CALL";
   default:
     return "<<unknown-pratt_parser_operation>>";
   }
 }
 pratt_parser_operation_t string_to_pratt_parser_operation(char* value){
   if (strcmp(value, "PRATT_PARSE_UNKNOWN") == 0) {
-return PRATT_PARSE_UNKNOWN;
+    return PRATT_PARSE_UNKNOWN;
   }
   if (strcmp(value, "PRATT_PARSE_PREFIX_OPERATOR") == 0) {
-return PRATT_PARSE_PREFIX_OPERATOR;
+    return PRATT_PARSE_PREFIX_OPERATOR;
   }
   if (strcmp(value, "PRATT_PARSE_BINARY_OPERATOR") == 0) {
-return PRATT_PARSE_BINARY_OPERATOR;
+    return PRATT_PARSE_BINARY_OPERATOR;
   }
   if (strcmp(value, "PRATT_PARSE_POSTFIX_OPERATOR") == 0) {
-return PRATT_PARSE_POSTFIX_OPERATOR;
+    return PRATT_PARSE_POSTFIX_OPERATOR;
   }
   if (strcmp(value, "PRATT_PARSE_CONDITIONAL") == 0) {
-return PRATT_PARSE_CONDITIONAL;
+    return PRATT_PARSE_CONDITIONAL;
   }
   if (strcmp(value, "PRATT_PARSE_IDENTIFIER") == 0) {
-return PRATT_PARSE_IDENTIFIER;
+    return PRATT_PARSE_IDENTIFIER;
   }
   if (strcmp(value, "PRATT_PARSE_LITERAL") == 0) {
-return PRATT_PARSE_LITERAL;
+    return PRATT_PARSE_LITERAL;
   }
   if (strcmp(value, "PRATT_PARSE_SUB_EXPRESSION") == 0) {
-return PRATT_PARSE_SUB_EXPRESSION;
+    return PRATT_PARSE_SUB_EXPRESSION;
   }
   if (strcmp(value, "PRATT_PARSE_INDEX_EXPRESSION") == 0) {
-return PRATT_PARSE_INDEX_EXPRESSION;
+    return PRATT_PARSE_INDEX_EXPRESSION;
   }
   if (strcmp(value, "PRATT_PARSE_SIZEOF") == 0) {
-return PRATT_PARSE_SIZEOF;
+    return PRATT_PARSE_SIZEOF;
   }
   if (strcmp(value, "PRATT_PARSE_CAST_MACRO") == 0) {
-return PRATT_PARSE_CAST_MACRO;
+    return PRATT_PARSE_CAST_MACRO;
   }
   if (strcmp(value, "PRATT_PARSE_TYPE_OF") == 0) {
-return PRATT_PARSE_TYPE_OF;
+    return PRATT_PARSE_TYPE_OF;
   }
   if (strcmp(value, "PRATT_PARSE_BLOCK_EXPR") == 0) {
-return PRATT_PARSE_BLOCK_EXPR;
+    return PRATT_PARSE_BLOCK_EXPR;
   }
   if (strcmp(value, "PRATT_PARSE_CALL") == 0) {
-return PRATT_PARSE_CALL;
+    return PRATT_PARSE_CALL;
   }
   return 0;
 }
@@ -12741,19 +12741,19 @@ enum_metadata_t* pratt_parser_operation_metadata(){
 char* associativity_to_string(associativity_t value){
   switch (value) {
     case LEFT_TO_RIGHT:
-return "LEFT_TO_RIGHT";
+    return "LEFT_TO_RIGHT";
   case RIGHT_TO_LEFT:
-return "RIGHT_TO_LEFT";
+    return "RIGHT_TO_LEFT";
   default:
     return "<<unknown-associativity>>";
   }
 }
 associativity_t string_to_associativity(char* value){
   if (strcmp(value, "LEFT_TO_RIGHT") == 0) {
-return LEFT_TO_RIGHT;
+    return LEFT_TO_RIGHT;
   }
   if (strcmp(value, "RIGHT_TO_LEFT") == 0) {
-return RIGHT_TO_LEFT;
+    return RIGHT_TO_LEFT;
   }
   return 0;
 }
@@ -12777,94 +12777,94 @@ enum_metadata_t* associativity_metadata(){
 char* precedence_to_string(precedence_t value){
   switch (value) {
     case PRECEDENCE_UNKNOWN:
-return "PRECEDENCE_UNKNOWN";
+    return "PRECEDENCE_UNKNOWN";
   case PRECEDENCE_COMMA:
-return "PRECEDENCE_COMMA";
+    return "PRECEDENCE_COMMA";
   case PRECEDENCE_ASSIGNMENT:
-return "PRECEDENCE_ASSIGNMENT";
+    return "PRECEDENCE_ASSIGNMENT";
   case PRECEDENCE_CONDITIONAL:
-return "PRECEDENCE_CONDITIONAL";
+    return "PRECEDENCE_CONDITIONAL";
   case PRECEDENCE_LOGICAL_OR:
-return "PRECEDENCE_LOGICAL_OR";
+    return "PRECEDENCE_LOGICAL_OR";
   case PRECEDENCE_LOGICAL_AND:
-return "PRECEDENCE_LOGICAL_AND";
+    return "PRECEDENCE_LOGICAL_AND";
   case PRECEDENCE_OR:
-return "PRECEDENCE_OR";
+    return "PRECEDENCE_OR";
   case PRECEDENCE_XOR:
-return "PRECEDENCE_XOR";
+    return "PRECEDENCE_XOR";
   case PRECEDENCE_AND:
-return "PRECEDENCE_AND";
+    return "PRECEDENCE_AND";
   case PRECEDENCE_EQUALITY:
-return "PRECEDENCE_EQUALITY";
+    return "PRECEDENCE_EQUALITY";
   case PRECEDENCE_RELATIONAL:
-return "PRECEDENCE_RELATIONAL";
+    return "PRECEDENCE_RELATIONAL";
   case PRECEDENCE_SHIFT:
-return "PRECEDENCE_SHIFT";
+    return "PRECEDENCE_SHIFT";
   case PRECEDENCE_ADDITIVE:
-return "PRECEDENCE_ADDITIVE";
+    return "PRECEDENCE_ADDITIVE";
   case PRECEDENCE_MULTIPICITIVE:
-return "PRECEDENCE_MULTIPICITIVE";
+    return "PRECEDENCE_MULTIPICITIVE";
   case PRECEDENCE_UNARY:
-return "PRECEDENCE_UNARY";
+    return "PRECEDENCE_UNARY";
   case PRECEDENCE_POSTFIX:
-return "PRECEDENCE_POSTFIX";
+    return "PRECEDENCE_POSTFIX";
   case PRECEDENCE_PRIMARY:
-return "PRECEDENCE_PRIMARY";
+    return "PRECEDENCE_PRIMARY";
   default:
     return "<<unknown-precedence>>";
   }
 }
 precedence_t string_to_precedence(char* value){
   if (strcmp(value, "PRECEDENCE_UNKNOWN") == 0) {
-return PRECEDENCE_UNKNOWN;
+    return PRECEDENCE_UNKNOWN;
   }
   if (strcmp(value, "PRECEDENCE_COMMA") == 0) {
-return PRECEDENCE_COMMA;
+    return PRECEDENCE_COMMA;
   }
   if (strcmp(value, "PRECEDENCE_ASSIGNMENT") == 0) {
-return PRECEDENCE_ASSIGNMENT;
+    return PRECEDENCE_ASSIGNMENT;
   }
   if (strcmp(value, "PRECEDENCE_CONDITIONAL") == 0) {
-return PRECEDENCE_CONDITIONAL;
+    return PRECEDENCE_CONDITIONAL;
   }
   if (strcmp(value, "PRECEDENCE_LOGICAL_OR") == 0) {
-return PRECEDENCE_LOGICAL_OR;
+    return PRECEDENCE_LOGICAL_OR;
   }
   if (strcmp(value, "PRECEDENCE_LOGICAL_AND") == 0) {
-return PRECEDENCE_LOGICAL_AND;
+    return PRECEDENCE_LOGICAL_AND;
   }
   if (strcmp(value, "PRECEDENCE_OR") == 0) {
-return PRECEDENCE_OR;
+    return PRECEDENCE_OR;
   }
   if (strcmp(value, "PRECEDENCE_XOR") == 0) {
-return PRECEDENCE_XOR;
+    return PRECEDENCE_XOR;
   }
   if (strcmp(value, "PRECEDENCE_AND") == 0) {
-return PRECEDENCE_AND;
+    return PRECEDENCE_AND;
   }
   if (strcmp(value, "PRECEDENCE_EQUALITY") == 0) {
-return PRECEDENCE_EQUALITY;
+    return PRECEDENCE_EQUALITY;
   }
   if (strcmp(value, "PRECEDENCE_RELATIONAL") == 0) {
-return PRECEDENCE_RELATIONAL;
+    return PRECEDENCE_RELATIONAL;
   }
   if (strcmp(value, "PRECEDENCE_SHIFT") == 0) {
-return PRECEDENCE_SHIFT;
+    return PRECEDENCE_SHIFT;
   }
   if (strcmp(value, "PRECEDENCE_ADDITIVE") == 0) {
-return PRECEDENCE_ADDITIVE;
+    return PRECEDENCE_ADDITIVE;
   }
   if (strcmp(value, "PRECEDENCE_MULTIPICITIVE") == 0) {
-return PRECEDENCE_MULTIPICITIVE;
+    return PRECEDENCE_MULTIPICITIVE;
   }
   if (strcmp(value, "PRECEDENCE_UNARY") == 0) {
-return PRECEDENCE_UNARY;
+    return PRECEDENCE_UNARY;
   }
   if (strcmp(value, "PRECEDENCE_POSTFIX") == 0) {
-return PRECEDENCE_POSTFIX;
+    return PRECEDENCE_POSTFIX;
   }
   if (strcmp(value, "PRECEDENCE_PRIMARY") == 0) {
-return PRECEDENCE_PRIMARY;
+    return PRECEDENCE_PRIMARY;
   }
   return 0;
 }
@@ -12963,29 +12963,29 @@ enum_metadata_t* precedence_metadata(){
 char* type_qualifier_to_string(type_qualifier_t value){
   switch (value) {
     case TYPE_QUALIFIER_NONE:
-return "TYPE_QUALIFIER_NONE";
+    return "TYPE_QUALIFIER_NONE";
   case TYPE_QUALIFIER_CONST:
-return "TYPE_QUALIFIER_CONST";
+    return "TYPE_QUALIFIER_CONST";
   case TYPE_QUALIFIER_VOLATILE:
-return "TYPE_QUALIFIER_VOLATILE";
+    return "TYPE_QUALIFIER_VOLATILE";
   case TYPE_QUALIFIER_RESTRICT:
-return "TYPE_QUALIFIER_RESTRICT";
+    return "TYPE_QUALIFIER_RESTRICT";
   default:
     return "<<unknown-type_qualifier>>";
   }
 }
 type_qualifier_t string_to_type_qualifier(char* value){
   if (strcmp(value, "TYPE_QUALIFIER_NONE") == 0) {
-return TYPE_QUALIFIER_NONE;
+    return TYPE_QUALIFIER_NONE;
   }
   if (strcmp(value, "TYPE_QUALIFIER_CONST") == 0) {
-return TYPE_QUALIFIER_CONST;
+    return TYPE_QUALIFIER_CONST;
   }
   if (strcmp(value, "TYPE_QUALIFIER_VOLATILE") == 0) {
-return TYPE_QUALIFIER_VOLATILE;
+    return TYPE_QUALIFIER_VOLATILE;
   }
   if (strcmp(value, "TYPE_QUALIFIER_RESTRICT") == 0) {
-return TYPE_QUALIFIER_RESTRICT;
+    return TYPE_QUALIFIER_RESTRICT;
   }
   return 0;
 }
@@ -13019,54 +13019,54 @@ enum_metadata_t* type_qualifier_metadata(){
 char* type_node_kind_to_string(type_node_kind_t value){
   switch (value) {
     case TYPE_NODE_KIND_UNKNOWN:
-return "TYPE_NODE_KIND_UNKNOWN";
+    return "TYPE_NODE_KIND_UNKNOWN";
   case TYPE_NODE_KIND_POINTER:
-return "TYPE_NODE_KIND_POINTER";
+    return "TYPE_NODE_KIND_POINTER";
   case TYPE_NODE_KIND_ARRAY:
-return "TYPE_NODE_KIND_ARRAY";
+    return "TYPE_NODE_KIND_ARRAY";
   case TYPE_NODE_KIND_SIZED_ARRAY:
-return "TYPE_NODE_KIND_SIZED_ARRAY";
+    return "TYPE_NODE_KIND_SIZED_ARRAY";
   case TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY:
-return "TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY";
+    return "TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY";
   case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
-return "TYPE_NODE_KIND_PRIMITIVE_TYPENAME";
+    return "TYPE_NODE_KIND_PRIMITIVE_TYPENAME";
   case TYPE_NODE_KIND_TYPENAME:
-return "TYPE_NODE_KIND_TYPENAME";
+    return "TYPE_NODE_KIND_TYPENAME";
   case TYPE_NODE_KIND_TYPE_EXPRESSION:
-return "TYPE_NODE_KIND_TYPE_EXPRESSION";
+    return "TYPE_NODE_KIND_TYPE_EXPRESSION";
   case TYPE_NODE_KIND_TYPEOF:
-return "TYPE_NODE_KIND_TYPEOF";
+    return "TYPE_NODE_KIND_TYPEOF";
   default:
     return "<<unknown-type_node_kind>>";
   }
 }
 type_node_kind_t string_to_type_node_kind(char* value){
   if (strcmp(value, "TYPE_NODE_KIND_UNKNOWN") == 0) {
-return TYPE_NODE_KIND_UNKNOWN;
+    return TYPE_NODE_KIND_UNKNOWN;
   }
   if (strcmp(value, "TYPE_NODE_KIND_POINTER") == 0) {
-return TYPE_NODE_KIND_POINTER;
+    return TYPE_NODE_KIND_POINTER;
   }
   if (strcmp(value, "TYPE_NODE_KIND_ARRAY") == 0) {
-return TYPE_NODE_KIND_ARRAY;
+    return TYPE_NODE_KIND_ARRAY;
   }
   if (strcmp(value, "TYPE_NODE_KIND_SIZED_ARRAY") == 0) {
-return TYPE_NODE_KIND_SIZED_ARRAY;
+    return TYPE_NODE_KIND_SIZED_ARRAY;
   }
   if (strcmp(value, "TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY") == 0) {
-return TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY;
+    return TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY;
   }
   if (strcmp(value, "TYPE_NODE_KIND_PRIMITIVE_TYPENAME") == 0) {
-return TYPE_NODE_KIND_PRIMITIVE_TYPENAME;
+    return TYPE_NODE_KIND_PRIMITIVE_TYPENAME;
   }
   if (strcmp(value, "TYPE_NODE_KIND_TYPENAME") == 0) {
-return TYPE_NODE_KIND_TYPENAME;
+    return TYPE_NODE_KIND_TYPENAME;
   }
   if (strcmp(value, "TYPE_NODE_KIND_TYPE_EXPRESSION") == 0) {
-return TYPE_NODE_KIND_TYPE_EXPRESSION;
+    return TYPE_NODE_KIND_TYPE_EXPRESSION;
   }
   if (strcmp(value, "TYPE_NODE_KIND_TYPEOF") == 0) {
-return TYPE_NODE_KIND_TYPEOF;
+    return TYPE_NODE_KIND_TYPEOF;
   }
   return 0;
 }
@@ -13195,64 +13195,64 @@ enum_metadata_t* type_node_kind_metadata(){
 // These checksums are currently easy to fake for example by using a
 // hacked git in the PATH at the time this compile was run.
 //
-// git cat-file -p 613ecb5073e9f6b8b3d2a2deb77a3040a0388d62
-// git cat-file -p 58637a0049c50cf56fe40e9b2a9de543c095785a
-// git cat-file -p cacfd0298651cd99521238583295319513a7c311
-// git cat-file -p 11f959d626cae14fb73a67898a35ea9d599a9e00
-// git cat-file -p 410a738d9b347300ac5cb091d8ebe87c5d9c7588
-// git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053
-// git cat-file -p 3c5dd5db0882383f07e78c584268392c1af4b604
-// git cat-file -p dfd7821b93a59d56306ce0efafb4f1deb16a35f9
-// git cat-file -p ddd0822e40ee0eb337c77637b9b0179aac2a7909
-// git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab
-// git cat-file -p 958d3082cdffbd52b6bb56dbd591c533902112f4
-// git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37
-// git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0
-// git cat-file -p 2efd1e5e3fddefbff312fa50684285083ee5613a
-// git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2
-// git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4
-// git cat-file -p c560ad207e743ce3b364b58540b81a7051072f0a
-// git cat-file -p bf32abd63596c839f264477dd15c71e9d5ffe30e
-// git cat-file -p 741b85af593dda43aeb84bd32ec3ed36c8f85c55
-// git cat-file -p 1d0266094b9c0915098e1352edbc8d62ee77abb0
-// git cat-file -p 8d8502036da69d42e740206185219ba74887f34a
-// git cat-file -p 1ccb428c8923e3d6aad2473fcf93f08c66c0f7db
-// git cat-file -p 8c46fe6d74bf287d49e00e7f6083721ff2cee458
-// git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976
-// git cat-file -p c6ed69dce8a057ab5b796554a0e1d0ba46ef4e3f
-// git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd
-// git cat-file -p 3d846c37fb156c312b278111e7b2fad26c2e03a2
-// git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05
-// git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d
-// git cat-file -p fa11c50add7d9d42d7c6dc386c874cac9d8ec8b2
-// git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136
-// git cat-file -p 429d5f51b04668f5bd89b347ef1beb577491cd52
-// git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb
-// git cat-file -p 254dd1272f89c5a0757be2130477a1634150324b
-// git cat-file -p 18d8db7f97490957c3377100f879efaaa0b03d7c
-// git cat-file -p 470244d22f140656bdb0b91e477560ca2d9104b4
-// git cat-file -p f06d191346d1e27ecadd9b61a2e2ad7be472705d
-// git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c
-// git cat-file -p 6c86f8d6c5d20f4fffae42fa6ac88b804e4d8f6e
-// git cat-file -p 0b55fcac19e62809336c191ff4b1feeccf79f121
-// git cat-file -p b453674f99972033ef9db514b94a8c8a827c1cb6
-// git cat-file -p 9eb13062725ddd77e88cfd0102e76f45d00cb781
-// git cat-file -p 95eaa4fbd394282318d3f068bddddc2fc02f6d6b
-// git cat-file -p b7baad67f45ea2963c8552254da995238fa09378
-// git cat-file -p 7685f26465480ccb3c1abd2f889544ad25ee37b1
-// git cat-file -p e7f7a4f3593b9b8d6670aa68c0fb0e4b24077ea9
-// git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af
-// git cat-file -p 6146b1de14ef9de1aab45db08dffee4731e4ad64
-// git cat-file -p 947f2b247995006fb0565973d63d5a71ddad85cc
-// git cat-file -p a617d38e299c401bca599467639d1338e9732594
-// git cat-file -p f263f55f50cea1052ffa613e539b1033249a9dbb
-// git cat-file -p 468303a3dbe5e25f045f1ffbefc3509eb2e7d462
-// git cat-file -p 3dfa38a859552333bb6e961a76974c6d3a3f5c7d
-// git cat-file -p dbc507a515c8859e8be9696b3267f8dba87ff0a7
-// git cat-file -p 84ca8b733bbe26047a4b1ef72bd73f2e0ed65f80
-// git cat-file -p 0a60637302a1720474efbd538777232352d15a37
-// git cat-file -p da5d06ce2e4ff926c65f532bfcfa6f106fbbc90b
-// git cat-file -p 282faf39e534070f851b3ce87f88e7ea79b4daee
-// git cat-file -p 9ca05c9db93267094539835e4e48896a4a8805c8
-// git cat-file -p 9db0df425f01f3369cb728855278b0c89530467a
-// git cat-file -p 62dd703ecf2abfa1974d804fb74f30dc8443160c
+// git cat-file -p 613ecb5073e9f6b8b3d2a2deb77a3040a0388d62 > ../../c-armyknife-lib/omni-c.c
+// git cat-file -p 58637a0049c50cf56fe40e9b2a9de543c095785a > ../../c-armyknife-lib/min-max.c
+// git cat-file -p cacfd0298651cd99521238583295319513a7c311 > ../../c-armyknife-lib/boolean.c
+// git cat-file -p 11f959d626cae14fb73a67898a35ea9d599a9e00 > ../../c-armyknife-lib/compound-literal.c
+// git cat-file -p 410a738d9b347300ac5cb091d8ebe87c5d9c7588 > ../../c-armyknife-lib/fn.c
+// git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053 > ../../c-armyknife-lib/leb128.c
+// git cat-file -p 3c5dd5db0882383f07e78c584268392c1af4b604 > ../../c-armyknife-lib/fatal-error.c
+// git cat-file -p dfd7821b93a59d56306ce0efafb4f1deb16a35f9 > ../../c-armyknife-lib/value.c
+// git cat-file -p ddd0822e40ee0eb337c77637b9b0179aac2a7909 > ../../c-armyknife-lib/allocate.c
+// git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab > ../../c-armyknife-lib/uint64.c
+// git cat-file -p 958d3082cdffbd52b6bb56dbd591c533902112f4 > ../../c-armyknife-lib/string-util.c
+// git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37 > ../../c-armyknife-lib/logger.c
+// git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0 > ../../c-armyknife-lib/utf8-decoder.c
+// git cat-file -p 2efd1e5e3fddefbff312fa50684285083ee5613a > ../../c-armyknife-lib/buffer.c
+// git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2 > ../../c-armyknife-lib/value-array.c
+// git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4 > ../../c-armyknife-lib/value-alist.c
+// git cat-file -p c560ad207e743ce3b364b58540b81a7051072f0a > ../../c-armyknife-lib/string-alist.c
+// git cat-file -p bf32abd63596c839f264477dd15c71e9d5ffe30e > ../../c-armyknife-lib/value-hashtable.c
+// git cat-file -p 741b85af593dda43aeb84bd32ec3ed36c8f85c55 > ../../c-armyknife-lib/string-hashtable.c
+// git cat-file -p 1d0266094b9c0915098e1352edbc8d62ee77abb0 > ../../c-armyknife-lib/value-tree.c
+// git cat-file -p 8d8502036da69d42e740206185219ba74887f34a > ../../c-armyknife-lib/string-tree.c
+// git cat-file -p 1ccb428c8923e3d6aad2473fcf93f08c66c0f7db > ../../c-armyknife-lib/flag.c
+// git cat-file -p 8c46fe6d74bf287d49e00e7f6083721ff2cee458 > ../../c-armyknife-lib/io.c
+// git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976 > ../../c-armyknife-lib/terminal.c
+// git cat-file -p c6ed69dce8a057ab5b796554a0e1d0ba46ef4e3f > ../../c-armyknife-lib/tokenizer.c
+// git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd > ../../c-armyknife-lib/random.c
+// git cat-file -p 3d846c37fb156c312b278111e7b2fad26c2e03a2 > ../../c-armyknife-lib/cdl-printer.c
+// git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05 > ../../c-armyknife-lib/sub-process.c
+// git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d > ../../c-armyknife-lib/splitjoin.c
+// git cat-file -p fa11c50add7d9d42d7c6dc386c874cac9d8ec8b2 > ../../c-armyknife-lib/test.c
+// git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
+// git cat-file -p 429d5f51b04668f5bd89b347ef1beb577491cd52 > keywords.c
+// git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
+// git cat-file -p 254dd1272f89c5a0757be2130477a1634150324b > file-reader.c
+// git cat-file -p 18d8db7f97490957c3377100f879efaaa0b03d7c > compiler-errors.c
+// git cat-file -p 470244d22f140656bdb0b91e477560ca2d9104b4 > lexer.c
+// git cat-file -p f06d191346d1e27ecadd9b61a2e2ad7be472705d > token-list.c
+// git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
+// git cat-file -p 6c86f8d6c5d20f4fffae42fa6ac88b804e4d8f6e > parser.c
+// git cat-file -p 0b55fcac19e62809336c191ff4b1feeccf79f121 > pstate.c
+// git cat-file -p b453674f99972033ef9db514b94a8c8a827c1cb6 > declaration-parser.c
+// git cat-file -p 9eb13062725ddd77e88cfd0102e76f45d00cb781 > node-list.c
+// git cat-file -p 95eaa4fbd394282318d3f068bddddc2fc02f6d6b > debug-printer.c
+// git cat-file -p b7baad67f45ea2963c8552254da995238fa09378 > c-file-printer.c
+// git cat-file -p 7685f26465480ccb3c1abd2f889544ad25ee37b1 > symbol-table.c
+// git cat-file -p e7f7a4f3593b9b8d6670aa68c0fb0e4b24077ea9 > source-to-source.c
+// git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af > preprocessor.c
+// git cat-file -p 6146b1de14ef9de1aab45db08dffee4731e4ad64 > header-file-extractor.c
+// git cat-file -p 947f2b247995006fb0565973d63d5a71ddad85cc > symbol-table-builder.c
+// git cat-file -p a617d38e299c401bca599467639d1338e9732594 > srcgen.c
+// git cat-file -p f263f55f50cea1052ffa613e539b1033249a9dbb > pratt-parser.c
+// git cat-file -p 468303a3dbe5e25f045f1ffbefc3509eb2e7d462 > statement-parser.c
+// git cat-file -p 3dfa38a859552333bb6e961a76974c6d3a3f5c7d > type-parser.c
+// git cat-file -p dbc507a515c8859e8be9696b3267f8dba87ff0a7 > user-type-parser.c
+// git cat-file -p 84ca8b733bbe26047a4b1ef72bd73f2e0ed65f80 > variable-definition-parser.c
+// git cat-file -p 0a60637302a1720474efbd538777232352d15a37 > literal-parser.c
+// git cat-file -p da5d06ce2e4ff926c65f532bfcfa6f106fbbc90b > balanced-construct-parser.c
+// git cat-file -p 282faf39e534070f851b3ce87f88e7ea79b4daee > printer.c
+// git cat-file -p 9ca05c9db93267094539835e4e48896a4a8805c8 > global-includes.c
+// git cat-file -p 9db0df425f01f3369cb728855278b0c89530467a > main.c
+// git cat-file -p 62dd703ecf2abfa1974d804fb74f30dc8443160c > build/gen-files/reflection-header.c
