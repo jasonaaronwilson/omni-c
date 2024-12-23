@@ -1,6 +1,8 @@
 #ifndef _REFLECTION_H_
 #define _REFLECTION_H_
 
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
 #include <string.h>
 
 /* ====================================================================== */
