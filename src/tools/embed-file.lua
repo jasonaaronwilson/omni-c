@@ -17,7 +17,7 @@ local function file_to_c_code()
 
     local bytes = {}
     for byte in file:lines(1) do
-        table.insert(bytes, string.format("0x%02X", string.byte(byte)))
+        table.insert(bytes, byte)
     end
     file:close()
 
@@ -27,10 +27,23 @@ local function file_to_c_code()
     c_code = c_code .. string.format("buffer_t* get_%s_buffer(void) {\n", var_name);
     c_code = c_code .. string.format("  static uint8_t %s[] = {\n    ", var_name)
 
+    local line_comment = ""
     for i = 1, num_bytes do
-        c_code = c_code .. bytes[i]
-        if i % 8 == 0 or i == num_bytes then
-            c_code = c_code .. ",\n    "
+        local byte_val = string.byte(bytes[i])
+        local hex_val = string.format("0x%02X", byte_val)
+
+        c_code = c_code .. hex_val
+
+        -- Build comment string
+        if byte_val >= 32 and byte_val <= 126 then
+            line_comment = line_comment .. string.char(byte_val)
+        else
+            line_comment = line_comment .. '.' -- Use '.' for non-printable characters
+        end
+
+        if i % 16 == 0 or i == num_bytes then
+            c_code = c_code .. ", // " .. line_comment .. "\n    "
+            line_comment = "" -- Reset comment
         else
             c_code = c_code .. ", "
         end
@@ -43,7 +56,7 @@ local function file_to_c_code()
     c_code = c_code .. string.format("  }\n")
     c_code = c_code .. string.format("  return result;\n")
     c_code = c_code .. string.format("}\n");
-    
+
     return c_code
 end
 
