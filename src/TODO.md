@@ -17,6 +17,13 @@
 
 1. automatic test main file generation
 
+1. add flag and code to dump the symbol table as cson (possibly
+   writing to a file...) -- generate + build
+
+1. add token_to_cson - when to use it?
+
+1. allow experimental overloading support when using clang
+
 ## Compiler Improvements
 
 1. better error messages on parse failures - clear errors better and
@@ -28,6 +35,9 @@
 1. Document and implement multi-level parsing and C macro expansion
    via "cpp".
 
+1. Write initial linearize() function. This will make it much easier
+   to figure out if we parsed everything correctly
+
 ## Other
 
 1. use new build command in tests
@@ -35,8 +45,6 @@
 1. refactor c-armyknife-lib so that the few overrides we need for
    tests can be specified which is a pre-requisite for moving
    c-armyknife-lib into the omni-c directory.
-
-1. improve typedef by allowing "=" and making it simple to typedef.
 
 1. macro and other overrides
 
