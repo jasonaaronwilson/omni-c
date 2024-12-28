@@ -105,7 +105,7 @@ local failed_tests = {}
 local no_golden_tests = {}
 
 local function get_timestamp()
-  return os.clock() * 1000 -- Millisecond precision
+  return os.time()
 end
 
 local start_time = get_timestamp()
