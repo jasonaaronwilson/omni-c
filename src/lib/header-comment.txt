@@ -1,0 +1,26 @@
+/*
+ * Copyright (c) 2024, Jason A. Wilson
+ *
+ * The project documentation, source code, tests, and the full open
+ * source license is available at:
+ *
+ * https://github.com/jasonaaronwilson/c-armyknife-lib/
+ * 
+ * This file itself is automatically generated from about 18 or more
+ * source files and is "packaged" into this particular format
+ * sometimes known as a "header only" libray (see
+ * https://en.wikipedia.org/wiki/Header-only) so we don't recommend
+ * editing this file by hand. Other ways of using or obtaining this
+ * library will be documented in the c-armyknife-lib repository
+ * including instructions for turning off some included functionality
+ * to save space.
+ *
+ * To actually use this library, one ".c" file in your project must
+ * include this file, (typically called
+ * c-armyknife-lib-<<version-string>>.h) after *first* defining
+ * C_ARMYKNIFE_LIB_IMPL otherwise it only provides the prototypes,
+ * inlined functions, macros, and type definitions, like you would
+ * normally see in a C header file and your program will not link
+ * correctly.
+ */
+
