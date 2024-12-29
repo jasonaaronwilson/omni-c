@@ -12987,36 +12987,36 @@ enum_metadata_t* type_node_kind_metadata(){
 //    --use-statement-parser=true
 //    --omit-c-armyknife-include=true
 //    --c-output-file=build/omni-c.c
-//    ../../c-armyknife-lib/omni-c.c
-//    ../../c-armyknife-lib/min-max.c
-//    ../../c-armyknife-lib/boolean.c
-//    ../../c-armyknife-lib/compound-literal.c
-//    ../../c-armyknife-lib/fn.c
-//    ../../c-armyknife-lib/leb128.c
-//    ../../c-armyknife-lib/fatal-error.c
-//    ../../c-armyknife-lib/value.c
-//    ../../c-armyknife-lib/allocate.c
-//    ../../c-armyknife-lib/uint64.c
-//    ../../c-armyknife-lib/string-util.c
-//    ../../c-armyknife-lib/logger.c
-//    ../../c-armyknife-lib/utf8-decoder.c
-//    ../../c-armyknife-lib/buffer.c
-//    ../../c-armyknife-lib/value-array.c
-//    ../../c-armyknife-lib/value-alist.c
-//    ../../c-armyknife-lib/string-alist.c
-//    ../../c-armyknife-lib/value-hashtable.c
-//    ../../c-armyknife-lib/string-hashtable.c
-//    ../../c-armyknife-lib/value-tree.c
-//    ../../c-armyknife-lib/string-tree.c
-//    ../../c-armyknife-lib/flag.c
-//    ../../c-armyknife-lib/io.c
-//    ../../c-armyknife-lib/terminal.c
-//    ../../c-armyknife-lib/tokenizer.c
-//    ../../c-armyknife-lib/random.c
-//    ../../c-armyknife-lib/cdl-printer.c
-//    ../../c-armyknife-lib/sub-process.c
-//    ../../c-armyknife-lib/splitjoin.c
-//    ../../c-armyknife-lib/test.c
+//    lib/omni-c.c
+//    lib/min-max.c
+//    lib/boolean.c
+//    lib/compound-literal.c
+//    lib/fn.c
+//    lib/leb128.c
+//    lib/fatal-error.c
+//    lib/value.c
+//    lib/allocate.c
+//    lib/uint64.c
+//    lib/string-util.c
+//    lib/logger.c
+//    lib/utf8-decoder.c
+//    lib/buffer.c
+//    lib/value-array.c
+//    lib/value-alist.c
+//    lib/string-alist.c
+//    lib/value-hashtable.c
+//    lib/string-hashtable.c
+//    lib/value-tree.c
+//    lib/string-tree.c
+//    lib/flag.c
+//    lib/io.c
+//    lib/terminal.c
+//    lib/tokenizer.c
+//    lib/random.c
+//    lib/cdl-printer.c
+//    lib/sub-process.c
+//    lib/splitjoin.c
+//    lib/test.c
 //    mode.c
 //    keywords.c
 //    file.c
@@ -13052,36 +13052,36 @@ enum_metadata_t* type_node_kind_metadata(){
 // These checksums are currently easy to fake for example by using a
 // hacked git in the PATH at the time this compile was run.
 //
-// git cat-file -p 613ecb5073e9f6b8b3d2a2deb77a3040a0388d62 > ../../c-armyknife-lib/omni-c.c
-// git cat-file -p 58637a0049c50cf56fe40e9b2a9de543c095785a > ../../c-armyknife-lib/min-max.c
-// git cat-file -p cacfd0298651cd99521238583295319513a7c311 > ../../c-armyknife-lib/boolean.c
-// git cat-file -p 11f959d626cae14fb73a67898a35ea9d599a9e00 > ../../c-armyknife-lib/compound-literal.c
-// git cat-file -p 410a738d9b347300ac5cb091d8ebe87c5d9c7588 > ../../c-armyknife-lib/fn.c
-// git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053 > ../../c-armyknife-lib/leb128.c
-// git cat-file -p 3c5dd5db0882383f07e78c584268392c1af4b604 > ../../c-armyknife-lib/fatal-error.c
-// git cat-file -p dfd7821b93a59d56306ce0efafb4f1deb16a35f9 > ../../c-armyknife-lib/value.c
-// git cat-file -p ddd0822e40ee0eb337c77637b9b0179aac2a7909 > ../../c-armyknife-lib/allocate.c
-// git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab > ../../c-armyknife-lib/uint64.c
-// git cat-file -p 958d3082cdffbd52b6bb56dbd591c533902112f4 > ../../c-armyknife-lib/string-util.c
-// git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37 > ../../c-armyknife-lib/logger.c
-// git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0 > ../../c-armyknife-lib/utf8-decoder.c
-// git cat-file -p 2efd1e5e3fddefbff312fa50684285083ee5613a > ../../c-armyknife-lib/buffer.c
-// git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2 > ../../c-armyknife-lib/value-array.c
-// git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4 > ../../c-armyknife-lib/value-alist.c
-// git cat-file -p c560ad207e743ce3b364b58540b81a7051072f0a > ../../c-armyknife-lib/string-alist.c
-// git cat-file -p bf32abd63596c839f264477dd15c71e9d5ffe30e > ../../c-armyknife-lib/value-hashtable.c
-// git cat-file -p 741b85af593dda43aeb84bd32ec3ed36c8f85c55 > ../../c-armyknife-lib/string-hashtable.c
-// git cat-file -p 1d0266094b9c0915098e1352edbc8d62ee77abb0 > ../../c-armyknife-lib/value-tree.c
-// git cat-file -p 8d8502036da69d42e740206185219ba74887f34a > ../../c-armyknife-lib/string-tree.c
-// git cat-file -p 1ccb428c8923e3d6aad2473fcf93f08c66c0f7db > ../../c-armyknife-lib/flag.c
-// git cat-file -p 8c46fe6d74bf287d49e00e7f6083721ff2cee458 > ../../c-armyknife-lib/io.c
-// git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976 > ../../c-armyknife-lib/terminal.c
-// git cat-file -p c6ed69dce8a057ab5b796554a0e1d0ba46ef4e3f > ../../c-armyknife-lib/tokenizer.c
-// git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd > ../../c-armyknife-lib/random.c
-// git cat-file -p 3d846c37fb156c312b278111e7b2fad26c2e03a2 > ../../c-armyknife-lib/cdl-printer.c
-// git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05 > ../../c-armyknife-lib/sub-process.c
-// git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d > ../../c-armyknife-lib/splitjoin.c
-// git cat-file -p fa11c50add7d9d42d7c6dc386c874cac9d8ec8b2 > ../../c-armyknife-lib/test.c
+// git cat-file -p 613ecb5073e9f6b8b3d2a2deb77a3040a0388d62 > lib/omni-c.c
+// git cat-file -p 58637a0049c50cf56fe40e9b2a9de543c095785a > lib/min-max.c
+// git cat-file -p cacfd0298651cd99521238583295319513a7c311 > lib/boolean.c
+// git cat-file -p 11f959d626cae14fb73a67898a35ea9d599a9e00 > lib/compound-literal.c
+// git cat-file -p 410a738d9b347300ac5cb091d8ebe87c5d9c7588 > lib/fn.c
+// git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053 > lib/leb128.c
+// git cat-file -p 3c5dd5db0882383f07e78c584268392c1af4b604 > lib/fatal-error.c
+// git cat-file -p dfd7821b93a59d56306ce0efafb4f1deb16a35f9 > lib/value.c
+// git cat-file -p ddd0822e40ee0eb337c77637b9b0179aac2a7909 > lib/allocate.c
+// git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab > lib/uint64.c
+// git cat-file -p 958d3082cdffbd52b6bb56dbd591c533902112f4 > lib/string-util.c
+// git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37 > lib/logger.c
+// git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0 > lib/utf8-decoder.c
+// git cat-file -p 2efd1e5e3fddefbff312fa50684285083ee5613a > lib/buffer.c
+// git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2 > lib/value-array.c
+// git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4 > lib/value-alist.c
+// git cat-file -p c560ad207e743ce3b364b58540b81a7051072f0a > lib/string-alist.c
+// git cat-file -p bf32abd63596c839f264477dd15c71e9d5ffe30e > lib/value-hashtable.c
+// git cat-file -p 741b85af593dda43aeb84bd32ec3ed36c8f85c55 > lib/string-hashtable.c
+// git cat-file -p 1d0266094b9c0915098e1352edbc8d62ee77abb0 > lib/value-tree.c
+// git cat-file -p 8d8502036da69d42e740206185219ba74887f34a > lib/string-tree.c
+// git cat-file -p 1ccb428c8923e3d6aad2473fcf93f08c66c0f7db > lib/flag.c
+// git cat-file -p 8c46fe6d74bf287d49e00e7f6083721ff2cee458 > lib/io.c
+// git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976 > lib/terminal.c
+// git cat-file -p c6ed69dce8a057ab5b796554a0e1d0ba46ef4e3f > lib/tokenizer.c
+// git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd > lib/random.c
+// git cat-file -p 3d846c37fb156c312b278111e7b2fad26c2e03a2 > lib/cdl-printer.c
+// git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05 > lib/sub-process.c
+// git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d > lib/splitjoin.c
+// git cat-file -p fa11c50add7d9d42d7c6dc386c874cac9d8ec8b2 > lib/test.c
 // git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
 // git cat-file -p 429d5f51b04668f5bd89b347ef1beb577491cd52 > keywords.c
 // git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c

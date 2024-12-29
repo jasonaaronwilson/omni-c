@@ -29,9 +29,9 @@ selfself: build/bin/selfself
 export ARMYKNIFE_LIB_LOG_LEVEL = WARN
 
 # Import
-include ../../c-armyknife-lib/Makefile.sources
+include lib/Makefile.sources
 
-C_ARMYKNIFE_SRC_C := $(addprefix ../../c-armyknife-lib/, $(SRC_C))
+C_ARMYKNIFE_SRC_C := $(addprefix lib/, $(SRC_C))
 
 # Google Gemini tells me this is a bad idea but I'm trying it out anyways.
 BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/tests/statements build/tests/expressions ; echo `pwd`/build)
