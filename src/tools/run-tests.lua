@@ -104,8 +104,30 @@ local failure = 0
 local failed_tests = {}
 local no_golden_tests = {}
 
+-- Return a time-stamp in milliseconds ignoring roll-over issues.
+--
+-- As you "cargo cult" this code, be aware that both Lua's integer
+-- precision (53bits?) and other factors may change when a "roll-over"
+-- or lack of precision occurs.
 local function get_timestamp()
-  return os.time()
+  --
+  -- This should just work cross-platform but resolution is limited to seconds
+  -- return os.time() * 1000
+  --
+  -- This does not appear to work (I got crazy numbers at least on my
+  -- modern Linux): os.clock()
+  -- 
+  -- This should work with GNU date installed but other "date" programs
+  -- or older GNU date may not understand it.
+  -- local handle = io.popen("date +%s%3N")
+  --
+  -- This seems to work OK on my modern Linux platform and hopefully
+  -- MacOS etc. It may stop working around November 20, 2286.
+  --
+  local handle = io.popen("date +%s%N | cut -b1-13")
+  local result = handle:read("*a")
+  handle:close()
+  return tonumber(result)
 end
 
 local start_time = get_timestamp()
@@ -172,7 +194,7 @@ print("======================================================================")
 local end_time = get_timestamp()
 local delta_ms = end_time - start_time
 
-print("Total test run time: " .. delta_ms .. " seconds")
+print("Total test run time: " .. delta_ms .. "ms")
 
 for _, test in ipairs(no_golden_tests) do
   print("  -- No golden file for " .. test)
