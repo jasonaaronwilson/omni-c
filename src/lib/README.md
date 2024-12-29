@@ -1,47 +1,13 @@
-# C Armyknife Library
+# Omni C Extended Standard Library
 
-A small fully open sourced C library that extends mainly POSIX with
-safer collections and a host of conveniences to enable you to write
-better medium sized C projects.
+This library is the basis of the Omni C "extended" standard
+library. It was imported from
+["c-armyknife-lib"](https://github.com/jasonaaronwilson/c-armyknife-lib).
 
-# Status is DEPRECATED
-
-Due to lack of interest in this library (zero stars on GitHub though
-one "person" is watching, I guess that's something...), I am going to
-stop maintaining this library in 2025 but leave it here for others to
-learn from. I will first do some cleanup such as moving arena.c to
-"the attic" since I never debugged that. I'll attempt to do a better
-job of documenting what I think is "good" vs. "needs work" for what's
-left.
-
-Despite being deprecated, I'm very open to pull requests to fix flaws
-like critical errors, additional tests, improved documentation,
-support for non Linux operating system, etc. At the very least I will
-try to convey any known errata that are found and your contributions
-are likely to help omni-c which I mention below.
-
-My AATree implementation fixes a bug that is present in the
-psuedo-code on Wikipedia which was actually a bit tricky to find (but
-luckily I use psuedo random "large" tests (wih "knobs" to scale up)
-for tricky stuff like trees or I wouldn't have noticed for quite a
-long time as the bug only appears in pretty big trees.
-
-The LRU memory-padding based bounds-checker surprisingly found bugs
-that valgrind didn't. The truth is that once I debugged this library
-and used it "religiously" within omni-c (you won't find many raw C
-arrays in omni-c), I haven't needed it so much.
-
-This library has been used to develop several tools though the primary
-goal was always writing
-["omni-c"](https://github.com/jasonaaronwilson/omni-c) my personal
-take on a non OOP successor to C with an implementation strategy
-similar to the original C++ "cfront" compiler (aka transpilation -
-eventually to very old C variants for you retro-computing
-enthusists). Eventually those tools or libraries will be written in
-omni-c (which means you can still use them from C or C++ -- the same
-calling conventions and such). I'm not sure omni-c will ever be
-popular though pushing the C language farther might supply ideas to
-the C standards committee.
+We expect to make significant changes from c-armyknife-lib going
+forward now that omni-c is self hosting and we can begin to use
+features of omni-c, namely declaration order flexibility and
+eventually templates.
 
 ## Features
 
@@ -97,7 +63,6 @@ the C standards committee.
   Notation). Once we transition this library to omni-c, either CDL or
   JSON output format will be available for either input or output just
   by setting a flag (I'm pretty certain I can auto-detect on reads...)
-  and because 
 
 ## Links
 
@@ -134,8 +99,19 @@ tcc version 0.9.27 (x86_64 Linux)
 
 ## Status
 
-As noted above, pending cleanup, this library will receive minimal
-updates though if you do encounter a bug, I may be very motivated to
-help fix it since this library will form the basis of the omni-c
-compiler which has been in the works as a hobby project for longer
-than a year.
+2024-12-28: this library was (badly) imported into the omni-c git
+repository. Since omni-c currently doesn't offer a true first class
+c-preprocessor, I don't expect all unit tests to run right away.
+
+## Notes
+
+My AATree implementation fixes a bug that is present in the
+psuedo-code on Wikipedia which was actually a bit tricky to find (but
+luckily I use psuedo random "large" tests (wih "knobs" to scale up)
+for tricky stuff like trees or I wouldn't have noticed for quite a
+long time as the bug only appears in pretty big trees.
+
+The LRU memory-padding based bounds-checker surprisingly found bugs
+that valgrind didn't. The truth is that once I debugged this library
+and used it "religiously" within omni-c (you won't find many raw C
+arrays in omni-c), I haven't needed it so much.
