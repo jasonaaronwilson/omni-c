@@ -1,5 +1,13 @@
 #!/bin/bash
 
+### OBSOLETE - This simple script has been obsolete for a while. The
+### most interesting thing left may be "date +%s%N" which seems to
+### offer better resolution than lua. While I maintain that this
+### simple treatment of tests as programs that return 0 (SUCCESS) or
+### non-zero (FAILURE) is viable and better than nothing,
+### omni-c/src/tools/run-tests.lua definitely makes it less painful to
+### add news tests and has worked well for quite a while.
+
 ### This is a copy of run-tests.sh from c-armyknife-lib. A test is
 ### simply any executable program (including shell scripts) that
 ### returns 0 on success and anything else.
