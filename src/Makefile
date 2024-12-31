@@ -78,10 +78,14 @@ SRC_C_SELF := \
 SRC_C := $(SRC_C_SELF)
 
 # lib/tests/value-hashtable-test.sh
+# lib/tests/string-tokenizer-test.sh \
 
 LIB_TESTS := \
 	lib/tests/buffer-test.sh \
 	lib/tests/cdl-printer-test.sh \
+	lib/tests/terminal-test.sh \
+	lib/tests/uint64-test.sh \
+	lib/tests/value-alist-test.sh \
 	lib/tests/value-array-test.sh \
 	lib/tests/value-tree-test.sh
 

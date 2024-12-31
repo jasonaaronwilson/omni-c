@@ -2,9 +2,6 @@
 // Test some operations on uint64_t
 //
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 void test_uint64_highest_bit_set() {
   test_assert(0 == uint64_highest_bit_set(1ULL << 0));
   for (int i = 0; i < 64; i++) {

@@ -4,12 +4,7 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 int main(int argc, char** argv) {
-  open_arena_for_test();
-
   buffer_t* buffer = make_buffer(100);
 
   buffer = term_clear_screen(buffer);
@@ -55,8 +50,6 @@ int main(int argc, char** argv) {
   }
 
   printf("%s", buffer_to_c_string(buffer));
-
-  close_arena_for_test();
 
   // TODO(jawilson): ability to query the initial foreground and
   // background color so we can reset the terminal back to it's
