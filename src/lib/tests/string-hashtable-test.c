@@ -4,9 +4,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 void test_string_ht() {
   string_hashtable_t* ht = make_string_hashtable(2);
   value_result_t value;

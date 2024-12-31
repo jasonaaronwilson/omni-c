@@ -1,2 +1,3 @@
 #!/bin/bash
-exec ./build-and-run.sh splitjoin-test.c splitjoin-test
+readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
+exec $DIR/build-and-run.sh splitjoin-test.c splitjoin-test
