@@ -4,9 +4,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 uint64_t hash_value(value_t value1) { return string_hash(value1.str); }
 
 int cmp_values(value_t value1, value_t value2) {
@@ -17,7 +14,7 @@ void test_value_ht() {
   value_hashtable_t* ht = make_value_hashtable(2);
   value_result_t value;
 
-  value = value_ht_find(ht, hash_values, cmp_values, str_to_value("a"));
+  value = value_ht_find(ht, hash_value, cmp_values, str_to_value("a"));
   test_assert(is_not_ok(value));
   test_assert(value_ht_num_entries(ht) == 0);
 

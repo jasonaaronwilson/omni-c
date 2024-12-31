@@ -1,3 +1,3 @@
 #!/bin/bash
-exec ./build-and-run.sh string-hashtable-test.c string-hashtable-test
-
+readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
+exec $DIR/build-and-run.sh value-hashtable-test.c value-hashtable-test

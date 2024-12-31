@@ -586,10 +586,10 @@ int invoke_c_compiler(char* input_file, char* output_file) {
 
   buffer_t* buffer = make_buffer(1);
   do {
-    sub_process_read(sub_process, buffer, NULL);
+    sub_process_read(sub_process, buffer, buffer);
     usleep(5);
   } while (is_sub_process_running(sub_process));
-  sub_process_read(sub_process, buffer, NULL);
+  sub_process_read(sub_process, buffer, buffer);
   sub_process_wait(sub_process);
 
   log_warn(">>> Exit Status <<< %d\n%s", sub_process->exit_code,

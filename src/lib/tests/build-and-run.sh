@@ -37,6 +37,12 @@ echo $src_files
 
 echo `pwd`
 ${OMNI_C_PATH} build --binary-output-file=$DIR/../../build/bin/$2 --c-output-file=$DIR/../../build/bin/$1  $src_files
+
+if [[ $? != 0 ]] ; then
+    echo "FAIL: ${OMNI_C_PATH} returned non zero exit code"
+    exit 1
+fi
+
 exec $DIR/../../build/bin/$2
 
 exit 0
