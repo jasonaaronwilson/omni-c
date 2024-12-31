@@ -5,9 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 void test_tree() {
   value_tree_t* tree = NULL;
   value_result_t value;

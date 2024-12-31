@@ -6,9 +6,6 @@
 
 #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 8
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 void test_cdl_printer() {
   cdl_printer_t* printer = make_cdl_printer(make_buffer(1));
   cdl_start_table(printer);

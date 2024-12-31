@@ -77,7 +77,13 @@ SRC_C_SELF := \
 
 SRC_C := $(SRC_C_SELF)
 
+LIB_TESTS := \
+	lib/tests/buffer-test.sh \
+	lib/tests/cdl-printer-test.sh \
+	lib/tests/value-tree-test.sh
+
 TESTS := $(wildcard tests/*.c tests/expressions/*.e tests/expressions/*.expr tests/statements/*.stmt)
+TESTS += $(LIB_TESTS)
 
 SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
 
