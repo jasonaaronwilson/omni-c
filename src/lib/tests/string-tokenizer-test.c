@@ -5,9 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 int main(int argc, char** argv) {
   value_array_t* tokens = NULL;
 

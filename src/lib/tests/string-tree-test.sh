@@ -1,3 +1,3 @@
 #!/bin/bash
-exec ./build-and-run.sh string-tree-test.c string-tree-test
-
+readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
+exec $DIR/build-and-run.sh string-tree-test.c string-tree-test
