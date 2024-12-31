@@ -11,10 +11,7 @@
 // and may be returning the sizeof a pointer which just happens to be
 // 8 masking not finding bugs.
 
-#define STRING_PRINTF_INITIAL_BUFFER_SIZE 16
-
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
+// #define STRING_PRINTF_INITIAL_BUFFER_SIZE 16
 
 #define TEST_VALID_UTF8_SEQUENCE(cp, n_bytes, ...)                             \
   do {                                                                         \

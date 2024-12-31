@@ -83,6 +83,8 @@ SRC_C := $(SRC_C_SELF)
 LIB_TESTS := \
 	lib/tests/buffer-test.sh \
 	lib/tests/cdl-printer-test.sh \
+	lib/tests/string-util-test.sh \
+	lib/tests/sub-process-test.sh \
 	lib/tests/terminal-test.sh \
 	lib/tests/uint64-test.sh \
 	lib/tests/value-alist-test.sh \

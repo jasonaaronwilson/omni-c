@@ -4,9 +4,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 void test_sub_process_read(void) {
   value_array_t* argv = make_value_array(1);
   value_array_add(argv, str_to_value("/usr/bin/ls"));
