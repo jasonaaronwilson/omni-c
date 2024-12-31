@@ -4,9 +4,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 void test_random_next() {
   random_state_t state = random_state_for_test();
   for (int i = 0; i < 10; i++) {

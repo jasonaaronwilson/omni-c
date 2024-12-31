@@ -4,9 +4,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 void test_boolean(void) {
   char* args[3];
   args[0] = "boolean-test";

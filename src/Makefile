@@ -83,6 +83,8 @@ SRC_C := $(SRC_C_SELF)
 LIB_TESTS := \
 	lib/tests/buffer-test.sh \
 	lib/tests/cdl-printer-test.sh \
+	lib/tests/flag-test.sh \
+	lib/tests/random-test.sh \
 	lib/tests/splitjoin-test.sh \
 	lib/tests/string-alist-test.sh \
 	lib/tests/string-hashtable-test.sh \

@@ -1,2 +1,3 @@
 #!/bin/bash
-exec ./build-and-run.sh random-test.c random-test
+readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
+exec $DIR/build-and-run.sh random-test.c random-test
