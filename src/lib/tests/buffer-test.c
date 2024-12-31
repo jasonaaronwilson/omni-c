@@ -4,10 +4,7 @@
 
 #include <stdlib.h>
 
-#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 8
-
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
+// #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 8
 
 void test_append_byte() {
   buffer_t* buffer = make_buffer(1);
@@ -272,8 +269,6 @@ void test_buffer_replace_matching_byte(void) {
 
 
 int main(int argc, char** argv) {
-  open_arena_for_test();
-
   test_buffer_c_substring();
   test_append_byte();
   test_append_string();
@@ -294,7 +289,5 @@ int main(int argc, char** argv) {
   test_buffer_to_uppercase();
   test_buffer_to_lowercase();
   test_buffer_replace_matching_byte();
-
-  close_arena_for_test();
   exit(0);
 }
