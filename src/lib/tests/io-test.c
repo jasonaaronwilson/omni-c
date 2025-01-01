@@ -1,11 +1,4 @@
-///
-/// Testing appending references of things to a byte array.
-///
-
 #include <stdlib.h>
-
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
 
 void test_write_then_read(char* file_name) {
   buffer_t* hello_buf = make_buffer(1);

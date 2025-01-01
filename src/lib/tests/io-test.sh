@@ -1,8 +1,10 @@
 #!/bin/bash
 
+readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
+
 SUFFIX=$$
 
-./build-and-run.sh io-test.c io-test /tmp/file-a.${SUFFIX}
+$DIR/build-and-run.sh io-test.c io-test /tmp/file-a.${SUFFIX}
 STATUS=$?
 
 # cleanup
