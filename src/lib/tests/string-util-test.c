@@ -226,8 +226,6 @@ void test_fasthash64(void) {
 }
 
 int main(int argc, char** argv) {
-  open_arena_for_test();
-
   test_is_null_or_empty();
 
   test_utf8_decode_ascii();
@@ -263,8 +261,6 @@ int main(int argc, char** argv) {
   test_string_printf();
 
   test_fasthash64();
-
-  close_arena_for_test();
 
   exit(0);
 }

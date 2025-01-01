@@ -77,8 +77,9 @@ SRC_C_SELF := \
 
 SRC_C := $(SRC_C_SELF)
 
+# TODO(jawilson): fixup these tests
 # lib/tests/value-hashtable-test.sh
-# lib/tests/string-tokenizer-test.sh \
+# lib/tests/logger-test.sh
 
 LIB_TESTS := \
 	lib/tests/buffer-test.sh \

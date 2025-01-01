@@ -43,10 +43,6 @@ void test_cdl_printer() {
 }
 
 int main(int argc, char** argv) {
-  open_arena_for_test();
-
   test_cdl_printer();
-
-  close_arena_for_test();
   exit(0);
 }

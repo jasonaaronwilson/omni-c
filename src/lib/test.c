@@ -1,17 +1,9 @@
-#line 2 "test.c"
 /**
  * @file test.c
  *
  * A set of macros and inline functions to help write tests for the
  * armyknife library (or your own tests).
  */
-
-// ======================================================================
-// This section is extraced to test.h
-// ======================================================================
-
-#ifndef _TEST_H_
-#define _TEST_H_
 
 /**
  * @macro test_fail
@@ -89,24 +81,6 @@
           a, b);                                                                \
     }                                                                           \
   } while (0)
-
-static inline void open_arena_for_test(void) {
-  /*
-#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
-  arena_open(4096 * 256);
-#endif
-  */
-}
-
-static inline void close_arena_for_test(void) {
-  /*
-#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
-  arena_close();
-#endif
-  */
-}
-
-#endif /* _TEST_H_ */
 
 /**
  * @function test_fail_and_exit

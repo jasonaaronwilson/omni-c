@@ -38,10 +38,8 @@ void test_min_max() {
 }
 
 int main(int argc, char** argv) {
-  open_arena_for_test();
   test_uint64_highest_bit_set();
   test_uint64_highest_bit_set_random();
   test_min_max();
-  close_arena_for_test();
   exit(0);
 }

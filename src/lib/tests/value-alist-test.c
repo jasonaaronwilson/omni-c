@@ -87,11 +87,7 @@ void test_value_alist_random() {
 }
 
 int main(int argc, char** argv) {
-  open_arena_for_test();
-
   test_value_alist();
   test_value_alist_random();
-
-  close_arena_for_test();
   exit(0);
 }
