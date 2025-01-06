@@ -34,7 +34,7 @@ src_files="$modified_src_files $DIR/$C_FILE"
 ##
 
 export ARMYKNIFE_LIB_LOG_LEVEL=WARN
-${OMNI_C_PATH} build --c-output-file=$DIR/../../build/bin/$C_FILE --binary-output-file=$DIR/../../build/bin/$EXE_FILE $src_files
+${OMNI_C_PATH} build --c-output-file=$DIR/../../build/bin/$C_FILE --binary-output-file=$DIR/../../build/bin/$EXE_FILE --c-compiler=tcc $src_files
 
 if [[ $? != 0 ]] ; then
     echo "FAIL: ${OMNI_C_PATH} returned non zero exit code"

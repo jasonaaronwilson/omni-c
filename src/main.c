@@ -31,6 +31,7 @@ boolean_t FLAG_dump_symbol_table = false;
 boolean_t FLAG_use_statement_parser = false;
 boolean_t FLAG_to_c = false;
 boolean_t FLAG_omit_c_armyknife_include = false;
+char* FLAG_c_compiler = "clang";
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
@@ -179,6 +180,7 @@ void configure_regular_commands(void) {
   flag_boolean("--dump-symbol-table", &FLAG_dump_symbol_table);
   flag_boolean("--use-statement-parser", &FLAG_use_statement_parser);
   flag_boolean("--omit-c-armyknife-include", &FLAG_omit_c_armyknife_include);
+  flag_string("--c-compiler", &FLAG_c_compiler);
   flag_file_args(&FLAG_files);
 }
 
@@ -568,16 +570,28 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv) {
   return output;
 }
 
+value_array_t* c_compiler_command_line(char* input_file, char* output_file) {
+  if (string_equal("clang", FLAG_c_compiler)
+      || string_equal("gcc", FLAG_c_compiler)
+      || string_equal("tcc", FLAG_c_compiler)) {
+    value_array_t* argv = make_value_array(2);
+    value_array_add(argv, str_to_value(FLAG_c_compiler));
+    value_array_add(argv, str_to_value("-g"));
+    value_array_add(argv, str_to_value("-rdynamic"));
+    value_array_add(argv, str_to_value("-O3"));
+    value_array_add(argv, str_to_value("-std=gnu99"));
+    value_array_add(argv, str_to_value("-o"));
+    value_array_add(argv, str_to_value(output_file));
+    value_array_add(argv, str_to_value(input_file));
+    return argv;
+  } else {
+    log_fatal("Unknown C compiler %s\n", FLAG_c_compiler);
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+}
+
 int invoke_c_compiler(char* input_file, char* output_file) {
-  value_array_t* argv = make_value_array(2);
-  value_array_add(argv, str_to_value("clang"));
-  value_array_add(argv, str_to_value("-g"));
-  value_array_add(argv, str_to_value("-rdynamic"));
-  value_array_add(argv, str_to_value("-O3"));
-  value_array_add(argv, str_to_value("-std=gnu99"));
-  value_array_add(argv, str_to_value("-o"));
-  value_array_add(argv, str_to_value(output_file));
-  value_array_add(argv, str_to_value(input_file));
+  value_array_t* argv = c_compiler_command_line(input_file, output_file);
 
   log_warn("Invoking C compiler with these arguments: %s",
            buffer_to_c_string(join_array_of_strings(argv, " ")));
