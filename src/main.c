@@ -606,7 +606,7 @@ int invoke_c_compiler(char* input_file, char* output_file) {
   sub_process_read(sub_process, buffer, buffer);
   sub_process_wait(sub_process);
 
-  log_warn(">>> Exit Status <<< %d\n%s", sub_process->exit_code,
+  log_warn(">>> Exit Status %d <<<\n%s", sub_process->exit_code,
            buffer_to_c_string(buffer));
 
   return sub_process->exit_code;
