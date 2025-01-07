@@ -12,7 +12,8 @@ If you just want to use Omni C, currently just do this:
 1. cd ~
 1. mkdir src
 1. cd src
-1. `git clone https://github.com/jasonaaronwilson/c-armyknife-lib.git`
+1. download and unpack https://hboehm.info/gc/gc_source/gc.tar.gz
+1. cd gc-8.2.8 ; ./configure && make && make install
 1. `git clone https://github.com/jasonaaronwilson/omni-c.git`
 1. `(cd omni-c/src/ ; make && make test)`
 

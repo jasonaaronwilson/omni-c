@@ -48,8 +48,6 @@
 
 1. add instructions for the extra test-suite
 
-1. try out hans-boehm collector
-
 1. introduce a tempory "method call" syntax (maybe :> or some nice
    unicode?)
 

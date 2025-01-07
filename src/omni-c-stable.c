@@ -97,6 +97,7 @@ typedef struct {
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <gc.h>
 #include <stdarg.h>
 #include <ctype.h>
 #include <errno.h>
@@ -158,8 +159,6 @@ typedef struct {
 
 #define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
 
-#define _ALLOCATE_H_
-
 #define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
 
 #define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
@@ -170,17 +169,7 @@ typedef struct {
 #define malloc_copy_of(source, number_of_bytes)                                \
   (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
 
-#define ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING 8
-
-#define ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING 8
-
-#define ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE 16
-
 #define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
-
-#define START_PADDING_BYTE (170 & 0xff)
-
-#define END_PADDING_BYTE ((~START_PADDING_BYTE) & 0xff)
 
 #define _UINT64_H_
 
@@ -589,8 +578,6 @@ typedef struct {
 
 #define _SPLITJOIN_H_
 
-#define _TEST_H_
-
 #define test_fail(format, ...)                                                 \
   do {                                                                         \
     test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
@@ -707,8 +694,6 @@ typedef struct value_result_t__generated_S value_result_t;
 typedef fn_t(int, value_t, value_t) value_comparison_fn;
 
 typedef fn_t(uint64_t, value_t) value_hash_fn;
-
-typedef struct memory_hashtable_bucket_S memory_hashtable_bucket_t;
 
 typedef struct logger_state_S logger_state_t;
 
@@ -1062,13 +1047,6 @@ typedef struct printer_S printer_t;
 
 struct fatal_error_config_S {
   boolean_t catch_sigsegv;
-};
-
-struct memory_hashtable_bucket_S {
-  uint64_t malloc_address;
-  uint64_t malloc_size;
-  char* allocation_filename;
-  uint64_t allocation_line_number;
 };
 
 struct logger_state_S {
@@ -1586,18 +1564,6 @@ struct printer_S {
 
 fatal_error_config_t fatal_error_config = {0};
 
-boolean_t is_initialized = false;
-
-boolean_t should_log_value = false;
-
-uint64_t number_of_bytes_allocated = 0;
-
-uint64_t number_of_malloc_calls = 0;
-
-uint64_t number_of_free_calls = 0;
-
-memory_hashtable_bucket_t memory_ht[ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE];
-
 logger_state_t global_logger_state;
 
 program_descriptor_t* current_program;
@@ -1818,6 +1784,8 @@ boolean_t FLAG_to_c = false;
 
 boolean_t FLAG_omit_c_armyknife_include = false;
 
+char* FLAG_c_compiler = "clang";
+
 // ========== function prototypes ==========
 
 extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
@@ -1839,11 +1807,6 @@ extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
 extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
 extern void check_memory_hashtable_padding();
-void check_start_padding(uint8_t* address);
-void check_end_padding(uint8_t* address, char* filename, uint64_t line);
-uint64_t mumurhash64_mix(uint64_t h);
-void track_padding(char* file, int line, uint8_t* address, uint64_t amount);
-void untrack_padding(uint8_t* malloc_address);
 extern int uint64_highest_bit_set(uint64_t n);
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
@@ -2252,6 +2215,7 @@ void parse_expression_string_and_print_parse_tree(char* expression);
 void parse_statement_string_and_print_parse_tree(char* expression);
 buffer_t* git_hash_object(char* filename);
 buffer_t* command_line_args_to_buffer(int argc, char** argv);
+value_array_t* c_compiler_command_line(char* input_file, char* output_file);
 int invoke_c_compiler(char* input_file, char* output_file);
 int main(int argc, char** argv);
 char* error_code_to_string(error_code_t value);
@@ -2314,20 +2278,6 @@ static inline boolean_t is_ok(value_result_t value){
 
 static inline boolean_t is_not_ok(value_result_t value){
   return ((value.nf_error)!=NF_OK);
-}
-
-static inline boolean_t should_log_memory_allocation(){
-  if (is_initialized)
-  {
-    return should_log_value;
-  }
-  char* var = getenv("ARMYKNIFE_LOG_MEMORY_ALLOCATION");
-  (is_initialized=true);
-  if (((var!=NULL)&&(strcmp(var, "true")==0)))
-  {
-    (should_log_value=true);
-  }
-  return should_log_value;
 }
 
 static inline boolean_t is_hex_digit(char ch){
@@ -2422,12 +2372,6 @@ __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_del
 
 static inline uint64_t rotl(uint64_t x, int k){
   return ((x<<k)|(x>>(64-k)));
-}
-
-static inline void open_arena_for_test(void){
-}
-
-static inline void close_arena_for_test(void){
 }
 
 static inline void maybe_initialize_keyword_maps(void){
@@ -3080,26 +3024,12 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount){
   {
     fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
-  if (should_log_memory_allocation())
-  {
-    fprintf(stderr, "ALLOCATE %s:%d -- n_bytes=%lu already_allocated=%lu n_calls=%lu\n", file, line, amount, number_of_bytes_allocated, number_of_malloc_calls);
-  }
-  check_memory_hashtable_padding();
-  uint64_t amount_with_padding = ((ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING+amount)+ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
-  uint8_t* result = malloc(amount_with_padding);
+  uint8_t* result = GC_malloc(amount);
   if ((result==NULL))
   {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
-  if (should_log_memory_allocation())
-  {
-    fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount, (/*CAST*/(unsigned long) result));
-  }
-  memset(result, 0, amount_with_padding);
-  track_padding(file, line, result, amount);
-  (number_of_bytes_allocated+=amount);
-  (number_of_malloc_calls++);
-  return (result+ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
+  return result;
 }
 
 uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount){
@@ -3109,109 +3039,7 @@ uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t 
 }
 
 void checked_free(char* file, int line, void* pointer){
-  if (should_log_memory_allocation())
-  {
-    fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line, (/*CAST*/(uint64_t) pointer));
-  }
-  if ((pointer==NULL))
-  {
-    fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
-  }
-  check_memory_hashtable_padding();
-  uint8_t* malloc_pointer = ((/*CAST*/(uint8_t*) pointer)-ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
-  untrack_padding(malloc_pointer);
-  (number_of_free_calls++);
-  free(malloc_pointer);
-}
-
-void check_memory_hashtable_padding(){
-  for (
-    int i = 0;
-    (i<ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE);
-    (i++))
-  {
-    if ((((memory_ht[i]).malloc_address)!=0))
-    {
-      uint64_t malloc_start_address = ((memory_ht[i]).malloc_address);
-      uint64_t malloc_size = ((memory_ht[i]).malloc_size);
-      check_start_padding((/*CAST*/(uint8_t*) malloc_start_address));
-      check_end_padding((/*CAST*/(uint8_t*) ((malloc_start_address+ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING)+malloc_size)), ((memory_ht[i]).allocation_filename), ((memory_ht[i]).allocation_line_number));
-    }
-  }
-}
-
-void check_start_padding(uint8_t* address){
-  for (
-    int i = 0;
-    (i<ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
-    (i++))
-  {
-    if (((address[i])!=START_PADDING_BYTE))
-    {
-      fatal_error(ERROR_MEMORY_START_PADDING_ERROR);
-    }
-  }
-}
-
-void check_end_padding(uint8_t* address, char* filename, uint64_t line){
-  for (
-    int i = 0;
-    (i<ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
-    (i++))
-  {
-    if (((address[i])!=END_PADDING_BYTE))
-    {
-      fprintf(stderr, "FATAL: someone clobbered past an allocation %lu. (allocated " "here: %s:%lu)\n", (/*CAST*/(uint64_t) address), filename, line);
-      fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
-    }
-  }
-}
-
-uint64_t mumurhash64_mix(uint64_t h){
-  (h*=(h>>33));
-  (h*=0xff51afd7ed558ccdL);
-  (h*=(h>>33));
-  (h*=0xc4ceb9fe1a85ec53L);
-  (h*=(h>>33));
-  return h;
-}
-
-void track_padding(char* file, int line, uint8_t* address, uint64_t amount){
-  for (
-    int i = 0;
-    (i<ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
-    (i++))
-  {
-    ((address[i])=START_PADDING_BYTE);
-  }
-  uint8_t* end_padding_address = ((address+amount)+ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
-  for (
-    int i = 0;
-    (i<ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
-    (i++))
-  {
-    ((end_padding_address[i])=END_PADDING_BYTE);
-  }
-  if ((ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE>0))
-  {
-    int bucket = (mumurhash64_mix((/*CAST*/(uint64_t) address))%ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE);
-    (((memory_ht[bucket]).malloc_address)=(/*CAST*/(uint64_t) address));
-    (((memory_ht[bucket]).malloc_size)=amount);
-    (((memory_ht[bucket]).allocation_filename)=file);
-    (((memory_ht[bucket]).allocation_line_number)=line);
-  }
-}
-
-void untrack_padding(uint8_t* malloc_address){
-  check_start_padding(malloc_address);
-  if ((ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE>0))
-  {
-    int bucket = (mumurhash64_mix((/*CAST*/(uint64_t) malloc_address))%ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE);
-    (((memory_ht[bucket]).malloc_address)=0);
-    (((memory_ht[bucket]).malloc_size)=0);
-    (((memory_ht[bucket]).allocation_filename)=0);
-    (((memory_ht[bucket]).allocation_line_number)=0);
-  }
+  return;
 }
 
 int uint64_highest_bit_set(uint64_t n){
@@ -10288,6 +10116,7 @@ void configure_regular_commands(void){
   flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
   flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
   flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+  flag_string("--c-compiler", (&FLAG_c_compiler));
   flag_file_args((&FLAG_files));
 }
 
@@ -10802,28 +10631,42 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv){
   return output;
 }
 
+value_array_t* c_compiler_command_line(char* input_file, char* output_file){
+  if (((string_equal("clang", FLAG_c_compiler)||string_equal("gcc", FLAG_c_compiler))||string_equal("tcc", FLAG_c_compiler)))
+  {
+    value_array_t* argv = make_value_array(2);
+    value_array_add(argv, str_to_value(FLAG_c_compiler));
+    value_array_add(argv, str_to_value("-g"));
+    value_array_add(argv, str_to_value("-rdynamic"));
+    value_array_add(argv, str_to_value("-O3"));
+    value_array_add(argv, str_to_value("-std=gnu99"));
+    value_array_add(argv, str_to_value("-o"));
+    value_array_add(argv, str_to_value(output_file));
+    value_array_add(argv, str_to_value(input_file));
+    value_array_add(argv, str_to_value("-lgc"));
+    return argv;
+  }
+  else
+  {
+    log_fatal("Unknown C compiler %s\n", FLAG_c_compiler);
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+}
+
 int invoke_c_compiler(char* input_file, char* output_file){
-  value_array_t* argv = make_value_array(2);
-  value_array_add(argv, str_to_value("clang"));
-  value_array_add(argv, str_to_value("-g"));
-  value_array_add(argv, str_to_value("-rdynamic"));
-  value_array_add(argv, str_to_value("-O3"));
-  value_array_add(argv, str_to_value("-std=gnu99"));
-  value_array_add(argv, str_to_value("-o"));
-  value_array_add(argv, str_to_value(output_file));
-  value_array_add(argv, str_to_value(input_file));
+  value_array_t* argv = c_compiler_command_line(input_file, output_file);
   log_warn("Invoking C compiler with these arguments: %s", buffer_to_c_string(join_array_of_strings(argv, " ")));
   sub_process_t* sub_process = make_sub_process(argv);
   sub_process_launch(sub_process);
   buffer_t* buffer = make_buffer(1);
   do  {
-    sub_process_read(sub_process, buffer, NULL);
+    sub_process_read(sub_process, buffer, buffer);
     usleep(5);
   }
 while (is_sub_process_running(sub_process));
-  sub_process_read(sub_process, buffer, NULL);
+  sub_process_read(sub_process, buffer, buffer);
   sub_process_wait(sub_process);
-  log_warn(">>> Exit Status <<< %d\n%s", (sub_process->exit_code), buffer_to_c_string(buffer));
+  log_warn(">>> Exit Status %d <<<\n%s", (sub_process->exit_code), buffer_to_c_string(buffer));
   return (sub_process->exit_code);
 }
 
@@ -12995,7 +12838,7 @@ enum_metadata_t* type_node_kind_metadata(){
 //    lib/leb128.c
 //    lib/fatal-error.c
 //    lib/value.c
-//    lib/allocate.c
+//    lib/gc-allocate.c
 //    lib/uint64.c
 //    lib/string-util.c
 //    lib/logger.c
@@ -13060,7 +12903,7 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053 > lib/leb128.c
 // git cat-file -p 3c5dd5db0882383f07e78c584268392c1af4b604 > lib/fatal-error.c
 // git cat-file -p dfd7821b93a59d56306ce0efafb4f1deb16a35f9 > lib/value.c
-// git cat-file -p ddd0822e40ee0eb337c77637b9b0179aac2a7909 > lib/allocate.c
+// git cat-file -p aa36f6385a3cef76e0d69e492f3bdb2f22bc57dd > lib/gc-allocate.c
 // git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab > lib/uint64.c
 // git cat-file -p 958d3082cdffbd52b6bb56dbd591c533902112f4 > lib/string-util.c
 // git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37 > lib/logger.c
@@ -13081,7 +12924,7 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 3d846c37fb156c312b278111e7b2fad26c2e03a2 > lib/cdl-printer.c
 // git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05 > lib/sub-process.c
 // git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d > lib/splitjoin.c
-// git cat-file -p fa11c50add7d9d42d7c6dc386c874cac9d8ec8b2 > lib/test.c
+// git cat-file -p 6d13af369d7152831ca19c4c8202aea995544067 > lib/test.c
 // git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
 // git cat-file -p 429d5f51b04668f5bd89b347ef1beb577491cd52 > keywords.c
 // git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
@@ -13110,6 +12953,6 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 0a60637302a1720474efbd538777232352d15a37 > literal-parser.c
 // git cat-file -p da5d06ce2e4ff926c65f532bfcfa6f106fbbc90b > balanced-construct-parser.c
 // git cat-file -p 282faf39e534070f851b3ce87f88e7ea79b4daee > printer.c
-// git cat-file -p 9ca05c9db93267094539835e4e48896a4a8805c8 > global-includes.c
-// git cat-file -p 9db0df425f01f3369cb728855278b0c89530467a > main.c
+// git cat-file -p ea1a646a86f833872d5be645ae3403283baf459f > global-includes.c
+// git cat-file -p d140b458bd36f76c542bdaaf69a70d8dd3e8cd5b > main.c
 // git cat-file -p 597bf0928ace2a7c632a3abdcbeb0f09a352616b > build/gen-files/reflection-header.c

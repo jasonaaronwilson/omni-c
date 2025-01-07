@@ -110,7 +110,7 @@ SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
 # ----------------------------------------------------------------------
 
 build/bin/omni-c-stable: omni-c-stable.c
-	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c-stable -std=gnu99 omni-c-stable.c
+	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c-stable -std=gnu99 omni-c-stable.c -lgc
 
 build/gen-files/reflection-header.c: runtime/reflection.h tools/embed-file.lua
 	tools/embed-file.lua reflection_header runtime/reflection.h > build/gen-files/reflection-header.c
