@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 __attribute__((warn_unused_result)) extern buffer_t*
@@ -128,6 +129,49 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
   if (fclose(file) != 0) {
     log_fatal("Failed to close file: %s", file_name);
     log_fatal("strerror(errno) = %s", strerror(errno));
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+/**
+ * @function make_file_read_only
+ *
+ * Changes permissions on a file to be "read-only".
+ */
+void make_file_read_only(char* file_name) {
+  // Set file permissions to read-only
+  if (chmod(file_name, S_IRUSR | S_IRGRP | S_IROTH) != 0) {
+    log_fatal("Failed to set file permissions: %s", file_name);
+    log_fatal("strerror(errno) = %s", strerror(errno));
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+/**
+ * @function make_writable_if_exists
+ *
+ * Checks if a file exists and, if it does, adds write permissions for 
+ * the owner.
+ */
+void make_writable_if_exists(const char* file_name) { 
+  // Check if the file exists
+  if (access(file_name, F_OK) != 0) {
+    // File doesn't exist, so no need to change permissions
+    return; 
+  }
+
+  // Get current permissions
+  struct stat file_stat;
+  if (stat(file_name, &file_stat) != 0) {
+    log_fatal("Error getting file status for %s: %s\n", file_name, strerror(errno));
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+  // Add write permission for the owner 
+  mode_t new_mode = file_stat.st_mode | S_IWUSR; 
+
+  if (chmod(file_name, new_mode) != 0) {
+    log_fatal("Error setting permissions for %s: %s\n", file_name, strerror(errno));
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }

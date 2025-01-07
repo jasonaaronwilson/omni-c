@@ -206,14 +206,11 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table) {
   }
 }
 
-buffer_t* get_reflection_header_buffer(void);
-
 char* include_node_to_string(cpp_include_node_t* node) {
   buffer_t* buffer = make_buffer(32);
   printer_t* printer = make_printer(buffer, 2);
   append_cpp_include_node(printer, node);
   char* include_statement = buffer_to_c_string(buffer);
-  // free buffer and printer...
   return include_statement;
 }
 
@@ -245,6 +242,8 @@ void generate_c_output_file(boolean_t is_library,
 
   buffer_t* buffer = make_buffer(1024 * 8);
   printer_t* printer = make_printer(buffer, 2);
+
+  add_generated_c_file_header(buffer);
 
   char* guard_name = "_HEADER_FILE_GUARD_";
 
@@ -414,8 +413,20 @@ void generate_c_output_file(boolean_t is_library,
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
   } else {
     log_info("Attempting to write buffer to %s", FLAG_c_output_file);
+    // make_writable_if_exists(FLAG_c_output_file);
     buffer_write_file(buffer, FLAG_c_output_file);
+    // make_file_read_only(FLAG_c_output_file);
   }
+}
+
+void add_generated_c_file_header(buffer_t* buffer) {
+  buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
+  buffer_printf(
+      buffer,
+      "// This is a generated file, so you generally don't want to edit it!\n");
+  buffer_printf(buffer,
+                "// The bottom of the file has more information about it's "
+                "creation.\n\n\n");
 }
 
 void parse_expression_string_and_print_parse_tree(char* expression) {
