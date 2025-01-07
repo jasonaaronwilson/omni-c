@@ -14,9 +14,6 @@
 
 1. automatic test main file generation
 
-1. add flag and code to dump the symbol table as cson (possibly
-   writing to a file...) -- generate + build
-
 1. add token_to_cson - when to use it?
 
 1. allow experimental overloading support when using clang
