@@ -119,6 +119,9 @@ build/bin/omni-c: build/bin/omni-c-stable build/gen-files/reflection-header.c ${
 	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c -std=gnu99 build/omni-c.c -lgc
 
+# Test --dump-symbol-table=true -- not recommend within emacs since
+# it's output handling is so slow though any fast enough terminal like
+# gnome terminal or if you redirect to a file.
 build/bin/self: build/bin/omni-c
 	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o build/bin/self build/self.c -lgc

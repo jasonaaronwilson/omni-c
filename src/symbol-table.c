@@ -224,48 +224,43 @@ buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table) {
   return buffer;
 }
 
-buffer_t* buffer_append_dgb_binding(buffer_t* buffer,
-                                    symbol_table_binding_t* binding) {
-  buffer_printf(buffer, "%s:\n", binding->key_string);
-  // Cheat for now. just the first parse_node_t
+void buffer_append_dgb_binding(cdl_printer_t* printer,
+                               symbol_table_binding_t* binding) {
+  cdl_key(printer, binding->key_string);
   buffer_append_dbg_parse_node(
-      make_cdl_printer(buffer),
+      printer,
       value_array_get_ptr(binding->definition_nodes, 0, typeof(parse_node_t*)));
-  return buffer;
 }
 
-buffer_t*
-    buffer_appennd_dbg_symbol_table_map(buffer_t* buffer,
-                                        symbol_table_map_t* symbol_table_map) {
+void buffer_appennd_dbg_symbol_table_map(cdl_printer_t* printer,
+                                         symbol_table_map_t* symbol_table_map) {
+  cdl_start_table(printer);
   for (int i = 0; i < symbol_table_map->ordered_bindings->length; i++) {
-    if (i > 0) {
-      buffer = buffer_printf(buffer, "\n");
-    }
     symbol_table_binding_t* binding = value_array_get_ptr(
         symbol_table_map->ordered_bindings, i, typeof(symbol_table_binding_t*));
-    buffer_append_dgb_binding(buffer, binding);
+    buffer_append_dgb_binding(printer, binding);
   }
-  return buffer;
+  cdl_end_table(printer);
 }
 
-buffer_t* buffer_append_dgb_symbol_table(buffer_t* buffer,
-                                         symbol_table_t* symbol_table) {
-  buffer = buffer_printf(buffer,
-                         "\n========================= Begin Symbol Table "
-                         "=========================\n");
-  buffer = buffer_printf(buffer, "*** Symbol Table Enumerations ***\n");
-  buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->enums);
-  buffer = buffer_printf(buffer, "\n*** Symbol Table Typedefs ***\n");
-  buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->typedefs);
-  buffer = buffer_printf(buffer, "\n*** Symbol Table Structures ***\n");
-  buffer
-      = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->structures);
-  buffer = buffer_printf(buffer, "\n*** Symbol Table Variables ***\n");
-  buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->variables);
-  buffer = buffer_printf(buffer, "\n*** Symbol Table Functions ***\n");
-  buffer = buffer_appennd_dbg_symbol_table_map(buffer, symbol_table->functions);
-  buffer = buffer_printf(buffer,
-                         "========================= End Symbol Table "
-                         "=========================\n\n");
-  return buffer;
+void buffer_append_dgb_symbol_table(cdl_printer_t* printer,
+                                    symbol_table_t* symbol_table) {
+  cdl_start_table(printer);
+
+  cdl_key(printer, "enumerations");
+  buffer_appennd_dbg_symbol_table_map(printer, symbol_table->enums);
+
+  cdl_key(printer, "typedefs");
+  buffer_appennd_dbg_symbol_table_map(printer, symbol_table->typedefs);
+
+  cdl_key(printer, "structures");
+  buffer_appennd_dbg_symbol_table_map(printer, symbol_table->structures);
+
+  cdl_key(printer, "variables");
+  buffer_appennd_dbg_symbol_table_map(printer, symbol_table->variables);
+
+  cdl_key(printer, "functions");
+  buffer_appennd_dbg_symbol_table_map(printer, symbol_table->functions);
+
+  cdl_end_table(printer);
 }

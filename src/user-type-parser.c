@@ -86,16 +86,27 @@ static inline boolean_t is_enum_node(parse_node_t* ptr) {
  *
  * Safely cast a generic node to a struct node after examining it's
  * tag.
- *
- * TODO(jawilson): this is a little ugly but if will hopefully make
- * things work...
  */
 static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
+  // TODO(jawilson): figure this ugliness out...
   if (ptr == NULL
       || !(ptr->tag == PARSE_NODE_STRUCT || ptr->tag == PARSE_NODE_UNION)) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(struct_node_t*, ptr);
+}
+
+/**
+ * @function to_union_node
+ *
+ * Safely cast a generic node to a struct node after examining it's
+ * tag.
+ */
+static inline union_node_t* to_union_node(parse_node_t* ptr) {
+  if (ptr == NULL || ptr->tag != PARSE_NODE_UNION) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(union_node_t*, ptr);
 }
 
 /**

@@ -200,7 +200,7 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table) {
             "====\n\n");
     buffer_t* buffer = make_buffer(128);
     buffer = symbol_table_stats(buffer, symbol_table);
-    buffer_append_dgb_symbol_table(buffer, symbol_table);
+    buffer_append_dgb_symbol_table(make_cdl_printer(buffer), symbol_table);
 
     fprintf(stderr, "%s", buffer_to_c_string(buffer));
   }

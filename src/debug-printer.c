@@ -32,6 +32,10 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
     buffer_append_dbg_struct_node(printer, to_struct_node(node));
     break;
 
+  case PARSE_NODE_UNION:
+    buffer_append_dbg_union_node(printer, to_union_node(node));
+    break;
+
   case PARSE_NODE_FIELD:
     buffer_append_dbg_field_node(printer, to_field_node(node));
     break;
@@ -215,6 +219,21 @@ void buffer_append_dbg_struct_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_STRUCT");
+  if (node->name != NULL) {
+    cdl_key(printer, "name");
+    cdl_string(printer, token_to_string(node->name));
+  }
+  cdl_key(printer, "partial_definition");
+  cdl_boolean(printer, node->partial_definition);
+  cdl_key(printer, "fields");
+  buffer_append_dbg_node_list(printer, node->fields);
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_UNION");
   if (node->name != NULL) {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
