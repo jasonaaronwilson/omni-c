@@ -12,7 +12,7 @@ SRC_C := \
 	leb128.c \
 	fatal-error.c \
 	value.c \
-	allocate.c \
+	gc-allocate.c \
 	uint64.c \
 	string-util.c \
 	logger.c \

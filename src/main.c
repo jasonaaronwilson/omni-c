@@ -583,6 +583,7 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file) {
     value_array_add(argv, str_to_value("-o"));
     value_array_add(argv, str_to_value(output_file));
     value_array_add(argv, str_to_value(input_file));
+    value_array_add(argv, str_to_value("-lgc"));
     return argv;
   } else {
     log_fatal("Unknown C compiler %s\n", FLAG_c_compiler);

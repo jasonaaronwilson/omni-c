@@ -248,9 +248,7 @@ int main(int argc, char** argv) {
     test_fail("string_substring");
   }
 
-#ifndef C_ARMYKNIFE_LIB_USE_ARENAS
-  check_memory_hashtable_padding();
-#endif
+  // check_memory_hashtable_padding();
 
   test_assert(string_equal("The quick brown fox",
                            string_duplicate("The quick brown fox")));
