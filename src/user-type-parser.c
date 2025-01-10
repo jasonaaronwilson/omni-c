@@ -35,6 +35,8 @@ typedef struct field_node_S {
   type_node_t* type;
   token_t* name;
   token_t* bit_field_width;
+  // TODO(jawilson): put suffixes into the type
+  value_array_t* suffixes;
 } field_node_t;
 
 /**
@@ -235,12 +237,26 @@ pstatus_t parse_field_node(pstate_t* pstate) {
   } else {
     pstate_ignore_error(pstate);
   }
+
+  value_array_t* suffixes = NULL;
+  // Handle internal arrays inside of structures
+  while (pstate_match_token_string(pstate, "[")) {
+    if (!parse_balanced_construct(pstate)) {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    if (suffixes == NULL) {
+      suffixes = make_value_array(1);
+    }
+    value_array_add(suffixes, ptr_to_value(pstate_get_result_node(pstate)));
+  }
+
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
   field_node_t* result = malloc_field_node();
   result->type = field_type;
   result->name = field_name;
+  result->suffixes = suffixes;
   return pstate_set_result_node(pstate, to_node(result));
 }
 

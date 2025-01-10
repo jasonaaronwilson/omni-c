@@ -450,6 +450,12 @@ printer_t* append_field_node(printer_t* printer, field_node_t* node) {
   if (node->name != NULL) {
     append_token(printer, node->name);
   }
+  if (node->suffixes) {
+    for (int i = 0; i < node->suffixes->length; i++) {
+      append_parse_node(printer, value_array_get_ptr(node->suffixes, i,
+                                                     typeof(parse_node_t*)));
+    }
+  }
   // TODO(jawilson): If the field has a bit-width, we need to print
   // that out as well.
   return printer;

@@ -363,7 +363,7 @@ pstatus_t parse_enum_node_declaration(pstate_t* pstate) {
 pstatus_t parse_structure_node_declaration(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   // We can't simply chain these because the expect token wipes out
-  // any nodes that haven't get grabbed. Hmmm.
+  // any nodes that haven't been preserved.
   if (!parse_structure_node(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
