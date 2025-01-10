@@ -2,7 +2,7 @@
 
 ## Cleanup & Build
 
-1. make "intermediate files" read only
+1. stop writing anything to "/tmp"
 
 ## Simple Compiler Improvements
 
