@@ -584,9 +584,13 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv) {
 value_array_t* c_compiler_command_line(char* input_file, char* output_file) {
   if (string_equal("clang", FLAG_c_compiler)
       || string_equal("gcc", FLAG_c_compiler)
-      || string_equal("tcc", FLAG_c_compiler)) {
+      || string_equal("tcc", FLAG_c_compiler)
+      || string_equal("zig", FLAG_c_compiler)) {
     value_array_t* argv = make_value_array(2);
     value_array_add(argv, str_to_value(FLAG_c_compiler));
+    if (string_equal("zig", FLAG_c_compiler)) {
+      value_array_add(argv, str_to_value("cc"));
+    }
     value_array_add(argv, str_to_value("-g"));
     value_array_add(argv, str_to_value("-rdynamic"));
     value_array_add(argv, str_to_value("-O3"));
