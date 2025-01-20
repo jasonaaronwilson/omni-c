@@ -1,4 +1,3 @@
 #!/bin/bash
-readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
-exec $DIR/build-and-run.sh uint64-test.c uint64-test
+exec ${OMNI_C_ROOT}/src/lib/tests/build-and-run.sh ${OMNI_C_ROOT}/src/lib/tests/uint64-test.c uint64-test
 

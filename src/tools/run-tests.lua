@@ -1,5 +1,24 @@
 #!/usr/bin/env lua
 
+local omni_c_root = os.getenv("OMNI_C_ROOT")
+local build_dir = os.getenv("BUILD_DIR")
+
+if omni_c_root then
+  print("OMNI_C_ROOT:", omni_c_root)
+else
+  print("Error: OMNI_C_ROOT environment variable not set.")
+  -- Handle the error appropriately, e.g., exit the script:
+  os.exit(1)
+end
+
+if build_dir then
+  print("BUILD_DIR:", build_dir)
+else
+  print("Error: BUILD_DIR environment variable not set.")
+  -- Handle the error appropriately, e.g., exit the script:
+  os.exit(1)
+end
+
 -- sudo apt-get install lua-filesystem
 local lfs = require("lfs") 
 
@@ -95,7 +114,7 @@ local function get_omni_c_executable()
   if exe then
      return exe
   else
-     return "./build/bin/omni-c"
+     return build_dir .. "/bin/omni-c"
   end
 end
 
@@ -142,12 +161,16 @@ for _, arg in ipairs(arg) do
   local omni_c_exec = get_omni_c_executable()
 
   if test_type == TestType.SCRIPT then
+     print("TestType.SCRIPT:", arg)
      exit_status = os.execute(arg)
   elseif test_type == TestType.PARSE_TEST then
-     exit_status = os.execute("./tools/generate-header-file-test.sh " .. arg)
+     print("TestType.PARSE_TEST:", arg)
+     exit_status = os.execute(omni_c_root .. "/src/tools/generate-header-file-test.sh " .. arg)
   elseif test_type == TestType.EXECUTE_TEST then
-     exit_status = os.execute("./tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
+     print("TestType.EXECUTE_TEST:", arg)
+     exit_status = os.execute(omni_c_root .. "/src/tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
   elseif test_type == TestType.PARSE_EXPRESSION or test_type == TestType.PARSE_EXPRESSION_TO_C then
+     print("TestType.PARSE_EXPRESSION(*):", arg)
      local contents = escape_and_quote(read_file(arg))
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
@@ -164,6 +187,7 @@ for _, arg in ipairs(arg) do
 	print(read_file(output_file))
      end
   elseif test_type == TestType.PARSE_STATEMENT then
+     print("TestType.PARSE_STATEMENT:", arg)
      local contents = escape_and_quote(read_file(arg))
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"

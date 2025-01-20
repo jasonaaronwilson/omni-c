@@ -1,3 +1,2 @@
 #!/bin/bash
-readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
-exec $DIR/build-and-run.sh sub-process-test.c sub-process-test
+exec ${OMNI_C_ROOT}/src/lib/tests/build-and-run.sh ${OMNI_C_ROOT}/src/lib/tests/sub-process-test.c sub-process-test

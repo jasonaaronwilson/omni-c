@@ -12,19 +12,33 @@
 # Aliases
 # ----------------------------------------------------------------------
 
-all: build/bin/omni-c
+all: ${BUILD_DIR}/bin/omni-c
 
-omni-c-stable: build/bin/omni-c-stable
+omni-c-stable: ${BUILD_DIR}/bin/omni-c-stable
 
-omni-c: build/bin/omni-c
+omni-c: ${BUILD_DIR}/bin/omni-c
 
-self: build/bin/self
+self: ${BUILD_DIR}/bin/self
 
-selfself: build/bin/selfself
+selfself: ${BUILD_DIR}/bin/selfself
 
 # ----------------------------------------------------------------------
 # Variable Definitions
 # ----------------------------------------------------------------------
+
+# --- Variables Passed from Top-Level Makefile ---
+
+# OMNI_C_ROOT: Root directory of the omni-c project.
+# BUILD_DIR:   Directory for build artifacts (absolute path).
+ifndef OMNI_C_ROOT
+  $(error OMNI_C_ROOT is not defined)
+endif
+
+ifndef BUILD_DIR
+  $(error BUILD_DIR is not defined)
+endif
+
+# --- Internal Variables ---
 
 export ARMYKNIFE_LIB_LOG_LEVEL = WARN
 
@@ -33,11 +47,10 @@ include lib/Makefile.sources
 
 C_ARMYKNIFE_SRC_C := $(addprefix lib/, $(SRC_C))
 
-# Google Gemini tells me this is a bad idea but I'm trying it out anyways.
-BUILD_DIR := $(shell mkdir -p build build/bin build/gen-files build/tests build/tests/statements build/tests/expressions ; echo `pwd`/build)
+$(shell mkdir -p ${BUILD_DIR}/bin ${BUILD_DIR}/gen-files ${BUILD_DIR}/tests ${BUILD_DIR}/tests/statements ${BUILD_DIR}/tests/expressions)
 
-STABLE_BINARY_PATH := build/bin/omni-c-stable
-OMNI_C := build/bin/omni-c
+STABLE_BINARY_PATH := ${BUILD_DIR}/bin/omni-c-stable
+OMNI_C := ${BUILD_DIR}/bin/omni-c
 
 WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr
 CC_FLAGS := -g -rdynamic ${WARN_FLAGS}
@@ -82,25 +95,25 @@ SRC_C := $(SRC_C_SELF)
 # lib/tests/logger-test.sh
 
 LIB_TESTS := \
-	lib/tests/buffer-test.sh \
-	lib/tests/cdl-printer-test.sh \
-	lib/tests/flag-test.sh \
-	lib/tests/io-test.sh \
-	lib/tests/random-test.sh \
-	lib/tests/splitjoin-test.sh \
-	lib/tests/string-alist-test.sh \
-	lib/tests/string-hashtable-test.sh \
-	lib/tests/string-tokenizer-test.sh \
-	lib/tests/string-tree-test.sh \
-	lib/tests/string-util-test.sh \
-	lib/tests/sub-process-test.sh \
-	lib/tests/terminal-test.sh \
-	lib/tests/uint64-test.sh \
-	lib/tests/value-alist-test.sh \
-	lib/tests/value-array-test.sh \
-	lib/tests/value-tree-test.sh
+	${OMNI_C_ROOT}/src/lib/tests/buffer-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/cdl-printer-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/flag-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/io-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/random-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/splitjoin-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/string-alist-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/string-hashtable-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/string-tokenizer-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/string-tree-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/string-util-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/sub-process-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/terminal-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/uint64-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/value-alist-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/value-array-test.sh \
+	${OMNI_C_ROOT}/src/lib/tests/value-tree-test.sh
 
-TESTS := $(wildcard tests/*.c tests/expressions/*.e tests/expressions/*.expr tests/statements/*.stmt)
+TESTS := $(wildcard ${OMNI_C_ROOT}/src/tests/*.c ${OMNI_C_ROOT}/src/tests/expressions/*.e ${OMNI_C_ROOT}/src/tests/expressions/*.expr ${OMNI_C_ROOT}/src/tests/statements/*.stmt)
 TESTS += $(LIB_TESTS)
 
 SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
@@ -109,34 +122,34 @@ SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
 # Target Definitions
 # ----------------------------------------------------------------------
 
-build/bin/omni-c-stable: omni-c-stable.c
-	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c-stable -std=gnu99 omni-c-stable.c -lgc
+${BUILD_DIR}/bin/omni-c-stable: omni-c-stable.c
+	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/omni-c-stable -std=gnu99 omni-c-stable.c -lgc
 
-build/gen-files/reflection-header.c: runtime/reflection.h tools/embed-file.lua
-	tools/embed-file.lua reflection_header runtime/reflection.h > build/gen-files/reflection-header.c
+${BUILD_DIR}/gen-files/reflection-header.c: runtime/reflection.h tools/embed-file.lua
+	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
-build/bin/omni-c: build/bin/omni-c-stable build/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
-	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
-	gcc ${CC_FLAGS_OPT} -o build/bin/omni-c -std=gnu99 build/omni-c.c -lgc
+${BUILD_DIR}/bin/omni-c: ${BUILD_DIR}/bin/omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
+	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/omni-c -std=gnu99 ${BUILD_DIR}/omni-c.c -lgc
 
 # Test --dump-symbol-table=true -- not recommend within emacs since
 # it's output handling is so slow though any fast enough terminal like
 # gnome terminal or if you redirect to a file.
-build/bin/self: build/bin/omni-c
-	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
-	gcc ${CC_FLAGS_OPT} -o build/bin/self build/self.c -lgc
+${BUILD_DIR}/bin/self: ${BUILD_DIR}/bin/omni-c
+	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/self ${BUILD_DIR}/self.c -lgc
 
-build/bin/selfself: build/bin/omni-c build/bin/self
-	/usr/bin/time --portability build/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=build/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} build/gen-files/reflection-header.c
-	gcc ${CC_FLAGS_OPT} -o build/bin/selfself -std=gnu99 build/selfself.c -lgc
+${BUILD_DIR}/bin/selfself: ${BUILD_DIR}/bin/omni-c ${BUILD_DIR}/bin/self
+	/usr/bin/time --portability ${BUILD_DIR}/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/selfself -std=gnu99 ${BUILD_DIR}/selfself.c -lgc
 
-test: build/bin/omni-c
+test: ${BUILD_DIR}/bin/omni-c
 	tools/run-tests.lua ${TESTS}
 
-selftest: build/bin/self
-	OMNI_C_EXECUTABLE=build/bin/self tools/run-tests.lua ${TESTS}
+selftest: ${BUILD_DIR}/bin/self
+	OMNI_C_EXECUTABLE=${BUILD_DIR}/bin/self tools/run-tests.lua ${TESTS}
 
-test-suite: build/bin/omni-c
+test-suite: ${BUILD_DIR}/bin/omni-c
 	tools/run-tests.lua ${SUITE_TESTS}
 
 # clang-format will take multiple files but if a file is missing it
@@ -152,7 +165,7 @@ tags:
 
 clean:
 	# This is all that should be necessary for a clean build
-	rm -rf build/
+	rm -rf ${BUILD_DIR}/*
 	# I would rather a "presubmit" rule such as no files named
 	# "a.out" to capture certain junk like this I've been known to
 	# create.  TODO(jawilson): make a warning

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## First just do this test the normal way.
-./build-and-run.sh logger-test.c logger-test
+exec ${OMNI_C_ROOT}/src/lib/tests/build-and-run.sh ${OMNI_C_ROOT}/src/lib/tests/logger-test.c logger-test
 
 if [ $? -ne 0 ]; then
     echo "  (since logger-test failed, we aren't testing writing to a file)"

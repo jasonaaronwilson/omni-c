@@ -5,15 +5,14 @@ EXE_FILE=$2
 shift
 shift
 
-readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
-readonly OMNI_C_PATH="${OMNI_C_EXECUTABLE:-$DIR/../../build/bin/omni-c}"
+readonly OMNI_CC_PATH="${BUILD_DIR}/bin/omni-c"
 
 ##
 ## We need all of the files in "lib" but relative to where the test
 ## runner is being run from.
 ##
 
-file_content=$(cat $DIR/../Makefile.sources)
+file_content=$(cat $OMNI_C_ROOT/src/lib/Makefile.sources)
 
 # Extract the SRC_C variable definition using sed
 src_c_definition=$(echo "$file_content" | sed -n '/^SRC_C :=/,/^$/p')
@@ -24,10 +23,11 @@ src_files=$(echo "$src_c_definition" | tr -d '\\' | tr '\n' ' ' | sed 's/SRC_C :
 
 modified_src_files=""
 for file in ${src_files}; do
-  modified_src_files="${modified_src_files} ${DIR}/../${file}"
+  modified_src_files="${modified_src_files} ${OMNI_C_ROOT}/src/lib/${file}"
 done
 
-src_files="${modified_src_files} ${DIR}/${C_FILE}"
+echo HERE HERE HERE ${C_FILE}
+src_files="${modified_src_files} ${C_FILE}"
 
 ##
 ## Now we can invoke omni-c to build the output binary
@@ -36,16 +36,16 @@ src_files="${modified_src_files} ${DIR}/${C_FILE}"
 ## By default we use tcc since it fast. If we were to tie ourselves to
 ## just on C compiler, clang or gcc
 
-OMNI_C_TEST_COMPILER:"${OMNI_C_TEST_COMPILER}:-tcc"
+OMNI_C_TEST_COMPILER="${OMNI_C_TEST_COMPILER:-tcc}"
 
 export ARMYKNIFE_LIB_LOG_LEVEL=WARN
-${OMNI_C_PATH} build \
-    --c-output-file=${DIR}/../../build/bin/${C_FILE} \
-    --binary-output-file=${DIR}/../../build/bin/${EXE_FILE} \
+${OMNI_CC_PATH} build \
+    --c-output-file=${BUILD_DIR}/bin/$(basename ${C_FILE}) \
+    --binary-output-file=${BUILD_DIR}/bin/${EXE_FILE} \
     --c-compiler=${OMNI_C_TEST_COMPILER} \
     $src_files
 if [[ $? != 0 ]] ; then
-    echo "FAIL: ${OMNI_C_PATH} returned non zero exit code"
+    echo "FAIL: ${OMNI_CC_PATH} returned non zero exit code"
     exit 1
 fi
 
@@ -53,4 +53,4 @@ fi
 ## Finally we can run the produced binary
 ##
 
-exec ${DIR}/../../build/bin/${EXE_FILE} $*
+exec ${BUILD_DIR}/bin/${EXE_FILE} $*

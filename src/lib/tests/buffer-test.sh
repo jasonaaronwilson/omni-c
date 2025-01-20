@@ -1,3 +1,2 @@
 #!/bin/bash
-readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
-exec $DIR/build-and-run.sh buffer-test.c buffer-test
+exec ${OMNI_C_ROOT}/src/lib/tests/build-and-run.sh ${OMNI_C_ROOT}/src/lib/tests/buffer-test.c buffer-test

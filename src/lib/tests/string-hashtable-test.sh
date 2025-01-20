@@ -1,3 +1,2 @@
 #!/bin/bash
-readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
-exec $DIR/build-and-run.sh string-hashtable-test.c string-hashtable-test
+exec ${OMNI_C_ROOT}/src/lib/tests/build-and-run.sh ${OMNI_C_ROOT}/src/lib/tests/string-hashtable-test.c string-hashtable-test

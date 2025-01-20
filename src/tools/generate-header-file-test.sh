@@ -1,8 +1,7 @@
 #!/bin/bash
 
 readonly SHOW_OUTPUT="false"
-readonly DIR="$(dirname "${BASH_SOURCE[0]}")"
-readonly OMNI_C_PATH="${OMNI_C_EXECUTABLE:-./build/bin/omni-c}"
+readonly OMNI_C_PATH="${OMNI_C_EXECUTABLE:-${BUILD_DIR}/bin/omni-c}"
 readonly FILE=$1
 TARGET_FILE=/tmp/$(basename "$1").h
 TARGET_BINARY=/tmp/$(basename "$1").o
