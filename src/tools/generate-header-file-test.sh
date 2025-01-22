@@ -3,8 +3,8 @@
 readonly SHOW_OUTPUT="false"
 readonly OMNI_C_PATH="${OMNI_C_EXECUTABLE:-${BUILD_DIR}/bin/omni-c}"
 readonly FILE=$1
-TARGET_FILE=/tmp/$(basename "$1").h
-TARGET_BINARY=/tmp/$(basename "$1").o
+TARGET_FILE=${BUILD_DIR}/tmp/$(basename "$1").h
+TARGET_BINARY=${BUILD_DIR}/tmp/$(basename "$1").o
 
 if [ ! -x "$OMNI_C_PATH" ]; then 
     echo "ERROR: 'omni-c' not found or not executable at '$OMNI_C_PATH'." >&2

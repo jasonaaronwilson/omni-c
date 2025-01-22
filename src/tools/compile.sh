@@ -2,9 +2,9 @@
 
 readonly OMNI_C_PATH="${BUILD_DIR}/bin/omni-c"
 
-TARGET_C_FILE=/tmp/$(basename "$1")
-TARGET_BINARY=/tmp/$(basename "$1").bin
-TARGET_OUTPUT=/tmp/$(basename "$1").bin.out
+TARGET_C_FILE=${BUILD_DIR}/tmp/$(basename "$1")
+TARGET_BINARY=${BUILD_DIR}/tmp/$(basename "$1").bin
+TARGET_OUTPUT=${BUILD_DIR}/tmp/$(basename "$1").bin.out
 shift
 
 ${OMNI_C_PATH} generate-library --c-output-file=${TARGET_C_FILE} --use-statement-parser=true $*

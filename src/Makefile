@@ -47,7 +47,7 @@ include lib/Makefile.sources
 
 C_ARMYKNIFE_SRC_C := $(addprefix lib/, $(SRC_C))
 
-$(shell mkdir -p ${BUILD_DIR}/bin ${BUILD_DIR}/gen-files ${BUILD_DIR}/tests ${BUILD_DIR}/tests/statements ${BUILD_DIR}/tests/expressions)
+$(shell mkdir -p ${BUILD_DIR}/bin ${BUILD_DIR}/gen-files ${BUILD_DIR}/tests ${BUILD_DIR}/tests/statements ${BUILD_DIR}/tests/expressions ${BUILD_DIR}/tmp)
 
 STABLE_BINARY_PATH := ${BUILD_DIR}/bin/omni-c-stable
 OMNI_C := ${BUILD_DIR}/bin/omni-c
@@ -165,30 +165,7 @@ tags:
 
 clean:
 	# This is all that should be necessary for a clean build
-	rm -rf ${BUILD_DIR}/*
-	# I would rather a "presubmit" rule such as no files named
-	# "a.out" to capture certain junk like this I've been known to
-	# create.  TODO(jawilson): make a warning
-	rm -f a.out tests/a.out tools/a.out
-	# Again, this would be better as a presubmit rule.
-	# 
-	# You shouldn't be creating .h files here - this will possibly
-	# end in tears and we should be more polite. I'm probably
-	# going to rename runtime/reflection.h just to avoid a strange
-	# special case.
-	#
-	find . -name '*.h' -not -path './runtime/*' -delete || true
-	# Emacs backup files, my speciality! If you had an issue with
-	# your text editor crashing and your leaving these behind,
-	# then make clean is not your friend here. This 
-	find . -name '*~' -delete || true
-	# Unknown
-	find ../examples/*.enum-generated.h -delete || true
-	# Figure out if still needed
-	rm -f tools/syntax-c
-	rm -f test-out.c test-out.o
-	rm -f self self.c selfself selfself.c global-header-file.h.gch
-	rm -f tests/*.out tests/expressions/*.out tests/statements/*.out
+	find "${BUILD_DIR}" -maxdepth 1 -not -name 'config.mk' -not -path "${BUILD_DIR}" -exec rm -rf {} +
 
 diff: clean
 	git difftool HEAD
