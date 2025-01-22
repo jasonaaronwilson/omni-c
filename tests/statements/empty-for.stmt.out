@@ -1,0 +1,17 @@
+{
+    tag = PARSE_NODE_FOR_STATEMENT
+    for_init = {
+        tag = PARSE_NODE_EMPTY_STATEMENT
+    }
+    for_body = {
+        tag = PARSE_NODE_EMPTY_STATEMENT
+    }
+}
+
+// C Output
+for (
+  ;
+  ;
+  )
+;
+

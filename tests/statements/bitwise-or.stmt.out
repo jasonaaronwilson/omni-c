@@ -1,0 +1,23 @@
+{
+    tag = PARSE_NODE_EXPRESSION_STATEMENT
+    expression = {
+        tag = PARSE_NODE_OPERATOR
+        operator = |
+        left = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                1
+            ]
+        }
+        right = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                0xffffffff
+            ]
+        }
+    }
+}
+
+// C Output
+(1|0xffffffff);
+

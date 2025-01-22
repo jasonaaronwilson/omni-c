@@ -1,0 +1,23 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = ->
+    left = {
+        tag = PARSE_NODE_OPERATOR
+        operator = .
+        left = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = token_list
+        }
+        right = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = list
+        }
+    }
+    right = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = length
+    }
+}
+
+// C Output
+((token_list.list)->length)

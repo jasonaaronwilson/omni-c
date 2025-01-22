@@ -1,0 +1,8 @@
+{
+    tag = PARSE_NODE_BREAK_STATEMENT
+    break_keyword_token = break
+}
+
+// C Output
+break;
+

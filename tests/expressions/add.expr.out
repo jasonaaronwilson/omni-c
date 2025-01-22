@@ -1,0 +1,15 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = +
+    left = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = a
+    }
+    right = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = b
+    }
+}
+
+// C Output
+(a+b)

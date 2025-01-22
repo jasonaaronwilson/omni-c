@@ -1,0 +1,10 @@
+{
+    tag = PARSE_NODE_BLOCK
+    statements = [
+    ]
+}
+
+// C Output
+{
+}
+

@@ -113,7 +113,7 @@ LIB_TESTS := \
 	${OMNI_C_ROOT}/src/lib/tests/value-array-test.sh \
 	${OMNI_C_ROOT}/src/lib/tests/value-tree-test.sh
 
-TESTS := $(wildcard ${OMNI_C_ROOT}/src/tests/*.c ${OMNI_C_ROOT}/src/tests/expressions/*.e ${OMNI_C_ROOT}/src/tests/expressions/*.expr ${OMNI_C_ROOT}/src/tests/statements/*.stmt)
+TESTS := $(wildcard ${OMNI_C_ROOT}/tests/*.c ${OMNI_C_ROOT}/tests/expressions/*.e ${OMNI_C_ROOT}/tests/expressions/*.expr ${OMNI_C_ROOT}/tests/statements/*.stmt)
 TESTS += $(LIB_TESTS)
 
 SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)

@@ -1,0 +1,12 @@
+{
+    tag = PARSE_NODE_CALL
+    function = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = foo
+    }
+    args = [
+    ]
+}
+
+// C Output
+foo()

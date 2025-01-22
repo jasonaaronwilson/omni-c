@@ -1,0 +1,22 @@
+{
+    tag = PARSE_NODE_VARIABLE_DEFINITION
+    name = buf
+    type = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_PRIMITIVE_TYPENAME
+        type_name = char
+        type_args = [
+        ]
+    }
+    suffixes = [
+        {
+            tag = PARSE_NODE_BALANCED_CONSTRUCT
+            start_token = "["
+            end_token = "]"
+        }
+    ]
+}
+
+// C Output
+char buf[4096];
+

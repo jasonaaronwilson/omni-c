@@ -1,0 +1,20 @@
+{
+    tag = PARSE_NODE_DO_STATEMENT
+    body = {
+        tag = PARSE_NODE_BLOCK
+        statements = [
+        ]
+    }
+    condition = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            1
+        ]
+    }
+}
+
+// C Output
+do{
+}
+while (1);
+

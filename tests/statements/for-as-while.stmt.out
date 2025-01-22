@@ -1,0 +1,31 @@
+{
+    tag = PARSE_NODE_FOR_STATEMENT
+    for_init = {
+        tag = PARSE_NODE_EMPTY_STATEMENT
+    }
+    for_test = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            1
+        ]
+    }
+    for_body = {
+        tag = PARSE_NODE_BLOCK
+        statements = [
+            {
+                tag = PARSE_NODE_BREAK_STATEMENT
+                break_keyword_token = break
+            }
+        ]
+    }
+}
+
+// C Output
+for (
+  ;
+  1;
+  )
+{
+  break;
+}
+

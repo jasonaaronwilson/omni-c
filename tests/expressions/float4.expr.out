@@ -1,0 +1,9 @@
+{
+    tag = PARSE_NODE_LITERAL
+    tokens = [
+        1.23e-5
+    ]
+}
+
+// C Output
+1.23e-5

@@ -1,0 +1,35 @@
+{
+    tag = PARSE_NODE_DO_STATEMENT
+    body = {
+        tag = PARSE_NODE_BLOCK
+        statements = [
+            {
+                tag = PARSE_NODE_IF_STATEMENT
+                if_condition = {
+                    tag = PARSE_NODE_IDENTIFIER
+                    token = true
+                }
+                if_true = {
+                    tag = PARSE_NODE_BLOCK
+                    statements = [
+                    ]
+                }
+            }
+        ]
+    }
+    condition = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            1
+        ]
+    }
+}
+
+// C Output
+do{
+  if (true)
+  {
+  }
+}
+while (1);
+

@@ -1,0 +1,30 @@
+{
+    tag = PARSE_NODE_VARIABLE_DEFINITION
+    name = foo
+    type = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_POINTER
+        qualifiers = [
+            const
+        ]
+        type_args = [
+            {
+                tag = PARSE_NODE_TYPE
+                type_node_kind = TYPE_NODE_KIND_PRIMITIVE_TYPENAME
+                type_name = char
+                type_args = [
+                ]
+            }
+        ]
+    }
+    value = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            ""FOO""
+        ]
+    }
+}
+
+// C Output
+const char* foo = "FOO";
+

@@ -1,0 +1,23 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = <
+    left = {
+        tag = PARSE_NODE_OPERATOR
+        operator = <
+        left = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = a
+        }
+        right = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = b
+        }
+    }
+    right = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = c
+    }
+}
+
+// C Output
+((a<b)<c)

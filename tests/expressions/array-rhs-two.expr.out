@@ -1,0 +1,27 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = "["
+    left = {
+        tag = PARSE_NODE_OPERATOR
+        operator = "["
+        left = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = foo
+        }
+        right = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                1
+            ]
+        }
+    }
+    right = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            2
+        ]
+    }
+}
+
+// C Output
+((foo[1])[2])

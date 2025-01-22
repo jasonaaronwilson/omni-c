@@ -1,0 +1,29 @@
+{
+    tag = PARSE_NODE_EXPRESSION_STATEMENT
+    expression = {
+        tag = PARSE_NODE_OPERATOR
+        operator = "="
+        left = {
+            tag = PARSE_NODE_IDENTIFIER
+            token = a
+        }
+        right = {
+            tag = PARSE_NODE_OPERATOR
+            operator = "="
+            left = {
+                tag = PARSE_NODE_IDENTIFIER
+                token = b
+            }
+            right = {
+                tag = PARSE_NODE_LITERAL
+                tokens = [
+                    0
+                ]
+            }
+        }
+    }
+}
+
+// C Output
+(a=(b=0));
+

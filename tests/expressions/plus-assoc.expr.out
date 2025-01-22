@@ -1,0 +1,29 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = +
+    left = {
+        tag = PARSE_NODE_OPERATOR
+        operator = +
+        left = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                1
+            ]
+        }
+        right = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                2
+            ]
+        }
+    }
+    right = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            3
+        ]
+    }
+}
+
+// C Output
+((1+2)+3)

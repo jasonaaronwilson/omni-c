@@ -1,0 +1,32 @@
+{
+    tag = PARSE_NODE_CALL
+    function = {
+        tag = PARSE_NODE_IDENTIFIER
+        token = foo
+    }
+    args = [
+        {
+            tag = PARSE_NODE_OPERATOR
+            operator = +
+            left = {
+                tag = PARSE_NODE_LITERAL
+                tokens = [
+                    123
+                ]
+            }
+            right = {
+                tag = PARSE_NODE_LITERAL
+                tokens = [
+                    456
+                ]
+            }
+        }
+        {
+            tag = PARSE_NODE_IDENTIFIER
+            token = asdf
+        }
+    ]
+}
+
+// C Output
+foo((123+456), asdf)

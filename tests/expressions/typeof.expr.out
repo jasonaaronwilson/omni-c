@@ -1,0 +1,14 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = typeof
+    left = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_PRIMITIVE_TYPENAME
+        type_name = int
+        type_args = [
+        ]
+    }
+}
+
+// C Output
+typeof(int)

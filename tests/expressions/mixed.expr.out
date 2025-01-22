@@ -1,0 +1,35 @@
+{
+    tag = PARSE_NODE_OPERATOR
+    operator = <<
+    left = {
+        tag = PARSE_NODE_OPERATOR
+        operator = +
+        left = {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                1
+            ]
+        }
+        right = {
+            tag = PARSE_NODE_OPERATOR
+            operator = *
+            left = {
+                tag = PARSE_NODE_IDENTIFIER
+                token = a
+            }
+            right = {
+                tag = PARSE_NODE_IDENTIFIER
+                token = b
+            }
+        }
+    }
+    right = {
+        tag = PARSE_NODE_LITERAL
+        tokens = [
+            1
+        ]
+    }
+}
+
+// C Output
+((1+(a*b))<<1)
