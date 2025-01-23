@@ -6,7 +6,7 @@
 #
 # ======================================================================
 
-.PHONY: all clean format tags test test-suite diff cfd how-big cf benchmark omni-c-stable omni-c self selfself selftest
+.PHONY: all clean format tags diff cfd how-big cf benchmark omni-c-stable omni-c self selfself
 
 # ----------------------------------------------------------------------
 # Aliases
@@ -90,34 +90,6 @@ SRC_C_SELF := \
 
 SRC_C := $(SRC_C_SELF)
 
-# TODO(jawilson): fixup these tests
-# lib/tests/value-hashtable-test.sh
-# lib/tests/logger-test.sh
-
-LIB_TESTS := \
-	${OMNI_C_ROOT}/tests/lib/buffer-test.sh \
-	${OMNI_C_ROOT}/tests/lib/cdl-printer-test.sh \
-	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
-	${OMNI_C_ROOT}/tests/lib/io-test.sh \
-	${OMNI_C_ROOT}/tests/lib/random-test.sh \
-	${OMNI_C_ROOT}/tests/lib/splitjoin-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-alist-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-hashtable-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-tokenizer-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-tree-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-util-test.sh \
-	${OMNI_C_ROOT}/tests/lib/sub-process-test.sh \
-	${OMNI_C_ROOT}/tests/lib/terminal-test.sh \
-	${OMNI_C_ROOT}/tests/lib/uint64-test.sh \
-	${OMNI_C_ROOT}/tests/lib/value-alist-test.sh \
-	${OMNI_C_ROOT}/tests/lib/value-array-test.sh \
-	${OMNI_C_ROOT}/tests/lib/value-tree-test.sh
-
-TESTS := $(wildcard ${OMNI_C_ROOT}/tests/*.c ${OMNI_C_ROOT}/tests/expressions/*.e ${OMNI_C_ROOT}/tests/expressions/*.expr ${OMNI_C_ROOT}/tests/statements/*.stmt)
-TESTS += $(LIB_TESTS)
-
-SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
-
 # ----------------------------------------------------------------------
 # Target Definitions
 # ----------------------------------------------------------------------
@@ -142,15 +114,6 @@ ${BUILD_DIR}/bin/self: ${BUILD_DIR}/bin/omni-c
 ${BUILD_DIR}/bin/selfself: ${BUILD_DIR}/bin/omni-c ${BUILD_DIR}/bin/self
 	/usr/bin/time --portability ${BUILD_DIR}/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/selfself -std=gnu99 ${BUILD_DIR}/selfself.c -lgc
-
-test: ${BUILD_DIR}/bin/omni-c
-	${OMNI_C_ROOT}/tools/run-tests.lua ${TESTS}
-
-selftest: ${BUILD_DIR}/bin/self
-	OMNI_C_EXECUTABLE=${BUILD_DIR}/bin/self ${OMNI_C_ROOT}/tools/run-tests.lua ${TESTS}
-
-test-suite: ${BUILD_DIR}/bin/omni-c
-	tools/run-tests.lua ${SUITE_TESTS}
 
 # clang-format will take multiple files but if a file is missing it
 # doesn't tell you which file is missing.

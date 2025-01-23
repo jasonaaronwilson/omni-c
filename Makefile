@@ -58,7 +58,7 @@ clean:
 .PHONY: test
 test:
 	@echo "Running tests..."
-	@$(MAKE) -C src test OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
+	@$(MAKE) -C tests all OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
 
 # Help target
 .PHONY: help
