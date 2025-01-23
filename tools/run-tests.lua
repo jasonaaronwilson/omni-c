@@ -165,10 +165,10 @@ for _, arg in ipairs(arg) do
      exit_status = os.execute(arg)
   elseif test_type == TestType.PARSE_TEST then
      print("TestType.PARSE_TEST:", arg)
-     exit_status = os.execute(omni_c_root .. "/src/tools/generate-header-file-test.sh " .. arg)
+     exit_status = os.execute(omni_c_root .. "/tools/generate-header-file-test.sh " .. arg)
   elseif test_type == TestType.EXECUTE_TEST then
      print("TestType.EXECUTE_TEST:", arg)
-     exit_status = os.execute(omni_c_root .. "/src/tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
+     exit_status = os.execute(omni_c_root .. "/tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
   elseif test_type == TestType.PARSE_EXPRESSION or test_type == TestType.PARSE_EXPRESSION_TO_C then
      print("TestType.PARSE_EXPRESSION(*):", arg)
      local contents = escape_and_quote(read_file(arg))

@@ -125,8 +125,8 @@ SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
 ${BUILD_DIR}/bin/omni-c-stable: omni-c-stable.c
 	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/omni-c-stable -std=gnu99 omni-c-stable.c -lgc
 
-${BUILD_DIR}/gen-files/reflection-header.c: runtime/reflection.h tools/embed-file.lua
-	tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
+${BUILD_DIR}/gen-files/reflection-header.c: runtime/reflection.h ${OMNI_C_ROOT}/tools/embed-file.lua
+	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
 ${BUILD_DIR}/bin/omni-c: ${BUILD_DIR}/bin/omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
 	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
@@ -144,10 +144,10 @@ ${BUILD_DIR}/bin/selfself: ${BUILD_DIR}/bin/omni-c ${BUILD_DIR}/bin/self
 	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/selfself -std=gnu99 ${BUILD_DIR}/selfself.c -lgc
 
 test: ${BUILD_DIR}/bin/omni-c
-	tools/run-tests.lua ${TESTS}
+	${OMNI_C_ROOT}/tools/run-tests.lua ${TESTS}
 
 selftest: ${BUILD_DIR}/bin/self
-	OMNI_C_EXECUTABLE=${BUILD_DIR}/bin/self tools/run-tests.lua ${TESTS}
+	OMNI_C_EXECUTABLE=${BUILD_DIR}/bin/self ${OMNI_C_ROOT}/tools/run-tests.lua ${TESTS}
 
 test-suite: ${BUILD_DIR}/bin/omni-c
 	tools/run-tests.lua ${SUITE_TESTS}
@@ -155,7 +155,7 @@ test-suite: ${BUILD_DIR}/bin/omni-c
 # clang-format will take multiple files but if a file is missing it
 # doesn't tell you which file is missing.
 format:
-	@for file in ${SRC_C} tools/random-code-generator.c; do \
+	@for file in ${SRC_C} ${OMNI_C_ROOT}/tools/random-code-generator.c; do \
 		echo "Formatting $$file"; \
 		clang-format -i $$file; \
 	done
