@@ -95,23 +95,23 @@ SRC_C := $(SRC_C_SELF)
 # lib/tests/logger-test.sh
 
 LIB_TESTS := \
-	${OMNI_C_ROOT}/src/lib/tests/buffer-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/cdl-printer-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/flag-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/io-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/random-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/splitjoin-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/string-alist-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/string-hashtable-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/string-tokenizer-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/string-tree-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/string-util-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/sub-process-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/terminal-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/uint64-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/value-alist-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/value-array-test.sh \
-	${OMNI_C_ROOT}/src/lib/tests/value-tree-test.sh
+	${OMNI_C_ROOT}/tests/lib/buffer-test.sh \
+	${OMNI_C_ROOT}/tests/lib/cdl-printer-test.sh \
+	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
+	${OMNI_C_ROOT}/tests/lib/io-test.sh \
+	${OMNI_C_ROOT}/tests/lib/random-test.sh \
+	${OMNI_C_ROOT}/tests/lib/splitjoin-test.sh \
+	${OMNI_C_ROOT}/tests/lib/string-alist-test.sh \
+	${OMNI_C_ROOT}/tests/lib/string-hashtable-test.sh \
+	${OMNI_C_ROOT}/tests/lib/string-tokenizer-test.sh \
+	${OMNI_C_ROOT}/tests/lib/string-tree-test.sh \
+	${OMNI_C_ROOT}/tests/lib/string-util-test.sh \
+	${OMNI_C_ROOT}/tests/lib/sub-process-test.sh \
+	${OMNI_C_ROOT}/tests/lib/terminal-test.sh \
+	${OMNI_C_ROOT}/tests/lib/uint64-test.sh \
+	${OMNI_C_ROOT}/tests/lib/value-alist-test.sh \
+	${OMNI_C_ROOT}/tests/lib/value-array-test.sh \
+	${OMNI_C_ROOT}/tests/lib/value-tree-test.sh
 
 TESTS := $(wildcard ${OMNI_C_ROOT}/tests/*.c ${OMNI_C_ROOT}/tests/expressions/*.e ${OMNI_C_ROOT}/tests/expressions/*.expr ${OMNI_C_ROOT}/tests/statements/*.stmt)
 TESTS += $(LIB_TESTS)
