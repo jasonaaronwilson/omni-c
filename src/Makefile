@@ -95,8 +95,8 @@ SRC_C := $(SRC_C_SELF)
 ${BUILD_DIR}/bin/omni-c-stable: omni-c-stable.c
 	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/omni-c-stable -std=gnu99 omni-c-stable.c -lgc
 
-${BUILD_DIR}/gen-files/reflection-header.c: runtime/reflection.h ${OMNI_C_ROOT}/tools/embed-file.lua
-	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header runtime/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
+${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/tools/embed-file.lua
+	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header embed/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
 ${BUILD_DIR}/bin/omni-c: ${BUILD_DIR}/bin/omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
 	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
