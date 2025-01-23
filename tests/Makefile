@@ -4,7 +4,7 @@
 #
 # ======================================================================
 
-.PHONY: all test test-suite selftest
+.PHONY: all test test-suite self-test
 
 # ----------------------------------------------------------------------
 # Aliases
@@ -17,9 +17,6 @@ all: test
 # ----------------------------------------------------------------------
 
 # --- Variables Passed from Top-Level Makefile ---
-
-# OMNI_C_ROOT: Root directory of the omni-c project.
-# BUILD_DIR:   Directory for build artifacts (absolute path).
 ifndef OMNI_C_ROOT
   $(error OMNI_C_ROOT is not defined)
 endif
@@ -32,24 +29,13 @@ endif
 
 export ARMYKNIFE_LIB_LOG_LEVEL = WARN
 
-# Import
-include ${OMNI_C_ROOT}/src/lib/Makefile.sources
-
-C_ARMYKNIFE_SRC_C := $(addprefix lib/, $(SRC_C))
-
 $(shell mkdir -p ${BUILD_DIR}/bin ${BUILD_DIR}/gen-files ${BUILD_DIR}/tests ${BUILD_DIR}/tests/statements ${BUILD_DIR}/tests/expressions ${BUILD_DIR}/tmp)
 
-STABLE_BINARY_PATH := ${BUILD_DIR}/bin/omni-c-stable
-OMNI_C := ${BUILD_DIR}/bin/omni-c
-
-WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr
-CC_FLAGS := -g -rdynamic ${WARN_FLAGS}
-CC_FLAGS_OPT := ${CC_FLAGS} -O3 
+TESTS := $(wildcard ${OMNI_C_ROOT}/tests/*.c ${OMNI_C_ROOT}/tests/expressions/*.e ${OMNI_C_ROOT}/tests/expressions/*.expr ${OMNI_C_ROOT}/tests/statements/*.stmt)
 
 # TODO(jawilson): fixup these tests
 # lib/tests/value-hashtable-test.sh
 # lib/tests/logger-test.sh
-
 LIB_TESTS := \
 	${OMNI_C_ROOT}/tests/lib/buffer-test.sh \
 	${OMNI_C_ROOT}/tests/lib/cdl-printer-test.sh \
@@ -69,7 +55,6 @@ LIB_TESTS := \
 	${OMNI_C_ROOT}/tests/lib/value-array-test.sh \
 	${OMNI_C_ROOT}/tests/lib/value-tree-test.sh
 
-TESTS := $(wildcard ${OMNI_C_ROOT}/tests/*.c ${OMNI_C_ROOT}/tests/expressions/*.e ${OMNI_C_ROOT}/tests/expressions/*.expr ${OMNI_C_ROOT}/tests/statements/*.stmt)
 TESTS += $(LIB_TESTS)
 
 SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
@@ -78,11 +63,11 @@ SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
 # Target Definitions
 # ----------------------------------------------------------------------
 
-test: ${BUILD_DIR}/bin/omni-c
+test:
 	${OMNI_C_ROOT}/tools/run-tests.lua ${TESTS}
 
-selftest: ${BUILD_DIR}/bin/self
+self-test:
 	OMNI_C_EXECUTABLE=${BUILD_DIR}/bin/self ${OMNI_C_ROOT}/tools/run-tests.lua ${TESTS}
 
-test-suite: ${BUILD_DIR}/bin/omni-c
-	tools/run-tests.lua ${SUITE_TESTS}
+test-suite:
+	${OMNI_C_ROOT}/tools/run-tests.lua ${SUITE_TESTS}

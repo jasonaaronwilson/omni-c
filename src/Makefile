@@ -1,8 +1,6 @@
 # ======================================================================
 #
-# Just run: "make" from this directory
-#
-# (Eventually we'll have an "install" target.)
+# This Makefile is invoked indirectly from OMNI_C_ROOT
 #
 # ======================================================================
 
