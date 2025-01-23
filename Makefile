@@ -56,7 +56,7 @@ clean:
 
 # Test target
 .PHONY: test
-test:
+test: all
 	@echo "Running tests..."
 	@$(MAKE) -C tests all OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
 
