@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ${OMNI_C_ROOT}/src/lib/tests/build-and-run.sh ${OMNI_C_ROOT}/src/lib/tests/buffer-test.c buffer-test
+exec ${OMNI_C_ROOT}/tests/lib/build-and-run.sh ${OMNI_C_ROOT}/tests/lib/buffer-test.c buffer-test

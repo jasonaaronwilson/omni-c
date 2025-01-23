@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ${OMNI_C_ROOT}/src/lib/tests/build-and-run.sh ${OMNI_C_ROOT}/src/lib/tests/terminal-test.c terminal-test
+exec ${OMNI_C_ROOT}/tests/lib/build-and-run.sh ${OMNI_C_ROOT}/tests/lib/terminal-test.c terminal-test

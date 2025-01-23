@@ -1,4 +1,4 @@
 #!/bin/bash
-exec ${OMNI_C_ROOT}/src/lib/tests/build-and-run.sh ${OMNI_C_ROOT}/src/lib/tests/flag-test.c flag-test
+exec ${OMNI_C_ROOT}/tests/lib/build-and-run.sh ${OMNI_C_ROOT}/tests/lib/flag-test.c flag-test
 
 
