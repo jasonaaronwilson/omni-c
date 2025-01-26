@@ -50,7 +50,12 @@ local function file_to_c_code()
         end
 
         if i % 16 == 0 or i == num_bytes then
-            c_code = c_code .. ", // " .. line_comment .. "\n    "
+	    local missing_bytes = 0
+	    if i == num_bytes and i % 16 ~= 0 then
+	       missing_bytes = (16 - (num_bytes % 16)) % 16
+	    end
+	    local spacing = string.rep(" ", missing_bytes * 6)
+            c_code = c_code .. ", " .. spacing .. " // " .. line_comment .. "\n    "
             line_comment = "" -- Reset comment
         else
             c_code = c_code .. ", "
