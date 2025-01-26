@@ -2,8 +2,6 @@
 
 ## Cleanup & Build
 
-1. stop writing anything to "/tmp"
-
 ## Simple Compiler Improvements
 
 1. start optionally putting out line directives and see what happens
