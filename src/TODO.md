@@ -2,11 +2,21 @@
 
 ## Cleanup & Build
 
+## Parse System Includes
+
+The goal here is to be able to parse all of the includes for omni-c
+itself (after using cpp to expand them) and extend the list to all the
+header file I can find on my system for common C libraries like
+SQLLite, SDL, Raylib, etc.
+
+1. allow complex initialization expressions in enums
+
 ## Simple Compiler Improvements
 
 1. start optionally putting out line directives and see what happens
-   during debugging. This should be better than the current comments
-   we put out.
+   during debugging (we can begin initially just doing this for
+   functions and expand to other statement types later (or as part of
+   getting the linearizer ready).
 
 1. use a proper stack in balanced construct parser.
 
@@ -47,5 +57,3 @@
    unicode?)
 
 1. make sure parser can handle more of unicode?
-
-1. parse system includes?
