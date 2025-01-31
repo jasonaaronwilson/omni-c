@@ -9,7 +9,8 @@ itself (after using cpp to expand them) and extend the list to all the
 header file I can find on my system for common C libraries like
 SQLLite, SDL, Raylib, etc.
 
-1. allow complex initialization expressions in enums
+The current hold-up is our inability to fully parse complicated C
+types (including function pointers).
 
 ## Simple Compiler Improvements
 
