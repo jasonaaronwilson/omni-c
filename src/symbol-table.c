@@ -70,7 +70,7 @@ typedef struct symbol_table_map_S {
  * be looked up this way...)
  */
 typedef struct symbol_table_S {
-  struct symbol_table_S* parent;
+  symbol_table_t* parent;
   value_array_t* system_includes;
   value_array_t* user_includes;
   value_array_t* defines;
