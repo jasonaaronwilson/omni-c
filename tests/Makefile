@@ -4,7 +4,7 @@
 #
 # ======================================================================
 
-.PHONY: all test test-suite self-test
+.PHONY: all test test-suite self-test format
 
 # ----------------------------------------------------------------------
 # Aliases
@@ -71,3 +71,6 @@ self-test:
 
 test-suite:
 	${OMNI_C_ROOT}/tools/run-tests.lua ${SUITE_TESTS}
+
+format:
+	echo "TODO(jawilson): implement format rule for test makefile"

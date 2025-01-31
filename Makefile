@@ -55,6 +55,14 @@ clean:
 	@echo "Cleaning build artifacts..."
 	@$(MAKE) -C src clean OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
 
+# Format target
+.PHONY: format
+format: all
+	@echo "Formatting src..."
+	@$(MAKE) -C src format OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
+	@echo "Formatting tests..."
+	@$(MAKE) -C tests format OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
+
 # Test target
 .PHONY: test
 test: all
@@ -67,6 +75,7 @@ help:
 	@echo "Available targets:"
 	@echo "  all     - Build omni-c (default)"
 	@echo "  clean   - Clean build artifacts"
+	@echo "  format  - Format source files and tests"
 	@echo "  test    - Build and run tests"
 	@echo "  help    - Display this help message"
 
