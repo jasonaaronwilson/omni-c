@@ -47,6 +47,7 @@ endif
 all:
 	@echo "Building omni-c..."
 	@$(MAKE) -C src OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
+	@$(MAKE) -C src self OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
 
 # Clean target
 .PHONY: clean

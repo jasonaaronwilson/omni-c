@@ -254,9 +254,9 @@ void buffer_append_dbg_enum_element(cdl_printer_t* printer,
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
   }
-  if (node->value != NULL) {
-    cdl_key(printer, "value");
-    cdl_string(printer, token_to_string(node->value));
+  if (node->value_expr != NULL) {
+    cdl_key(printer, "value_expr");
+    buffer_append_dbg_parse_node(printer, node->value_expr);
   }
   cdl_end_table(printer);
 }

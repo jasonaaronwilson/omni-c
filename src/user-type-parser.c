@@ -60,7 +60,7 @@ typedef struct enum_node_S {
 typedef struct enum_element_S {
   parse_node_type_t tag;
   token_t* name;
-  token_t* value;
+  parse_node_t* value_expr;
 } enum_element_t;
 
 /**
@@ -353,8 +353,8 @@ pstatus_t parse_enum_node(pstate_t* pstate) {
 /**
  * @function parse_enum_element_node
  *
- * Parse an enum element with an optional integer value and eat any
- * trailing comma.
+ * Parse an enum element with an optional expression (hopefully
+ * constant) and eat any trailing comma.
  */
 pstatus_t parse_enum_element_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
@@ -362,12 +362,12 @@ pstatus_t parse_enum_element_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   token_t* name = pstate_get_result_token(pstate);
-  token_t* value = NULL;
+  parse_node_t* value_expr = NULL;
   if (pstate_expect_token_string(pstate, "=")) {
-    if (!pstate_expect_token_type(pstate, TOKEN_TYPE_INTEGER_LITERAL)) {
+    if (!pratt_parse_expression(pstate, 0)) {
       return pstate_propagate_error(pstate, saved_position);
     }
-    value = pstate_get_result_token(pstate);
+    value_expr = pstate_get_result_node(pstate);
   }
 
   if (!pstate_expect_token_string(pstate, ",")) {
@@ -376,7 +376,7 @@ pstatus_t parse_enum_element_node(pstate_t* pstate) {
 
   enum_element_t* result = malloc_enum_element();
   result->name = name;
-  result->value = value;
+  result->value_expr = value_expr;
 
   return pstate_set_result_node(pstate, to_node(result));
 }

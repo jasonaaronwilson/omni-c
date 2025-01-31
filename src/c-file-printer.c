@@ -349,9 +349,9 @@ printer_t* append_enum_node(printer_t* printer, enum_node_t* node) {
 
 printer_t* append_enum_element(printer_t* printer, enum_element_t* node) {
   append_token(printer, node->name);
-  if (node->value != NULL) {
+  if (node->value_expr != NULL) {
     append_string(printer, " = ");
-    append_token(printer, node->value);
+    append_parse_node(printer, node->value_expr);
   }
   return printer;
 }
