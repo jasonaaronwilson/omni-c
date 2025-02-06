@@ -1,7 +1,3 @@
-#line 2 "buffer.c"
-#ifndef _BUFFER_H_
-#define _BUFFER_H_
-
 /**
  * @file buffer.c
  *
@@ -13,11 +9,13 @@
  * (or inserted into) them reducing large classes of errors.
  */
 
-#include <ctype.h>
-#include <stdint.h>
-#include <string.h>
+// struct buffer_t {}; didn't work but *should* have!
 
-struct buffer_S {
+// This forumulation is legal in omni-c and kind of "Go"ish. There
+// isn't a way to say "struct buffer_t" with this formulation anymore
+// in C. Maybe we should embrace this change. Hmmm.
+
+typedef buffer_t = struct {
   uint32_t length;
   uint32_t capacity;
   uint8_t* elements;
@@ -35,85 +33,10 @@ struct buffer_S {
  * While buffers may seem scary, used properly from a single thread,
  * they are actually quite predictable.
  */
-typedef struct buffer_S buffer_t;
-
-extern buffer_t* make_buffer(uint64_t initial_capacity);
-
-extern uint64_t buffer_length(buffer_t* buffer);
-
-extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
-
-extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
-
-extern char* buffer_to_c_string(buffer_t* buffer);
-
-extern void buffer_clear(buffer_t* buffer);
-
-extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
-
-extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
-
-extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
-                                     uint64_t n_bytes);
-
-extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
-
-extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer,
-                                          uint64_t start_position,
-                                          uint64_t end_position,
-                                          buffer_t* src_buffer);
-
-extern buffer_t* buffer_append_string(buffer_t* buffer, const char* str);
-
-__attribute__((format(printf, 2, 3))) extern buffer_t*
-    buffer_printf(buffer_t* buffer, char* format, ...);
-
-extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte,
-                                             int count);
-
-utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
-
-extern buffer_t* buffer_append_code_point(buffer_t* buffer,
-                                          uint32_t code_point);
-
-boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
-                                 char* str);
-
-buffer_t* buffer_from_string(char* string);
-
-buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
-                               uint64_t original_end, uint64_t new_width);
-
-buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
-                             char* replacement_text);
-
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original,
-                                       uint8_t replacement);
-
-boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
-                                 char* text);
-
-uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start);
-
-uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
-
-buffer_t* buffer_to_uppercase(buffer_t* buffer);
-
-buffer_t* buffer_to_lowercase(buffer_t* buffer);
-
-typedef struct line_and_column_S {
+typedef line_and_column_t = struct {
   uint64_t line;
   uint64_t column;
-} line_and_column_t;
-
-line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
-                                                     uint64_t position);
-
-#endif /* _BUFFER_H_ */
-
-// ======================================================================
-
-#include <stdlib.h>
+};
 
 /**
  * @function make_buffer
