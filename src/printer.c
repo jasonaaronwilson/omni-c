@@ -18,12 +18,14 @@ typedef struct printer_S {
   // TODO(jawilson): add is_header_file
 } printer_t;
 
-printer_t* make_printer(buffer_t* buffer, int indent_width) {
+printer_t* make_printer(buffer_t* buffer, symbol_table_t* symbol_table,
+                        int indent_width) {
   printer_t* result = malloc_struct(printer_t);
+  result->symbol_table = symbol_table;
   result->buffer = buffer;
   result->indent_width = indent_width;
   result->convert_nullptr = true;
-  result->output_line_directives = false;
+  result->output_line_directives = true;
   return result;
 }
 

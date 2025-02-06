@@ -26,7 +26,7 @@ static inline char* remove_type_suffix_1(char* typename) {
  */
 void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
   buffer_t* buffer = make_buffer(1);
-  printer_t* printer = make_printer(buffer, 2);
+  printer_t* printer = make_printer(buffer, symbol_table, 2);
 
   for (int i = 0; i < symbol_table->typedefs->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding

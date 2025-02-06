@@ -208,7 +208,7 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table) {
 
 char* include_node_to_string(cpp_include_node_t* node) {
   buffer_t* buffer = make_buffer(32);
-  printer_t* printer = make_printer(buffer, 2);
+  printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
   append_cpp_include_node(printer, node);
   char* include_statement = buffer_to_c_string(buffer);
   return include_statement;
@@ -241,7 +241,7 @@ void generate_c_output_file(boolean_t is_library,
   dump_symbol_table("reorder structures", symbol_table);
 
   buffer_t* buffer = make_buffer(1024 * 8);
-  printer_t* printer = make_printer(buffer, 2);
+  printer_t* printer = make_printer(buffer, symbol_table, 2);
 
   add_generated_c_file_header(buffer);
 
@@ -465,7 +465,7 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
   buffer_append_dbg_parse_node(make_cdl_printer(output), node);
   if (FLAG_to_c) {
     buffer_append_string(output, "\n// C Output\n");
-    printer_t* printer = make_printer(output, 2);
+    printer_t* printer = make_printer(output, make_symbol_table(), 2);
     append_parse_node(printer, node);
   }
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
@@ -498,7 +498,7 @@ void parse_statement_string_and_print_parse_tree(char* expression) {
   buffer_t* output = make_buffer(1);
   buffer_append_dbg_parse_node(make_cdl_printer(output), node);
   buffer_append_string(output, "\n// C Output\n");
-  printer_t* printer = make_printer(output, 2);
+  printer_t* printer = make_printer(output, make_symbol_table(), 2);
   append_parse_node(printer, node);
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }

@@ -84,6 +84,15 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer,
  * will come from user's source file so NULL is a potential result.
  */
 // @NullableResult
-file_t* symbol_table_token_to_file(token_t* token) {
+file_t* symbol_table_token_to_file(symbol_table_t* symbol_table,
+                                   token_t* token) {
+  value_array_t* files = symbol_table->files;
+  buffer_t* buffer = token->buffer;
+  for (int i = 0; i < files->length; i++) {
+    file_t* file = cast(file_t*, value_array_get(files, i).ptr);
+    if (file->data == buffer) {
+      return file;
+    }
+  }
   return NULL;
 }

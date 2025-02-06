@@ -941,6 +941,14 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
 }
 
 printer_t* append_line_directive(printer_t* printer, token_t* token) {
-  buffer_printf(printer->buffer, "\n# %d \"%s\"\n", token->line_number, "fixme.c");
+  if (printer->symbol_table == NULL) {
+    log_fatal("printer->symbol_table is not set.");
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  file_t* file = symbol_table_token_to_file(printer->symbol_table, token);
+  if (file != NULL) {
+    buffer_printf(printer->buffer, "\n# %d \"%s\"\n", token->line_number,
+                  file == NULL ? "fixme.c" : file->file_name);
+  }
   return printer;
 }
