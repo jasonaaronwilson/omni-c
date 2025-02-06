@@ -71,6 +71,7 @@ typedef struct symbol_table_map_S {
  */
 typedef struct symbol_table_S {
   symbol_table_t* parent;
+  value_array_t* files;
   value_array_t* system_includes;
   value_array_t* user_includes;
   value_array_t* defines;
@@ -90,6 +91,7 @@ symbol_table_map_t* make_symbol_table_map(void) {
 
 symbol_table_t* make_symbol_table(void) {
   symbol_table_t* result = malloc_struct(symbol_table_t);
+  result->files = make_value_array(16);
   result->system_includes = make_value_array(16);
   result->user_includes = make_value_array(16);
   result->defines = make_value_array(16);

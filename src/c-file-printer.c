@@ -183,6 +183,9 @@ printer_t* append_balanced_construct_node(printer_t* printer,
 
 printer_t* append_c_function_node_and_body(printer_t* printer,
                                            function_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->function_name);
+  }
   append_c_function_node_prefix(printer, node);
   append_parse_node(printer, node->body);
   printer_newline(printer);
@@ -584,7 +587,11 @@ printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node) {
   if (node->token == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  append_token(printer, node->token);
+  if (token_matches(node->token, "nullptr")) {
+    append_string(printer, "((void *)0)");
+  } else {
+    append_token(printer, node->token);
+  }
   return printer;
 }
 
@@ -931,4 +938,9 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
                      buffer_to_c_string(element_constructions));
 
   return buffer_append_buffer(buffer, code);
+}
+
+printer_t* append_line_directive(printer_t* printer, token_t* token) {
+  buffer_printf(printer->buffer, "\n# %d \"%s\"\n", token->line_number, "fixme.c");
+  return printer;
 }

@@ -15,6 +15,7 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table,
   value_array_t* files = read_files(file_names);
   for (int i = 0; i < files->length; i++) {
     file_t* file = cast(file_t*, value_array_get(files, i).ptr);
+    value_array_add(symbol_table->files, ptr_to_value(file));
     symbol_table_parse_buffer(symbol_table, file->data, file->file_name,
                               use_statement_parser);
   }
@@ -72,4 +73,17 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer,
   declarations_node_t* root
       = to_declarations_node(pstate_get_result_node(&pstate));
   symbol_table_add_declartions(symbol_table, root);
+}
+
+/**
+ * @function symbol_table_token_to_file
+ *
+ * Tokens only point at the "buffer" they are derived from however
+ * most of these buffers were read from a file on disk so we know
+ * their "source file". Since we do code generation, not every token
+ * will come from user's source file so NULL is a potential result.
+ */
+// @NullableResult
+file_t* symbol_table_token_to_file(token_t* token) {
+  return NULL;
 }

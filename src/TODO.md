@@ -2,6 +2,11 @@
 
 ## Cleanup & Build
 
+## nullptr instead of NULL
+
+We now replace nullptr with ((void*)0). We should probably use nullptr
+instead of NULL "everywhere".
+
 ## Parse System Includes
 
 The goal here is to be able to parse all of the includes for omni-c

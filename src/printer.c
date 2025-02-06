@@ -7,9 +7,14 @@
  * necessary).
  */
 typedef struct printer_S {
-  buffer_t* buffer;
+  // This should only be used to get the filename for a buffer inside
+  // of a token...
+  symbol_table_t* symbol_table;
+  buffer_t* buffer; // This is the output buffer.
   uint32_t indent_width;
   uint32_t indent_level;
+  boolean_t convert_nullptr;
+  boolean_t output_line_directives;
   // TODO(jawilson): add is_header_file
 } printer_t;
 
@@ -17,6 +22,8 @@ printer_t* make_printer(buffer_t* buffer, int indent_width) {
   printer_t* result = malloc_struct(printer_t);
   result->buffer = buffer;
   result->indent_width = indent_width;
+  result->convert_nullptr = true;
+  result->output_line_directives = false;
   return result;
 }
 
