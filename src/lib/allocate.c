@@ -1,5 +1,3 @@
-#line 2 "allocate.c"
-
 /**
  * @file allocate.c
  *
@@ -25,18 +23,6 @@
  * pays off, perhaps we can port it into valgrind so please send
  * feedback if you find armyknife-lib's memcheck mode helpful or not.
  */
-
-#ifndef _ALLOCATE_H_
-#define _ALLOCATE_H_
-
-#include <stdint.h>
-
-extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
-extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
-                                       uint64_t amount);
-extern void checked_free(char* file, int line, void* pointer);
-
-extern void check_memory_hashtable_padding();
 
 /**
  * @macro malloc_bytes
@@ -75,16 +61,6 @@ extern void check_memory_hashtable_padding();
  */
 #define malloc_copy_of(source, number_of_bytes)                                \
   (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
-
-// TODO(jawilson): malloc_copy_of_struct
-
-#endif /* _ALLOCATE_H_ */
-
-// ======================================================================
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 boolean_t is_initialized = false;
 boolean_t should_log_value = false;
