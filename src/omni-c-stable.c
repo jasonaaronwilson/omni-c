@@ -1345,7 +1345,8 @@ struct symbol_table_map_S {
 };
 
 struct symbol_table_S {
-  struct symbol_table_S* parent;
+  symbol_table_t* parent;
+  value_array_t* files;
   value_array_t* system_includes;
   value_array_t* user_includes;
   value_array_t* defines;
@@ -1521,6 +1522,7 @@ struct field_node_S {
   type_node_t* type;
   token_t* name;
   token_t* bit_field_width;
+  value_array_t* suffixes;
 };
 
 struct enum_node_S {
@@ -1533,7 +1535,7 @@ struct enum_node_S {
 struct enum_element_S {
   parse_node_type_t tag;
   token_t* name;
-  token_t* value;
+  parse_node_t* value_expr;
 };
 
 struct variable_definition_node_S {
@@ -1561,9 +1563,12 @@ struct balanced_construct_node_S {
 };
 
 struct printer_S {
+  symbol_table_t* symbol_table;
   buffer_t* buffer;
   uint32_t indent_width;
   uint32_t indent_level;
+  boolean_t convert_nullptr;
+  boolean_t output_line_directives;
 };
 
 // ========== global variables ==========
@@ -2105,6 +2110,7 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node);
 printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node);
 printer_t* append_call_node(printer_t* printer, call_node_t* node);
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string);
+printer_t* append_line_directive(printer_t* printer, token_t* token);
 symbol_table_map_t* make_symbol_table_map(void);
 symbol_table_t* make_symbol_table(void);
 symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_string);
@@ -2127,10 +2133,9 @@ void convert_nullptr_to_null(value_array_t* tokens);
 c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position);
 uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens, uint64_t start_position);
 void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens);
-__attribute__((warn_unused_result)) buffer_t* extract_enums_process_declarations(buffer_t* output, declarations_node_t* root);
-__attribute__((warn_unused_result)) buffer_t* extract_prototypes_process_declarations(buffer_t* output, declarations_node_t* root);
 void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names, boolean_t use_statement_parser);
 void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, char* file_name, boolean_t use_statement_parser);
+file_t* symbol_table_token_to_file(symbol_table_t* symbol_table, token_t* token);
 void srcgen_enum_to_string_converters(symbol_table_t* symbol_table);
 pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence);
 pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left);
@@ -2200,7 +2205,7 @@ pstatus_t parse_initializer(pstate_t* pstate);
 pstatus_t parse_variable_definition_node(pstate_t* pstate);
 pstatus_t parse_literal_node(pstate_t* pstate);
 pstatus_t parse_balanced_construct(pstate_t* pstate);
-printer_t* make_printer(buffer_t* buffer, int indent_width);
+printer_t* make_printer(buffer_t* buffer, symbol_table_t* symbol_table, int indent_width);
 printer_t* append_string(printer_t* printer, char* string);
 printer_t* append_token(printer_t* printer, token_t* token);
 printer_t* printer_newline(printer_t* printer);
@@ -2282,18 +2287,26 @@ enum_metadata_t* type_node_kind_metadata();
 
 // ========== inlined functions ==========
 
+
+# 144 "lib/value.c"
 static inline boolean_t is_ok(value_result_t value){
   return ((value.nf_error)==NF_OK);
 }
 
+
+# 154 "lib/value.c"
 static inline boolean_t is_not_ok(value_result_t value){
   return ((value.nf_error)!=NF_OK);
 }
 
+
+# 206 "lib/string-util.c"
 static inline boolean_t is_hex_digit(char ch){
   return (((ch>='0')&&(ch<='9'))||((ch>='a')&&(ch<='f')));
 }
 
+
+# 210 "lib/string-util.c"
 static inline uint64_t hex_digit_to_value(char ch){
   if (((ch>='0')&&(ch<='9')))
   {
@@ -2305,6 +2318,8 @@ static inline uint64_t hex_digit_to_value(char ch){
   }
 }
 
+
+# 488 "lib/string-util.c"
 static inline uint64_t mix(uint64_t h){
   (h^=(h>>23));
   (h*=0x2127599bf4325c37ULL);
@@ -2312,78 +2327,116 @@ static inline uint64_t mix(uint64_t h){
   return h;
 }
 
+
+# 176 "lib/logger.c"
 static inline boolean_t should_log_info(){
   return ((global_logger_state.level)<=LOGGER_INFO);
 }
 
+
+# 24 "lib/string-alist.c"
 static inline value_result_t alist_find(string_alist_t* list, char* key){
   return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
 }
 
+
+# 35 "lib/string-alist.c"
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value){
   return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
 }
 
+
+# 49 "lib/string-alist.c"
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key){
   return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
 }
 
+
+# 63 "lib/string-alist.c"
 __attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list){
   return value_alist_length((/*CAST*/(value_alist_t*) list));
 }
 
+
+# 71 "lib/value-hashtable.c"
 static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
   return (ht->n_entries);
 }
 
+
+# 17 "lib/string-hashtable.c"
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht){
   return (/*CAST*/(value_hashtable_t*) ht);
 }
 
+
+# 30 "lib/string-hashtable.c"
 static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets){
   return (/*CAST*/(string_hashtable_t*) make_value_hashtable(n_buckets));
 }
 
+
+# 40 "lib/string-hashtable.c"
 __attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value){
   return (/*CAST*/(string_hashtable_t*) value_ht_insert(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key), value));
 }
 
+
+# 53 "lib/string-hashtable.c"
 __attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key){
   return (/*CAST*/(string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key)));
 }
 
+
+# 64 "lib/string-hashtable.c"
 static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key){
   return value_ht_find(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key));
 }
 
+
+# 74 "lib/string-hashtable.c"
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht){
   return value_ht_num_entries(to_value_hashtable(ht));
 }
 
+
+# 183 "lib/value-tree.c"
 static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b){
   return ((a<b) ? a : b);
 }
 
+
+# 217 "lib/value-tree.c"
 static inline boolean_t value_tree_is_leaf(value_tree_t* t){
   return (((t->left)==NULL)&&((t->right)==NULL));
 }
 
+
+# 22 "lib/string-tree.c"
 static inline value_result_t string_tree_find(string_tree_t* t, char* key){
   return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
 }
 
+
+# 34 "lib/string-tree.c"
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value){
   return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
 }
 
+
+# 47 "lib/string-tree.c"
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_delete(string_tree_t* t, char* key){
   return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
 }
 
+
+# 63 "lib/random.c"
 static inline uint64_t rotl(uint64_t x, int k){
   return ((x<<k)|(x>>(64-k)));
 }
 
+
+# 123 "keywords.c"
 static inline void maybe_initialize_keyword_maps(void){
   if ((c_keywords_ht==NULL))
   {
@@ -2391,6 +2444,8 @@ static inline void maybe_initialize_keyword_maps(void){
   }
 }
 
+
+# 40 "lexer.c"
 static inline token_t* token_at(value_array_t* tokens, uint64_t position){
   if ((position>=(tokens->length)))
   {
@@ -2399,6 +2454,8 @@ static inline token_t* token_at(value_array_t* tokens, uint64_t position){
   return value_array_get_ptr(tokens, position, typeof(token_t*));
 }
 
+
+# 47 "lexer.c"
 static inline boolean_t token_matches(token_t* token, char* str){
   if ((token==NULL))
   {
@@ -2408,20 +2465,28 @@ static inline boolean_t token_matches(token_t* token, char* str){
   return ((str_len==((token->end)-(token->start)))&&buffer_match_string_at((token->buffer), (token->start), str));
 }
 
+
+# 56 "lexer.c"
 static inline boolean_t token_starts_with(token_t* token, char* str){
   return buffer_match_string_at((token->buffer), (token->start), str);
 }
 
+
+# 60 "lexer.c"
 static inline boolean_t token_contains(token_t* token, char* str){
   return buffer_region_contains((token->buffer), (token->start), (token->end), str);
 }
 
+
+# 572 "lexer.c"
 static inline token_t* heap_allocate_token(token_t token){
   token_t* result = malloc_struct(token_t);
   ((*result)=token);
   return result;
 }
 
+
+# 21 "token-list.c"
 static inline void token_list_add(token_list_t* token_list, token_t* token){
   if ((token==NULL))
   {
@@ -2434,6 +2499,8 @@ static inline void token_list_add(token_list_t* token_list, token_t* token){
   value_array_add((token_list->list), ptr_to_value(token));
 }
 
+
+# 36 "token-list.c"
 static inline uint64_t token_list_length(token_list_t token_list){
   if (((token_list.list)==NULL))
   {
@@ -2442,10 +2509,14 @@ static inline uint64_t token_list_length(token_list_t token_list){
   return ((token_list.list)->length);
 }
 
+
+# 48 "token-list.c"
 static inline boolean_t token_list_is_empty(token_list_t token_list){
   return (token_list_length(token_list)==0);
 }
 
+
+# 57 "token-list.c"
 static inline token_t* token_list_get(token_list_t token_list, uint64_t index){
   if (((token_list.list)==NULL))
   {
@@ -2454,6 +2525,8 @@ static inline token_t* token_list_get(token_list_t token_list, uint64_t index){
   return value_array_get_ptr((token_list.list), index, typeof(token_t*));
 }
 
+
+# 69 "token-list.c"
 static inline boolean_t token_list_contains(token_list_t token_list, char* token_string){
   for (
     int i = 0;
@@ -2468,10 +2541,14 @@ static inline boolean_t token_list_contains(token_list_t token_list, char* token
   return false;
 }
 
+
+# 102 "parser.c"
 static inline parse_node_t* to_node(void* ptr){
   return (/*CAST*/(parse_node_t*) ptr);
 }
 
+
+# 139 "declaration-parser.c"
 static inline declarations_node_t* to_declarations_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_DECLARATIONS)))
   {
@@ -2480,6 +2557,8 @@ static inline declarations_node_t* to_declarations_node(parse_node_t* ptr){
   return (/*CAST*/(declarations_node_t*) ptr);
 }
 
+
+# 152 "declaration-parser.c"
 static inline literal_node_t* to_literal_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_LITERAL)))
   {
@@ -2488,6 +2567,8 @@ static inline literal_node_t* to_literal_node(parse_node_t* ptr){
   return (/*CAST*/(literal_node_t*) ptr);
 }
 
+
+# 165 "declaration-parser.c"
 static inline function_node_t* to_function_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FUNCTION)))
   {
@@ -2496,6 +2577,8 @@ static inline function_node_t* to_function_node(parse_node_t* ptr){
   return (/*CAST*/(function_node_t*) ptr);
 }
 
+
+# 179 "declaration-parser.c"
 static inline function_argument_node_t* to_function_argument_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FUNCTION_ARGUMENT)))
   {
@@ -2504,6 +2587,8 @@ static inline function_argument_node_t* to_function_argument_node(parse_node_t* 
   return (/*CAST*/(function_argument_node_t*) ptr);
 }
 
+
+# 192 "declaration-parser.c"
 static inline typedef_node_t* to_typedef_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_TYPEDEF)))
   {
@@ -2512,6 +2597,8 @@ static inline typedef_node_t* to_typedef_node(parse_node_t* ptr){
   return (/*CAST*/(typedef_node_t*) ptr);
 }
 
+
+# 205 "declaration-parser.c"
 static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_UNPARSED_EXPRESSION)))
   {
@@ -2520,6 +2607,8 @@ static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr){
   return (/*CAST*/(unparsed_expression_t*) ptr);
 }
 
+
+# 218 "declaration-parser.c"
 static inline attribute_node_t* to_attribute_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_ATTRIBUTE)))
   {
@@ -2528,6 +2617,8 @@ static inline attribute_node_t* to_attribute_node(parse_node_t* ptr){
   return (/*CAST*/(attribute_node_t*) ptr);
 }
 
+
+# 231 "declaration-parser.c"
 static inline cpp_define_node_t* to_cpp_define_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CPP_DEFINE)))
   {
@@ -2536,6 +2627,8 @@ static inline cpp_define_node_t* to_cpp_define_node(parse_node_t* ptr){
   return (/*CAST*/(cpp_define_node_t*) ptr);
 }
 
+
+# 244 "declaration-parser.c"
 static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CPP_INCLUDE)))
   {
@@ -2544,48 +2637,64 @@ static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr){
   return (/*CAST*/(cpp_include_node_t*) ptr);
 }
 
+
+# 255 "declaration-parser.c"
 static inline declarations_node_t* malloc_declarations(void){
   declarations_node_t* result = malloc_struct(declarations_node_t);
   ((result->tag)=PARSE_NODE_DECLARATIONS);
   return result;
 }
 
+
+# 261 "declaration-parser.c"
 static inline function_node_t* malloc_function_node(void){
   function_node_t* result = malloc_struct(function_node_t);
   ((result->tag)=PARSE_NODE_FUNCTION);
   return result;
 }
 
+
+# 267 "declaration-parser.c"
 static inline function_argument_node_t* malloc_function_argument_node(void){
   function_argument_node_t* result = malloc_struct(function_argument_node_t);
   ((result->tag)=PARSE_NODE_FUNCTION_ARGUMENT);
   return result;
 }
 
+
+# 273 "declaration-parser.c"
 static inline typedef_node_t* malloc_typedef_node(void){
   typedef_node_t* result = malloc_struct(typedef_node_t);
   ((result->tag)=PARSE_NODE_TYPEDEF);
   return result;
 }
 
+
+# 279 "declaration-parser.c"
 static inline attribute_node_t* malloc_attribute_node(void){
   attribute_node_t* result = malloc_struct(attribute_node_t);
   ((result->tag)=PARSE_NODE_ATTRIBUTE);
   return result;
 }
 
+
+# 285 "declaration-parser.c"
 static inline cpp_include_node_t* malloc_cpp_include_node(void){
   cpp_include_node_t* result = malloc_struct(cpp_include_node_t);
   ((result->tag)=PARSE_NODE_CPP_INCLUDE);
   return result;
 }
 
+
+# 291 "declaration-parser.c"
 static inline cpp_define_node_t* malloc_cpp_define_node(void){
   cpp_define_node_t* result = malloc_struct(cpp_define_node_t);
   ((result->tag)=PARSE_NODE_CPP_DEFINE);
   return result;
 }
 
+
+# 31 "node-list.c"
 static inline void node_list_add_node(node_list_t* node_list, parse_node_t* oc_node){
   if ((oc_node==NULL))
   {
@@ -2598,6 +2707,8 @@ static inline void node_list_add_node(node_list_t* node_list, parse_node_t* oc_n
   value_array_add((node_list->list), ptr_to_value(oc_node));
 }
 
+
+# 47 "node-list.c"
 static inline uint64_t node_list_length(node_list_t node_list){
   if (((node_list.list)==NULL))
   {
@@ -2606,10 +2717,14 @@ static inline uint64_t node_list_length(node_list_t node_list){
   return ((node_list.list)->length);
 }
 
+
+# 59 "node-list.c"
 static inline boolean_t node_list_is_empty(node_list_t node_list){
   return (node_list_length(node_list)==0);
 }
 
+
+# 68 "node-list.c"
 static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index){
   if (((node_list.list)==NULL))
   {
@@ -2618,6 +2733,8 @@ static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index)
   return value_array_get_ptr((node_list.list), index, typeof(parse_node_t*));
 }
 
+
+# 3 "header-file-extractor.c"
 static inline char* remove_type_suffix(char* typename){
   if (string_ends_with(typename, "_t"))
   {
@@ -2629,6 +2746,8 @@ static inline char* remove_type_suffix(char* typename){
   }
 }
 
+
+# 9 "srcgen.c"
 static inline char* remove_type_suffix_1(char* typename){
   if (string_ends_with(typename, "_t"))
   {
@@ -2640,30 +2759,40 @@ static inline char* remove_type_suffix_1(char* typename){
   }
 }
 
+
+# 111 "pratt-parser.c"
 static inline operator_node_t* malloc_operator_node(void){
   operator_node_t* result = malloc_struct(operator_node_t);
   ((result->tag)=PARSE_NODE_OPERATOR);
   return result;
 }
 
+
+# 117 "pratt-parser.c"
 static inline identifier_node_t* malloc_identifier_node(void){
   identifier_node_t* result = malloc_struct(identifier_node_t);
   ((result->tag)=PARSE_NODE_IDENTIFIER);
   return result;
 }
 
+
+# 123 "pratt-parser.c"
 static inline call_node_t* malloc_call_node(void){
   call_node_t* result = malloc_struct(call_node_t);
   ((result->tag)=PARSE_NODE_CALL);
   return result;
 }
 
+
+# 129 "pratt-parser.c"
 static inline conditional_node_t* malloc_conditional_node(void){
   conditional_node_t* result = malloc_struct(conditional_node_t);
   ((result->tag)=PARSE_NODE_CONDITIONAL);
   return result;
 }
 
+
+# 141 "pratt-parser.c"
 static inline identifier_node_t* to_identifier_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_IDENTIFIER)))
   {
@@ -2672,6 +2801,8 @@ static inline identifier_node_t* to_identifier_node(parse_node_t* ptr){
   return (/*CAST*/(identifier_node_t*) ptr);
 }
 
+
+# 154 "pratt-parser.c"
 static inline operator_node_t* to_operator_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_OPERATOR)))
   {
@@ -2680,6 +2811,8 @@ static inline operator_node_t* to_operator_node(parse_node_t* ptr){
   return (/*CAST*/(operator_node_t*) ptr);
 }
 
+
+# 167 "pratt-parser.c"
 static inline call_node_t* to_call_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CALL)))
   {
@@ -2688,6 +2821,8 @@ static inline call_node_t* to_call_node(parse_node_t* ptr){
   return (/*CAST*/(call_node_t*) ptr);
 }
 
+
+# 180 "pratt-parser.c"
 static inline conditional_node_t* to_conditional_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CONDITIONAL)))
   {
@@ -2696,16 +2831,22 @@ static inline conditional_node_t* to_conditional_node(parse_node_t* ptr){
   return (/*CAST*/(conditional_node_t*) ptr);
 }
 
+
+# 188 "pratt-parser.c"
 static inline pratt_parser_instruction_t make_parser_instruction(token_t* token, pratt_parser_operation_t operation, precedence_t precedence){
   return ((pratt_parser_instruction_t) {.token = token, .operation = operation, .precedence = precedence});
 }
 
+
+# 65 "type-parser.c"
 static inline type_node_t* malloc_type_node(void){
   type_node_t* result = malloc_struct(type_node_t);
   ((result->tag)=PARSE_NODE_TYPE);
   return result;
 }
 
+
+# 77 "type-parser.c"
 static inline type_node_t* to_type_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_TYPE)))
   {
@@ -2714,14 +2855,20 @@ static inline type_node_t* to_type_node(parse_node_t* ptr){
   return (/*CAST*/(type_node_t*) ptr);
 }
 
+
+# 72 "user-type-parser.c"
 static inline boolean_t is_struct_node(parse_node_t* ptr){
   return ((ptr!=NULL)&&((ptr->tag)==PARSE_NODE_STRUCT));
 }
 
+
+# 82 "user-type-parser.c"
 static inline boolean_t is_enum_node(parse_node_t* ptr){
   return ((ptr!=NULL)&&((ptr->tag)==PARSE_NODE_ENUM));
 }
 
+
+# 92 "user-type-parser.c"
 static inline struct_node_t* to_struct_node(parse_node_t* ptr){
   if (((ptr==NULL)||(!(((ptr->tag)==PARSE_NODE_STRUCT)||((ptr->tag)==PARSE_NODE_UNION)))))
   {
@@ -2730,6 +2877,8 @@ static inline struct_node_t* to_struct_node(parse_node_t* ptr){
   return (/*CAST*/(struct_node_t*) ptr);
 }
 
+
+# 107 "user-type-parser.c"
 static inline union_node_t* to_union_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_UNION)))
   {
@@ -2738,6 +2887,8 @@ static inline union_node_t* to_union_node(parse_node_t* ptr){
   return (/*CAST*/(union_node_t*) ptr);
 }
 
+
+# 120 "user-type-parser.c"
 static inline field_node_t* to_field_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FIELD)))
   {
@@ -2746,6 +2897,8 @@ static inline field_node_t* to_field_node(parse_node_t* ptr){
   return (/*CAST*/(field_node_t*) ptr);
 }
 
+
+# 133 "user-type-parser.c"
 static inline enum_node_t* to_enum_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_ENUM)))
   {
@@ -2754,6 +2907,8 @@ static inline enum_node_t* to_enum_node(parse_node_t* ptr){
   return (/*CAST*/(enum_node_t*) ptr);
 }
 
+
+# 146 "user-type-parser.c"
 static inline enum_element_t* to_enum_element_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_ENUM_ELEMENT)))
   {
@@ -2762,36 +2917,48 @@ static inline enum_element_t* to_enum_element_node(parse_node_t* ptr){
   return (/*CAST*/(enum_element_t*) ptr);
 }
 
+
+# 153 "user-type-parser.c"
 static inline enum_node_t* malloc_enum_node(void){
   enum_node_t* result = malloc_struct(enum_node_t);
   ((result->tag)=PARSE_NODE_ENUM);
   return result;
 }
 
+
+# 159 "user-type-parser.c"
 static inline enum_element_t* malloc_enum_element(void){
   enum_element_t* result = malloc_struct(enum_element_t);
   ((result->tag)=PARSE_NODE_ENUM_ELEMENT);
   return result;
 }
 
+
+# 165 "user-type-parser.c"
 static inline struct_node_t* malloc_struct_node(void){
   struct_node_t* result = malloc_struct(struct_node_t);
   ((result->tag)=PARSE_NODE_STRUCT);
   return result;
 }
 
+
+# 171 "user-type-parser.c"
 static inline union_node_t* malloc_union_node(void){
   union_node_t* result = malloc_struct(union_node_t);
   ((result->tag)=PARSE_NODE_UNION);
   return result;
 }
 
+
+# 177 "user-type-parser.c"
 static inline field_node_t* malloc_field_node(void){
   field_node_t* result = malloc_struct(field_node_t);
   ((result->tag)=PARSE_NODE_FIELD);
   return result;
 }
 
+
+# 25 "variable-definition-parser.c"
 static inline variable_definition_node_t* to_variable_definition_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_VARIABLE_DEFINITION)))
   {
@@ -2800,18 +2967,24 @@ static inline variable_definition_node_t* to_variable_definition_node(parse_node
   return (/*CAST*/(variable_definition_node_t*) ptr);
 }
 
+
+# 33 "variable-definition-parser.c"
 static inline variable_definition_node_t* malloc_variable_definition_node(void){
   variable_definition_node_t* result = malloc_struct(variable_definition_node_t);
   ((result->tag)=PARSE_NODE_VARIABLE_DEFINITION);
   return result;
 }
 
+
+# 19 "literal-parser.c"
 static inline literal_node_t* malloc_literal_node(void){
   literal_node_t* result = malloc_struct(literal_node_t);
   ((result->tag)=PARSE_NODE_LITERAL);
   return result;
 }
 
+
+# 25 "balanced-construct-parser.c"
 static inline balanced_construct_node_t* to_balanced_construct_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_BALANCED_CONSTRUCT)))
   {
@@ -2820,6 +2993,8 @@ static inline balanced_construct_node_t* to_balanced_construct_node(parse_node_t
   return (/*CAST*/(balanced_construct_node_t*) ptr);
 }
 
+
+# 35 "balanced-construct-parser.c"
 static inline balanced_construct_node_t* malloc_balanced_construct_node(){
   balanced_construct_node_t* result = malloc_struct(balanced_construct_node_t);
   ((result->tag)=PARSE_NODE_BALANCED_CONSTRUCT);
@@ -2829,6 +3004,8 @@ static inline balanced_construct_node_t* malloc_balanced_construct_node(){
 
 // ========== functions ==========
 
+
+# 80 "lib/leb128.c"
 unsigned encode_sleb_128(int64_t Value, uint8_t* p){
   uint8_t* orig_p = p;
   int More;
@@ -2844,6 +3021,8 @@ while (More);
   return (/*CAST*/(unsigned) (p-orig_p));
 }
 
+
+# 104 "lib/leb128.c"
 unsigned encode_uleb_128(uint64_t Value, uint8_t* p){
   uint8_t* orig_p = p;
   do  {
@@ -2857,6 +3036,8 @@ while ((Value!=0));
   return (/*CAST*/(unsigned) (p-orig_p));
 }
 
+
+# 122 "lib/leb128.c"
 unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end){
   const uint8_t* orig_p = p;
   uint64_t Value = 0;
@@ -2881,6 +3062,8 @@ while (((*(p++))>=128));
   return result;
 }
 
+
+# 151 "lib/leb128.c"
 signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end){
   const uint8_t* orig_p = p;
   int64_t Value = 0;
@@ -2910,6 +3093,8 @@ while ((Byte>=128));
   return result;
 }
 
+
+# 120 "lib/fatal-error.c"
 _Noreturn void fatal_error_impl(char* file, int line, int error_code){
   print_fatal_error_banner();
   print_backtrace();
@@ -2935,6 +3120,8 @@ _Noreturn void fatal_error_impl(char* file, int line, int error_code){
   exit((-(error_code+100)));
 }
 
+
+# 164 "lib/fatal-error.c"
 const char* fatal_error_code_to_string(int error_code){
   switch (error_code)
   {
@@ -2971,6 +3158,8 @@ const char* fatal_error_code_to_string(int error_code){
   }
 }
 
+
+# 92 "lib/fatal-error.c"
 void configure_fatal_errors(fatal_error_config_t config){
   (fatal_error_config=config);
   if ((config.catch_sigsegv))
@@ -2979,14 +3168,20 @@ void configure_fatal_errors(fatal_error_config_t config){
   }
 }
 
+
+# 88 "lib/fatal-error.c"
 void segmentation_fault_handler(int signal_number){
   fatal_error(ERROR_SIGSEGV);
 }
 
+
+# 143 "lib/fatal-error.c"
 void print_fatal_error_banner(){
   fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
 }
 
+
+# 149 "lib/fatal-error.c"
 void print_backtrace(){
   do  {
     void* array[10];
@@ -3003,6 +3198,8 @@ void print_backtrace(){
 while (0);
 }
 
+
+# 200 "lib/fatal-error.c"
 void print_error_code_name(int error_code){
   fprintf(stderr, " ");
   fprintf(stderr, "*** ");
@@ -3010,12 +3207,16 @@ void print_error_code_name(int error_code){
   fprintf(stderr, " ***\n");
 }
 
+
+# 103 "lib/fatal-error.c"
 char* get_command_line(){
   buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
   buffer_replace_matching_byte(buffer, 0, ' ');
   return buffer_to_c_string(buffer);
 }
 
+
+# 110 "lib/fatal-error.c"
 char* get_program_path(){
   char buf[4096];
   int n = readlink("/proc/self/exe", buf, (sizeof(buf)));
@@ -3029,14 +3230,20 @@ char* get_program_path(){
   }
 }
 
+
+# 189 "lib/value.c"
 int cmp_string_values(value_t value1, value_t value2){
   return strcmp((value1.str), (value2.str));
 }
 
+
+# 198 "lib/value.c"
 uint64_t hash_string_value(value_t value1){
   return string_hash((value1.str));
 }
 
+
+# 83 "lib/gc-allocate.c"
 uint8_t* checked_malloc(char* file, int line, uint64_t amount){
   if (((amount==0)||(amount>ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT)))
   {
@@ -3050,16 +3257,22 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount){
   return result;
 }
 
+
+# 104 "lib/gc-allocate.c"
 uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount){
   uint8_t* result = checked_malloc(file, line, amount);
   memcpy(result, source, amount);
   return result;
 }
 
+
+# 121 "lib/gc-allocate.c"
 void checked_free(char* file, int line, void* pointer){
   return;
 }
 
+
+# 22 "lib/uint64.c"
 int uint64_highest_bit_set(uint64_t n){
   if ((n>=(1ULL<<32)))
   {
@@ -3096,10 +3309,14 @@ int uint64_highest_bit_set(uint64_t n){
   }
 }
 
+
+# 53 "lib/string-util.c"
 int string_is_null_or_empty(const char* str){
   return ((str==NULL)||(strlen(str)==0));
 }
 
+
+# 62 "lib/string-util.c"
 int string_equal(const char* str1, const char* str2){
   if (string_is_null_or_empty(str1))
   {
@@ -3108,10 +3325,14 @@ int string_equal(const char* str1, const char* str2){
   return (strcmp(str1, str2)==0);
 }
 
+
+# 74 "lib/string-util.c"
 int string_starts_with(const char* str1, const char* str2){
   return (strncmp(str1, str2, strlen(str2))==0);
 }
 
+
+# 83 "lib/string-util.c"
 int string_ends_with(const char* str1, const char* str2){
   size_t len1 = strlen(str1);
   size_t len2 = strlen(str2);
@@ -3122,10 +3343,14 @@ int string_ends_with(const char* str1, const char* str2){
   return (strcmp((str1+(len1-len2)), str2)==0);
 }
 
+
+# 99 "lib/string-util.c"
 boolean_t string_contains_char(const char* str, char ch){
   return (string_index_of_char(str, ch)>=0);
 }
 
+
+# 113 "lib/string-util.c"
 int string_index_of_char(const char* str, char ch){
   if (string_is_null_or_empty(str))
   {
@@ -3145,16 +3370,22 @@ int string_index_of_char(const char* str, char ch){
   return (-1);
 }
 
+
+# 311 "lib/string-util.c"
 char* uint64_to_string(uint64_t number){
   char buffer[32];
   sprintf(buffer, "%lu", number);
   return string_duplicate(buffer);
 }
 
+
+# 132 "lib/string-util.c"
 uint64_t string_hash(const char* str){
   return fasthash64(str, strlen(str), 0);
 }
 
+
+# 141 "lib/string-util.c"
 char* string_substring(const char* str, int start, int end){
   uint64_t len = strlen(str);
   if ((((start>=len)||(start>=end))||(end<start)))
@@ -3174,6 +3405,8 @@ char* string_substring(const char* str, int start, int end){
   return result;
 }
 
+
+# 262 "lib/string-util.c"
 value_result_t string_parse_uint64(const char* string){
   if (string_starts_with(string, "0x"))
   {
@@ -3190,6 +3423,8 @@ value_result_t string_parse_uint64(const char* string){
   }
 }
 
+
+# 155 "lib/string-util.c"
 value_result_t string_parse_uint64_dec(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
@@ -3213,6 +3448,8 @@ value_result_t string_parse_uint64_dec(const char* string){
   return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
 }
 
+
+# 223 "lib/string-util.c"
 value_result_t string_parse_uint64_hex(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
@@ -3236,6 +3473,8 @@ value_result_t string_parse_uint64_hex(const char* string){
   return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
 }
 
+
+# 183 "lib/string-util.c"
 value_result_t string_parse_uint64_bin(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
@@ -3259,6 +3498,8 @@ value_result_t string_parse_uint64_bin(const char* string){
   return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
 }
 
+
+# 278 "lib/string-util.c"
 char* string_duplicate(const char* src){
   if ((src==NULL))
   {
@@ -3270,6 +3511,8 @@ char* string_duplicate(const char* src){
   return result;
 }
 
+
+# 295 "lib/string-util.c"
 char* string_append(const char* a, const char* b){
   if (((a==NULL)||(b==NULL)))
   {
@@ -3282,6 +3525,8 @@ char* string_append(const char* a, const char* b){
   return result;
 }
 
+
+# 323 "lib/string-util.c"
 char* string_left_pad(const char* str, int n, char ch){
   if ((n<0))
   {
@@ -3304,6 +3549,8 @@ char* string_left_pad(const char* str, int n, char ch){
   return result;
 }
 
+
+# 357 "lib/string-util.c"
 char* string_right_pad(const char* str, int n, char ch){
   if ((n<0))
   {
@@ -3326,6 +3573,8 @@ char* string_right_pad(const char* str, int n, char ch){
   return result;
 }
 
+
+# 429 "lib/string-util.c"
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...){
   char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
@@ -3357,6 +3606,8 @@ while (0);
   }
 }
 
+
+# 395 "lib/string-util.c"
 char* string_truncate(char* str, int limit, char* at_limit_suffix){
   buffer_t* buffer = make_buffer(limit);
   for (
@@ -3382,6 +3633,8 @@ char* string_truncate(char* str, int limit, char* at_limit_suffix){
   return result;
 }
 
+
+# 497 "lib/string-util.c"
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed){
   const uint64_t m = 0x880355f21e6d1965ULL;
   const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
@@ -3419,6 +3672,8 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed){
   return mix(h);
 }
 
+
+# 262 "lib/logger.c"
 void logger_init(void){
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
   if ((level_string!=NULL))
@@ -3459,6 +3714,8 @@ void logger_init(void){
   }
 }
 
+
+# 335 "lib/logger.c"
 __attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...){
   FILE* output = (global_logger_state.output);
   if ((output==NULL))
@@ -3477,6 +3734,8 @@ __attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_numb
   }
 }
 
+
+# 228 "lib/logger.c"
 value_result_t parse_log_level_enum(char* str){
   if (((strcmp("FATAL", str)==0)||(strcmp("fatal", str)==0)))
   {
@@ -3513,6 +3772,8 @@ value_result_t parse_log_level_enum(char* str){
   }
 }
 
+
+# 308 "lib/logger.c"
 char* logger_level_to_string(int level){
   switch (level)
   {
@@ -3533,6 +3794,8 @@ char* logger_level_to_string(int level){
   }
 }
 
+
+# 34 "lib/utf8-decoder.c"
 utf8_decode_result_t utf8_decode(const uint8_t* array){
   uint8_t firstByte = (array[0]);
   if (((firstByte&0x80)==0))
@@ -3566,6 +3829,8 @@ utf8_decode_result_t utf8_decode(const uint8_t* array){
   }
 }
 
+
+# 123 "lib/buffer.c"
 buffer_t* make_buffer(uint64_t initial_capacity){
   buffer_t* result = malloc_struct(buffer_t);
   if ((initial_capacity<16))
@@ -3580,10 +3845,14 @@ buffer_t* make_buffer(uint64_t initial_capacity){
   return result;
 }
 
+
+# 140 "lib/buffer.c"
 uint64_t buffer_length(buffer_t* array){
   return (array->length);
 }
 
+
+# 159 "lib/buffer.c"
 uint8_t buffer_get(buffer_t* buffer, uint64_t position){
   if ((position<(buffer->length)))
   {
@@ -3596,6 +3865,8 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position){
   }
 }
 
+
+# 177 "lib/buffer.c"
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
   if ((buffer==NULL))
   {
@@ -3615,10 +3886,14 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
   return result;
 }
 
+
+# 201 "lib/buffer.c"
 char* buffer_to_c_string(buffer_t* buffer){
   return buffer_c_substring(buffer, 0, (buffer->length));
 }
 
+
+# 147 "lib/buffer.c"
 void buffer_clear(buffer_t* buffer){
   for (
     int i = 0;
@@ -3630,6 +3905,8 @@ void buffer_clear(buffer_t* buffer){
   ((buffer->length)=0);
 }
 
+
+# 252 "lib/buffer.c"
 extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity){
   if (((buffer->capacity)<capacity))
   {
@@ -3642,6 +3919,8 @@ extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity){
   return buffer;
 }
 
+
+# 210 "lib/buffer.c"
 buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element){
   if (((buffer->length)<(buffer->capacity)))
   {
@@ -3653,6 +3932,8 @@ buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element){
   return buffer_append_byte(buffer, element);
 }
 
+
+# 225 "lib/buffer.c"
 buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes){
   for (
     int i = 0;
@@ -3664,10 +3945,14 @@ buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes
   return buffer;
 }
 
+
+# 576 "lib/buffer.c"
 extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer){
   return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
 }
 
+
+# 588 "lib/buffer.c"
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer){
   if ((buffer==src_buffer))
   {
@@ -3683,10 +3968,14 @@ extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_posit
   return buffer;
 }
 
+
+# 240 "lib/buffer.c"
 buffer_t* buffer_append_string(buffer_t* buffer, const char* str){
   return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
 }
 
+
+# 274 "lib/buffer.c"
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...){
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
@@ -3718,6 +4007,8 @@ while (0);
   }
 }
 
+
+# 312 "lib/buffer.c"
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count){
   for (
     int i = 0;
@@ -3729,6 +4020,8 @@ extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int
   return buffer;
 }
 
+
+# 326 "lib/buffer.c"
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position){
   if ((position>=(buffer->length)))
   {
@@ -3746,6 +4039,8 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position){
   return result;
 }
 
+
+# 352 "lib/buffer.c"
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point){
   if ((code_point<0x80))
   {
@@ -3783,6 +4078,8 @@ extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
   }
 }
 
+
+# 387 "lib/buffer.c"
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str){
   for (
     uint64_t pos = start_position;
@@ -3807,12 +4104,16 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char
   return false;
 }
 
+
+# 413 "lib/buffer.c"
 buffer_t* buffer_from_string(char* string){
   buffer_t* result = make_buffer(strlen(string));
   (result=buffer_append_string(result, string));
   return result;
 }
 
+
+# 426 "lib/buffer.c"
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width){
   if ((start>end))
   {
@@ -3838,6 +4139,8 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, u
   return buffer;
 }
 
+
+# 460 "lib/buffer.c"
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text){
   int len_original = strlen(original_text);
   int len_replacement = strlen(replacement_text);
@@ -3861,6 +4164,8 @@ buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replac
   return buffer;
 }
 
+
+# 525 "lib/buffer.c"
 buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement){
   for (
     int i = 0;
@@ -3875,6 +4180,8 @@ buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8
   return buffer;
 }
 
+
+# 507 "lib/buffer.c"
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text){
   for (
     int i = start;
@@ -3889,6 +4196,8 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
   return false;
 }
 
+
+# 542 "lib/buffer.c"
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start){
   uint64_t position = start;
   while ((position>0))
@@ -3902,6 +4211,8 @@ uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start){
   return position;
 }
 
+
+# 561 "lib/buffer.c"
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start){
   uint64_t position = start;
   while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
@@ -3911,6 +4222,8 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start){
   return position;
 }
 
+
+# 611 "lib/buffer.c"
 buffer_t* buffer_to_uppercase(buffer_t* buffer){
   for (
     uint64_t i = 0;
@@ -3922,6 +4235,8 @@ buffer_t* buffer_to_uppercase(buffer_t* buffer){
   return buffer;
 }
 
+
+# 627 "lib/buffer.c"
 buffer_t* buffer_to_lowercase(buffer_t* buffer){
   for (
     uint64_t i = 0;
@@ -3933,6 +4248,8 @@ buffer_t* buffer_to_lowercase(buffer_t* buffer){
   return buffer;
 }
 
+
+# 480 "lib/buffer.c"
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position){
   uint64_t line = 1;
   uint64_t column = 1;
@@ -3958,6 +4275,8 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t 
                                              });
 }
 
+
+# 66 "lib/value-array.c"
 value_array_t* make_value_array(uint64_t initial_capacity){
   if ((initial_capacity==0))
   {
@@ -3969,6 +4288,8 @@ value_array_t* make_value_array(uint64_t initial_capacity){
   return result;
 }
 
+
+# 104 "lib/value-array.c"
 value_t value_array_get(value_array_t* array, uint32_t index){
   if ((index<(array->length)))
   {
@@ -3978,6 +4299,8 @@ value_t value_array_get(value_array_t* array, uint32_t index){
   return ((value_t) {0});
 }
 
+
+# 119 "lib/value-array.c"
 void value_array_replace(value_array_t* array, uint32_t index, value_t element){
   if ((index<(array->length)))
   {
@@ -3987,15 +4310,21 @@ void value_array_replace(value_array_t* array, uint32_t index, value_t element){
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 }
 
+
+# 136 "lib/value-array.c"
 void value_array_add(value_array_t* array, value_t element){
   value_array_ensure_capacity(array, ((array->length)+1));
   (((array->elements)[((array->length)++)])=element);
 }
 
+
+# 147 "lib/value-array.c"
 void value_array_push(value_array_t* array, value_t element){
   value_array_add(array, element);
 }
 
+
+# 162 "lib/value-array.c"
 value_t value_array_pop(value_array_t* array){
   if (((array->length)==0))
   {
@@ -4008,6 +4337,8 @@ value_t value_array_pop(value_array_t* array){
   return result;
 }
 
+
+# 190 "lib/value-array.c"
 void value_array_insert_at(value_array_t* array, uint32_t position, value_t element){
   if ((position==(array->length)))
   {
@@ -4031,6 +4362,8 @@ void value_array_insert_at(value_array_t* array, uint32_t position, value_t elem
   (((array->elements)[position])=element);
 }
 
+
+# 223 "lib/value-array.c"
 value_t value_array_delete_at(value_array_t* array, uint32_t position){
   value_t result = value_array_get(array, position);
   for (
@@ -4044,6 +4377,8 @@ value_t value_array_delete_at(value_array_t* array, uint32_t position){
   return result;
 }
 
+
+# 79 "lib/value-array.c"
 void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity){
   if (((array->capacity)<required_capacity))
   {
@@ -4067,6 +4402,8 @@ void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacit
   }
 }
 
+
+# 97 "lib/value-alist.c"
 value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
   while (list)
   {
@@ -4079,6 +4416,8 @@ value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn,
   return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
 }
 
+
+# 57 "lib/value-alist.c"
 value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value){
   value_alist_t* result = malloc_struct(value_alist_t);
   ((result->next)=value_alist_delete(list, cmp_fn, key));
@@ -4087,6 +4426,8 @@ value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_f
   return result;
 }
 
+
+# 74 "lib/value-alist.c"
 value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
   if ((list==NULL))
   {
@@ -4102,6 +4443,8 @@ value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_f
   return list;
 }
 
+
+# 116 "lib/value-alist.c"
 __attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list){
   uint64_t result = 0;
   while (list)
@@ -4112,6 +4455,8 @@ __attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_ali
   return result;
 }
 
+
+# 103 "lib/value-hashtable.c"
 value_hashtable_t* make_value_hashtable(uint64_t n_buckets){
   if ((n_buckets<2))
   {
@@ -4123,6 +4468,8 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets){
   return result;
 }
 
+
+# 120 "lib/value-hashtable.c"
 value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value){
   uint64_t hashcode = hash_fn(key);
   int bucket = (hashcode%(ht->n_buckets));
@@ -4142,6 +4489,8 @@ value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
   return ht;
 }
 
+
+# 149 "lib/value-hashtable.c"
 value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
   uint64_t hashcode = hash_fn(key);
   int bucket = (hashcode%(ht->n_buckets));
@@ -4157,6 +4506,8 @@ value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
   return ht;
 }
 
+
+# 169 "lib/value-hashtable.c"
 value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
   uint64_t hashcode = hash_fn(key);
   int bucket = (hashcode%(ht->n_buckets));
@@ -4164,6 +4515,8 @@ value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value
   return value_alist_find(list, cmp_fn, key);
 }
 
+
+# 191 "lib/value-hashtable.c"
 void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn){
   uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
   value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
@@ -4183,6 +4536,8 @@ void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_f
   free_bytes(new_ht);
 }
 
+
+# 91 "lib/value-tree.c"
 value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
   if ((t==NULL))
   {
@@ -4206,6 +4561,8 @@ value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, valu
   }
 }
 
+
+# 158 "lib/value-tree.c"
 value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value){
   if ((t==NULL))
   {
@@ -4231,6 +4588,8 @@ value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, val
   return t;
 }
 
+
+# 227 "lib/value-tree.c"
 value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
   if ((t==NULL))
   {
@@ -4280,6 +4639,8 @@ value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, val
   return t;
 }
 
+
+# 109 "lib/value-tree.c"
 value_tree_t* value_tree_skew(value_tree_t* t){
   if ((t==NULL))
   {
@@ -4299,6 +4660,8 @@ value_tree_t* value_tree_skew(value_tree_t* t){
   return t;
 }
 
+
+# 125 "lib/value-tree.c"
 value_tree_t* value_tree_split(value_tree_t* t){
   if ((t==NULL))
   {
@@ -4319,6 +4682,8 @@ value_tree_t* value_tree_split(value_tree_t* t){
   return t;
 }
 
+
+# 144 "lib/value-tree.c"
 value_tree_t* make_value_tree_leaf(value_t key, value_t value){
   value_tree_t* result = malloc_struct(value_tree_t);
   ((result->level)=1);
@@ -4327,6 +4692,8 @@ value_tree_t* make_value_tree_leaf(value_t key, value_t value){
   return result;
 }
 
+
+# 187 "lib/value-tree.c"
 value_tree_t* value_tree_decrease_level(value_tree_t* t){
   if (((t->left)&&(t->right)))
   {
@@ -4343,6 +4710,8 @@ value_tree_t* value_tree_decrease_level(value_tree_t* t){
   return t;
 }
 
+
+# 201 "lib/value-tree.c"
 value_tree_t* value_tree_predecessor(value_tree_t* t){
   (t=(t->left));
   while (((t->right)!=NULL))
@@ -4352,6 +4721,8 @@ value_tree_t* value_tree_predecessor(value_tree_t* t){
   return t;
 }
 
+
+# 209 "lib/value-tree.c"
 value_tree_t* value_tree_successor(value_tree_t* t){
   (t=(t->right));
   while (((t->left)!=NULL))
@@ -4361,6 +4732,8 @@ value_tree_t* value_tree_successor(value_tree_t* t){
   return t;
 }
 
+
+# 206 "lib/flag.c"
 void flag_program_name(char* name){
   (current_program=malloc_struct(program_descriptor_t));
   ((current_program->name)=name);
@@ -4368,6 +4741,8 @@ void flag_program_name(char* name){
   (current_flag=NULL);
 }
 
+
+# 233 "lib/flag.c"
 void flag_description(char* description){
   if ((current_flag!=NULL))
   {
@@ -4390,6 +4765,8 @@ void flag_description(char* description){
   }
 }
 
+
+# 259 "lib/flag.c"
 void flag_file_args(value_array_t** write_back_file_args_ptr){
   if ((current_command!=NULL))
   {
@@ -4407,6 +4784,8 @@ void flag_file_args(value_array_t** write_back_file_args_ptr){
   }
 }
 
+
+# 219 "lib/flag.c"
 void flag_command(char* name, char** write_back_ptr){
   (current_command=malloc_struct(command_descriptor_t));
   ((current_command->name)=name);
@@ -4415,36 +4794,52 @@ void flag_command(char* name, char** write_back_ptr){
   ((current_program->commands)=string_tree_insert((current_program->commands), name, ptr_to_value(current_command)));
 }
 
+
+# 291 "lib/flag.c"
 void flag_boolean(char* name, boolean_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_boolean);
 }
 
+
+# 295 "lib/flag.c"
 void flag_string(char* name, char** write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_string);
 }
 
+
+# 299 "lib/flag.c"
 void flag_uint64(char* name, uint64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_uint64);
 }
 
+
+# 303 "lib/flag.c"
 void flag_int64(char* name, int64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_int64);
 }
 
+
+# 307 "lib/flag.c"
 void flag_double(char* name, double* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_double);
 }
 
+
+# 328 "lib/flag.c"
 void flag_enum(char* name, int* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_enum);
   ((current_flag->enum_size)=((sizeof(int))*8));
 }
 
+
+# 333 "lib/flag.c"
 void flag_enum_64(char* name, uint64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_enum);
   ((current_flag->enum_size)=64);
 }
 
+
+# 338 "lib/flag.c"
 void flag_enum_value(char* name, uint64_t value){
   if (((!current_flag)||((current_flag->flag_type)!=flag_type_enum)))
   {
@@ -4454,6 +4849,8 @@ void flag_enum_value(char* name, uint64_t value){
   ((current_flag->enum_values)=string_tree_insert((current_flag->enum_values), name, u64_to_value(value)));
 }
 
+
+# 348 "lib/flag.c"
 void flag_alias(char* alias){
   if ((current_flag!=NULL))
   {
@@ -4479,6 +4876,8 @@ void flag_alias(char* alias){
   }
 }
 
+
+# 379 "lib/flag.c"
 char* flag_parse_command_line(int argc, char** argv){
   if ((current_program==NULL))
   {
@@ -4558,6 +4957,8 @@ char* flag_parse_command_line(int argc, char** argv){
   return NULL;
 }
 
+
+# 638 "lib/flag.c"
 void flag_print_help(FILE* out, char* message){
   fprintf(out, "\nMessage: %s\n", message);
   if ((current_program==NULL))
@@ -4585,6 +4986,8 @@ void flag_print_help(FILE* out, char* message){
   }
 }
 
+
+# 465 "lib/flag.c"
 command_descriptor_t* flag_find_command_descriptor(char* name){
   if (((current_program->commands)==NULL))
   {
@@ -4602,6 +5005,8 @@ command_descriptor_t* flag_find_command_descriptor(char* name){
   }
 }
 
+
+# 485 "lib/flag.c"
 flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name){
   if ((command!=NULL))
   {
@@ -4619,6 +5024,8 @@ flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char
   return NULL;
 }
 
+
+# 521 "lib/flag.c"
 flag_key_value_t flag_split_argument(char* arg){
   int equal_sign_index = string_index_of_char(arg, '=');
   if ((equal_sign_index>=0))
@@ -4630,6 +5037,8 @@ flag_key_value_t flag_split_argument(char* arg){
   return ((flag_key_value_t) {.key = arg, .value = NULL});
 }
 
+
+# 538 "lib/flag.c"
 char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value){
   switch ((flag->flag_type))
   {
@@ -4649,6 +5058,8 @@ char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value)
   return "<ILLEGAL-STATE-NOT-REACHED>";
 }
 
+
+# 561 "lib/flag.c"
 char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value){
   char* val = (key_value.value);
   if (((string_equal("true", val)||string_equal("t", val))||string_equal("1", val)))
@@ -4667,6 +5078,8 @@ char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_valu
   return NULL;
 }
 
+
+# 577 "lib/flag.c"
 char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value){
   value_result_t val_result = string_parse_uint64((key_value.value));
   if (is_ok(val_result))
@@ -4680,6 +5093,8 @@ char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value
   return NULL;
 }
 
+
+# 589 "lib/flag.c"
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value){
   value_result_t val_result = string_tree_find((flag->enum_values), (key_value.value));
   if (is_ok(val_result))
@@ -4700,6 +5115,8 @@ char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value){
   return string_printf("Flag %s does not accept the argument value %s", (key_value.key), (key_value.value));
 }
 
+
+# 272 "lib/flag.c"
 void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type){
   (current_flag=malloc_struct(flag_descriptor_t));
   ((current_flag->flag_type)=flag_type);
@@ -4721,6 +5138,8 @@ void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type){
   }
 }
 
+
+# 623 "lib/flag.c"
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags){
   fprintf(out, "%s\n", header);
   string_tree_foreach(flags, key, value,   {
@@ -4729,6 +5148,8 @@ void flag_print_flags(FILE* out, char* header, string_tree_t* flags){
 );
 }
 
+
+# 69 "lib/io.c"
 __attribute__((warn_unused_result)) buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name){
   uint64_t capacity = (bytes->capacity);
   {
@@ -4747,6 +5168,8 @@ __attribute__((warn_unused_result)) buffer_t* buffer_append_file_contents(buffer
   return bytes;
 }
 
+
+# 99 "lib/io.c"
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input){
   uint8_t buffer[1024];
   while (1)
@@ -4761,6 +5184,8 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t*
   return bytes;
 }
 
+
+# 116 "lib/io.c"
 void buffer_write_file(buffer_t* bytes, char* file_name){
   FILE* file = fopen(file_name, "w");
   if ((file==NULL))
@@ -4784,6 +5209,8 @@ void buffer_write_file(buffer_t* bytes, char* file_name){
   }
 }
 
+
+# 196 "lib/io.c"
 buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line){
   while ((!feof(input)))
   {
@@ -4801,11 +5228,15 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line){
   return buffer;
 }
 
+
+# 217 "lib/io.c"
 extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes){
   int file_number = fileno(input);
   return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
 }
 
+
+# 230 "lib/io.c"
 extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes){
   fcntl(file_number, F_SETFL, (fcntl(file_number, F_GETFL)|O_NONBLOCK));
   uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
@@ -4842,6 +5273,8 @@ extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_
   return buffer;
 }
 
+
+# 274 "lib/io.c"
 int file_peek_byte(FILE* input){
   if (feof(input))
   {
@@ -4855,10 +5288,14 @@ int file_peek_byte(FILE* input){
   return result;
 }
 
+
+# 294 "lib/io.c"
 boolean_t file_eof(FILE* input){
   return (feof(input)||(file_peek_byte(input)<0));
 }
 
+
+# 305 "lib/io.c"
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size){
   if (until_eof)
   {
@@ -4878,6 +5315,8 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t s
   }
 }
 
+
+# 335 "lib/io.c"
 void file_skip_bytes(FILE* input, uint64_t n_bytes){
   while (1)
   {
@@ -4894,6 +5333,8 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes){
   }
 }
 
+
+# 141 "lib/io.c"
 void make_file_read_only(char* file_name){
   if ((chmod(file_name, ((S_IRUSR|S_IRGRP)|S_IROTH))!=0))
   {
@@ -4903,6 +5344,8 @@ void make_file_read_only(char* file_name){
   }
 }
 
+
+# 156 "lib/io.c"
 void make_writable_if_exists(const char* file_name){
   if ((access(file_name, F_OK)!=0))
   {
@@ -4922,10 +5365,14 @@ void make_writable_if_exists(const char* file_name){
   }
 }
 
+
+# 362 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
 }
 
+
+# 225 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color){
   uint8_t blue = (color&0xff);
   uint8_t green = ((color>>8)&0xff);
@@ -4933,6 +5380,8 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(b
   return buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
 }
 
+
+# 246 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color){
   uint8_t blue = (color&0xff);
   uint8_t green = ((color>>8)&0xff);
@@ -4940,10 +5389,14 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(b
   return buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
 }
 
+
+# 269 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_absolute(buffer_t* buffer, int x, int y){
   return buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
 }
 
+
+# 284 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(buffer_t* buffer, int x, int y){
   if ((x>0))
   {
@@ -4965,26 +5418,38 @@ __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(b
   return buffer;
 }
 
+
+# 306 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_bold(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
 }
 
+
+# 317 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
 }
 
+
+# 328 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_italic(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
 }
 
+
+# 339 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_underline(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
 }
 
+
+# 351 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
 }
 
+
+# 372 "lib/terminal.c"
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box){
   (buffer=term_move_cursor_absolute(buffer, x0, y0));
   (buffer=buffer_append_code_point(buffer, (box->upper_left_corner)));
@@ -5025,6 +5490,8 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
   return buffer;
 }
 
+
+# 412 "lib/terminal.c"
 extern struct termios term_echo_off(){
   struct termios oldt;
   struct termios newt;
@@ -5037,18 +5504,26 @@ extern struct termios term_echo_off(){
   return oldt;
 }
 
+
+# 434 "lib/terminal.c"
 extern void term_echo_restore(struct termios oldt){
   tcsetattr(STDIN_FILENO, TCSANOW, (&oldt));
 }
 
+
+# 34 "lib/tokenizer.c"
 value_array_t* string_tokenize(const char* str, const char* delimiters){
   return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
 }
 
+
+# 48 "lib/tokenizer.c"
 value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters){
   return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
 }
 
+
+# 61 "lib/tokenizer.c"
 value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters){
   value_array_t* result = make_value_array(1);
   char token_data[1024];
@@ -5081,14 +5556,20 @@ value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* 
   return result;
 }
 
+
+# 87 "lib/tokenizer.c"
 void add_duplicate(value_array_t* token_array, const char* data){
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
 
+
+# 40 "lib/random.c"
 random_state_t random_state_for_test(void){
   return ((random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
 }
 
+
+# 91 "lib/random.c"
 uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
   if ((maximum==0))
   {
@@ -5107,6 +5588,8 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
   }
 }
 
+
+# 53 "lib/random.c"
 random_state_t* random_state(void){
   if (((shared_random_state.a)==0))
   {
@@ -5116,6 +5599,8 @@ random_state_t* random_state(void){
   return (&shared_random_state);
 }
 
+
+# 73 "lib/random.c"
 uint64_t random_next(random_state_t* state){
   uint64_t s0 = (state->a);
   uint64_t s1 = (state->b);
@@ -5126,16 +5611,22 @@ uint64_t random_next(random_state_t* state){
   return result;
 }
 
+
+# 60 "lib/cdl-printer.c"
 cdl_printer_t* make_cdl_printer(buffer_t* buffer){
   cdl_printer_t* result = malloc_struct(cdl_printer_t);
   ((result->buffer)=buffer);
   return result;
 }
 
+
+# 113 "lib/cdl-printer.c"
 void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
   cdl_output_token(printer, (boolean ? "true" : "false"));
 }
 
+
+# 117 "lib/cdl-printer.c"
 void cdl_string(cdl_printer_t* printer, char* string){
   if ((!is_safe_string(string)))
   {
@@ -5147,46 +5638,66 @@ void cdl_string(cdl_printer_t* printer, char* string){
   }
 }
 
+
+# 125 "lib/cdl-printer.c"
 void cdl_int64(cdl_printer_t* printer, int64_t number){
   cdl_output_token(printer, string_printf("%ld", number));
 }
 
+
+# 129 "lib/cdl-printer.c"
 void cdl_uint64(cdl_printer_t* printer, uint64_t number){
   cdl_output_token(printer, uint64_to_string(number));
 }
 
+
+# 133 "lib/cdl-printer.c"
 void cdl_double(cdl_printer_t* printer, double number){
   cdl_output_token(printer, string_printf("%lf", number));
 }
 
+
+# 137 "lib/cdl-printer.c"
 void cdl_start_array(cdl_printer_t* printer){
   cdl_output_token(printer, "[");
   ((printer->indention_level)+=1);
 }
 
+
+# 142 "lib/cdl-printer.c"
 void cdl_end_array(cdl_printer_t* printer){
   ((printer->indention_level)-=1);
   cdl_output_token(printer, "]");
 }
 
+
+# 147 "lib/cdl-printer.c"
 void cdl_start_table(cdl_printer_t* printer){
   cdl_output_token(printer, "{");
   ((printer->indention_level)+=1);
 }
 
+
+# 152 "lib/cdl-printer.c"
 void cdl_key(cdl_printer_t* printer, char* key){
   ((printer->key_token)=key);
 }
 
+
+# 154 "lib/cdl-printer.c"
 void cdl_end_table(cdl_printer_t* printer){
   ((printer->indention_level)-=1);
   cdl_output_token(printer, "}");
 }
 
+
+# 66 "lib/cdl-printer.c"
 void cdl_indent(cdl_printer_t* printer){
   buffer_append_repeated_byte((printer->buffer), ' ', (4*(printer->indention_level)));
 }
 
+
+# 71 "lib/cdl-printer.c"
 boolean_t is_safe_string(char* string){
   buffer_t* buffer = buffer_from_string(string);
   for (
@@ -5226,6 +5737,8 @@ boolean_t is_safe_string(char* string){
   return true;
 }
 
+
+# 103 "lib/cdl-printer.c"
 void cdl_output_token(cdl_printer_t* printer, char* string){
   cdl_indent(printer);
   if (((printer->key_token)!=NULL))
@@ -5239,6 +5752,8 @@ void cdl_output_token(cdl_printer_t* printer, char* string){
   }
 }
 
+
+# 71 "lib/sub-process.c"
 sub_process_t* make_sub_process(value_array_t* argv){
   sub_process_t* result = malloc_struct(sub_process_t);
   ((result->argv)=argv);
@@ -5246,6 +5761,8 @@ sub_process_t* make_sub_process(value_array_t* argv){
   return result;
 }
 
+
+# 84 "lib/sub-process.c"
 boolean_t sub_process_launch(sub_process_t* sub_process){
   uint64_t length = ((sub_process->argv)->length);
   if ((length<1))
@@ -5308,6 +5825,8 @@ boolean_t sub_process_launch(sub_process_t* sub_process){
   }
 }
 
+
+# 167 "lib/sub-process.c"
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position){
   int stdin_fd = (sub_process->stdin);
   int flags = fcntl(stdin_fd, F_GETFL, 0);
@@ -5328,6 +5847,8 @@ uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t 
   return bytes_written;
 }
 
+
+# 191 "lib/sub-process.c"
 void sub_process_close_stdin(sub_process_t* sub_process){
   if (((sub_process->stdin)!=(-1)))
   {
@@ -5340,6 +5861,8 @@ void sub_process_close_stdin(sub_process_t* sub_process){
   }
 }
 
+
+# 201 "lib/sub-process.c"
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr){
   if ((stdout!=NULL))
   {
@@ -5351,6 +5874,8 @@ void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* st
   }
 }
 
+
+# 262 "lib/sub-process.c"
 void sub_process_wait(sub_process_t* sub_process){
   if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
   {
@@ -5360,6 +5885,8 @@ void sub_process_wait(sub_process_t* sub_process){
   }
 }
 
+
+# 280 "lib/sub-process.c"
 void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr){
   sub_process_launch(sub_process);
   uint64_t written = 0;
@@ -5380,6 +5907,8 @@ while (is_sub_process_running(sub_process));
   sub_process_wait(sub_process);
 }
 
+
+# 215 "lib/sub-process.c"
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status){
   if ((pid==(-1)))
   {
@@ -5403,6 +5932,8 @@ void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int s
   }
 }
 
+
+# 241 "lib/sub-process.c"
 boolean_t is_sub_process_running(sub_process_t* sub_process){
   if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
   {
@@ -5418,6 +5949,8 @@ boolean_t is_sub_process_running(sub_process_t* sub_process){
   return false;
 }
 
+
+# 28 "lib/splitjoin.c"
 buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator){
   buffer_t* result = make_buffer(1);
   for (
@@ -5434,6 +5967,8 @@ buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator
   return result;
 }
 
+
+# 92 "lib/test.c"
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
   va_list args;
   fprintf(stdout, "%s:%d: ", file_name, line_number);
@@ -5444,6 +5979,8 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
   exit(1);
 }
 
+
+# 86 "keywords.c"
 void initialize_keyword_maps(void){
   int num_keywords = ((sizeof(c_keywords_array))/(sizeof((c_keywords_array[0]))));
   (c_keywords_ht=make_string_hashtable((2*num_keywords)));
@@ -5472,6 +6009,8 @@ void initialize_keyword_maps(void){
   (cpp_builtin_types_ht=string_ht_insert(cpp_builtin_types_ht, "char8_t", u64_to_value(1)));
 }
 
+
+# 135 "keywords.c"
 boolean_t is_reserved_word(input_mode_t mode, char* str){
   maybe_initialize_keyword_maps();
   switch (mode)
@@ -5488,6 +6027,8 @@ boolean_t is_reserved_word(input_mode_t mode, char* str){
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
+
+# 156 "keywords.c"
 boolean_t is_builtin_type_name(input_mode_t mode, char* str){
   maybe_initialize_keyword_maps();
   switch (mode)
@@ -5504,6 +6045,8 @@ boolean_t is_builtin_type_name(input_mode_t mode, char* str){
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
+
+# 13 "file-reader.c"
 value_array_t* read_files(value_array_t* files){
   fprintf(stderr, "Parsing %d files...\n", (files->length));
   value_array_t* result = make_value_array((files->length));
@@ -5519,6 +6062,8 @@ value_array_t* read_files(value_array_t* files){
   return result;
 }
 
+
+# 30 "file-reader.c"
 file_t* read_file(char* file_name){
   file_t* result = malloc_struct(file_t);
   buffer_t* buffer = make_buffer((1024*8));
@@ -5529,6 +6074,8 @@ file_t* read_file(char* file_name){
   return result;
 }
 
+
+# 73 "compiler-errors.c"
 buffer_t* buffer_append_human_readable_error(buffer_t* buffer, compiler_error_t* error){
   if (((error->tokenizer_error_code)!=TOKENIZER_ERROR_UNKNOWN))
   {
@@ -5541,6 +6088,8 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer, compiler_error_t*
   return buffer;
 }
 
+
+# 94 "compiler-errors.c"
 src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location, int before_lines, int after_lines){
   src_code_snippets_t result = {0};
   uint64_t current_begin = buffer_beginning_of_line(buffer, location);
@@ -5567,6 +6116,8 @@ src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location,
   return result;
 }
 
+
+# 129 "compiler-errors.c"
 char* do_common_replacements(char* template, compiler_error_t* error){
   buffer_t* buffer = make_buffer(256);
   char* file_name = (error->file_name);
@@ -5591,11 +6142,15 @@ char* do_common_replacements(char* template, compiler_error_t* error){
   return buffer_to_c_string(buffer);
 }
 
+
+# 228 "compiler-errors.c"
 buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer, compiler_error_t* error){
   (buffer=buffer_printf(buffer, "\nlexer error code = %d\n", (error->tokenizer_error_code)));
   return buffer;
 }
 
+
+# 239 "compiler-errors.c"
 buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_error_t* error){
   (buffer=buffer_printf(buffer, "\nparser error code = %d\n", (error->parse_error_code)));
   char* template = NULL;
@@ -5633,10 +6188,14 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_e
   return buffer_append_string(buffer, template_string);
 }
 
+
+# 101 "lexer.c"
 char* token_to_string(token_t* token){
   return buffer_c_substring((token->buffer), (token->start), (token->end));
 }
 
+
+# 111 "lexer.c"
 token_t* make_derived_token(token_t* source_token){
   token_t* result = (/*CAST*/(token_t*) malloc_copy_of((/*CAST*/(uint8_t*) source_token), (sizeof(token_t))));
   buffer_t* buffer = make_buffer(((source_token->end)-(source_token->start)));
@@ -5647,6 +6206,8 @@ token_t* make_derived_token(token_t* source_token){
   return result;
 }
 
+
+# 132 "lexer.c"
 __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, token_t token){
   char* str = token_to_string((&token));
   (buffer=buffer_printf(buffer, "type: %s start: %d end: %d line=%d column=%d str: %s", token_type_to_string((token.type)), (token.start), (token.end), (token.line_number), (token.column_number), str));
@@ -5654,6 +6215,8 @@ __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t
   return buffer;
 }
 
+
+# 149 "lexer.c"
 buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token){
   char* str = token_to_string(token);
   (buffer=buffer_printf(buffer, "%s", str));
@@ -5661,6 +6224,8 @@ buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token){
   return buffer;
 }
 
+
+# 181 "lexer.c"
 token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position){
   uint64_t pos = start_position;
   while ((pos<buffer_length(buffer)))
@@ -5688,6 +6253,8 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position){
                                            .end = pos})});
 }
 
+
+# 218 "lexer.c"
 boolean_t is_identifier_start(uint32_t code_point){
   switch (code_point)
   {
@@ -5700,6 +6267,8 @@ boolean_t is_identifier_start(uint32_t code_point){
   }
 }
 
+
+# 238 "lexer.c"
 token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position){
   uint64_t pos = start_position;
   while ((pos<buffer_length(buffer)))
@@ -5723,6 +6292,8 @@ token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position){
                                            .end = pos})});
 }
 
+
+# 280 "lexer.c"
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position){
   numeric_literal_encoding_t encoding = NUMERIC_LITERAL_ENCODING_UNDECIDED;
   uint32_t previous_code_point = 0;
@@ -5793,6 +6364,8 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position){
                                            .end = pos})});
 }
 
+
+# 349 "lexer.c"
 boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_point, uint32_t previous_code_point){
   switch (encoding)
   {
@@ -5817,6 +6390,8 @@ boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_p
   return false;
 }
 
+
+# 449 "lexer.c"
 token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position){
   int num_elements = ((sizeof(c_punctuation))/(sizeof((c_punctuation[0]))));
   for (
@@ -5837,10 +6412,14 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position)
                          .error_position = start_position});
 }
 
+
+# 468 "lexer.c"
 boolean_t is_comment_start(buffer_t* buffer, uint64_t position){
   return (buffer_match_string_at(buffer, position, "//")||buffer_match_string_at(buffer, position, "/*"));
 }
 
+
+# 473 "lexer.c"
 token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position){
   if (buffer_match_string_at(buffer, start_position, "//"))
   {
@@ -5878,10 +6457,14 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position){
                            .error_position = start_position});
 }
 
+
+# 505 "lexer.c"
 boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position){
   return buffer_match_string_at(buffer, position, "\"");
 }
 
+
+# 509 "lexer.c"
 token_or_error_t tokenize_quoted_literal_common(buffer_t* buffer, uint64_t start_position, char* opening_sequence, char* quoted_closing_sequence, char* closing_sequence, token_type_t token_type, tokenizer_error_t unterminated_error_code){
   if ((!buffer_match_string_at(buffer, start_position, opening_sequence)))
   {
@@ -5914,18 +6497,26 @@ token_or_error_t tokenize_quoted_literal_common(buffer_t* buffer, uint64_t start
                            .error_position = start_position});
 }
 
+
+# 549 "lexer.c"
 token_or_error_t tokenize_string_literal(buffer_t* buffer, uint64_t start_position){
   return tokenize_quoted_literal_common(buffer, start_position, "\"", "\\\"", "\"", TOKEN_TYPE_STRING_LITERAL, TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
 }
 
+
+# 556 "lexer.c"
 boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position){
   return buffer_match_string_at(buffer, position, "'");
 }
 
+
+# 560 "lexer.c"
 token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position){
   return tokenize_quoted_literal_common(buffer, start_position, "'", "\\'", "'", TOKEN_TYPE_CHARACTER_LITERAL, TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL);
 }
 
+
+# 598 "lexer.c"
 tokenizer_result_t tokenize(buffer_t* buffer){
   tokenizer_result_t result = {0};
   value_array_t* result_tokens = make_value_array(1024);
@@ -6000,6 +6591,8 @@ tokenizer_result_t tokenize(buffer_t* buffer){
   return result;
 }
 
+
+# 36 "token-transformer.c"
 value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options_t xform_options){
   value_array_t* result = make_value_array((tokens->length));
   for (
@@ -6036,6 +6629,8 @@ value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options
   return result;
 }
 
+
+# 7 "pstate.c"
 pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code){
   ((pstate->result_token)=NULL);
   ((pstate->result_node)=NULL);
@@ -6046,11 +6641,15 @@ pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_co
   return false;
 }
 
+
+# 32 "pstate.c"
 pstate_t* pstate_ignore_error(pstate_t* pstate){
   ((pstate->error)=((compiler_error_t) {0}));
   return pstate;
 }
 
+
+# 44 "pstate.c"
 pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position){
   ((pstate->position)=saved_position);
   if ((!((pstate->error).parse_error_code)))
@@ -6060,6 +6659,8 @@ pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position){
   return false;
 }
 
+
+# 58 "pstate.c"
 pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token){
   ((pstate->error)=((compiler_error_t) {0}));
   ((pstate->result_node)=NULL);
@@ -6067,6 +6668,8 @@ pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token){
   return true;
 }
 
+
+# 71 "pstate.c"
 pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node){
   ((pstate->error)=((compiler_error_t) {0}));
   ((pstate->result_node)=node);
@@ -6074,6 +6677,8 @@ pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node){
   return true;
 }
 
+
+# 85 "pstate.c"
 token_t* pstate_get_result_token(pstate_t* pstate){
   if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
   {
@@ -6085,6 +6690,8 @@ token_t* pstate_get_result_token(pstate_t* pstate){
   return token;
 }
 
+
+# 102 "pstate.c"
 parse_node_t* pstate_get_result_node(pstate_t* pstate){
   if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
   {
@@ -6100,6 +6707,8 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate){
   return result;
 }
 
+
+# 122 "pstate.c"
 parse_node_t* pstate_get_optional_result_node(pstate_t* pstate){
   ((pstate->error)=((compiler_error_t) {0}));
   parse_node_t* result = (pstate->result_node);
@@ -6107,10 +6716,14 @@ parse_node_t* pstate_get_optional_result_node(pstate_t* pstate){
   return result;
 }
 
+
+# 135 "pstate.c"
 token_t* pstate_peek(pstate_t* pstate, int offset){
   return token_at((pstate->tokens), ((pstate->position)+offset));
 }
 
+
+# 146 "pstate.c"
 token_t* pstate_advance(pstate_t* pstate){
   if (((pstate->error).parse_error_code))
   {
@@ -6122,11 +6735,15 @@ token_t* pstate_advance(pstate_t* pstate){
   return token;
 }
 
+
+# 162 "pstate.c"
 boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string){
   token_t* token = pstate_peek(pstate, 0);
   return token_matches(token, token_string);
 }
 
+
+# 179 "pstate.c"
 pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string){
   token_t* token = pstate_peek(pstate, 0);
   if (token_matches(token, token_string))
@@ -6140,6 +6757,8 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string){
   return false;
 }
 
+
+# 200 "pstate.c"
 pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type){
   token_t* token = pstate_peek(pstate, 0);
   if ((token_type==(token->type)))
@@ -6153,6 +6772,8 @@ pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type){
   return false;
 }
 
+
+# 308 "declaration-parser.c"
 pstatus_t parse_declarations(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   declarations_node_t* result = malloc_declarations();
@@ -6167,6 +6788,8 @@ pstatus_t parse_declarations(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 323 "declaration-parser.c"
 pstatus_t parse_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((((((parse_function_node(pstate)||parse_improved_typedef_node(pstate_ignore_error(pstate)))||parse_typedef_node(pstate_ignore_error(pstate)))||parse_enum_node_declaration(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_structure_node_declaration(pstate_ignore_error(pstate)))||parse_union_node_declaration(pstate_ignore_error(pstate))))
@@ -6176,6 +6799,8 @@ pstatus_t parse_declaration(pstate_t* pstate){
   return pstate_error(pstate, saved_position, PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION);
 }
 
+
+# 343 "declaration-parser.c"
 pstatus_t parse_enum_node_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_enum_node(pstate)))
@@ -6190,6 +6815,8 @@ pstatus_t parse_enum_node_declaration(pstate_t* pstate){
   return pstate_set_result_node(pstate, result);
 }
 
+
+# 363 "declaration-parser.c"
 pstatus_t parse_structure_node_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_structure_node(pstate)))
@@ -6204,6 +6831,8 @@ pstatus_t parse_structure_node_declaration(pstate_t* pstate){
   return pstate_set_result_node(pstate, result);
 }
 
+
+# 383 "declaration-parser.c"
 pstatus_t parse_union_node_declaration(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_union_node(pstate)))
@@ -6218,6 +6847,8 @@ pstatus_t parse_union_node_declaration(pstate_t* pstate){
   return pstate_set_result_node(pstate, result);
 }
 
+
+# 403 "declaration-parser.c"
 pstatus_t parse_attribute_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "__attribute__"))||(!parse_balanced_construct(pstate))))
@@ -6230,6 +6861,8 @@ pstatus_t parse_attribute_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 421 "declaration-parser.c"
 pstatus_t parse_function_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* storage_class_specifier = NULL;
@@ -6308,6 +6941,8 @@ pstatus_t parse_function_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(fn_node));
 }
 
+
+# 499 "declaration-parser.c"
 pstatus_t parse_function_argument_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   function_argument_node_t* result = malloc_function_argument_node();
@@ -6339,6 +6974,8 @@ pstatus_t parse_function_argument_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 530 "declaration-parser.c"
 pstatus_t parse_function_body_node(pstate_t* pstate){
   if ((pstate->use_statement_parser))
   {
@@ -6351,6 +6988,8 @@ pstatus_t parse_function_body_node(pstate_t* pstate){
   }
 }
 
+
+# 547 "declaration-parser.c"
 pstatus_t parse_typedef_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "typedef")))
@@ -6377,6 +7016,8 @@ pstatus_t parse_typedef_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 575 "declaration-parser.c"
 pstatus_t parse_improved_typedef_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "typedef")))
@@ -6407,6 +7048,8 @@ pstatus_t parse_improved_typedef_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 17 "debug-printer.c"
 void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node){
   switch ((node->tag))
   {
@@ -6514,6 +7157,8 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node){
   }
 }
 
+
+# 169 "debug-printer.c"
 void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list){
   cdl_start_array(printer);
   uint64_t length = node_list_length(list);
@@ -6527,6 +7172,8 @@ void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list){
   cdl_end_array(printer);
 }
 
+
+# 184 "debug-printer.c"
 void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, char* field_name){
   cdl_key(printer, field_name);
   cdl_start_array(printer);
@@ -6542,10 +7189,14 @@ void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, cha
   cdl_end_array(printer);
 }
 
+
+# 197 "debug-printer.c"
 void buffer_append_dbg_declarations(cdl_printer_t* printer, declarations_node_t* node){
   buffer_append_dbg_node_list(printer, (node->declarations));
 }
 
+
+# 202 "debug-printer.c"
 void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6562,6 +7213,8 @@ void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node){
   cdl_end_table(printer);
 }
 
+
+# 217 "debug-printer.c"
 void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6578,6 +7231,8 @@ void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node){
   cdl_end_table(printer);
 }
 
+
+# 233 "debug-printer.c"
 void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6594,6 +7249,8 @@ void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node){
   cdl_end_table(printer);
 }
 
+
+# 248 "debug-printer.c"
 void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6603,14 +7260,16 @@ void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string((node->name)));
   }
-  if (((node->value)!=NULL))
+  if (((node->value_expr)!=NULL))
   {
-    cdl_key(printer, "value");
-    cdl_string(printer, token_to_string((node->value)));
+    cdl_key(printer, "value_expr");
+    buffer_append_dbg_parse_node(printer, (node->value_expr));
   }
   cdl_end_table(printer);
 }
 
+
+# 264 "debug-printer.c"
 void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6625,9 +7284,25 @@ void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node){
     cdl_key(printer, "type");
     buffer_append_dbg_type_node(printer, (node->type));
   }
+  if (((node->suffixes)!=NULL))
+  {
+    cdl_key(printer, "suffixes");
+    cdl_start_array(printer);
+    for (
+      uint64_t i = 0;
+      (i<((node->suffixes)->length));
+      (i++))
+    {
+      parse_node_t* suffix = value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*));
+      buffer_append_dbg_parse_node(printer, suffix);
+    }
+    cdl_end_array(printer);
+  }
   cdl_end_table(printer);
 }
 
+
+# 290 "debug-printer.c"
 void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6667,6 +7342,8 @@ void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node){
   cdl_end_table(printer);
 }
 
+
+# 329 "debug-printer.c"
 void buffer_append_dbg_literal_node(cdl_printer_t* printer, literal_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6693,6 +7370,8 @@ void buffer_append_dbg_literal_node(cdl_printer_t* printer, literal_node_t* node
   cdl_end_table(printer);
 }
 
+
+# 352 "debug-printer.c"
 void buffer_append_dbg_function_node(cdl_printer_t* printer, function_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6724,6 +7403,8 @@ void buffer_append_dbg_function_node(cdl_printer_t* printer, function_node_t* no
   cdl_end_table(printer);
 }
 
+
+# 386 "debug-printer.c"
 void buffer_append_dbg_function_argument_node(cdl_printer_t* printer, function_argument_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6741,6 +7422,8 @@ void buffer_append_dbg_function_argument_node(cdl_printer_t* printer, function_a
   cdl_end_table(printer);
 }
 
+
+# 403 "debug-printer.c"
 void buffer_append_dbg_balanced_construct_node(cdl_printer_t* printer, balanced_construct_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6758,6 +7441,8 @@ void buffer_append_dbg_balanced_construct_node(cdl_printer_t* printer, balanced_
   cdl_end_table(printer);
 }
 
+
+# 419 "debug-printer.c"
 void buffer_append_dbg_typedef_node(cdl_printer_t* printer, typedef_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6775,6 +7460,8 @@ void buffer_append_dbg_typedef_node(cdl_printer_t* printer, typedef_node_t* node
   cdl_end_table(printer);
 }
 
+
+# 435 "debug-printer.c"
 void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable_definition_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6816,6 +7503,8 @@ void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable
   cdl_end_table(printer);
 }
 
+
+# 469 "debug-printer.c"
 void buffer_append_dbg_attribute_node(cdl_printer_t* printer, attribute_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6833,6 +7522,8 @@ void buffer_append_dbg_attribute_node(cdl_printer_t* printer, attribute_node_t* 
   cdl_end_table(printer);
 }
 
+
+# 492 "debug-printer.c"
 void buffer_append_dbg_empty_statement_node(cdl_printer_t* printer, empty_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6840,6 +7531,8 @@ void buffer_append_dbg_empty_statement_node(cdl_printer_t* printer, empty_statem
   cdl_end_table(printer);
 }
 
+
+# 503 "debug-printer.c"
 void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6849,6 +7542,8 @@ void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node){
   cdl_end_table(printer);
 }
 
+
+# 512 "debug-printer.c"
 void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6871,6 +7566,8 @@ void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node
   cdl_end_table(printer);
 }
 
+
+# 533 "debug-printer.c"
 void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6888,6 +7585,8 @@ void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t
   cdl_end_table(printer);
 }
 
+
+# 549 "debug-printer.c"
 void buffer_append_dbg_for_node(cdl_printer_t* printer, for_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6915,6 +7614,8 @@ void buffer_append_dbg_for_node(cdl_printer_t* printer, for_statement_node_t* no
   cdl_end_table(printer);
 }
 
+
+# 573 "debug-printer.c"
 void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6932,6 +7633,8 @@ void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node
   cdl_end_table(printer);
 }
 
+
+# 589 "debug-printer.c"
 void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6944,6 +7647,8 @@ void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statem
   cdl_end_table(printer);
 }
 
+
+# 601 "debug-printer.c"
 void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6956,6 +7661,8 @@ void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_
   cdl_end_table(printer);
 }
 
+
+# 613 "debug-printer.c"
 void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6968,6 +7675,8 @@ void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statem
   cdl_end_table(printer);
 }
 
+
+# 625 "debug-printer.c"
 void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6980,6 +7689,8 @@ void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t
   cdl_end_table(printer);
 }
 
+
+# 637 "debug-printer.c"
 void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6987,6 +7698,8 @@ void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_
   cdl_end_table(printer);
 }
 
+
+# 645 "debug-printer.c"
 void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -6999,6 +7712,8 @@ void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_stat
   cdl_end_table(printer);
 }
 
+
+# 657 "debug-printer.c"
 void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, expression_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7011,6 +7726,8 @@ void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, express
   cdl_end_table(printer);
 }
 
+
+# 671 "debug-printer.c"
 void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7020,6 +7737,8 @@ void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t
   cdl_end_table(printer);
 }
 
+
+# 681 "debug-printer.c"
 void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7039,6 +7758,8 @@ void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* no
   cdl_end_table(printer);
 }
 
+
+# 699 "debug-printer.c"
 void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7050,6 +7771,8 @@ void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node){
   cdl_end_table(printer);
 }
 
+
+# 710 "debug-printer.c"
 void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7072,6 +7795,8 @@ void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node
   cdl_end_table(printer);
 }
 
+
+# 730 "debug-printer.c"
 void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
@@ -7089,6 +7814,8 @@ void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node
   cdl_end_table(printer);
 }
 
+
+# 756 "debug-printer.c"
 void debug_append_tokens(buffer_t* buffer, value_array_t* tokens){
   for (
     int i = 0;
@@ -7100,6 +7827,8 @@ void debug_append_tokens(buffer_t* buffer, value_array_t* tokens){
   }
 }
 
+
+# 25 "c-file-printer.c"
 printer_t* append_parse_node(printer_t* printer, parse_node_t* node){
   switch ((node->tag))
   {
@@ -7161,6 +7890,8 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node){
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
+
+# 132 "c-file-printer.c"
 printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* node){
   for (
     int i = 0;
@@ -7203,12 +7934,16 @@ printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* no
   return printer;
 }
 
+
+# 168 "c-file-printer.c"
 printer_t* append_c_function_node_prototype(printer_t* printer, function_node_t* node){
   append_c_function_node_prefix(printer, node);
   append_string(printer, ";\n");
   return printer;
 }
 
+
+# 175 "c-file-printer.c"
 printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct_node_t* node){
   uint64_t start = ((node->start_token)->start);
   uint64_t end = ((node->end_token)->end);
@@ -7216,13 +7951,21 @@ printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct
   return printer;
 }
 
+
+# 184 "c-file-printer.c"
 printer_t* append_c_function_node_and_body(printer_t* printer, function_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->function_name));
+  }
   append_c_function_node_prefix(printer, node);
   append_parse_node(printer, (node->body));
   printer_newline(printer);
   return printer;
 }
 
+
+# 195 "c-file-printer.c"
 printer_t* append_c_function_argument_node(printer_t* printer, function_argument_node_t* node){
   if ((node->is_var_args))
   {
@@ -7240,6 +7983,8 @@ printer_t* append_c_function_argument_node(printer_t* printer, function_argument
   return printer;
 }
 
+
+# 214 "c-file-printer.c"
 printer_t* append_type_node(printer_t* printer, type_node_t* node){
   if ((((node->qualifiers)&TYPE_QUALIFIER_CONST)==TYPE_QUALIFIER_CONST))
   {
@@ -7294,6 +8039,8 @@ printer_t* append_type_node(printer_t* printer, type_node_t* node){
   return printer;
 }
 
+
+# 280 "c-file-printer.c"
 printer_t* append_fn_type_node(printer_t* printer, type_node_t* node){
   append_token(printer, (node->type_name));
   append_string(printer, "(");
@@ -7312,11 +8059,15 @@ printer_t* append_fn_type_node(printer_t* printer, type_node_t* node){
   return printer;
 }
 
+
+# 293 "c-file-printer.c"
 printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node){
   append_c_raw_token_span(printer, (node->inner_start_token), (node->inner_end_token));
   return printer;
 }
 
+
+# 317 "c-file-printer.c"
 printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, token_t* end_token){
   if (((start_token->buffer)!=(end_token->buffer)))
   {
@@ -7326,6 +8077,8 @@ printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, tok
   return printer;
 }
 
+
+# 327 "c-file-printer.c"
 printer_t* append_enum_node(printer_t* printer, enum_node_t* node){
   append_string(printer, "enum ");
   if (((node->name)!=NULL))
@@ -7353,16 +8106,20 @@ printer_t* append_enum_node(printer_t* printer, enum_node_t* node){
   return printer;
 }
 
+
+# 353 "c-file-printer.c"
 printer_t* append_enum_element(printer_t* printer, enum_element_t* node){
   append_token(printer, (node->name));
-  if (((node->value)!=NULL))
+  if (((node->value_expr)!=NULL))
   {
     append_string(printer, " = ");
-    append_token(printer, (node->value));
+    append_parse_node(printer, (node->value_expr));
   }
   return printer;
 }
 
+
+# 368 "c-file-printer.c"
 printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string){
   append_string(printer, "char* ");
   append_string(printer, to_string_fn_prefix);
@@ -7405,6 +8162,8 @@ printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to
   return printer;
 }
 
+
+# 418 "c-file-printer.c"
 printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string){
   append_string(printer, type_string);
   append_string(printer, " string_to_");
@@ -7437,6 +8196,8 @@ printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to
   return printer;
 }
 
+
+# 450 "c-file-printer.c"
 printer_t* append_field_node(printer_t* printer, field_node_t* node){
   append_type_node(printer, (node->type));
   append_string(printer, " ");
@@ -7444,9 +8205,21 @@ printer_t* append_field_node(printer_t* printer, field_node_t* node){
   {
     append_token(printer, (node->name));
   }
+  if ((node->suffixes))
+  {
+    for (
+      int i = 0;
+      (i<((node->suffixes)->length));
+      (i++))
+    {
+      append_parse_node(printer, value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*)));
+    }
+  }
   return printer;
 }
 
+
+# 470 "c-file-printer.c"
 printer_t* append_struct_node(printer_t* printer, struct_node_t* node){
   append_string(printer, (((node->tag)==PARSE_NODE_UNION) ? "union " : "struct "));
   if (((node->name)!=NULL))
@@ -7472,6 +8245,8 @@ printer_t* append_struct_node(printer_t* printer, struct_node_t* node){
   return printer;
 }
 
+
+# 494 "c-file-printer.c"
 printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node){
   append_string(printer, "typedef ");
   append_type_node(printer, (node->type_node));
@@ -7481,16 +8256,22 @@ printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node){
   return printer;
 }
 
+
+# 506 "c-file-printer.c"
 printer_t* append_cpp_include_node(printer_t* printer, cpp_include_node_t* node){
   append_string(printer, (node->text));
   return printer;
 }
 
+
+# 515 "c-file-printer.c"
 printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node){
   append_string(printer, (node->text));
   return printer;
 }
 
+
+# 523 "c-file-printer.c"
 printer_t* append_variable_definition_node(printer_t* printer, variable_definition_node_t* node, boolean_t is_library){
   printer_indent(printer);
   boolean_t is_header_file = (!is_library);
@@ -7526,6 +8307,8 @@ printer_t* append_variable_definition_node(printer_t* printer, variable_definiti
   return printer;
 }
 
+
+# 555 "c-file-printer.c"
 printer_t* append_literal_node(printer_t* printer, literal_node_t* node){
   if (((node->token)!=NULL))
   {
@@ -7569,33 +8352,50 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node){
   return printer;
 }
 
+
+# 586 "c-file-printer.c"
 printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node){
   if (((node->token)==NULL))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  append_token(printer, (node->token));
+  if (token_matches((node->token), "nullptr"))
+  {
+    append_string(printer, "((void *)0)");
+  }
+  else
+  {
+    append_token(printer, (node->token));
+  }
   return printer;
 }
 
+
+# 605 "c-file-printer.c"
 printer_t* append_empty_statement_node(printer_t* printer, empty_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, ";\n");
   return printer;
 }
 
+
+# 615 "c-file-printer.c"
 printer_t* append_break_statement_node(printer_t* printer, break_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "break;\n");
   return printer;
 }
 
+
+# 625 "c-file-printer.c"
 printer_t* append_continue_statement_node(printer_t* printer, continue_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "continue;\n");
   return printer;
 }
 
+
+# 635 "c-file-printer.c"
 printer_t* append_label_statement_node(printer_t* printer, label_statement_node_t* node){
   printer_indent(printer);
   append_token(printer, (node->label));
@@ -7603,6 +8403,8 @@ printer_t* append_label_statement_node(printer_t* printer, label_statement_node_
   return printer;
 }
 
+
+# 646 "c-file-printer.c"
 printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node){
   printer_indent(printer);
   append_string(printer, "case ");
@@ -7611,12 +8413,16 @@ printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node){
   return printer;
 }
 
+
+# 657 "c-file-printer.c"
 printer_t* append_default_label_node(printer_t* printer, default_label_node_t* node){
   printer_indent(printer);
   append_string(printer, "default:\n");
   return printer;
 }
 
+
+# 667 "c-file-printer.c"
 printer_t* append_expression_statement_node(printer_t* printer, expression_statement_node_t* node){
   printer_indent(printer);
   append_parse_node(printer, (node->expression));
@@ -7624,6 +8430,8 @@ printer_t* append_expression_statement_node(printer_t* printer, expression_state
   return printer;
 }
 
+
+# 678 "c-file-printer.c"
 printer_t* append_block_node(printer_t* printer, block_node_t* node){
   printer_indent(printer);
   append_string(printer, "{\n");
@@ -7642,6 +8450,8 @@ printer_t* append_block_node(printer_t* printer, block_node_t* node){
   return printer;
 }
 
+
+# 695 "c-file-printer.c"
 printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "if (");
@@ -7657,6 +8467,8 @@ printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* nod
   return printer;
 }
 
+
+# 713 "c-file-printer.c"
 printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "while (");
@@ -7666,6 +8478,8 @@ printer_t* append_while_statement_node(printer_t* printer, while_statement_node_
   return printer;
 }
 
+
+# 726 "c-file-printer.c"
 printer_t* append_switch_statement_node(printer_t* printer, switch_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "switch (");
@@ -7675,6 +8489,8 @@ printer_t* append_switch_statement_node(printer_t* printer, switch_statement_nod
   return printer;
 }
 
+
+# 739 "c-file-printer.c"
 printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "for (\n");
@@ -7706,6 +8522,8 @@ printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* n
   return printer;
 }
 
+
+# 776 "c-file-printer.c"
 printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "do");
@@ -7716,6 +8534,8 @@ printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* nod
   return printer;
 }
 
+
+# 791 "c-file-printer.c"
 printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "return");
@@ -7728,6 +8548,8 @@ printer_t* append_return_statement_node(printer_t* printer, return_statement_nod
   return printer;
 }
 
+
+# 806 "c-file-printer.c"
 printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
   if (token_matches((node->operator), "cast"))
   {
@@ -7776,6 +8598,8 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
   return printer;
 }
 
+
+# 851 "c-file-printer.c"
 printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node){
   append_string(printer, "(");
   if (((node->condition)!=NULL))
@@ -7796,6 +8620,8 @@ printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node)
   return printer;
 }
 
+
+# 872 "c-file-printer.c"
 printer_t* append_call_node(printer_t* printer, call_node_t* node){
   append_parse_node(printer, (node->function));
   append_string(printer, "(");
@@ -7814,6 +8640,8 @@ printer_t* append_call_node(printer_t* printer, call_node_t* node){
   return printer;
 }
 
+
+# 889 "c-file-printer.c"
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string){
   char* code_template = "enum_metadata_t* ${fn_prefix}_metadata() {\n" "${element_constructions}" "    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {\n" "        .name = \"${enum_name}\",\n" "        .elements = ${previous_var_address}\n" "    };\n" "    return &enum_metadata_result;\n" "}\n\n";
   char* field_template = "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n" "        .next = ${previous_var_address},\n" "        .name = \"${element_name}\",\n" "        .value = ${element_name}\n" "    };\n";
@@ -7844,6 +8672,24 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char*
   return buffer_append_buffer(buffer, code);
 }
 
+
+# 943 "c-file-printer.c"
+printer_t* append_line_directive(printer_t* printer, token_t* token){
+  if (((printer->symbol_table)==NULL))
+  {
+    log_fatal("printer->symbol_table is not set.");
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  file_t* file = symbol_table_token_to_file((printer->symbol_table), token);
+  if ((file!=NULL))
+  {
+    buffer_printf((printer->buffer), "\n# %d \"%s\"\n", (token->line_number), ((file==NULL) ? "fixme.c" : (file->file_name)));
+  }
+  return printer;
+}
+
+
+# 85 "symbol-table.c"
 symbol_table_map_t* make_symbol_table_map(void){
   symbol_table_map_t* result = malloc_struct(symbol_table_map_t);
   ((result->ht)=make_string_hashtable(16));
@@ -7851,8 +8697,11 @@ symbol_table_map_t* make_symbol_table_map(void){
   return result;
 }
 
+
+# 92 "symbol-table.c"
 symbol_table_t* make_symbol_table(void){
   symbol_table_t* result = malloc_struct(symbol_table_t);
+  ((result->files)=make_value_array(16));
   ((result->system_includes)=make_value_array(16));
   ((result->user_includes)=make_value_array(16));
   ((result->defines)=make_value_array(16));
@@ -7864,6 +8713,8 @@ symbol_table_t* make_symbol_table(void){
   return result;
 }
 
+
+# 111 "symbol-table.c"
 symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_string){
   value_result_t result = string_ht_find((map->ht), key_string);
   if (is_ok(result))
@@ -7873,6 +8724,8 @@ symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_
   return NULL;
 }
 
+
+# 128 "symbol-table.c"
 parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char* key_string){
   value_result_t result = string_ht_find((map->ht), key_string);
   if (is_ok(result))
@@ -7887,6 +8740,8 @@ parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char
   return NULL;
 }
 
+
+# 142 "symbol-table.c"
 void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string, parse_node_t* node){
   value_result_t previous_binding = string_ht_find((map->ht), key_string);
   if (is_ok(previous_binding))
@@ -7903,6 +8758,8 @@ void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string
   value_array_add((map->ordered_bindings), ptr_to_value(binding));
 }
 
+
+# 170 "symbol-table.c"
 void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_node_t* root){
   uint64_t length = node_list_length((root->declarations));
   for (
@@ -7936,6 +8793,8 @@ void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_nod
   }
 }
 
+
+# 214 "symbol-table.c"
 buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table){
   (buffer=buffer_printf(buffer, "Symbol Table Stats\n"));
   (buffer=buffer_printf(buffer, "#enums %d\n", string_ht_num_entries(((symbol_table->enums)->ht))));
@@ -7946,11 +8805,15 @@ buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table){
   return buffer;
 }
 
+
+# 229 "symbol-table.c"
 void buffer_append_dgb_binding(cdl_printer_t* printer, symbol_table_binding_t* binding){
   cdl_key(printer, (binding->key_string));
   buffer_append_dbg_parse_node(printer, value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
 }
 
+
+# 237 "symbol-table.c"
 void buffer_appennd_dbg_symbol_table_map(cdl_printer_t* printer, symbol_table_map_t* symbol_table_map){
   cdl_start_table(printer);
   for (
@@ -7964,6 +8827,8 @@ void buffer_appennd_dbg_symbol_table_map(cdl_printer_t* printer, symbol_table_ma
   cdl_end_table(printer);
 }
 
+
+# 248 "symbol-table.c"
 void buffer_append_dgb_symbol_table(cdl_printer_t* printer, symbol_table_t* symbol_table){
   cdl_start_table(printer);
   cdl_key(printer, "enumerations");
@@ -7979,6 +8844,8 @@ void buffer_append_dgb_symbol_table(cdl_printer_t* printer, symbol_table_t* symb
   cdl_end_table(printer);
 }
 
+
+# 17 "source-to-source.c"
 token_t* generate_struct_name_from_typedef_name(token_t* name){
   token_t* generated = make_derived_token(name);
   buffer_append_string((generated->buffer), "__generated_S");
@@ -7986,6 +8853,8 @@ token_t* generate_struct_name_from_typedef_name(token_t* name){
   return generated;
 }
 
+
+# 40 "source-to-source.c"
 void split_structure_typedefs(symbol_table_t* symbol_table){
   for (
     int i = 0;
@@ -8018,6 +8887,8 @@ void split_structure_typedefs(symbol_table_t* symbol_table){
   }
 }
 
+
+# 129 "source-to-source.c"
 void reorder_symbol_table_typedefs(symbol_table_t* symbol_table){
   value_array_t* bindings = ((symbol_table->typedefs)->ordered_bindings);
   value_array_t* reordered_bindings = make_value_array((bindings->length));
@@ -8032,6 +8903,8 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table){
   (((symbol_table->typedefs)->ordered_bindings)=reordered_bindings);
 }
 
+
+# 141 "source-to-source.c"
 void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings){
   log_debug("processing binding %s", (binding->key_string));
   if ((!(binding->visited)))
@@ -8071,6 +8944,8 @@ void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs
   }
 }
 
+
+# 188 "source-to-source.c"
 struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* binding){
   for (
     uint64_t i = 0;
@@ -8087,6 +8962,8 @@ struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* bindin
   return NULL;
 }
 
+
+# 201 "source-to-source.c"
 symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* symbol_table, type_node_t* type_node){
   if (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
   {
@@ -8130,6 +9007,8 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
   }
 }
 
+
+# 251 "source-to-source.c"
 void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_table, symbol_table_binding_t* binding, value_array_t* reordered_bindings){
   log_debug("processing %s", (binding->key_string));
   if ((!(binding->visited)))
@@ -8161,6 +9040,8 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
   }
 }
 
+
+# 292 "source-to-source.c"
 void reorder_symbol_table_structures(symbol_table_t* symbol_table){
   value_array_t* bindings = ((symbol_table->structures)->ordered_bindings);
   value_array_t* reordered_bindings = make_value_array((bindings->length));
@@ -8175,6 +9056,8 @@ void reorder_symbol_table_structures(symbol_table_t* symbol_table){
   (((symbol_table->structures)->ordered_bindings)=reordered_bindings);
 }
 
+
+# 315 "source-to-source.c"
 void convert_nullptr_to_null(value_array_t* tokens){
   buffer_t* null_token = buffer_append_string(make_buffer(1), "NULL");
   for (
@@ -8192,6 +9075,8 @@ void convert_nullptr_to_null(value_array_t* tokens){
   }
 }
 
+
+# 48 "preprocessor.c"
 c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position){
   c_preprocessor_directive_range_t result = {0};
   uint64_t position = start_position;
@@ -8222,6 +9107,8 @@ c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_opti
   return result;
 }
 
+
+# 80 "preprocessor.c"
 uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens, uint64_t start_position){
   c_preprocessor_directive_range_t range = mark_c_preprocessor_directive(options, tokens, start_position);
   token_t* directive_name = token_at(tokens, (start_position+1));
@@ -8248,6 +9135,8 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_
   return (range.token_end_position);
 }
 
+
+# 106 "preprocessor.c"
 void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens){
   for (
     uint64_t position = 0;
@@ -8266,79 +9155,8 @@ void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_tab
   }
 }
 
-__attribute__((warn_unused_result)) buffer_t* extract_enums_process_declarations(buffer_t* output, declarations_node_t* root){
-  printer_t* printer = make_printer(output, 2);
-  uint64_t length = node_list_length((root->declarations));
-  for (
-    uint64_t i = 0;
-    (i<length);
-    (i++))
-  {
-    parse_node_t* node = node_list_get((root->declarations), i);
-    if (((node->tag)==PARSE_NODE_TYPEDEF))
-    {
-      typedef_node_t* typedef_node = to_typedef_node(node);
-      if (is_enum_node(((typedef_node->type_node)->user_type)))
-      {
-        enum_node_t* enum_node = to_enum_node(((typedef_node->type_node)->user_type));
-        buffer_printf(output, "typedef ");
-        buffer_printf(output, "%s ", token_to_string((typedef_node->name)));
-        append_enum_node(printer, enum_node);
-        buffer_printf(output, ";\n\n");
-        char* enum_node_name = token_to_string((typedef_node->name));
-        char* to_string_prefix = remove_type_suffix(enum_node_name);
-        char* enum_node_type_string = enum_node_name;
-        append_enum_to_string(printer, enum_node, to_string_prefix, enum_node_type_string);
-        append_string_to_enum(printer, enum_node, to_string_prefix, enum_node_type_string);
-      }
-    }
-    else
-    if (((node->tag)==PARSE_NODE_ENUM))
-    {
-      enum_node_t* enum_node = to_enum_node(node);
-      append_enum_node(printer, enum_node);
-      buffer_printf(output, ";\n\n");
-      char* enum_node_name = token_to_string((enum_node->name));
-      char* to_string_prefix = remove_type_suffix(enum_node_name);
-      char* enum_node_type_string = string_printf("enum %s", enum_node_name);
-      append_enum_to_string(printer, enum_node, to_string_prefix, enum_node_type_string);
-      append_string_to_enum(printer, enum_node, to_string_prefix, enum_node_type_string);
-    }
-  }
-  return output;
-}
 
-__attribute__((warn_unused_result)) buffer_t* extract_prototypes_process_declarations(buffer_t* output, declarations_node_t* root){
-  printer_t* printer = make_printer(output, 2);
-  uint64_t length = node_list_length((root->declarations));
-  for (
-    uint64_t i = 0;
-    (i<length);
-    (i++))
-  {
-    parse_node_t* node = node_list_get((root->declarations), i);
-    if (((node->tag)==PARSE_NODE_FUNCTION))
-    {
-      function_node_t* fn_node = to_function_node(node);
-      if (((fn_node->body)==NULL))
-      {
-        continue;
-      }
-      if (token_list_contains((fn_node->function_specifiers), "inline"))
-      {
-        continue;
-      }
-      if ((((fn_node->storage_class_specifier)!=NULL)&&token_matches((fn_node->storage_class_specifier), "static")))
-      {
-        continue;
-      }
-      append_c_function_node_prototype(printer, fn_node);
-      buffer_printf(output, "\n");
-    }
-  }
-  return output;
-}
-
+# 12 "symbol-table-builder.c"
 void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names, boolean_t use_statement_parser){
   value_array_t* files = read_files(file_names);
   for (
@@ -8347,10 +9165,13 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_arr
     (i++))
   {
     file_t* file = (/*CAST*/(file_t*) (value_array_get(files, i).ptr));
+    value_array_add((symbol_table->files), ptr_to_value(file));
     symbol_table_parse_buffer(symbol_table, (file->data), (file->file_name), use_statement_parser);
   }
 }
 
+
+# 34 "symbol-table-builder.c"
 void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, char* file_name, boolean_t use_statement_parser){
   tokenizer_result_t tokenizer_result = tokenize(buffer);
   if ((tokenizer_result.tokenizer_error_code))
@@ -8382,9 +9203,30 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, c
   symbol_table_add_declartions(symbol_table, root);
 }
 
+
+# 87 "symbol-table-builder.c"
+file_t* symbol_table_token_to_file(symbol_table_t* symbol_table, token_t* token){
+  value_array_t* files = (symbol_table->files);
+  buffer_t* buffer = (token->buffer);
+  for (
+    int i = 0;
+    (i<(files->length));
+    (i++))
+  {
+    file_t* file = (/*CAST*/(file_t*) (value_array_get(files, i).ptr));
+    if (((file->data)==buffer))
+    {
+      return file;
+    }
+  }
+  return NULL;
+}
+
+
+# 27 "srcgen.c"
 void srcgen_enum_to_string_converters(symbol_table_t* symbol_table){
   buffer_t* buffer = make_buffer(1);
-  printer_t* printer = make_printer(buffer, 2);
+  printer_t* printer = make_printer(buffer, symbol_table, 2);
   for (
     int i = 0;
     (i<(((symbol_table->typedefs)->ordered_bindings)->length));
@@ -8424,6 +9266,8 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table){
   }
 }
 
+
+# 200 "pratt-parser.c"
 pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence){
   uint64_t saved_position = (pstate->position);
   token_t* token = pstate_peek(pstate, 0);
@@ -8459,6 +9303,8 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence){
   return NULL;
 }
 
+
+# 242 "pratt-parser.c"
 pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left){
   uint64_t saved_position = (pstate->position);
   token_t* token = pstate_peek(pstate, 0);
@@ -8740,6 +9586,8 @@ while (0);
   return pstate_error(pstate, saved_position, PARSE_ERROR_UNHANDLED_INSTRUCTION);
 }
 
+
+# 510 "pratt-parser.c"
 pratt_parser_instruction_t get_prefix_instruction(token_t* token){
   switch ((token->type))
   {
@@ -8786,6 +9634,8 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token){
   return ((pratt_parser_instruction_t) {0});
 }
 
+
+# 577 "pratt-parser.c"
 pratt_parser_instruction_t get_infix_instruction(token_t* token){
   if ((token_matches(token, "+")||token_matches(token, "-")))
   {
@@ -8854,6 +9704,8 @@ pratt_parser_instruction_t get_infix_instruction(token_t* token){
   return ((pratt_parser_instruction_t) {0});
 }
 
+
+# 663 "pratt-parser.c"
 associativity_t precedence_to_associativity(precedence_t precedence){
   switch (precedence)
   {
@@ -8895,6 +9747,8 @@ associativity_t precedence_to_associativity(precedence_t precedence){
   return 0;
 }
 
+
+# 153 "statement-parser.c"
 pstatus_t parse_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((((((((((((((parse_block(pstate)||parse_break_statement(pstate_ignore_error(pstate)))||parse_return_statement(pstate_ignore_error(pstate)))||parse_if_statement(pstate_ignore_error(pstate)))||parse_while_statement(pstate_ignore_error(pstate)))||parse_do_statement(pstate_ignore_error(pstate)))||parse_for_statement(pstate_ignore_error(pstate)))||parse_switch_statement(pstate_ignore_error(pstate)))||parse_case_label(pstate_ignore_error(pstate)))||parse_default_label(pstate_ignore_error(pstate)))||parse_continue_statement(pstate_ignore_error(pstate)))||parse_goto_statement(pstate_ignore_error(pstate)))||parse_label_statement(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_expression_statement(pstate_ignore_error(pstate)))||parse_empty_statement(pstate_ignore_error(pstate))))
@@ -8904,6 +9758,8 @@ pstatus_t parse_statement(pstate_t* pstate){
   return pstate_error(pstate, saved_position, PARSE_ERROR_EXPECTED_STATEMENT);
 }
 
+
+# 178 "statement-parser.c"
 pstatus_t parse_block(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "{")))
@@ -8922,6 +9778,8 @@ pstatus_t parse_block(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 196 "statement-parser.c"
 pstatus_t parse_return_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "return")))
@@ -8937,6 +9795,8 @@ pstatus_t parse_return_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_return_statement(expr)));
 }
 
+
+# 212 "statement-parser.c"
 pstatus_t parse_if_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "if"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -8962,6 +9822,8 @@ pstatus_t parse_if_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_if_statement(if_test, if_true, if_false)));
 }
 
+
+# 239 "statement-parser.c"
 pstatus_t parse_while_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "while"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -8977,6 +9839,8 @@ pstatus_t parse_while_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_while_statement(while_test, while_body)));
 }
 
+
+# 258 "statement-parser.c"
 pstatus_t parse_do_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "do"))||(!parse_statement(pstate))))
@@ -9000,6 +9864,8 @@ pstatus_t parse_do_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_do_statement(do_while_body, do_while_condition)));
 }
 
+
+# 283 "statement-parser.c"
 pstatus_t parse_for_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "for"))||(!pstate_expect_token_string(pstate, "("))))
@@ -9037,6 +9903,8 @@ pstatus_t parse_for_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_for_statement(for_init, for_test, for_increment, for_body)));
 }
 
+
+# 319 "statement-parser.c"
 pstatus_t parse_switch_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "switch"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -9052,6 +9920,8 @@ pstatus_t parse_switch_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_switch_statement(switch_item, block)));
 }
 
+
+# 338 "statement-parser.c"
 pstatus_t parse_case_label(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "case"))||(!parse_expression(pstate))))
@@ -9066,6 +9936,8 @@ pstatus_t parse_case_label(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_case_label(case_expr)));
 }
 
+
+# 357 "statement-parser.c"
 pstatus_t parse_expression_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_expression(pstate)))
@@ -9080,6 +9952,8 @@ pstatus_t parse_expression_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_expression_statement_node(expr)));
 }
 
+
+# 373 "statement-parser.c"
 pstatus_t parse_goto_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* label_token = pstate_peek(pstate, 1);
@@ -9090,6 +9964,8 @@ pstatus_t parse_goto_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_goto_statement(label_token)));
 }
 
+
+# 388 "statement-parser.c"
 pstatus_t parse_break_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* keyword_token = pstate_peek(pstate, 0);
@@ -9100,6 +9976,8 @@ pstatus_t parse_break_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_break_statement(keyword_token)));
 }
 
+
+# 402 "statement-parser.c"
 pstatus_t parse_continue_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* keyword_token = pstate_peek(pstate, 0);
@@ -9110,6 +9988,8 @@ pstatus_t parse_continue_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_continue_statement(keyword_token)));
 }
 
+
+# 416 "statement-parser.c"
 pstatus_t parse_label_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* label_token = pstate_peek(pstate, 0);
@@ -9120,6 +10000,8 @@ pstatus_t parse_label_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_label_statement(label_token)));
 }
 
+
+# 430 "statement-parser.c"
 pstatus_t parse_default_label(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* default_token = pstate_peek(pstate, 0);
@@ -9130,6 +10012,8 @@ pstatus_t parse_default_label(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_default_label(default_token)));
 }
 
+
+# 444 "statement-parser.c"
 pstatus_t parse_empty_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* semi_colon_token = pstate_peek(pstate, 0);
@@ -9140,6 +10024,8 @@ pstatus_t parse_empty_statement(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(make_empty_statement(semi_colon_token)));
 }
 
+
+# 463 "statement-parser.c"
 break_statement_node_t* make_break_statement(token_t* break_keyword_token){
   break_statement_node_t* result = malloc_struct(break_statement_node_t);
   ((result->tag)=PARSE_NODE_BREAK_STATEMENT);
@@ -9147,6 +10033,8 @@ break_statement_node_t* make_break_statement(token_t* break_keyword_token){
   return result;
 }
 
+
+# 476 "statement-parser.c"
 break_statement_node_t* to_break_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_BREAK_STATEMENT)))
   {
@@ -9155,6 +10043,8 @@ break_statement_node_t* to_break_statement_node(parse_node_t* ptr){
   return (/*CAST*/(break_statement_node_t*) ptr);
 }
 
+
+# 490 "statement-parser.c"
 continue_statement_node_t* make_continue_statement(token_t* keyword_token){
   continue_statement_node_t* result = malloc_struct(continue_statement_node_t);
   ((result->tag)=PARSE_NODE_CONTINUE_STATEMENT);
@@ -9162,6 +10052,8 @@ continue_statement_node_t* make_continue_statement(token_t* keyword_token){
   return result;
 }
 
+
+# 503 "statement-parser.c"
 continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CONTINUE_STATEMENT)))
   {
@@ -9170,6 +10062,8 @@ continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr){
   return (/*CAST*/(continue_statement_node_t*) ptr);
 }
 
+
+# 517 "statement-parser.c"
 label_statement_node_t* make_label_statement(token_t* label){
   label_statement_node_t* result = malloc_struct(label_statement_node_t);
   ((result->tag)=PARSE_NODE_LABEL_STATEMENT);
@@ -9177,6 +10071,8 @@ label_statement_node_t* make_label_statement(token_t* label){
   return result;
 }
 
+
+# 530 "statement-parser.c"
 label_statement_node_t* to_label_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_LABEL_STATEMENT)))
   {
@@ -9185,6 +10081,8 @@ label_statement_node_t* to_label_statement_node(parse_node_t* ptr){
   return (/*CAST*/(label_statement_node_t*) ptr);
 }
 
+
+# 544 "statement-parser.c"
 goto_statement_node_t* make_goto_statement(token_t* label){
   goto_statement_node_t* result = malloc_struct(goto_statement_node_t);
   ((result->tag)=PARSE_NODE_GOTO_STATEMENT);
@@ -9192,6 +10090,8 @@ goto_statement_node_t* make_goto_statement(token_t* label){
   return result;
 }
 
+
+# 557 "statement-parser.c"
 goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_GOTO_STATEMENT)))
   {
@@ -9200,6 +10100,8 @@ goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr){
   return (/*CAST*/(goto_statement_node_t*) ptr);
 }
 
+
+# 571 "statement-parser.c"
 empty_statement_node_t* make_empty_statement(token_t* semi_colon_token){
   empty_statement_node_t* result = malloc_struct(empty_statement_node_t);
   ((result->tag)=PARSE_NODE_EMPTY_STATEMENT);
@@ -9207,6 +10109,8 @@ empty_statement_node_t* make_empty_statement(token_t* semi_colon_token){
   return result;
 }
 
+
+# 584 "statement-parser.c"
 empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_EMPTY_STATEMENT)))
   {
@@ -9215,6 +10119,8 @@ empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr){
   return (/*CAST*/(empty_statement_node_t*) ptr);
 }
 
+
+# 598 "statement-parser.c"
 switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_node_t* block){
   switch_statement_node_t* result = malloc_struct(switch_statement_node_t);
   ((result->tag)=PARSE_NODE_SWITCH_STATEMENT);
@@ -9223,6 +10129,8 @@ switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_n
   return result;
 }
 
+
+# 613 "statement-parser.c"
 switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_SWITCH_STATEMENT)))
   {
@@ -9231,6 +10139,8 @@ switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr){
   return (/*CAST*/(switch_statement_node_t*) ptr);
 }
 
+
+# 627 "statement-parser.c"
 case_label_node_t* make_case_label(parse_node_t* expression){
   case_label_node_t* result = malloc_struct(case_label_node_t);
   ((result->tag)=PARSE_NODE_CASE_LABEL);
@@ -9238,6 +10148,8 @@ case_label_node_t* make_case_label(parse_node_t* expression){
   return result;
 }
 
+
+# 640 "statement-parser.c"
 case_label_node_t* to_case_label_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CASE_LABEL)))
   {
@@ -9246,6 +10158,8 @@ case_label_node_t* to_case_label_node(parse_node_t* ptr){
   return (/*CAST*/(case_label_node_t*) ptr);
 }
 
+
+# 654 "statement-parser.c"
 default_label_node_t* make_default_label(token_t* default_token){
   default_label_node_t* result = malloc_struct(default_label_node_t);
   ((result->tag)=PARSE_NODE_DEFAULT_LABEL);
@@ -9253,6 +10167,8 @@ default_label_node_t* make_default_label(token_t* default_token){
   return result;
 }
 
+
+# 667 "statement-parser.c"
 default_label_node_t* to_default_label_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_DEFAULT_LABEL)))
   {
@@ -9261,12 +10177,16 @@ default_label_node_t* to_default_label_node(parse_node_t* ptr){
   return (/*CAST*/(default_label_node_t*) ptr);
 }
 
+
+# 682 "statement-parser.c"
 block_node_t* make_block_node(){
   block_node_t* result = malloc_struct(block_node_t);
   ((result->tag)=PARSE_NODE_BLOCK);
   return result;
 }
 
+
+# 694 "statement-parser.c"
 block_node_t* to_block_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_BLOCK)))
   {
@@ -9275,6 +10195,8 @@ block_node_t* to_block_node(parse_node_t* ptr){
   return (/*CAST*/(block_node_t*) ptr);
 }
 
+
+# 709 "statement-parser.c"
 for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body){
   for_statement_node_t* result = malloc_struct(for_statement_node_t);
   ((result->tag)=PARSE_NODE_FOR_STATEMENT);
@@ -9285,6 +10207,8 @@ for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* f
   return result;
 }
 
+
+# 728 "statement-parser.c"
 for_statement_node_t* to_for_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FOR_STATEMENT)))
   {
@@ -9293,6 +10217,8 @@ for_statement_node_t* to_for_statement_node(parse_node_t* ptr){
   return (/*CAST*/(for_statement_node_t*) ptr);
 }
 
+
+# 742 "statement-parser.c"
 if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else){
   if_statement_node_t* result = malloc_struct(if_statement_node_t);
   ((result->tag)=PARSE_NODE_IF_STATEMENT);
@@ -9302,6 +10228,8 @@ if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t*
   return result;
 }
 
+
+# 759 "statement-parser.c"
 if_statement_node_t* to_if_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_IF_STATEMENT)))
   {
@@ -9310,6 +10238,8 @@ if_statement_node_t* to_if_statement_node(parse_node_t* ptr){
   return (/*CAST*/(if_statement_node_t*) ptr);
 }
 
+
+# 774 "statement-parser.c"
 expression_statement_node_t* make_expression_statement_node(parse_node_t* expression){
   expression_statement_node_t* result = malloc_struct(expression_statement_node_t);
   ((result->tag)=PARSE_NODE_EXPRESSION_STATEMENT);
@@ -9317,6 +10247,8 @@ expression_statement_node_t* make_expression_statement_node(parse_node_t* expres
   return result;
 }
 
+
+# 788 "statement-parser.c"
 expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_EXPRESSION_STATEMENT)))
   {
@@ -9325,6 +10257,8 @@ expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr){
   return (/*CAST*/(expression_statement_node_t*) ptr);
 }
 
+
+# 802 "statement-parser.c"
 return_statement_node_t* make_return_statement(parse_node_t* expression){
   return_statement_node_t* result = malloc_struct(return_statement_node_t);
   ((result->tag)=PARSE_NODE_RETURN_STATEMENT);
@@ -9332,6 +10266,8 @@ return_statement_node_t* make_return_statement(parse_node_t* expression){
   return result;
 }
 
+
+# 815 "statement-parser.c"
 return_statement_node_t* to_return_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_RETURN_STATEMENT)))
   {
@@ -9340,6 +10276,8 @@ return_statement_node_t* to_return_statement_node(parse_node_t* ptr){
   return (/*CAST*/(return_statement_node_t*) ptr);
 }
 
+
+# 829 "statement-parser.c"
 while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node_t* body){
   while_statement_node_t* result = malloc_struct(while_statement_node_t);
   ((result->tag)=PARSE_NODE_WHILE_STATEMENT);
@@ -9348,6 +10286,8 @@ while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node
   return result;
 }
 
+
+# 844 "statement-parser.c"
 while_statement_node_t* to_while_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_WHILE_STATEMENT)))
   {
@@ -9356,6 +10296,8 @@ while_statement_node_t* to_while_statement_node(parse_node_t* ptr){
   return (/*CAST*/(while_statement_node_t*) ptr);
 }
 
+
+# 858 "statement-parser.c"
 do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* condition){
   do_statement_node_t* result = malloc_struct(do_statement_node_t);
   ((result->tag)=PARSE_NODE_DO_STATEMENT);
@@ -9364,6 +10306,8 @@ do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* conditi
   return result;
 }
 
+
+# 873 "statement-parser.c"
 do_statement_node_t* to_do_statement_node(parse_node_t* ptr){
   if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_DO_STATEMENT)))
   {
@@ -9372,6 +10316,8 @@ do_statement_node_t* to_do_statement_node(parse_node_t* ptr){
   return (/*CAST*/(do_statement_node_t*) ptr);
 }
 
+
+# 94 "type-parser.c"
 pstatus_t parse_type_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((parse_typeof_node(pstate)||parse_function_type(pstate)))
@@ -9456,6 +10402,8 @@ pstatus_t parse_type_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 167 "type-parser.c"
 canonical_type_result_t make_type_token_result(char* str, int consumed_tokens){
   token_t* canonical_token = malloc_struct(typeof(token_t));
   ((canonical_token->type)=TOKEN_TYPE_IDENTIFIER);
@@ -9465,6 +10413,8 @@ canonical_type_result_t make_type_token_result(char* str, int consumed_tokens){
   return ((canonical_type_result_t) {.canonical_type = canonical_token, .consumed_tokens = consumed_tokens});
 }
 
+
+# 178 "type-parser.c"
 pstatus_t parse_typeof_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "typeof")))
@@ -9490,6 +10440,8 @@ pstatus_t parse_typeof_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 207 "type-parser.c"
 canonical_type_result_t parse_canonical_type(pstate_t* pstate){
   token_t* a = pstate_peek(pstate, 0);
   token_t* b = pstate_peek(pstate, 1);
@@ -9585,6 +10537,8 @@ canonical_type_result_t parse_canonical_type(pstate_t* pstate){
   return ((canonical_type_result_t) {.canonical_type = NULL, .consumed_tokens = 0});
 }
 
+
+# 321 "type-parser.c"
 pstatus_t parse_function_type(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* fn_t_token = pstate_peek(pstate, 0);
@@ -9611,6 +10565,8 @@ pstatus_t parse_function_type(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 362 "type-parser.c"
 pstatus_t parse_function_type_argument(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, ",")))
@@ -9629,6 +10585,8 @@ pstatus_t parse_function_type_argument(pstate_t* pstate){
   return true;
 }
 
+
+# 186 "user-type-parser.c"
 pstatus_t parse_structure_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "struct")))
@@ -9669,6 +10627,8 @@ pstatus_t parse_structure_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 222 "user-type-parser.c"
 pstatus_t parse_field_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_type_node(pstate)))
@@ -9690,6 +10650,19 @@ pstatus_t parse_field_node(pstate_t* pstate){
   {
     pstate_ignore_error(pstate);
   }
+  value_array_t* suffixes = NULL;
+  while (pstate_match_token_string(pstate, "["))
+  {
+    if ((!parse_balanced_construct(pstate)))
+    {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    if ((suffixes==NULL))
+    {
+      (suffixes=make_value_array(1));
+    }
+    value_array_add(suffixes, ptr_to_value(pstate_get_result_node(pstate)));
+  }
   if ((!pstate_expect_token_string(pstate, ";")))
   {
     return pstate_propagate_error(pstate, saved_position);
@@ -9697,9 +10670,12 @@ pstatus_t parse_field_node(pstate_t* pstate){
   field_node_t* result = malloc_field_node();
   ((result->type)=field_type);
   ((result->name)=field_name);
+  ((result->suffixes)=suffixes);
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 266 "user-type-parser.c"
 pstatus_t parse_union_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "union")))
@@ -9740,6 +10716,8 @@ pstatus_t parse_union_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 304 "user-type-parser.c"
 pstatus_t parse_user_type_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((parse_enum_node(pstate)||parse_structure_node(pstate_ignore_error(pstate)))||parse_union_node(pstate_ignore_error(pstate))))
@@ -9752,6 +10730,8 @@ pstatus_t parse_user_type_node(pstate_t* pstate){
   }
 }
 
+
+# 320 "user-type-parser.c"
 pstatus_t parse_enum_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "enum")))
@@ -9789,6 +10769,8 @@ pstatus_t parse_enum_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 359 "user-type-parser.c"
 pstatus_t parse_enum_element_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
@@ -9796,14 +10778,14 @@ pstatus_t parse_enum_element_node(pstate_t* pstate){
     return pstate_propagate_error(pstate, saved_position);
   }
   token_t* name = pstate_get_result_token(pstate);
-  token_t* value = NULL;
+  parse_node_t* value_expr = NULL;
   if (pstate_expect_token_string(pstate, "="))
   {
-    if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_INTEGER_LITERAL)))
+    if ((!pratt_parse_expression(pstate, 0)))
     {
       return pstate_propagate_error(pstate, saved_position);
     }
-    (value=pstate_get_result_token(pstate));
+    (value_expr=pstate_get_result_node(pstate));
   }
   if ((!pstate_expect_token_string(pstate, ",")))
   {
@@ -9811,14 +10793,18 @@ pstatus_t parse_enum_element_node(pstate_t* pstate){
   }
   enum_element_t* result = malloc_enum_element();
   ((result->name)=name);
-  ((result->value)=value);
+  ((result->value_expr)=value_expr);
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 45 "variable-definition-parser.c"
 pstatus_t parse_expression(pstate_t* pstate){
   return pratt_parse_expression(pstate, 0);
 }
 
+
+# 54 "variable-definition-parser.c"
 pstatus_t parse_initializer(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (token_matches(pstate_peek(pstate, 0), "{"))
@@ -9828,6 +10814,8 @@ pstatus_t parse_initializer(pstate_t* pstate){
   return pstate_error(pstate, saved_position, PARSE_ERROR_CLOSE_BRACKET_EXPECTED);
 }
 
+
+# 70 "variable-definition-parser.c"
 pstatus_t parse_variable_definition_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* storage_class_specifier = NULL;
@@ -9887,6 +10875,8 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate){
   return pstate_set_result_node(pstate, to_node(result));
 }
 
+
+# 25 "literal-parser.c"
 pstatus_t parse_literal_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_STRING_LITERAL))
@@ -9957,6 +10947,8 @@ pstatus_t parse_literal_node(pstate_t* pstate){
   return pstate_error(pstate, saved_position, PARSE_ERROR_NOT_LITERAL_NODE);
 }
 
+
+# 48 "balanced-construct-parser.c"
 pstatus_t parse_balanced_construct(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   int open_parens = 0;
@@ -10008,48 +11000,69 @@ while (((((open_parens+open_brackets)+open_braces)>0)&&((pstate->position)<((pst
   return pstate_set_result_node(pstate, to_node(result));
 }
 
-printer_t* make_printer(buffer_t* buffer, int indent_width){
+
+# 21 "printer.c"
+printer_t* make_printer(buffer_t* buffer, symbol_table_t* symbol_table, int indent_width){
   printer_t* result = malloc_struct(printer_t);
+  ((result->symbol_table)=symbol_table);
   ((result->buffer)=buffer);
   ((result->indent_width)=indent_width);
+  ((result->convert_nullptr)=true);
+  ((result->output_line_directives)=true);
   return result;
 }
 
+
+# 32 "printer.c"
 printer_t* append_string(printer_t* printer, char* string){
   buffer_append_string((printer->buffer), string);
   return printer;
 }
 
+
+# 37 "printer.c"
 printer_t* append_token(printer_t* printer, token_t* token){
   buffer_append_sub_buffer((printer->buffer), (token->start), (token->end), (token->buffer));
   return printer;
 }
 
+
+# 43 "printer.c"
 printer_t* printer_newline(printer_t* printer){
   buffer_append_byte((printer->buffer), '\n');
   return printer;
 }
 
+
+# 48 "printer.c"
 printer_t* printer_space(printer_t* printer){
   buffer_append_byte((printer->buffer), ' ');
   return printer;
 }
 
+
+# 53 "printer.c"
 printer_t* printer_indent(printer_t* printer){
   buffer_append_repeated_byte((printer->buffer), ' ', ((printer->indent_width)*(printer->indent_level)));
   return printer;
 }
 
+
+# 59 "printer.c"
 printer_t* printer_increase_indent(printer_t* printer){
   ((printer->indent_level)++);
   return printer;
 }
 
+
+# 64 "printer.c"
 printer_t* printer_decrease_indent(printer_t* printer){
   ((printer->indent_level)--);
   return printer;
 }
 
+
+# 36 "main.c"
 void do_print_tokens(value_array_t* tokens, char* message){
   if (FLAG_print_tokens_show_tokens)
   {
@@ -10067,6 +11080,8 @@ void do_print_tokens(value_array_t* tokens, char* message){
   }
 }
 
+
+# 51 "main.c"
 void print_tokens(void){
   log_info("print_tokens()");
   value_array_t* files = read_files(FLAG_files);
@@ -10124,6 +11139,8 @@ void print_tokens(void){
   }
 }
 
+
+# 119 "main.c"
 void configure_flags(void){
   flag_program_name("omni-c");
   flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
@@ -10135,17 +11152,23 @@ void configure_flags(void){
   configure_parse_statement();
 }
 
+
+# 136 "main.c"
 void configure_parse_expression(void){
   flag_command("parse-expression", (&FLAG_command));
   flag_string("--expression", (&FLAG_expression));
   flag_boolean("--to-c", (&FLAG_to_c));
 }
 
+
+# 142 "main.c"
 void configure_parse_statement(void){
   flag_command("parse-statement", (&FLAG_command));
   flag_string("--statement", (&FLAG_statement));
 }
 
+
+# 147 "main.c"
 void configure_print_tokens_command(void){
   flag_command("print-tokens", (&FLAG_command));
   flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
@@ -10156,6 +11179,8 @@ void configure_print_tokens_command(void){
   flag_file_args((&FLAG_files));
 }
 
+
+# 158 "main.c"
 void configure_regular_commands(void){
   flag_command("generate-header-file", (&FLAG_command));
   flag_string("--c-output-file", (&FLAG_c_output_file));
@@ -10182,10 +11207,14 @@ void configure_regular_commands(void){
   flag_file_args((&FLAG_files));
 }
 
+
+# 187 "main.c"
 boolean_t is_inlined_function(function_node_t* node){
   return (token_matches((node->storage_class_specifier), "static")&&token_list_contains((node->function_specifiers), "inline"));
 }
 
+
+# 192 "main.c"
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table){
   if (FLAG_dump_symbol_table)
   {
@@ -10199,14 +11228,18 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table){
   }
 }
 
+
+# 209 "main.c"
 char* include_node_to_string(cpp_include_node_t* node){
   buffer_t* buffer = make_buffer(32);
-  printer_t* printer = make_printer(buffer, 2);
+  printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
   append_cpp_include_node(printer, node);
   char* include_statement = buffer_to_c_string(buffer);
   return include_statement;
 }
 
+
+# 223 "main.c"
 void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment){
   boolean_t is_header_file = (!is_library);
   symbol_table_t* symbol_table = make_symbol_table();
@@ -10224,7 +11257,7 @@ void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overvie
   reorder_symbol_table_structures(symbol_table);
   dump_symbol_table("reorder structures", symbol_table);
   buffer_t* buffer = make_buffer((1024*8));
-  printer_t* printer = make_printer(buffer, 2);
+  printer_t* printer = make_printer(buffer, symbol_table, 2);
   add_generated_c_file_header(buffer);
   char* guard_name = "_HEADER_FILE_GUARD_";
   if (is_header_file)
@@ -10405,12 +11438,16 @@ void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overvie
   }
 }
 
+
+# 422 "main.c"
 void add_generated_c_file_header(buffer_t* buffer){
   buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
   buffer_printf(buffer, "// This is a generated file, so you generally don't want to edit it!\n");
-  buffer_printf(buffer, "// The bottom of the file has more information about it's creation.\n\n\n");
+  buffer_printf(buffer, "// The bottom of the file has more information about it's " "creation.\n\n\n");
 }
 
+
+# 432 "main.c"
 void parse_expression_string_and_print_parse_tree(char* expression){
   if ((expression==NULL))
   {
@@ -10448,12 +11485,14 @@ void parse_expression_string_and_print_parse_tree(char* expression){
   if (FLAG_to_c)
   {
     buffer_append_string(output, "\n// C Output\n");
-    printer_t* printer = make_printer(output, 2);
+    printer_t* printer = make_printer(output, make_symbol_table(), 2);
     append_parse_node(printer, node);
   }
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
+
+# 474 "main.c"
 void parse_statement_string_and_print_parse_tree(char* expression){
   tokenizer_result_t tokenizer_result = tokenize(buffer_append_string(make_buffer(1), expression));
   if ((tokenizer_result.tokenizer_error_code))
@@ -10480,11 +11519,13 @@ void parse_statement_string_and_print_parse_tree(char* expression){
   buffer_t* output = make_buffer(1);
   buffer_append_dbg_parse_node(make_cdl_printer(output), node);
   buffer_append_string(output, "\n// C Output\n");
-  printer_t* printer = make_printer(output, 2);
+  printer_t* printer = make_printer(output, make_symbol_table(), 2);
   append_parse_node(printer, node);
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
+
+# 527 "main.c"
 buffer_t* git_hash_object(char* filename){
   value_array_t* argv = make_value_array(2);
   value_array_add(argv, str_to_value("git"));
@@ -10503,6 +11544,8 @@ while (is_sub_process_running(sub_process));
   return buffer;
 }
 
+
+# 555 "main.c"
 buffer_t* command_line_args_to_buffer(int argc, char** argv){
   buffer_t* output = make_buffer((argc*5));
   buffer_printf(output, "// Full Compiler Command Line:\n//\n");
@@ -10532,11 +11575,17 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv){
   return output;
 }
 
+
+# 584 "main.c"
 value_array_t* c_compiler_command_line(char* input_file, char* output_file){
-  if (((string_equal("clang", FLAG_c_compiler)||string_equal("gcc", FLAG_c_compiler))||string_equal("tcc", FLAG_c_compiler)))
+  if ((((string_equal("clang", FLAG_c_compiler)||string_equal("gcc", FLAG_c_compiler))||string_equal("tcc", FLAG_c_compiler))||string_equal("zig", FLAG_c_compiler)))
   {
     value_array_t* argv = make_value_array(2);
     value_array_add(argv, str_to_value(FLAG_c_compiler));
+    if (string_equal("zig", FLAG_c_compiler))
+    {
+      value_array_add(argv, str_to_value("cc"));
+    }
     value_array_add(argv, str_to_value("-g"));
     value_array_add(argv, str_to_value("-rdynamic"));
     value_array_add(argv, str_to_value("-O3"));
@@ -10554,6 +11603,8 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file){
   }
 }
 
+
+# 609 "main.c"
 int invoke_c_compiler(char* input_file, char* output_file){
   value_array_t* argv = c_compiler_command_line(input_file, output_file);
   log_warn("Invoking C compiler with these arguments: %s", buffer_to_c_string(join_array_of_strings(argv, " ")));
@@ -10571,6 +11622,8 @@ while (is_sub_process_running(sub_process));
   return (sub_process->exit_code);
 }
 
+
+# 631 "main.c"
 int main(int argc, char** argv){
   configure_fatal_errors(((fatal_error_config_t) {
                                                  .catch_sigsegv = true,
@@ -10651,162 +11704,164 @@ int main(int argc, char** argv){
   exit(0);
 }
 
+
+# 2 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
 buffer_t* get_reflection_header_buffer(void){
   uint8_t reflection_header[] = {
-    0x23, 0x69, 0x66, 0x6E, 0x64, 0x65, 0x66, 0x20, 0x5F, 0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54, // #ifndef _REFLECT
-    0x49, 0x4F, 0x4E, 0x5F, 0x48, 0x5F, 0x0A, 0x23, 0x64, 0x65, 0x66, 0x69, 0x6E, 0x65, 0x20, 0x5F, // ION_H_.#define _
-    0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54, 0x49, 0x4F, 0x4E, 0x5F, 0x48, 0x5F, 0x0A, 0x0A, 0x23, // REFLECTION_H_..#
-    0x64, 0x65, 0x66, 0x69, 0x6E, 0x65, 0x20, 0x66, 0x6E, 0x5F, 0x74, 0x28, 0x72, 0x65, 0x74, 0x75, // define fn_t(retu
-    0x72, 0x6E, 0x5F, 0x74, 0x79, 0x70, 0x65, 0x2C, 0x20, 0x2E, 0x2E, 0x2E, 0x29, 0x20, 0x74, 0x79, // rn_type, ...) ty
-    0x70, 0x65, 0x6F, 0x66, 0x28, 0x72, 0x65, 0x74, 0x75, 0x72, 0x6E, 0x5F, 0x74, 0x79, 0x70, 0x65, // peof(return_type
-    0x28, 0x2A, 0x29, 0x28, 0x5F, 0x5F, 0x56, 0x41, 0x5F, 0x41, 0x52, 0x47, 0x53, 0x5F, 0x5F, 0x29, // (*)(__VA_ARGS__)
-    0x29, 0x0A, 0x0A, 0x23, 0x69, 0x6E, 0x63, 0x6C, 0x75, 0x64, 0x65, 0x20, 0x3C, 0x73, 0x74, 0x72, // )..#include <str
-    0x69, 0x6E, 0x67, 0x2E, 0x68, 0x3E, 0x0A, 0x0A, 0x2F, 0x2A, 0x20, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // ing.h>../* =====
-    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // ================
-    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // ================
-    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // ================
-    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // ================
-    0x3D, 0x20, 0x2A, 0x2F, 0x0A, 0x2F, 0x2F, 0x20, 0x54, 0x68, 0x65, 0x73, 0x65, 0x20, 0x61, 0x72, // = */.// These ar
-    0x65, 0x20, 0x74, 0x68, 0x65, 0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x69, 0x6F, 0x6E, // e the reflection
-    0x20, 0x41, 0x50, 0x49, 0x20, 0x64, 0x61, 0x74, 0x61, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, //  API data struct
-    0x75, 0x72, 0x65, 0x73, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61, 0x20, 0x70, 0x72, 0x6F, 0x67, 0x72, // ures for a progr
-    0x61, 0x6D, 0x20, 0x63, 0x6F, 0x6D, 0x70, 0x69, 0x6C, 0x65, 0x64, 0x0A, 0x2F, 0x2F, 0x20, 0x77, // am compiled.// w
-    0x69, 0x74, 0x68, 0x20, 0x4F, 0x6D, 0x6E, 0x69, 0x20, 0x43, 0x2E, 0x20, 0x57, 0x65, 0x20, 0x75, // ith Omni C. We u
-    0x73, 0x65, 0x20, 0x6C, 0x69, 0x6E, 0x6B, 0x65, 0x64, 0x20, 0x6C, 0x69, 0x73, 0x74, 0x73, 0x20, // se linked lists 
-    0x69, 0x6E, 0x73, 0x74, 0x65, 0x61, 0x64, 0x20, 0x6F, 0x66, 0x20, 0x76, 0x61, 0x6C, 0x75, 0x65, // instead of value
-    0x5F, 0x61, 0x72, 0x72, 0x61, 0x79, 0x5F, 0x74, 0x20, 0x74, 0x6F, 0x20, 0x6B, 0x65, 0x65, 0x70, // _array_t to keep
-    0x0A, 0x2F, 0x2F, 0x20, 0x63, 0x6F, 0x6D, 0x70, 0x69, 0x6C, 0x65, 0x64, 0x20, 0x70, 0x72, 0x6F, // .// compiled pro
-    0x67, 0x72, 0x61, 0x6D, 0x73, 0x20, 0x69, 0x6E, 0x64, 0x65, 0x70, 0x65, 0x6E, 0x64, 0x65, 0x6E, // grams independen
-    0x74, 0x20, 0x6F, 0x66, 0x20, 0x61, 0x6E, 0x79, 0x20, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x75, // t of any particu
-    0x6C, 0x61, 0x72, 0x20, 0x6C, 0x69, 0x62, 0x72, 0x61, 0x72, 0x79, 0x0A, 0x2F, 0x2F, 0x20, 0x64, // lar library.// d
-    0x61, 0x74, 0x61, 0x2D, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73, 0x2E, 0x0A, // ata-structures..
-    0x2F, 0x2A, 0x20, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // /* =============
-    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // ================
-    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // ================
-    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, // ================
-    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x20, 0x2A, 0x2F, 0x0A, 0x0A, 0x2F, 0x2F, // ========= */..//
-    0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, //  ---------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x45, 0x6E, 0x75, 0x6D, 0x65, // -------.// Enume
-    0x72, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // rations.// -----
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x0A, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, // -..typedef struc
-    0x74, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D, // t enum_element_m
-    0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74, // etadata_S {.  st
-    0x72, 0x75, 0x63, 0x74, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, // ruct enum_elemen
-    0x74, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53, 0x2A, 0x20, 0x6E, 0x65, // t_metadata_S* ne
-    0x78, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, // xt;.  char* name
-    0x3B, 0x0A, 0x20, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x76, 0x61, 0x6C, 0x75, 0x65, 0x3B, 0x0A, // ;.  long value;.
-    0x7D, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D, // } enum_element_m
-    0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A, 0x2A, 0x0A, // etadata_t;../**.
-    0x20, 0x2A, 0x20, 0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20, 0x65, 0x6E, //  * @structure en
-    0x75, 0x6D, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x0A, 0x20, 0x2A, // um_metadata_t. *
-    0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75, 0x6E, 0x74, 0x69, 0x6D, 0x65, 0x20, // . * The runtime 
-    0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61, 0x20, 0x72, // metadata for a r
-    0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x65, 0x72, 0x61, // eflected enumera
-    0x74, 0x69, 0x6F, 0x6E, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65, // tion.. */.typede
-    0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, // f struct {.  cha
-    0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, // r* name;.  enum_
-    0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, // element_metadata
-    0x5F, 0x74, 0x2A, 0x20, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x73, 0x3B, 0x0A, 0x7D, 0x20, // _t* elements;.} 
-    0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, // enum_metadata_t;
-    0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ..// -----------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x53, // -----------.// S
-    0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, // tructures.// ---
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, // ---..typedef str
-    0x75, 0x63, 0x74, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, // uct field_metada
-    0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, // ta_S {.  struct 
-    0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53, // field_metadata_S
-    0x2A, 0x20, 0x6E, 0x65, 0x78, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, // * next;.  char* 
-    0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x74, 0x79, // name;.  char* ty
-    0x70, 0x65, 0x5F, 0x6E, 0x61, 0x6D, 0x65, 0x5F, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67, 0x3B, 0x0A, // pe_name_string;.
-    0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5F, 0x6F, 0x66, 0x66, 0x73, //   int start_offs
-    0x65, 0x74, 0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61, // et;.} field_meta
-    0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A, 0x2A, 0x0A, 0x20, 0x2A, 0x20, // data_t;../**. * 
-    0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, // @structure struc
-    0x74, 0x75, 0x72, 0x65, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x0A, // ture_metadata_t.
-    0x20, 0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75, 0x6E, 0x74, 0x69, 0x6D, //  *. * The runtim
-    0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61, // e metadata for a
-    0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, //  reflected struc
-    0x74, 0x75, 0x72, 0x65, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65, // ture.. */.typede
-    0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, // f struct {.  cha
-    0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x73, // r* name;.  int s
-    0x69, 0x7A, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x61, 0x6C, 0x69, 0x67, 0x6E, // ize;.  int align
-    0x6D, 0x65, 0x6E, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, // ment;.  field_me
-    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x73, // tadata_t* fields
-    0x3B, 0x0A, 0x7D, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x5F, 0x6D, 0x65, // ;.} structure_me
-    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, // tadata_t;..// --
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x55, 0x6E, 0x69, 0x6F, 0x6E, 0x73, 0x20, 0x0A, // ----.// Unions .
-    0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // // -------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x2F, 0x2A, 0x0A, 0x20, 0x2A, // ---------../*. *
-    0x20, 0x55, 0x6E, 0x69, 0x6F, 0x6E, 0x73, 0x20, 0x63, 0x6F, 0x75, 0x6C, 0x64, 0x20, 0x62, 0x65, //  Unions could be
-    0x20, 0x74, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x20, 0x65, 0x78, 0x61, 0x63, 0x74, 0x6C, 0x79, //  treated exactly
-    0x20, 0x6C, 0x69, 0x6B, 0x65, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73, //  like structures
-    0x20, 0x68, 0x6F, 0x77, 0x65, 0x76, 0x65, 0x72, 0x20, 0x74, 0x68, 0x65, 0x72, 0x65, 0x20, 0x69, //  however there i
-    0x73, 0x20, 0x6E, 0x6F, 0x0A, 0x20, 0x2A, 0x20, 0x75, 0x6E, 0x69, 0x66, 0x6F, 0x72, 0x6D, 0x20, // s no. * uniform 
-    0x77, 0x61, 0x79, 0x20, 0x74, 0x6F, 0x20, 0x74, 0x61, 0x67, 0x20, 0x61, 0x20, 0x75, 0x6E, 0x69, // way to tag a uni
-    0x6F, 0x6E, 0x20, 0x73, 0x6F, 0x20, 0x6D, 0x61, 0x6B, 0x69, 0x6E, 0x67, 0x20, 0x75, 0x73, 0x65, // on so making use
-    0x20, 0x6F, 0x66, 0x20, 0x74, 0x68, 0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, //  of the metadata
-    0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x62, 0x69, 0x74, 0x0A, 0x20, 0x2A, 0x20, 0x70, 0x72, 0x6F, //  is a bit. * pro
-    0x62, 0x6C, 0x65, 0x6D, 0x61, 0x74, 0x69, 0x63, 0x2E, 0x20, 0x46, 0x6F, 0x72, 0x20, 0x74, 0x68, // blematic. For th
-    0x61, 0x74, 0x20, 0x72, 0x65, 0x61, 0x73, 0x6F, 0x6E, 0x20, 0x28, 0x61, 0x6E, 0x64, 0x20, 0x62, // at reason (and b
-    0x65, 0x63, 0x61, 0x75, 0x73, 0x65, 0x20, 0x6F, 0x6D, 0x6E, 0x69, 0x2D, 0x63, 0x20, 0x64, 0x6F, // ecause omni-c do
-    0x65, 0x73, 0x6E, 0x27, 0x74, 0x20, 0x6E, 0x65, 0x65, 0x64, 0x20, 0x74, 0x68, 0x65, 0x6D, 0x0A, // esn't need them.
-    0x20, 0x2A, 0x20, 0x79, 0x65, 0x74, 0x29, 0x2C, 0x20, 0x77, 0x65, 0x20, 0x61, 0x72, 0x65, 0x20, //  * yet), we are 
-    0x73, 0x6B, 0x69, 0x70, 0x70, 0x69, 0x6E, 0x67, 0x20, 0x74, 0x68, 0x65, 0x6D, 0x20, 0x66, 0x6F, // skipping them fo
-    0x72, 0x20, 0x6E, 0x6F, 0x77, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, // r now.. */..// -
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x46, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, // -----.// Functio
-    0x6E, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ns.// ----------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, // ----------------
-    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x74, 0x79, // ------------..ty
-    0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x66, 0x75, 0x6E, // pedef struct fun
-    0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, // ction_arg_metada
-    0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, // ta_S {.  struct 
-    0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74, // function_arg_met
-    0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x6E, 0x65, 0x78, 0x74, 0x3B, 0x0A, 0x20, // adata_t* next;. 
-    0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x63, //  char* name;.  c
-    0x68, 0x61, 0x72, 0x2A, 0x20, 0x74, 0x79, 0x70, 0x65, 0x5F, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67, // har* type_string
-    0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, // ;.} function_arg
-    0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A, // _metadata_t;../*
-    0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20, // *. * @structure 
-    0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, // function_metadat
-    0x61, 0x5F, 0x74, 0x0A, 0x20, 0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75, // a_t. *. * The ru
-    0x6E, 0x74, 0x69, 0x6D, 0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, // ntime metadata f
-    0x6F, 0x72, 0x20, 0x61, 0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x73, // or a reflected s
-    0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79, // tructure.. */.ty
-    0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20, // pedef struct {. 
-    0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x66, //  char* name;.  f
-    0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74, 0x61, // unction_arg_meta
-    0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x61, 0x72, 0x67, 0x75, 0x6D, 0x65, 0x6E, 0x74, // data_t* argument
-    0x73, 0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x6D, 0x65, // s;.} function_me
-    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x23, 0x65, 0x6E, 0x64, 0x69, // tadata_t;..#endi
-    0x66, 0x20, 0x2F, 0x2A, 0x20, 0x5F, 0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54, 0x49, 0x4F, 0x4E, // f /* _REFLECTION
-    0x5F, 0x48, 0x5F, 0x20, 0x2A, 0x2F, 0x0A, // _H_ */.
+    0x23, 0x69, 0x66, 0x6E, 0x64, 0x65, 0x66, 0x20, 0x5F, 0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54,  // #ifndef _REFLECT
+    0x49, 0x4F, 0x4E, 0x5F, 0x48, 0x5F, 0x0A, 0x23, 0x64, 0x65, 0x66, 0x69, 0x6E, 0x65, 0x20, 0x5F,  // ION_H_.#define _
+    0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54, 0x49, 0x4F, 0x4E, 0x5F, 0x48, 0x5F, 0x0A, 0x0A, 0x23,  // REFLECTION_H_..#
+    0x64, 0x65, 0x66, 0x69, 0x6E, 0x65, 0x20, 0x66, 0x6E, 0x5F, 0x74, 0x28, 0x72, 0x65, 0x74, 0x75,  // define fn_t(retu
+    0x72, 0x6E, 0x5F, 0x74, 0x79, 0x70, 0x65, 0x2C, 0x20, 0x2E, 0x2E, 0x2E, 0x29, 0x20, 0x74, 0x79,  // rn_type, ...) ty
+    0x70, 0x65, 0x6F, 0x66, 0x28, 0x72, 0x65, 0x74, 0x75, 0x72, 0x6E, 0x5F, 0x74, 0x79, 0x70, 0x65,  // peof(return_type
+    0x28, 0x2A, 0x29, 0x28, 0x5F, 0x5F, 0x56, 0x41, 0x5F, 0x41, 0x52, 0x47, 0x53, 0x5F, 0x5F, 0x29,  // (*)(__VA_ARGS__)
+    0x29, 0x0A, 0x0A, 0x23, 0x69, 0x6E, 0x63, 0x6C, 0x75, 0x64, 0x65, 0x20, 0x3C, 0x73, 0x74, 0x72,  // )..#include <str
+    0x69, 0x6E, 0x67, 0x2E, 0x68, 0x3E, 0x0A, 0x0A, 0x2F, 0x2A, 0x20, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ing.h>../* =====
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x20, 0x2A, 0x2F, 0x0A, 0x2F, 0x2F, 0x20, 0x54, 0x68, 0x65, 0x73, 0x65, 0x20, 0x61, 0x72,  // = */.// These ar
+    0x65, 0x20, 0x74, 0x68, 0x65, 0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x69, 0x6F, 0x6E,  // e the reflection
+    0x20, 0x41, 0x50, 0x49, 0x20, 0x64, 0x61, 0x74, 0x61, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74,  //  API data struct
+    0x75, 0x72, 0x65, 0x73, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61, 0x20, 0x70, 0x72, 0x6F, 0x67, 0x72,  // ures for a progr
+    0x61, 0x6D, 0x20, 0x63, 0x6F, 0x6D, 0x70, 0x69, 0x6C, 0x65, 0x64, 0x0A, 0x2F, 0x2F, 0x20, 0x77,  // am compiled.// w
+    0x69, 0x74, 0x68, 0x20, 0x4F, 0x6D, 0x6E, 0x69, 0x20, 0x43, 0x2E, 0x20, 0x57, 0x65, 0x20, 0x75,  // ith Omni C. We u
+    0x73, 0x65, 0x20, 0x6C, 0x69, 0x6E, 0x6B, 0x65, 0x64, 0x20, 0x6C, 0x69, 0x73, 0x74, 0x73, 0x20,  // se linked lists 
+    0x69, 0x6E, 0x73, 0x74, 0x65, 0x61, 0x64, 0x20, 0x6F, 0x66, 0x20, 0x76, 0x61, 0x6C, 0x75, 0x65,  // instead of value
+    0x5F, 0x61, 0x72, 0x72, 0x61, 0x79, 0x5F, 0x74, 0x20, 0x74, 0x6F, 0x20, 0x6B, 0x65, 0x65, 0x70,  // _array_t to keep
+    0x0A, 0x2F, 0x2F, 0x20, 0x63, 0x6F, 0x6D, 0x70, 0x69, 0x6C, 0x65, 0x64, 0x20, 0x70, 0x72, 0x6F,  // .// compiled pro
+    0x67, 0x72, 0x61, 0x6D, 0x73, 0x20, 0x69, 0x6E, 0x64, 0x65, 0x70, 0x65, 0x6E, 0x64, 0x65, 0x6E,  // grams independen
+    0x74, 0x20, 0x6F, 0x66, 0x20, 0x61, 0x6E, 0x79, 0x20, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x75,  // t of any particu
+    0x6C, 0x61, 0x72, 0x20, 0x6C, 0x69, 0x62, 0x72, 0x61, 0x72, 0x79, 0x0A, 0x2F, 0x2F, 0x20, 0x64,  // lar library.// d
+    0x61, 0x74, 0x61, 0x2D, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73, 0x2E, 0x0A,  // ata-structures..
+    0x2F, 0x2A, 0x20, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // /* =============
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x20, 0x2A, 0x2F, 0x0A, 0x0A, 0x2F, 0x2F,  // ========= */..//
+    0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  //  ---------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x45, 0x6E, 0x75, 0x6D, 0x65,  // -------.// Enume
+    0x72, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // rations.// -----
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x0A, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63,  // -..typedef struc
+    0x74, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D,  // t enum_element_m
+    0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74,  // etadata_S {.  st
+    0x72, 0x75, 0x63, 0x74, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E,  // ruct enum_elemen
+    0x74, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53, 0x2A, 0x20, 0x6E, 0x65,  // t_metadata_S* ne
+    0x78, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65,  // xt;.  char* name
+    0x3B, 0x0A, 0x20, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x76, 0x61, 0x6C, 0x75, 0x65, 0x3B, 0x0A,  // ;.  long value;.
+    0x7D, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D,  // } enum_element_m
+    0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A, 0x2A, 0x0A,  // etadata_t;../**.
+    0x20, 0x2A, 0x20, 0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20, 0x65, 0x6E,  //  * @structure en
+    0x75, 0x6D, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x0A, 0x20, 0x2A,  // um_metadata_t. *
+    0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75, 0x6E, 0x74, 0x69, 0x6D, 0x65, 0x20,  // . * The runtime 
+    0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61, 0x20, 0x72,  // metadata for a r
+    0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x65, 0x72, 0x61,  // eflected enumera
+    0x74, 0x69, 0x6F, 0x6E, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65,  // tion.. */.typede
+    0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61,  // f struct {.  cha
+    0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F,  // r* name;.  enum_
+    0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,  // element_metadata
+    0x5F, 0x74, 0x2A, 0x20, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x73, 0x3B, 0x0A, 0x7D, 0x20,  // _t* elements;.} 
+    0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B,  // enum_metadata_t;
+    0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ..// -----------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x53,  // -----------.// S
+    0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D,  // tructures.// ---
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72,  // ---..typedef str
+    0x75, 0x63, 0x74, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61,  // uct field_metada
+    0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20,  // ta_S {.  struct 
+    0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53,  // field_metadata_S
+    0x2A, 0x20, 0x6E, 0x65, 0x78, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20,  // * next;.  char* 
+    0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x74, 0x79,  // name;.  char* ty
+    0x70, 0x65, 0x5F, 0x6E, 0x61, 0x6D, 0x65, 0x5F, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67, 0x3B, 0x0A,  // pe_name_string;.
+    0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5F, 0x6F, 0x66, 0x66, 0x73,  //   int start_offs
+    0x65, 0x74, 0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61,  // et;.} field_meta
+    0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A, 0x2A, 0x0A, 0x20, 0x2A, 0x20,  // data_t;../**. * 
+    0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63,  // @structure struc
+    0x74, 0x75, 0x72, 0x65, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x0A,  // ture_metadata_t.
+    0x20, 0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75, 0x6E, 0x74, 0x69, 0x6D,  //  *. * The runtim
+    0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61,  // e metadata for a
+    0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63,  //  reflected struc
+    0x74, 0x75, 0x72, 0x65, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65,  // ture.. */.typede
+    0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61,  // f struct {.  cha
+    0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x73,  // r* name;.  int s
+    0x69, 0x7A, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x61, 0x6C, 0x69, 0x67, 0x6E,  // ize;.  int align
+    0x6D, 0x65, 0x6E, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65,  // ment;.  field_me
+    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x73,  // tadata_t* fields
+    0x3B, 0x0A, 0x7D, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x5F, 0x6D, 0x65,  // ;.} structure_me
+    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D,  // tadata_t;..// --
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x55, 0x6E, 0x69, 0x6F, 0x6E, 0x73, 0x20, 0x0A,  // ----.// Unions .
+    0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // // -------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x2F, 0x2A, 0x0A, 0x20, 0x2A,  // ---------../*. *
+    0x20, 0x55, 0x6E, 0x69, 0x6F, 0x6E, 0x73, 0x20, 0x63, 0x6F, 0x75, 0x6C, 0x64, 0x20, 0x62, 0x65,  //  Unions could be
+    0x20, 0x74, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x20, 0x65, 0x78, 0x61, 0x63, 0x74, 0x6C, 0x79,  //  treated exactly
+    0x20, 0x6C, 0x69, 0x6B, 0x65, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73,  //  like structures
+    0x20, 0x68, 0x6F, 0x77, 0x65, 0x76, 0x65, 0x72, 0x20, 0x74, 0x68, 0x65, 0x72, 0x65, 0x20, 0x69,  //  however there i
+    0x73, 0x20, 0x6E, 0x6F, 0x0A, 0x20, 0x2A, 0x20, 0x75, 0x6E, 0x69, 0x66, 0x6F, 0x72, 0x6D, 0x20,  // s no. * uniform 
+    0x77, 0x61, 0x79, 0x20, 0x74, 0x6F, 0x20, 0x74, 0x61, 0x67, 0x20, 0x61, 0x20, 0x75, 0x6E, 0x69,  // way to tag a uni
+    0x6F, 0x6E, 0x20, 0x73, 0x6F, 0x20, 0x6D, 0x61, 0x6B, 0x69, 0x6E, 0x67, 0x20, 0x75, 0x73, 0x65,  // on so making use
+    0x20, 0x6F, 0x66, 0x20, 0x74, 0x68, 0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,  //  of the metadata
+    0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x62, 0x69, 0x74, 0x0A, 0x20, 0x2A, 0x20, 0x70, 0x72, 0x6F,  //  is a bit. * pro
+    0x62, 0x6C, 0x65, 0x6D, 0x61, 0x74, 0x69, 0x63, 0x2E, 0x20, 0x46, 0x6F, 0x72, 0x20, 0x74, 0x68,  // blematic. For th
+    0x61, 0x74, 0x20, 0x72, 0x65, 0x61, 0x73, 0x6F, 0x6E, 0x20, 0x28, 0x61, 0x6E, 0x64, 0x20, 0x62,  // at reason (and b
+    0x65, 0x63, 0x61, 0x75, 0x73, 0x65, 0x20, 0x6F, 0x6D, 0x6E, 0x69, 0x2D, 0x63, 0x20, 0x64, 0x6F,  // ecause omni-c do
+    0x65, 0x73, 0x6E, 0x27, 0x74, 0x20, 0x6E, 0x65, 0x65, 0x64, 0x20, 0x74, 0x68, 0x65, 0x6D, 0x0A,  // esn't need them.
+    0x20, 0x2A, 0x20, 0x79, 0x65, 0x74, 0x29, 0x2C, 0x20, 0x77, 0x65, 0x20, 0x61, 0x72, 0x65, 0x20,  //  * yet), we are 
+    0x73, 0x6B, 0x69, 0x70, 0x70, 0x69, 0x6E, 0x67, 0x20, 0x74, 0x68, 0x65, 0x6D, 0x20, 0x66, 0x6F,  // skipping them fo
+    0x72, 0x20, 0x6E, 0x6F, 0x77, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D,  // r now.. */..// -
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x46, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F,  // -----.// Functio
+    0x6E, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ns.// ----------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x74, 0x79,  // ------------..ty
+    0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x66, 0x75, 0x6E,  // pedef struct fun
+    0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61,  // ction_arg_metada
+    0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20,  // ta_S {.  struct 
+    0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74,  // function_arg_met
+    0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x6E, 0x65, 0x78, 0x74, 0x3B, 0x0A, 0x20,  // adata_t* next;. 
+    0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x63,  //  char* name;.  c
+    0x68, 0x61, 0x72, 0x2A, 0x20, 0x74, 0x79, 0x70, 0x65, 0x5F, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67,  // har* type_string
+    0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67,  // ;.} function_arg
+    0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A,  // _metadata_t;../*
+    0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20,  // *. * @structure 
+    0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,  // function_metadat
+    0x61, 0x5F, 0x74, 0x0A, 0x20, 0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75,  // a_t. *. * The ru
+    0x6E, 0x74, 0x69, 0x6D, 0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66,  // ntime metadata f
+    0x6F, 0x72, 0x20, 0x61, 0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x73,  // or a reflected s
+    0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79,  // tructure.. */.ty
+    0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20,  // pedef struct {. 
+    0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x66,  //  char* name;.  f
+    0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74, 0x61,  // unction_arg_meta
+    0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x61, 0x72, 0x67, 0x75, 0x6D, 0x65, 0x6E, 0x74,  // data_t* argument
+    0x73, 0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x6D, 0x65,  // s;.} function_me
+    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x23, 0x65, 0x6E, 0x64, 0x69,  // tadata_t;..#endi
+    0x66, 0x20, 0x2F, 0x2A, 0x20, 0x5F, 0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54, 0x49, 0x4F, 0x4E,  // f /* _REFLECTION
+    0x5F, 0x48, 0x5F, 0x20, 0x2A, 0x2F, 0x0A,                                                        // _H_ */.
     };
   buffer_t* result = make_buffer(2455);
   for (
@@ -12894,11 +13949,11 @@ enum_metadata_t* type_node_kind_metadata(){
 
 // Full Compiler Command Line:
 //
-// build/bin/omni-c
+// /home/jawilson/src/omni-c/build-dir/bin/omni-c
 //    generate-library
 //    --use-statement-parser=true
 //    --omit-c-armyknife-include=true
-//    --c-output-file=build/self.c
+//    --c-output-file=/home/jawilson/src/omni-c/build-dir/self.c
 //    lib/omni-c.c
 //    lib/min-max.c
 //    lib/boolean.c
@@ -12959,7 +14014,7 @@ enum_metadata_t* type_node_kind_metadata(){
 //    printer.c
 //    global-includes.c
 //    main.c
-//    build/gen-files/reflection-header.c
+//    /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
 
 // These checksums are currently easy to fake for example by using a
 // hacked git in the PATH at the time this compile was run.
@@ -13004,24 +14059,24 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
 // git cat-file -p 6c86f8d6c5d20f4fffae42fa6ac88b804e4d8f6e > parser.c
 // git cat-file -p 0b55fcac19e62809336c191ff4b1feeccf79f121 > pstate.c
-// git cat-file -p b453674f99972033ef9db514b94a8c8a827c1cb6 > declaration-parser.c
+// git cat-file -p e89d2eaf5a00bb0fff8354c5d3ec4a684cf1786b > declaration-parser.c
 // git cat-file -p 9eb13062725ddd77e88cfd0102e76f45d00cb781 > node-list.c
-// git cat-file -p bcd925b5ab3a4e188ed25937aaf9ac0725570bd5 > debug-printer.c
-// git cat-file -p b7baad67f45ea2963c8552254da995238fa09378 > c-file-printer.c
-// git cat-file -p 100e82f46659c7e0b33058eddb08cbf12e869de2 > symbol-table.c
+// git cat-file -p c952ba7aa0e925387df3af39a094a34b857604f0 > debug-printer.c
+// git cat-file -p b46b3a5e174d75f817cfae42024a7da4c46f7511 > c-file-printer.c
+// git cat-file -p 57602622ba4bbb8cb59d7c595e216644036a49bd > symbol-table.c
 // git cat-file -p 28e23703d22e9660efecb6ffce1e0d48320c1114 > source-to-source.c
 // git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af > preprocessor.c
-// git cat-file -p 6146b1de14ef9de1aab45db08dffee4731e4ad64 > header-file-extractor.c
-// git cat-file -p 947f2b247995006fb0565973d63d5a71ddad85cc > symbol-table-builder.c
-// git cat-file -p a617d38e299c401bca599467639d1338e9732594 > srcgen.c
+// git cat-file -p 52af4fa58ea28535587766f2912d174b3856816f > header-file-extractor.c
+// git cat-file -p 913519428cb6d960a7af9beb766cfaac79e06546 > symbol-table-builder.c
+// git cat-file -p 1ef0ccd414c4831d299ebfe679272b61dcc98699 > srcgen.c
 // git cat-file -p f263f55f50cea1052ffa613e539b1033249a9dbb > pratt-parser.c
 // git cat-file -p 468303a3dbe5e25f045f1ffbefc3509eb2e7d462 > statement-parser.c
 // git cat-file -p 3dfa38a859552333bb6e961a76974c6d3a3f5c7d > type-parser.c
-// git cat-file -p 5da823a61e6db0f60d1c258ea98820a7980adb47 > user-type-parser.c
+// git cat-file -p ced1810a143a2f13942438bfcdedd8f2b2994eb9 > user-type-parser.c
 // git cat-file -p 84ca8b733bbe26047a4b1ef72bd73f2e0ed65f80 > variable-definition-parser.c
 // git cat-file -p 0a60637302a1720474efbd538777232352d15a37 > literal-parser.c
 // git cat-file -p da5d06ce2e4ff926c65f532bfcfa6f106fbbc90b > balanced-construct-parser.c
-// git cat-file -p 282faf39e534070f851b3ce87f88e7ea79b4daee > printer.c
+// git cat-file -p a1246b1440b1757d6547a3b3f595d5bb0646849a > printer.c
 // git cat-file -p ea1a646a86f833872d5be645ae3403283baf459f > global-includes.c
-// git cat-file -p a6ecd0940bf7762c49b61dda8e283cf11e76542d > main.c
-// git cat-file -p 597bf0928ace2a7c632a3abdcbeb0f09a352616b > build/gen-files/reflection-header.c
+// git cat-file -p 7894049236245de66168f1fefb894120708ed110 > main.c
+// git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
