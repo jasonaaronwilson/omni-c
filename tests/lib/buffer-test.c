@@ -284,6 +284,14 @@ void test_buffer_byte_source(void) {
   test_assert_integer_equal(third, 0);
 }
 
+void test_buffer_byte_target(void) {
+  buffer_t* buffer = make_buffer(5);
+  byte_stream_target_t* target = buffer_to_byte_target(buffer);
+  target->write_byte(target, 'H');
+  target->write_byte(target, 'i');
+  test_assert_string_equal("Hi", buffer_to_c_string(buffer));
+}
+
 int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
@@ -306,5 +314,6 @@ int main(int argc, char** argv) {
   test_buffer_to_lowercase();
   test_buffer_replace_matching_byte();
   test_buffer_byte_source();
+  test_buffer_byte_target();
   exit(0);
 }

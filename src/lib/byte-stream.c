@@ -1,3 +1,5 @@
+/* ================================================================ */
+
 typedef byte_stream_source_t = struct {
   // Read one byte. If a byte was available, set the second argument
   // to true, otherwise false.
@@ -5,12 +7,10 @@ typedef byte_stream_source_t = struct {
   void* data;
 };
 
-/*
-typedef byte_stream_sink_t = struct {
-  fn_t(byte_sink_t*, byte_sink_t*, uint8_t*) write_byte;
+typedef byte_stream_target_t = struct {
+  fn_t(byte_stream_target_t*, byte_stream_target_t*, uint8_t) write_byte;
   void* data;
 };
-*/
 
 /* ================================================================ */
 
@@ -70,4 +70,19 @@ uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_
     *has_byte = false;
   }
   return result;
+}
+
+/* ================================================================ */
+
+byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer) {
+  byte_stream_target_t* result = malloc_struct(byte_stream_target_t);
+  result->write_byte = &buffer_stream_target_write;
+  result->data = cast(void*, buffer);
+  return result;
+}
+
+byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte) {
+  buffer_t* buffer = cast(buffer_t*, target->data);
+  buffer_append_byte(buffer, byte);
+  return target;
 }
