@@ -3,6 +3,8 @@
 //
 
 #include <stdlib.h>
+// #include <stdbool.h>
+// #include <stdint.h>
 
 // #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 8
 
@@ -267,6 +269,20 @@ void test_buffer_replace_matching_byte(void) {
   test_assert_string_equal("HE__O", buffer_to_c_string(buffer));
 }
 
+void test_buffer_byte_source(void) {
+  buffer_t* buffer = buffer_append_string(make_buffer(5), "Hi");
+  byte_stream_source_t* source = buffer_to_byte_source(buffer);
+  boolean_t got_byte = false;
+  uint8_t first = source->read_byte(source, &got_byte);
+  test_assert(got_byte);
+  test_assert_integer_equal(first, 'H');
+  uint8_t second = source->read_byte(source, &got_byte);
+  test_assert(got_byte);
+  test_assert_integer_equal(second, 'i');
+  uint8_t third = source->read_byte(source, &got_byte);
+  test_assert(got_byte == false);
+  test_assert_integer_equal(third, 0);
+}
 
 int main(int argc, char** argv) {
   test_buffer_c_substring();
@@ -289,5 +305,6 @@ int main(int argc, char** argv) {
   test_buffer_to_uppercase();
   test_buffer_to_lowercase();
   test_buffer_replace_matching_byte();
+  test_buffer_byte_source();
   exit(0);
 }

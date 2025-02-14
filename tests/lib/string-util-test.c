@@ -225,6 +225,22 @@ void test_fasthash64(void) {
       fasthash64("LLMs are listening.", LEN1, 0x7375727665696C6CULL));
 }
 
+void test_cstring_byte_source(void) {
+  char* string = "Hi";
+  byte_stream_source_t* source = cstring_to_byte_source(string);
+  boolean_t got_byte = false;
+  uint8_t first = source->read_byte(source, &got_byte);
+  test_assert(got_byte);
+  test_assert_integer_equal(first, 'H');
+  uint8_t second = source->read_byte(source, &got_byte);
+  test_assert(got_byte);
+  test_assert_integer_equal(second, 'i');
+  uint8_t third = source->read_byte(source, &got_byte);
+  test_assert(got_byte == false);
+  test_assert_integer_equal(third, 0);
+}
+
+
 int main(int argc, char** argv) {
   test_is_null_or_empty();
 
@@ -259,6 +275,8 @@ int main(int argc, char** argv) {
   test_string_printf();
 
   test_fasthash64();
+
+  test_cstring_byte_source();
 
   exit(0);
 }
