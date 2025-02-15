@@ -63,3 +63,13 @@ types (including function pointers).
    unicode?)
 
 1. make sure parser can handle more of unicode?
+
+# Unnecessary Library Changes
+
+I know I am adding things to "lib" that are strictly unnecessary at
+the moment but it has the added benefit of giving me a better
+<i>feel</i>.
+
+1. A (buffered) file source and (buffered) file target. If the buffer
+   max-size is zero, then get shitty performance but more familiar
+   behavior. Hmmm.
