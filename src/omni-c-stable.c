@@ -105,7 +105,6 @@ typedef struct {
 #include <string.h>
 #include <gc.h>
 #include <stdarg.h>
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -116,6 +115,7 @@ typedef struct {
 #include <time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <ctype.h>
 
 // ========== defines ==========
 
@@ -130,8 +130,6 @@ typedef struct {
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
-
-#define _BOOLEAN_H_
 
 #define _COMPOUND_LITERAL_H_
 
@@ -260,8 +258,6 @@ typedef struct {
   } while (0)
 
 #define _UTF8_DECODER_H_
-
-#define _BUFFER_H_
 
 #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
 
@@ -705,9 +701,17 @@ typedef struct logger_state_S logger_state_t;
 
 typedef struct utf8_decode_result_S utf8_decode_result_t;
 
-typedef struct buffer_S buffer_t;
+typedef struct buffer_t__generated_S buffer_t;
 
-typedef struct line_and_column_S line_and_column_t;
+typedef struct line_and_column_t__generated_S line_and_column_t;
+
+typedef struct byte_stream_source_t__generated_S byte_stream_source_t;
+
+typedef struct byte_stream_target_t__generated_S byte_stream_target_t;
+
+typedef struct buffer_byte_stream_source_data_t__generated_S buffer_byte_stream_source_data_t;
+
+typedef struct cstring_byte_stream_source_data_t__generated_S cstring_byte_stream_source_data_t;
 
 typedef struct value_array_S value_array_t;
 
@@ -1068,12 +1072,6 @@ struct utf8_decode_result_S {
   boolean_t error;
 };
 
-struct buffer_S {
-  uint32_t length;
-  uint32_t capacity;
-  uint8_t* elements;
-};
-
 struct value_array_S {
   uint32_t length;
   uint32_t capacity;
@@ -1206,9 +1204,36 @@ struct value_result_t__generated_S {
   non_fatal_error_code_t nf_error;
 };
 
-struct line_and_column_S {
+struct buffer_t__generated_S {
+  uint32_t length;
+  uint32_t capacity;
+  uint8_t* elements;
+};
+
+struct line_and_column_t__generated_S {
   uint64_t line;
   uint64_t column;
+};
+
+struct byte_stream_source_t__generated_S {
+  fn_t(uint8_t, byte_stream_source_t*, boolean_t*) read_byte;
+  void* data;
+};
+
+struct byte_stream_target_t__generated_S {
+  fn_t(byte_stream_target_t*, byte_stream_target_t*, uint8_t) write_byte;
+  void* data;
+};
+
+struct buffer_byte_stream_source_data_t__generated_S {
+  buffer_t* buffer;
+  uint64_t position;
+};
+
+struct cstring_byte_stream_source_data_t__generated_S {
+  char* string;
+  uint64_t length;
+  uint64_t position;
 };
 
 struct cdl_printer_t__generated_S {
@@ -1844,33 +1869,39 @@ __attribute__((format(printf, 5, 6))) extern void logger_impl(char* file, int li
 value_result_t parse_log_level_enum(char* str);
 char* logger_level_to_string(int level);
 extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
-extern buffer_t* make_buffer(uint64_t initial_capacity);
-extern uint64_t buffer_length(buffer_t* buffer);
-extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
-extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
-extern char* buffer_to_c_string(buffer_t* buffer);
-extern void buffer_clear(buffer_t* buffer);
+buffer_t* make_buffer(uint64_t initial_capacity);
+uint64_t buffer_length(buffer_t* array);
+void buffer_clear(buffer_t* buffer);
+uint8_t buffer_get(buffer_t* buffer, uint64_t position);
+char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
+char* buffer_to_c_string(buffer_t* buffer);
+buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element);
+buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
+buffer_t* buffer_append_string(buffer_t* buffer, const char* str);
 extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
-extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
-extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
-extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
-extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer);
-extern buffer_t* buffer_append_string(buffer_t* buffer, const char* str);
-__attribute__((format(printf, 2, 3))) extern buffer_t* buffer_printf(buffer_t* buffer, char* format, ...);
+__attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...);
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str);
 buffer_t* buffer_from_string(char* string);
-buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start, uint64_t original_end, uint64_t new_width);
+buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width);
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text);
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement);
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position);
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text);
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement);
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start);
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
+extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer);
 buffer_t* buffer_to_uppercase(buffer_t* buffer);
 buffer_t* buffer_to_lowercase(buffer_t* buffer);
-line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position);
+byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer);
+uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
+byte_stream_source_t* cstring_to_byte_source(char* string);
+uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
+byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer);
+byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte);
 extern value_array_t* make_value_array(uint64_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
 extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
@@ -3830,7 +3861,7 @@ utf8_decode_result_t utf8_decode(const uint8_t* array){
 }
 
 
-# 123 "lib/buffer.c"
+# 46 "lib/buffer.c"
 buffer_t* make_buffer(uint64_t initial_capacity){
   buffer_t* result = malloc_struct(buffer_t);
   if ((initial_capacity<16))
@@ -3846,13 +3877,26 @@ buffer_t* make_buffer(uint64_t initial_capacity){
 }
 
 
-# 140 "lib/buffer.c"
+# 63 "lib/buffer.c"
 uint64_t buffer_length(buffer_t* array){
   return (array->length);
 }
 
 
-# 159 "lib/buffer.c"
+# 70 "lib/buffer.c"
+void buffer_clear(buffer_t* buffer){
+  for (
+    int i = 0;
+    (i<(buffer->capacity));
+    (i++))
+  {
+    (((buffer->elements)[i])=0);
+  }
+  ((buffer->length)=0);
+}
+
+
+# 82 "lib/buffer.c"
 uint8_t buffer_get(buffer_t* buffer, uint64_t position){
   if ((position<(buffer->length)))
   {
@@ -3866,7 +3910,7 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position){
 }
 
 
-# 177 "lib/buffer.c"
+# 100 "lib/buffer.c"
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
   if ((buffer==NULL))
   {
@@ -3887,26 +3931,45 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
 }
 
 
-# 201 "lib/buffer.c"
+# 124 "lib/buffer.c"
 char* buffer_to_c_string(buffer_t* buffer){
   return buffer_c_substring(buffer, 0, (buffer->length));
 }
 
 
-# 147 "lib/buffer.c"
-void buffer_clear(buffer_t* buffer){
-  for (
-    int i = 0;
-    (i<(buffer->capacity));
-    (i++))
+# 133 "lib/buffer.c"
+buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element){
+  if (((buffer->length)<(buffer->capacity)))
   {
-    (((buffer->elements)[i])=0);
+    (((buffer->elements)[(buffer->length)])=element);
+    ((buffer->length)++);
+    return buffer;
   }
-  ((buffer->length)=0);
+  (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
+  return buffer_append_byte(buffer, element);
 }
 
 
-# 252 "lib/buffer.c"
+# 148 "lib/buffer.c"
+buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes){
+  for (
+    int i = 0;
+    (i<n_bytes);
+    (i++))
+  {
+    (buffer=buffer_append_byte(buffer, (bytes[i])));
+  }
+  return buffer;
+}
+
+
+# 163 "lib/buffer.c"
+buffer_t* buffer_append_string(buffer_t* buffer, const char* str){
+  return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
+}
+
+
+# 175 "lib/buffer.c"
 extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity){
   if (((buffer->capacity)<capacity))
   {
@@ -3920,62 +3983,7 @@ extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity){
 }
 
 
-# 210 "lib/buffer.c"
-buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element){
-  if (((buffer->length)<(buffer->capacity)))
-  {
-    (((buffer->elements)[(buffer->length)])=element);
-    ((buffer->length)++);
-    return buffer;
-  }
-  (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
-  return buffer_append_byte(buffer, element);
-}
-
-
-# 225 "lib/buffer.c"
-buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes){
-  for (
-    int i = 0;
-    (i<n_bytes);
-    (i++))
-  {
-    (buffer=buffer_append_byte(buffer, (bytes[i])));
-  }
-  return buffer;
-}
-
-
-# 576 "lib/buffer.c"
-extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer){
-  return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
-}
-
-
-# 588 "lib/buffer.c"
-extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer){
-  if ((buffer==src_buffer))
-  {
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-  for (
-    uint64_t position = start_position;
-    (position<end_position);
-    (position++))
-  {
-    (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
-  }
-  return buffer;
-}
-
-
-# 240 "lib/buffer.c"
-buffer_t* buffer_append_string(buffer_t* buffer, const char* str){
-  return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
-}
-
-
-# 274 "lib/buffer.c"
+# 197 "lib/buffer.c"
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...){
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
@@ -4008,7 +4016,7 @@ while (0);
 }
 
 
-# 312 "lib/buffer.c"
+# 235 "lib/buffer.c"
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count){
   for (
     int i = 0;
@@ -4021,7 +4029,7 @@ extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int
 }
 
 
-# 326 "lib/buffer.c"
+# 249 "lib/buffer.c"
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position){
   if ((position>=(buffer->length)))
   {
@@ -4040,7 +4048,7 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position){
 }
 
 
-# 352 "lib/buffer.c"
+# 275 "lib/buffer.c"
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point){
   if ((code_point<0x80))
   {
@@ -4079,7 +4087,7 @@ extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
 }
 
 
-# 387 "lib/buffer.c"
+# 310 "lib/buffer.c"
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str){
   for (
     uint64_t pos = start_position;
@@ -4105,7 +4113,7 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char
 }
 
 
-# 413 "lib/buffer.c"
+# 336 "lib/buffer.c"
 buffer_t* buffer_from_string(char* string){
   buffer_t* result = make_buffer(strlen(string));
   (result=buffer_append_string(result, string));
@@ -4113,7 +4121,7 @@ buffer_t* buffer_from_string(char* string){
 }
 
 
-# 426 "lib/buffer.c"
+# 349 "lib/buffer.c"
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width){
   if ((start>end))
   {
@@ -4140,7 +4148,7 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, u
 }
 
 
-# 460 "lib/buffer.c"
+# 383 "lib/buffer.c"
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text){
   int len_original = strlen(original_text);
   int len_replacement = strlen(replacement_text);
@@ -4165,91 +4173,7 @@ buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replac
 }
 
 
-# 525 "lib/buffer.c"
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement){
-  for (
-    int i = 0;
-    (i<(buffer->length));
-    (i++))
-  {
-    if ((((buffer->elements)[i])==original))
-    {
-      (((buffer->elements)[i])=replacement);
-    }
-  }
-  return buffer;
-}
-
-
-# 507 "lib/buffer.c"
-boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text){
-  for (
-    int i = start;
-    (i<end);
-    (i++))
-  {
-    if (buffer_match_string_at(buffer, i, text))
-    {
-      return true;
-    }
-  }
-  return false;
-}
-
-
-# 542 "lib/buffer.c"
-uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start){
-  uint64_t position = start;
-  while ((position>0))
-  {
-    (position--);
-    if ((buffer_get(buffer, position)=='\n'))
-    {
-      return (position+1);
-    }
-  }
-  return position;
-}
-
-
-# 561 "lib/buffer.c"
-uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start){
-  uint64_t position = start;
-  while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
-  {
-    (position++);
-  }
-  return position;
-}
-
-
-# 611 "lib/buffer.c"
-buffer_t* buffer_to_uppercase(buffer_t* buffer){
-  for (
-    uint64_t i = 0;
-    (i<(buffer->length));
-    (i++))
-  {
-    (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
-  }
-  return buffer;
-}
-
-
-# 627 "lib/buffer.c"
-buffer_t* buffer_to_lowercase(buffer_t* buffer){
-  for (
-    uint64_t i = 0;
-    (i<(buffer->length));
-    (i++))
-  {
-    (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
-  }
-  return buffer;
-}
-
-
-# 480 "lib/buffer.c"
+# 403 "lib/buffer.c"
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position){
   uint64_t line = 1;
   uint64_t column = 1;
@@ -4273,6 +4197,189 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t 
                                                  .line = line,
                                                  .column = column,
                                              });
+}
+
+
+# 430 "lib/buffer.c"
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text){
+  for (
+    int i = start;
+    (i<end);
+    (i++))
+  {
+    if (buffer_match_string_at(buffer, i, text))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+# 448 "lib/buffer.c"
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement){
+  for (
+    int i = 0;
+    (i<(buffer->length));
+    (i++))
+  {
+    if ((((buffer->elements)[i])==original))
+    {
+      (((buffer->elements)[i])=replacement);
+    }
+  }
+  return buffer;
+}
+
+
+# 465 "lib/buffer.c"
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start){
+  uint64_t position = start;
+  while ((position>0))
+  {
+    (position--);
+    if ((buffer_get(buffer, position)=='\n'))
+    {
+      return (position+1);
+    }
+  }
+  return position;
+}
+
+
+# 484 "lib/buffer.c"
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start){
+  uint64_t position = start;
+  while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
+  {
+    (position++);
+  }
+  return position;
+}
+
+
+# 499 "lib/buffer.c"
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer){
+  return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
+}
+
+
+# 511 "lib/buffer.c"
+extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer){
+  if ((buffer==src_buffer))
+  {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  for (
+    uint64_t position = start_position;
+    (position<end_position);
+    (position++))
+  {
+    (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
+  }
+  return buffer;
+}
+
+
+# 534 "lib/buffer.c"
+buffer_t* buffer_to_uppercase(buffer_t* buffer){
+  for (
+    uint64_t i = 0;
+    (i<(buffer->length));
+    (i++))
+  {
+    (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
+  }
+  return buffer;
+}
+
+
+# 550 "lib/buffer.c"
+buffer_t* buffer_to_lowercase(buffer_t* buffer){
+  for (
+    uint64_t i = 0;
+    (i<(buffer->length));
+    (i++))
+  {
+    (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
+  }
+  return buffer;
+}
+
+
+# 17 "lib/byte-stream.c"
+byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer){
+  byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
+  ((result->read_byte)=(&buffer_stream_source_read));
+  buffer_byte_stream_source_data_t* data = malloc_struct(buffer_byte_stream_source_data_t);
+  ((data->buffer)=buffer);
+  ((data->position)=0);
+  ((result->data)=(/*CAST*/(void*) data));
+  return result;
+}
+
+
+# 32 "lib/byte-stream.c"
+uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte){
+  buffer_byte_stream_source_data_t* data = (/*CAST*/(buffer_byte_stream_source_data_t*) (source->data));
+  uint8_t result = 0;
+  if (((data->position)<buffer_length((data->buffer))))
+  {
+    (result=buffer_get((data->buffer), ((data->position)++)));
+    ((*has_byte)=true);
+  }
+  else
+  {
+    ((*has_byte)=false);
+  }
+  return result;
+}
+
+
+# 46 "lib/byte-stream.c"
+byte_stream_source_t* cstring_to_byte_source(char* string){
+  byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
+  ((result->read_byte)=(&cstring_stream_source_read));
+  cstring_byte_stream_source_data_t* data = malloc_struct(cstring_byte_stream_source_data_t);
+  ((data->string)=string);
+  ((data->length)=strlen(string));
+  ((data->position)=0);
+  ((result->data)=(/*CAST*/(void*) data));
+  return result;
+}
+
+
+# 63 "lib/byte-stream.c"
+uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte){
+  cstring_byte_stream_source_data_t* data = (/*CAST*/(cstring_byte_stream_source_data_t*) (source->data));
+  uint8_t result = 0;
+  if (((data->position)<(data->length)))
+  {
+    (result=((data->string)[((data->position)++)]));
+    ((*has_byte)=true);
+  }
+  else
+  {
+    ((*has_byte)=false);
+  }
+  return result;
+}
+
+
+# 77 "lib/byte-stream.c"
+byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer){
+  byte_stream_target_t* result = malloc_struct(byte_stream_target_t);
+  ((result->write_byte)=(&buffer_stream_target_write));
+  ((result->data)=(/*CAST*/(void*) buffer));
+  return result;
+}
+
+
+# 84 "lib/byte-stream.c"
+byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte){
+  buffer_t* buffer = (/*CAST*/(buffer_t*) (target->data));
+  buffer_append_byte(buffer, byte);
+  return target;
 }
 
 
@@ -13949,11 +14056,11 @@ enum_metadata_t* type_node_kind_metadata(){
 
 // Full Compiler Command Line:
 //
-// /home/jawilson/src/omni-c/build-dir/bin/omni-c
+// /home/jawilson/src/omni-c/build-dir/bin/omni-c-stable
 //    generate-library
 //    --use-statement-parser=true
 //    --omit-c-armyknife-include=true
-//    --c-output-file=/home/jawilson/src/omni-c/build-dir/self.c
+//    --c-output-file=/home/jawilson/src/omni-c/build-dir/omni-c.c
 //    lib/omni-c.c
 //    lib/min-max.c
 //    lib/boolean.c
@@ -13968,6 +14075,7 @@ enum_metadata_t* type_node_kind_metadata(){
 //    lib/logger.c
 //    lib/utf8-decoder.c
 //    lib/buffer.c
+//    lib/byte-stream.c
 //    lib/value-array.c
 //    lib/value-alist.c
 //    lib/string-alist.c
@@ -14021,7 +14129,7 @@ enum_metadata_t* type_node_kind_metadata(){
 //
 // git cat-file -p 613ecb5073e9f6b8b3d2a2deb77a3040a0388d62 > lib/omni-c.c
 // git cat-file -p 58637a0049c50cf56fe40e9b2a9de543c095785a > lib/min-max.c
-// git cat-file -p cacfd0298651cd99521238583295319513a7c311 > lib/boolean.c
+// git cat-file -p 34c0f39b6f480c7ce9cb93fd79586d8900323bdf > lib/boolean.c
 // git cat-file -p 11f959d626cae14fb73a67898a35ea9d599a9e00 > lib/compound-literal.c
 // git cat-file -p 410a738d9b347300ac5cb091d8ebe87c5d9c7588 > lib/fn.c
 // git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053 > lib/leb128.c
@@ -14032,7 +14140,8 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 958d3082cdffbd52b6bb56dbd591c533902112f4 > lib/string-util.c
 // git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37 > lib/logger.c
 // git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0 > lib/utf8-decoder.c
-// git cat-file -p 2efd1e5e3fddefbff312fa50684285083ee5613a > lib/buffer.c
+// git cat-file -p 792fad23b9b7d9f2b2eb2728c0b0b928b1611e82 > lib/buffer.c
+// git cat-file -p 800182d499c344faba101baa94359c9c585a77a1 > lib/byte-stream.c
 // git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2 > lib/value-array.c
 // git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4 > lib/value-alist.c
 // git cat-file -p c560ad207e743ce3b364b58540b81a7051072f0a > lib/string-alist.c
