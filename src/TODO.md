@@ -21,10 +21,7 @@ types (including function pointers).
 
 ## Simple Compiler Improvements
 
-1. start optionally putting out line directives and see what happens
-   during debugging (we can begin initially just doing this for
-   functions and expand to other statement types later (or as part of
-   getting the linearizer ready).
+1. put out more line for other types of statements.
 
 1. use a proper stack in balanced construct parser.
 
