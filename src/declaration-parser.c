@@ -137,7 +137,7 @@ typedef struct {
  * it's tag.
  */
 static inline declarations_node_t* to_declarations_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_DECLARATIONS) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_DECLARATIONS) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(declarations_node_t*, ptr);
@@ -150,7 +150,7 @@ static inline declarations_node_t* to_declarations_node(parse_node_t* ptr) {
  * tag.
  */
 static inline literal_node_t* to_literal_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_LITERAL) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_LITERAL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(literal_node_t*, ptr);
@@ -163,7 +163,7 @@ static inline literal_node_t* to_literal_node(parse_node_t* ptr) {
  * tag.
  */
 static inline function_node_t* to_function_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_FUNCTION) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_FUNCTION) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(function_node_t*, ptr);
@@ -177,7 +177,7 @@ static inline function_node_t* to_function_node(parse_node_t* ptr) {
  */
 static inline function_argument_node_t*
     to_function_argument_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_FUNCTION_ARGUMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_FUNCTION_ARGUMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(function_argument_node_t*, ptr);
@@ -190,7 +190,7 @@ static inline function_argument_node_t*
  * tag.
  */
 static inline typedef_node_t* to_typedef_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_TYPEDEF) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_TYPEDEF) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(typedef_node_t*, ptr);
@@ -203,7 +203,7 @@ static inline typedef_node_t* to_typedef_node(parse_node_t* ptr) {
  * examining it's tag.
  */
 static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_UNPARSED_EXPRESSION) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_UNPARSED_EXPRESSION) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(unparsed_expression_t*, ptr);
@@ -216,7 +216,7 @@ static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr) {
  * it's tag.
  */
 static inline attribute_node_t* to_attribute_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_ATTRIBUTE) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_ATTRIBUTE) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(attribute_node_t*, ptr);
@@ -229,7 +229,7 @@ static inline attribute_node_t* to_attribute_node(parse_node_t* ptr) {
  * it's tag.
  */
 static inline cpp_define_node_t* to_cpp_define_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_CPP_DEFINE) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_CPP_DEFINE) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(cpp_define_node_t*, ptr);
@@ -242,7 +242,7 @@ static inline cpp_define_node_t* to_cpp_define_node(parse_node_t* ptr) {
  * it's tag.
  */
 static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_CPP_INCLUDE) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_CPP_INCLUDE) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(cpp_include_node_t*, ptr);
@@ -421,7 +421,7 @@ pstatus_t parse_attribute_node(pstate_t* pstate) {
 pstatus_t parse_function_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
 
-  token_t* storage_class_specifier = NULL;
+  token_t* storage_class_specifier = nullptr;
   token_list_t function_specifiers = {0};
   node_list_t attributes = {0};
 
@@ -431,7 +431,7 @@ pstatus_t parse_function_node(pstate_t* pstate) {
         || pstate_expect_token_string(pstate_ignore_error(pstate), "auto")
         || pstate_expect_token_string(pstate_ignore_error(pstate),
                                       "register")) {
-      if (storage_class_specifier == NULL) {
+      if (storage_class_specifier == nullptr) {
         storage_class_specifier = pstate_get_result_token(pstate);
       } else {
         return pstate_error(pstate, saved_position,

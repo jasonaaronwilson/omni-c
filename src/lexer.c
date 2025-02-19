@@ -39,13 +39,13 @@ typedef struct tokenizer_result_S {
 
 static inline token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
-    return NULL;
+    return nullptr;
   }
   return value_array_get_ptr(tokens, position, typeof(token_t*));
 }
 
 static inline boolean_t token_matches(token_t* token, char* str) {
-  if (token == NULL) {
+  if (token == nullptr) {
     return false;
   }
   int str_len = strlen(str);
@@ -615,7 +615,7 @@ tokenizer_result_t tokenize(buffer_t* buffer) {
     }
 
     uint32_t code_point = decode_result.code_point;
-    token_t* token = NULL;
+    token_t* token = nullptr;
 
     if (isspace(code_point)) {
       read_token(tokenize_whitespace);
@@ -635,7 +635,7 @@ tokenizer_result_t tokenize(buffer_t* buffer) {
 
     // If token is null we have a problem...
 
-    if (token != NULL) {
+    if (token != nullptr) {
       token->line_number = line_number;
       token->column_number = column_number;
       for (int i = token->start; i < token->end; i++) {

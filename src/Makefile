@@ -122,7 +122,7 @@ format:
 	done
 
 tags:
-	etags *.c
+	find . -type f -name "*.c" ! -name "omni-c-stable.c" -print0 | xargs -0 etags -o ${BUILD_DIR}/TAGS
 
 clean:
 	# This is all that should be necessary for a clean build

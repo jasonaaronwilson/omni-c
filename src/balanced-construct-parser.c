@@ -23,7 +23,7 @@ typedef struct balanced_construct_node_S {
  */
 static inline balanced_construct_node_t*
     to_balanced_construct_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_BALANCED_CONSTRUCT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_BALANCED_CONSTRUCT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(balanced_construct_node_t*, ptr);

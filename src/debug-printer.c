@@ -203,7 +203,7 @@ void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node) {
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_ENUM");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
   }
@@ -219,7 +219,7 @@ void buffer_append_dbg_struct_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_STRUCT");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
   }
@@ -234,7 +234,7 @@ void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node) {
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_UNION");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
   }
@@ -250,11 +250,11 @@ void buffer_append_dbg_enum_element(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_ENUM_ELEMENT");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
   }
-  if (node->value_expr != NULL) {
+  if (node->value_expr != nullptr) {
     cdl_key(printer, "value_expr");
     buffer_append_dbg_parse_node(printer, node->value_expr);
   }
@@ -265,15 +265,15 @@ void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node) {
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_FIELD");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
   }
-  if (node->type != NULL) {
+  if (node->type != nullptr) {
     cdl_key(printer, "type");
     buffer_append_dbg_type_node(printer, node->type);
   }
-  if (node->suffixes != NULL) {
+  if (node->suffixes != nullptr) {
     cdl_key(printer, "suffixes");
     cdl_start_array(printer);
     for (uint64_t i = 0; i < node->suffixes->length; i++) {
@@ -313,11 +313,11 @@ void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node) {
     cdl_end_array(printer);
   }
 
-  if (node->type_name != NULL) {
+  if (node->type_name != nullptr) {
     cdl_key(printer, "type_name");
     cdl_string(printer, token_to_string(node->type_name));
   }
-  if (node->user_type != NULL) {
+  if (node->user_type != nullptr) {
     cdl_key(printer, "user_type");
     buffer_append_dbg_parse_node(printer, node->user_type);
   }
@@ -331,18 +331,18 @@ void buffer_append_dbg_literal_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_LITERAL");
-  if (node->token != NULL) {
+  if (node->token != nullptr) {
     cdl_key(printer, "token");
     cdl_string(printer, token_to_string(node->token));
   }
-  if (node->tokens != NULL) {
+  if (node->tokens != nullptr) {
     buffer_append_dbg_tokens(printer, node->tokens, "tokens");
   }
-  if (node->initializer_node != NULL) {
+  if (node->initializer_node != nullptr) {
     cdl_key(printer, "initializer_node");
     buffer_append_dbg_parse_node(printer, node->initializer_node);
   }
-  if (node->initializer_type != NULL) {
+  if (node->initializer_type != nullptr) {
     cdl_key(printer, "initializer_type");
     buffer_append_dbg_parse_node(printer, node->initializer_type);
   }
@@ -357,26 +357,26 @@ void buffer_append_dbg_function_node(cdl_printer_t* printer,
   cdl_key(printer, "attributes");
   buffer_append_dbg_node_list(printer, node->attributes);
 
-  if (node->storage_class_specifier != NULL) {
+  if (node->storage_class_specifier != nullptr) {
     cdl_key(printer, "storage_class_specifier");
     cdl_string(printer, token_to_string(node->storage_class_specifier));
   }
 
   // FIXME! use function_specifiers
 
-  if (node->return_type != NULL) {
+  if (node->return_type != nullptr) {
     cdl_key(printer, "return_type");
     buffer_append_dbg_type_node(printer, node->return_type);
   }
 
-  if (node->function_name != NULL) {
+  if (node->function_name != nullptr) {
     cdl_key(printer, "function_name");
     cdl_string(printer, token_to_string(node->function_name));
   }
 
   cdl_key(printer, "function_args");
   buffer_append_dbg_node_list(printer, node->function_args);
-  if (node->body != NULL) {
+  if (node->body != nullptr) {
     cdl_key(printer, "body");
     buffer_append_dbg_parse_node(printer, node->body);
   }
@@ -389,11 +389,11 @@ void buffer_append_dbg_function_argument_node(cdl_printer_t* printer,
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_FUNCTION_ARGUEMENT");
 
-  if (node->arg_type != NULL) {
+  if (node->arg_type != nullptr) {
     cdl_key(printer, "arg_type");
     buffer_append_dbg_type_node(printer, node->arg_type);
   }
-  if (node->arg_name != NULL) {
+  if (node->arg_name != nullptr) {
     cdl_key(printer, "arg_name");
     cdl_string(printer, token_to_string(node->arg_name));
   }
@@ -405,11 +405,11 @@ void buffer_append_dbg_balanced_construct_node(
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_BALANCED_CONSTRUCT");
-  if (node->start_token != NULL) {
+  if (node->start_token != nullptr) {
     cdl_key(printer, "start_token");
     cdl_string(printer, token_to_string(node->start_token));
   }
-  if (node->end_token != NULL) {
+  if (node->end_token != nullptr) {
     cdl_key(printer, "end_token");
     cdl_string(printer, token_to_string(node->end_token));
   }
@@ -421,11 +421,11 @@ void buffer_append_dbg_typedef_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_TYPEDEF");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
   }
-  if (node->type_node != NULL) {
+  if (node->type_node != nullptr) {
     cdl_key(printer, "type_node");
     buffer_append_dbg_type_node(printer, node->type_node);
   }
@@ -437,23 +437,23 @@ void buffer_append_dbg_variable_definition_node(
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_VARIABLE_DEFINITION");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string(node->name));
   }
-  if (node->type != NULL) {
+  if (node->type != nullptr) {
     cdl_key(printer, "type");
     buffer_append_dbg_type_node(printer, node->type);
   }
-  if (node->value != NULL) {
+  if (node->value != nullptr) {
     cdl_key(printer, "value");
     buffer_append_dbg_parse_node(printer, node->value);
   }
-  if (node->storage_class_specifier != NULL) {
+  if (node->storage_class_specifier != nullptr) {
     cdl_key(printer, "storage_class_specifier");
     cdl_string(printer, token_to_string(node->storage_class_specifier));
   }
-  if (node->suffixes != NULL) {
+  if (node->suffixes != nullptr) {
     cdl_key(printer, "suffixes");
     cdl_start_array(printer);
     for (uint64_t i = 0; i < node->suffixes->length; i++) {
@@ -471,11 +471,11 @@ void buffer_append_dbg_attribute_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_ATTRIBUTE");
-  if (node->inner_start_token != NULL) {
+  if (node->inner_start_token != nullptr) {
     cdl_key(printer, "inner_start_token");
     cdl_string(printer, token_to_string(node->inner_start_token));
   }
-  if (node->inner_end_token != NULL) {
+  if (node->inner_end_token != nullptr) {
     cdl_key(printer, "inner_end_token");
     cdl_string(printer, token_to_string(node->inner_end_token));
   }
@@ -514,15 +514,15 @@ void buffer_append_dbg_if_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_IF_STATEMENT");
-  if (node->if_condition != NULL) {
+  if (node->if_condition != nullptr) {
     cdl_key(printer, "if_condition");
     buffer_append_dbg_parse_node(printer, node->if_condition);
   }
-  if (node->if_true != NULL) {
+  if (node->if_true != nullptr) {
     cdl_key(printer, "if_true");
     buffer_append_dbg_parse_node(printer, node->if_true);
   }
-  if (node->if_else != NULL) {
+  if (node->if_else != nullptr) {
     cdl_key(printer, "if_else");
     buffer_append_dbg_parse_node(printer, node->if_else);
   }
@@ -535,11 +535,11 @@ void buffer_append_dbg_while_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_WHILE_STATEMENT");
-  if (node->condition != NULL) {
+  if (node->condition != nullptr) {
     cdl_key(printer, "condition");
     buffer_append_dbg_parse_node(printer, node->condition);
   }
-  if (node->body != NULL) {
+  if (node->body != nullptr) {
     cdl_key(printer, "body");
     buffer_append_dbg_parse_node(printer, node->body);
   }
@@ -551,19 +551,19 @@ void buffer_append_dbg_for_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_FOR_STATEMENT");
-  if (node->for_init != NULL) {
+  if (node->for_init != nullptr) {
     cdl_key(printer, "for_init");
     buffer_append_dbg_parse_node(printer, node->for_init);
   }
-  if (node->for_test != NULL) {
+  if (node->for_test != nullptr) {
     cdl_key(printer, "for_test");
     buffer_append_dbg_parse_node(printer, node->for_test);
   }
-  if (node->for_increment != NULL) {
+  if (node->for_increment != nullptr) {
     cdl_key(printer, "for_increment");
     buffer_append_dbg_parse_node(printer, node->for_increment);
   }
-  if (node->for_body != NULL) {
+  if (node->for_body != nullptr) {
     cdl_key(printer, "for_body");
     buffer_append_dbg_parse_node(printer, node->for_body);
   }
@@ -575,11 +575,11 @@ void buffer_append_dbg_do_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_DO_STATEMENT");
-  if (node->body != NULL) {
+  if (node->body != nullptr) {
     cdl_key(printer, "body");
     buffer_append_dbg_parse_node(printer, node->body);
   }
-  if (node->condition != NULL) {
+  if (node->condition != nullptr) {
     cdl_key(printer, "condition");
     buffer_append_dbg_parse_node(printer, node->condition);
   }
@@ -591,7 +591,7 @@ void buffer_append_dbg_break_statement_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_BREAK_STATEMENT");
-  if (node->break_keyword_token != NULL) {
+  if (node->break_keyword_token != nullptr) {
     cdl_key(printer, "break_keyword_token");
     cdl_string(printer, token_to_string(node->break_keyword_token));
   }
@@ -603,7 +603,7 @@ void buffer_append_dbg_continue_statement_node(
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_CONTINUE_STATEMENT");
-  if (node->continue_keyword_token != NULL) {
+  if (node->continue_keyword_token != nullptr) {
     cdl_key(printer, "continue_keyword_token");
     cdl_string(printer, token_to_string(node->continue_keyword_token));
   }
@@ -615,7 +615,7 @@ void buffer_append_dbg_label_statement_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_LABEL_STATEMENT");
-  if (node->label != NULL) {
+  if (node->label != nullptr) {
     cdl_key(printer, "label");
     cdl_string(printer, token_to_string(node->label));
   }
@@ -627,7 +627,7 @@ void buffer_append_dbg_case_label_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_CASE_LABEL");
-  if (node->expression != NULL) {
+  if (node->expression != nullptr) {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, node->expression);
   }
@@ -647,7 +647,7 @@ void buffer_append_dbg_return_statement_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_RETURN_STATEMENT");
-  if (node->expression != NULL) {
+  if (node->expression != nullptr) {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, node->expression);
   }
@@ -659,7 +659,7 @@ void buffer_append_dbg_expression_statement_node(
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_EXPRESSION_STATEMENT");
-  if (node->expression != NULL) {
+  if (node->expression != nullptr) {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, node->expression);
   }
@@ -685,11 +685,11 @@ void buffer_append_dbg_operator_node(cdl_printer_t* printer,
   cdl_string(printer, "PARSE_NODE_OPERATOR");
   cdl_key(printer, "operator");
   cdl_string(printer, token_to_string(node->operator));
-  if (node->left != NULL) {
+  if (node->left != nullptr) {
     cdl_key(printer, "left");
     buffer_append_dbg_parse_node(printer, node->left);
   }
-  if (node->right != NULL) {
+  if (node->right != nullptr) {
     cdl_key(printer, "right");
     buffer_append_dbg_parse_node(printer, node->right);
   }
@@ -712,15 +712,15 @@ void buffer_append_dbg_conditional_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_CONDITIONAL");
-  if (node->condition != NULL) {
+  if (node->condition != nullptr) {
     cdl_key(printer, "condition");
     buffer_append_dbg_parse_node(printer, node->condition);
   }
-  if (node->expr_if_true != NULL) {
+  if (node->expr_if_true != nullptr) {
     cdl_key(printer, "expr_if_true");
     buffer_append_dbg_parse_node(printer, node->expr_if_true);
   }
-  if (node->expr_if_false != NULL) {
+  if (node->expr_if_false != nullptr) {
     cdl_key(printer, "expr_if_false");
     buffer_append_dbg_parse_node(printer, node->expr_if_false);
   }
@@ -732,11 +732,11 @@ void buffer_append_dbg_switch_node(cdl_printer_t* printer,
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_SWITCH_STATEMENT");
-  if (node->expression != NULL) {
+  if (node->expression != nullptr) {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, node->expression);
   }
-  if (node->block != NULL) {
+  if (node->block != nullptr) {
     cdl_key(printer, "block");
     buffer_append_dbg_parse_node(printer, node->block);
   }

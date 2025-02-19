@@ -138,7 +138,7 @@ printer_t* append_c_function_node_prefix(printer_t* printer,
     append_string(printer, " ");
   }
 
-  if (node->storage_class_specifier != NULL) {
+  if (node->storage_class_specifier != nullptr) {
     append_token(printer, node->storage_class_specifier);
     append_string(printer, " ");
   }
@@ -198,7 +198,7 @@ printer_t* append_c_function_argument_node(printer_t* printer,
     append_string(printer, "...");
   } else {
     append_type_node(printer, node->arg_type);
-    if (node->arg_name != NULL) {
+    if (node->arg_name != nullptr) {
       printer_space(printer);
       append_token(printer, node->arg_name);
     }
@@ -231,7 +231,7 @@ printer_t* append_type_node(printer_t* printer, type_node_t* node) {
 
   case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
   case TYPE_NODE_KIND_TYPENAME:
-    if (node->type_name != NULL) {
+    if (node->type_name != nullptr) {
       append_token(printer, node->type_name);
     }
     break;
@@ -327,7 +327,7 @@ printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token,
 printer_t* append_enum_node(printer_t* printer, enum_node_t* node) {
 
   append_string(printer, "enum ");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     append_token(printer, node->name);
     printer_newline(printer);
   }
@@ -352,7 +352,7 @@ printer_t* append_enum_node(printer_t* printer, enum_node_t* node) {
 
 printer_t* append_enum_element(printer_t* printer, enum_element_t* node) {
   append_token(printer, node->name);
-  if (node->value_expr != NULL) {
+  if (node->value_expr != nullptr) {
     append_string(printer, " = ");
     append_parse_node(printer, node->value_expr);
   }
@@ -450,7 +450,7 @@ printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node,
 printer_t* append_field_node(printer_t* printer, field_node_t* node) {
   append_type_node(printer, node->type);
   append_string(printer, " ");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     append_token(printer, node->name);
   }
   if (node->suffixes) {
@@ -469,7 +469,7 @@ printer_t* append_field_node(printer_t* printer, field_node_t* node) {
  */
 printer_t* append_struct_node(printer_t* printer, struct_node_t* node) {
   append_string(printer, node->tag == PARSE_NODE_UNION ? "union " : "struct ");
-  if (node->name != NULL) {
+  if (node->name != nullptr) {
     append_token(printer, node->name);
   }
 
@@ -525,7 +525,7 @@ printer_t* append_variable_definition_node(printer_t* printer,
                                            boolean_t is_library) {
   printer_indent(printer);
   boolean_t is_header_file = !is_library;
-  if (node->storage_class_specifier != NULL) {
+  if (node->storage_class_specifier != nullptr) {
     append_token(printer, node->storage_class_specifier);
     append_string(printer, " ");
   } else if (is_header_file) {
@@ -541,7 +541,7 @@ printer_t* append_variable_definition_node(printer_t* printer,
                                                      typeof(parse_node_t*)));
     }
   }
-  if (is_library && node->value != NULL) {
+  if (is_library && node->value != nullptr) {
     append_string(printer, " = ");
     append_parse_node(printer, node->value);
   }
@@ -553,20 +553,20 @@ printer_t* append_variable_definition_node(printer_t* printer,
  * @function append_literal_node
  */
 printer_t* append_literal_node(printer_t* printer, literal_node_t* node) {
-  if (node->token != NULL) {
+  if (node->token != nullptr) {
     append_token(printer, node->token);
-  } else if (node->initializer_node != NULL) {
-    if (node->initializer_type != NULL) {
+  } else if (node->initializer_node != nullptr) {
+    if (node->initializer_type != nullptr) {
       append_string(printer, "((");
       append_parse_node(printer, node->initializer_type);
       append_string(printer, ") ");
     }
     append_balanced_construct_node(
         printer, to_balanced_construct_node(node->initializer_node));
-    if (node->initializer_type != NULL) {
+    if (node->initializer_type != nullptr) {
       append_string(printer, ")");
     }
-  } else if (node->tokens != NULL && node->tokens->length > 0) {
+  } else if (node->tokens != nullptr && node->tokens->length > 0) {
     for (uint64_t i = 0; i < node->tokens->length; i++) {
       if (i > 0) {
         append_string(printer, " ");
@@ -584,7 +584,7 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node) {
  * @function append_literal_node
  */
 printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node) {
-  if (node->token == NULL) {
+  if (node->token == nullptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   if (token_matches(node->token, "nullptr")) {
@@ -744,7 +744,7 @@ printer_t* append_for_statement_node(printer_t* printer,
   printer_increase_indent(printer);
 
   // for_init
-  if (node->for_init != NULL) {
+  if (node->for_init != nullptr) {
     append_parse_node(printer, node->for_init);
   } else {
     printer_indent(printer);
@@ -753,7 +753,7 @@ printer_t* append_for_statement_node(printer_t* printer,
 
   // for_test
   printer_indent(printer);
-  if (node->for_test != NULL) {
+  if (node->for_test != nullptr) {
     append_parse_node(printer, node->for_test);
   }
   append_string(printer, ";");
@@ -761,7 +761,7 @@ printer_t* append_for_statement_node(printer_t* printer,
 
   // for_increment
   printer_indent(printer);
-  if (node->for_increment != NULL) {
+  if (node->for_increment != nullptr) {
     append_parse_node(printer, node->for_increment);
   }
   append_string(printer, ")\n");
@@ -792,7 +792,7 @@ printer_t* append_return_statement_node(printer_t* printer,
                                         return_statement_node_t* node) {
   printer_indent(printer);
   append_string(printer, "return");
-  if (node->expression != NULL) {
+  if (node->expression != nullptr) {
     append_string(printer, " ");
     append_parse_node(printer, node->expression);
   }
@@ -826,14 +826,14 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
   }
 
   append_string(printer, "(");
-  if (node->left != NULL) {
+  if (node->left != nullptr) {
     append_parse_node(printer, node->left);
   }
   append_token(printer, node->operator);
   if (token_matches(node->operator, "sizeof")) {
     append_string(printer, "(");
   }
-  if (node->right != NULL) {
+  if (node->right != nullptr) {
     append_parse_node(printer, node->right);
   }
   if (token_matches(node->operator, "sizeof")) {
@@ -851,15 +851,15 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node) {
 printer_t* append_conditional_node(printer_t* printer,
                                    conditional_node_t* node) {
   append_string(printer, "(");
-  if (node->condition != NULL) {
+  if (node->condition != nullptr) {
     append_parse_node(printer, node->condition);
   }
   append_string(printer, " ? ");
-  if (node->expr_if_true != NULL) {
+  if (node->expr_if_true != nullptr) {
     append_parse_node(printer, node->expr_if_true);
   }
   append_string(printer, " : ");
-  if (node->expr_if_false != NULL) {
+  if (node->expr_if_false != nullptr) {
     append_parse_node(printer, node->expr_if_false);
   }
   append_string(printer, ")");
@@ -910,7 +910,7 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
   buffer_t* element_constructions = make_buffer(128);
   buffer_t* buf = make_buffer(128);
 
-  char* previous_var_address = "NULL";
+  char* previous_var_address = "((void*)0)";
 
   // TODO(jawilson): do in reverse order though no one should
   // technically care...
@@ -941,14 +941,14 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
 }
 
 printer_t* append_line_directive(printer_t* printer, token_t* token) {
-  if (printer->symbol_table == NULL) {
+  if (printer->symbol_table == nullptr) {
     log_fatal("printer->symbol_table is not set.");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   file_t* file = symbol_table_token_to_file(printer->symbol_table, token);
-  if (file != NULL) {
+  if (file != nullptr) {
     buffer_printf(printer->buffer, "\n# %d \"%s\"\n", token->line_number,
-                  file == NULL ? "fixme.c" : file->file_name);
+                  file == nullptr ? "fixme.c" : file->file_name);
   }
   return printer;
 }

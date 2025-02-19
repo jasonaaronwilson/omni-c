@@ -81,7 +81,7 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer,
  * Tokens only point at the "buffer" they are derived from however
  * most of these buffers were read from a file on disk so we know
  * their "source file". Since we do code generation, not every token
- * will come from user's source file so NULL is a potential result.
+ * will come from user's source file so nullptr is a potential result.
  */
 // @NullableResult
 file_t* symbol_table_token_to_file(symbol_table_t* symbol_table,
@@ -94,5 +94,5 @@ file_t* symbol_table_token_to_file(symbol_table_t* symbol_table,
       return file;
     }
   }
-  return NULL;
+  return nullptr;
 }

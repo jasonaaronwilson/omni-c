@@ -221,7 +221,7 @@ pstatus_t parse_if_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* if_true = pstate_get_result_node(pstate);
-  parse_node_t* if_false = NULL;
+  parse_node_t* if_false = nullptr;
   if (pstate_match_token_string(pstate, "else")) {
     pstate_advance(pstate);
     if (!parse_statement(pstate)) {
@@ -290,14 +290,14 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* for_init = pstate_get_result_node(pstate);
-  parse_node_t* for_test = NULL;
+  parse_node_t* for_test = nullptr;
   if (parse_expression(pstate)) {
     for_test = pstate_get_result_node(pstate);
   }
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* for_increment = NULL;
+  parse_node_t* for_increment = nullptr;
   if (parse_expression(pstate)) {
     for_increment = pstate_get_result_node(pstate);
   }
@@ -474,7 +474,7 @@ break_statement_node_t* make_break_statement(token_t* break_keyword_token) {
  * pointer after examining it's tag.
  */
 break_statement_node_t* to_break_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_BREAK_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_BREAK_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(break_statement_node_t*, ptr);
@@ -501,7 +501,7 @@ continue_statement_node_t* make_continue_statement(token_t* keyword_token) {
  * pointer after examining it's tag.
  */
 continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_CONTINUE_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_CONTINUE_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(continue_statement_node_t*, ptr);
@@ -528,7 +528,7 @@ label_statement_node_t* make_label_statement(token_t* label) {
  * pointer after examining it's tag.
  */
 label_statement_node_t* to_label_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_LABEL_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_LABEL_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(label_statement_node_t*, ptr);
@@ -555,7 +555,7 @@ goto_statement_node_t* make_goto_statement(token_t* label) {
  * pointer after examining it's tag.
  */
 goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_GOTO_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_GOTO_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(goto_statement_node_t*, ptr);
@@ -582,7 +582,7 @@ empty_statement_node_t* make_empty_statement(token_t* semi_colon_token) {
  * pointer after examining it's tag.
  */
 empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_EMPTY_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_EMPTY_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(empty_statement_node_t*, ptr);
@@ -611,7 +611,7 @@ switch_statement_node_t* make_switch_statement(parse_node_t* expression,
  * pointer after examining it's tag.
  */
 switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_SWITCH_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_SWITCH_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(switch_statement_node_t*, ptr);
@@ -638,7 +638,7 @@ case_label_node_t* make_case_label(parse_node_t* expression) {
  * pointer after examining it's tag.
  */
 case_label_node_t* to_case_label_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_CASE_LABEL) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_CASE_LABEL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(case_label_node_t*, ptr);
@@ -665,7 +665,7 @@ default_label_node_t* make_default_label(token_t* default_token) {
  * pointer after examining it's tag.
  */
 default_label_node_t* to_default_label_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_DEFAULT_LABEL) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_DEFAULT_LABEL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(default_label_node_t*, ptr);
@@ -692,7 +692,7 @@ block_node_t* make_block_node() {
  * pointer after examining it's tag.
  */
 block_node_t* to_block_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_BLOCK) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_BLOCK) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(block_node_t*, ptr);
@@ -726,7 +726,7 @@ for_statement_node_t* make_for_statement(parse_node_t* for_init,
  * pointer after examining it's tag.
  */
 for_statement_node_t* to_for_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_FOR_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_FOR_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(for_statement_node_t*, ptr);
@@ -757,7 +757,7 @@ if_statement_node_t* make_if_statement(parse_node_t* if_condition,
  * pointer after examining it's tag.
  */
 if_statement_node_t* to_if_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_IF_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_IF_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(if_statement_node_t*, ptr);
@@ -786,7 +786,7 @@ expression_statement_node_t*
  * pointer after examining it's tag.
  */
 expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_EXPRESSION_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_EXPRESSION_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(expression_statement_node_t*, ptr);
@@ -813,7 +813,7 @@ return_statement_node_t* make_return_statement(parse_node_t* expression) {
  * pointer after examining it's tag.
  */
 return_statement_node_t* to_return_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_RETURN_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_RETURN_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(return_statement_node_t*, ptr);
@@ -842,7 +842,7 @@ while_statement_node_t* make_while_statement(parse_node_t* condition,
  * pointer after examining it's tag.
  */
 while_statement_node_t* to_while_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_WHILE_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_WHILE_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(while_statement_node_t*, ptr);
@@ -871,7 +871,7 @@ do_statement_node_t* make_do_statement(parse_node_t* body,
  * pointer after examining it's tag.
  */
 do_statement_node_t* to_do_statement_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_DO_STATEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_DO_STATEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(do_statement_node_t*, ptr);

@@ -19,10 +19,10 @@ typedef struct token_list_S {
  * reading is done without the extra address.
  */
 static inline void token_list_add(token_list_t* token_list, token_t* token) {
-  if (token == NULL) {
+  if (token == nullptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  if (token_list->list == NULL) {
+  if (token_list->list == nullptr) {
     token_list->list = make_value_array(2);
   }
   value_array_add(token_list->list, ptr_to_value(token));
@@ -34,7 +34,7 @@ static inline void token_list_add(token_list_t* token_list, token_t* token) {
  * Determine the length of the token list.
  */
 static inline uint64_t token_list_length(token_list_t token_list) {
-  if (token_list.list == NULL) {
+  if (token_list.list == nullptr) {
     return 0;
   }
   return token_list.list->length;
@@ -55,7 +55,7 @@ static inline boolean_t token_list_is_empty(token_list_t token_list) {
  * Return the n-th element of the token list.
  */
 static inline token_t* token_list_get(token_list_t token_list, uint64_t index) {
-  if (token_list.list == NULL) {
+  if (token_list.list == nullptr) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
   return value_array_get_ptr(token_list.list, index, typeof(token_t*));

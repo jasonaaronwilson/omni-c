@@ -55,6 +55,12 @@ clean:
 	@echo "Cleaning build artifacts..."
 	@$(MAKE) -C src clean OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
 
+# Tags target
+.PHONY: tags
+tags:
+	@echo "Creating tags file..."
+	@$(MAKE) -C src tags OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
+
 # Format target
 .PHONY: format
 format: all
@@ -76,6 +82,7 @@ help:
 	@echo "  all     - Build omni-c (default)"
 	@echo "  clean   - Clean build artifacts"
 	@echo "  format  - Format source files and tests"
+	@echo "  tags    - make a tags file"
 	@echo "  test    - Build and run tests"
 	@echo "  help    - Display this help message"
 

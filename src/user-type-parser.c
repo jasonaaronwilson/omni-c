@@ -70,7 +70,7 @@ typedef struct enum_element_S {
  * trying to cast it using to_struct_node).
  */
 static inline boolean_t is_struct_node(parse_node_t* ptr) {
-  return (ptr != NULL) && (ptr->tag == PARSE_NODE_STRUCT);
+  return (ptr != nullptr) && (ptr->tag == PARSE_NODE_STRUCT);
 }
 
 /**
@@ -80,7 +80,7 @@ static inline boolean_t is_struct_node(parse_node_t* ptr) {
  * trying to cast it using to_enum_node).
  */
 static inline boolean_t is_enum_node(parse_node_t* ptr) {
-  return (ptr != NULL) && (ptr->tag == PARSE_NODE_ENUM);
+  return (ptr != nullptr) && (ptr->tag == PARSE_NODE_ENUM);
 }
 
 /**
@@ -91,7 +91,7 @@ static inline boolean_t is_enum_node(parse_node_t* ptr) {
  */
 static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
   // TODO(jawilson): figure this ugliness out...
-  if (ptr == NULL
+  if (ptr == nullptr
       || !(ptr->tag == PARSE_NODE_STRUCT || ptr->tag == PARSE_NODE_UNION)) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -105,7 +105,7 @@ static inline struct_node_t* to_struct_node(parse_node_t* ptr) {
  * tag.
  */
 static inline union_node_t* to_union_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_UNION) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_UNION) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(union_node_t*, ptr);
@@ -118,7 +118,7 @@ static inline union_node_t* to_union_node(parse_node_t* ptr) {
  * tag.
  */
 static inline field_node_t* to_field_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_FIELD) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_FIELD) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(field_node_t*, ptr);
@@ -131,7 +131,7 @@ static inline field_node_t* to_field_node(parse_node_t* ptr) {
  * it's tag.
  */
 static inline enum_node_t* to_enum_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_ENUM) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_ENUM) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(enum_node_t*, ptr);
@@ -144,7 +144,7 @@ static inline enum_node_t* to_enum_node(parse_node_t* ptr) {
  * it's tag.
  */
 static inline enum_element_t* to_enum_element_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_ENUM_ELEMENT) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_ENUM_ELEMENT) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(enum_element_t*, ptr);
@@ -238,13 +238,13 @@ pstatus_t parse_field_node(pstate_t* pstate) {
     pstate_ignore_error(pstate);
   }
 
-  value_array_t* suffixes = NULL;
+  value_array_t* suffixes = nullptr;
   // Handle internal arrays inside of structures
   while (pstate_match_token_string(pstate, "[")) {
     if (!parse_balanced_construct(pstate)) {
       return pstate_propagate_error(pstate, saved_position);
     }
-    if (suffixes == NULL) {
+    if (suffixes == nullptr) {
       suffixes = make_value_array(1);
     }
     value_array_add(suffixes, ptr_to_value(pstate_get_result_node(pstate)));
@@ -362,7 +362,7 @@ pstatus_t parse_enum_element_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   token_t* name = pstate_get_result_token(pstate);
-  parse_node_t* value_expr = NULL;
+  parse_node_t* value_expr = nullptr;
   if (pstate_expect_token_string(pstate, "=")) {
     if (!pratt_parse_expression(pstate, 0)) {
       return pstate_propagate_error(pstate, saved_position);

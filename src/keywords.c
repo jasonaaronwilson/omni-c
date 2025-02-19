@@ -74,14 +74,14 @@ char* cpp_keywords_array[] = {
     "co_return", // Used with coroutines
 };
 
-string_hashtable_t* c_keywords_ht = NULL;
-string_hashtable_t* c_builtin_types_ht = NULL;
+string_hashtable_t* c_keywords_ht = nullptr;
+string_hashtable_t* c_builtin_types_ht = nullptr;
 
-string_hashtable_t* cpp_keywords_ht = NULL;
-string_hashtable_t* cpp_builtin_types_ht = NULL;
+string_hashtable_t* cpp_keywords_ht = nullptr;
+string_hashtable_t* cpp_builtin_types_ht = nullptr;
 
-string_hashtable_t* oc_keywords_ht = NULL;
-string_hashtable_t* oc_builtin_types_ht = NULL;
+string_hashtable_t* oc_keywords_ht = nullptr;
+string_hashtable_t* oc_builtin_types_ht = nullptr;
 
 void initialize_keyword_maps(void) {
   // Put the keywords into a hashtable. A binary search would work as
@@ -121,7 +121,7 @@ void initialize_keyword_maps(void) {
 }
 
 static inline void maybe_initialize_keyword_maps(void) {
-  if (c_keywords_ht == NULL) {
+  if (c_keywords_ht == nullptr) {
     initialize_keyword_maps();
   }
 }

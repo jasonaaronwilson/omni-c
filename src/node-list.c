@@ -30,10 +30,10 @@ typedef struct node_list_S {
  */
 static inline void node_list_add_node(node_list_t* node_list,
                                       parse_node_t* oc_node) {
-  if (oc_node == NULL) {
+  if (oc_node == nullptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  if (node_list->list == NULL) {
+  if (node_list->list == nullptr) {
     node_list->list = make_value_array(2);
   }
   value_array_add(node_list->list, ptr_to_value(oc_node));
@@ -45,7 +45,7 @@ static inline void node_list_add_node(node_list_t* node_list,
  * Determine the length of the node list.
  */
 static inline uint64_t node_list_length(node_list_t node_list) {
-  if (node_list.list == NULL) {
+  if (node_list.list == nullptr) {
     return 0;
   }
   return node_list.list->length;
@@ -67,7 +67,7 @@ static inline boolean_t node_list_is_empty(node_list_t node_list) {
  */
 static inline parse_node_t* node_list_get(node_list_t node_list,
                                           uint64_t index) {
-  if (node_list.list == NULL) {
+  if (node_list.list == nullptr) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
   return value_array_get_ptr(node_list.list, index, typeof(parse_node_t*));

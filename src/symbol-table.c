@@ -114,7 +114,7 @@ symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map,
   if (is_ok(result)) {
     return cast(symbol_table_binding_t*, result.ptr);
   }
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -136,7 +136,7 @@ parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map,
     return value_array_get_ptr(binding->definition_nodes, 0,
                                typeof(parse_node_t*));
   }
-  return NULL;
+  return nullptr;
 }
 
 void symbol_table_add_declaration_node(symbol_table_map_t* map,

@@ -75,7 +75,7 @@ static inline type_node_t* malloc_type_node(void) {
  * tag.
  */
 static inline type_node_t* to_type_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_TYPE) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_TYPE) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(type_node_t*, ptr);
@@ -112,7 +112,7 @@ pstatus_t parse_type_node(pstate_t* pstate) {
   canonical_type_result_t canonical_type_result = parse_canonical_type(pstate);
   token_t* type_name = canonical_type_result.canonical_type;
 
-  if (type_name != NULL) {
+  if (type_name != nullptr) {
     while (canonical_type_result.consumed_tokens > 0) {
       canonical_type_result.consumed_tokens--;
       pstate_advance(pstate);
@@ -302,6 +302,8 @@ canonical_type_result_t parse_canonical_type(pstate_t* pstate) {
     return make_type_token_result("double", 1);
   }
 
+  // TODO(jawilson): FIXME! - we aren't replacing inside of
+  // compound_literals yet!
   return compound_literal(canonical_type_result_t,
                           {.canonical_type = NULL, .consumed_tokens = 0});
 }

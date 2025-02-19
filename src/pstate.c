@@ -6,8 +6,8 @@
  */
 pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position,
                        parse_error_code_t parse_error_code) {
-  pstate->result_token = NULL;
-  pstate->result_node = NULL;
+  pstate->result_token = nullptr;
+  pstate->result_node = nullptr;
   pstate->error.parse_error_code = parse_error_code;
   pstate->error.error_position = pstate->position;
   pstate->error.error_token = token_at(pstate->tokens, pstate->position);
@@ -57,7 +57,7 @@ pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position) {
  */
 pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token) {
   pstate->error = compound_literal(compiler_error_t, {0});
-  pstate->result_node = NULL;
+  pstate->result_node = nullptr;
   pstate->result_token = token;
   return true;
 }
@@ -71,7 +71,7 @@ pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token) {
 pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node) {
   pstate->error = compound_literal(compiler_error_t, {0});
   pstate->result_node = node;
-  pstate->result_token = NULL;
+  pstate->result_token = nullptr;
   return true;
 }
 
@@ -89,14 +89,14 @@ token_t* pstate_get_result_token(pstate_t* pstate) {
     // fatal_error(ERROR_ILLEGAL_STATE);
   }
   token_t* token = pstate->result_token;
-  pstate->result_token = NULL;
+  pstate->result_token = nullptr;
   return token;
 }
 
 /**
  * @parse pstate_get_result_node
  *
- * Return the result node in the pstate. This will never return NULL
+ * Return the result node in the pstate. This will never return nullptr
  * (see pstate_get_optional_result_node);
  */
 parse_node_t* pstate_get_result_node(pstate_t* pstate) {
@@ -106,23 +106,23 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate) {
     // fatal_error(ERROR_ILLEGAL_STATE);
   }
   parse_node_t* result = pstate->result_node;
-  if (result == NULL) {
+  if (result == nullptr) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  pstate->result_node = NULL;
+  pstate->result_node = nullptr;
   return result;
 }
 
 /**
  * @parse pstate_get_optional_result_node
  *
- * Return the result node in the pstate. This will never return NULL
+ * Return the result node in the pstate. This will never return nullptr
  * (see pstate_get_optional_result_node);
  */
 parse_node_t* pstate_get_optional_result_node(pstate_t* pstate) {
   pstate->error = compound_literal(compiler_error_t, {0});
   parse_node_t* result = pstate->result_node;
-  pstate->result_node = NULL;
+  pstate->result_node = nullptr;
   return result;
 }
 
@@ -179,7 +179,7 @@ boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string) {
 pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string) {
   token_t* token = pstate_peek(pstate, 0);
   if (token_matches(token, token_string)) {
-    pstate->result_node = NULL;
+    pstate->result_node = nullptr;
     pstate->result_token = token;
     pstate->position += 1;
     return true;
@@ -200,7 +200,7 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string) {
 pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type) {
   token_t* token = pstate_peek(pstate, 0);
   if (token_type == token->type) {
-    pstate->result_node = NULL;
+    pstate->result_node = nullptr;
     pstate->result_token = token;
     pstate->position += 1;
     return true;

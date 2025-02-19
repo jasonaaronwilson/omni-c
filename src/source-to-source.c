@@ -52,7 +52,7 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
       struct_node_t* struct_node = to_struct_node(node->type_node->user_type);
       if (!struct_node->partial_definition) {
 
-        if (struct_node->name == NULL) {
+        if (struct_node->name == nullptr) {
           struct_node->name
               = generate_struct_name_from_typedef_name(node->name);
         }
@@ -158,7 +158,7 @@ void reorder_symbol_table_typedefs__process_binding(
       char* type_name = token_to_string(type_node->type_name);
       symbol_table_binding_t* dependent_binding
           = symbol_table_map_get(typedefs, type_name);
-      if (dependent_binding != NULL) {
+      if (dependent_binding != nullptr) {
         reorder_symbol_table_typedefs__process_binding(
             typedefs, dependent_binding, reordered_bindings);
       }
@@ -194,7 +194,7 @@ struct_node_t*
       return structure_node;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 symbol_table_binding_t*
@@ -205,14 +205,14 @@ symbol_table_binding_t*
         "resolve_typename_to_structure_binding -- not looking through pointers "
         "%p",
         type_node);
-    return NULL;
+    return nullptr;
   }
 
   if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION) {
     parse_node_t* user_type = type_node->user_type;
     if (is_struct_node(user_type)) {
       struct_node_t* struct_node = to_struct_node(user_type);
-      if (struct_node->name != NULL) {
+      if (struct_node->name != nullptr) {
         char* key_name = token_to_string(struct_node->name);
         symbol_table_binding_t* binding
             = symbol_table_map_get(symbol_table->structures, key_name);
@@ -226,7 +226,7 @@ symbol_table_binding_t*
       }
     }
     // ignore enums, they are already processed...
-    return NULL;
+    return nullptr;
   }
 
   // TODO(jawilson): recurse on any ARRAY type.
@@ -235,7 +235,7 @@ symbol_table_binding_t*
             key_string);
   symbol_table_binding_t* typedef_binding
       = symbol_table_map_get(symbol_table->typedefs, key_string);
-  if (typedef_binding != NULL) {
+  if (typedef_binding != nullptr) {
     if (typedef_binding->definition_nodes->length != 1) {
       fatal_error(ERROR_ILLEGAL_STATE);
     }
@@ -255,7 +255,7 @@ void reorder_symbol_table_structures_process_binding(
   if (!binding->visited) {
     binding->visited = true;
     struct_node_t* structure_node = get_full_structure_definition_node(binding);
-    if (structure_node == NULL) {
+    if (structure_node == nullptr) {
       // We only have partial definitions which is perfectly fine as
       // long as we only ever use poitners to those nodes.
       return;
@@ -265,10 +265,10 @@ void reorder_symbol_table_structures_process_binding(
       field_node_t* field
           = to_field_node(node_list_get(structure_node->fields, i));
       type_node_t* type_node = field->type;
-      if (type_node != NULL) {
+      if (type_node != nullptr) {
         symbol_table_binding_t* field_type_binding
             = resolve_typename_to_structure_binding(symbol_table, type_node);
-        if (field_type_binding != NULL && !field_type_binding->visited) {
+        if (field_type_binding != nullptr && !field_type_binding->visited) {
           reorder_symbol_table_structures_process_binding(
               symbol_table, field_type_binding, reordered_bindings);
         }
@@ -299,28 +299,4 @@ void reorder_symbol_table_structures(symbol_table_t* symbol_table) {
                                                     reordered_bindings);
   }
   symbol_table->structures->ordered_bindings = reordered_bindings;
-}
-
-/**
- * @function convert_nullptr_to_null
- *
- * This function runs before parsing and simply replaces each instance
- * of "nullptr" to NULL so that the input can use nullptr and still
- * compile with c99 without worrying about header files, etc.
- *
- * TODO(jawilson): this isn't going to work right until we fully parse
- * without the shortcuts like function body parsing. One work around
- * is to print the tokens to a buffer and lex them again.
- */
-void convert_nullptr_to_null(value_array_t* tokens) {
-  // easy way to break-point... __asm("int3");
-  buffer_t* null_token = buffer_append_string(make_buffer(1), "NULL");
-  for (int i = 0; i < tokens->length; i++) {
-    token_t* token = token_at(tokens, i);
-    if (token_matches(token, "nullptr")) {
-      token->start = 0;
-      token->end = null_token->length;
-      token->buffer = null_token;
-    }
-  }
 }

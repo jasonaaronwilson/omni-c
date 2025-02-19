@@ -12,8 +12,8 @@
 // Here are is the combined set of flags we parse.
 /* ====================================================================== */
 
-value_array_t* FLAG_files = NULL;
-char* FLAG_command = NULL;
+value_array_t* FLAG_files = nullptr;
+char* FLAG_command = nullptr;
 boolean_t FLAG_print_command_line = true;
 boolean_t FLAG_include_unnamed_nodes = false;
 boolean_t FLAG_print_tokens_show_tokens = false;
@@ -21,11 +21,11 @@ boolean_t FLAG_print_tokens_include_whitespace = false;
 boolean_t FLAG_print_tokens_include_comments = false;
 boolean_t FLAG_print_tokens_parse_and_print = true;
 boolean_t FLAG_print_tokens_show_appended_tokens = true;
-char* FLAG_c_output_file = NULL;
-char* FLAG_binary_output_file = NULL;
+char* FLAG_c_output_file = nullptr;
+char* FLAG_binary_output_file = nullptr;
 boolean_t FLAG_generate_enum_convertors = true;
-char* FLAG_expression = NULL;
-char* FLAG_statement = NULL;
+char* FLAG_expression = nullptr;
+char* FLAG_statement = nullptr;
 boolean_t FLAG_dump_symbol_table = false;
 // TODO(jawilson): make this the default or even remove?
 boolean_t FLAG_use_statement_parser = false;
@@ -70,8 +70,6 @@ void print_tokens(void) {
     }
 
     value_array_t* tokens = tokenizer_result.tokens;
-
-    convert_nullptr_to_null(tokens);
 
     if (FLAG_print_tokens_show_appended_tokens) {
       buffer_t* appended_tokens = make_buffer(1);
@@ -314,7 +312,7 @@ void generate_c_output_file(boolean_t is_library,
         = value_array_get_ptr(symbol_table->structures->ordered_bindings, i,
                               typeof(symbol_table_binding_t*));
     struct_node_t* struct_node = get_full_structure_definition_node(binding);
-    if (struct_node == NULL) {
+    if (struct_node == nullptr) {
       struct_node = value_array_get_ptr(binding->definition_nodes, 0,
                                         typeof(struct_node_t*));
     }
@@ -389,7 +387,7 @@ void generate_c_output_file(boolean_t is_library,
         function_node_t* function_node = to_function_node(cast(
             parse_node_t*, value_array_get(binding->definition_nodes, j).ptr));
         if (!is_inlined_function(function_node)
-            && function_node->body != NULL) {
+            && function_node->body != nullptr) {
           append_newline_after_functions = true;
           if (false) {
             buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
@@ -409,7 +407,7 @@ void generate_c_output_file(boolean_t is_library,
 
   buffer_append_buffer(buffer, command_line_overview_comment);
 
-  if (FLAG_c_output_file == NULL) {
+  if (FLAG_c_output_file == nullptr) {
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
   } else {
     log_info("Attempting to write buffer to %s", FLAG_c_output_file);
@@ -430,7 +428,7 @@ void add_generated_c_file_header(buffer_t* buffer) {
 }
 
 void parse_expression_string_and_print_parse_tree(char* expression) {
-  if (expression == NULL) {
+  if (expression == nullptr) {
     log_fatal("Expression not specified!");
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
@@ -535,10 +533,10 @@ buffer_t* git_hash_object(char* filename) {
 
   buffer_t* buffer = make_buffer(1);
   do {
-    sub_process_read(sub_process, buffer, NULL);
+    sub_process_read(sub_process, buffer, nullptr);
     usleep(5);
   } while (is_sub_process_running(sub_process));
-  sub_process_read(sub_process, buffer, NULL);
+  sub_process_read(sub_process, buffer, nullptr);
   sub_process_wait(sub_process);
 
   return buffer;
@@ -651,7 +649,7 @@ int main(int argc, char** argv) {
     fprintf(stderr, "\n");
   }
 
-  if (FLAG_command == NULL) {
+  if (FLAG_command == nullptr) {
     // Technically this should not be reached because once a command
     // is defined, a missing or wrong command should trigger an error
     // and caught above. Note sure why this is still happening but

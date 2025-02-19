@@ -240,7 +240,7 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer,
                                                     compiler_error_t* error) {
   buffer = buffer_printf(buffer, "\nparser error code = %d\n",
                          error->parse_error_code);
-  char* template = NULL;
+  char* template = nullptr;
   switch (error->parse_error_code) {
   case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
     template = error_field_width_or_semicolon;

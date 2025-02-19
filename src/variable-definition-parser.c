@@ -23,7 +23,7 @@ typedef struct variable_definition_node_S {
  */
 static inline variable_definition_node_t*
     to_variable_definition_node(parse_node_t* ptr) {
-  if (ptr == NULL || ptr->tag != PARSE_NODE_VARIABLE_DEFINITION) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_VARIABLE_DEFINITION) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   return cast(variable_definition_node_t*, ptr);
@@ -69,11 +69,11 @@ pstatus_t parse_initializer(pstate_t* pstate) {
  */
 pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  token_t* storage_class_specifier = NULL;
+  token_t* storage_class_specifier = nullptr;
 
   while (pstate_expect_token_string(pstate, "static")
          || pstate_expect_token_string(pstate_ignore_error(pstate), "extern")) {
-    if (storage_class_specifier != NULL) {
+    if (storage_class_specifier != nullptr) {
       return pstate_error(pstate, saved_position,
                           PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);
     }
@@ -98,7 +98,7 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate) {
     if (!parse_balanced_construct(pstate)) {
       return pstate_propagate_error(pstate, saved_position);
     }
-    if (result->suffixes == NULL) {
+    if (result->suffixes == nullptr) {
       result->suffixes = make_value_array(1);
     }
     value_array_add(result->suffixes,
