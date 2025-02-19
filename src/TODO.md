@@ -2,10 +2,12 @@
 
 ## Cleanup & Build
 
+## Build lib/tests and lib/examples with omni-c.
+
 ## nullptr instead of NULL
 
-We now replace nullptr with ((void*)0). We should probably use nullptr
-instead of NULL "everywhere".
+Need to fix inside of compund_literals (which probably means we need
+to parse them correctly?)
 
 ## Parse System Includes
 
