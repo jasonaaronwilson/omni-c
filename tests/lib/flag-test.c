@@ -173,7 +173,7 @@ void test_enum_64(void) {
 }
 
 void test_enum(void) {
-  char* args[2];
+  char* args[2] = {0};
   args[0] = "enum-test";
   args[1] = "--enum=a";
 
@@ -181,7 +181,7 @@ void test_enum(void) {
   value_array_t* FLAG_files = NULL;
 
   flag_program_name("enum-64-test");
-  flag_enum("--enum", (int*) &FLAG_enum);
+  flag_enum("--enum", cast(int*, &FLAG_enum));
   flag_enum_value("a", test_enum_a);
   flag_enum_value("A", test_enum_a);
   flag_enum_value("b", test_enum_b);
@@ -319,9 +319,9 @@ void test_alias(void) {
 
 
 int main(int argc, char** argv) {
-  configure_fatal_errors((fatal_error_config_t){
-      .catch_sigsegv = true,
-  });
+  configure_fatal_errors(compound_literal(fatal_error_config_t, {
+	  .catch_sigsegv = true,
+      }));
   test_boolean();
   test_uint64();
   test_string();

@@ -7,7 +7,7 @@
 
 void test_value_alist() {
   value_alist_t* list = NULL;
-  value_result_t value;
+  value_result_t value = {0};
 
   value = value_alist_find(list, cmp_string_values, str_to_value("a"));
   test_assert(is_not_ok(value));
@@ -44,9 +44,9 @@ void test_value_alist() {
   test_assert(is_ok(value) && string_equal("C", value.str));
 
   // clang-format off
-  value_alist_foreach(list, key, value, { 
+  value_alist_foreach(list, key, value, block_expr({ 
       fprintf(stderr, "key=%s value = %s\n", key.str, value.str);
-  });
+      }));
   // clang-format on
 }
 

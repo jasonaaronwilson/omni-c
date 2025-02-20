@@ -51,7 +51,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
  * Return true if the given string is NULL or strlen is zero.
  */
 int string_is_null_or_empty(const char* str) {
-  return (str == NULL) || (strlen(str) == 0);
+  return (str == nullptr) || (strlen(str) == 0);
 }
 
 /**

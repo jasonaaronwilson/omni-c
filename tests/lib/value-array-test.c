@@ -122,7 +122,7 @@ void test_insert_at_and_delete_at_random() {
 void test_value_array_get_ptr(void) {
   value_array_t* array = make_value_array(1);
   value_array_add(array, str_to_value("a"));
-  char* first = value_array_get_ptr(array, 0, char*);
+  char* first = value_array_get_ptr(array, 0, typeof(char*));
   test_assert_string_equal("a", first);
 }
 

@@ -6,7 +6,7 @@
 
 void test_string_ht() {
   string_hashtable_t* ht = make_string_hashtable(2);
-  value_result_t value;
+  value_result_t value = {0};
 
   value = string_ht_find(ht, "a");
   test_assert(is_not_ok(value));
@@ -42,9 +42,9 @@ void test_string_ht() {
   test_assert(is_ok(value) && string_equal("C", value.str));
 
   // clang-format off
-  string_ht_foreach(ht, key, value, { 
+  string_ht_foreach(ht, key, value, block_expr({ 
       fprintf(stderr, "key=%s value = %s\n", key, value.str);
-  });
+      }));
   // clang-format on
 }
 
@@ -89,7 +89,7 @@ void test_ht_random() {
   }
 
   log_test("The final bucket count of the hashtable is %lu",
-           ((value_hashtable_t*) ht)->n_buckets);
+           cast(value_hashtable_t*, ht)->n_buckets);
 }
 
 int main(int argc, char** argv) {

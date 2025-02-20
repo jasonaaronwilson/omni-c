@@ -40,6 +40,7 @@ OMNI_C_TEST_COMPILER="${OMNI_C_TEST_COMPILER:-tcc}"
 
 export ARMYKNIFE_LIB_LOG_LEVEL=WARN
 ${OMNI_CC_PATH} build \
+    --use-statement-parser=true \
     --c-output-file=${BUILD_DIR}/bin/$(basename ${C_FILE}) \
     --binary-output-file=${BUILD_DIR}/bin/${EXE_FILE} \
     --c-compiler=${OMNI_C_TEST_COMPILER} \

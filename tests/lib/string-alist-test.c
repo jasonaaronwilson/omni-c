@@ -7,7 +7,7 @@
 
 void test_alist() {
   string_alist_t* list = NULL;
-  value_result_t value;
+  value_result_t value = {0};
 
   value = alist_find(list, "a");
   test_assert(is_not_ok(value));
@@ -39,10 +39,13 @@ void test_alist() {
   value = alist_find(list, "c");
   test_assert(is_ok(value) && string_equal("C", value.str));
 
+  // TODO(jawilson): figure out why this can't be parsed properly? Are
+  // we really not using these for-each macros in omni-c/src/*.c ?
+
   // clang-format off
-  string_alist_foreach(list, key, value, { 
+  string_alist_foreach(list, key, value, block_expr({ 
       fprintf(stderr, "key=%s value = %s\n", key, value.str);
-  });
+      }));
   // clang-format on
 }
 

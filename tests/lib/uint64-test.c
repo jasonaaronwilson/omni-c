@@ -5,7 +5,7 @@
 void test_uint64_highest_bit_set() {
   test_assert(0 == uint64_highest_bit_set(1ULL << 0));
   for (int i = 0; i < 64; i++) {
-    test_assert(i == uint64_highest_bit_set(((uint64_t) 1) << i));
+    test_assert(i == uint64_highest_bit_set(cast(uint64_t, 1) << i));
   }
 }
 
@@ -21,7 +21,7 @@ void test_uint64_highest_bit_set_random() {
     // "freqencies" (a power of two) and randomly "attenuate" those.
     next &= ((1ULL << i) - 1);
     // Now mix that in with the
-    uint64_t messy_number = (((uint64_t) 1) << i) | next;
+    uint64_t messy_number = (cast(uint64_t, 1) << i) | next;
     if (i != (uint64_highest_bit_set(messy_number))) {
       test_fail("loop i=%d next=%lu", i, next);
     }

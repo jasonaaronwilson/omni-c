@@ -7,7 +7,7 @@
 
 void test_tree() {
   string_tree_t* tree = NULL;
-  value_result_t value;
+  value_result_t value = {0};
 
   value = string_tree_find(tree, "a");
   test_assert(is_not_ok(value));
@@ -45,9 +45,9 @@ void test_tree() {
   tree = string_tree_insert(tree, "j", str_to_value("j"));
 
   // clang-format off
-  string_tree_foreach(tree, key, value, {
+  string_tree_foreach(tree, key, value, block_expr({
       fprintf(stderr, "key=%s value = %s\n", key, value.str);
-  });
+      }));
   // clang-format on
 }
 
