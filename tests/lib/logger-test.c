@@ -4,9 +4,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 void test_logger() {
   // You probably wouldn't use this form yourself but the macros are a
   // bit tricky to get right...
