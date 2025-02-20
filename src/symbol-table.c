@@ -106,7 +106,7 @@ symbol_table_t* make_symbol_table(void) {
 /**
  * @function symbol_table_map_get
  *
- * Get an existing binding or return NULL.
+ * Get an existing binding or return nullptr.
  */
 symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map,
                                              char* key_string) {

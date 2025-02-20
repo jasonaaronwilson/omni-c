@@ -75,7 +75,7 @@ static inline boolean_t should_log_memory_allocation() {
   }
   char* var = getenv("ARMYKNIFE_LOG_MEMORY_ALLOCATION");
   is_initialized = true;
-  if (var != NULL && strcmp(var, "true") == 0) {
+  if (var != nullptr && strcmp(var, "true") == 0) {
     should_log_value = true;
   }
   return should_log_value;
@@ -283,7 +283,7 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
                                  + amount
                                  + ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING;
   uint8_t* result = malloc(amount_with_padding);
-  if (result == NULL) {
+  if (result == nullptr) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
 
@@ -329,7 +329,7 @@ void checked_free(char* file, int line, void* pointer) {
     fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line,
             cast(uint64_t, pointer));
   }
-  if (pointer == NULL) {
+  if (pointer == nullptr) {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
   }
 

@@ -98,7 +98,7 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
  * to end (appending a zero byte to make sure it's a legal C string).
  */
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
-  if (buffer == NULL) {
+  if (buffer == nullptr) {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
 

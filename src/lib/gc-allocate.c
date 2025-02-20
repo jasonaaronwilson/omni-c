@@ -88,7 +88,7 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
 
   uint8_t* result = GC_malloc(amount);
 
-  if (result == NULL) {
+  if (result == nullptr) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
 
