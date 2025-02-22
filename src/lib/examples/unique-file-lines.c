@@ -35,9 +35,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 // result is a hashtable of strings -> true
 string_hashtable_t* initial_seen_hashtable() {
   string_hashtable_t* seen = make_string_hashtable(128 * 1024);
@@ -70,7 +67,7 @@ int main(int argc, char** argv) {
   // Flag Parsing
 
   boolean_t FLAG_use_tree = false;
-  value_array_t* FLAG_files = NULL;
+  value_array_t* FLAG_files = nullptr;
 
   flag_program_name(argv[0]);
   flag_description("Similar to 'cat' but duplicate 'lines' are elided.");
@@ -87,7 +84,7 @@ int main(int argc, char** argv) {
   }
 
   string_hashtable_t* seen = initial_seen_hashtable();
-  string_tree_t* seen_tree = NULL;
+  string_tree_t* seen_tree = nullptr;
 
   // This is about the worst way we could write this. So?
   buffer_t* buffer = make_buffer(1);

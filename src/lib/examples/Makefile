@@ -1,6 +1,18 @@
-gall: examples manual-smoke-test
+all: examples manual-smoke-test
+
+# OMNI_C_ROOT: Root directory of the omni-c project.
+# BUILD_DIR:   Directory for build artifacts (absolute path).
+ifndef OMNI_C_ROOT
+  $(error OMNI_C_ROOT is not defined)
+endif
+
+ifndef BUILD_DIR
+  $(error BUILD_DIR is not defined)
+endif
 
 examples:
+	echo "Sorry, not of these examples currently build. Waiting for archive support"
+	exit 1
 	mkdir -p build/
 	gcc -g -rdynamic -O2 -o build/unique-file-lines unique-file-lines.c
 	gcc -g -rdynamic -O2 -o build/sort-lines sort-lines.c

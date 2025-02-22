@@ -14,11 +14,8 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 int main(int argc, char** argv) {
-  value_array_t* FLAG_files = NULL;
+  value_array_t* FLAG_files = nullptr;
 
   flag_program_name(argv[0]);
   flag_description("Reads utf8 encoded files and outputs the code-points");

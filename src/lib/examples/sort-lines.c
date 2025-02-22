@@ -10,12 +10,9 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 int main(int argc, char** argv) {
   // Flag Parsing
-  value_array_t* FLAG_files = NULL;
+  value_array_t* FLAG_files = nullptr;
 
   flag_program_name(argv[0]);
   flag_description("Similar to 'sort' though duplicate 'lines' are elided.");
@@ -29,7 +26,7 @@ int main(int argc, char** argv) {
 
   // The main program.
 
-  string_tree_t* sorted = NULL;
+  string_tree_t* sorted = nullptr;
 
   for (int i = 0; i < FLAG_files->length; i++) {
     char* file_name = value_array_get(FLAG_files, i).str;

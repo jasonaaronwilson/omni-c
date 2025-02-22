@@ -18,9 +18,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 int main(int argc, char** argv) {
   configure_fatal_errors((fatal_error_config_t){
       .catch_sigsegv = true,
@@ -30,7 +27,7 @@ int main(int argc, char** argv) {
 
   uint64_t FLAG_number_of_lines = 1024;
   uint64_t FLAG_max_number = 0xffffffff;
-  value_array_t* FLAG_files = NULL;
+  value_array_t* FLAG_files = nullptr;
 
   flag_program_name(argv[0]);
   flag_description("Generate (highly probable) unique lines.");

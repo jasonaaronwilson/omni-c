@@ -55,6 +55,13 @@ clean:
 	@echo "Cleaning build artifacts..."
 	@$(MAKE) -C src clean OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
 
+# Examples target
+.PHONY: examples
+examples: all
+	@echo "Building examples in src/lib/examples..."
+	@$(MAKE) -C src/lib/examples all OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR)
+
+
 # Tags target
 .PHONY: tags
 tags:

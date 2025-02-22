@@ -8,9 +8,6 @@
 
 #include <stdlib.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 // result is a hashtable of string -> uint64_t
 string_hashtable_t* initial_counts_hashtable() {
   // The hashtable will resize as necessary but we still want a
@@ -23,7 +20,7 @@ int main(int argc, char** argv) {
   // Flag Parsing
 
   boolean_t FLAG_use_tree = false;
-  value_array_t* FLAG_files = NULL;
+  value_array_t* FLAG_files = nullptr;
 
   flag_program_name(argv[0]);
   flag_description("Creates a histogram of lines and their counts");
@@ -43,7 +40,7 @@ int main(int argc, char** argv) {
   value_array_t* files = FLAG_files;
 
   string_hashtable_t* counts = initial_counts_hashtable();
-  string_tree_t* counts_tree = NULL;
+  string_tree_t* counts_tree = nullptr;
 
   for (int i = 0; i < files->length; i++) {
     char* file_name = value_array_get(files, i).str;

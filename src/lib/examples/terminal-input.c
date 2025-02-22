@@ -8,11 +8,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define C_ARMYKNIFE_LIB_IMPL
-#include "../c-armyknife-lib.h"
-
 int main(int argc, char** argv) {
-  value_array_t* FLAG_files = NULL;
+  value_array_t* FLAG_files = nullptr;
 
   flag_program_name(argv[0]);
   flag_description(
@@ -32,11 +29,11 @@ int main(int argc, char** argv) {
 
   struct termios oldt = term_echo_off();
 
-  time_t start_time = time(NULL);
+  time_t start_time = time(nullptr);
   time_t end_time = start_time + 60; // 30 seconds from start
 
   buffer_t* buffer = make_buffer(10);
-  while (time(NULL) < end_time) {
+  while (time(nullptr) < end_time) {
     buffer_clear(buffer);
     buffer = buffer_read_ready_bytes(buffer, stdin, 10);
 
