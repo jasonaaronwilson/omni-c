@@ -34,4 +34,5 @@ SRC_C := \
 	cdl-printer.c \
 	sub-process.c \
 	splitjoin.c \
+	oarchive.c \
 	test.c
