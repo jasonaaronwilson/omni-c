@@ -134,20 +134,20 @@ void configure_flags(void) {
 
 void configure_parse_expression(void) {
   flag_command("parse-expression", &FLAG_command);
-  flag_description("** UNIT TESTING");
+  flag_description("** UNIT TESTING **");
   flag_string("--expression", &FLAG_expression);
   flag_boolean("--to-c", &FLAG_to_c);
 }
 
 void configure_parse_statement(void) {
   flag_command("parse-statement", &FLAG_command);
-  flag_description("** UNIT TESTING");
+  flag_description("** UNIT TESTING **");
   flag_string("--statement", &FLAG_statement);
 }
 
 void configure_print_tokens_command(void) {
   flag_command("print-tokens", &FLAG_command);
-  flag_description("** UNIT TESTING");
+  flag_description("** UNIT TESTING **");
   flag_boolean("--show-tokens", &FLAG_print_tokens_show_tokens);
   flag_boolean("--include-whitespace", &FLAG_print_tokens_include_whitespace);
   flag_boolean("--include-comments", &FLAG_print_tokens_include_comments);
@@ -195,7 +195,7 @@ void configure_regular_commands(void) {
   flag_file_args(&FLAG_files);
 
   flag_command("archive", &FLAG_command);
-  flag_description("create an archive from unprocessed source files");
+  flag_description("create an archive of unprocessed source files");
   flag_string("--archive-output-file", &FLAG_archive_output_file);
   flag_description("the target path of the output archive");
   flag_file_args(&FLAG_files);
