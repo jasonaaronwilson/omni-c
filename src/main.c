@@ -706,6 +706,14 @@ int main(int argc, char** argv) {
     log_info("Exiting normally.");
     exit(0);
   } else if (string_equal("build", FLAG_command)) {
+    if (string_is_null_or_empty(FLAG_c_output_file)) {
+      log_fatal("Must supply --c-output-file");
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+    if (string_is_null_or_empty(FLAG_binary_output_file)) {
+      log_fatal("Must supply --binary-output-file");
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
     generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
     int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
     if (status == 0) {
