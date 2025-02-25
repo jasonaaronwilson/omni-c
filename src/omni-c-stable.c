@@ -763,6 +763,8 @@ typedef enum {
 
 typedef struct sub_process_t__generated_S sub_process_t;
 
+typedef fn_t(boolean_t, FILE*, string_tree_t*, int64_t, void*) oarchive_stream_headers_callback_t;
+
 typedef enum {
   INPUT_MODE_OMNI_C,
   INPUT_MODE_STANDARD_C,
@@ -1686,17 +1688,17 @@ char* cpp_keywords_array[] = {
     "co_return", // Used with coroutines
 };
 
-string_hashtable_t* c_keywords_ht = NULL;
+string_hashtable_t* c_keywords_ht = ((void *)0);
 
-string_hashtable_t* c_builtin_types_ht = NULL;
+string_hashtable_t* c_builtin_types_ht = ((void *)0);
 
-string_hashtable_t* cpp_keywords_ht = NULL;
+string_hashtable_t* cpp_keywords_ht = ((void *)0);
 
-string_hashtable_t* cpp_builtin_types_ht = NULL;
+string_hashtable_t* cpp_builtin_types_ht = ((void *)0);
 
-string_hashtable_t* oc_keywords_ht = NULL;
+string_hashtable_t* oc_keywords_ht = ((void *)0);
 
-string_hashtable_t* oc_builtin_types_ht = NULL;
+string_hashtable_t* oc_builtin_types_ht = ((void *)0);
 
 char* formatted_snippet = "======================================================================\n" "{error-prefix-lines}" "{error-highlight-on}" "{error-current-line}" "{error-highlight-off}" "{error-suffix-lines}" "\n======================================================================" "\n";
 
@@ -1784,9 +1786,9 @@ char* c_punctuation[] = {
     "\\\n",
 };
 
-value_array_t* FLAG_files = NULL;
+value_array_t* FLAG_files = ((void *)0);
 
-char* FLAG_command = NULL;
+char* FLAG_command = ((void *)0);
 
 boolean_t FLAG_print_command_line = true;
 
@@ -1802,15 +1804,17 @@ boolean_t FLAG_print_tokens_parse_and_print = true;
 
 boolean_t FLAG_print_tokens_show_appended_tokens = true;
 
-char* FLAG_c_output_file = NULL;
+char* FLAG_c_output_file = ((void *)0);
 
-char* FLAG_binary_output_file = NULL;
+char* FLAG_binary_output_file = ((void *)0);
+
+char* FLAG_archive_output_file = ((void *)0);
 
 boolean_t FLAG_generate_enum_convertors = true;
 
-char* FLAG_expression = NULL;
+char* FLAG_expression = ((void *)0);
 
-char* FLAG_statement = NULL;
+char* FLAG_statement = ((void *)0);
 
 boolean_t FLAG_dump_symbol_table = false;
 
@@ -2011,12 +2015,17 @@ void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_std
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
 boolean_t is_sub_process_running(sub_process_t* sub_process);
 buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
+void oarchive_append_header_and_file_contents(FILE* out, char* filename);
+string_tree_t* oarchive_read_header(FILE* in);
+void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data);
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 void initialize_keyword_maps(void);
 boolean_t is_reserved_word(input_mode_t mode, char* str);
 boolean_t is_builtin_type_name(input_mode_t mode, char* str);
 value_array_t* read_files(value_array_t* files);
 file_t* read_file(char* file_name);
+void add_all_oarchive_members(value_array_t* result, char* archive_file_name);
+boolean_t add_orachive_file(FILE* input, string_tree_t* metadata, int64_t size, void* callback_data);
 buffer_t* buffer_append_human_readable_error(buffer_t* buffer, compiler_error_t* error);
 src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location, int before_lines, int after_lines);
 char* do_common_replacements(char* template, compiler_error_t* error);
@@ -2160,7 +2169,6 @@ struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* bindin
 symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* symbol_table, type_node_t* type_node);
 void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_table, symbol_table_binding_t* binding, value_array_t* reordered_bindings);
 void reorder_symbol_table_structures(symbol_table_t* symbol_table);
-void convert_nullptr_to_null(value_array_t* tokens);
 c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position);
 uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens, uint64_t start_position);
 void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens);
@@ -2262,6 +2270,7 @@ buffer_t* git_hash_object(char* filename);
 buffer_t* command_line_args_to_buffer(int argc, char** argv);
 value_array_t* c_compiler_command_line(char* input_file, char* output_file);
 int invoke_c_compiler(char* input_file, char* output_file);
+void generate_archive_file(void);
 int main(int argc, char** argv);
 buffer_t* get_reflection_header_buffer(void);
 char* error_code_to_string(error_code_t value);
@@ -2469,7 +2478,7 @@ static inline uint64_t rotl(uint64_t x, int k){
 
 # 123 "keywords.c"
 static inline void maybe_initialize_keyword_maps(void){
-  if ((c_keywords_ht==NULL))
+  if ((c_keywords_ht==((void *)0)))
   {
     initialize_keyword_maps();
   }
@@ -2480,7 +2489,7 @@ static inline void maybe_initialize_keyword_maps(void){
 static inline token_t* token_at(value_array_t* tokens, uint64_t position){
   if ((position>=(tokens->length)))
   {
-    return NULL;
+    return ((void *)0);
   }
   return value_array_get_ptr(tokens, position, typeof(token_t*));
 }
@@ -2488,7 +2497,7 @@ static inline token_t* token_at(value_array_t* tokens, uint64_t position){
 
 # 47 "lexer.c"
 static inline boolean_t token_matches(token_t* token, char* str){
-  if ((token==NULL))
+  if ((token==((void *)0)))
   {
     return false;
   }
@@ -2519,11 +2528,11 @@ static inline token_t* heap_allocate_token(token_t token){
 
 # 21 "token-list.c"
 static inline void token_list_add(token_list_t* token_list, token_t* token){
-  if ((token==NULL))
+  if ((token==((void *)0)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  if (((token_list->list)==NULL))
+  if (((token_list->list)==((void *)0)))
   {
     ((token_list->list)=make_value_array(2));
   }
@@ -2533,7 +2542,7 @@ static inline void token_list_add(token_list_t* token_list, token_t* token){
 
 # 36 "token-list.c"
 static inline uint64_t token_list_length(token_list_t token_list){
-  if (((token_list.list)==NULL))
+  if (((token_list.list)==((void *)0)))
   {
     return 0;
   }
@@ -2549,7 +2558,7 @@ static inline boolean_t token_list_is_empty(token_list_t token_list){
 
 # 57 "token-list.c"
 static inline token_t* token_list_get(token_list_t token_list, uint64_t index){
-  if (((token_list.list)==NULL))
+  if (((token_list.list)==((void *)0)))
   {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
@@ -2581,7 +2590,7 @@ static inline parse_node_t* to_node(void* ptr){
 
 # 139 "declaration-parser.c"
 static inline declarations_node_t* to_declarations_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_DECLARATIONS)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DECLARATIONS)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2591,7 +2600,7 @@ static inline declarations_node_t* to_declarations_node(parse_node_t* ptr){
 
 # 152 "declaration-parser.c"
 static inline literal_node_t* to_literal_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_LITERAL)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_LITERAL)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2601,7 +2610,7 @@ static inline literal_node_t* to_literal_node(parse_node_t* ptr){
 
 # 165 "declaration-parser.c"
 static inline function_node_t* to_function_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FUNCTION)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FUNCTION)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2611,7 +2620,7 @@ static inline function_node_t* to_function_node(parse_node_t* ptr){
 
 # 179 "declaration-parser.c"
 static inline function_argument_node_t* to_function_argument_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FUNCTION_ARGUMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FUNCTION_ARGUMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2621,7 +2630,7 @@ static inline function_argument_node_t* to_function_argument_node(parse_node_t* 
 
 # 192 "declaration-parser.c"
 static inline typedef_node_t* to_typedef_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_TYPEDEF)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_TYPEDEF)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2631,7 +2640,7 @@ static inline typedef_node_t* to_typedef_node(parse_node_t* ptr){
 
 # 205 "declaration-parser.c"
 static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_UNPARSED_EXPRESSION)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_UNPARSED_EXPRESSION)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2641,7 +2650,7 @@ static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr){
 
 # 218 "declaration-parser.c"
 static inline attribute_node_t* to_attribute_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_ATTRIBUTE)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_ATTRIBUTE)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2651,7 +2660,7 @@ static inline attribute_node_t* to_attribute_node(parse_node_t* ptr){
 
 # 231 "declaration-parser.c"
 static inline cpp_define_node_t* to_cpp_define_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CPP_DEFINE)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CPP_DEFINE)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2661,7 +2670,7 @@ static inline cpp_define_node_t* to_cpp_define_node(parse_node_t* ptr){
 
 # 244 "declaration-parser.c"
 static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CPP_INCLUDE)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CPP_INCLUDE)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2727,11 +2736,11 @@ static inline cpp_define_node_t* malloc_cpp_define_node(void){
 
 # 31 "node-list.c"
 static inline void node_list_add_node(node_list_t* node_list, parse_node_t* oc_node){
-  if ((oc_node==NULL))
+  if ((oc_node==((void *)0)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  if (((node_list->list)==NULL))
+  if (((node_list->list)==((void *)0)))
   {
     ((node_list->list)=make_value_array(2));
   }
@@ -2741,7 +2750,7 @@ static inline void node_list_add_node(node_list_t* node_list, parse_node_t* oc_n
 
 # 47 "node-list.c"
 static inline uint64_t node_list_length(node_list_t node_list){
-  if (((node_list.list)==NULL))
+  if (((node_list.list)==((void *)0)))
   {
     return 0;
   }
@@ -2757,7 +2766,7 @@ static inline boolean_t node_list_is_empty(node_list_t node_list){
 
 # 68 "node-list.c"
 static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index){
-  if (((node_list.list)==NULL))
+  if (((node_list.list)==((void *)0)))
   {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
@@ -2825,7 +2834,7 @@ static inline conditional_node_t* malloc_conditional_node(void){
 
 # 141 "pratt-parser.c"
 static inline identifier_node_t* to_identifier_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_IDENTIFIER)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_IDENTIFIER)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2835,7 +2844,7 @@ static inline identifier_node_t* to_identifier_node(parse_node_t* ptr){
 
 # 154 "pratt-parser.c"
 static inline operator_node_t* to_operator_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_OPERATOR)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_OPERATOR)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2845,7 +2854,7 @@ static inline operator_node_t* to_operator_node(parse_node_t* ptr){
 
 # 167 "pratt-parser.c"
 static inline call_node_t* to_call_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CALL)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CALL)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2855,7 +2864,7 @@ static inline call_node_t* to_call_node(parse_node_t* ptr){
 
 # 180 "pratt-parser.c"
 static inline conditional_node_t* to_conditional_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CONDITIONAL)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CONDITIONAL)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2879,7 +2888,7 @@ static inline type_node_t* malloc_type_node(void){
 
 # 77 "type-parser.c"
 static inline type_node_t* to_type_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_TYPE)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_TYPE)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2889,19 +2898,19 @@ static inline type_node_t* to_type_node(parse_node_t* ptr){
 
 # 72 "user-type-parser.c"
 static inline boolean_t is_struct_node(parse_node_t* ptr){
-  return ((ptr!=NULL)&&((ptr->tag)==PARSE_NODE_STRUCT));
+  return ((ptr!=((void *)0))&&((ptr->tag)==PARSE_NODE_STRUCT));
 }
 
 
 # 82 "user-type-parser.c"
 static inline boolean_t is_enum_node(parse_node_t* ptr){
-  return ((ptr!=NULL)&&((ptr->tag)==PARSE_NODE_ENUM));
+  return ((ptr!=((void *)0))&&((ptr->tag)==PARSE_NODE_ENUM));
 }
 
 
 # 92 "user-type-parser.c"
 static inline struct_node_t* to_struct_node(parse_node_t* ptr){
-  if (((ptr==NULL)||(!(((ptr->tag)==PARSE_NODE_STRUCT)||((ptr->tag)==PARSE_NODE_UNION)))))
+  if (((ptr==((void *)0))||(!(((ptr->tag)==PARSE_NODE_STRUCT)||((ptr->tag)==PARSE_NODE_UNION)))))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2911,7 +2920,7 @@ static inline struct_node_t* to_struct_node(parse_node_t* ptr){
 
 # 107 "user-type-parser.c"
 static inline union_node_t* to_union_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_UNION)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_UNION)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2921,7 +2930,7 @@ static inline union_node_t* to_union_node(parse_node_t* ptr){
 
 # 120 "user-type-parser.c"
 static inline field_node_t* to_field_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FIELD)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FIELD)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2931,7 +2940,7 @@ static inline field_node_t* to_field_node(parse_node_t* ptr){
 
 # 133 "user-type-parser.c"
 static inline enum_node_t* to_enum_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_ENUM)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_ENUM)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2941,7 +2950,7 @@ static inline enum_node_t* to_enum_node(parse_node_t* ptr){
 
 # 146 "user-type-parser.c"
 static inline enum_element_t* to_enum_element_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_ENUM_ELEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_ENUM_ELEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -2991,7 +3000,7 @@ static inline field_node_t* malloc_field_node(void){
 
 # 25 "variable-definition-parser.c"
 static inline variable_definition_node_t* to_variable_definition_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_VARIABLE_DEFINITION)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_VARIABLE_DEFINITION)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -3017,7 +3026,7 @@ static inline literal_node_t* malloc_literal_node(void){
 
 # 25 "balanced-construct-parser.c"
 static inline balanced_construct_node_t* to_balanced_construct_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_BALANCED_CONSTRUCT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_BALANCED_CONSTRUCT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -3281,7 +3290,7 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount){
     fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
   uint8_t* result = GC_malloc(amount);
-  if ((result==NULL))
+  if ((result==((void *)0)))
   {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
@@ -3343,7 +3352,7 @@ int uint64_highest_bit_set(uint64_t n){
 
 # 53 "lib/string-util.c"
 int string_is_null_or_empty(const char* str){
-  return ((str==NULL)||(strlen(str)==0));
+  return ((str==((void *)0))||(strlen(str)==0));
 }
 
 
@@ -3912,7 +3921,7 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position){
 
 # 100 "lib/buffer.c"
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
-  if ((buffer==NULL))
+  if ((buffer==((void *)0)))
   {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
@@ -6075,6 +6084,83 @@ buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator
 }
 
 
+# 17 "lib/oarchive.c"
+void oarchive_append_header_and_file_contents(FILE* out, char* filename){
+  buffer_t* contents = make_buffer(1);
+  (contents=buffer_append_file_contents(contents, filename));
+  fprintf(out, "filename=%s", filename);
+  fputc(0, out);
+  fprintf(out, "size=%d", (contents->length));
+  fputc(0, out);
+  fputc(0, out);
+  for (
+    uint64_t i = 0;
+    (i<(contents->length));
+    (i++))
+  {
+    fputc(buffer_get(contents, i), out);
+  }
+}
+
+
+# 37 "lib/oarchive.c"
+string_tree_t* oarchive_read_header(FILE* in){
+  string_tree_t* metadata = NULL;
+  while ((!feof(in)))
+  {
+    if ((file_peek_byte(in)=='\0'))
+    {
+      fgetc(in);
+      break;
+    }
+    buffer_t* key = make_buffer(8);
+    (key=buffer_read_until(key, in, '='));
+    buffer_t* value = make_buffer(8);
+    (value=buffer_read_until(value, in, '\0'));
+    if ((((key->length)==0)&&((value->length)==0)))
+    {
+      return metadata;
+    }
+    (metadata=string_tree_insert(metadata, buffer_to_c_string(key), str_to_value(buffer_to_c_string(value))));
+  }
+  return metadata;
+}
+
+
+# 86 "lib/oarchive.c"
+void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data){
+  while ((!file_eof(in)))
+  {
+    string_tree_t* metadata = oarchive_read_header(in);
+    int64_t size = 0;
+    value_result_t size_value = string_tree_find(metadata, "size");
+    if ((!is_ok(size_value)))
+    {
+      log_warn("Encounterd a header without an explicit size.");
+    }
+    else
+    {
+      value_result_t data_size = string_parse_uint64_dec((size_value.str));
+      if ((!is_ok(data_size)))
+      {
+        log_fatal("Encounterd a header with an unparseable size %s", (size_value.str));
+        fatal_error(ERROR_FATAL);
+      }
+      else
+      {
+        (size=(data_size.u64));
+      }
+    }
+    boolean_t skip_data = callback(in, metadata, size, callback_data);
+    if ((skip_data&&(size>0)))
+    {
+      log_none("Skipping %lu\n", size);
+      file_skip_bytes(in, size);
+    }
+  }
+}
+
+
 # 92 "lib/test.c"
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
   va_list args;
@@ -6153,7 +6239,7 @@ boolean_t is_builtin_type_name(input_mode_t mode, char* str){
 }
 
 
-# 13 "file-reader.c"
+# 23 "file-reader.c"
 value_array_t* read_files(value_array_t* files){
   fprintf(stderr, "Parsing %d files...\n", (files->length));
   value_array_t* result = make_value_array((files->length));
@@ -6163,14 +6249,22 @@ value_array_t* read_files(value_array_t* files){
     (i++))
   {
     char* file_name = (value_array_get(files, i).str);
-    fprintf(stderr, "Reading %s\n", file_name);
-    value_array_add(result, ptr_to_value(read_file(file_name)));
+    if (string_ends_with(file_name, ".oar"))
+    {
+      fprintf(stderr, "Reading archive %s\n", file_name);
+      add_all_oarchive_members(result, file_name);
+    }
+    else
+    {
+      fprintf(stderr, "Reading %s\n", file_name);
+      value_array_add(result, ptr_to_value(read_file(file_name)));
+    }
   }
   return result;
 }
 
 
-# 30 "file-reader.c"
+# 45 "file-reader.c"
 file_t* read_file(char* file_name){
   file_t* result = malloc_struct(file_t);
   buffer_t* buffer = make_buffer((1024*8));
@@ -6179,6 +6273,43 @@ file_t* read_file(char* file_name){
   ((result->file_name)=file_name);
   ((result->data)=buffer);
   return result;
+}
+
+
+# 58 "file-reader.c"
+void add_all_oarchive_members(value_array_t* result, char* archive_file_name){
+  FILE* in = fopen(archive_file_name, "r");
+  oarchive_stream_members(in, (&add_orachive_file), result);
+  fclose(in);
+}
+
+
+# 64 "file-reader.c"
+boolean_t add_orachive_file(FILE* input, string_tree_t* metadata, int64_t size, void* callback_data){
+  value_result_t filename_value = string_tree_find(metadata, "filename");
+  if (is_ok(filename_value))
+  {
+    char* file_name = (filename_value.str);
+    log_info("Extracting %s from archive", file_name);
+    file_t* read_file = malloc_struct(file_t);
+    buffer_t* buffer = make_buffer(size);
+    while (((size--)>0))
+    {
+      int b = fgetc(input);
+      buffer_append_byte(buffer, b);
+    }
+    ((read_file->tag)=STD_C_SOURCE_FILE);
+    ((read_file->file_name)=file_name);
+    ((read_file->data)=buffer);
+    value_array_add((/*CAST*/(value_array_t*) callback_data), ptr_to_value(read_file));
+  }
+  else
+  {
+    log_fatal("There is no filename for an omni-archive memember.");
+    log_fatal("Perhaps the .oar file isn't properly formed or created by omni-c " "archive?");
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+  return false;
 }
 
 
@@ -6260,7 +6391,7 @@ buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer, compile
 # 239 "compiler-errors.c"
 buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_error_t* error){
   (buffer=buffer_printf(buffer, "\nparser error code = %d\n", (error->parse_error_code)));
-  char* template = NULL;
+  char* template = ((void *)0);
   switch ((error->parse_error_code))
   {
     case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
@@ -6638,7 +6769,7 @@ tokenizer_result_t tokenize(buffer_t* buffer){
       return ((tokenizer_result_t) {.tokenizer_error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR});
     }
     uint32_t code_point = (decode_result.code_point);
-    token_t* token = NULL;
+    token_t* token = ((void *)0);
     if (isspace(code_point))
     {
       read_token(tokenize_whitespace);
@@ -6672,7 +6803,7 @@ tokenizer_result_t tokenize(buffer_t* buffer){
     {
       read_token(tokenize_punctuation);
     }
-    if ((token!=NULL))
+    if ((token!=((void *)0)))
     {
       ((token->line_number)=line_number);
       ((token->column_number)=column_number);
@@ -6739,8 +6870,8 @@ value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options
 
 # 7 "pstate.c"
 pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code){
-  ((pstate->result_token)=NULL);
-  ((pstate->result_node)=NULL);
+  ((pstate->result_token)=((void *)0));
+  ((pstate->result_node)=((void *)0));
   (((pstate->error).parse_error_code)=parse_error_code);
   (((pstate->error).error_position)=(pstate->position));
   (((pstate->error).error_token)=token_at((pstate->tokens), (pstate->position)));
@@ -6770,7 +6901,7 @@ pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position){
 # 58 "pstate.c"
 pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token){
   ((pstate->error)=((compiler_error_t) {0}));
-  ((pstate->result_node)=NULL);
+  ((pstate->result_node)=((void *)0));
   ((pstate->result_token)=token);
   return true;
 }
@@ -6780,7 +6911,7 @@ pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token){
 pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node){
   ((pstate->error)=((compiler_error_t) {0}));
   ((pstate->result_node)=node);
-  ((pstate->result_token)=NULL);
+  ((pstate->result_token)=((void *)0));
   return true;
 }
 
@@ -6793,7 +6924,7 @@ token_t* pstate_get_result_token(pstate_t* pstate){
     ((pstate->error)=((compiler_error_t) {0}));
   }
   token_t* token = (pstate->result_token);
-  ((pstate->result_token)=NULL);
+  ((pstate->result_token)=((void *)0));
   return token;
 }
 
@@ -6806,11 +6937,11 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate){
     ((pstate->error)=((compiler_error_t) {0}));
   }
   parse_node_t* result = (pstate->result_node);
-  if ((result==NULL))
+  if ((result==((void *)0)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  ((pstate->result_node)=NULL);
+  ((pstate->result_node)=((void *)0));
   return result;
 }
 
@@ -6819,7 +6950,7 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate){
 parse_node_t* pstate_get_optional_result_node(pstate_t* pstate){
   ((pstate->error)=((compiler_error_t) {0}));
   parse_node_t* result = (pstate->result_node);
-  ((pstate->result_node)=NULL);
+  ((pstate->result_node)=((void *)0));
   return result;
 }
 
@@ -6855,7 +6986,7 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string){
   token_t* token = pstate_peek(pstate, 0);
   if (token_matches(token, token_string))
   {
-    ((pstate->result_node)=NULL);
+    ((pstate->result_node)=((void *)0));
     ((pstate->result_token)=token);
     ((pstate->position)+=1);
     return true;
@@ -6870,7 +7001,7 @@ pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type){
   token_t* token = pstate_peek(pstate, 0);
   if ((token_type==(token->type)))
   {
-    ((pstate->result_node)=NULL);
+    ((pstate->result_node)=((void *)0));
     ((pstate->result_token)=token);
     ((pstate->position)+=1);
     return true;
@@ -6972,14 +7103,14 @@ pstatus_t parse_attribute_node(pstate_t* pstate){
 # 421 "declaration-parser.c"
 pstatus_t parse_function_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
-  token_t* storage_class_specifier = NULL;
+  token_t* storage_class_specifier = ((void *)0);
   token_list_t function_specifiers = {0};
   node_list_t attributes = {0};
   while (1)
   {
     if ((((pstate_expect_token_string(pstate, "static")||pstate_expect_token_string(pstate_ignore_error(pstate), "extern"))||pstate_expect_token_string(pstate_ignore_error(pstate), "auto"))||pstate_expect_token_string(pstate_ignore_error(pstate), "register")))
     {
-      if ((storage_class_specifier==NULL))
+      if ((storage_class_specifier==((void *)0)))
       {
         (storage_class_specifier=pstate_get_result_token(pstate));
       }
@@ -7308,7 +7439,7 @@ void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_ENUM");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string((node->name)));
@@ -7326,7 +7457,7 @@ void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_STRUCT");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string((node->name)));
@@ -7344,7 +7475,7 @@ void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_UNION");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string((node->name)));
@@ -7362,12 +7493,12 @@ void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_ENUM_ELEMENT");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string((node->name)));
   }
-  if (((node->value_expr)!=NULL))
+  if (((node->value_expr)!=((void *)0)))
   {
     cdl_key(printer, "value_expr");
     buffer_append_dbg_parse_node(printer, (node->value_expr));
@@ -7381,17 +7512,17 @@ void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node){
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_FIELD");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string((node->name)));
   }
-  if (((node->type)!=NULL))
+  if (((node->type)!=((void *)0)))
   {
     cdl_key(printer, "type");
     buffer_append_dbg_type_node(printer, (node->type));
   }
-  if (((node->suffixes)!=NULL))
+  if (((node->suffixes)!=((void *)0)))
   {
     cdl_key(printer, "suffixes");
     cdl_start_array(printer);
@@ -7434,12 +7565,12 @@ void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node){
     }
     cdl_end_array(printer);
   }
-  if (((node->type_name)!=NULL))
+  if (((node->type_name)!=((void *)0)))
   {
     cdl_key(printer, "type_name");
     cdl_string(printer, token_to_string((node->type_name)));
   }
-  if (((node->user_type)!=NULL))
+  if (((node->user_type)!=((void *)0)))
   {
     cdl_key(printer, "user_type");
     buffer_append_dbg_parse_node(printer, (node->user_type));
@@ -7455,21 +7586,21 @@ void buffer_append_dbg_literal_node(cdl_printer_t* printer, literal_node_t* node
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_LITERAL");
-  if (((node->token)!=NULL))
+  if (((node->token)!=((void *)0)))
   {
     cdl_key(printer, "token");
     cdl_string(printer, token_to_string((node->token)));
   }
-  if (((node->tokens)!=NULL))
+  if (((node->tokens)!=((void *)0)))
   {
     buffer_append_dbg_tokens(printer, (node->tokens), "tokens");
   }
-  if (((node->initializer_node)!=NULL))
+  if (((node->initializer_node)!=((void *)0)))
   {
     cdl_key(printer, "initializer_node");
     buffer_append_dbg_parse_node(printer, (node->initializer_node));
   }
-  if (((node->initializer_type)!=NULL))
+  if (((node->initializer_type)!=((void *)0)))
   {
     cdl_key(printer, "initializer_type");
     buffer_append_dbg_parse_node(printer, (node->initializer_type));
@@ -7485,24 +7616,24 @@ void buffer_append_dbg_function_node(cdl_printer_t* printer, function_node_t* no
   cdl_string(printer, "PARSE_NODE_FUNCTION");
   cdl_key(printer, "attributes");
   buffer_append_dbg_node_list(printer, (node->attributes));
-  if (((node->storage_class_specifier)!=NULL))
+  if (((node->storage_class_specifier)!=((void *)0)))
   {
     cdl_key(printer, "storage_class_specifier");
     cdl_string(printer, token_to_string((node->storage_class_specifier)));
   }
-  if (((node->return_type)!=NULL))
+  if (((node->return_type)!=((void *)0)))
   {
     cdl_key(printer, "return_type");
     buffer_append_dbg_type_node(printer, (node->return_type));
   }
-  if (((node->function_name)!=NULL))
+  if (((node->function_name)!=((void *)0)))
   {
     cdl_key(printer, "function_name");
     cdl_string(printer, token_to_string((node->function_name)));
   }
   cdl_key(printer, "function_args");
   buffer_append_dbg_node_list(printer, (node->function_args));
-  if (((node->body)!=NULL))
+  if (((node->body)!=((void *)0)))
   {
     cdl_key(printer, "body");
     buffer_append_dbg_parse_node(printer, (node->body));
@@ -7516,12 +7647,12 @@ void buffer_append_dbg_function_argument_node(cdl_printer_t* printer, function_a
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_FUNCTION_ARGUEMENT");
-  if (((node->arg_type)!=NULL))
+  if (((node->arg_type)!=((void *)0)))
   {
     cdl_key(printer, "arg_type");
     buffer_append_dbg_type_node(printer, (node->arg_type));
   }
-  if (((node->arg_name)!=NULL))
+  if (((node->arg_name)!=((void *)0)))
   {
     cdl_key(printer, "arg_name");
     cdl_string(printer, token_to_string((node->arg_name)));
@@ -7535,12 +7666,12 @@ void buffer_append_dbg_balanced_construct_node(cdl_printer_t* printer, balanced_
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_BALANCED_CONSTRUCT");
-  if (((node->start_token)!=NULL))
+  if (((node->start_token)!=((void *)0)))
   {
     cdl_key(printer, "start_token");
     cdl_string(printer, token_to_string((node->start_token)));
   }
-  if (((node->end_token)!=NULL))
+  if (((node->end_token)!=((void *)0)))
   {
     cdl_key(printer, "end_token");
     cdl_string(printer, token_to_string((node->end_token)));
@@ -7554,12 +7685,12 @@ void buffer_append_dbg_typedef_node(cdl_printer_t* printer, typedef_node_t* node
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_TYPEDEF");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string((node->name)));
   }
-  if (((node->type_node)!=NULL))
+  if (((node->type_node)!=((void *)0)))
   {
     cdl_key(printer, "type_node");
     buffer_append_dbg_type_node(printer, (node->type_node));
@@ -7573,27 +7704,27 @@ void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_VARIABLE_DEFINITION");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     cdl_key(printer, "name");
     cdl_string(printer, token_to_string((node->name)));
   }
-  if (((node->type)!=NULL))
+  if (((node->type)!=((void *)0)))
   {
     cdl_key(printer, "type");
     buffer_append_dbg_type_node(printer, (node->type));
   }
-  if (((node->value)!=NULL))
+  if (((node->value)!=((void *)0)))
   {
     cdl_key(printer, "value");
     buffer_append_dbg_parse_node(printer, (node->value));
   }
-  if (((node->storage_class_specifier)!=NULL))
+  if (((node->storage_class_specifier)!=((void *)0)))
   {
     cdl_key(printer, "storage_class_specifier");
     cdl_string(printer, token_to_string((node->storage_class_specifier)));
   }
-  if (((node->suffixes)!=NULL))
+  if (((node->suffixes)!=((void *)0)))
   {
     cdl_key(printer, "suffixes");
     cdl_start_array(printer);
@@ -7616,12 +7747,12 @@ void buffer_append_dbg_attribute_node(cdl_printer_t* printer, attribute_node_t* 
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_ATTRIBUTE");
-  if (((node->inner_start_token)!=NULL))
+  if (((node->inner_start_token)!=((void *)0)))
   {
     cdl_key(printer, "inner_start_token");
     cdl_string(printer, token_to_string((node->inner_start_token)));
   }
-  if (((node->inner_end_token)!=NULL))
+  if (((node->inner_end_token)!=((void *)0)))
   {
     cdl_key(printer, "inner_end_token");
     cdl_string(printer, token_to_string((node->inner_end_token)));
@@ -7655,17 +7786,17 @@ void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_IF_STATEMENT");
-  if (((node->if_condition)!=NULL))
+  if (((node->if_condition)!=((void *)0)))
   {
     cdl_key(printer, "if_condition");
     buffer_append_dbg_parse_node(printer, (node->if_condition));
   }
-  if (((node->if_true)!=NULL))
+  if (((node->if_true)!=((void *)0)))
   {
     cdl_key(printer, "if_true");
     buffer_append_dbg_parse_node(printer, (node->if_true));
   }
-  if (((node->if_else)!=NULL))
+  if (((node->if_else)!=((void *)0)))
   {
     cdl_key(printer, "if_else");
     buffer_append_dbg_parse_node(printer, (node->if_else));
@@ -7679,12 +7810,12 @@ void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_WHILE_STATEMENT");
-  if (((node->condition)!=NULL))
+  if (((node->condition)!=((void *)0)))
   {
     cdl_key(printer, "condition");
     buffer_append_dbg_parse_node(printer, (node->condition));
   }
-  if (((node->body)!=NULL))
+  if (((node->body)!=((void *)0)))
   {
     cdl_key(printer, "body");
     buffer_append_dbg_parse_node(printer, (node->body));
@@ -7698,22 +7829,22 @@ void buffer_append_dbg_for_node(cdl_printer_t* printer, for_statement_node_t* no
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_FOR_STATEMENT");
-  if (((node->for_init)!=NULL))
+  if (((node->for_init)!=((void *)0)))
   {
     cdl_key(printer, "for_init");
     buffer_append_dbg_parse_node(printer, (node->for_init));
   }
-  if (((node->for_test)!=NULL))
+  if (((node->for_test)!=((void *)0)))
   {
     cdl_key(printer, "for_test");
     buffer_append_dbg_parse_node(printer, (node->for_test));
   }
-  if (((node->for_increment)!=NULL))
+  if (((node->for_increment)!=((void *)0)))
   {
     cdl_key(printer, "for_increment");
     buffer_append_dbg_parse_node(printer, (node->for_increment));
   }
-  if (((node->for_body)!=NULL))
+  if (((node->for_body)!=((void *)0)))
   {
     cdl_key(printer, "for_body");
     buffer_append_dbg_parse_node(printer, (node->for_body));
@@ -7727,12 +7858,12 @@ void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_DO_STATEMENT");
-  if (((node->body)!=NULL))
+  if (((node->body)!=((void *)0)))
   {
     cdl_key(printer, "body");
     buffer_append_dbg_parse_node(printer, (node->body));
   }
-  if (((node->condition)!=NULL))
+  if (((node->condition)!=((void *)0)))
   {
     cdl_key(printer, "condition");
     buffer_append_dbg_parse_node(printer, (node->condition));
@@ -7746,7 +7877,7 @@ void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statem
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_BREAK_STATEMENT");
-  if (((node->break_keyword_token)!=NULL))
+  if (((node->break_keyword_token)!=((void *)0)))
   {
     cdl_key(printer, "break_keyword_token");
     cdl_string(printer, token_to_string((node->break_keyword_token)));
@@ -7760,7 +7891,7 @@ void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_CONTINUE_STATEMENT");
-  if (((node->continue_keyword_token)!=NULL))
+  if (((node->continue_keyword_token)!=((void *)0)))
   {
     cdl_key(printer, "continue_keyword_token");
     cdl_string(printer, token_to_string((node->continue_keyword_token)));
@@ -7774,7 +7905,7 @@ void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statem
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_LABEL_STATEMENT");
-  if (((node->label)!=NULL))
+  if (((node->label)!=((void *)0)))
   {
     cdl_key(printer, "label");
     cdl_string(printer, token_to_string((node->label)));
@@ -7788,7 +7919,7 @@ void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_CASE_LABEL");
-  if (((node->expression)!=NULL))
+  if (((node->expression)!=((void *)0)))
   {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, (node->expression));
@@ -7811,7 +7942,7 @@ void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_stat
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_RETURN_STATEMENT");
-  if (((node->expression)!=NULL))
+  if (((node->expression)!=((void *)0)))
   {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, (node->expression));
@@ -7825,7 +7956,7 @@ void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, express
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_EXPRESSION_STATEMENT");
-  if (((node->expression)!=NULL))
+  if (((node->expression)!=((void *)0)))
   {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, (node->expression));
@@ -7852,12 +7983,12 @@ void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* no
   cdl_string(printer, "PARSE_NODE_OPERATOR");
   cdl_key(printer, "operator");
   cdl_string(printer, token_to_string((node->operator)));
-  if (((node->left)!=NULL))
+  if (((node->left)!=((void *)0)))
   {
     cdl_key(printer, "left");
     buffer_append_dbg_parse_node(printer, (node->left));
   }
-  if (((node->right)!=NULL))
+  if (((node->right)!=((void *)0)))
   {
     cdl_key(printer, "right");
     buffer_append_dbg_parse_node(printer, (node->right));
@@ -7884,17 +8015,17 @@ void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_CONDITIONAL");
-  if (((node->condition)!=NULL))
+  if (((node->condition)!=((void *)0)))
   {
     cdl_key(printer, "condition");
     buffer_append_dbg_parse_node(printer, (node->condition));
   }
-  if (((node->expr_if_true)!=NULL))
+  if (((node->expr_if_true)!=((void *)0)))
   {
     cdl_key(printer, "expr_if_true");
     buffer_append_dbg_parse_node(printer, (node->expr_if_true));
   }
-  if (((node->expr_if_false)!=NULL))
+  if (((node->expr_if_false)!=((void *)0)))
   {
     cdl_key(printer, "expr_if_false");
     buffer_append_dbg_parse_node(printer, (node->expr_if_false));
@@ -7908,12 +8039,12 @@ void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node
   cdl_start_table(printer);
   cdl_key(printer, "tag");
   cdl_string(printer, "PARSE_NODE_SWITCH_STATEMENT");
-  if (((node->expression)!=NULL))
+  if (((node->expression)!=((void *)0)))
   {
     cdl_key(printer, "expression");
     buffer_append_dbg_parse_node(printer, (node->expression));
   }
-  if (((node->block)!=NULL))
+  if (((node->block)!=((void *)0)))
   {
     cdl_key(printer, "block");
     buffer_append_dbg_parse_node(printer, (node->block));
@@ -8008,7 +8139,7 @@ printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* no
     append_c_attribute_node(printer, to_attribute_node(node_list_get((node->attributes), i)));
     append_string(printer, " ");
   }
-  if (((node->storage_class_specifier)!=NULL))
+  if (((node->storage_class_specifier)!=((void *)0)))
   {
     append_token(printer, (node->storage_class_specifier));
     append_string(printer, " ");
@@ -8081,7 +8212,7 @@ printer_t* append_c_function_argument_node(printer_t* printer, function_argument
   else
   {
     append_type_node(printer, (node->arg_type));
-    if (((node->arg_name)!=NULL))
+    if (((node->arg_name)!=((void *)0)))
     {
       printer_space(printer);
       append_token(printer, (node->arg_name));
@@ -8113,7 +8244,7 @@ printer_t* append_type_node(printer_t* printer, type_node_t* node){
     break;
     case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
     case TYPE_NODE_KIND_TYPENAME:
-    if (((node->type_name)!=NULL))
+    if (((node->type_name)!=((void *)0)))
     {
       append_token(printer, (node->type_name));
     }
@@ -8188,7 +8319,7 @@ printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, tok
 # 327 "c-file-printer.c"
 printer_t* append_enum_node(printer_t* printer, enum_node_t* node){
   append_string(printer, "enum ");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     append_token(printer, (node->name));
     printer_newline(printer);
@@ -8217,7 +8348,7 @@ printer_t* append_enum_node(printer_t* printer, enum_node_t* node){
 # 353 "c-file-printer.c"
 printer_t* append_enum_element(printer_t* printer, enum_element_t* node){
   append_token(printer, (node->name));
-  if (((node->value_expr)!=NULL))
+  if (((node->value_expr)!=((void *)0)))
   {
     append_string(printer, " = ");
     append_parse_node(printer, (node->value_expr));
@@ -8308,7 +8439,7 @@ printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to
 printer_t* append_field_node(printer_t* printer, field_node_t* node){
   append_type_node(printer, (node->type));
   append_string(printer, " ");
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     append_token(printer, (node->name));
   }
@@ -8329,7 +8460,7 @@ printer_t* append_field_node(printer_t* printer, field_node_t* node){
 # 470 "c-file-printer.c"
 printer_t* append_struct_node(printer_t* printer, struct_node_t* node){
   append_string(printer, (((node->tag)==PARSE_NODE_UNION) ? "union " : "struct "));
-  if (((node->name)!=NULL))
+  if (((node->name)!=((void *)0)))
   {
     append_token(printer, (node->name));
   }
@@ -8382,7 +8513,7 @@ printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node){
 printer_t* append_variable_definition_node(printer_t* printer, variable_definition_node_t* node, boolean_t is_library){
   printer_indent(printer);
   boolean_t is_header_file = (!is_library);
-  if (((node->storage_class_specifier)!=NULL))
+  if (((node->storage_class_specifier)!=((void *)0)))
   {
     append_token(printer, (node->storage_class_specifier));
     append_string(printer, " ");
@@ -8405,7 +8536,7 @@ printer_t* append_variable_definition_node(printer_t* printer, variable_definiti
       append_parse_node(printer, value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*)));
     }
   }
-  if ((is_library&&((node->value)!=NULL)))
+  if ((is_library&&((node->value)!=((void *)0))))
   {
     append_string(printer, " = ");
     append_parse_node(printer, (node->value));
@@ -8417,27 +8548,27 @@ printer_t* append_variable_definition_node(printer_t* printer, variable_definiti
 
 # 555 "c-file-printer.c"
 printer_t* append_literal_node(printer_t* printer, literal_node_t* node){
-  if (((node->token)!=NULL))
+  if (((node->token)!=((void *)0)))
   {
     append_token(printer, (node->token));
   }
   else
-  if (((node->initializer_node)!=NULL))
+  if (((node->initializer_node)!=((void *)0)))
   {
-    if (((node->initializer_type)!=NULL))
+    if (((node->initializer_type)!=((void *)0)))
     {
       append_string(printer, "((");
       append_parse_node(printer, (node->initializer_type));
       append_string(printer, ") ");
     }
     append_balanced_construct_node(printer, to_balanced_construct_node((node->initializer_node)));
-    if (((node->initializer_type)!=NULL))
+    if (((node->initializer_type)!=((void *)0)))
     {
       append_string(printer, ")");
     }
   }
   else
-  if ((((node->tokens)!=NULL)&&(((node->tokens)->length)>0)))
+  if ((((node->tokens)!=((void *)0))&&(((node->tokens)->length)>0)))
   {
     for (
       uint64_t i = 0;
@@ -8462,7 +8593,7 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node){
 
 # 586 "c-file-printer.c"
 printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node){
-  if (((node->token)==NULL))
+  if (((node->token)==((void *)0)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -8602,7 +8733,7 @@ printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* n
   printer_indent(printer);
   append_string(printer, "for (\n");
   printer_increase_indent(printer);
-  if (((node->for_init)!=NULL))
+  if (((node->for_init)!=((void *)0)))
   {
     append_parse_node(printer, (node->for_init));
   }
@@ -8612,14 +8743,14 @@ printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* n
     append_string(printer, ";\n");
   }
   printer_indent(printer);
-  if (((node->for_test)!=NULL))
+  if (((node->for_test)!=((void *)0)))
   {
     append_parse_node(printer, (node->for_test));
   }
   append_string(printer, ";");
   printer_newline(printer);
   printer_indent(printer);
-  if (((node->for_increment)!=NULL))
+  if (((node->for_increment)!=((void *)0)))
   {
     append_parse_node(printer, (node->for_increment));
   }
@@ -8646,7 +8777,7 @@ printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* nod
 printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node){
   printer_indent(printer);
   append_string(printer, "return");
-  if (((node->expression)!=NULL))
+  if (((node->expression)!=((void *)0)))
   {
     append_string(printer, " ");
     append_parse_node(printer, (node->expression));
@@ -8679,7 +8810,7 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
     return printer;
   }
   append_string(printer, "(");
-  if (((node->left)!=NULL))
+  if (((node->left)!=((void *)0)))
   {
     append_parse_node(printer, (node->left));
   }
@@ -8688,7 +8819,7 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
   {
     append_string(printer, "(");
   }
-  if (((node->right)!=NULL))
+  if (((node->right)!=((void *)0)))
   {
     append_parse_node(printer, (node->right));
   }
@@ -8709,17 +8840,17 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
 # 851 "c-file-printer.c"
 printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node){
   append_string(printer, "(");
-  if (((node->condition)!=NULL))
+  if (((node->condition)!=((void *)0)))
   {
     append_parse_node(printer, (node->condition));
   }
   append_string(printer, " ? ");
-  if (((node->expr_if_true)!=NULL))
+  if (((node->expr_if_true)!=((void *)0)))
   {
     append_parse_node(printer, (node->expr_if_true));
   }
   append_string(printer, " : ");
-  if (((node->expr_if_false)!=NULL))
+  if (((node->expr_if_false)!=((void *)0)))
   {
     append_parse_node(printer, (node->expr_if_false));
   }
@@ -8754,7 +8885,7 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char*
   char* field_template = "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n" "        .next = ${previous_var_address},\n" "        .name = \"${element_name}\",\n" "        .value = ${element_name}\n" "    };\n";
   buffer_t* element_constructions = make_buffer(128);
   buffer_t* buf = make_buffer(128);
-  char* previous_var_address = "NULL";
+  char* previous_var_address = "((void*)0)";
   for (
     int i = 0;
     (i<node_list_length((node->elements)));
@@ -8782,15 +8913,15 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char*
 
 # 943 "c-file-printer.c"
 printer_t* append_line_directive(printer_t* printer, token_t* token){
-  if (((printer->symbol_table)==NULL))
+  if (((printer->symbol_table)==((void *)0)))
   {
     log_fatal("printer->symbol_table is not set.");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   file_t* file = symbol_table_token_to_file((printer->symbol_table), token);
-  if ((file!=NULL))
+  if ((file!=((void *)0)))
   {
-    buffer_printf((printer->buffer), "\n# %d \"%s\"\n", (token->line_number), ((file==NULL) ? "fixme.c" : (file->file_name)));
+    buffer_printf((printer->buffer), "\n# %d \"%s\"\n", (token->line_number), ((file==((void *)0)) ? "fixme.c" : (file->file_name)));
   }
   return printer;
 }
@@ -8828,7 +8959,7 @@ symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_
   {
     return (/*CAST*/(symbol_table_binding_t*) (result.ptr));
   }
-  return NULL;
+  return ((void *)0);
 }
 
 
@@ -8844,7 +8975,7 @@ parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char
     }
     return value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*));
   }
-  return NULL;
+  return ((void *)0);
 }
 
 
@@ -8979,7 +9110,7 @@ void split_structure_typedefs(symbol_table_t* symbol_table){
       struct_node_t* struct_node = to_struct_node(((node->type_node)->user_type));
       if ((!(struct_node->partial_definition)))
       {
-        if (((struct_node->name)==NULL))
+        if (((struct_node->name)==((void *)0)))
         {
           ((struct_node->name)=generate_struct_name_from_typedef_name((node->name)));
         }
@@ -9031,7 +9162,7 @@ void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs
     {
       char* type_name = token_to_string((type_node->type_name));
       symbol_table_binding_t* dependent_binding = symbol_table_map_get(typedefs, type_name);
-      if ((dependent_binding!=NULL))
+      if ((dependent_binding!=((void *)0)))
       {
         reorder_symbol_table_typedefs__process_binding(typedefs, dependent_binding, reordered_bindings);
       }
@@ -9066,7 +9197,7 @@ struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* bindin
       return structure_node;
     }
   }
-  return NULL;
+  return ((void *)0);
 }
 
 
@@ -9075,7 +9206,7 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
   if (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
   {
     log_debug("resolve_typename_to_structure_binding -- not looking through pointers " "%p", type_node);
-    return NULL;
+    return ((void *)0);
   }
   if (((type_node->type_node_kind)==TYPE_NODE_KIND_TYPE_EXPRESSION))
   {
@@ -9083,7 +9214,7 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
     if (is_struct_node(user_type))
     {
       struct_node_t* struct_node = to_struct_node(user_type);
-      if (((struct_node->name)!=NULL))
+      if (((struct_node->name)!=((void *)0)))
       {
         char* key_name = token_to_string((struct_node->name));
         symbol_table_binding_t* binding = symbol_table_map_get((symbol_table->structures), key_name);
@@ -9094,12 +9225,12 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
         return binding;
       }
     }
-    return NULL;
+    return ((void *)0);
   }
   char* key_string = token_to_string((type_node->type_name));
   log_debug("resolve_typename_to_structure_binding -- %d %s", (type_node->tag), key_string);
   symbol_table_binding_t* typedef_binding = symbol_table_map_get((symbol_table->typedefs), key_string);
-  if ((typedef_binding!=NULL))
+  if ((typedef_binding!=((void *)0)))
   {
     if ((((typedef_binding->definition_nodes)->length)!=1))
     {
@@ -9122,7 +9253,7 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
   {
     ((binding->visited)=true);
     struct_node_t* structure_node = get_full_structure_definition_node(binding);
-    if ((structure_node==NULL))
+    if ((structure_node==((void *)0)))
     {
       return;
     }
@@ -9134,10 +9265,10 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
     {
       field_node_t* field = to_field_node(node_list_get((structure_node->fields), i));
       type_node_t* type_node = (field->type);
-      if ((type_node!=NULL))
+      if ((type_node!=((void *)0)))
       {
         symbol_table_binding_t* field_type_binding = resolve_typename_to_structure_binding(symbol_table, type_node);
-        if (((field_type_binding!=NULL)&&(!(field_type_binding->visited))))
+        if (((field_type_binding!=((void *)0))&&(!(field_type_binding->visited))))
         {
           reorder_symbol_table_structures_process_binding(symbol_table, field_type_binding, reordered_bindings);
         }
@@ -9161,25 +9292,6 @@ void reorder_symbol_table_structures(symbol_table_t* symbol_table){
     reorder_symbol_table_structures_process_binding(symbol_table, binding, reordered_bindings);
   }
   (((symbol_table->structures)->ordered_bindings)=reordered_bindings);
-}
-
-
-# 315 "source-to-source.c"
-void convert_nullptr_to_null(value_array_t* tokens){
-  buffer_t* null_token = buffer_append_string(make_buffer(1), "NULL");
-  for (
-    int i = 0;
-    (i<(tokens->length));
-    (i++))
-  {
-    token_t* token = token_at(tokens, i);
-    if (token_matches(token, "nullptr"))
-    {
-      ((token->start)=0);
-      ((token->end)=(null_token->length));
-      ((token->buffer)=null_token);
-    }
-  }
 }
 
 
@@ -9326,7 +9438,7 @@ file_t* symbol_table_token_to_file(symbol_table_t* symbol_table, token_t* token)
       return file;
     }
   }
-  return NULL;
+  return ((void *)0);
 }
 
 
@@ -9378,7 +9490,7 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table){
 pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence){
   uint64_t saved_position = (pstate->position);
   token_t* token = pstate_peek(pstate, 0);
-  if ((token==NULL))
+  if ((token==((void *)0)))
   {
     return pstate_error(pstate, saved_position, PARSE_ERROR_EOF);
   }
@@ -9388,7 +9500,7 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence){
     log_debug("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
     return pstate_error(pstate, saved_position, PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL);
   }
-  if ((!pratt_handle_instruction(pstate, prefix_instruction, NULL)))
+  if ((!pratt_handle_instruction(pstate, prefix_instruction, ((void *)0))))
   {
     log_debug("(RETURNING ERROR) handle instruction\n", token_to_string(token));
     return pstate_propagate_error(pstate, saved_position);
@@ -9407,7 +9519,7 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence){
     }
     (left=pstate_get_result_node(pstate));
   }
-  return NULL;
+  return ((void *)0);
 }
 
 
@@ -9459,11 +9571,11 @@ while (0);
       }
       operator_node_t* result = malloc_operator_node();
       ((result->operator)=token);
-      if ((left!=NULL))
+      if ((left!=((void *)0)))
       {
         fatal_error(ERROR_ILLEGAL_STATE);
       }
-      ((result->left)=NULL);
+      ((result->left)=((void *)0));
       ((result->right)=pstate_get_result_node(pstate));
       return pstate_set_result_node(pstate, to_node(result));
     }
@@ -9474,7 +9586,7 @@ while (0);
       operator_node_t* result = malloc_operator_node();
       ((result->operator)=token);
       ((result->left)=left);
-      ((result->right)=NULL);
+      ((result->right)=((void *)0));
       return pstate_set_result_node(pstate, to_node(result));
     }
 while (0);
@@ -9916,7 +10028,7 @@ pstatus_t parse_if_statement(pstate_t* pstate){
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* if_true = pstate_get_result_node(pstate);
-  parse_node_t* if_false = NULL;
+  parse_node_t* if_false = ((void *)0);
   if (pstate_match_token_string(pstate, "else"))
   {
     pstate_advance(pstate);
@@ -9984,7 +10096,7 @@ pstatus_t parse_for_statement(pstate_t* pstate){
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* for_init = pstate_get_result_node(pstate);
-  parse_node_t* for_test = NULL;
+  parse_node_t* for_test = ((void *)0);
   if (parse_expression(pstate))
   {
     (for_test=pstate_get_result_node(pstate));
@@ -9993,7 +10105,7 @@ pstatus_t parse_for_statement(pstate_t* pstate){
   {
     return pstate_propagate_error(pstate, saved_position);
   }
-  parse_node_t* for_increment = NULL;
+  parse_node_t* for_increment = ((void *)0);
   if (parse_expression(pstate))
   {
     (for_increment=pstate_get_result_node(pstate));
@@ -10143,7 +10255,7 @@ break_statement_node_t* make_break_statement(token_t* break_keyword_token){
 
 # 476 "statement-parser.c"
 break_statement_node_t* to_break_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_BREAK_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_BREAK_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10162,7 +10274,7 @@ continue_statement_node_t* make_continue_statement(token_t* keyword_token){
 
 # 503 "statement-parser.c"
 continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CONTINUE_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CONTINUE_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10181,7 +10293,7 @@ label_statement_node_t* make_label_statement(token_t* label){
 
 # 530 "statement-parser.c"
 label_statement_node_t* to_label_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_LABEL_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_LABEL_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10200,7 +10312,7 @@ goto_statement_node_t* make_goto_statement(token_t* label){
 
 # 557 "statement-parser.c"
 goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_GOTO_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_GOTO_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10219,7 +10331,7 @@ empty_statement_node_t* make_empty_statement(token_t* semi_colon_token){
 
 # 584 "statement-parser.c"
 empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_EMPTY_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_EMPTY_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10239,7 +10351,7 @@ switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_n
 
 # 613 "statement-parser.c"
 switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_SWITCH_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_SWITCH_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10258,7 +10370,7 @@ case_label_node_t* make_case_label(parse_node_t* expression){
 
 # 640 "statement-parser.c"
 case_label_node_t* to_case_label_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_CASE_LABEL)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CASE_LABEL)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10277,7 +10389,7 @@ default_label_node_t* make_default_label(token_t* default_token){
 
 # 667 "statement-parser.c"
 default_label_node_t* to_default_label_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_DEFAULT_LABEL)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DEFAULT_LABEL)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10295,7 +10407,7 @@ block_node_t* make_block_node(){
 
 # 694 "statement-parser.c"
 block_node_t* to_block_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_BLOCK)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_BLOCK)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10317,7 +10429,7 @@ for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* f
 
 # 728 "statement-parser.c"
 for_statement_node_t* to_for_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_FOR_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FOR_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10338,7 +10450,7 @@ if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t*
 
 # 759 "statement-parser.c"
 if_statement_node_t* to_if_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_IF_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_IF_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10357,7 +10469,7 @@ expression_statement_node_t* make_expression_statement_node(parse_node_t* expres
 
 # 788 "statement-parser.c"
 expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_EXPRESSION_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_EXPRESSION_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10376,7 +10488,7 @@ return_statement_node_t* make_return_statement(parse_node_t* expression){
 
 # 815 "statement-parser.c"
 return_statement_node_t* to_return_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_RETURN_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_RETURN_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10396,7 +10508,7 @@ while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node
 
 # 844 "statement-parser.c"
 while_statement_node_t* to_while_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_WHILE_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_WHILE_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10416,7 +10528,7 @@ do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* conditi
 
 # 873 "statement-parser.c"
 do_statement_node_t* to_do_statement_node(parse_node_t* ptr){
-  if (((ptr==NULL)||((ptr->tag)!=PARSE_NODE_DO_STATEMENT)))
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DO_STATEMENT)))
   {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -10440,7 +10552,7 @@ pstatus_t parse_type_node(pstate_t* pstate){
   }
   canonical_type_result_t canonical_type_result = parse_canonical_type(pstate);
   token_t* type_name = (canonical_type_result.canonical_type);
-  if ((type_name!=NULL))
+  if ((type_name!=((void *)0)))
   {
     while (((canonical_type_result.consumed_tokens)>0))
     {
@@ -10645,7 +10757,7 @@ canonical_type_result_t parse_canonical_type(pstate_t* pstate){
 }
 
 
-# 321 "type-parser.c"
+# 323 "type-parser.c"
 pstatus_t parse_function_type(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* fn_t_token = pstate_peek(pstate, 0);
@@ -10673,7 +10785,7 @@ pstatus_t parse_function_type(pstate_t* pstate){
 }
 
 
-# 362 "type-parser.c"
+# 364 "type-parser.c"
 pstatus_t parse_function_type_argument(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, ",")))
@@ -10757,14 +10869,14 @@ pstatus_t parse_field_node(pstate_t* pstate){
   {
     pstate_ignore_error(pstate);
   }
-  value_array_t* suffixes = NULL;
+  value_array_t* suffixes = ((void *)0);
   while (pstate_match_token_string(pstate, "["))
   {
     if ((!parse_balanced_construct(pstate)))
     {
       return pstate_propagate_error(pstate, saved_position);
     }
-    if ((suffixes==NULL))
+    if ((suffixes==((void *)0)))
     {
       (suffixes=make_value_array(1));
     }
@@ -10885,7 +10997,7 @@ pstatus_t parse_enum_element_node(pstate_t* pstate){
     return pstate_propagate_error(pstate, saved_position);
   }
   token_t* name = pstate_get_result_token(pstate);
-  parse_node_t* value_expr = NULL;
+  parse_node_t* value_expr = ((void *)0);
   if (pstate_expect_token_string(pstate, "="))
   {
     if ((!pratt_parse_expression(pstate, 0)))
@@ -10925,10 +11037,10 @@ pstatus_t parse_initializer(pstate_t* pstate){
 # 70 "variable-definition-parser.c"
 pstatus_t parse_variable_definition_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
-  token_t* storage_class_specifier = NULL;
+  token_t* storage_class_specifier = ((void *)0);
   while ((pstate_expect_token_string(pstate, "static")||pstate_expect_token_string(pstate_ignore_error(pstate), "extern")))
   {
-    if ((storage_class_specifier!=NULL))
+    if ((storage_class_specifier!=((void *)0)))
     {
       return pstate_error(pstate, saved_position, PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);
     }
@@ -10954,7 +11066,7 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate){
     {
       return pstate_propagate_error(pstate, saved_position);
     }
-    if (((result->suffixes)==NULL))
+    if (((result->suffixes)==((void *)0)))
     {
       ((result->suffixes)=make_value_array(1));
     }
@@ -11169,7 +11281,7 @@ printer_t* printer_decrease_indent(printer_t* printer){
 }
 
 
-# 36 "main.c"
+# 37 "main.c"
 void do_print_tokens(value_array_t* tokens, char* message){
   if (FLAG_print_tokens_show_tokens)
   {
@@ -11188,7 +11300,7 @@ void do_print_tokens(value_array_t* tokens, char* message){
 }
 
 
-# 51 "main.c"
+# 52 "main.c"
 void print_tokens(void){
   log_info("print_tokens()");
   value_array_t* files = read_files(FLAG_files);
@@ -11208,7 +11320,6 @@ void print_tokens(void){
       continue;
     }
     value_array_t* tokens = (tokenizer_result.tokens);
-    convert_nullptr_to_null(tokens);
     if (FLAG_print_tokens_show_appended_tokens)
     {
       buffer_t* appended_tokens = make_buffer(1);
@@ -11247,7 +11358,7 @@ void print_tokens(void){
 }
 
 
-# 119 "main.c"
+# 118 "main.c"
 void configure_flags(void){
   flag_program_name("omni-c");
   flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
@@ -11260,9 +11371,10 @@ void configure_flags(void){
 }
 
 
-# 136 "main.c"
+# 135 "main.c"
 void configure_parse_expression(void){
   flag_command("parse-expression", (&FLAG_command));
+  flag_description("** UNIT TESTING **");
   flag_string("--expression", (&FLAG_expression));
   flag_boolean("--to-c", (&FLAG_to_c));
 }
@@ -11271,13 +11383,15 @@ void configure_parse_expression(void){
 # 142 "main.c"
 void configure_parse_statement(void){
   flag_command("parse-statement", (&FLAG_command));
+  flag_description("** UNIT TESTING **");
   flag_string("--statement", (&FLAG_statement));
 }
 
 
-# 147 "main.c"
+# 148 "main.c"
 void configure_print_tokens_command(void){
   flag_command("print-tokens", (&FLAG_command));
+  flag_description("** UNIT TESTING **");
   flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
   flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
   flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
@@ -11287,9 +11401,10 @@ void configure_print_tokens_command(void){
 }
 
 
-# 158 "main.c"
+# 160 "main.c"
 void configure_regular_commands(void){
   flag_command("generate-header-file", (&FLAG_command));
+  flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
   flag_string("--c-output-file", (&FLAG_c_output_file));
   flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
   flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
@@ -11297,6 +11412,7 @@ void configure_regular_commands(void){
   flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
   flag_file_args((&FLAG_files));
   flag_command("generate-library", (&FLAG_command));
+  flag_description("create a single C file 'library' of C99 code; most users will prefer " "'build'");
   flag_string("--c-output-file", (&FLAG_c_output_file));
   flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
   flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
@@ -11304,6 +11420,7 @@ void configure_regular_commands(void){
   flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
   flag_file_args((&FLAG_files));
   flag_command("build", (&FLAG_command));
+  flag_description("build an executable by generating the C code and invoking the C " "compiler");
   flag_string("--c-output-file", (&FLAG_c_output_file));
   flag_string("--binary-output-file", (&FLAG_binary_output_file));
   flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
@@ -11312,16 +11429,21 @@ void configure_regular_commands(void){
   flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
   flag_string("--c-compiler", (&FLAG_c_compiler));
   flag_file_args((&FLAG_files));
+  flag_command("archive", (&FLAG_command));
+  flag_description("create an archive of unprocessed source files");
+  flag_string("--archive-output-file", (&FLAG_archive_output_file));
+  flag_description("the target path of the output archive");
+  flag_file_args((&FLAG_files));
 }
 
 
-# 187 "main.c"
+# 204 "main.c"
 boolean_t is_inlined_function(function_node_t* node){
   return (token_matches((node->storage_class_specifier), "static")&&token_list_contains((node->function_specifiers), "inline"));
 }
 
 
-# 192 "main.c"
+# 209 "main.c"
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table){
   if (FLAG_dump_symbol_table)
   {
@@ -11336,7 +11458,7 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table){
 }
 
 
-# 209 "main.c"
+# 226 "main.c"
 char* include_node_to_string(cpp_include_node_t* node){
   buffer_t* buffer = make_buffer(32);
   printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
@@ -11346,7 +11468,7 @@ char* include_node_to_string(cpp_include_node_t* node){
 }
 
 
-# 223 "main.c"
+# 240 "main.c"
 void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment){
   boolean_t is_header_file = (!is_library);
   symbol_table_t* symbol_table = make_symbol_table();
@@ -11437,7 +11559,7 @@ void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overvie
   {
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->structures)->ordered_bindings), i, typeof(symbol_table_binding_t*));
     struct_node_t* struct_node = get_full_structure_definition_node(binding);
-    if ((struct_node==NULL))
+    if ((struct_node==((void *)0)))
     {
       (struct_node=value_array_get_ptr((binding->definition_nodes), 0, typeof(struct_node_t*)));
     }
@@ -11513,7 +11635,7 @@ void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overvie
         (j++))
       {
         function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), j).ptr)));
-        if (((!is_inlined_function(function_node))&&((function_node->body)!=NULL)))
+        if (((!is_inlined_function(function_node))&&((function_node->body)!=((void *)0))))
         {
           (append_newline_after_functions=true);
           if (false)
@@ -11534,7 +11656,7 @@ void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overvie
     buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
   }
   buffer_append_buffer(buffer, command_line_overview_comment);
-  if ((FLAG_c_output_file==NULL))
+  if ((FLAG_c_output_file==((void *)0)))
   {
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
   }
@@ -11546,7 +11668,7 @@ void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overvie
 }
 
 
-# 422 "main.c"
+# 439 "main.c"
 void add_generated_c_file_header(buffer_t* buffer){
   buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
   buffer_printf(buffer, "// This is a generated file, so you generally don't want to edit it!\n");
@@ -11554,9 +11676,9 @@ void add_generated_c_file_header(buffer_t* buffer){
 }
 
 
-# 432 "main.c"
+# 449 "main.c"
 void parse_expression_string_and_print_parse_tree(char* expression){
-  if ((expression==NULL))
+  if ((expression==((void *)0)))
   {
     log_fatal("Expression not specified!");
     fatal_error(ERROR_ILLEGAL_INPUT);
@@ -11599,7 +11721,7 @@ void parse_expression_string_and_print_parse_tree(char* expression){
 }
 
 
-# 474 "main.c"
+# 491 "main.c"
 void parse_statement_string_and_print_parse_tree(char* expression){
   tokenizer_result_t tokenizer_result = tokenize(buffer_append_string(make_buffer(1), expression));
   if ((tokenizer_result.tokenizer_error_code))
@@ -11632,7 +11754,7 @@ void parse_statement_string_and_print_parse_tree(char* expression){
 }
 
 
-# 527 "main.c"
+# 544 "main.c"
 buffer_t* git_hash_object(char* filename){
   value_array_t* argv = make_value_array(2);
   value_array_add(argv, str_to_value("git"));
@@ -11642,17 +11764,17 @@ buffer_t* git_hash_object(char* filename){
   sub_process_launch(sub_process);
   buffer_t* buffer = make_buffer(1);
   do  {
-    sub_process_read(sub_process, buffer, NULL);
+    sub_process_read(sub_process, buffer, ((void *)0));
     usleep(5);
   }
 while (is_sub_process_running(sub_process));
-  sub_process_read(sub_process, buffer, NULL);
+  sub_process_read(sub_process, buffer, ((void *)0));
   sub_process_wait(sub_process);
   return buffer;
 }
 
 
-# 555 "main.c"
+# 572 "main.c"
 buffer_t* command_line_args_to_buffer(int argc, char** argv){
   buffer_t* output = make_buffer((argc*5));
   buffer_printf(output, "// Full Compiler Command Line:\n//\n");
@@ -11683,7 +11805,7 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv){
 }
 
 
-# 584 "main.c"
+# 601 "main.c"
 value_array_t* c_compiler_command_line(char* input_file, char* output_file){
   if ((((string_equal("clang", FLAG_c_compiler)||string_equal("gcc", FLAG_c_compiler))||string_equal("tcc", FLAG_c_compiler))||string_equal("zig", FLAG_c_compiler)))
   {
@@ -11711,7 +11833,7 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file){
 }
 
 
-# 609 "main.c"
+# 626 "main.c"
 int invoke_c_compiler(char* input_file, char* output_file){
   value_array_t* argv = c_compiler_command_line(input_file, output_file);
   log_warn("Invoking C compiler with these arguments: %s", buffer_to_c_string(join_array_of_strings(argv, " ")));
@@ -11730,7 +11852,31 @@ while (is_sub_process_running(sub_process));
 }
 
 
-# 631 "main.c"
+# 648 "main.c"
+void generate_archive_file(void){
+  if ((FLAG_archive_output_file==((void *)0)))
+  {
+    log_fatal("Must specify the archive output file name");
+    exit((-1));
+  }
+  if (((FLAG_files==((void *)0))||((FLAG_files->length)==0)))
+  {
+    log_warn("No archive members specified.");
+    exit((-1));
+  }
+  FILE* out = fopen(FLAG_archive_output_file, "w");
+  for (
+    int i = 0;
+    (i<(FLAG_files->length));
+    (i++))
+  {
+    oarchive_append_header_and_file_contents(out, (value_array_get(FLAG_files, i).str));
+  }
+  fclose(out);
+}
+
+
+# 667 "main.c"
 int main(int argc, char** argv){
   configure_fatal_errors(((fatal_error_config_t) {
                                                  .catch_sigsegv = true,
@@ -11755,9 +11901,16 @@ int main(int argc, char** argv){
     }
     fprintf(stderr, "\n");
   }
-  if ((FLAG_command==NULL))
+  if ((FLAG_command==((void *)0)))
   {
     fatal_error(ERROR_BAD_COMMAND_LINE);
+  }
+  else
+  if (string_equal("archive", FLAG_command))
+  {
+    generate_archive_file();
+    log_info("Exiting normally.");
+    exit(0);
   }
   else
   if (string_equal("generate-header-file", FLAG_command))
@@ -11776,6 +11929,16 @@ int main(int argc, char** argv){
   else
   if (string_equal("build", FLAG_command))
   {
+    if (string_is_null_or_empty(FLAG_c_output_file))
+    {
+      log_fatal("Must supply --c-output-file");
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+    if (string_is_null_or_empty(FLAG_binary_output_file))
+    {
+      log_fatal("Must supply --binary-output-file");
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
     generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
     int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
     if ((status==0))
@@ -14091,6 +14254,7 @@ enum_metadata_t* type_node_kind_metadata(){
 //    lib/cdl-printer.c
 //    lib/sub-process.c
 //    lib/splitjoin.c
+//    lib/oarchive.c
 //    lib/test.c
 //    mode.c
 //    keywords.c
@@ -14135,12 +14299,12 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053 > lib/leb128.c
 // git cat-file -p 3c5dd5db0882383f07e78c584268392c1af4b604 > lib/fatal-error.c
 // git cat-file -p dfd7821b93a59d56306ce0efafb4f1deb16a35f9 > lib/value.c
-// git cat-file -p aa36f6385a3cef76e0d69e492f3bdb2f22bc57dd > lib/gc-allocate.c
+// git cat-file -p 370981574e9bb6b426bf03982b46d340a9d510bc > lib/gc-allocate.c
 // git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab > lib/uint64.c
-// git cat-file -p 958d3082cdffbd52b6bb56dbd591c533902112f4 > lib/string-util.c
+// git cat-file -p 86f366c60c46cbda83f28ac81cf7e62d78e3c9d6 > lib/string-util.c
 // git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37 > lib/logger.c
 // git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0 > lib/utf8-decoder.c
-// git cat-file -p 792fad23b9b7d9f2b2eb2728c0b0b928b1611e82 > lib/buffer.c
+// git cat-file -p aa6ee8f5be5115c1c6585ee454754a22542480e5 > lib/buffer.c
 // git cat-file -p 800182d499c344faba101baa94359c9c585a77a1 > lib/byte-stream.c
 // git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2 > lib/value-array.c
 // git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4 > lib/value-alist.c
@@ -14157,35 +14321,36 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 3d846c37fb156c312b278111e7b2fad26c2e03a2 > lib/cdl-printer.c
 // git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05 > lib/sub-process.c
 // git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d > lib/splitjoin.c
+// git cat-file -p fbc6df051ad9a1e3a0c09f1e2b07274607eefc28 > lib/oarchive.c
 // git cat-file -p 6d13af369d7152831ca19c4c8202aea995544067 > lib/test.c
 // git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
-// git cat-file -p 429d5f51b04668f5bd89b347ef1beb577491cd52 > keywords.c
+// git cat-file -p 6c0a741ef33f143d100f562fbb6624a0e4b0bb39 > keywords.c
 // git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
-// git cat-file -p 254dd1272f89c5a0757be2130477a1634150324b > file-reader.c
-// git cat-file -p 18d8db7f97490957c3377100f879efaaa0b03d7c > compiler-errors.c
-// git cat-file -p 470244d22f140656bdb0b91e477560ca2d9104b4 > lexer.c
-// git cat-file -p f06d191346d1e27ecadd9b61a2e2ad7be472705d > token-list.c
+// git cat-file -p 519bac76f7060874edf686e186bbd0127c492875 > file-reader.c
+// git cat-file -p 004af75f97ab6e1a5c9176e991a9f17f6e07d515 > compiler-errors.c
+// git cat-file -p 7188ecb3f4f5b2ddbb91624982c6d81868672f02 > lexer.c
+// git cat-file -p 0b1ed82677427f66828e3ccbad7c004541d0a0ca > token-list.c
 // git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
 // git cat-file -p 6c86f8d6c5d20f4fffae42fa6ac88b804e4d8f6e > parser.c
-// git cat-file -p 0b55fcac19e62809336c191ff4b1feeccf79f121 > pstate.c
-// git cat-file -p e89d2eaf5a00bb0fff8354c5d3ec4a684cf1786b > declaration-parser.c
-// git cat-file -p 9eb13062725ddd77e88cfd0102e76f45d00cb781 > node-list.c
-// git cat-file -p c952ba7aa0e925387df3af39a094a34b857604f0 > debug-printer.c
-// git cat-file -p b46b3a5e174d75f817cfae42024a7da4c46f7511 > c-file-printer.c
-// git cat-file -p 57602622ba4bbb8cb59d7c595e216644036a49bd > symbol-table.c
-// git cat-file -p 28e23703d22e9660efecb6ffce1e0d48320c1114 > source-to-source.c
+// git cat-file -p cd60d37211fe9a583784388dfe6254fb129cc08c > pstate.c
+// git cat-file -p 33f0b96b151a7506a48abca978bed1a25410fe61 > declaration-parser.c
+// git cat-file -p 67c4a0e6f2de51b5ed41c289ff9575d4a21a0c68 > node-list.c
+// git cat-file -p fd66d6ae20a88b0cccad5b19b09e4fa61c28792a > debug-printer.c
+// git cat-file -p e1a5d501ffeebcec6fca73eb8bd2a0c49539d250 > c-file-printer.c
+// git cat-file -p 47fe4a94a6ba151764cfb98f6d995a8c47fb3e01 > symbol-table.c
+// git cat-file -p b246b13119ee9f082fbf88b642b914b6d0b7fb7d > source-to-source.c
 // git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af > preprocessor.c
 // git cat-file -p 52af4fa58ea28535587766f2912d174b3856816f > header-file-extractor.c
-// git cat-file -p 913519428cb6d960a7af9beb766cfaac79e06546 > symbol-table-builder.c
+// git cat-file -p 7e7f49598c2d9701253f09009d7012618ade9339 > symbol-table-builder.c
 // git cat-file -p 1ef0ccd414c4831d299ebfe679272b61dcc98699 > srcgen.c
-// git cat-file -p f263f55f50cea1052ffa613e539b1033249a9dbb > pratt-parser.c
-// git cat-file -p 468303a3dbe5e25f045f1ffbefc3509eb2e7d462 > statement-parser.c
-// git cat-file -p 3dfa38a859552333bb6e961a76974c6d3a3f5c7d > type-parser.c
-// git cat-file -p ced1810a143a2f13942438bfcdedd8f2b2994eb9 > user-type-parser.c
-// git cat-file -p 84ca8b733bbe26047a4b1ef72bd73f2e0ed65f80 > variable-definition-parser.c
+// git cat-file -p 2c7444aaad7eb274e29ca6fa490305a17a88c862 > pratt-parser.c
+// git cat-file -p 17597f6785549c041809de46f2c0844d84d27898 > statement-parser.c
+// git cat-file -p 3f07bb1029d51a41d0a1e7b7ffe8095f7df1b518 > type-parser.c
+// git cat-file -p 9e037abaf89da4c6ea500ebf09b2bb3cd64a570a > user-type-parser.c
+// git cat-file -p 17bb7334f2306be9c30ef56bbd46456bf20824c9 > variable-definition-parser.c
 // git cat-file -p 0a60637302a1720474efbd538777232352d15a37 > literal-parser.c
-// git cat-file -p da5d06ce2e4ff926c65f532bfcfa6f106fbbc90b > balanced-construct-parser.c
+// git cat-file -p 1d763bad1a86fe024fae36db07e66a5c160393c9 > balanced-construct-parser.c
 // git cat-file -p a1246b1440b1757d6547a3b3f595d5bb0646849a > printer.c
 // git cat-file -p ea1a646a86f833872d5be645ae3403283baf459f > global-includes.c
-// git cat-file -p 7894049236245de66168f1fefb894120708ed110 > main.c
+// git cat-file -p 12d884cd8f4513d29f4b88012b637de8624689cc > main.c
 // git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
