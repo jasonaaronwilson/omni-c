@@ -71,15 +71,15 @@ int main(int argc, char** argv) {
 
   if (use_tree) {
     // clang-format off
-    string_tree_foreach(counts_tree, key, value, {
+    string_tree_foreach(counts_tree, key, value, block_expr({
 	fprintf(stdout, "%d:%s\n", value.u64 & 0xfffffff, key);
-      });
+	}));
     // clang-format on
   } else {
     // clang-format off
-    string_ht_foreach(counts, key, value, {
+    string_ht_foreach(counts, key, value, block_expr({
 	fprintf(stdout, "%d:%s\n", value.u64 & 0xfffffff, key);
-      });
+	}));
     // clang-format on
   }
 

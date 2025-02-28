@@ -4,7 +4,7 @@
 #
 # ======================================================================
 
-.PHONY: all clean format tags diff cfd how-big cf benchmark omni-c-stable omni-c self selfself lib
+.PHONY: all clean format tags diff cfd how-big cf benchmark omni-c-stable omni-c self selfself lib lib-examples
 
 # ----------------------------------------------------------------------
 # Aliases
@@ -150,3 +150,5 @@ cf: format clean
 benchmark:
 	/bin/bash -c 'time (make clean && make && make test)'
 
+lib-examples:
+	@$(MAKE) -C lib/lib/examples examples

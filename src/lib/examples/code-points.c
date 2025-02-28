@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
   // The main program.
   buffer_t* buffer = make_buffer(1);
   buffer = buffer_append_all(buffer, stdin);
-  uint8_t* str = (uint8_t*) buffer_to_c_string(buffer);
+  uint8_t* str = cast(uint8_t*, buffer_to_c_string(buffer));
   int offset = 0;
   while (offset < buffer_length(buffer)) {
     utf8_decode_result_t result = utf8_decode(&str[offset]);

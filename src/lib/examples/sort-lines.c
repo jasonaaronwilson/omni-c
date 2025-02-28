@@ -40,9 +40,9 @@ int main(int argc, char** argv) {
   }
 
   // clang-format off
-  string_tree_foreach(sorted, key, value_ignored, {
+  string_tree_foreach(sorted, key, value_ignored, block_expr({
       fprintf(stdout, "%s\n", key);
-    });
+      }));
   // clang-format on
 
   exit(0);

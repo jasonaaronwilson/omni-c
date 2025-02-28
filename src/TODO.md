@@ -2,6 +2,8 @@
 
 ## Cleanup & Build
 
+1. put git hashes into archives
+
 1. detect the same "source path" for a file and error out if they are
 the same.
 

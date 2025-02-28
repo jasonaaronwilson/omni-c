@@ -19,9 +19,9 @@
 #include <stdlib.h>
 
 int main(int argc, char** argv) {
-  configure_fatal_errors((fatal_error_config_t){
+  configure_fatal_errors(compound_literal(fatal_error_config_t, {
       .catch_sigsegv = true,
-  });
+      }));
 
   // Flag Parsing
 
