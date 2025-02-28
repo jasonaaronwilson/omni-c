@@ -4,7 +4,7 @@
 #
 # ======================================================================
 
-.PHONY: all clean format tags diff cfd how-big cf benchmark omni-c-stable omni-c self selfself
+.PHONY: all clean format tags diff cfd how-big cf benchmark omni-c-stable omni-c self selfself lib
 
 # ----------------------------------------------------------------------
 # Aliases
@@ -19,6 +19,8 @@ omni-c: ${BUILD_DIR}/bin/omni-c
 self: ${BUILD_DIR}/bin/self
 
 selfself: ${BUILD_DIR}/bin/selfself
+
+lib: ${BUILD_DIR}/bin/lib.oar
 
 # ----------------------------------------------------------------------
 # Variable Definitions
@@ -98,7 +100,10 @@ ${BUILD_DIR}/bin/omni-c-stable: omni-c-stable.c
 ${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/tools/embed-file.lua
 	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header embed/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
 
-${BUILD_DIR}/bin/omni-c: ${BUILD_DIR}/bin/omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF}
+${BUILD_DIR}/bin/lib.oar: ${C_ARMYKNIFE_SRC_C}
+	${STABLE_BINARY_PATH} archive ${C_ARMYKNIFE_SRC_C} --archive-output-file=${BUILD_DIR}/bin/lib.oar
+
+${BUILD_DIR}/bin/omni-c: ${BUILD_DIR}/bin/omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} lib
 	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/omni-c -std=gnu99 ${BUILD_DIR}/omni-c.c -lgc
 
