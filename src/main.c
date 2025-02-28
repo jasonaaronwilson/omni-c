@@ -28,8 +28,7 @@ boolean_t FLAG_generate_enum_convertors = true;
 char* FLAG_expression = nullptr;
 char* FLAG_statement = nullptr;
 boolean_t FLAG_dump_symbol_table = false;
-// TODO(jawilson): make this the default or even remove?
-boolean_t FLAG_use_statement_parser = false;
+boolean_t FLAG_use_statement_parser = true;
 boolean_t FLAG_to_c = false;
 boolean_t FLAG_omit_c_armyknife_include = false;
 char* FLAG_c_compiler = "clang";
