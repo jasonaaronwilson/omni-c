@@ -1,8 +1,3 @@
-#line 2 "value.c"
-
-#ifndef _VALUE_H_
-#define _VALUE_H_
-
 #include <stdint.h>
 
 /**
@@ -177,8 +172,6 @@ typedef fn_t(uint64_t, value_t value1) value_hash_fn;
 
 int cmp_string_values(value_t value1, value_t value2);
 uint64_t hash_string_value(value_t value1);
-
-#endif /* _VALUE_H_ */
 
 /**
  * @function cmp_string_values

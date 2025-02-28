@@ -1,4 +1,3 @@
-#line 2 "value-hashtable.c"
 /**
  * @file value-hashtable.c
  *

@@ -1,5 +1,3 @@
-#line 2 "compress.c"
-
 /**
  * @file compress.c
  *
@@ -59,9 +57,6 @@
  * 639][https://en.wikipedia.org/wiki/ISO_639]), images, etc.
  */
 
-#ifndef _COMPRESS_H_
-#define _COMPRESS_H_
-
 typedef enum {
   DATA_BLOCK_BYTE_LITERAL,
   DATA_BLOCK_BLOCK_LITERAL,
@@ -77,8 +72,6 @@ byte compress(byte_buffer_t* byte_source,
 uint64_t decompress(byte_source_t* byte_source, 
 		    byte_sink_t* byte_sink, 
 		    byte_source_t* dictionary_byte_source);
-
-#endif /* _COMPRESS_H_ */
 
 /**
  * @function compress

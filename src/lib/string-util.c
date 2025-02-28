@@ -1,4 +1,3 @@
-#line 2 "string-util.c"
 /**
  * @file string-util.c
  *

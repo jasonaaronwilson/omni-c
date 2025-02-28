@@ -1,4 +1,3 @@
-#line 2 "compound-literal.c"
 /**
  * @file compound-literal.c
  *
@@ -32,9 +31,4 @@
 // This section is extraced to compound-literal.h
 // ======================================================================
 
-#ifndef _COMPOUND_LITERAL_H_
-#define _COMPOUND_LITERAL_H_
-
 #define compound_literal(type, ...) ((type) __VA_ARGS__)
-
-#endif /* _COMPOUND_LITERAL_H_ */

@@ -1,5 +1,3 @@
-#line 2 "cdl-printer.c"
-
 /**
  * @file cdl-printer.c
  *
@@ -31,31 +29,11 @@
  * "comma-less data language", take your pick!
  */
 
-#ifndef _CDL_PRINTER_H_
-#define _CDL_PRINTER_H_
-
 typedef struct {
   buffer_t* buffer;
   char* key_token;
   int indention_level;
 } cdl_printer_t;
-
-cdl_printer_t* make_cdl_printer(buffer_t* buffer);
-
-void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
-void cdl_string(cdl_printer_t* printer, char* string);
-void cdl_int64(cdl_printer_t* printer, int64_t number);
-void cdl_uint64(cdl_printer_t* printer, uint64_t number);
-void cdl_double(cdl_printer_t* printer, double number);
-
-void cdl_start_array(cdl_printer_t* printer);
-void cdl_end_array(cdl_printer_t* printer);
-
-void cdl_start_table(cdl_printer_t* printer);
-void cdl_key(cdl_printer_t* printer, char* key);
-void cdl_end_table(cdl_printer_t* printer);
-
-#endif /* _CDL_PRINTER_H_ */
 
 cdl_printer_t* make_cdl_printer(buffer_t* buffer) {
   cdl_printer_t* result = malloc_struct(cdl_printer_t);
