@@ -5,6 +5,10 @@ This doesn't work. Maybe it doesn't matter since we now have typedef X = Y;
 struct a_t {
   int foo;
 };
+
+If we did want to make it work, then we could rewrite in the compiler
+to form c.
+
 */
 
 typedef struct b_S {
