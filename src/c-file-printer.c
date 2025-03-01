@@ -817,6 +817,7 @@ printer_t* append_do_statement_node(printer_t* printer,
   printer_indent(printer);
   append_string(printer, "do");
   append_parse_node(printer, node->body);
+  printer_indent(printer);
   append_string(printer, "while (");
   append_parse_node(printer, node->condition);
   append_string(printer, ");\n");
