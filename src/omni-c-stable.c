@@ -131,8 +131,6 @@ typedef struct {
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-#define _COMPOUND_LITERAL_H_
-
 #define compound_literal(type, ...) ((type) __VA_ARGS__)
 
 #define _FN_H_
@@ -148,8 +146,6 @@ typedef struct {
 #define _FATAL_ERROR_H_
 
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-#define _VALUE_H_
 
 #define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
 
@@ -574,8 +570,6 @@ typedef struct {
 
 #define _RANDOM_H_
 
-#define _CDL_PRINTER_H_
-
 #define _SUB_PROCESS_H_
 
 #define _SPLITJOIN_H_
@@ -894,6 +888,8 @@ typedef enum {
   PARSE_NODE_BALANCED_CONSTRUCT,
   PARSE_NODE_CALL,
   PARSE_NODE_CONDITIONAL,
+  PARSE_NODE_COMPOUND_LITERAL,
+  PARSE_NODE_DESIGNATED_INITIALIZER,
 } parse_node_type_t;
 
 typedef struct parse_node_S parse_node_t;
@@ -1049,7 +1045,11 @@ typedef struct enum_element_S enum_element_t;
 
 typedef struct variable_definition_node_S variable_definition_node_t;
 
-typedef struct literal_node_S literal_node_t;
+typedef struct literal_node_t__generated_S literal_node_t;
+
+typedef struct compound_literal_node_t__generated_S compound_literal_node_t;
+
+typedef struct designated_initializer_node_t__generated_S designated_initializer_node_t;
 
 typedef struct balanced_construct_node_S balanced_construct_node_t;
 
@@ -1430,6 +1430,7 @@ struct conditional_node_t__generated_S {
 
 struct if_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* if_condition;
   parse_node_t* if_true;
   parse_node_t* if_else;
@@ -1437,6 +1438,7 @@ struct if_statement_node_t__generated_S {
 
 struct for_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* for_init;
   parse_node_t* for_test;
   parse_node_t* for_increment;
@@ -1445,12 +1447,14 @@ struct for_statement_node_t__generated_S {
 
 struct do_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* body;
   parse_node_t* condition;
 };
 
 struct while_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* condition;
   parse_node_t* body;
 };
@@ -1462,22 +1466,26 @@ struct empty_statement_node_t__generated_S {
 
 struct block_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   node_list_t statements;
 };
 
 struct return_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
 };
 
 struct switch_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
   parse_node_t* block;
 };
 
 struct case_label_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
 };
 
@@ -1488,6 +1496,7 @@ struct default_label_node_t__generated_S {
 
 struct goto_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   token_t* label;
 };
 
@@ -1508,11 +1517,13 @@ struct label_statement_node_t__generated_S {
 
 struct variable_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
 };
 
 struct expression_statement_node_t__generated_S {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
 };
 
@@ -1575,12 +1586,25 @@ struct variable_definition_node_S {
   value_array_t* suffixes;
 };
 
-struct literal_node_S {
+struct literal_node_t__generated_S {
   parse_node_type_t tag;
   token_t* token;
   value_array_t* tokens;
   parse_node_t* initializer_node;
   parse_node_t* initializer_type;
+};
+
+struct compound_literal_node_t__generated_S {
+  parse_node_type_t tag;
+  parse_node_t* type_node;
+  node_list_t initializers;
+};
+
+struct designated_initializer_node_t__generated_S {
+  parse_node_type_t tag;
+  parse_node_t* index_expression;
+  token_t* member_name;
+  parse_node_t* value;
 };
 
 struct balanced_construct_node_S {
@@ -1818,7 +1842,7 @@ char* FLAG_statement = ((void *)0);
 
 boolean_t FLAG_dump_symbol_table = false;
 
-boolean_t FLAG_use_statement_parser = false;
+boolean_t FLAG_use_statement_parser = true;
 
 boolean_t FLAG_to_c = false;
 
@@ -1992,7 +2016,10 @@ extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum
 random_state_t* random_state(void);
 uint64_t random_next(random_state_t* state);
 cdl_printer_t* make_cdl_printer(buffer_t* buffer);
-void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
+void cdl_indent(cdl_printer_t* printer);
+boolean_t is_safe_string(char* string);
+void cdl_output_token(cdl_printer_t* printer, char* string);
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean);
 void cdl_string(cdl_printer_t* printer, char* string);
 void cdl_int64(cdl_printer_t* printer, int64_t number);
 void cdl_uint64(cdl_printer_t* printer, uint64_t number);
@@ -2002,9 +2029,6 @@ void cdl_end_array(cdl_printer_t* printer);
 void cdl_start_table(cdl_printer_t* printer);
 void cdl_key(cdl_printer_t* printer, char* key);
 void cdl_end_table(cdl_printer_t* printer);
-void cdl_indent(cdl_printer_t* printer);
-boolean_t is_safe_string(char* string);
-void cdl_output_token(cdl_printer_t* printer, char* string);
 sub_process_t* make_sub_process(value_array_t* argv);
 boolean_t sub_process_launch(sub_process_t* sub_process);
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
@@ -2050,6 +2074,7 @@ boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position);
 token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position);
 tokenizer_result_t tokenize(buffer_t* buffer);
 value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options_t xform_options);
+boolean_t pstate_is_eof(pstate_t* pstate);
 pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code);
 pstate_t* pstate_ignore_error(pstate_t* pstate);
 pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position);
@@ -2203,29 +2228,29 @@ continue_statement_node_t* make_continue_statement(token_t* keyword_token);
 continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr);
 label_statement_node_t* make_label_statement(token_t* label);
 label_statement_node_t* to_label_statement_node(parse_node_t* ptr);
-goto_statement_node_t* make_goto_statement(token_t* label);
+goto_statement_node_t* make_goto_statement(token_t* first_token, token_t* label);
 goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr);
 empty_statement_node_t* make_empty_statement(token_t* semi_colon_token);
 empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr);
-switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_node_t* block);
+switch_statement_node_t* make_switch_statement(token_t* first_token, parse_node_t* expression, parse_node_t* block);
 switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr);
-case_label_node_t* make_case_label(parse_node_t* expression);
+case_label_node_t* make_case_label(token_t* first_token, parse_node_t* expression);
 case_label_node_t* to_case_label_node(parse_node_t* ptr);
 default_label_node_t* make_default_label(token_t* default_token);
 default_label_node_t* to_default_label_node(parse_node_t* ptr);
-block_node_t* make_block_node();
+block_node_t* make_block_node(token_t* first_token);
 block_node_t* to_block_node(parse_node_t* ptr);
-for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body);
+for_statement_node_t* make_for_statement(token_t* first_token, parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body);
 for_statement_node_t* to_for_statement_node(parse_node_t* ptr);
-if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else);
+if_statement_node_t* make_if_statement(token_t* first_token, parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else);
 if_statement_node_t* to_if_statement_node(parse_node_t* ptr);
-expression_statement_node_t* make_expression_statement_node(parse_node_t* expression);
+expression_statement_node_t* make_expression_statement_node(token_t* first_token, parse_node_t* expression);
 expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr);
-return_statement_node_t* make_return_statement(parse_node_t* expression);
+return_statement_node_t* make_return_statement(token_t* first_token, parse_node_t* expression);
 return_statement_node_t* to_return_statement_node(parse_node_t* ptr);
-while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node_t* body);
+while_statement_node_t* make_while_statement(token_t* first_token, parse_node_t* condition, parse_node_t* body);
 while_statement_node_t* to_while_statement_node(parse_node_t* ptr);
-do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* condition);
+do_statement_node_t* make_do_statement(token_t* first_token, parse_node_t* body, parse_node_t* condition);
 do_statement_node_t* to_do_statement_node(parse_node_t* ptr);
 pstatus_t parse_type_node(pstate_t* pstate);
 canonical_type_result_t make_type_token_result(char* str, int consumed_tokens);
@@ -2243,6 +2268,8 @@ pstatus_t parse_expression(pstate_t* pstate);
 pstatus_t parse_initializer(pstate_t* pstate);
 pstatus_t parse_variable_definition_node(pstate_t* pstate);
 pstatus_t parse_literal_node(pstate_t* pstate);
+pstatus_t parse_compound_literal(pstate_t* pstate);
+pstatus_t parse_designated_initializer_node(pstate_t* pstate);
 pstatus_t parse_balanced_construct(pstate_t* pstate);
 printer_t* make_printer(buffer_t* buffer, symbol_table_t* symbol_table, int indent_width);
 printer_t* append_string(printer_t* printer, char* string);
@@ -2328,25 +2355,25 @@ enum_metadata_t* type_node_kind_metadata();
 // ========== inlined functions ==========
 
 
-# 144 "lib/value.c"
+# 139 "lib/value.c"
 static inline boolean_t is_ok(value_result_t value){
   return ((value.nf_error)==NF_OK);
 }
 
 
-# 154 "lib/value.c"
+# 149 "lib/value.c"
 static inline boolean_t is_not_ok(value_result_t value){
   return ((value.nf_error)!=NF_OK);
 }
 
 
-# 206 "lib/string-util.c"
+# 205 "lib/string-util.c"
 static inline boolean_t is_hex_digit(char ch){
   return (((ch>='0')&&(ch<='9'))||((ch>='a')&&(ch<='f')));
 }
 
 
-# 210 "lib/string-util.c"
+# 209 "lib/string-util.c"
 static inline uint64_t hex_digit_to_value(char ch){
   if (((ch>='0')&&(ch<='9')))
   {
@@ -2359,7 +2386,7 @@ static inline uint64_t hex_digit_to_value(char ch){
 }
 
 
-# 488 "lib/string-util.c"
+# 487 "lib/string-util.c"
 static inline uint64_t mix(uint64_t h){
   (h^=(h>>23));
   (h*=0x2127599bf4325c37ULL);
@@ -2398,7 +2425,7 @@ __attribute__((warn_unused_result)) static inline uint64_t alist_length(string_a
 }
 
 
-# 71 "lib/value-hashtable.c"
+# 70 "lib/value-hashtable.c"
 static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
   return (ht->n_entries);
 }
@@ -2582,7 +2609,7 @@ static inline boolean_t token_list_contains(token_list_t token_list, char* token
 }
 
 
-# 102 "parser.c"
+# 104 "parser.c"
 static inline parse_node_t* to_node(void* ptr){
   return (/*CAST*/(parse_node_t*) ptr);
 }
@@ -3016,10 +3043,26 @@ static inline variable_definition_node_t* malloc_variable_definition_node(void){
 }
 
 
-# 19 "literal-parser.c"
+# 37 "literal-parser.c"
 static inline literal_node_t* malloc_literal_node(void){
   literal_node_t* result = malloc_struct(literal_node_t);
   ((result->tag)=PARSE_NODE_LITERAL);
+  return result;
+}
+
+
+# 43 "literal-parser.c"
+static inline compound_literal_node_t* malloc_compound_literal_node(void){
+  compound_literal_node_t* result = malloc_struct(compound_literal_node_t);
+  ((result->tag)=PARSE_NODE_COMPOUND_LITERAL);
+  return result;
+}
+
+
+# 50 "literal-parser.c"
+static inline designated_initializer_node_t* malloc_designated_initializer_node(void){
+  designated_initializer_node_t* result = malloc_struct(designated_initializer_node_t);
+  ((result->tag)=PARSE_NODE_DESIGNATED_INITIALIZER);
   return result;
 }
 
@@ -3134,7 +3177,7 @@ while ((Byte>=128));
 }
 
 
-# 120 "lib/fatal-error.c"
+# 119 "lib/fatal-error.c"
 _Noreturn void fatal_error_impl(char* file, int line, int error_code){
   print_fatal_error_banner();
   print_backtrace();
@@ -3161,7 +3204,7 @@ _Noreturn void fatal_error_impl(char* file, int line, int error_code){
 }
 
 
-# 164 "lib/fatal-error.c"
+# 163 "lib/fatal-error.c"
 const char* fatal_error_code_to_string(int error_code){
   switch (error_code)
   {
@@ -3199,7 +3242,7 @@ const char* fatal_error_code_to_string(int error_code){
 }
 
 
-# 92 "lib/fatal-error.c"
+# 91 "lib/fatal-error.c"
 void configure_fatal_errors(fatal_error_config_t config){
   (fatal_error_config=config);
   if ((config.catch_sigsegv))
@@ -3209,19 +3252,19 @@ void configure_fatal_errors(fatal_error_config_t config){
 }
 
 
-# 88 "lib/fatal-error.c"
+# 87 "lib/fatal-error.c"
 void segmentation_fault_handler(int signal_number){
   fatal_error(ERROR_SIGSEGV);
 }
 
 
-# 143 "lib/fatal-error.c"
+# 142 "lib/fatal-error.c"
 void print_fatal_error_banner(){
   fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
 }
 
 
-# 149 "lib/fatal-error.c"
+# 148 "lib/fatal-error.c"
 void print_backtrace(){
   do  {
     void* array[10];
@@ -3239,7 +3282,7 @@ while (0);
 }
 
 
-# 200 "lib/fatal-error.c"
+# 199 "lib/fatal-error.c"
 void print_error_code_name(int error_code){
   fprintf(stderr, " ");
   fprintf(stderr, "*** ");
@@ -3248,7 +3291,7 @@ void print_error_code_name(int error_code){
 }
 
 
-# 103 "lib/fatal-error.c"
+# 102 "lib/fatal-error.c"
 char* get_command_line(){
   buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
   buffer_replace_matching_byte(buffer, 0, ' ');
@@ -3256,7 +3299,7 @@ char* get_command_line(){
 }
 
 
-# 110 "lib/fatal-error.c"
+# 109 "lib/fatal-error.c"
 char* get_program_path(){
   char buf[4096];
   int n = readlink("/proc/self/exe", buf, (sizeof(buf)));
@@ -3271,13 +3314,13 @@ char* get_program_path(){
 }
 
 
-# 189 "lib/value.c"
+# 182 "lib/value.c"
 int cmp_string_values(value_t value1, value_t value2){
   return strcmp((value1.str), (value2.str));
 }
 
 
-# 198 "lib/value.c"
+# 191 "lib/value.c"
 uint64_t hash_string_value(value_t value1){
   return string_hash((value1.str));
 }
@@ -3350,13 +3393,13 @@ int uint64_highest_bit_set(uint64_t n){
 }
 
 
-# 53 "lib/string-util.c"
+# 52 "lib/string-util.c"
 int string_is_null_or_empty(const char* str){
   return ((str==((void *)0))||(strlen(str)==0));
 }
 
 
-# 62 "lib/string-util.c"
+# 61 "lib/string-util.c"
 int string_equal(const char* str1, const char* str2){
   if (string_is_null_or_empty(str1))
   {
@@ -3366,13 +3409,13 @@ int string_equal(const char* str1, const char* str2){
 }
 
 
-# 74 "lib/string-util.c"
+# 73 "lib/string-util.c"
 int string_starts_with(const char* str1, const char* str2){
   return (strncmp(str1, str2, strlen(str2))==0);
 }
 
 
-# 83 "lib/string-util.c"
+# 82 "lib/string-util.c"
 int string_ends_with(const char* str1, const char* str2){
   size_t len1 = strlen(str1);
   size_t len2 = strlen(str2);
@@ -3384,13 +3427,13 @@ int string_ends_with(const char* str1, const char* str2){
 }
 
 
-# 99 "lib/string-util.c"
+# 98 "lib/string-util.c"
 boolean_t string_contains_char(const char* str, char ch){
   return (string_index_of_char(str, ch)>=0);
 }
 
 
-# 113 "lib/string-util.c"
+# 112 "lib/string-util.c"
 int string_index_of_char(const char* str, char ch){
   if (string_is_null_or_empty(str))
   {
@@ -3411,7 +3454,7 @@ int string_index_of_char(const char* str, char ch){
 }
 
 
-# 311 "lib/string-util.c"
+# 310 "lib/string-util.c"
 char* uint64_to_string(uint64_t number){
   char buffer[32];
   sprintf(buffer, "%lu", number);
@@ -3419,13 +3462,13 @@ char* uint64_to_string(uint64_t number){
 }
 
 
-# 132 "lib/string-util.c"
+# 131 "lib/string-util.c"
 uint64_t string_hash(const char* str){
   return fasthash64(str, strlen(str), 0);
 }
 
 
-# 141 "lib/string-util.c"
+# 140 "lib/string-util.c"
 char* string_substring(const char* str, int start, int end){
   uint64_t len = strlen(str);
   if ((((start>=len)||(start>=end))||(end<start)))
@@ -3446,7 +3489,7 @@ char* string_substring(const char* str, int start, int end){
 }
 
 
-# 262 "lib/string-util.c"
+# 261 "lib/string-util.c"
 value_result_t string_parse_uint64(const char* string){
   if (string_starts_with(string, "0x"))
   {
@@ -3464,7 +3507,7 @@ value_result_t string_parse_uint64(const char* string){
 }
 
 
-# 155 "lib/string-util.c"
+# 154 "lib/string-util.c"
 value_result_t string_parse_uint64_dec(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
@@ -3489,7 +3532,7 @@ value_result_t string_parse_uint64_dec(const char* string){
 }
 
 
-# 223 "lib/string-util.c"
+# 222 "lib/string-util.c"
 value_result_t string_parse_uint64_hex(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
@@ -3514,7 +3557,7 @@ value_result_t string_parse_uint64_hex(const char* string){
 }
 
 
-# 183 "lib/string-util.c"
+# 182 "lib/string-util.c"
 value_result_t string_parse_uint64_bin(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
@@ -3539,7 +3582,7 @@ value_result_t string_parse_uint64_bin(const char* string){
 }
 
 
-# 278 "lib/string-util.c"
+# 277 "lib/string-util.c"
 char* string_duplicate(const char* src){
   if ((src==NULL))
   {
@@ -3552,7 +3595,7 @@ char* string_duplicate(const char* src){
 }
 
 
-# 295 "lib/string-util.c"
+# 294 "lib/string-util.c"
 char* string_append(const char* a, const char* b){
   if (((a==NULL)||(b==NULL)))
   {
@@ -3566,7 +3609,7 @@ char* string_append(const char* a, const char* b){
 }
 
 
-# 323 "lib/string-util.c"
+# 322 "lib/string-util.c"
 char* string_left_pad(const char* str, int n, char ch){
   if ((n<0))
   {
@@ -3590,7 +3633,7 @@ char* string_left_pad(const char* str, int n, char ch){
 }
 
 
-# 357 "lib/string-util.c"
+# 356 "lib/string-util.c"
 char* string_right_pad(const char* str, int n, char ch){
   if ((n<0))
   {
@@ -3614,7 +3657,7 @@ char* string_right_pad(const char* str, int n, char ch){
 }
 
 
-# 429 "lib/string-util.c"
+# 428 "lib/string-util.c"
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...){
   char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
@@ -3647,7 +3690,7 @@ while (0);
 }
 
 
-# 395 "lib/string-util.c"
+# 394 "lib/string-util.c"
 char* string_truncate(char* str, int limit, char* at_limit_suffix){
   buffer_t* buffer = make_buffer(limit);
   for (
@@ -3674,7 +3717,7 @@ char* string_truncate(char* str, int limit, char* at_limit_suffix){
 }
 
 
-# 497 "lib/string-util.c"
+# 496 "lib/string-util.c"
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed){
   const uint64_t m = 0x880355f21e6d1965ULL;
   const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
@@ -4572,7 +4615,7 @@ __attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_ali
 }
 
 
-# 103 "lib/value-hashtable.c"
+# 102 "lib/value-hashtable.c"
 value_hashtable_t* make_value_hashtable(uint64_t n_buckets){
   if ((n_buckets<2))
   {
@@ -4585,7 +4628,7 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets){
 }
 
 
-# 120 "lib/value-hashtable.c"
+# 119 "lib/value-hashtable.c"
 value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value){
   uint64_t hashcode = hash_fn(key);
   int bucket = (hashcode%(ht->n_buckets));
@@ -4606,7 +4649,7 @@ value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
 }
 
 
-# 149 "lib/value-hashtable.c"
+# 148 "lib/value-hashtable.c"
 value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
   uint64_t hashcode = hash_fn(key);
   int bucket = (hashcode%(ht->n_buckets));
@@ -4623,7 +4666,7 @@ value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
 }
 
 
-# 169 "lib/value-hashtable.c"
+# 168 "lib/value-hashtable.c"
 value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
   uint64_t hashcode = hash_fn(key);
   int bucket = (hashcode%(ht->n_buckets));
@@ -4632,7 +4675,7 @@ value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value
 }
 
 
-# 191 "lib/value-hashtable.c"
+# 190 "lib/value-hashtable.c"
 void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn){
   uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
   value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
@@ -5627,19 +5670,19 @@ extern void term_echo_restore(struct termios oldt){
 }
 
 
-# 34 "lib/tokenizer.c"
+# 33 "lib/tokenizer.c"
 value_array_t* string_tokenize(const char* str, const char* delimiters){
   return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
 }
 
 
-# 48 "lib/tokenizer.c"
+# 47 "lib/tokenizer.c"
 value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters){
   return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
 }
 
 
-# 61 "lib/tokenizer.c"
+# 60 "lib/tokenizer.c"
 value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters){
   value_array_t* result = make_value_array(1);
   char token_data[1024];
@@ -5673,7 +5716,7 @@ value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* 
 }
 
 
-# 87 "lib/tokenizer.c"
+# 86 "lib/tokenizer.c"
 void add_duplicate(value_array_t* token_array, const char* data){
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
@@ -5728,7 +5771,7 @@ uint64_t random_next(random_state_t* state){
 }
 
 
-# 60 "lib/cdl-printer.c"
+# 38 "lib/cdl-printer.c"
 cdl_printer_t* make_cdl_printer(buffer_t* buffer){
   cdl_printer_t* result = malloc_struct(cdl_printer_t);
   ((result->buffer)=buffer);
@@ -5736,84 +5779,13 @@ cdl_printer_t* make_cdl_printer(buffer_t* buffer){
 }
 
 
-# 113 "lib/cdl-printer.c"
-void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
-  cdl_output_token(printer, (boolean ? "true" : "false"));
-}
-
-
-# 117 "lib/cdl-printer.c"
-void cdl_string(cdl_printer_t* printer, char* string){
-  if ((!is_safe_string(string)))
-  {
-    cdl_output_token(printer, string_printf("\"%s\"", string));
-  }
-  else
-  {
-    cdl_output_token(printer, string);
-  }
-}
-
-
-# 125 "lib/cdl-printer.c"
-void cdl_int64(cdl_printer_t* printer, int64_t number){
-  cdl_output_token(printer, string_printf("%ld", number));
-}
-
-
-# 129 "lib/cdl-printer.c"
-void cdl_uint64(cdl_printer_t* printer, uint64_t number){
-  cdl_output_token(printer, uint64_to_string(number));
-}
-
-
-# 133 "lib/cdl-printer.c"
-void cdl_double(cdl_printer_t* printer, double number){
-  cdl_output_token(printer, string_printf("%lf", number));
-}
-
-
-# 137 "lib/cdl-printer.c"
-void cdl_start_array(cdl_printer_t* printer){
-  cdl_output_token(printer, "[");
-  ((printer->indention_level)+=1);
-}
-
-
-# 142 "lib/cdl-printer.c"
-void cdl_end_array(cdl_printer_t* printer){
-  ((printer->indention_level)-=1);
-  cdl_output_token(printer, "]");
-}
-
-
-# 147 "lib/cdl-printer.c"
-void cdl_start_table(cdl_printer_t* printer){
-  cdl_output_token(printer, "{");
-  ((printer->indention_level)+=1);
-}
-
-
-# 152 "lib/cdl-printer.c"
-void cdl_key(cdl_printer_t* printer, char* key){
-  ((printer->key_token)=key);
-}
-
-
-# 154 "lib/cdl-printer.c"
-void cdl_end_table(cdl_printer_t* printer){
-  ((printer->indention_level)-=1);
-  cdl_output_token(printer, "}");
-}
-
-
-# 66 "lib/cdl-printer.c"
+# 44 "lib/cdl-printer.c"
 void cdl_indent(cdl_printer_t* printer){
   buffer_append_repeated_byte((printer->buffer), ' ', (4*(printer->indention_level)));
 }
 
 
-# 71 "lib/cdl-printer.c"
+# 49 "lib/cdl-printer.c"
 boolean_t is_safe_string(char* string){
   buffer_t* buffer = buffer_from_string(string);
   for (
@@ -5854,7 +5826,7 @@ boolean_t is_safe_string(char* string){
 }
 
 
-# 103 "lib/cdl-printer.c"
+# 81 "lib/cdl-printer.c"
 void cdl_output_token(cdl_printer_t* printer, char* string){
   cdl_indent(printer);
   if (((printer->key_token)!=NULL))
@@ -5866,6 +5838,77 @@ void cdl_output_token(cdl_printer_t* printer, char* string){
   {
     buffer_printf((printer->buffer), "%s\n", string);
   }
+}
+
+
+# 91 "lib/cdl-printer.c"
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
+  cdl_output_token(printer, (boolean ? "true" : "false"));
+}
+
+
+# 95 "lib/cdl-printer.c"
+void cdl_string(cdl_printer_t* printer, char* string){
+  if ((!is_safe_string(string)))
+  {
+    cdl_output_token(printer, string_printf("\"%s\"", string));
+  }
+  else
+  {
+    cdl_output_token(printer, string);
+  }
+}
+
+
+# 103 "lib/cdl-printer.c"
+void cdl_int64(cdl_printer_t* printer, int64_t number){
+  cdl_output_token(printer, string_printf("%ld", number));
+}
+
+
+# 107 "lib/cdl-printer.c"
+void cdl_uint64(cdl_printer_t* printer, uint64_t number){
+  cdl_output_token(printer, uint64_to_string(number));
+}
+
+
+# 111 "lib/cdl-printer.c"
+void cdl_double(cdl_printer_t* printer, double number){
+  cdl_output_token(printer, string_printf("%lf", number));
+}
+
+
+# 115 "lib/cdl-printer.c"
+void cdl_start_array(cdl_printer_t* printer){
+  cdl_output_token(printer, "[");
+  ((printer->indention_level)+=1);
+}
+
+
+# 120 "lib/cdl-printer.c"
+void cdl_end_array(cdl_printer_t* printer){
+  ((printer->indention_level)-=1);
+  cdl_output_token(printer, "]");
+}
+
+
+# 125 "lib/cdl-printer.c"
+void cdl_start_table(cdl_printer_t* printer){
+  cdl_output_token(printer, "{");
+  ((printer->indention_level)+=1);
+}
+
+
+# 130 "lib/cdl-printer.c"
+void cdl_key(cdl_printer_t* printer, char* key){
+  ((printer->key_token)=key);
+}
+
+
+# 132 "lib/cdl-printer.c"
+void cdl_end_table(cdl_printer_t* printer){
+  ((printer->indention_level)-=1);
+  cdl_output_token(printer, "}");
 }
 
 
@@ -6868,7 +6911,13 @@ value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options
 }
 
 
-# 7 "pstate.c"
+# 6 "pstate.c"
+boolean_t pstate_is_eof(pstate_t* pstate){
+  return ((pstate->position)<((pstate->tokens)->length));
+}
+
+
+# 16 "pstate.c"
 pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code){
   ((pstate->result_token)=((void *)0));
   ((pstate->result_node)=((void *)0));
@@ -6880,14 +6929,14 @@ pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_co
 }
 
 
-# 32 "pstate.c"
+# 41 "pstate.c"
 pstate_t* pstate_ignore_error(pstate_t* pstate){
   ((pstate->error)=((compiler_error_t) {0}));
   return pstate;
 }
 
 
-# 44 "pstate.c"
+# 53 "pstate.c"
 pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position){
   ((pstate->position)=saved_position);
   if ((!((pstate->error).parse_error_code)))
@@ -6898,7 +6947,7 @@ pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position){
 }
 
 
-# 58 "pstate.c"
+# 67 "pstate.c"
 pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token){
   ((pstate->error)=((compiler_error_t) {0}));
   ((pstate->result_node)=((void *)0));
@@ -6907,7 +6956,7 @@ pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token){
 }
 
 
-# 71 "pstate.c"
+# 80 "pstate.c"
 pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node){
   ((pstate->error)=((compiler_error_t) {0}));
   ((pstate->result_node)=node);
@@ -6916,7 +6965,7 @@ pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node){
 }
 
 
-# 85 "pstate.c"
+# 94 "pstate.c"
 token_t* pstate_get_result_token(pstate_t* pstate){
   if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
   {
@@ -6929,7 +6978,7 @@ token_t* pstate_get_result_token(pstate_t* pstate){
 }
 
 
-# 102 "pstate.c"
+# 111 "pstate.c"
 parse_node_t* pstate_get_result_node(pstate_t* pstate){
   if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
   {
@@ -6946,7 +6995,7 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate){
 }
 
 
-# 122 "pstate.c"
+# 131 "pstate.c"
 parse_node_t* pstate_get_optional_result_node(pstate_t* pstate){
   ((pstate->error)=((compiler_error_t) {0}));
   parse_node_t* result = (pstate->result_node);
@@ -6955,13 +7004,13 @@ parse_node_t* pstate_get_optional_result_node(pstate_t* pstate){
 }
 
 
-# 135 "pstate.c"
+# 144 "pstate.c"
 token_t* pstate_peek(pstate_t* pstate, int offset){
   return token_at((pstate->tokens), ((pstate->position)+offset));
 }
 
 
-# 146 "pstate.c"
+# 155 "pstate.c"
 token_t* pstate_advance(pstate_t* pstate){
   if (((pstate->error).parse_error_code))
   {
@@ -6974,14 +7023,14 @@ token_t* pstate_advance(pstate_t* pstate){
 }
 
 
-# 162 "pstate.c"
+# 171 "pstate.c"
 boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string){
   token_t* token = pstate_peek(pstate, 0);
   return token_matches(token, token_string);
 }
 
 
-# 179 "pstate.c"
+# 188 "pstate.c"
 pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string){
   token_t* token = pstate_peek(pstate, 0);
   if (token_matches(token, token_string))
@@ -6996,7 +7045,7 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string){
 }
 
 
-# 200 "pstate.c"
+# 209 "pstate.c"
 pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type){
   token_t* token = pstate_peek(pstate, 0);
   if ((token_type==(token->type)))
@@ -8611,30 +8660,46 @@ printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node){
 
 # 605 "c-file-printer.c"
 printer_t* append_empty_statement_node(printer_t* printer, empty_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->semi_colon_token));
+  }
   printer_indent(printer);
   append_string(printer, ";\n");
   return printer;
 }
 
 
-# 615 "c-file-printer.c"
+# 618 "c-file-printer.c"
 printer_t* append_break_statement_node(printer_t* printer, break_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->break_keyword_token));
+  }
   printer_indent(printer);
   append_string(printer, "break;\n");
   return printer;
 }
 
 
-# 625 "c-file-printer.c"
+# 631 "c-file-printer.c"
 printer_t* append_continue_statement_node(printer_t* printer, continue_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->continue_keyword_token));
+  }
   printer_indent(printer);
   append_string(printer, "continue;\n");
   return printer;
 }
 
 
-# 635 "c-file-printer.c"
+# 644 "c-file-printer.c"
 printer_t* append_label_statement_node(printer_t* printer, label_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->label));
+  }
   printer_indent(printer);
   append_token(printer, (node->label));
   append_string(printer, ":\n");
@@ -8642,8 +8707,12 @@ printer_t* append_label_statement_node(printer_t* printer, label_statement_node_
 }
 
 
-# 646 "c-file-printer.c"
+# 658 "c-file-printer.c"
 printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_string(printer, "case ");
   append_parse_node(printer, (node->expression));
@@ -8652,16 +8721,24 @@ printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node){
 }
 
 
-# 657 "c-file-printer.c"
+# 672 "c-file-printer.c"
 printer_t* append_default_label_node(printer_t* printer, default_label_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->default_token));
+  }
   printer_indent(printer);
   append_string(printer, "default:\n");
   return printer;
 }
 
 
-# 667 "c-file-printer.c"
+# 685 "c-file-printer.c"
 printer_t* append_expression_statement_node(printer_t* printer, expression_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_parse_node(printer, (node->expression));
   append_string(printer, ";\n");
@@ -8669,8 +8746,12 @@ printer_t* append_expression_statement_node(printer_t* printer, expression_state
 }
 
 
-# 678 "c-file-printer.c"
+# 699 "c-file-printer.c"
 printer_t* append_block_node(printer_t* printer, block_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_string(printer, "{\n");
   printer_increase_indent(printer);
@@ -8689,8 +8770,12 @@ printer_t* append_block_node(printer_t* printer, block_node_t* node){
 }
 
 
-# 695 "c-file-printer.c"
+# 719 "c-file-printer.c"
 printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_string(printer, "if (");
   append_parse_node(printer, (node->if_condition));
@@ -8706,8 +8791,12 @@ printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* nod
 }
 
 
-# 713 "c-file-printer.c"
+# 740 "c-file-printer.c"
 printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_string(printer, "while (");
   append_parse_node(printer, (node->condition));
@@ -8717,8 +8806,12 @@ printer_t* append_while_statement_node(printer_t* printer, while_statement_node_
 }
 
 
-# 726 "c-file-printer.c"
+# 756 "c-file-printer.c"
 printer_t* append_switch_statement_node(printer_t* printer, switch_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_string(printer, "switch (");
   append_parse_node(printer, (node->expression));
@@ -8728,8 +8821,12 @@ printer_t* append_switch_statement_node(printer_t* printer, switch_statement_nod
 }
 
 
-# 739 "c-file-printer.c"
+# 772 "c-file-printer.c"
 printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_string(printer, "for (\n");
   printer_increase_indent(printer);
@@ -8761,11 +8858,16 @@ printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* n
 }
 
 
-# 776 "c-file-printer.c"
+# 812 "c-file-printer.c"
 printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_string(printer, "do");
   append_parse_node(printer, (node->body));
+  printer_indent(printer);
   append_string(printer, "while (");
   append_parse_node(printer, (node->condition));
   append_string(printer, ");\n");
@@ -8773,8 +8875,12 @@ printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* nod
 }
 
 
-# 791 "c-file-printer.c"
+# 831 "c-file-printer.c"
 printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node){
+  if ((printer->output_line_directives))
+  {
+    append_line_directive(printer, (node->first_token));
+  }
   printer_indent(printer);
   append_string(printer, "return");
   if (((node->expression)!=((void *)0)))
@@ -8787,7 +8893,7 @@ printer_t* append_return_statement_node(printer_t* printer, return_statement_nod
 }
 
 
-# 806 "c-file-printer.c"
+# 849 "c-file-printer.c"
 printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
   if (token_matches((node->operator), "cast"))
   {
@@ -8837,7 +8943,7 @@ printer_t* append_operator_node(printer_t* printer, operator_node_t* node){
 }
 
 
-# 851 "c-file-printer.c"
+# 894 "c-file-printer.c"
 printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node){
   append_string(printer, "(");
   if (((node->condition)!=((void *)0)))
@@ -8859,7 +8965,7 @@ printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node)
 }
 
 
-# 872 "c-file-printer.c"
+# 915 "c-file-printer.c"
 printer_t* append_call_node(printer_t* printer, call_node_t* node){
   append_parse_node(printer, (node->function));
   append_string(printer, "(");
@@ -8879,7 +8985,7 @@ printer_t* append_call_node(printer_t* printer, call_node_t* node){
 }
 
 
-# 889 "c-file-printer.c"
+# 932 "c-file-printer.c"
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string){
   char* code_template = "enum_metadata_t* ${fn_prefix}_metadata() {\n" "${element_constructions}" "    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {\n" "        .name = \"${enum_name}\",\n" "        .elements = ${previous_var_address}\n" "    };\n" "    return &enum_metadata_result;\n" "}\n\n";
   char* field_template = "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n" "        .next = ${previous_var_address},\n" "        .name = \"${element_name}\",\n" "        .value = ${element_name}\n" "    };\n";
@@ -8911,8 +9017,13 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char*
 }
 
 
-# 943 "c-file-printer.c"
+# 986 "c-file-printer.c"
 printer_t* append_line_directive(printer_t* printer, token_t* token){
+  if ((token==((void *)0)))
+  {
+    buffer_printf((printer->buffer), "\n// (no 'first token') provided)\n");
+    return printer;
+  }
   if (((printer->symbol_table)==((void *)0)))
   {
     log_fatal("printer->symbol_table is not set.");
@@ -9967,7 +10078,7 @@ associativity_t precedence_to_associativity(precedence_t precedence){
 }
 
 
-# 153 "statement-parser.c"
+# 164 "statement-parser.c"
 pstatus_t parse_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((((((((((((((parse_block(pstate)||parse_break_statement(pstate_ignore_error(pstate)))||parse_return_statement(pstate_ignore_error(pstate)))||parse_if_statement(pstate_ignore_error(pstate)))||parse_while_statement(pstate_ignore_error(pstate)))||parse_do_statement(pstate_ignore_error(pstate)))||parse_for_statement(pstate_ignore_error(pstate)))||parse_switch_statement(pstate_ignore_error(pstate)))||parse_case_label(pstate_ignore_error(pstate)))||parse_default_label(pstate_ignore_error(pstate)))||parse_continue_statement(pstate_ignore_error(pstate)))||parse_goto_statement(pstate_ignore_error(pstate)))||parse_label_statement(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_expression_statement(pstate_ignore_error(pstate)))||parse_empty_statement(pstate_ignore_error(pstate))))
@@ -9978,14 +10089,14 @@ pstatus_t parse_statement(pstate_t* pstate){
 }
 
 
-# 178 "statement-parser.c"
+# 189 "statement-parser.c"
 pstatus_t parse_block(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "{")))
   {
     return pstate_propagate_error(pstate, saved_position);
   }
-  block_node_t* result = make_block_node();
+  block_node_t* result = make_block_node(token_at((pstate->tokens), saved_position));
   while (parse_statement(pstate))
   {
     node_list_add_node((&(result->statements)), pstate_get_result_node(pstate));
@@ -9998,7 +10109,7 @@ pstatus_t parse_block(pstate_t* pstate){
 }
 
 
-# 196 "statement-parser.c"
+# 208 "statement-parser.c"
 pstatus_t parse_return_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!pstate_expect_token_string(pstate, "return")))
@@ -10011,11 +10122,11 @@ pstatus_t parse_return_statement(pstate_t* pstate){
   {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, to_node(make_return_statement(expr)));
+  return pstate_set_result_node(pstate, to_node(make_return_statement(token_at((pstate->tokens), saved_position), expr)));
 }
 
 
-# 212 "statement-parser.c"
+# 226 "statement-parser.c"
 pstatus_t parse_if_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "if"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -10038,11 +10149,11 @@ pstatus_t parse_if_statement(pstate_t* pstate){
     }
     (if_false=pstate_get_result_node(pstate));
   }
-  return pstate_set_result_node(pstate, to_node(make_if_statement(if_test, if_true, if_false)));
+  return pstate_set_result_node(pstate, to_node(make_if_statement(token_at((pstate->tokens), saved_position), if_test, if_true, if_false)));
 }
 
 
-# 239 "statement-parser.c"
+# 255 "statement-parser.c"
 pstatus_t parse_while_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "while"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -10055,11 +10166,11 @@ pstatus_t parse_while_statement(pstate_t* pstate){
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* while_body = pstate_get_result_node(pstate);
-  return pstate_set_result_node(pstate, to_node(make_while_statement(while_test, while_body)));
+  return pstate_set_result_node(pstate, to_node(make_while_statement(token_at((pstate->tokens), saved_position), while_test, while_body)));
 }
 
 
-# 258 "statement-parser.c"
+# 276 "statement-parser.c"
 pstatus_t parse_do_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "do"))||(!parse_statement(pstate))))
@@ -10080,11 +10191,11 @@ pstatus_t parse_do_statement(pstate_t* pstate){
   {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, to_node(make_do_statement(do_while_body, do_while_condition)));
+  return pstate_set_result_node(pstate, to_node(make_do_statement(token_at((pstate->tokens), saved_position), do_while_body, do_while_condition)));
 }
 
 
-# 283 "statement-parser.c"
+# 303 "statement-parser.c"
 pstatus_t parse_for_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "for"))||(!pstate_expect_token_string(pstate, "("))))
@@ -10119,11 +10230,11 @@ pstatus_t parse_for_statement(pstate_t* pstate){
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* for_body = pstate_get_result_node(pstate);
-  return pstate_set_result_node(pstate, to_node(make_for_statement(for_init, for_test, for_increment, for_body)));
+  return pstate_set_result_node(pstate, to_node(make_for_statement(token_at((pstate->tokens), saved_position), for_init, for_test, for_increment, for_body)));
 }
 
 
-# 319 "statement-parser.c"
+# 340 "statement-parser.c"
 pstatus_t parse_switch_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((((!pstate_expect_token_string(pstate, "switch"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
@@ -10136,11 +10247,11 @@ pstatus_t parse_switch_statement(pstate_t* pstate){
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* block = pstate_get_result_node(pstate);
-  return pstate_set_result_node(pstate, to_node(make_switch_statement(switch_item, block)));
+  return pstate_set_result_node(pstate, to_node(make_switch_statement(token_at((pstate->tokens), saved_position), switch_item, block)));
 }
 
 
-# 338 "statement-parser.c"
+# 361 "statement-parser.c"
 pstatus_t parse_case_label(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (((!pstate_expect_token_string(pstate, "case"))||(!parse_expression(pstate))))
@@ -10152,11 +10263,11 @@ pstatus_t parse_case_label(pstate_t* pstate){
   {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, to_node(make_case_label(case_expr)));
+  return pstate_set_result_node(pstate, to_node(make_case_label(token_at((pstate->tokens), saved_position), case_expr)));
 }
 
 
-# 357 "statement-parser.c"
+# 382 "statement-parser.c"
 pstatus_t parse_expression_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if ((!parse_expression(pstate)))
@@ -10168,11 +10279,11 @@ pstatus_t parse_expression_statement(pstate_t* pstate){
   {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, to_node(make_expression_statement_node(expr)));
+  return pstate_set_result_node(pstate, to_node(make_expression_statement_node(token_at((pstate->tokens), saved_position), expr)));
 }
 
 
-# 373 "statement-parser.c"
+# 399 "statement-parser.c"
 pstatus_t parse_goto_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* label_token = pstate_peek(pstate, 1);
@@ -10180,11 +10291,11 @@ pstatus_t parse_goto_statement(pstate_t* pstate){
   {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, to_node(make_goto_statement(label_token)));
+  return pstate_set_result_node(pstate, to_node(make_goto_statement(token_at((pstate->tokens), saved_position), label_token)));
 }
 
 
-# 388 "statement-parser.c"
+# 415 "statement-parser.c"
 pstatus_t parse_break_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* keyword_token = pstate_peek(pstate, 0);
@@ -10196,7 +10307,7 @@ pstatus_t parse_break_statement(pstate_t* pstate){
 }
 
 
-# 402 "statement-parser.c"
+# 429 "statement-parser.c"
 pstatus_t parse_continue_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* keyword_token = pstate_peek(pstate, 0);
@@ -10208,7 +10319,7 @@ pstatus_t parse_continue_statement(pstate_t* pstate){
 }
 
 
-# 416 "statement-parser.c"
+# 443 "statement-parser.c"
 pstatus_t parse_label_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* label_token = pstate_peek(pstate, 0);
@@ -10220,7 +10331,7 @@ pstatus_t parse_label_statement(pstate_t* pstate){
 }
 
 
-# 430 "statement-parser.c"
+# 457 "statement-parser.c"
 pstatus_t parse_default_label(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* default_token = pstate_peek(pstate, 0);
@@ -10232,7 +10343,7 @@ pstatus_t parse_default_label(pstate_t* pstate){
 }
 
 
-# 444 "statement-parser.c"
+# 471 "statement-parser.c"
 pstatus_t parse_empty_statement(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   token_t* semi_colon_token = pstate_peek(pstate, 0);
@@ -10244,7 +10355,7 @@ pstatus_t parse_empty_statement(pstate_t* pstate){
 }
 
 
-# 463 "statement-parser.c"
+# 490 "statement-parser.c"
 break_statement_node_t* make_break_statement(token_t* break_keyword_token){
   break_statement_node_t* result = malloc_struct(break_statement_node_t);
   ((result->tag)=PARSE_NODE_BREAK_STATEMENT);
@@ -10253,7 +10364,7 @@ break_statement_node_t* make_break_statement(token_t* break_keyword_token){
 }
 
 
-# 476 "statement-parser.c"
+# 503 "statement-parser.c"
 break_statement_node_t* to_break_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_BREAK_STATEMENT)))
   {
@@ -10263,7 +10374,7 @@ break_statement_node_t* to_break_statement_node(parse_node_t* ptr){
 }
 
 
-# 490 "statement-parser.c"
+# 517 "statement-parser.c"
 continue_statement_node_t* make_continue_statement(token_t* keyword_token){
   continue_statement_node_t* result = malloc_struct(continue_statement_node_t);
   ((result->tag)=PARSE_NODE_CONTINUE_STATEMENT);
@@ -10272,7 +10383,7 @@ continue_statement_node_t* make_continue_statement(token_t* keyword_token){
 }
 
 
-# 503 "statement-parser.c"
+# 530 "statement-parser.c"
 continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CONTINUE_STATEMENT)))
   {
@@ -10282,7 +10393,7 @@ continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr){
 }
 
 
-# 517 "statement-parser.c"
+# 544 "statement-parser.c"
 label_statement_node_t* make_label_statement(token_t* label){
   label_statement_node_t* result = malloc_struct(label_statement_node_t);
   ((result->tag)=PARSE_NODE_LABEL_STATEMENT);
@@ -10291,7 +10402,7 @@ label_statement_node_t* make_label_statement(token_t* label){
 }
 
 
-# 530 "statement-parser.c"
+# 557 "statement-parser.c"
 label_statement_node_t* to_label_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_LABEL_STATEMENT)))
   {
@@ -10301,16 +10412,17 @@ label_statement_node_t* to_label_statement_node(parse_node_t* ptr){
 }
 
 
-# 544 "statement-parser.c"
-goto_statement_node_t* make_goto_statement(token_t* label){
+# 571 "statement-parser.c"
+goto_statement_node_t* make_goto_statement(token_t* first_token, token_t* label){
   goto_statement_node_t* result = malloc_struct(goto_statement_node_t);
   ((result->tag)=PARSE_NODE_GOTO_STATEMENT);
+  ((result->first_token)=first_token);
   ((result->label)=label);
   return result;
 }
 
 
-# 557 "statement-parser.c"
+# 586 "statement-parser.c"
 goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_GOTO_STATEMENT)))
   {
@@ -10320,7 +10432,7 @@ goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr){
 }
 
 
-# 571 "statement-parser.c"
+# 600 "statement-parser.c"
 empty_statement_node_t* make_empty_statement(token_t* semi_colon_token){
   empty_statement_node_t* result = malloc_struct(empty_statement_node_t);
   ((result->tag)=PARSE_NODE_EMPTY_STATEMENT);
@@ -10329,7 +10441,7 @@ empty_statement_node_t* make_empty_statement(token_t* semi_colon_token){
 }
 
 
-# 584 "statement-parser.c"
+# 613 "statement-parser.c"
 empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_EMPTY_STATEMENT)))
   {
@@ -10339,17 +10451,18 @@ empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr){
 }
 
 
-# 598 "statement-parser.c"
-switch_statement_node_t* make_switch_statement(parse_node_t* expression, parse_node_t* block){
+# 627 "statement-parser.c"
+switch_statement_node_t* make_switch_statement(token_t* first_token, parse_node_t* expression, parse_node_t* block){
   switch_statement_node_t* result = malloc_struct(switch_statement_node_t);
   ((result->tag)=PARSE_NODE_SWITCH_STATEMENT);
+  ((result->first_token)=first_token);
   ((result->expression)=expression);
   ((result->block)=block);
   return result;
 }
 
 
-# 613 "statement-parser.c"
+# 644 "statement-parser.c"
 switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_SWITCH_STATEMENT)))
   {
@@ -10359,16 +10472,17 @@ switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr){
 }
 
 
-# 627 "statement-parser.c"
-case_label_node_t* make_case_label(parse_node_t* expression){
+# 658 "statement-parser.c"
+case_label_node_t* make_case_label(token_t* first_token, parse_node_t* expression){
   case_label_node_t* result = malloc_struct(case_label_node_t);
   ((result->tag)=PARSE_NODE_CASE_LABEL);
+  ((result->first_token)=first_token);
   ((result->expression)=expression);
   return result;
 }
 
 
-# 640 "statement-parser.c"
+# 673 "statement-parser.c"
 case_label_node_t* to_case_label_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CASE_LABEL)))
   {
@@ -10378,7 +10492,7 @@ case_label_node_t* to_case_label_node(parse_node_t* ptr){
 }
 
 
-# 654 "statement-parser.c"
+# 687 "statement-parser.c"
 default_label_node_t* make_default_label(token_t* default_token){
   default_label_node_t* result = malloc_struct(default_label_node_t);
   ((result->tag)=PARSE_NODE_DEFAULT_LABEL);
@@ -10387,7 +10501,7 @@ default_label_node_t* make_default_label(token_t* default_token){
 }
 
 
-# 667 "statement-parser.c"
+# 700 "statement-parser.c"
 default_label_node_t* to_default_label_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DEFAULT_LABEL)))
   {
@@ -10397,15 +10511,16 @@ default_label_node_t* to_default_label_node(parse_node_t* ptr){
 }
 
 
-# 682 "statement-parser.c"
-block_node_t* make_block_node(){
+# 715 "statement-parser.c"
+block_node_t* make_block_node(token_t* first_token){
   block_node_t* result = malloc_struct(block_node_t);
+  ((result->first_token)=first_token);
   ((result->tag)=PARSE_NODE_BLOCK);
   return result;
 }
 
 
-# 694 "statement-parser.c"
+# 728 "statement-parser.c"
 block_node_t* to_block_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_BLOCK)))
   {
@@ -10415,10 +10530,11 @@ block_node_t* to_block_node(parse_node_t* ptr){
 }
 
 
-# 709 "statement-parser.c"
-for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body){
+# 743 "statement-parser.c"
+for_statement_node_t* make_for_statement(token_t* first_token, parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body){
   for_statement_node_t* result = malloc_struct(for_statement_node_t);
   ((result->tag)=PARSE_NODE_FOR_STATEMENT);
+  ((result->first_token)=first_token);
   ((result->for_init)=for_init);
   ((result->for_test)=for_test);
   ((result->for_increment)=for_increment);
@@ -10427,7 +10543,7 @@ for_statement_node_t* make_for_statement(parse_node_t* for_init, parse_node_t* f
 }
 
 
-# 728 "statement-parser.c"
+# 764 "statement-parser.c"
 for_statement_node_t* to_for_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FOR_STATEMENT)))
   {
@@ -10437,10 +10553,11 @@ for_statement_node_t* to_for_statement_node(parse_node_t* ptr){
 }
 
 
-# 742 "statement-parser.c"
-if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else){
+# 778 "statement-parser.c"
+if_statement_node_t* make_if_statement(token_t* first_token, parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else){
   if_statement_node_t* result = malloc_struct(if_statement_node_t);
   ((result->tag)=PARSE_NODE_IF_STATEMENT);
+  ((result->first_token)=first_token);
   ((result->if_condition)=if_condition);
   ((result->if_true)=if_true);
   ((result->if_else)=if_else);
@@ -10448,7 +10565,7 @@ if_statement_node_t* make_if_statement(parse_node_t* if_condition, parse_node_t*
 }
 
 
-# 759 "statement-parser.c"
+# 797 "statement-parser.c"
 if_statement_node_t* to_if_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_IF_STATEMENT)))
   {
@@ -10458,16 +10575,17 @@ if_statement_node_t* to_if_statement_node(parse_node_t* ptr){
 }
 
 
-# 774 "statement-parser.c"
-expression_statement_node_t* make_expression_statement_node(parse_node_t* expression){
+# 812 "statement-parser.c"
+expression_statement_node_t* make_expression_statement_node(token_t* first_token, parse_node_t* expression){
   expression_statement_node_t* result = malloc_struct(expression_statement_node_t);
   ((result->tag)=PARSE_NODE_EXPRESSION_STATEMENT);
+  ((result->first_token)=first_token);
   ((result->expression)=expression);
   return result;
 }
 
 
-# 788 "statement-parser.c"
+# 828 "statement-parser.c"
 expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_EXPRESSION_STATEMENT)))
   {
@@ -10477,16 +10595,17 @@ expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr){
 }
 
 
-# 802 "statement-parser.c"
-return_statement_node_t* make_return_statement(parse_node_t* expression){
+# 842 "statement-parser.c"
+return_statement_node_t* make_return_statement(token_t* first_token, parse_node_t* expression){
   return_statement_node_t* result = malloc_struct(return_statement_node_t);
   ((result->tag)=PARSE_NODE_RETURN_STATEMENT);
+  ((result->first_token)=first_token);
   ((result->expression)=expression);
   return result;
 }
 
 
-# 815 "statement-parser.c"
+# 857 "statement-parser.c"
 return_statement_node_t* to_return_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_RETURN_STATEMENT)))
   {
@@ -10496,17 +10615,18 @@ return_statement_node_t* to_return_statement_node(parse_node_t* ptr){
 }
 
 
-# 829 "statement-parser.c"
-while_statement_node_t* make_while_statement(parse_node_t* condition, parse_node_t* body){
+# 871 "statement-parser.c"
+while_statement_node_t* make_while_statement(token_t* first_token, parse_node_t* condition, parse_node_t* body){
   while_statement_node_t* result = malloc_struct(while_statement_node_t);
   ((result->tag)=PARSE_NODE_WHILE_STATEMENT);
+  ((result->first_token)=first_token);
   ((result->condition)=condition);
   ((result->body)=body);
   return result;
 }
 
 
-# 844 "statement-parser.c"
+# 888 "statement-parser.c"
 while_statement_node_t* to_while_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_WHILE_STATEMENT)))
   {
@@ -10516,17 +10636,18 @@ while_statement_node_t* to_while_statement_node(parse_node_t* ptr){
 }
 
 
-# 858 "statement-parser.c"
-do_statement_node_t* make_do_statement(parse_node_t* body, parse_node_t* condition){
+# 902 "statement-parser.c"
+do_statement_node_t* make_do_statement(token_t* first_token, parse_node_t* body, parse_node_t* condition){
   do_statement_node_t* result = malloc_struct(do_statement_node_t);
   ((result->tag)=PARSE_NODE_DO_STATEMENT);
+  ((result->first_token)=first_token);
   ((result->body)=body);
   ((result->condition)=condition);
   return result;
 }
 
 
-# 873 "statement-parser.c"
+# 918 "statement-parser.c"
 do_statement_node_t* to_do_statement_node(parse_node_t* ptr){
   if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DO_STATEMENT)))
   {
@@ -11095,7 +11216,7 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate){
 }
 
 
-# 25 "literal-parser.c"
+# 57 "literal-parser.c"
 pstatus_t parse_literal_node(pstate_t* pstate){
   uint64_t saved_position = (pstate->position);
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_STRING_LITERAL))
@@ -11157,6 +11278,14 @@ pstatus_t parse_literal_node(pstate_t* pstate){
     ((result->initializer_type)=type_node);
     return pstate_set_result_node(pstate, to_node(result));
   }
+  if (parse_compound_literal(pstate))
+  {
+    return true;
+  }
+  else
+  {
+    pstate_ignore_error(pstate);
+  }
   if (((((((pstate_expect_token_string(pstate, "NULL")||pstate_expect_token_string(pstate_ignore_error(pstate), "nullptr"))||pstate_expect_token_string(pstate_ignore_error(pstate), "true"))||pstate_expect_token_string(pstate_ignore_error(pstate), "false"))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_INTEGER_LITERAL))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_FLOAT_LITERAL))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_CHARACTER_LITERAL)))
   {
     literal_node_t* result = malloc_literal_node();
@@ -11164,6 +11293,97 @@ pstatus_t parse_literal_node(pstate_t* pstate){
     return pstate_set_result_node(pstate, to_node(result));
   }
   return pstate_error(pstate, saved_position, PARSE_ERROR_NOT_LITERAL_NODE);
+}
+
+
+# 147 "literal-parser.c"
+pstatus_t parse_compound_literal(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if ((!pstate_expect_token_string(pstate, "(")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if ((!parse_type_node(pstate)))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  parse_node_t* type_node = pstate_get_result_node(pstate);
+  if ((!pstate_expect_token_string(pstate, ")")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if ((!pstate_expect_token_string(pstate, "{")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  node_list_t initializers = ((node_list_t) {0});
+  while (true)
+  {
+    if (pstate_is_eof(pstate))
+    {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    if (pstate_match_token_string(pstate, "}"))
+    {
+      pstate_advance(pstate);
+      break;
+    }
+    if ((node_list_length(initializers)>0))
+    {
+      if (pstate_match_token_string(pstate, ","))
+      {
+        pstate_advance(pstate);
+      }
+      else
+      {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+    }
+    if (parse_designated_initializer_node(pstate))
+    {
+      parse_node_t* initializer = pstate_get_result_node(pstate);
+      node_list_add_node((&initializers), initializer);
+    }
+    else
+    if (parse_literal_node(pstate))
+    {
+      parse_node_t* initializer = pstate_get_result_node(pstate);
+      node_list_add_node((&initializers), initializer);
+    }
+  }
+  compound_literal_node_t* result = malloc_compound_literal_node();
+  ((result->type_node)=type_node);
+  ((result->initializers)=initializers);
+  pstate_set_result_node(pstate, to_node(result));
+  return true;
+}
+
+
+# 199 "literal-parser.c"
+pstatus_t parse_designated_initializer_node(pstate_t* pstate){
+  uint64_t saved_position = (pstate->position);
+  if ((!pstate_expect_token_string(pstate, ".")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  token_t* member_name = pstate_get_result_token(pstate);
+  if ((!pstate_expect_token_string(pstate, "=")))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if ((!parse_expression(pstate)))
+  {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  designated_initializer_node_t* result = malloc_designated_initializer_node();
+  ((result->member_name)=member_name);
+  ((result->value)=pstate_get_result_node(pstate));
+  pstate_set_result_node(pstate, to_node(result));
+  return true;
 }
 
 
@@ -11281,7 +11501,7 @@ printer_t* printer_decrease_indent(printer_t* printer){
 }
 
 
-# 37 "main.c"
+# 36 "main.c"
 void do_print_tokens(value_array_t* tokens, char* message){
   if (FLAG_print_tokens_show_tokens)
   {
@@ -11300,7 +11520,7 @@ void do_print_tokens(value_array_t* tokens, char* message){
 }
 
 
-# 52 "main.c"
+# 51 "main.c"
 void print_tokens(void){
   log_info("print_tokens()");
   value_array_t* files = read_files(FLAG_files);
@@ -11358,7 +11578,7 @@ void print_tokens(void){
 }
 
 
-# 118 "main.c"
+# 117 "main.c"
 void configure_flags(void){
   flag_program_name("omni-c");
   flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
@@ -11371,7 +11591,7 @@ void configure_flags(void){
 }
 
 
-# 135 "main.c"
+# 134 "main.c"
 void configure_parse_expression(void){
   flag_command("parse-expression", (&FLAG_command));
   flag_description("** UNIT TESTING **");
@@ -11380,7 +11600,7 @@ void configure_parse_expression(void){
 }
 
 
-# 142 "main.c"
+# 141 "main.c"
 void configure_parse_statement(void){
   flag_command("parse-statement", (&FLAG_command));
   flag_description("** UNIT TESTING **");
@@ -11388,7 +11608,7 @@ void configure_parse_statement(void){
 }
 
 
-# 148 "main.c"
+# 147 "main.c"
 void configure_print_tokens_command(void){
   flag_command("print-tokens", (&FLAG_command));
   flag_description("** UNIT TESTING **");
@@ -11401,7 +11621,7 @@ void configure_print_tokens_command(void){
 }
 
 
-# 160 "main.c"
+# 159 "main.c"
 void configure_regular_commands(void){
   flag_command("generate-header-file", (&FLAG_command));
   flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
@@ -11437,13 +11657,13 @@ void configure_regular_commands(void){
 }
 
 
-# 204 "main.c"
+# 203 "main.c"
 boolean_t is_inlined_function(function_node_t* node){
   return (token_matches((node->storage_class_specifier), "static")&&token_list_contains((node->function_specifiers), "inline"));
 }
 
 
-# 209 "main.c"
+# 208 "main.c"
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table){
   if (FLAG_dump_symbol_table)
   {
@@ -11458,7 +11678,7 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table){
 }
 
 
-# 226 "main.c"
+# 225 "main.c"
 char* include_node_to_string(cpp_include_node_t* node){
   buffer_t* buffer = make_buffer(32);
   printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
@@ -11468,7 +11688,7 @@ char* include_node_to_string(cpp_include_node_t* node){
 }
 
 
-# 240 "main.c"
+# 239 "main.c"
 void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment){
   boolean_t is_header_file = (!is_library);
   symbol_table_t* symbol_table = make_symbol_table();
@@ -11668,7 +11888,7 @@ void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overvie
 }
 
 
-# 439 "main.c"
+# 438 "main.c"
 void add_generated_c_file_header(buffer_t* buffer){
   buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
   buffer_printf(buffer, "// This is a generated file, so you generally don't want to edit it!\n");
@@ -11676,7 +11896,7 @@ void add_generated_c_file_header(buffer_t* buffer){
 }
 
 
-# 449 "main.c"
+# 448 "main.c"
 void parse_expression_string_and_print_parse_tree(char* expression){
   if ((expression==((void *)0)))
   {
@@ -11721,7 +11941,7 @@ void parse_expression_string_and_print_parse_tree(char* expression){
 }
 
 
-# 491 "main.c"
+# 490 "main.c"
 void parse_statement_string_and_print_parse_tree(char* expression){
   tokenizer_result_t tokenizer_result = tokenize(buffer_append_string(make_buffer(1), expression));
   if ((tokenizer_result.tokenizer_error_code))
@@ -11754,7 +11974,7 @@ void parse_statement_string_and_print_parse_tree(char* expression){
 }
 
 
-# 544 "main.c"
+# 543 "main.c"
 buffer_t* git_hash_object(char* filename){
   value_array_t* argv = make_value_array(2);
   value_array_add(argv, str_to_value("git"));
@@ -11774,7 +11994,7 @@ while (is_sub_process_running(sub_process));
 }
 
 
-# 572 "main.c"
+# 571 "main.c"
 buffer_t* command_line_args_to_buffer(int argc, char** argv){
   buffer_t* output = make_buffer((argc*5));
   buffer_printf(output, "// Full Compiler Command Line:\n//\n");
@@ -11805,7 +12025,7 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv){
 }
 
 
-# 601 "main.c"
+# 600 "main.c"
 value_array_t* c_compiler_command_line(char* input_file, char* output_file){
   if ((((string_equal("clang", FLAG_c_compiler)||string_equal("gcc", FLAG_c_compiler))||string_equal("tcc", FLAG_c_compiler))||string_equal("zig", FLAG_c_compiler)))
   {
@@ -11833,7 +12053,7 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file){
 }
 
 
-# 626 "main.c"
+# 625 "main.c"
 int invoke_c_compiler(char* input_file, char* output_file){
   value_array_t* argv = c_compiler_command_line(input_file, output_file);
   log_warn("Invoking C compiler with these arguments: %s", buffer_to_c_string(join_array_of_strings(argv, " ")));
@@ -11852,7 +12072,7 @@ while (is_sub_process_running(sub_process));
 }
 
 
-# 648 "main.c"
+# 647 "main.c"
 void generate_archive_file(void){
   if ((FLAG_archive_output_file==((void *)0)))
   {
@@ -11876,7 +12096,7 @@ void generate_archive_file(void){
 }
 
 
-# 667 "main.c"
+# 666 "main.c"
 int main(int argc, char** argv){
   configure_fatal_errors(((fatal_error_config_t) {
                                                  .catch_sigsegv = true,
@@ -12290,7 +12510,7 @@ error_code_t string_to_error_code(char* value){
 }
 enum_metadata_t* error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "ERROR_UKNOWN",
         .value = ERROR_UKNOWN
     };
@@ -12461,7 +12681,7 @@ non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
 }
 enum_metadata_t* non_fatal_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "NF_OK",
         .value = NF_OK
     };
@@ -12537,7 +12757,7 @@ flag_type_t string_to_flag_type(char* value){
 }
 enum_metadata_t* flag_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "flag_type_none",
         .value = flag_type_none
     };
@@ -12613,7 +12833,7 @@ sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
 }
 enum_metadata_t* sub_process_exit_status_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "EXIT_STATUS_UNKNOWN",
         .value = EXIT_STATUS_UNKNOWN
     };
@@ -12664,7 +12884,7 @@ input_mode_t string_to_input_mode(char* value){
 }
 enum_metadata_t* input_mode_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "INPUT_MODE_OMNI_C",
         .value = INPUT_MODE_OMNI_C
     };
@@ -12705,7 +12925,7 @@ output_mode_t string_to_output_mode(char* value){
 }
 enum_metadata_t* output_mode_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "OUTPUT_MODE_STANDARD_C",
         .value = OUTPUT_MODE_STANDARD_C
     };
@@ -12746,7 +12966,7 @@ file_tag_t string_to_file_tag(char* value){
 }
 enum_metadata_t* file_tag_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "OMNI_C_SOURCE_FILE",
         .value = OMNI_C_SOURCE_FILE
     };
@@ -12807,7 +13027,7 @@ tokenizer_error_t string_to_tokenizer_error(char* value){
 }
 enum_metadata_t* tokenizer_error_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "TOKENIZER_ERROR_UNKNOWN",
         .value = TOKENIZER_ERROR_UNKNOWN
     };
@@ -12958,7 +13178,7 @@ parse_error_code_t string_to_parse_error_code(char* value){
 }
 enum_metadata_t* parse_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "PARSE_ERROR_UNKNOWN",
         .value = PARSE_ERROR_UNKNOWN
     };
@@ -13124,7 +13344,7 @@ token_type_t string_to_token_type(char* value){
 }
 enum_metadata_t* token_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "TOKEN_TYPE_UNKNOWN",
         .value = TOKEN_TYPE_UNKNOWN
     };
@@ -13220,7 +13440,7 @@ numeric_literal_encoding_t string_to_numeric_literal_encoding(char* value){
 }
 enum_metadata_t* numeric_literal_encoding_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "NUMERIC_LITERAL_ENCODING_UNDECIDED",
         .value = NUMERIC_LITERAL_ENCODING_UNDECIDED
     };
@@ -13342,6 +13562,10 @@ char* parse_node_type_to_string(parse_node_type_t value){
     return "PARSE_NODE_CALL";
   case PARSE_NODE_CONDITIONAL:
     return "PARSE_NODE_CONDITIONAL";
+  case PARSE_NODE_COMPOUND_LITERAL:
+    return "PARSE_NODE_COMPOUND_LITERAL";
+  case PARSE_NODE_DESIGNATED_INITIALIZER:
+    return "PARSE_NODE_DESIGNATED_INITIALIZER";
   default:
     return "<<unknown-parse_node_type>>";
   }
@@ -13467,11 +13691,17 @@ parse_node_type_t string_to_parse_node_type(char* value){
   if (strcmp(value, "PARSE_NODE_CONDITIONAL") == 0) {
     return PARSE_NODE_CONDITIONAL;
   }
+  if (strcmp(value, "PARSE_NODE_COMPOUND_LITERAL") == 0) {
+    return PARSE_NODE_COMPOUND_LITERAL;
+  }
+  if (strcmp(value, "PARSE_NODE_DESIGNATED_INITIALIZER") == 0) {
+    return PARSE_NODE_DESIGNATED_INITIALIZER;
+  }
   return 0;
 }
 enum_metadata_t* parse_node_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "PARSE_NODE_UNKNOWN",
         .value = PARSE_NODE_UNKNOWN
     };
@@ -13670,9 +13900,19 @@ enum_metadata_t* parse_node_type_metadata(){
         .name = "PARSE_NODE_CONDITIONAL",
         .value = PARSE_NODE_CONDITIONAL
     };
+    static enum_element_metadata_t var_40 = (enum_element_metadata_t) {
+        .next = &var_39,
+        .name = "PARSE_NODE_COMPOUND_LITERAL",
+        .value = PARSE_NODE_COMPOUND_LITERAL
+    };
+    static enum_element_metadata_t var_41 = (enum_element_metadata_t) {
+        .next = &var_40,
+        .name = "PARSE_NODE_DESIGNATED_INITIALIZER",
+        .value = PARSE_NODE_DESIGNATED_INITIALIZER
+    };
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "parse_node_type_t",
-        .elements = &var_39
+        .elements = &var_41
     };
     return &enum_metadata_result;
 }
@@ -13757,7 +13997,7 @@ pratt_parser_operation_t string_to_pratt_parser_operation(char* value){
 }
 enum_metadata_t* pratt_parser_operation_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "PRATT_PARSE_UNKNOWN",
         .value = PRATT_PARSE_UNKNOWN
     };
@@ -13853,7 +14093,7 @@ associativity_t string_to_associativity(char* value){
 }
 enum_metadata_t* associativity_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "LEFT_TO_RIGHT",
         .value = LEFT_TO_RIGHT
     };
@@ -13964,7 +14204,7 @@ precedence_t string_to_precedence(char* value){
 }
 enum_metadata_t* precedence_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "PRECEDENCE_UNKNOWN",
         .value = PRECEDENCE_UNKNOWN
     };
@@ -14085,7 +14325,7 @@ type_qualifier_t string_to_type_qualifier(char* value){
 }
 enum_metadata_t* type_qualifier_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "TYPE_QUALIFIER_NONE",
         .value = TYPE_QUALIFIER_NONE
     };
@@ -14166,7 +14406,7 @@ type_node_kind_t string_to_type_node_kind(char* value){
 }
 enum_metadata_t* type_node_kind_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
+        .next = ((void*)0),
         .name = "TYPE_NODE_KIND_UNKNOWN",
         .value = TYPE_NODE_KIND_UNKNOWN
     };
@@ -14294,14 +14534,14 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 613ecb5073e9f6b8b3d2a2deb77a3040a0388d62 > lib/omni-c.c
 // git cat-file -p 58637a0049c50cf56fe40e9b2a9de543c095785a > lib/min-max.c
 // git cat-file -p 34c0f39b6f480c7ce9cb93fd79586d8900323bdf > lib/boolean.c
-// git cat-file -p 11f959d626cae14fb73a67898a35ea9d599a9e00 > lib/compound-literal.c
+// git cat-file -p bafe73cf643ee7eaf31f00c45d2ba446e8eba75a > lib/compound-literal.c
 // git cat-file -p 410a738d9b347300ac5cb091d8ebe87c5d9c7588 > lib/fn.c
 // git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053 > lib/leb128.c
-// git cat-file -p 3c5dd5db0882383f07e78c584268392c1af4b604 > lib/fatal-error.c
-// git cat-file -p dfd7821b93a59d56306ce0efafb4f1deb16a35f9 > lib/value.c
+// git cat-file -p f0dc18c1fe99776d4fc87d538344c111342ad10e > lib/fatal-error.c
+// git cat-file -p 89bcbe94972d0735935a4a43ccbfc7a67f6f4e6d > lib/value.c
 // git cat-file -p 370981574e9bb6b426bf03982b46d340a9d510bc > lib/gc-allocate.c
 // git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab > lib/uint64.c
-// git cat-file -p 86f366c60c46cbda83f28ac81cf7e62d78e3c9d6 > lib/string-util.c
+// git cat-file -p 78058c8251adf1a3664f16e043c4c19f4454a263 > lib/string-util.c
 // git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37 > lib/logger.c
 // git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0 > lib/utf8-decoder.c
 // git cat-file -p aa6ee8f5be5115c1c6585ee454754a22542480e5 > lib/buffer.c
@@ -14309,16 +14549,16 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2 > lib/value-array.c
 // git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4 > lib/value-alist.c
 // git cat-file -p c560ad207e743ce3b364b58540b81a7051072f0a > lib/string-alist.c
-// git cat-file -p bf32abd63596c839f264477dd15c71e9d5ffe30e > lib/value-hashtable.c
+// git cat-file -p e8c7b621cbbcfe1f3807635aa3d329f73e0db429 > lib/value-hashtable.c
 // git cat-file -p 741b85af593dda43aeb84bd32ec3ed36c8f85c55 > lib/string-hashtable.c
 // git cat-file -p 1d0266094b9c0915098e1352edbc8d62ee77abb0 > lib/value-tree.c
 // git cat-file -p 8d8502036da69d42e740206185219ba74887f34a > lib/string-tree.c
 // git cat-file -p 1ccb428c8923e3d6aad2473fcf93f08c66c0f7db > lib/flag.c
 // git cat-file -p f92b16dde49a695a28f50a43d46a753935e40024 > lib/io.c
 // git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976 > lib/terminal.c
-// git cat-file -p c6ed69dce8a057ab5b796554a0e1d0ba46ef4e3f > lib/tokenizer.c
+// git cat-file -p f1d5e507966591d900a0301e08fad74c425b02e0 > lib/tokenizer.c
 // git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd > lib/random.c
-// git cat-file -p 3d846c37fb156c312b278111e7b2fad26c2e03a2 > lib/cdl-printer.c
+// git cat-file -p c4db2805aa9ad2dbf641dec703d2c57d087aad56 > lib/cdl-printer.c
 // git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05 > lib/sub-process.c
 // git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d > lib/splitjoin.c
 // git cat-file -p fbc6df051ad9a1e3a0c09f1e2b07274607eefc28 > lib/oarchive.c
@@ -14331,12 +14571,12 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 7188ecb3f4f5b2ddbb91624982c6d81868672f02 > lexer.c
 // git cat-file -p 0b1ed82677427f66828e3ccbad7c004541d0a0ca > token-list.c
 // git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
-// git cat-file -p 6c86f8d6c5d20f4fffae42fa6ac88b804e4d8f6e > parser.c
-// git cat-file -p cd60d37211fe9a583784388dfe6254fb129cc08c > pstate.c
+// git cat-file -p bc27a1fa5e0e46e5be7efb58913bf35141b3d84d > parser.c
+// git cat-file -p 93f67393615462ba6d0dfb65979007280ae43e50 > pstate.c
 // git cat-file -p 33f0b96b151a7506a48abca978bed1a25410fe61 > declaration-parser.c
 // git cat-file -p 67c4a0e6f2de51b5ed41c289ff9575d4a21a0c68 > node-list.c
 // git cat-file -p fd66d6ae20a88b0cccad5b19b09e4fa61c28792a > debug-printer.c
-// git cat-file -p e1a5d501ffeebcec6fca73eb8bd2a0c49539d250 > c-file-printer.c
+// git cat-file -p 3c2da52b70818ac42e587f1a31e477ce7d046d6c > c-file-printer.c
 // git cat-file -p 47fe4a94a6ba151764cfb98f6d995a8c47fb3e01 > symbol-table.c
 // git cat-file -p b246b13119ee9f082fbf88b642b914b6d0b7fb7d > source-to-source.c
 // git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af > preprocessor.c
@@ -14344,13 +14584,13 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 7e7f49598c2d9701253f09009d7012618ade9339 > symbol-table-builder.c
 // git cat-file -p 1ef0ccd414c4831d299ebfe679272b61dcc98699 > srcgen.c
 // git cat-file -p 2c7444aaad7eb274e29ca6fa490305a17a88c862 > pratt-parser.c
-// git cat-file -p 17597f6785549c041809de46f2c0844d84d27898 > statement-parser.c
+// git cat-file -p f923613065cf23c91a715e7e4661647d6a8a08c6 > statement-parser.c
 // git cat-file -p 3f07bb1029d51a41d0a1e7b7ffe8095f7df1b518 > type-parser.c
 // git cat-file -p 9e037abaf89da4c6ea500ebf09b2bb3cd64a570a > user-type-parser.c
 // git cat-file -p 17bb7334f2306be9c30ef56bbd46456bf20824c9 > variable-definition-parser.c
-// git cat-file -p 0a60637302a1720474efbd538777232352d15a37 > literal-parser.c
+// git cat-file -p 9d05a19accd8aad90f0eebd7490a271f447b0e52 > literal-parser.c
 // git cat-file -p 1d763bad1a86fe024fae36db07e66a5c160393c9 > balanced-construct-parser.c
 // git cat-file -p a1246b1440b1757d6547a3b3f595d5bb0646849a > printer.c
 // git cat-file -p ea1a646a86f833872d5be645ae3403283baf459f > global-includes.c
-// git cat-file -p 12d884cd8f4513d29f4b88012b637de8624689cc > main.c
+// git cat-file -p e6c66e3900bdf556d55ae31ee6fc5f826c43afe9 > main.c
 // git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
