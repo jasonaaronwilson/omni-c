@@ -14,6 +14,7 @@ export ARMYKNIFE_LIB_LOG_LEVEL = WARN
 
 OMNI_CC_PATH := $(BUILD_DIR)/bin/omni-c
 LIB_PATH := $(BUILD_DIR)/bin/lib.oar
+OMNI_C_TEST_COMPILER ?= tcc
 
 define build_c_file
 	${OMNI_CC_PATH} build \

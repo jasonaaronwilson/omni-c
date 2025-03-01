@@ -7,10 +7,6 @@
 1. detect the same "source path" for a file and error out if they are
 the same.
 
-## Build lib/examples/* with omni-c.
-
-
-
 ## nullptr instead of NULL
 
 Need to fix inside of compund_literals (which probably means we need
