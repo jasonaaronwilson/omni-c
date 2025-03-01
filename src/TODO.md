@@ -24,8 +24,6 @@ types (including function pointers).
 
 ## Simple Compiler Improvements
 
-1. put out more line for other types of statements.
-
 1. use a proper stack in balanced construct parser.
 
 1. automatic test main file generation

@@ -1,140 +1,151 @@
 /**
  * @structure if_statement_node_t
  */
-typedef struct {
+typedef if_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* if_condition;
   parse_node_t* if_true;
   parse_node_t* if_else;
-} if_statement_node_t;
+};
 
 /**
  * @structure for_statement_node_t
  */
-typedef struct {
+typedef for_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* for_init;
   parse_node_t* for_test;
   parse_node_t* for_increment;
   parse_node_t* for_body;
-} for_statement_node_t;
+};
 
 /**
  * @structure do_statement_node_t
  */
-typedef struct {
+typedef do_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* body;
   parse_node_t* condition;
-} do_statement_node_t;
+};
 
 /**
  * @structure while_statement_node_t
  */
-typedef struct {
+typedef while_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* condition;
   parse_node_t* body;
-} while_statement_node_t;
+};
 
 /**
  * @structure empty_statement_node_t
  */
-typedef struct {
+typedef empty_statement_node_t = struct {
   parse_node_type_t tag;
   token_t* semi_colon_token;
-} empty_statement_node_t;
+};
 
 /**
  * @structure block_node_t
  */
-typedef struct {
+typedef block_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   node_list_t statements;
-} block_node_t;
+};
 
 /**
  * @structure return_statement_node_t
  */
-typedef struct {
+typedef return_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
-} return_statement_node_t;
+};
 
 /**
  * @structure switch_statement_node_t
  */
-typedef struct {
+typedef switch_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
   parse_node_t* block;
-} switch_statement_node_t;
+};
 
 /**
  * @structure case_label_node_t
  */
-typedef struct {
+typedef case_label_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
-} case_label_node_t;
+};
 
 /**
  * @structure default_label_node_t
  */
-typedef struct {
+typedef default_label_node_t = struct {
   parse_node_type_t tag;
   token_t* default_token;
-} default_label_node_t;
+};
 
 /**
  * @structure goto_statement_node_t
  */
-typedef struct {
+typedef goto_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   token_t* label;
-} goto_statement_node_t;
+};
 
 /**
  * @structure break_statement_node_t
  */
-typedef struct {
+typedef break_statement_node_t = struct {
   parse_node_type_t tag;
   token_t* break_keyword_token;
-} break_statement_node_t;
+};
 
 /**
  * @structure continue_statement_node_t
  */
-typedef struct {
+typedef continue_statement_node_t = struct {
   parse_node_type_t tag;
   token_t* continue_keyword_token;
-} continue_statement_node_t;
+};
 
 /**
  * @structure label_statement_t
  */
-typedef struct {
+typedef label_statement_node_t = struct {
   parse_node_type_t tag;
   token_t* label;
-} label_statement_node_t;
+};
 
 /**
  * @structure variable_statement_node_t
  */
-typedef struct {
+typedef variable_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   // type
   // name
   parse_node_t* expression;
-} variable_statement_node_t;
+};
 
 /**
  * @structure expression_statement_node_t
  */
-typedef struct {
+typedef expression_statement_node_t = struct {
   parse_node_type_t tag;
+  token_t* first_token;
   parse_node_t* expression;
-} expression_statement_node_t;
+};
 
 /**
  * @function parse_statement
@@ -180,7 +191,8 @@ pstatus_t parse_block(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, "{")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  block_node_t* result = make_block_node();
+  block_node_t* result
+      = make_block_node(token_at(pstate->tokens, saved_position));
   while (parse_statement(pstate)) {
     node_list_add_node(&result->statements, pstate_get_result_node(pstate));
   }
@@ -203,7 +215,9 @@ pstatus_t parse_return_statement(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, to_node(make_return_statement(expr)));
+  return pstate_set_result_node(
+      pstate, to_node(make_return_statement(
+                  token_at(pstate->tokens, saved_position), expr)));
 }
 
 /**
@@ -230,7 +244,9 @@ pstatus_t parse_if_statement(pstate_t* pstate) {
     if_false = pstate_get_result_node(pstate);
   }
   return pstate_set_result_node(
-      pstate, to_node(make_if_statement(if_test, if_true, if_false)));
+      pstate,
+      to_node(make_if_statement(token_at(pstate->tokens, saved_position),
+                                if_test, if_true, if_false)));
 }
 
 /**
@@ -249,7 +265,9 @@ pstatus_t parse_while_statement(pstate_t* pstate) {
   }
   parse_node_t* while_body = pstate_get_result_node(pstate);
   return pstate_set_result_node(
-      pstate, to_node(make_while_statement(while_test, while_body)));
+      pstate,
+      to_node(make_while_statement(token_at(pstate->tokens, saved_position),
+                                   while_test, while_body)));
 }
 
 /**
@@ -274,7 +292,9 @@ pstatus_t parse_do_statement(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
   return pstate_set_result_node(
-      pstate, to_node(make_do_statement(do_while_body, do_while_condition)));
+      pstate,
+      to_node(make_do_statement(token_at(pstate->tokens, saved_position),
+                                do_while_body, do_while_condition)));
 }
 
 /**
@@ -310,7 +330,8 @@ pstatus_t parse_for_statement(pstate_t* pstate) {
   parse_node_t* for_body = pstate_get_result_node(pstate);
   return pstate_set_result_node(
       pstate,
-      to_node(make_for_statement(for_init, for_test, for_increment, for_body)));
+      to_node(make_for_statement(token_at(pstate->tokens, saved_position),
+                                 for_init, for_test, for_increment, for_body)));
 }
 
 /**
@@ -329,7 +350,9 @@ pstatus_t parse_switch_statement(pstate_t* pstate) {
   }
   parse_node_t* block = pstate_get_result_node(pstate);
   return pstate_set_result_node(
-      pstate, to_node(make_switch_statement(switch_item, block)));
+      pstate,
+      to_node(make_switch_statement(token_at(pstate->tokens, saved_position),
+                                    switch_item, block)));
 }
 
 /**
@@ -345,7 +368,9 @@ pstatus_t parse_case_label(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, ":")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate, to_node(make_case_label(case_expr)));
+  return pstate_set_result_node(
+      pstate, to_node(make_case_label(token_at(pstate->tokens, saved_position),
+                                      case_expr)));
 }
 
 /**
@@ -363,8 +388,9 @@ pstatus_t parse_expression_statement(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate,
-                                to_node(make_expression_statement_node(expr)));
+  return pstate_set_result_node(
+      pstate, to_node(make_expression_statement_node(
+                  token_at(pstate->tokens, saved_position), expr)));
 }
 
 /**
@@ -378,8 +404,9 @@ pstatus_t parse_goto_statement(pstate_t* pstate) {
       || !pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  return pstate_set_result_node(pstate,
-                                to_node(make_goto_statement(label_token)));
+  return pstate_set_result_node(
+      pstate, to_node(make_goto_statement(
+                  token_at(pstate->tokens, saved_position), label_token)));
 }
 
 /**
@@ -541,9 +568,11 @@ label_statement_node_t* to_label_statement_node(parse_node_t* ptr) {
  *
  * Allocating a break statement node and set it's field values.
  */
-goto_statement_node_t* make_goto_statement(token_t* label) {
+goto_statement_node_t* make_goto_statement(token_t* first_token,
+                                           token_t* label) {
   goto_statement_node_t* result = malloc_struct(goto_statement_node_t);
   result->tag = PARSE_NODE_GOTO_STATEMENT;
+  result->first_token = first_token;
   result->label = label;
   return result;
 }
@@ -595,10 +624,12 @@ empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr) {
  *
  * Allocating a switch statement node and set it's field values.
  */
-switch_statement_node_t* make_switch_statement(parse_node_t* expression,
+switch_statement_node_t* make_switch_statement(token_t* first_token,
+                                               parse_node_t* expression,
                                                parse_node_t* block) {
   switch_statement_node_t* result = malloc_struct(switch_statement_node_t);
   result->tag = PARSE_NODE_SWITCH_STATEMENT;
+  result->first_token = first_token;
   result->expression = expression;
   result->block = block;
   return result;
@@ -624,9 +655,11 @@ switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr) {
  *
  * Allocating a case label node and set it's field values.
  */
-case_label_node_t* make_case_label(parse_node_t* expression) {
+case_label_node_t* make_case_label(token_t* first_token,
+                                   parse_node_t* expression) {
   case_label_node_t* result = malloc_struct(case_label_node_t);
   result->tag = PARSE_NODE_CASE_LABEL;
+  result->first_token = first_token;
   result->expression = expression;
   return result;
 }
@@ -679,8 +712,9 @@ default_label_node_t* to_default_label_node(parse_node_t* ptr) {
  * Allocating a block node and set it's field values. Typically
  * statements are added to the block node after creation.
  */
-block_node_t* make_block_node() {
+block_node_t* make_block_node(token_t* first_token) {
   block_node_t* result = malloc_struct(block_node_t);
+  result->first_token = first_token;
   result->tag = PARSE_NODE_BLOCK;
   return result;
 }
@@ -706,12 +740,14 @@ block_node_t* to_block_node(parse_node_t* ptr) {
  * Allocating a for statement node and set it's field
  * values.
  */
-for_statement_node_t* make_for_statement(parse_node_t* for_init,
+for_statement_node_t* make_for_statement(token_t* first_token,
+                                         parse_node_t* for_init,
                                          parse_node_t* for_test,
                                          parse_node_t* for_increment,
                                          parse_node_t* for_body) {
   for_statement_node_t* result = malloc_struct(for_statement_node_t);
   result->tag = PARSE_NODE_FOR_STATEMENT;
+  result->first_token = first_token;
   result->for_init = for_init;
   result->for_test = for_test;
   result->for_increment = for_increment;
@@ -739,11 +775,13 @@ for_statement_node_t* to_for_statement_node(parse_node_t* ptr) {
  *
  * Allocating a if statement node and set it's field values.
  */
-if_statement_node_t* make_if_statement(parse_node_t* if_condition,
+if_statement_node_t* make_if_statement(token_t* first_token,
+                                       parse_node_t* if_condition,
                                        parse_node_t* if_true,
                                        parse_node_t* if_else) {
   if_statement_node_t* result = malloc_struct(if_statement_node_t);
   result->tag = PARSE_NODE_IF_STATEMENT;
+  result->first_token = first_token;
   result->if_condition = if_condition;
   result->if_true = if_true;
   result->if_else = if_else;
@@ -771,10 +809,12 @@ if_statement_node_t* to_if_statement_node(parse_node_t* ptr) {
  * Allocating a expression statement node and set it's field values.
  */
 expression_statement_node_t*
-    make_expression_statement_node(parse_node_t* expression) {
+    make_expression_statement_node(token_t* first_token,
+                                   parse_node_t* expression) {
   expression_statement_node_t* result
       = malloc_struct(expression_statement_node_t);
   result->tag = PARSE_NODE_EXPRESSION_STATEMENT;
+  result->first_token = first_token;
   result->expression = expression;
   return result;
 }
@@ -799,9 +839,11 @@ expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr) {
  *
  * Allocating a return statement node and set it's field values.
  */
-return_statement_node_t* make_return_statement(parse_node_t* expression) {
+return_statement_node_t* make_return_statement(token_t* first_token,
+                                               parse_node_t* expression) {
   return_statement_node_t* result = malloc_struct(return_statement_node_t);
   result->tag = PARSE_NODE_RETURN_STATEMENT;
+  result->first_token = first_token;
   result->expression = expression;
   return result;
 }
@@ -826,10 +868,12 @@ return_statement_node_t* to_return_statement_node(parse_node_t* ptr) {
  *
  * Allocating a while statement node and set it's field values.
  */
-while_statement_node_t* make_while_statement(parse_node_t* condition,
+while_statement_node_t* make_while_statement(token_t* first_token,
+                                             parse_node_t* condition,
                                              parse_node_t* body) {
   while_statement_node_t* result = malloc_struct(while_statement_node_t);
   result->tag = PARSE_NODE_WHILE_STATEMENT;
+  result->first_token = first_token;
   result->condition = condition;
   result->body = body;
   return result;
@@ -855,10 +899,11 @@ while_statement_node_t* to_while_statement_node(parse_node_t* ptr) {
  *
  * Allocating a do statement node and set it's field values.
  */
-do_statement_node_t* make_do_statement(parse_node_t* body,
+do_statement_node_t* make_do_statement(token_t* first_token, parse_node_t* body,
                                        parse_node_t* condition) {
   do_statement_node_t* result = malloc_struct(do_statement_node_t);
   result->tag = PARSE_NODE_DO_STATEMENT;
+  result->first_token = first_token;
   result->body = body;
   result->condition = condition;
   return result;

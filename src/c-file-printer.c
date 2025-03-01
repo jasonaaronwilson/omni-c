@@ -604,6 +604,9 @@ printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node) {
  */
 printer_t* append_empty_statement_node(printer_t* printer,
                                        empty_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->semi_colon_token);
+  }
   printer_indent(printer);
   append_string(printer, ";\n");
   return printer;
@@ -614,6 +617,9 @@ printer_t* append_empty_statement_node(printer_t* printer,
  */
 printer_t* append_break_statement_node(printer_t* printer,
                                        break_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->break_keyword_token);
+  }
   printer_indent(printer);
   append_string(printer, "break;\n");
   return printer;
@@ -624,6 +630,9 @@ printer_t* append_break_statement_node(printer_t* printer,
  */
 printer_t* append_continue_statement_node(printer_t* printer,
                                           continue_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->continue_keyword_token);
+  }
   printer_indent(printer);
   append_string(printer, "continue;\n");
   return printer;
@@ -634,6 +643,9 @@ printer_t* append_continue_statement_node(printer_t* printer,
  */
 printer_t* append_label_statement_node(printer_t* printer,
                                        label_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->label);
+  }
   printer_indent(printer);
   append_token(printer, node->label);
   append_string(printer, ":\n");
@@ -644,6 +656,9 @@ printer_t* append_label_statement_node(printer_t* printer,
  * @function append_case_label_node
  */
 printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
   append_string(printer, "case ");
   append_parse_node(printer, node->expression);
@@ -656,6 +671,9 @@ printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node) {
  */
 printer_t* append_default_label_node(printer_t* printer,
                                      default_label_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->default_token);
+  }
   printer_indent(printer);
   append_string(printer, "default:\n");
   return printer;
@@ -666,6 +684,9 @@ printer_t* append_default_label_node(printer_t* printer,
  */
 printer_t* append_expression_statement_node(printer_t* printer,
                                             expression_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
   append_parse_node(printer, node->expression);
   append_string(printer, ";\n");
@@ -676,6 +697,9 @@ printer_t* append_expression_statement_node(printer_t* printer,
  * @function append_block_node
  */
 printer_t* append_block_node(printer_t* printer, block_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
   append_string(printer, "{\n");
   printer_increase_indent(printer);
@@ -694,6 +718,9 @@ printer_t* append_block_node(printer_t* printer, block_node_t* node) {
  */
 printer_t* append_if_statement_node(printer_t* printer,
                                     if_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
   append_string(printer, "if (");
   append_parse_node(printer, node->if_condition);
@@ -712,6 +739,9 @@ printer_t* append_if_statement_node(printer_t* printer,
  */
 printer_t* append_while_statement_node(printer_t* printer,
                                        while_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
   append_string(printer, "while (");
   append_parse_node(printer, node->condition);
@@ -725,6 +755,9 @@ printer_t* append_while_statement_node(printer_t* printer,
  */
 printer_t* append_switch_statement_node(printer_t* printer,
                                         switch_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
   append_string(printer, "switch (");
   append_parse_node(printer, node->expression);
@@ -738,6 +771,9 @@ printer_t* append_switch_statement_node(printer_t* printer,
  */
 printer_t* append_for_statement_node(printer_t* printer,
                                      for_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
 
   append_string(printer, "for (\n");
@@ -775,6 +811,9 @@ printer_t* append_for_statement_node(printer_t* printer,
  */
 printer_t* append_do_statement_node(printer_t* printer,
                                     do_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
   append_string(printer, "do");
   append_parse_node(printer, node->body);
@@ -790,6 +829,9 @@ printer_t* append_do_statement_node(printer_t* printer,
  */
 printer_t* append_return_statement_node(printer_t* printer,
                                         return_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
   printer_indent(printer);
   append_string(printer, "return");
   if (node->expression != nullptr) {
@@ -941,6 +983,10 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node,
 }
 
 printer_t* append_line_directive(printer_t* printer, token_t* token) {
+  if (token == nullptr) {
+    buffer_printf(printer->buffer, "\n// (no 'first token') provided)\n");
+    return printer;
+  }
   if (printer->symbol_table == nullptr) {
     log_fatal("printer->symbol_table is not set.");
     fatal_error(ERROR_ILLEGAL_STATE);
