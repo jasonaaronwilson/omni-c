@@ -5,7 +5,8 @@
  * number, character constant, a string literal, or a complex
  * initializer like {1, 2}.
  */
-typedef struct literal_node_S {
+
+typedef literal_node_t = struct {
   parse_node_type_t tag;
   token_t* token;
   // This is used for string literals since in C multiple string
@@ -14,11 +15,42 @@ typedef struct literal_node_S {
   value_array_t* tokens;
   parse_node_t* initializer_node;
   parse_node_t* initializer_type;
-} literal_node_t;
+};
+
+// (type_node) { initializer-list }
+typedef compound_literal_node_t = struct {
+  parse_node_type_t tag;
+  parse_node_t* type_node;
+  // Expressions or designated_initializer_node_t
+  node_list_t initializers;
+};
+
+typedef designated_initializer_node_t = struct {
+  parse_node_type_t tag;
+  // For [index] = value
+  parse_node_t* index_expression;
+  // For structures/union .member_name = value
+  token_t* member_name;
+  parse_node_t* value;
+};
 
 static inline literal_node_t* malloc_literal_node(void) {
   literal_node_t* result = malloc_struct(literal_node_t);
   result->tag = PARSE_NODE_LITERAL;
+  return result;
+}
+
+static inline compound_literal_node_t* malloc_compound_literal_node(void) {
+  compound_literal_node_t* result = malloc_struct(compound_literal_node_t);
+  result->tag = PARSE_NODE_COMPOUND_LITERAL;
+  return result;
+}
+
+static inline designated_initializer_node_t*
+    malloc_designated_initializer_node(void) {
+  designated_initializer_node_t* result
+      = malloc_struct(designated_initializer_node_t);
+  result->tag = PARSE_NODE_DESIGNATED_INITIALIZER;
   return result;
 }
 
@@ -61,6 +93,9 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
     return pstate_set_result_node(pstate, to_node(result));
   }
 
+  // This is the "macro" syntax for compound_literals, not a real
+  // compound_literal that is fully parse. We'd like to get rid of
+  // this hack at some point.
   if (pstate_match_token_string(pstate, "compound_literal")) {
     pstate_advance(pstate);
     if (!pstate_expect_token_string(pstate, "(") || !parse_type_node(pstate)) {
@@ -84,6 +119,12 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
     return pstate_set_result_node(pstate, to_node(result));
   }
 
+  if (parse_compound_literal(pstate)) {
+    return true;
+  } else {
+    pstate_ignore_error(pstate);
+  }
+
   if (pstate_expect_token_string(pstate, "NULL")
       || pstate_expect_token_string(pstate_ignore_error(pstate), "nullptr")
       || pstate_expect_token_string(pstate_ignore_error(pstate), "true")
@@ -100,4 +141,87 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
   }
 
   return pstate_error(pstate, saved_position, PARSE_ERROR_NOT_LITERAL_NODE);
+}
+
+// (type) { initializer-list }
+pstatus_t parse_compound_literal(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+  if (!pstate_expect_token_string(pstate, "(")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if (!parse_type_node(pstate)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  parse_node_t* type_node = pstate_get_result_node(pstate);
+  if (!pstate_expect_token_string(pstate, ")")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if (!pstate_expect_token_string(pstate, "{")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  node_list_t initializers = compound_literal(node_list_t, {0});
+
+  while (true) {
+    if (pstate_is_eof(pstate)) {
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    if (pstate_match_token_string(pstate, "}")) {
+      pstate_advance(pstate);
+      break;
+    }
+
+    if (node_list_length(initializers) > 0) {
+      if (pstate_match_token_string(pstate, ",")) {
+        pstate_advance(pstate);
+      } else {
+        return pstate_propagate_error(pstate, saved_position);
+      }
+    }
+
+    if (parse_designated_initializer_node(pstate)) {
+      parse_node_t* initializer = pstate_get_result_node(pstate);
+      node_list_add_node(&initializers, initializer);
+    } else if (parse_literal_node(pstate)) {
+      parse_node_t* initializer = pstate_get_result_node(pstate);
+      node_list_add_node(&initializers, initializer);
+    }
+  }
+
+  compound_literal_node_t* result = malloc_compound_literal_node();
+  result->type_node = type_node;
+  result->initializers = initializers;
+  pstate_set_result_node(pstate, to_node(result));
+
+  return true;
+}
+
+// .member_name = expression
+pstatus_t parse_designated_initializer_node(pstate_t* pstate) {
+  uint64_t saved_position = pstate->position;
+
+  // TODO(jawilson): [N] = ...
+
+  if (!pstate_expect_token_string(pstate, ".")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+  if (!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  token_t* member_name = pstate_get_result_token(pstate);
+
+  if (!pstate_expect_token_string(pstate, "=")) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  if (!parse_expression(pstate)) {
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+  designated_initializer_node_t* result = malloc_designated_initializer_node();
+  result->member_name = member_name;
+  result->value = pstate_get_result_node(pstate);
+  pstate_set_result_node(pstate, to_node(result));
+
+  return true;
 }
