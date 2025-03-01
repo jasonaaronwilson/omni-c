@@ -1,4 +1,13 @@
 /**
+ * @function pstate_is_eof
+ *
+ * Return true if there are no remaining tokens in the token stream.
+ */
+boolean_t pstate_is_eof(pstate_t* pstate) {
+  return pstate->position < pstate->tokens->length;
+}
+
+/**
  * @function pstate_error
  *
  * Sets the error in state (possibly overwriting an existing error
@@ -76,7 +85,7 @@ pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node) {
 }
 
 /**
- * @parse pstate_get_token
+ * @function pstate_get_token
  *
  * Return the result token in the pstate. This is not necessarily the
  * token that is currently at the head of the stream (for that use
@@ -94,7 +103,7 @@ token_t* pstate_get_result_token(pstate_t* pstate) {
 }
 
 /**
- * @parse pstate_get_result_node
+ * @function pstate_get_result_node
  *
  * Return the result node in the pstate. This will never return nullptr
  * (see pstate_get_optional_result_node);
@@ -114,7 +123,7 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate) {
 }
 
 /**
- * @parse pstate_get_optional_result_node
+ * @function pstate_get_optional_result_node
  *
  * Return the result node in the pstate. This will never return nullptr
  * (see pstate_get_optional_result_node);
@@ -127,7 +136,7 @@ parse_node_t* pstate_get_optional_result_node(pstate_t* pstate) {
 }
 
 /**
- * @parse pstate_peek
+ * @function pstate_peek
  *
  * Return a token at a relative offset from the current position in
  * pstate.
@@ -137,7 +146,7 @@ token_t* pstate_peek(pstate_t* pstate, int offset) {
 }
 
 /**
- * @parse pstate_advance
+ * @function pstate_advance
  *
  * Advance the token position by one token (and return the
  * token). Note that this will cause a fatal error if we are already
@@ -155,7 +164,7 @@ token_t* pstate_advance(pstate_t* pstate) {
 }
 
 /**
- * @parse pstate_match_token_string
+ * @function pstate_match_token_string
  *
  * This does NOT advance the position like the expect version.
  */
@@ -168,7 +177,7 @@ boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string) {
 // boolean_t pstate_match_token_type(pstate_t* pstate, "");
 
 /**
- * @parse pstate_expect_token_string
+ * @function pstate_expect_token_string
  *
  * This is similar to pstate_match_token_string except that it is used
  * when the head token must match the given token or the parse fails
@@ -189,7 +198,7 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string) {
 }
 
 /**
- * @parse pstate_expect_token_type
+ * @function pstate_expect_token_type
  *
  * This is similar to pstate_match_token_string except that it is used
  * when the head token must match the given token or the parse fails
