@@ -40,6 +40,7 @@ typedef enum {
   PARSE_ERROR_EXPECTED_TOKEN_TYPE,
   PARSE_ERROR_EOF,
   PARSE_ERROR_UNHANDLED_INSTRUCTION,
+  PARSE_ERROR_BAD_INITIALIZER,
 } parse_error_code_t;
 
 // TODO(jawilson): Do we need this forward declaration anymore now

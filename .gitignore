@@ -4,4 +4,6 @@ build-dir/
 src/build/
 src/tests/statements/*.out
 src/tests/expressions/*.out
+tests/statements/*.out
+tests/expressions/*.out
 

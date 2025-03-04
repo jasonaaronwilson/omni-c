@@ -203,7 +203,8 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence) {
   if (token == nullptr) {
     return pstate_error(pstate, saved_position, PARSE_ERROR_EOF);
   }
-  pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(token);
+  pratt_parser_instruction_t prefix_instruction
+      = get_prefix_instruction(pstate, token);
   if (prefix_instruction.operation == PRATT_PARSE_UNKNOWN) {
     log_debug("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
     return pstate_error(pstate, saved_position,
@@ -507,7 +508,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
  * since we don't have a unique type for each token though we could do
  * that in the future...)
  */
-pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
+pratt_parser_instruction_t get_prefix_instruction(pstate_t* pstate,
+                                                  token_t* token) {
   switch (token->type) {
 
   case TOKEN_TYPE_IDENTIFIER:
@@ -550,8 +552,18 @@ pratt_parser_instruction_t get_prefix_instruction(token_t* token) {
   }
 
   if (token_matches(token, "(")) {
-    return make_parser_instruction(token, PRATT_PARSE_SUB_EXPRESSION,
-                                   PRECEDENCE_PRIMARY);
+    // Do we need with infix instructions? Hmmmm...
+    uint64_t saved_position = pstate->position;
+    // Might be a "casted" compound literal...
+    if (parse_compound_literal(pstate)) {
+      pstate_rollback(pstate, saved_position);
+      return make_parser_instruction(token, PRATT_PARSE_LITERAL,
+                                     PRECEDENCE_PRIMARY);
+    } else {
+      pstate_ignore_error(pstate);
+      return make_parser_instruction(token, PRATT_PARSE_SUB_EXPRESSION,
+                                     PRECEDENCE_PRIMARY);
+    }
   }
 
   // also need (cast)

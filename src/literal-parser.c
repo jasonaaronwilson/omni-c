@@ -46,12 +46,28 @@ static inline compound_literal_node_t* malloc_compound_literal_node(void) {
   return result;
 }
 
+static inline compound_literal_node_t*
+    to_compound_literal_node(parse_node_t* ptr) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_COMPOUND_LITERAL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(compound_literal_node_t*, ptr);
+}
+
 static inline designated_initializer_node_t*
     malloc_designated_initializer_node(void) {
   designated_initializer_node_t* result
       = malloc_struct(designated_initializer_node_t);
   result->tag = PARSE_NODE_DESIGNATED_INITIALIZER;
   return result;
+}
+
+static inline designated_initializer_node_t*
+    to_designated_initializer_node(parse_node_t* ptr) {
+  if (ptr == nullptr || ptr->tag != PARSE_NODE_DESIGNATED_INITIALIZER) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(designated_initializer_node_t*, ptr);
 }
 
 pstatus_t parse_literal_node(pstate_t* pstate) {
@@ -145,45 +161,67 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
 
 // (type) { initializer-list }
 pstatus_t parse_compound_literal(pstate_t* pstate) {
+  log_warn("Trying to parse a casted compound literal...");
+
   uint64_t saved_position = pstate->position;
   if (!pstate_expect_token_string(pstate, "(")) {
+    log_warn("Failed to match expected token '('...");
     return pstate_propagate_error(pstate, saved_position);
   }
+  log_warn("MATCHED token '('...");
   if (!parse_type_node(pstate)) {
+    log_warn("Failed to match a parse type node...");
     return pstate_propagate_error(pstate, saved_position);
   }
+  log_warn("MATCHED type...");
   parse_node_t* type_node = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(pstate, ")")) {
+    log_warn("Failed to match expected token ')'...");
     return pstate_propagate_error(pstate, saved_position);
   }
+  log_warn("MATCHED ')'...");
   if (!pstate_expect_token_string(pstate, "{")) {
+    log_warn("Failed to match expected token '{'...");
     return pstate_propagate_error(pstate, saved_position);
   }
+  log_warn("MATCHED '{'...");
   node_list_t initializers = compound_literal(node_list_t, {0});
 
   while (true) {
     if (pstate_is_eof(pstate)) {
+      log_warn("Didn't find a matching '}' before EOF...");
       return pstate_propagate_error(pstate, saved_position);
     }
     if (pstate_match_token_string(pstate, "}")) {
+      log_warn("MATCHED expected token '}'...");
       pstate_advance(pstate);
       break;
     }
 
     if (node_list_length(initializers) > 0) {
-      if (pstate_match_token_string(pstate, ",")) {
-        pstate_advance(pstate);
-      } else {
+      if (!pstate_expect_token_string(pstate, ",")) {
+        log_warn("Failed to match expected token ','...");
         return pstate_propagate_error(pstate, saved_position);
       }
+      log_warn("MATCHED expected token ','...");
     }
 
     if (parse_designated_initializer_node(pstate)) {
+      log_warn("MATCHED designated initializer...");
       parse_node_t* initializer = pstate_get_result_node(pstate);
       node_list_add_node(&initializers, initializer);
-    } else if (parse_literal_node(pstate)) {
-      parse_node_t* initializer = pstate_get_result_node(pstate);
-      node_list_add_node(&initializers, initializer);
+    } else {
+      log_warn(
+          "Failed to match a designated initializer (trying literal node)...");
+      if (parse_literal_node(pstate)) {
+        log_warn("MATCHED literal...");
+        parse_node_t* initializer = pstate_get_result_node(pstate);
+        node_list_add_node(&initializers, initializer);
+      } else {
+        log_warn("Failed to match designated initializer or literal...");
+        return pstate_error(pstate, saved_position,
+                            PARSE_ERROR_BAD_INITIALIZER);
+      }
     }
   }
 
@@ -197,6 +235,8 @@ pstatus_t parse_compound_literal(pstate_t* pstate) {
 
 // .member_name = expression
 pstatus_t parse_designated_initializer_node(pstate_t* pstate) {
+  log_warn("Trying to parse a designated_initializer_node...");
+
   uint64_t saved_position = pstate->position;
 
   // TODO(jawilson): [N] = ...

@@ -154,6 +154,15 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node) {
     buffer_append_dbg_conditional_node(printer, to_conditional_node(node));
     break;
 
+  case PARSE_NODE_COMPOUND_LITERAL:
+    buffer_append_dbg_compound_literal(printer, to_compound_literal_node(node));
+    break;
+
+  case PARSE_NODE_DESIGNATED_INITIALIZER:
+    buffer_append_dbg_designated_initializer(
+        printer, to_designated_initializer_node(node));
+    break;
+
   default:
     log_fatal("No debug printer for %s", parse_node_type_to_string(node->tag));
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -739,6 +748,40 @@ void buffer_append_dbg_switch_node(cdl_printer_t* printer,
   if (node->block != nullptr) {
     cdl_key(printer, "block");
     buffer_append_dbg_parse_node(printer, node->block);
+  }
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_compound_literal(cdl_printer_t* printer,
+                                        compound_literal_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_COMPOUND_LITERAL");
+  if (node->type_node != nullptr) {
+    cdl_key(printer, "type_node");
+    buffer_append_dbg_parse_node(printer, node->type_node);
+  }
+  cdl_key(printer, "initializers");
+  buffer_append_dbg_node_list(printer, node->initializers);
+  cdl_end_table(printer);
+}
+
+void buffer_append_dbg_designated_initializer(
+    cdl_printer_t* printer, designated_initializer_node_t* node) {
+  cdl_start_table(printer);
+  cdl_key(printer, "tag");
+  cdl_string(printer, "PARSE_NODE_DESIGNATED_INITIALIZER");
+  if (node->index_expression != nullptr) {
+    cdl_key(printer, "index_expression");
+    buffer_append_dbg_parse_node(printer, node->index_expression);
+  }
+  if (node->member_name != nullptr) {
+    cdl_key(printer, "member_name");
+    cdl_string(printer, token_to_string(node->member_name));
+  }
+  if (node->value != nullptr) {
+    cdl_key(printer, "value");
+    buffer_append_dbg_parse_node(printer, node->value);
   }
   cdl_end_table(printer);
 }

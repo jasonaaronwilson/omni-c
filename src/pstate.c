@@ -4,7 +4,7 @@
  * Return true if there are no remaining tokens in the token stream.
  */
 boolean_t pstate_is_eof(pstate_t* pstate) {
-  return pstate->position < pstate->tokens->length;
+  return !(pstate->position < pstate->tokens->length);
 }
 
 /**
@@ -216,4 +216,17 @@ pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type) {
   }
   pstate->error.parse_error_code = PARSE_ERROR_EXPECTED_TOKEN_TYPE;
   return false;
+}
+
+/**
+ * @function pstate_rollback
+ *
+ * This is normally used when the we actually succeeded in our last
+ * parse attempt but want to throw away work.
+ */
+void pstate_rollback(pstate_t* pstate, uint64_t saved_position) {
+  pstate->position = saved_position;
+  pstate->result_node = nullptr;
+  pstate->result_token = nullptr;
+  pstate_ignore_error(pstate);
 }

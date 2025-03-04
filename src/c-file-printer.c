@@ -115,6 +115,14 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
   case PARSE_NODE_CALL:
     return append_call_node(printer, to_call_node(node));
 
+  case PARSE_NODE_COMPOUND_LITERAL:
+    return append_compound_literal_node(printer,
+                                        to_compound_literal_node(node));
+
+  case PARSE_NODE_DESIGNATED_INITIALIZER:
+    return append_designated_initializer_node(
+        printer, to_designated_initializer_node(node));
+
   default:
     break;
   }
@@ -997,5 +1005,34 @@ printer_t* append_line_directive(printer_t* printer, token_t* token) {
     buffer_printf(printer->buffer, "\n# %d \"%s\"\n", token->line_number,
                   file == nullptr ? "fixme.c" : file->file_name);
   }
+  return printer;
+}
+
+printer_t* append_compound_literal_node(printer_t* printer,
+                                        compound_literal_node_t* node) {
+  append_string(printer, "(");
+  append_parse_node(printer, node->type_node);
+  append_string(printer, ")");
+  append_string(printer, "{");
+
+  for (int i = 0; i < node_list_length(node->initializers); i++) {
+    if (i > 0) {
+      append_string(printer, ", ");
+    }
+    parse_node_t* initializer = node_list_get(node->initializers, i);
+    append_parse_node(printer, initializer);
+  }
+
+  append_string(printer, "}");
+  return printer;
+}
+
+printer_t*
+    append_designated_initializer_node(printer_t* printer,
+                                       designated_initializer_node_t* node) {
+  append_string(printer, ".");
+  append_token(printer, node->member_name);
+  append_string(printer, "=");
+  append_parse_node(printer, node->value);
   return printer;
 }

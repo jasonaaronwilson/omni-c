@@ -1,0 +1,2 @@
+(value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+

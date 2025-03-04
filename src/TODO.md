@@ -7,6 +7,8 @@
 1. detect the same "source path" for a file and error out if they are
 the same.
 
+1. ooops, tests still write an .out file to the tests/ directory...
+
 ## nullptr instead of NULL
 
 Need to fix inside of compund_literals (which probably means we need

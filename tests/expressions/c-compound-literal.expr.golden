@@ -1,0 +1,33 @@
+{
+    tag = PARSE_NODE_COMPOUND_LITERAL
+    type_node = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_TYPENAME
+        type_name = value_result_t
+        type_args = [
+        ]
+    }
+    initializers = [
+        {
+            tag = PARSE_NODE_DESIGNATED_INITIALIZER
+            member_name = u64
+            value = {
+                tag = PARSE_NODE_LITERAL
+                tokens = [
+                    0
+                ]
+            }
+        }
+        {
+            tag = PARSE_NODE_DESIGNATED_INITIALIZER
+            member_name = nf_error
+            value = {
+                tag = PARSE_NODE_IDENTIFIER
+                token = NF_ERROR_NOT_PARSED_AS_NUMBER
+            }
+        }
+    ]
+}
+
+// C Output
+(value_result_t){.u64=0, .nf_error=NF_ERROR_NOT_PARSED_AS_NUMBER}
