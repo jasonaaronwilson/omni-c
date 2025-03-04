@@ -1,0 +1,31 @@
+{
+    tag = PARSE_NODE_COMPOUND_LITERAL
+    type_node = {
+        tag = PARSE_NODE_TYPE
+        type_node_kind = TYPE_NODE_KIND_TYPENAME
+        type_name = value_result_t
+        type_args = [
+        ]
+    }
+    initializers = [
+        {
+            tag = PARSE_NODE_LITERAL
+            tokens = [
+                0
+            ]
+        }
+        {
+            tag = PARSE_NODE_DESIGNATED_INITIALIZER
+            member_name = u64
+            value = {
+                tag = PARSE_NODE_LITERAL
+                tokens = [
+                    0
+                ]
+            }
+        }
+    ]
+}
+
+// C Output
+(value_result_t){0, .u64=0}

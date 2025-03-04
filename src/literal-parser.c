@@ -161,64 +161,64 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
 
 // (type) { initializer-list }
 pstatus_t parse_compound_literal(pstate_t* pstate) {
-  log_warn("Trying to parse a casted compound literal...");
+  log_info("Trying to parse a casted compound literal...");
 
   uint64_t saved_position = pstate->position;
   if (!pstate_expect_token_string(pstate, "(")) {
-    log_warn("Failed to match expected token '('...");
+    log_info("Failed to match expected token '('...");
     return pstate_propagate_error(pstate, saved_position);
   }
-  log_warn("MATCHED token '('...");
+  log_info("MATCHED token '('...");
   if (!parse_type_node(pstate)) {
-    log_warn("Failed to match a parse type node...");
+    log_info("Failed to match a parse type node...");
     return pstate_propagate_error(pstate, saved_position);
   }
-  log_warn("MATCHED type...");
+  log_info("MATCHED type...");
   parse_node_t* type_node = pstate_get_result_node(pstate);
   if (!pstate_expect_token_string(pstate, ")")) {
-    log_warn("Failed to match expected token ')'...");
+    log_info("Failed to match expected token ')'...");
     return pstate_propagate_error(pstate, saved_position);
   }
-  log_warn("MATCHED ')'...");
+  log_info("MATCHED ')'...");
   if (!pstate_expect_token_string(pstate, "{")) {
-    log_warn("Failed to match expected token '{'...");
+    log_info("Failed to match expected token '{'...");
     return pstate_propagate_error(pstate, saved_position);
   }
-  log_warn("MATCHED '{'...");
+  log_info("MATCHED '{'...");
   node_list_t initializers = compound_literal(node_list_t, {0});
 
   while (true) {
     if (pstate_is_eof(pstate)) {
-      log_warn("Didn't find a matching '}' before EOF...");
+      log_info("Didn't find a matching '}' before EOF...");
       return pstate_propagate_error(pstate, saved_position);
     }
     if (pstate_match_token_string(pstate, "}")) {
-      log_warn("MATCHED expected token '}'...");
+      log_info("MATCHED expected token '}'...");
       pstate_advance(pstate);
       break;
     }
 
     if (node_list_length(initializers) > 0) {
       if (!pstate_expect_token_string(pstate, ",")) {
-        log_warn("Failed to match expected token ','...");
+        log_info("Failed to match expected token ','...");
         return pstate_propagate_error(pstate, saved_position);
       }
-      log_warn("MATCHED expected token ','...");
+      log_info("MATCHED expected token ','...");
     }
 
     if (parse_designated_initializer_node(pstate)) {
-      log_warn("MATCHED designated initializer...");
+      log_info("MATCHED designated initializer...");
       parse_node_t* initializer = pstate_get_result_node(pstate);
       node_list_add_node(&initializers, initializer);
     } else {
-      log_warn(
+      log_info(
           "Failed to match a designated initializer (trying literal node)...");
       if (parse_literal_node(pstate)) {
-        log_warn("MATCHED literal...");
+        log_info("MATCHED literal...");
         parse_node_t* initializer = pstate_get_result_node(pstate);
         node_list_add_node(&initializers, initializer);
       } else {
-        log_warn("Failed to match designated initializer or literal...");
+        log_info("Failed to match designated initializer or literal...");
         return pstate_error(pstate, saved_position,
                             PARSE_ERROR_BAD_INITIALIZER);
       }
@@ -235,7 +235,7 @@ pstatus_t parse_compound_literal(pstate_t* pstate) {
 
 // .member_name = expression
 pstatus_t parse_designated_initializer_node(pstate_t* pstate) {
-  log_warn("Trying to parse a designated_initializer_node...");
+  log_info("Trying to parse a designated_initializer_node...");
 
   uint64_t saved_position = pstate->position;
 
