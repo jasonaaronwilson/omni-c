@@ -87,6 +87,7 @@ SRC_C_SELF := \
 	printer.c \
 	global-includes.c \
 	linearizer.c \
+	flags.c \
 	main.c
 
 SRC_C := $(SRC_C_SELF)
