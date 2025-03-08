@@ -122,6 +122,31 @@ move semantics, etc.)
 
 ## Status
 
+* (2025-03-07) I haven't updated status for a while so there is a lot
+  here, some of it's user visible and kind of cool though the vast
+  amount of work was moving towards a mono-repo where *everything* is
+  compiled with omni-c (which increases coverage and should allow more
+  focus/progress/changes/ease-of-installation, etc.). I'm finally
+  putting out line directives for all statements which seems to work
+  well for debugging (at least when not -O3) and also helps with C
+  compiler error messages that occur when omni-c doesn't catch the
+  problem itself (too frequently). nullptr is always available even
+  when compiling to C99. The new "typedef foo = BAR;" syntax is
+  usually easier to use than the equivalent format without that magic
+  "=" sign and maybe even seasoned C developers would like it. This
+  along with the fn_t macro made messing around with structures as
+  interfaces (see byte_stream_source and byte_stream_target, not
+  really utilized, more of an experiment) not that painful to write
+  (and it's more readable to me at least...) Integration with the
+  Boehm GC (so more Go like than ever...) The "build" sub-command
+  automatically invokes the C compiler (with several different C
+  compilers supported out of the box like gcc, tcc, clang and even
+  "zig cc"). Rounding out the changes, I finally incorporated
+  "omni-archives" which are a convenient way to package up source code
+  for "all at once" compilation model - an extremely simple
+  alternative to zip or tar which is about 100 lines of somewhat
+  commented code (see src/lib/oarchive.c), handles unlimited length
+  utf-8 filenames, etc.
 * (2024-12-10) Tested on an Orange Pi Zero 2 (1GB, Debian Bookworm
   based OS provided by Orange Pi, Quad Core ARM Cortex-A53 64-bit
   1.5GHz processor) a less than $40 computer. Building is much slower
