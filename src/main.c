@@ -9,7 +9,11 @@
  */
 
 /* ====================================================================== */
-// Here are is the combined set of flags we parse.
+//
+// Main parses all flags into global variables because of overlap
+// between commands but only this file and foo_<command>.c should
+// directly refer to any such global variable hence there funky names.
+//
 /* ====================================================================== */
 
 value_array_t* FLAG_files = nullptr;
@@ -32,6 +36,83 @@ boolean_t FLAG_use_statement_parser = true;
 boolean_t FLAG_to_c = false;
 boolean_t FLAG_omit_c_armyknife_include = false;
 char* FLAG_c_compiler = "clang";
+
+/**
+ * @function main
+ *
+ * This is the main entry point to the omni-c compiler.
+ */
+int main(int argc, char** argv) {
+  configure_fatal_errors(
+      compound_literal(fatal_error_config_t, {
+                                                 .catch_sigsegv = true,
+                                             }));
+  logger_init();
+
+  configure_flags();
+
+  char* error = flag_parse_command_line(argc, argv);
+  if (error) {
+    flag_print_help(stderr, error);
+    exit(1);
+  }
+
+  if (FLAG_print_command_line) {
+    fprintf(stderr, "Command Line:");
+    for (int i = 0; i < argc; i++) {
+      fprintf(stderr, " %s", argv[i]);
+    }
+    fprintf(stderr, "\n");
+  }
+
+  if (FLAG_command == nullptr) {
+    // Technically this should not be reached because once a command
+    // is defined, a missing or wrong command should trigger an error
+    // and caught above. Note sure why this is still happening but
+    // paranoid code can be easier to debug.
+    fatal_error(ERROR_BAD_COMMAND_LINE);
+  } else if (string_equal("archive", FLAG_command)) {
+    generate_archive_file();
+    log_info("Exiting normally.");
+    exit(0);
+  } else if (string_equal("generate-header-file", FLAG_command)) {
+    generate_c_output_file(false, command_line_args_to_buffer(argc, argv));
+    log_info("Exiting normally.");
+    exit(0);
+  } else if (string_equal("generate-library", FLAG_command)) {
+    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
+    log_info("Exiting normally.");
+    exit(0);
+  } else if (string_equal("build", FLAG_command)) {
+    if (string_is_null_or_empty(FLAG_c_output_file)) {
+      log_fatal("Must supply --c-output-file");
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+    if (string_is_null_or_empty(FLAG_binary_output_file)) {
+      log_fatal("Must supply --binary-output-file");
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
+    int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
+    if (status == 0) {
+      log_info("Exiting normally.");
+      exit(0);
+    } else {
+      log_warn("Exiting abnormally.");
+      exit(status);
+    }
+  } else if (string_equal("parse-expression", FLAG_command)) {
+    parse_expression_string_and_print_parse_tree(FLAG_expression);
+  } else if (string_equal("parse-statement", FLAG_command)) {
+    parse_statement_string_and_print_parse_tree(FLAG_statement);
+  } else if (string_equal("print-tokens", FLAG_command)) {
+    print_tokens();
+  } else {
+    fprintf(stderr, "Unknown command: %s\n", FLAG_command);
+  }
+
+  exit(0);
+}
 
 void do_print_tokens(value_array_t* tokens, char* message) {
   if (FLAG_print_tokens_show_tokens) {
@@ -661,76 +742,4 @@ void generate_archive_file(void) {
         out, value_array_get(FLAG_files, i).str);
   }
   fclose(out);
-}
-
-int main(int argc, char** argv) {
-  configure_fatal_errors(
-      compound_literal(fatal_error_config_t, {
-                                                 .catch_sigsegv = true,
-                                             }));
-  logger_init();
-
-  configure_flags();
-
-  char* error = flag_parse_command_line(argc, argv);
-  if (error) {
-    flag_print_help(stderr, error);
-    exit(1);
-  }
-
-  if (FLAG_print_command_line) {
-    fprintf(stderr, "Command Line:");
-    for (int i = 0; i < argc; i++) {
-      fprintf(stderr, " %s", argv[i]);
-    }
-    fprintf(stderr, "\n");
-  }
-
-  if (FLAG_command == nullptr) {
-    // Technically this should not be reached because once a command
-    // is defined, a missing or wrong command should trigger an error
-    // and caught above. Note sure why this is still happening but
-    // paranoid code can be easier to debug.
-    fatal_error(ERROR_BAD_COMMAND_LINE);
-  } else if (string_equal("archive", FLAG_command)) {
-    generate_archive_file();
-    log_info("Exiting normally.");
-    exit(0);
-  } else if (string_equal("generate-header-file", FLAG_command)) {
-    generate_c_output_file(false, command_line_args_to_buffer(argc, argv));
-    log_info("Exiting normally.");
-    exit(0);
-  } else if (string_equal("generate-library", FLAG_command)) {
-    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
-    log_info("Exiting normally.");
-    exit(0);
-  } else if (string_equal("build", FLAG_command)) {
-    if (string_is_null_or_empty(FLAG_c_output_file)) {
-      log_fatal("Must supply --c-output-file");
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-    if (string_is_null_or_empty(FLAG_binary_output_file)) {
-      log_fatal("Must supply --binary-output-file");
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
-    int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
-    if (status == 0) {
-      log_info("Exiting normally.");
-      exit(0);
-    } else {
-      log_warn("Exiting abnormally.");
-      exit(status);
-    }
-  } else if (string_equal("parse-expression", FLAG_command)) {
-    parse_expression_string_and_print_parse_tree(FLAG_expression);
-  } else if (string_equal("parse-statement", FLAG_command)) {
-    parse_statement_string_and_print_parse_tree(FLAG_statement);
-  } else if (string_equal("print-tokens", FLAG_command)) {
-    print_tokens();
-  } else {
-    fprintf(stderr, "Unknown command: %s\n", FLAG_command);
-  }
-
-  exit(0);
 }
