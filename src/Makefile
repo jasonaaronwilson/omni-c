@@ -89,6 +89,7 @@ SRC_C_SELF := \
 	linearizer.c \
 	main.c \
 	archive-command.c \
+	generate-c-output-file.c \
 	flags.c
 
 SRC_C := $(SRC_C_SELF)
