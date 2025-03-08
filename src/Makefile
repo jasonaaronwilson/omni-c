@@ -86,6 +86,7 @@ SRC_C_SELF := \
 	balanced-construct-parser.c \
 	printer.c \
 	global-includes.c \
+	linearizer.c \
 	main.c
 
 SRC_C := $(SRC_C_SELF)
