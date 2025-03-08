@@ -1,20 +1,18 @@
 # Omni-C
 
-A C derived programming language so similar to C you can start using
-omni-c right away if you already know C.
+An extended C programming language with convenience and safety
+enhancement features.
 
-The main feature is that you'll enjoy a fully independent declaration
-order (so you never have to write a header file again), an enhanced
-standard library with basic collections to promote additional run-time
-safety, overloaded functions, generic programming via templates,
-function calling with method a method syntax, and even some basic
-reflection capabilities. (You'll never worry about turning an enum to
-a string or vice-versa).
+The main features beyound C is an independent declaration order (so
+you never have to write a header file again), an enhanced standard
+library with basic collections to promote additional run-time safety,
+overloaded functions, generic programming via templates, function
+calling with "method" syntax, and basic reflection capabilities. (For
+example, enum to string and string to enum conversion.)
 
-Since Omni C is a transpiler you will get the same code quality as
-your favorite C compiler such as gcc, clang, tcc, msvc, and custom
-compilers for embedded development work (we will eventually
-"poly-fill" to ancient C compilers because we can).
+Since Omni C is a transpiler, code quality should be similar to the
+underlying C compiler used (gcc, clang, tcc, msvc, etc., and we may
+"poly-fill" to even older C standards than C99).
 
 ## Using Omni C
 
@@ -25,14 +23,11 @@ like so:
   omni-c build --executable=my_program *.c sub-directory/*.c
 ```
 
-If you are building larger programs, you may want to create libraries
-and begin using a build system of your choice, but omni-c isn't
-forcing this on you.
-
-We will probably have a (versioned) package mechanism like all other
-modern languages so you can stand on the shoulders of giants instead
-of writing all of your own code. We will eventually supply an LLM
-prompt so that LLMs just work for you too.
+(There are other options like source archives to help structure larger
+programs, or you can use or output more standard C libraries with
+header files. We will eventually have a (versioned) package mechanism
+like all other modern languages so you can stand on the shoulders of
+giants instead of writing all of your own code.)
 
 ## Omni C Standard Library
 
@@ -46,28 +41,23 @@ The Omni C standard library provides a minimal set of "collections":
 
 Although not exactly a collection in the traditional sense,
 `buffer_t`, is similar to an array of bytes that automatically grows,
-and can be used consistently for a variety of purposes such as
-building strings (like StringBuilder in Java). You can even printf
-into a buffer_t though we think you'll prefer string interpolation
-more (they still use buffer_t underneath).
+and is used consistently for a variety of purposes such as building
+strings (like StringBuilder in Java). You can even printf into a
+buffer_t though we think you'll prefer string interpolation more (they
+still use buffer_t underneath).
 
 Unlike the C standard library, everything added to Omni C uses very
 readable names.
-
-I'm using the precursor library called c-armyknife-lib to write omni-c
-and low-level memory curruption is now very rare. While C++ can
-probably argue the same, you can use Omni C when a C++ compiler isn't
-available but unlike C++, there is quite a bit less magic going on (no
-move semantics, etc.)
 
 ## Features
 
 1. forward declarations and a particular declaration order is not
    necessary (though allowed and verified...)
-1. a much more sane type declaration syntax (especially convenient for
-   things like functions: `fn_t<void,uint64_t*>*` is much easier to
-   read than the C equivalent so much less need for typedefs!)
-   built-in cast() operator to make casting more readable too.
+1. options for more readable type declarations (especially convenient
+   for things like functions: `fn_t<void,uint64_t*>*` is much easier
+   to read than the C equivalent so much less need for typedefs!)
+   built-in cast() operator to make casting more readable too (or at
+   least easier to locate since cast's are a source of unsafe C).
 1. overloaded functions (these are technically already available in
    clang but you don't need to use an attribute, etc.)
 1. syntactic sugar - method call/chaining syntax (so code might look
