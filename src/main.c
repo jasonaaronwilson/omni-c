@@ -45,9 +45,7 @@ int main(int argc, char** argv) {
   } else if (string_equal("archive", FLAG_command)) {
     archive_command();
   } else if (string_equal("generate-header-file", FLAG_command)) {
-    generate_c_output_file(false, command_line_args_to_buffer(argc, argv));
-    log_info("Exiting normally.");
-    exit(0);
+    generate_header_file_command(command_line_args_to_buffer(argc, argv));
   } else if (string_equal("generate-library", FLAG_command)) {
     generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
     log_info("Exiting normally.");
