@@ -43,9 +43,7 @@ int main(int argc, char** argv) {
     // paranoid code can be easier to debug.
     fatal_error(ERROR_BAD_COMMAND_LINE);
   } else if (string_equal("archive", FLAG_command)) {
-    generate_archive_file();
-    log_info("Exiting normally.");
-    exit(0);
+    archive_command();
   } else if (string_equal("generate-header-file", FLAG_command)) {
     generate_c_output_file(false, command_line_args_to_buffer(argc, argv));
     log_info("Exiting normally.");
@@ -608,23 +606,4 @@ int invoke_c_compiler(char* input_file, char* output_file) {
            buffer_to_c_string(buffer));
 
   return sub_process->exit_code;
-}
-
-void generate_archive_file(void) {
-  if (FLAG_archive_output_file == nullptr) {
-    log_fatal("Must specify the archive output file name");
-    exit(-1);
-  }
-  if (FLAG_files == nullptr || FLAG_files->length == 0) {
-    log_warn("No archive members specified.");
-    exit(-1);
-  }
-
-  // TODO(jawilson): what if the file already exists, etc.?
-  FILE* out = fopen(FLAG_archive_output_file, "w");
-  for (int i = 0; i < FLAG_files->length; i++) {
-    oarchive_append_header_and_file_contents(
-        out, value_array_get(FLAG_files, i).str);
-  }
-  fclose(out);
 }
