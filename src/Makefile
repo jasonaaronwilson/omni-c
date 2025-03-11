@@ -93,6 +93,7 @@ SRC_C_SELF := \
 	generate-header-file-command.c \
 	c-compiler-backend.c \
 	git-hash-object.c \
+	print-tokens.c \
 	flags.c
 
 SRC_C := $(SRC_C_SELF)
