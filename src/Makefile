@@ -94,6 +94,7 @@ SRC_C_SELF := \
 	c-compiler-backend.c \
 	git-hash-object.c \
 	print-tokens.c \
+	parse-test.c \
 	flags.c
 
 SRC_C := $(SRC_C_SELF)
