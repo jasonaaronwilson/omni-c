@@ -91,6 +91,7 @@ SRC_C_SELF := \
 	archive-command.c \
 	generate-c-output-file.c \
 	generate-header-file-command.c \
+	c-compiler-backend.c \
 	flags.c
 
 SRC_C := $(SRC_C_SELF)
