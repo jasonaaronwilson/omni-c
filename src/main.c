@@ -47,9 +47,7 @@ int main(int argc, char** argv) {
   } else if (string_equal("generate-header-file", FLAG_command)) {
     generate_header_file_command(command_line_args_to_buffer(argc, argv));
   } else if (string_equal("generate-library", FLAG_command)) {
-    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
-    log_info("Exiting normally.");
-    exit(0);
+    generate_library_command(command_line_args_to_buffer(argc, argv));
   } else if (string_equal("build", FLAG_command)) {
     if (string_is_null_or_empty(FLAG_c_output_file)) {
       log_fatal("Must supply --c-output-file");
