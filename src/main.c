@@ -162,41 +162,6 @@ void print_tokens(void) {
   }
 }
 
-void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table) {
-  if (FLAG_dump_symbol_table) {
-    fprintf(stderr,
-            "=================================================================="
-            "====\n");
-    fprintf(stderr, "%s\n", phase_name);
-    fprintf(stderr,
-            "=================================================================="
-            "====\n\n");
-    buffer_t* buffer = make_buffer(128);
-    buffer = symbol_table_stats(buffer, symbol_table);
-    buffer_append_dgb_symbol_table(make_cdl_printer(buffer), symbol_table);
-
-    fprintf(stderr, "%s", buffer_to_c_string(buffer));
-  }
-}
-
-char* include_node_to_string(cpp_include_node_t* node) {
-  buffer_t* buffer = make_buffer(32);
-  printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
-  append_cpp_include_node(printer, node);
-  char* include_statement = buffer_to_c_string(buffer);
-  return include_statement;
-}
-
-void add_generated_c_file_header(buffer_t* buffer) {
-  buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
-  buffer_printf(
-      buffer,
-      "// This is a generated file, so you generally don't want to edit it!\n");
-  buffer_printf(buffer,
-                "// The bottom of the file has more information about it's "
-                "creation.\n\n\n");
-}
-
 void parse_expression_string_and_print_parse_tree(char* expression) {
   if (expression == nullptr) {
     log_fatal("Expression not specified!");
