@@ -52,6 +52,9 @@ int main(int argc, char** argv) {
   } else if (string_equal("build", FLAG_command)) {
     buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
     build_command(command_line_comment);
+  } else if (string_equal("test", FLAG_command)) {
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+    test_command(command_line_comment);
   } else if (string_equal("parse-expression", FLAG_command)) {
     parse_expression_string_and_print_parse_tree(FLAG_expression);
   } else if (string_equal("parse-statement", FLAG_command)) {

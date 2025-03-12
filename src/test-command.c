@@ -34,9 +34,11 @@ void test_command(buffer_t* command_line_comment) {
   /* ----- We need to be able to hook into generate_c_output_file ----- */
   generate_c_output_file(true, command_line_comment);
 
-  int error_status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
+  int error_status
+      = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
   if (error_status) {
-    log_fatal("The underlying C compiler produced an error compiling the test(s).");
+    log_fatal(
+        "The underlying C compiler produced an error compiling the test(s).");
     // TODO(jawilson): maybe a test banner? We should get a count back
     // of how many tests we didn't run? I guessing a rolling banner?
     exit(error_status);
@@ -46,8 +48,8 @@ void test_command(buffer_t* command_line_comment) {
 }
 
 void run_test_binary(char* rand_binary_file_name) {
-  // FIXME
-  exit(0);
+  log_fatal("RUN TEST BINARY!");
+  exit(1);
 }
 
 void handle_if_internal_test(void) {
@@ -63,10 +65,13 @@ void handle_if_internal_test(void) {
   }
 }
 
-void handle_statement_test(char* filename) {
+void handle_statement_test(char* file_name) {
+  log_fatal("IMPLEMENT ME!");
   exit(1);
 }
 
-void handle_expression_test(char* filename) {
+void handle_expression_test(char* file_name) {
+  parse_expression_string_and_print_parse_tree_from_buffer(
+      buffer_read_file(file_name));
   exit(1);
 }

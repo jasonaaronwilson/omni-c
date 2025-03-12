@@ -3,11 +3,17 @@ void parse_expression_string_and_print_parse_tree(char* expression) {
     log_fatal("Expression not specified!");
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
-  tokenizer_result_t tokenizer_result
-      = tokenize(buffer_append_string(make_buffer(1), expression));
+  parse_expression_string_and_print_parse_tree_from_buffer(
+      buffer_append_string(make_buffer(1), expression));
+}
+
+void parse_expression_string_and_print_parse_tree_from_buffer(
+    buffer_t* input_buffer) {
+  tokenizer_result_t tokenizer_result = tokenize(input_buffer);
   if (tokenizer_result.tokenizer_error_code) {
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
+
   value_array_t* tokens = tokenizer_result.tokens;
   tokens = transform_tokens(
       tokens, compound_literal(token_transformer_options_t,

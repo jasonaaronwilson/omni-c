@@ -112,4 +112,10 @@ void configure_regular_commands(void) {
   flag_string("--archive-output-file", &FLAG_archive_output_file);
   flag_description("the target path of the output archive");
   flag_file_args(&FLAG_files);
+
+  flag_command("test", &FLAG_command);
+  flag_description("compile and run all unit tests in the input files");
+  // TODO(jawilson): copy flags from build (should be get rid of
+  // use-statement-parser flag?)
+  flag_file_args(&FLAG_files);
 }
