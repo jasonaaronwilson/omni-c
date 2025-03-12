@@ -1,11 +1,7 @@
-void parse_expression_string_and_print_parse_tree(char* expression) {
-  if (expression == nullptr) {
-    log_fatal("Expression not specified!");
-    fatal_error(ERROR_ILLEGAL_INPUT);
-  }
-  parse_expression_string_and_print_parse_tree_from_buffer(
-      buffer_append_string(make_buffer(1), expression));
-}
+// TODO(jawilson): in theory these should differ only by the fn_t they
+// call? (I guess the expression tests also look for a ";" - so two
+// bits of deltas?) Probably easier to just make more top-down
+// functions.
 
 void parse_expression_string_and_print_parse_tree_from_buffer(
     buffer_t* input_buffer) {
@@ -46,9 +42,8 @@ void parse_expression_string_and_print_parse_tree_from_buffer(
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
-void parse_statement_string_and_print_parse_tree(char* expression) {
-  tokenizer_result_t tokenizer_result
-      = tokenize(buffer_append_string(make_buffer(1), expression));
+void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer) {
+  tokenizer_result_t tokenizer_result = tokenize(input_buffer);
   if (tokenizer_result.tokenizer_error_code) {
     fatal_error(ERROR_ILLEGAL_INPUT);
   }

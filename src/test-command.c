@@ -66,8 +66,9 @@ void handle_if_internal_test(void) {
 }
 
 void handle_statement_test(char* file_name) {
-  log_fatal("IMPLEMENT ME!");
-  exit(1);
+  parse_statement_string_and_print_parse_tree_from_buffer(
+      buffer_read_file(file_name));
+  exit(0);
 }
 
 void handle_expression_test(char* file_name) {

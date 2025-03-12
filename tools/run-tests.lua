@@ -59,19 +59,16 @@ local TestType = {
     -- The same as PARSE_TEST except additionally the compiled program
     -- is run
     EXECUTE_TEST = 3,
-    -- The test it a simple expression that should be parsed
-    PARSE_EXPRESSION = 4,
-    -- The test it a simple statement that should be parsed
-    PARSE_STATEMENT = 5
+    -- The input file is parsed and printed and then compared to a
+    -- golden file
+    PARSE_PRINT_TEST = 4,
 }
 
 local function get_test_type(filename)
    if ends_with(filename, ".sh") then
       return TestType.SCRIPT
-   elseif ends_with(filename, ".expr") then
-      return TestType.PARSE_EXPRESSION
-   elseif ends_with(filename, ".stmt") then
-      return TestType.PARSE_STATEMENT
+   elseif ends_with(filename, ".expr") or ends_with(filename, ".stmt") then
+      return TestType.PARSE_PRINT_TEST
    else
       local contents = read_file(filename)
       if contains(contents, "main%(") then
@@ -165,23 +162,11 @@ for _, arg in ipairs(arg) do
   elseif test_type == TestType.EXECUTE_TEST then
      print("TestType.EXECUTE_TEST:", arg)
      exit_status = os.execute(omni_c_root .. "/tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
-  elseif test_type == TestType.PARSE_EXPRESSION then
-     print("TestType.PARSE_EXPRESSION(*):", arg)
+  elseif test_type == TestType.PARSE_PRINT_TEST then
+     print("TestType.PARSE_PRINT_TEST(*):", arg)
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
      exit_status = os.execute(omni_c_exec .. " test " .. arg .. " >" .. output_file)
-     if exit_status and file_exists(golden_file) then
-          exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
-     else
-        table.insert(no_golden_tests, arg)
-	print(read_file(output_file))
-     end
-  elseif test_type == TestType.PARSE_STATEMENT then
-     print("TestType.PARSE_STATEMENT:", arg)
-     local contents = escape_and_quote(read_file(arg))
-     local golden_file = arg .. ".golden"
-     local output_file = arg .. ".out"
-     exit_status = os.execute(omni_c_exec .. " parse-statement --statement " .. contents .. " >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else
