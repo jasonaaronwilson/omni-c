@@ -61,19 +61,15 @@ local TestType = {
     EXECUTE_TEST = 3,
     -- The test it a simple expression that should be parsed
     PARSE_EXPRESSION = 4,
-    -- Like the above but we also output the expression as C code
-    PARSE_EXPRESSION_TO_C = 5,
     -- The test it a simple statement that should be parsed
-    PARSE_STATEMENT = 6
+    PARSE_STATEMENT = 5
 }
 
 local function get_test_type(filename)
    if ends_with(filename, ".sh") then
       return TestType.SCRIPT
-   elseif ends_with(filename, ".e") then
-      return TestType.PARSE_EXPRESSION
    elseif ends_with(filename, ".expr") then
-      return TestType.PARSE_EXPRESSION_TO_C
+      return TestType.PARSE_EXPRESSION
    elseif ends_with(filename, ".stmt") then
       return TestType.PARSE_STATEMENT
    else
@@ -169,17 +165,11 @@ for _, arg in ipairs(arg) do
   elseif test_type == TestType.EXECUTE_TEST then
      print("TestType.EXECUTE_TEST:", arg)
      exit_status = os.execute(omni_c_root .. "/tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
-  elseif test_type == TestType.PARSE_EXPRESSION or test_type == TestType.PARSE_EXPRESSION_TO_C then
+  elseif test_type == TestType.PARSE_EXPRESSION then
      print("TestType.PARSE_EXPRESSION(*):", arg)
-     local contents = escape_and_quote(read_file(arg))
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
-     local to_c = "--to-c=false"
-     if test_type == TestType.PARSE_EXPRESSION_TO_C then
-     	to_c = "--to-c=true"
-     end
-     exit_status = os.execute(omni_c_exec .. " parse-expression " .. to_c ..
-       " --expression " .. contents .. " >" .. output_file)
+     exit_status = os.execute(omni_c_exec .. " test " .. arg .. " >" .. output_file)
      if exit_status and file_exists(golden_file) then
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else

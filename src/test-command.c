@@ -73,5 +73,5 @@ void handle_statement_test(char* file_name) {
 void handle_expression_test(char* file_name) {
   parse_expression_string_and_print_parse_tree_from_buffer(
       buffer_read_file(file_name));
-  exit(1);
+  exit(0);
 }
