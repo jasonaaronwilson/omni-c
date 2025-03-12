@@ -2,12 +2,15 @@
 
 ## Cleanup & Build
 
-1. put git hashes into archives (optionally add time-stamps?)
+1. put git hashes into archives (optionally and conditionally add
+time-stamps?)
 
 1. detect the same "source path" for a file and error out if they are
 the same.
 
-1. ooops, tests still write an .out file to the tests/ directory...
+1. ooops, tests still write an .out file to the tests/ directory but
+   something kind of cleans them up? that's on run-tests.lua and we
+   just touched that code?
 
 ## our source code only uses nullptr instead of NULL
 
@@ -15,17 +18,6 @@ We still need to handle them in compund_literals... We seem to be able
 to handle C style "casted" compound literals now but we should now
 parse compound_literal appropriately so maybe just remove
 compound_literal macro/hack?
-
-## Parse System Includes
-
-The goal here is to be able to parse all of the includes for omni-c
-itself (after using cpp to expand them) and extend the list to all the
-header file I can find on my system for common C libraries like
-SQLLite, SDL, Raylib, etc.
-
-The current known hold-up is our inability to fully parse complicated
-C types (including function pointers) though many other things are
-likely to arise.
 
 ## Simple Compiler Improvements
 
@@ -69,3 +61,17 @@ likely to arise.
    unicode?)
 
 1. make sure parser can handle more of unicode?
+
+## Parse System Includes
+
+*Not Yet*
+
+The goal here is to be able to parse all of the includes for omni-c
+itself (after using cpp to expand them) and extend the list to all the
+header file I can find on my system for common C libraries like
+SQLLite, SDL, Raylib, etc.
+
+The current known hold-up is our inability to fully parse complicated
+C types (including function pointers) though many other things are
+likely to arise.
+
