@@ -60,13 +60,23 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes);
 #include <sys/stat.h>
 
 /**
+ * @function buffer_read_file
+ *
+ * Read all of the bytes of a file into a newly created buffer and
+ * return that buffer.
+ */
+buffer_t* buffer_read_file(char* file_name) {
+  buffer_t* result = make_buffer(1);
+  return buffer_append_file_contents(result, file_name);
+}
+
+/**
  * @function buffer_append_file_contents
  *
  * Completely reads a file and appends the contents to the passed in
  * buffer. This is often much more convenient than streaming a file.
  */
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_append_file_contents(buffer_t* bytes, char* file_name) {
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name) {
 
   uint64_t capacity = bytes->capacity;
 
