@@ -45,27 +45,14 @@ int main(int argc, char** argv) {
   } else if (string_equal("archive", FLAG_command)) {
     archive_command();
   } else if (string_equal("generate-header-file", FLAG_command)) {
-    generate_header_file_command(command_line_args_to_buffer(argc, argv));
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+    generate_header_file_command(command_line_comment);
   } else if (string_equal("generate-library", FLAG_command)) {
-    generate_library_command(command_line_args_to_buffer(argc, argv));
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+    generate_library_command(command_line_comment);
   } else if (string_equal("build", FLAG_command)) {
-    if (string_is_null_or_empty(FLAG_c_output_file)) {
-      log_fatal("Must supply --c-output-file");
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-    if (string_is_null_or_empty(FLAG_binary_output_file)) {
-      log_fatal("Must supply --binary-output-file");
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
-    int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
-    if (status == 0) {
-      log_info("Exiting normally.");
-      exit(0);
-    } else {
-      log_warn("Exiting abnormally.");
-      exit(status);
-    }
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+    build_command(command_line_comment);
   } else if (string_equal("parse-expression", FLAG_command)) {
     parse_expression_string_and_print_parse_tree(FLAG_expression);
   } else if (string_equal("parse-statement", FLAG_command)) {

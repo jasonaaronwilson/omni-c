@@ -89,6 +89,7 @@ SRC_C_SELF := \
 	linearizer.c \
 	main.c \
 	archive-command.c \
+	build-command.c \
 	generate-c-output-file.c \
 	generate-header-file-command.c \
 	generate-library-command.c \
