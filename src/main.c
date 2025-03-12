@@ -2,10 +2,9 @@
  * @file main.c
  *
  * "main.c" acts as the entry point to the omni-c transpiler. It
- * registers flags for the command line processor library, calls that
- * library to parse the command line, and then dispatch to the
- * top-level entry points for each "git style" sub-command
- * (generate-header-file, generate-library, etc.)
+ * registers and parses flags (with the standard flag parser), and
+ * then dispatches to the right handler for each git style
+ * (sub)-command.
  */
 
 /**
