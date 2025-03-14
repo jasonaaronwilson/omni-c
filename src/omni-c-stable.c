@@ -809,6 +809,7 @@ typedef enum {
   PARSE_ERROR_EXPECTED_TOKEN_TYPE,
   PARSE_ERROR_EOF,
   PARSE_ERROR_UNHANDLED_INSTRUCTION,
+  PARSE_ERROR_BAD_INITIALIZER,
 } parse_error_code_t;
 
 typedef struct compiler_error_S compiler_error_t;
@@ -1054,6 +1055,8 @@ typedef struct designated_initializer_node_t__generated_S designated_initializer
 typedef struct balanced_construct_node_S balanced_construct_node_t;
 
 typedef struct printer_S printer_t;
+
+typedef struct tmp_provider_t__generated_S tmp_provider_t;
 
 // ========== stuctures/unions ==========
 
@@ -1622,6 +1625,11 @@ struct printer_S {
   boolean_t output_line_directives;
 };
 
+struct tmp_provider_t__generated_S {
+  fn_t(token_t*) get;
+  uint32_t count;
+};
+
 // ========== global variables ==========
 
 fatal_error_config_t fatal_error_config = {0};
@@ -1844,7 +1852,7 @@ boolean_t FLAG_dump_symbol_table = false;
 
 boolean_t FLAG_use_statement_parser = true;
 
-boolean_t FLAG_to_c = false;
+boolean_t FLAG_to_c = true;
 
 boolean_t FLAG_omit_c_armyknife_include = false;
 
@@ -1991,6 +1999,7 @@ int file_peek_byte(FILE* input);
 boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
 void file_skip_bytes(FILE* input, uint64_t n_bytes);
+buffer_t* buffer_read_file(char* file_name);
 void make_file_read_only(char* file_name);
 void make_writable_if_exists(const char* file_name);
 __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer);
@@ -2088,6 +2097,7 @@ token_t* pstate_advance(pstate_t* pstate);
 boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string);
 pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string);
 pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type);
+void pstate_rollback(pstate_t* pstate, uint64_t saved_position);
 pstatus_t parse_declarations(pstate_t* pstate);
 pstatus_t parse_declaration(pstate_t* pstate);
 pstatus_t parse_enum_node_declaration(pstate_t* pstate);
@@ -2134,6 +2144,8 @@ void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* no
 void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node);
 void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node_t* node);
 void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node_t* node);
+void buffer_append_dbg_compound_literal(cdl_printer_t* printer, compound_literal_node_t* node);
+void buffer_append_dbg_designated_initializer(cdl_printer_t* printer, designated_initializer_node_t* node);
 void debug_append_tokens(buffer_t* buffer, value_array_t* tokens);
 printer_t* append_parse_node(printer_t* printer, parse_node_t* node);
 printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* node);
@@ -2176,6 +2188,8 @@ printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node)
 printer_t* append_call_node(printer_t* printer, call_node_t* node);
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string);
 printer_t* append_line_directive(printer_t* printer, token_t* token);
+printer_t* append_compound_literal_node(printer_t* printer, compound_literal_node_t* node);
+printer_t* append_designated_initializer_node(printer_t* printer, designated_initializer_node_t* node);
 symbol_table_map_t* make_symbol_table_map(void);
 symbol_table_t* make_symbol_table(void);
 symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_string);
@@ -2203,7 +2217,7 @@ file_t* symbol_table_token_to_file(symbol_table_t* symbol_table, token_t* token)
 void srcgen_enum_to_string_converters(symbol_table_t* symbol_table);
 pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence);
 pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left);
-pratt_parser_instruction_t get_prefix_instruction(token_t* token);
+pratt_parser_instruction_t get_prefix_instruction(pstate_t* pstate, token_t* token);
 pratt_parser_instruction_t get_infix_instruction(token_t* token);
 associativity_t precedence_to_associativity(precedence_t precedence);
 pstatus_t parse_statement(pstate_t* pstate);
@@ -2279,26 +2293,40 @@ printer_t* printer_space(printer_t* printer);
 printer_t* printer_indent(printer_t* printer);
 printer_t* printer_increase_indent(printer_t* printer);
 printer_t* printer_decrease_indent(printer_t* printer);
+void linearize_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node);
+void linearize_expression(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node, token_t* target);
+void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider, block_node_t* node);
+tmp_provider_t* make_tmp_provider();
+token_t* tmp_provider_get(tmp_provider_t* data);
+int main(int argc, char** argv);
+buffer_t* command_line_args_to_buffer(int argc, char** argv);
+void archive_command(void);
+void generate_archive_file(void);
+void build_command(buffer_t* command_line_comment);
+void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment);
+boolean_t is_inlined_function(function_node_t* node);
+void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table);
+char* include_node_to_string(cpp_include_node_t* node);
+void add_generated_c_file_header(buffer_t* buffer);
+void generate_header_file_command(buffer_t* command_line_overview_comment);
+void generate_library_command(buffer_t* command_line_overview_comment);
+int invoke_c_compiler(char* input_file, char* output_file);
+value_array_t* c_compiler_command_line(char* input_file, char* output_file);
+buffer_t* git_hash_object(char* filename);
 void do_print_tokens(value_array_t* tokens, char* message);
 void print_tokens(void);
+void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer);
+void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer);
+void test_command(buffer_t* command_line_comment);
+void run_test_binary(char* rand_binary_file_name);
+void handle_if_internal_test(void);
+void handle_statement_test(char* file_name);
+void handle_expression_test(char* file_name);
 void configure_flags(void);
 void configure_parse_expression(void);
 void configure_parse_statement(void);
 void configure_print_tokens_command(void);
 void configure_regular_commands(void);
-boolean_t is_inlined_function(function_node_t* node);
-void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table);
-char* include_node_to_string(cpp_include_node_t* node);
-void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment);
-void add_generated_c_file_header(buffer_t* buffer);
-void parse_expression_string_and_print_parse_tree(char* expression);
-void parse_statement_string_and_print_parse_tree(char* expression);
-buffer_t* git_hash_object(char* filename);
-buffer_t* command_line_args_to_buffer(int argc, char** argv);
-value_array_t* c_compiler_command_line(char* input_file, char* output_file);
-int invoke_c_compiler(char* input_file, char* output_file);
-void generate_archive_file(void);
-int main(int argc, char** argv);
 buffer_t* get_reflection_header_buffer(void);
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
@@ -3662,16 +3690,56 @@ static inline compound_literal_node_t* malloc_compound_literal_node(void)
 
 
 # 50 "literal-parser.c"
-static inline designated_initializer_node_t* malloc_designated_initializer_node(void)
+static inline compound_literal_node_t* to_compound_literal_node(parse_node_t* ptr)
 # 50 "literal-parser.c"
+{
+
+# 51 "literal-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_COMPOUND_LITERAL)))
+
+# 51 "literal-parser.c"
+  {
+
+# 52 "literal-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 54 "literal-parser.c"
+  return (/*CAST*/(compound_literal_node_t*) ptr);
+}
+
+
+# 58 "literal-parser.c"
+static inline designated_initializer_node_t* malloc_designated_initializer_node(void)
+# 58 "literal-parser.c"
 {
   designated_initializer_node_t* result = malloc_struct(designated_initializer_node_t);
 
-# 53 "literal-parser.c"
+# 61 "literal-parser.c"
   ((result->tag)=PARSE_NODE_DESIGNATED_INITIALIZER);
 
-# 54 "literal-parser.c"
+# 62 "literal-parser.c"
   return result;
+}
+
+
+# 66 "literal-parser.c"
+static inline designated_initializer_node_t* to_designated_initializer_node(parse_node_t* ptr)
+# 66 "literal-parser.c"
+{
+
+# 67 "literal-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DESIGNATED_INITIALIZER)))
+
+# 67 "literal-parser.c"
+  {
+
+# 68 "literal-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 70 "literal-parser.c"
+  return (/*CAST*/(designated_initializer_node_t*) ptr);
 }
 
 
@@ -8242,452 +8310,463 @@ void flag_print_flags(FILE* out, char* header, string_tree_t* flags)
 }
 
 
-# 69 "lib/io.c"
-__attribute__((warn_unused_result)) buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
-# 69 "lib/io.c"
+# 79 "lib/io.c"
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
+# 79 "lib/io.c"
 {
   uint64_t capacity = (bytes->capacity);
 
-# 74 "lib/io.c"
+# 84 "lib/io.c"
   {
     struct stat st;
 
-# 76 "lib/io.c"
+# 86 "lib/io.c"
     if ((stat(file_name, (&st))<0))
 
-# 76 "lib/io.c"
+# 86 "lib/io.c"
     {
 
-# 77 "lib/io.c"
+# 87 "lib/io.c"
       log_fatal("file does not exist: %s", file_name);
 
-# 78 "lib/io.c"
+# 88 "lib/io.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-# 80 "lib/io.c"
+# 90 "lib/io.c"
     (capacity=(st.st_size));
   }
 
-# 83 "lib/io.c"
+# 93 "lib/io.c"
   (bytes=buffer_increase_capacity(bytes, capacity));
   FILE* file = fopen(file_name, "r");
 
-# 86 "lib/io.c"
+# 96 "lib/io.c"
   (bytes=buffer_append_all(bytes, file));
 
-# 87 "lib/io.c"
+# 97 "lib/io.c"
   fclose(file);
 
-# 89 "lib/io.c"
+# 99 "lib/io.c"
   return bytes;
 }
 
 
-# 99 "lib/io.c"
+# 109 "lib/io.c"
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input)
-# 99 "lib/io.c"
+# 109 "lib/io.c"
 {
   uint8_t buffer[1024];
 
-# 101 "lib/io.c"
+# 111 "lib/io.c"
   while (1)
 
-# 101 "lib/io.c"
+# 111 "lib/io.c"
   {
     uint64_t n_read = fread(buffer, 1, (sizeof(buffer)), input);
 
-# 103 "lib/io.c"
+# 113 "lib/io.c"
     if ((n_read==0))
 
-# 103 "lib/io.c"
+# 113 "lib/io.c"
     {
 
-# 104 "lib/io.c"
+# 114 "lib/io.c"
       break;
     }
 
-# 106 "lib/io.c"
+# 116 "lib/io.c"
     (bytes=buffer_append_bytes(bytes, buffer, n_read));
   }
 
-# 108 "lib/io.c"
+# 118 "lib/io.c"
   return bytes;
 }
 
 
-# 116 "lib/io.c"
+# 126 "lib/io.c"
 void buffer_write_file(buffer_t* bytes, char* file_name)
-# 116 "lib/io.c"
+# 126 "lib/io.c"
 {
   FILE* file = fopen(file_name, "w");
 
-# 118 "lib/io.c"
+# 128 "lib/io.c"
   if ((file==NULL))
 
-# 118 "lib/io.c"
+# 128 "lib/io.c"
   {
 
-# 119 "lib/io.c"
+# 129 "lib/io.c"
     log_fatal("Failed to open file for writing: %s", file_name);
 
-# 120 "lib/io.c"
+# 130 "lib/io.c"
     log_fatal("strerror(errno) = %s", strerror(errno));
 
-# 121 "lib/io.c"
+# 131 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   size_t bytes_written = fwrite((bytes->elements), 1, (bytes->length), file);
 
-# 124 "lib/io.c"
+# 134 "lib/io.c"
   if ((bytes_written!=(bytes->length)))
 
-# 124 "lib/io.c"
+# 134 "lib/io.c"
   {
 
-# 125 "lib/io.c"
+# 135 "lib/io.c"
     log_fatal("Failed to write %d bytes to %s", (bytes->length), file_name);
 
-# 126 "lib/io.c"
+# 136 "lib/io.c"
     log_fatal("strerror(errno) = %s", strerror(errno));
 
-# 127 "lib/io.c"
+# 137 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 129 "lib/io.c"
+# 139 "lib/io.c"
   if ((fclose(file)!=0))
 
-# 129 "lib/io.c"
+# 139 "lib/io.c"
   {
 
-# 130 "lib/io.c"
+# 140 "lib/io.c"
     log_fatal("Failed to close file: %s", file_name);
 
-# 131 "lib/io.c"
+# 141 "lib/io.c"
     log_fatal("strerror(errno) = %s", strerror(errno));
 
-# 132 "lib/io.c"
+# 142 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 196 "lib/io.c"
+# 206 "lib/io.c"
 buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line)
-# 196 "lib/io.c"
+# 206 "lib/io.c"
 {
 
-# 197 "lib/io.c"
+# 207 "lib/io.c"
   while ((!feof(input)))
 
-# 197 "lib/io.c"
+# 207 "lib/io.c"
   {
     int ch = fgetc(input);
 
-# 199 "lib/io.c"
+# 209 "lib/io.c"
     if ((ch<0))
 
-# 199 "lib/io.c"
+# 209 "lib/io.c"
     {
 
-# 200 "lib/io.c"
+# 210 "lib/io.c"
       return buffer;
     }
 
-# 202 "lib/io.c"
+# 212 "lib/io.c"
     if ((ch==end_of_line))
 
-# 202 "lib/io.c"
+# 212 "lib/io.c"
     {
 
-# 203 "lib/io.c"
+# 213 "lib/io.c"
       return buffer;
     }
 
-# 205 "lib/io.c"
+# 215 "lib/io.c"
     (buffer=buffer_append_byte(buffer, ch));
   }
 
-# 207 "lib/io.c"
+# 217 "lib/io.c"
   return buffer;
 }
 
 
-# 217 "lib/io.c"
+# 227 "lib/io.c"
 extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes)
-# 218 "lib/io.c"
+# 228 "lib/io.c"
 {
   int file_number = fileno(input);
 
-# 220 "lib/io.c"
+# 230 "lib/io.c"
   return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
 }
 
 
-# 230 "lib/io.c"
+# 240 "lib/io.c"
 extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes)
-# 232 "lib/io.c"
+# 242 "lib/io.c"
 {
 
-# 233 "lib/io.c"
+# 243 "lib/io.c"
   fcntl(file_number, F_SETFL, (fcntl(file_number, F_GETFL)|O_NONBLOCK));
   uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
   char read_buffer[1024];
 
-# 239 "lib/io.c"
+# 249 "lib/io.c"
   while ((bytes_remaining>0))
 
-# 239 "lib/io.c"
+# 249 "lib/io.c"
   {
     int bytes_read = read(file_number, read_buffer, (sizeof(read_buffer)));
 
-# 241 "lib/io.c"
+# 251 "lib/io.c"
     if ((bytes_read>0))
 
-# 241 "lib/io.c"
+# 251 "lib/io.c"
     {
 
-# 242 "lib/io.c"
+# 252 "lib/io.c"
       for (
         int i = 0;
         (i<bytes_read);
         (i++))
 
-# 242 "lib/io.c"
+# 252 "lib/io.c"
       {
 
-# 243 "lib/io.c"
+# 253 "lib/io.c"
         (buffer=buffer_append_byte(buffer, (/*CAST*/(uint8_t) (read_buffer[i]))));
 
-# 244 "lib/io.c"
+# 254 "lib/io.c"
         (bytes_remaining--);
       }
     }
     else
 
-# 246 "lib/io.c"
+# 256 "lib/io.c"
     if ((bytes_read==0))
 
-# 246 "lib/io.c"
+# 256 "lib/io.c"
     {
-
-# 248 "lib/io.c"
-      break;
-    }
-    else
-
-# 249 "lib/io.c"
-    {
-
-# 251 "lib/io.c"
-      if (((errno!=EAGAIN)&&(errno!=EWOULDBLOCK)))
-
-# 251 "lib/io.c"
-      {
-
-# 253 "lib/io.c"
-        log_fatal("Error reading from file descriptor %d: %s", file_number, strerror(errno));
-
-# 255 "lib/io.c"
-        fatal_error(ERROR_ILLEGAL_STATE);
-      }
 
 # 258 "lib/io.c"
       break;
     }
+    else
+
+# 259 "lib/io.c"
+    {
+
+# 261 "lib/io.c"
+      if (((errno!=EAGAIN)&&(errno!=EWOULDBLOCK)))
+
+# 261 "lib/io.c"
+      {
+
+# 263 "lib/io.c"
+        log_fatal("Error reading from file descriptor %d: %s", file_number, strerror(errno));
+
+# 265 "lib/io.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 268 "lib/io.c"
+      break;
+    }
   }
 
-# 262 "lib/io.c"
+# 272 "lib/io.c"
   return buffer;
 }
 
 
-# 274 "lib/io.c"
+# 284 "lib/io.c"
 int file_peek_byte(FILE* input)
-# 274 "lib/io.c"
+# 284 "lib/io.c"
 {
 
-# 275 "lib/io.c"
+# 285 "lib/io.c"
   if (feof(input))
 
-# 275 "lib/io.c"
+# 285 "lib/io.c"
   {
 
-# 276 "lib/io.c"
+# 286 "lib/io.c"
     return (-1);
   }
   int result = fgetc(input);
 
-# 282 "lib/io.c"
+# 292 "lib/io.c"
   if ((result>=0))
 
-# 282 "lib/io.c"
+# 292 "lib/io.c"
   {
 
-# 283 "lib/io.c"
+# 293 "lib/io.c"
     ungetc(result, input);
   }
 
-# 285 "lib/io.c"
+# 295 "lib/io.c"
   return result;
 }
 
 
-# 294 "lib/io.c"
+# 304 "lib/io.c"
 boolean_t file_eof(FILE* input)
-# 294 "lib/io.c"
+# 304 "lib/io.c"
 {
 
-# 295 "lib/io.c"
+# 305 "lib/io.c"
   return (feof(input)||(file_peek_byte(input)<0));
 }
 
 
-# 305 "lib/io.c"
+# 315 "lib/io.c"
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size)
-# 306 "lib/io.c"
+# 316 "lib/io.c"
 {
 
-# 307 "lib/io.c"
+# 317 "lib/io.c"
   if (until_eof)
 
-# 307 "lib/io.c"
+# 317 "lib/io.c"
   {
 
-# 308 "lib/io.c"
+# 318 "lib/io.c"
     (size=ULLONG_MAX);
   }
   uint8_t buffer[FILE_COPY_STREAM_BUFFER_SIZE];
 
-# 312 "lib/io.c"
+# 322 "lib/io.c"
   while ((size>0))
 
-# 312 "lib/io.c"
+# 322 "lib/io.c"
   {
     int minimum = ((size<FILE_COPY_STREAM_BUFFER_SIZE) ? size : FILE_COPY_STREAM_BUFFER_SIZE);
     uint64_t n_read = fread(buffer, 1, minimum, input);
 
-# 317 "lib/io.c"
+# 327 "lib/io.c"
     if ((n_read==0))
 
-# 317 "lib/io.c"
+# 327 "lib/io.c"
     {
 
-# 318 "lib/io.c"
+# 328 "lib/io.c"
       break;
     }
 
-# 320 "lib/io.c"
+# 330 "lib/io.c"
     fwrite(buffer, 1, n_read, output);
 
-# 321 "lib/io.c"
+# 331 "lib/io.c"
     (size-=n_read);
   }
 }
 
 
-# 335 "lib/io.c"
+# 345 "lib/io.c"
 void file_skip_bytes(FILE* input, uint64_t n_bytes)
-# 335 "lib/io.c"
+# 345 "lib/io.c"
 {
 
-# 342 "lib/io.c"
+# 352 "lib/io.c"
   while (1)
 
-# 342 "lib/io.c"
+# 352 "lib/io.c"
   {
 
-# 343 "lib/io.c"
+# 353 "lib/io.c"
     if (((n_bytes==0)||feof(input)))
 
-# 343 "lib/io.c"
+# 353 "lib/io.c"
     {
 
-# 344 "lib/io.c"
+# 354 "lib/io.c"
       return;
     }
     int ch = fgetc(input);
 
-# 347 "lib/io.c"
+# 357 "lib/io.c"
     if ((ch<0))
 
-# 347 "lib/io.c"
+# 357 "lib/io.c"
     {
 
-# 349 "lib/io.c"
+# 359 "lib/io.c"
       return;
     }
 
-# 351 "lib/io.c"
+# 361 "lib/io.c"
     (n_bytes--);
   }
 }
 
 
-# 141 "lib/io.c"
+# 68 "lib/io.c"
+buffer_t* buffer_read_file(char* file_name)
+# 68 "lib/io.c"
+{
+  buffer_t* result = make_buffer(1);
+
+# 70 "lib/io.c"
+  return buffer_append_file_contents(result, file_name);
+}
+
+
+# 151 "lib/io.c"
 void make_file_read_only(char* file_name)
-# 141 "lib/io.c"
+# 151 "lib/io.c"
 {
 
-# 143 "lib/io.c"
+# 153 "lib/io.c"
   if ((chmod(file_name, ((S_IRUSR|S_IRGRP)|S_IROTH))!=0))
 
-# 143 "lib/io.c"
+# 153 "lib/io.c"
   {
 
-# 144 "lib/io.c"
+# 154 "lib/io.c"
     log_fatal("Failed to set file permissions: %s", file_name);
 
-# 145 "lib/io.c"
+# 155 "lib/io.c"
     log_fatal("strerror(errno) = %s", strerror(errno));
 
-# 146 "lib/io.c"
+# 156 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 156 "lib/io.c"
+# 166 "lib/io.c"
 void make_writable_if_exists(const char* file_name)
-# 156 "lib/io.c"
+# 166 "lib/io.c"
 {
 
-# 158 "lib/io.c"
+# 168 "lib/io.c"
   if ((access(file_name, F_OK)!=0))
 
-# 158 "lib/io.c"
+# 168 "lib/io.c"
   {
 
-# 160 "lib/io.c"
+# 170 "lib/io.c"
     return;
   }
   struct stat file_stat;
 
-# 165 "lib/io.c"
+# 175 "lib/io.c"
   if ((stat(file_name, (&file_stat))!=0))
 
-# 165 "lib/io.c"
+# 175 "lib/io.c"
   {
 
-# 166 "lib/io.c"
+# 176 "lib/io.c"
     log_fatal("Error getting file status for %s: %s\n", file_name, strerror(errno));
 
-# 167 "lib/io.c"
+# 177 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   mode_t new_mode = ((file_stat.st_mode)|S_IWUSR);
 
-# 173 "lib/io.c"
+# 183 "lib/io.c"
   if ((chmod(file_name, new_mode)!=0))
 
-# 173 "lib/io.c"
+# 183 "lib/io.c"
   {
 
-# 174 "lib/io.c"
+# 184 "lib/io.c"
     log_fatal("Error setting permissions for %s: %s\n", file_name, strerror(errno));
 
-# 175 "lib/io.c"
+# 185 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
@@ -10380,254 +10459,254 @@ boolean_t add_orachive_file(FILE* input, string_tree_t* metadata, int64_t size, 
 }
 
 
-# 73 "compiler-errors.c"
-buffer_t* buffer_append_human_readable_error(buffer_t* buffer, compiler_error_t* error)
 # 74 "compiler-errors.c"
+buffer_t* buffer_append_human_readable_error(buffer_t* buffer, compiler_error_t* error)
+# 75 "compiler-errors.c"
 {
 
-# 75 "compiler-errors.c"
+# 76 "compiler-errors.c"
   if (((error->tokenizer_error_code)!=TOKENIZER_ERROR_UNKNOWN))
 
-# 75 "compiler-errors.c"
+# 76 "compiler-errors.c"
   {
 
-# 76 "compiler-errors.c"
+# 77 "compiler-errors.c"
     (buffer=buffer_append_human_readable_tokenizer_error(buffer, error));
   }
 
-# 78 "compiler-errors.c"
+# 79 "compiler-errors.c"
   if (((error->parse_error_code)!=PARSE_ERROR_UNKNOWN))
 
-# 78 "compiler-errors.c"
+# 79 "compiler-errors.c"
   {
 
-# 79 "compiler-errors.c"
+# 80 "compiler-errors.c"
     (buffer=buffer_append_human_readable_parser_error(buffer, error));
   }
 
-# 81 "compiler-errors.c"
+# 82 "compiler-errors.c"
   return buffer;
 }
 
 
-# 94 "compiler-errors.c"
-src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location, int before_lines, int after_lines)
 # 95 "compiler-errors.c"
+src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location, int before_lines, int after_lines)
+# 96 "compiler-errors.c"
 {
   src_code_snippets_t result = {0};
   uint64_t current_begin = buffer_beginning_of_line(buffer, location);
   uint64_t current_end = buffer_end_of_line(buffer, location);
 
-# 101 "compiler-errors.c"
+# 102 "compiler-errors.c"
   ((result.current_line)=buffer_c_substring(buffer, current_begin, current_end));
   uint64_t prefix_begin = current_begin;
 
-# 104 "compiler-errors.c"
+# 105 "compiler-errors.c"
   for (
     int i = 0;
     ((i<before_lines)&&(prefix_begin>0));
     (i++))
 
-# 104 "compiler-errors.c"
+# 105 "compiler-errors.c"
   {
 
-# 105 "compiler-errors.c"
+# 106 "compiler-errors.c"
     (prefix_begin=buffer_beginning_of_line(buffer, (prefix_begin-1)));
   }
 
-# 107 "compiler-errors.c"
+# 108 "compiler-errors.c"
   ((result.previous_lines)=buffer_c_substring(buffer, prefix_begin, current_begin));
   uint64_t suffix_end = current_end;
 
-# 111 "compiler-errors.c"
+# 112 "compiler-errors.c"
   for (
     int i = 0;
     ((i<after_lines)&&(suffix_end<(buffer->length)));
     (i++))
 
-# 111 "compiler-errors.c"
+# 112 "compiler-errors.c"
   {
 
-# 112 "compiler-errors.c"
+# 113 "compiler-errors.c"
     (suffix_end=buffer_end_of_line(buffer, (suffix_end+1)));
   }
 
-# 114 "compiler-errors.c"
+# 115 "compiler-errors.c"
   ((result.next_lines)=buffer_c_substring(buffer, current_end, suffix_end));
 
-# 116 "compiler-errors.c"
+# 117 "compiler-errors.c"
   return result;
 }
 
 
-# 129 "compiler-errors.c"
+# 130 "compiler-errors.c"
 char* do_common_replacements(char* template, compiler_error_t* error)
-# 129 "compiler-errors.c"
+# 130 "compiler-errors.c"
 {
   buffer_t* buffer = make_buffer(256);
   char* file_name = (error->file_name);
   src_code_snippets_t snippet = {0};
 
-# 135 "compiler-errors.c"
+# 136 "compiler-errors.c"
   if ((error->error_token))
 
-# 135 "compiler-errors.c"
+# 136 "compiler-errors.c"
   {
     line_and_column_t position_info = buffer_position_to_line_and_column(((error->error_token)->buffer), ((error->error_token)->start));
 
-# 140 "compiler-errors.c"
+# 141 "compiler-errors.c"
     (buffer=buffer_printf(buffer, "%s:%d.%d: ", file_name, ((position_info.line)&0xffffffff), ((position_info.column)&0xffffffff)));
 
-# 144 "compiler-errors.c"
+# 145 "compiler-errors.c"
     (snippet=get_source_code_snippet(((error->error_token)->buffer), ((error->error_token)->start), 5, 3));
   }
   else
 
-# 146 "compiler-errors.c"
+# 147 "compiler-errors.c"
   {
 
-# 147 "compiler-errors.c"
+# 148 "compiler-errors.c"
     (buffer=buffer_printf(buffer, "%s:%d.%d: ", file_name, 0, 0));
   }
 
-# 150 "compiler-errors.c"
+# 151 "compiler-errors.c"
   (buffer=buffer_append_string(buffer, template));
 
-# 153 "compiler-errors.c"
+# 154 "compiler-errors.c"
   (buffer=buffer_replace_all(buffer, "{formatted_snippet}", formatted_snippet));
 
-# 159 "compiler-errors.c"
+# 160 "compiler-errors.c"
   (buffer=buffer_replace_all(buffer, "{error-highlight-on}", "\033[1m"));
 
-# 161 "compiler-errors.c"
+# 162 "compiler-errors.c"
   (buffer=buffer_replace_all(buffer, "{error-highlight-off}", "\033[0m"));
 
-# 163 "compiler-errors.c"
+# 164 "compiler-errors.c"
   (buffer=buffer_replace_all(buffer, "{error-prefix-lines}", (snippet.previous_lines)));
 
-# 165 "compiler-errors.c"
+# 166 "compiler-errors.c"
   (buffer=buffer_replace_all(buffer, "{error-current-line}", (snippet.current_line)));
 
-# 167 "compiler-errors.c"
+# 168 "compiler-errors.c"
   (buffer=buffer_replace_all(buffer, "{error-suffix-lines}", (snippet.next_lines)));
 
-# 170 "compiler-errors.c"
+# 171 "compiler-errors.c"
   return buffer_to_c_string(buffer);
 }
 
 
-# 228 "compiler-errors.c"
-buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer, compiler_error_t* error)
 # 229 "compiler-errors.c"
+buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer, compiler_error_t* error)
+# 230 "compiler-errors.c"
 {
 
-# 234 "compiler-errors.c"
+# 235 "compiler-errors.c"
   (buffer=buffer_printf(buffer, "\nlexer error code = %d\n", (error->tokenizer_error_code)));
 
-# 236 "compiler-errors.c"
+# 237 "compiler-errors.c"
   return buffer;
 }
 
 
-# 239 "compiler-errors.c"
-buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_error_t* error)
 # 240 "compiler-errors.c"
+buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_error_t* error)
+# 241 "compiler-errors.c"
 {
 
-# 241 "compiler-errors.c"
+# 242 "compiler-errors.c"
   (buffer=buffer_printf(buffer, "\nparser error code = %d\n", (error->parse_error_code)));
   char* template = ((void *)0);
 
-# 244 "compiler-errors.c"
+# 245 "compiler-errors.c"
   switch ((error->parse_error_code))
 
-# 244 "compiler-errors.c"
+# 245 "compiler-errors.c"
   {
 
-# 245 "compiler-errors.c"
+# 246 "compiler-errors.c"
     case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
 
-# 246 "compiler-errors.c"
+# 247 "compiler-errors.c"
     (template=error_field_width_or_semicolon);
 
-# 247 "compiler-errors.c"
+# 248 "compiler-errors.c"
     break;
-
-# 249 "compiler-errors.c"
-    case PARSE_ERROR_CLOSE_BRACKET_EXPECTED:
 
 # 250 "compiler-errors.c"
-    (template=error_open_brace_expected);
+    case PARSE_ERROR_CLOSE_BRACKET_EXPECTED:
 
 # 251 "compiler-errors.c"
-    break;
+    (template=error_open_brace_expected);
 
-# 253 "compiler-errors.c"
-    case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
+# 252 "compiler-errors.c"
+    break;
 
 # 254 "compiler-errors.c"
-    (template=error_unrecognized_top_level_declaration);
+    case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
 
 # 255 "compiler-errors.c"
-    break;
+    (template=error_unrecognized_top_level_declaration);
 
-# 257 "compiler-errors.c"
-    case PARSE_ERROR_SEMICOLON_EXPECTED:
+# 256 "compiler-errors.c"
+    break;
 
 # 258 "compiler-errors.c"
-    (template=error_open_semicolon_expected);
+    case PARSE_ERROR_SEMICOLON_EXPECTED:
 
 # 259 "compiler-errors.c"
-    break;
+    (template=error_open_semicolon_expected);
 
-# 261 "compiler-errors.c"
-    case PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER:
+# 260 "compiler-errors.c"
+    break;
 
 # 262 "compiler-errors.c"
-    (template=error_conflicting_storage_class_specifier);
+    case PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER:
 
 # 263 "compiler-errors.c"
-    break;
+    (template=error_conflicting_storage_class_specifier);
 
-# 265 "compiler-errors.c"
-    case PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER:
+# 264 "compiler-errors.c"
+    break;
 
 # 266 "compiler-errors.c"
-    (template=error_conflicting_function_specifier);
+    case PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER:
 
 # 267 "compiler-errors.c"
-    break;
+    (template=error_conflicting_function_specifier);
 
-# 269 "compiler-errors.c"
-    case PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+# 268 "compiler-errors.c"
+    break;
 
 # 270 "compiler-errors.c"
-    (template=error_expected_open_paren_for_underscore_attribute);
+    case PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
 
 # 271 "compiler-errors.c"
-    break;
+    (template=error_expected_open_paren_for_underscore_attribute);
 
-# 273 "compiler-errors.c"
-    case PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+# 272 "compiler-errors.c"
+    break;
 
 # 274 "compiler-errors.c"
-    (template=error_expected_matching_close_paren_after_underscore_attribute);
+    case PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
 
 # 275 "compiler-errors.c"
+    (template=error_expected_matching_close_paren_after_underscore_attribute);
+
+# 276 "compiler-errors.c"
     break;
 
-# 277 "compiler-errors.c"
+# 278 "compiler-errors.c"
     default:
 
-# 278 "compiler-errors.c"
+# 279 "compiler-errors.c"
     (template=parse_error_unknown);
 
-# 279 "compiler-errors.c"
+# 280 "compiler-errors.c"
     break;
   }
   char* template_string = do_common_replacements(template, error);
 
-# 283 "compiler-errors.c"
+# 284 "compiler-errors.c"
   return buffer_append_string(buffer, template_string);
 }
 
@@ -11525,7 +11604,7 @@ boolean_t pstate_is_eof(pstate_t* pstate)
 {
 
 # 7 "pstate.c"
-  return ((pstate->position)<((pstate->tokens)->length));
+  return (!((pstate->position)<((pstate->tokens)->length)));
 }
 
 
@@ -11823,6 +11902,25 @@ pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type)
 
 # 218 "pstate.c"
   return false;
+}
+
+
+# 227 "pstate.c"
+void pstate_rollback(pstate_t* pstate, uint64_t saved_position)
+# 227 "pstate.c"
+{
+
+# 228 "pstate.c"
+  ((pstate->position)=saved_position);
+
+# 229 "pstate.c"
+  ((pstate->result_node)=((void *)0));
+
+# 230 "pstate.c"
+  ((pstate->result_token)=((void *)0));
+
+# 231 "pstate.c"
+  pstate_ignore_error(pstate);
 }
 
 
@@ -12713,1575 +12811,1689 @@ void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node)
     break;
 
 # 157 "debug-printer.c"
-    default:
+    case PARSE_NODE_COMPOUND_LITERAL:
 
 # 158 "debug-printer.c"
-    log_fatal("No debug printer for %s", parse_node_type_to_string((node->tag)));
+    buffer_append_dbg_compound_literal(printer, to_compound_literal_node(node));
 
 # 159 "debug-printer.c"
+    break;
+
+# 161 "debug-printer.c"
+    case PARSE_NODE_DESIGNATED_INITIALIZER:
+
+# 162 "debug-printer.c"
+    buffer_append_dbg_designated_initializer(printer, to_designated_initializer_node(node));
+
+# 164 "debug-printer.c"
+    break;
+
+# 166 "debug-printer.c"
+    default:
+
+# 167 "debug-printer.c"
+    log_fatal("No debug printer for %s", parse_node_type_to_string((node->tag)));
+
+# 168 "debug-printer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
 
-# 160 "debug-printer.c"
+# 169 "debug-printer.c"
     break;
   }
 }
 
 
-# 169 "debug-printer.c"
+# 178 "debug-printer.c"
 void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list)
-# 169 "debug-printer.c"
+# 178 "debug-printer.c"
 {
 
-# 170 "debug-printer.c"
+# 179 "debug-printer.c"
   cdl_start_array(printer);
   uint64_t length = node_list_length(list);
 
-# 172 "debug-printer.c"
+# 181 "debug-printer.c"
   for (
     uint64_t i = 0;
     (i<length);
     (i++))
 
-# 172 "debug-printer.c"
+# 181 "debug-printer.c"
   {
 
-# 173 "debug-printer.c"
+# 182 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, node_list_get(list, i));
   }
 
-# 175 "debug-printer.c"
+# 184 "debug-printer.c"
   cdl_end_array(printer);
 }
 
 
-# 184 "debug-printer.c"
+# 193 "debug-printer.c"
 void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, char* field_name)
-# 185 "debug-printer.c"
+# 194 "debug-printer.c"
 {
 
-# 186 "debug-printer.c"
+# 195 "debug-printer.c"
   cdl_key(printer, field_name);
 
-# 187 "debug-printer.c"
+# 196 "debug-printer.c"
   cdl_start_array(printer);
   uint64_t length = (tokens->length);
 
-# 189 "debug-printer.c"
+# 198 "debug-printer.c"
   for (
     uint64_t i = 0;
     (i<length);
     (i++))
 
-# 189 "debug-printer.c"
+# 198 "debug-printer.c"
   {
     token_t* token = value_array_get_ptr(tokens, i, typeof(token_t*));
 
-# 191 "debug-printer.c"
+# 200 "debug-printer.c"
     cdl_string(printer, token_to_string(token));
   }
 
-# 193 "debug-printer.c"
+# 202 "debug-printer.c"
   cdl_end_array(printer);
 }
 
 
-# 197 "debug-printer.c"
+# 206 "debug-printer.c"
 void buffer_append_dbg_declarations(cdl_printer_t* printer, declarations_node_t* node)
-# 198 "debug-printer.c"
+# 207 "debug-printer.c"
 {
 
-# 199 "debug-printer.c"
+# 208 "debug-printer.c"
   buffer_append_dbg_node_list(printer, (node->declarations));
 }
 
 
-# 202 "debug-printer.c"
-void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node)
-# 202 "debug-printer.c"
-{
-
-# 203 "debug-printer.c"
-  cdl_start_table(printer);
-
-# 204 "debug-printer.c"
-  cdl_key(printer, "tag");
-
-# 205 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_ENUM");
-
-# 206 "debug-printer.c"
-  if (((node->name)!=((void *)0)))
-
-# 206 "debug-printer.c"
-  {
-
-# 207 "debug-printer.c"
-    cdl_key(printer, "name");
-
-# 208 "debug-printer.c"
-    cdl_string(printer, token_to_string((node->name)));
-  }
-
-# 210 "debug-printer.c"
-  cdl_key(printer, "elements");
-
 # 211 "debug-printer.c"
-  buffer_append_dbg_node_list(printer, (node->elements));
+void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node)
+# 211 "debug-printer.c"
+{
 
 # 212 "debug-printer.c"
-  cdl_key(printer, "partial_definition");
+  cdl_start_table(printer);
 
 # 213 "debug-printer.c"
-  cdl_boolean(printer, (node->partial_definition));
+  cdl_key(printer, "tag");
 
 # 214 "debug-printer.c"
-  cdl_end_table(printer);
-}
+  cdl_string(printer, "PARSE_NODE_ENUM");
 
+# 215 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 215 "debug-printer.c"
+  {
+
+# 216 "debug-printer.c"
+    cdl_key(printer, "name");
 
 # 217 "debug-printer.c"
-void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node)
-# 218 "debug-printer.c"
-{
+    cdl_string(printer, token_to_string((node->name)));
+  }
 
 # 219 "debug-printer.c"
-  cdl_start_table(printer);
+  cdl_key(printer, "elements");
 
 # 220 "debug-printer.c"
-  cdl_key(printer, "tag");
+  buffer_append_dbg_node_list(printer, (node->elements));
 
 # 221 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_STRUCT");
+  cdl_key(printer, "partial_definition");
 
 # 222 "debug-printer.c"
-  if (((node->name)!=((void *)0)))
-
-# 222 "debug-printer.c"
-  {
+  cdl_boolean(printer, (node->partial_definition));
 
 # 223 "debug-printer.c"
-    cdl_key(printer, "name");
+  cdl_end_table(printer);
+}
 
-# 224 "debug-printer.c"
-    cdl_string(printer, token_to_string((node->name)));
-  }
 
 # 226 "debug-printer.c"
-  cdl_key(printer, "partial_definition");
-
+void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node)
 # 227 "debug-printer.c"
-  cdl_boolean(printer, (node->partial_definition));
+{
 
 # 228 "debug-printer.c"
-  cdl_key(printer, "fields");
+  cdl_start_table(printer);
 
 # 229 "debug-printer.c"
-  buffer_append_dbg_node_list(printer, (node->fields));
+  cdl_key(printer, "tag");
 
 # 230 "debug-printer.c"
-  cdl_end_table(printer);
-}
+  cdl_string(printer, "PARSE_NODE_STRUCT");
 
+# 231 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 231 "debug-printer.c"
+  {
+
+# 232 "debug-printer.c"
+    cdl_key(printer, "name");
 
 # 233 "debug-printer.c"
-void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node)
-# 233 "debug-printer.c"
-{
-
-# 234 "debug-printer.c"
-  cdl_start_table(printer);
+    cdl_string(printer, token_to_string((node->name)));
+  }
 
 # 235 "debug-printer.c"
-  cdl_key(printer, "tag");
-
-# 236 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_UNION");
-
-# 237 "debug-printer.c"
-  if (((node->name)!=((void *)0)))
-
-# 237 "debug-printer.c"
-  {
-
-# 238 "debug-printer.c"
-    cdl_key(printer, "name");
-
-# 239 "debug-printer.c"
-    cdl_string(printer, token_to_string((node->name)));
-  }
-
-# 241 "debug-printer.c"
   cdl_key(printer, "partial_definition");
 
-# 242 "debug-printer.c"
+# 236 "debug-printer.c"
   cdl_boolean(printer, (node->partial_definition));
 
-# 243 "debug-printer.c"
+# 237 "debug-printer.c"
   cdl_key(printer, "fields");
 
-# 244 "debug-printer.c"
+# 238 "debug-printer.c"
   buffer_append_dbg_node_list(printer, (node->fields));
 
-# 245 "debug-printer.c"
+# 239 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 248 "debug-printer.c"
-void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node)
-# 249 "debug-printer.c"
+# 242 "debug-printer.c"
+void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node)
+# 242 "debug-printer.c"
 {
 
-# 250 "debug-printer.c"
+# 243 "debug-printer.c"
   cdl_start_table(printer);
 
-# 251 "debug-printer.c"
+# 244 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 252 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_ENUM_ELEMENT");
+# 245 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_UNION");
 
-# 253 "debug-printer.c"
+# 246 "debug-printer.c"
   if (((node->name)!=((void *)0)))
 
-# 253 "debug-printer.c"
+# 246 "debug-printer.c"
   {
 
-# 254 "debug-printer.c"
+# 247 "debug-printer.c"
     cdl_key(printer, "name");
 
-# 255 "debug-printer.c"
+# 248 "debug-printer.c"
     cdl_string(printer, token_to_string((node->name)));
   }
 
-# 257 "debug-printer.c"
-  if (((node->value_expr)!=((void *)0)))
+# 250 "debug-printer.c"
+  cdl_key(printer, "partial_definition");
+
+# 251 "debug-printer.c"
+  cdl_boolean(printer, (node->partial_definition));
+
+# 252 "debug-printer.c"
+  cdl_key(printer, "fields");
+
+# 253 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->fields));
+
+# 254 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
 
 # 257 "debug-printer.c"
-  {
-
+void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node)
 # 258 "debug-printer.c"
-    cdl_key(printer, "value_expr");
+{
 
 # 259 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 260 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 261 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_ENUM_ELEMENT");
+
+# 262 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 262 "debug-printer.c"
+  {
+
+# 263 "debug-printer.c"
+    cdl_key(printer, "name");
+
+# 264 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->name)));
+  }
+
+# 266 "debug-printer.c"
+  if (((node->value_expr)!=((void *)0)))
+
+# 266 "debug-printer.c"
+  {
+
+# 267 "debug-printer.c"
+    cdl_key(printer, "value_expr");
+
+# 268 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->value_expr));
   }
 
-# 261 "debug-printer.c"
+# 270 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 264 "debug-printer.c"
+# 273 "debug-printer.c"
 void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node)
-# 264 "debug-printer.c"
+# 273 "debug-printer.c"
 {
 
-# 265 "debug-printer.c"
+# 274 "debug-printer.c"
   cdl_start_table(printer);
 
-# 266 "debug-printer.c"
+# 275 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 267 "debug-printer.c"
+# 276 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_FIELD");
 
-# 268 "debug-printer.c"
+# 277 "debug-printer.c"
   if (((node->name)!=((void *)0)))
 
-# 268 "debug-printer.c"
+# 277 "debug-printer.c"
   {
 
-# 269 "debug-printer.c"
+# 278 "debug-printer.c"
     cdl_key(printer, "name");
 
-# 270 "debug-printer.c"
+# 279 "debug-printer.c"
     cdl_string(printer, token_to_string((node->name)));
   }
 
-# 272 "debug-printer.c"
+# 281 "debug-printer.c"
   if (((node->type)!=((void *)0)))
 
-# 272 "debug-printer.c"
+# 281 "debug-printer.c"
   {
 
-# 273 "debug-printer.c"
+# 282 "debug-printer.c"
     cdl_key(printer, "type");
 
-# 274 "debug-printer.c"
+# 283 "debug-printer.c"
     buffer_append_dbg_type_node(printer, (node->type));
   }
 
-# 276 "debug-printer.c"
+# 285 "debug-printer.c"
   if (((node->suffixes)!=((void *)0)))
 
-# 276 "debug-printer.c"
+# 285 "debug-printer.c"
   {
 
-# 277 "debug-printer.c"
+# 286 "debug-printer.c"
     cdl_key(printer, "suffixes");
 
-# 278 "debug-printer.c"
+# 287 "debug-printer.c"
     cdl_start_array(printer);
 
-# 279 "debug-printer.c"
+# 288 "debug-printer.c"
     for (
       uint64_t i = 0;
       (i<((node->suffixes)->length));
       (i++))
 
-# 279 "debug-printer.c"
+# 288 "debug-printer.c"
     {
       parse_node_t* suffix = value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*));
 
-# 282 "debug-printer.c"
+# 291 "debug-printer.c"
       buffer_append_dbg_parse_node(printer, suffix);
     }
 
-# 284 "debug-printer.c"
+# 293 "debug-printer.c"
     cdl_end_array(printer);
   }
 
-# 287 "debug-printer.c"
+# 296 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 290 "debug-printer.c"
+# 299 "debug-printer.c"
 void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node)
-# 290 "debug-printer.c"
+# 299 "debug-printer.c"
 {
 
-# 291 "debug-printer.c"
+# 300 "debug-printer.c"
   cdl_start_table(printer);
 
-# 292 "debug-printer.c"
+# 301 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 293 "debug-printer.c"
+# 302 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_TYPE");
 
-# 294 "debug-printer.c"
+# 303 "debug-printer.c"
   cdl_key(printer, "type_node_kind");
 
-# 295 "debug-printer.c"
+# 304 "debug-printer.c"
   cdl_string(printer, type_node_kind_to_string((node->type_node_kind)));
 
-# 299 "debug-printer.c"
+# 308 "debug-printer.c"
   if (((node->qualifiers)>0))
 
-# 299 "debug-printer.c"
+# 308 "debug-printer.c"
   {
 
-# 300 "debug-printer.c"
+# 309 "debug-printer.c"
     cdl_key(printer, "qualifiers");
 
-# 301 "debug-printer.c"
+# 310 "debug-printer.c"
     cdl_start_array(printer);
 
-# 302 "debug-printer.c"
+# 311 "debug-printer.c"
     if ((((node->qualifiers)&TYPE_QUALIFIER_CONST)==TYPE_QUALIFIER_CONST))
 
-# 302 "debug-printer.c"
+# 311 "debug-printer.c"
     {
 
-# 303 "debug-printer.c"
+# 312 "debug-printer.c"
       cdl_string(printer, "const");
     }
 
-# 305 "debug-printer.c"
+# 314 "debug-printer.c"
     if ((((node->qualifiers)&TYPE_QUALIFIER_VOLATILE)==TYPE_QUALIFIER_VOLATILE))
 
-# 306 "debug-printer.c"
+# 315 "debug-printer.c"
     {
 
-# 307 "debug-printer.c"
+# 316 "debug-printer.c"
       cdl_string(printer, "volatile");
     }
 
-# 309 "debug-printer.c"
+# 318 "debug-printer.c"
     if ((((node->qualifiers)&TYPE_QUALIFIER_RESTRICT)==TYPE_QUALIFIER_RESTRICT))
 
-# 310 "debug-printer.c"
+# 319 "debug-printer.c"
     {
 
-# 311 "debug-printer.c"
+# 320 "debug-printer.c"
       cdl_string(printer, "restrict");
     }
 
-# 313 "debug-printer.c"
+# 322 "debug-printer.c"
     cdl_end_array(printer);
   }
 
-# 316 "debug-printer.c"
+# 325 "debug-printer.c"
   if (((node->type_name)!=((void *)0)))
 
-# 316 "debug-printer.c"
+# 325 "debug-printer.c"
   {
 
-# 317 "debug-printer.c"
+# 326 "debug-printer.c"
     cdl_key(printer, "type_name");
 
-# 318 "debug-printer.c"
+# 327 "debug-printer.c"
     cdl_string(printer, token_to_string((node->type_name)));
   }
 
-# 320 "debug-printer.c"
+# 329 "debug-printer.c"
   if (((node->user_type)!=((void *)0)))
 
-# 320 "debug-printer.c"
+# 329 "debug-printer.c"
   {
 
-# 321 "debug-printer.c"
+# 330 "debug-printer.c"
     cdl_key(printer, "user_type");
 
-# 322 "debug-printer.c"
+# 331 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->user_type));
   }
 
-# 324 "debug-printer.c"
+# 333 "debug-printer.c"
   cdl_key(printer, "type_args");
 
-# 325 "debug-printer.c"
+# 334 "debug-printer.c"
   buffer_append_dbg_node_list(printer, (node->type_args));
 
-# 326 "debug-printer.c"
+# 335 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 329 "debug-printer.c"
+# 338 "debug-printer.c"
 void buffer_append_dbg_literal_node(cdl_printer_t* printer, literal_node_t* node)
-# 330 "debug-printer.c"
+# 339 "debug-printer.c"
 {
 
-# 331 "debug-printer.c"
+# 340 "debug-printer.c"
   cdl_start_table(printer);
 
-# 332 "debug-printer.c"
+# 341 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 333 "debug-printer.c"
+# 342 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_LITERAL");
 
-# 334 "debug-printer.c"
+# 343 "debug-printer.c"
   if (((node->token)!=((void *)0)))
 
-# 334 "debug-printer.c"
+# 343 "debug-printer.c"
   {
 
-# 335 "debug-printer.c"
+# 344 "debug-printer.c"
     cdl_key(printer, "token");
 
-# 336 "debug-printer.c"
+# 345 "debug-printer.c"
     cdl_string(printer, token_to_string((node->token)));
   }
 
-# 338 "debug-printer.c"
+# 347 "debug-printer.c"
   if (((node->tokens)!=((void *)0)))
 
-# 338 "debug-printer.c"
+# 347 "debug-printer.c"
   {
 
-# 339 "debug-printer.c"
+# 348 "debug-printer.c"
     buffer_append_dbg_tokens(printer, (node->tokens), "tokens");
   }
 
-# 341 "debug-printer.c"
+# 350 "debug-printer.c"
   if (((node->initializer_node)!=((void *)0)))
 
-# 341 "debug-printer.c"
+# 350 "debug-printer.c"
   {
 
-# 342 "debug-printer.c"
+# 351 "debug-printer.c"
     cdl_key(printer, "initializer_node");
 
-# 343 "debug-printer.c"
+# 352 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->initializer_node));
   }
 
-# 345 "debug-printer.c"
+# 354 "debug-printer.c"
   if (((node->initializer_type)!=((void *)0)))
 
-# 345 "debug-printer.c"
+# 354 "debug-printer.c"
   {
 
-# 346 "debug-printer.c"
+# 355 "debug-printer.c"
     cdl_key(printer, "initializer_type");
 
-# 347 "debug-printer.c"
+# 356 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->initializer_type));
   }
 
-# 349 "debug-printer.c"
+# 358 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 352 "debug-printer.c"
+# 361 "debug-printer.c"
 void buffer_append_dbg_function_node(cdl_printer_t* printer, function_node_t* node)
-# 353 "debug-printer.c"
+# 362 "debug-printer.c"
 {
 
-# 354 "debug-printer.c"
+# 363 "debug-printer.c"
   cdl_start_table(printer);
 
-# 355 "debug-printer.c"
+# 364 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 356 "debug-printer.c"
+# 365 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_FUNCTION");
 
-# 357 "debug-printer.c"
+# 366 "debug-printer.c"
   cdl_key(printer, "attributes");
 
-# 358 "debug-printer.c"
+# 367 "debug-printer.c"
   buffer_append_dbg_node_list(printer, (node->attributes));
 
-# 360 "debug-printer.c"
+# 369 "debug-printer.c"
   if (((node->storage_class_specifier)!=((void *)0)))
 
-# 360 "debug-printer.c"
+# 369 "debug-printer.c"
   {
 
-# 361 "debug-printer.c"
+# 370 "debug-printer.c"
     cdl_key(printer, "storage_class_specifier");
 
-# 362 "debug-printer.c"
+# 371 "debug-printer.c"
     cdl_string(printer, token_to_string((node->storage_class_specifier)));
   }
 
-# 367 "debug-printer.c"
+# 376 "debug-printer.c"
   if (((node->return_type)!=((void *)0)))
 
-# 367 "debug-printer.c"
+# 376 "debug-printer.c"
   {
 
-# 368 "debug-printer.c"
+# 377 "debug-printer.c"
     cdl_key(printer, "return_type");
 
-# 369 "debug-printer.c"
+# 378 "debug-printer.c"
     buffer_append_dbg_type_node(printer, (node->return_type));
   }
 
-# 372 "debug-printer.c"
+# 381 "debug-printer.c"
   if (((node->function_name)!=((void *)0)))
 
-# 372 "debug-printer.c"
+# 381 "debug-printer.c"
   {
 
-# 373 "debug-printer.c"
+# 382 "debug-printer.c"
     cdl_key(printer, "function_name");
 
-# 374 "debug-printer.c"
+# 383 "debug-printer.c"
     cdl_string(printer, token_to_string((node->function_name)));
   }
 
-# 377 "debug-printer.c"
+# 386 "debug-printer.c"
   cdl_key(printer, "function_args");
 
-# 378 "debug-printer.c"
+# 387 "debug-printer.c"
   buffer_append_dbg_node_list(printer, (node->function_args));
 
-# 379 "debug-printer.c"
+# 388 "debug-printer.c"
   if (((node->body)!=((void *)0)))
 
-# 379 "debug-printer.c"
+# 388 "debug-printer.c"
   {
 
-# 380 "debug-printer.c"
+# 389 "debug-printer.c"
     cdl_key(printer, "body");
 
-# 381 "debug-printer.c"
+# 390 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->body));
   }
 
-# 383 "debug-printer.c"
+# 392 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 386 "debug-printer.c"
+# 395 "debug-printer.c"
 void buffer_append_dbg_function_argument_node(cdl_printer_t* printer, function_argument_node_t* node)
-# 387 "debug-printer.c"
+# 396 "debug-printer.c"
 {
 
-# 388 "debug-printer.c"
+# 397 "debug-printer.c"
   cdl_start_table(printer);
 
-# 389 "debug-printer.c"
+# 398 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 390 "debug-printer.c"
+# 399 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_FUNCTION_ARGUEMENT");
 
-# 392 "debug-printer.c"
+# 401 "debug-printer.c"
   if (((node->arg_type)!=((void *)0)))
 
-# 392 "debug-printer.c"
+# 401 "debug-printer.c"
   {
 
-# 393 "debug-printer.c"
+# 402 "debug-printer.c"
     cdl_key(printer, "arg_type");
 
-# 394 "debug-printer.c"
+# 403 "debug-printer.c"
     buffer_append_dbg_type_node(printer, (node->arg_type));
   }
 
-# 396 "debug-printer.c"
+# 405 "debug-printer.c"
   if (((node->arg_name)!=((void *)0)))
 
-# 396 "debug-printer.c"
+# 405 "debug-printer.c"
   {
 
-# 397 "debug-printer.c"
+# 406 "debug-printer.c"
     cdl_key(printer, "arg_name");
 
-# 398 "debug-printer.c"
+# 407 "debug-printer.c"
     cdl_string(printer, token_to_string((node->arg_name)));
   }
 
-# 400 "debug-printer.c"
+# 409 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 403 "debug-printer.c"
+# 412 "debug-printer.c"
 void buffer_append_dbg_balanced_construct_node(cdl_printer_t* printer, balanced_construct_node_t* node)
-# 404 "debug-printer.c"
+# 413 "debug-printer.c"
 {
 
-# 405 "debug-printer.c"
+# 414 "debug-printer.c"
   cdl_start_table(printer);
 
-# 406 "debug-printer.c"
+# 415 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 407 "debug-printer.c"
+# 416 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_BALANCED_CONSTRUCT");
 
-# 408 "debug-printer.c"
+# 417 "debug-printer.c"
   if (((node->start_token)!=((void *)0)))
 
-# 408 "debug-printer.c"
+# 417 "debug-printer.c"
   {
 
-# 409 "debug-printer.c"
+# 418 "debug-printer.c"
     cdl_key(printer, "start_token");
 
-# 410 "debug-printer.c"
+# 419 "debug-printer.c"
     cdl_string(printer, token_to_string((node->start_token)));
   }
 
-# 412 "debug-printer.c"
+# 421 "debug-printer.c"
   if (((node->end_token)!=((void *)0)))
 
-# 412 "debug-printer.c"
+# 421 "debug-printer.c"
   {
 
-# 413 "debug-printer.c"
+# 422 "debug-printer.c"
     cdl_key(printer, "end_token");
 
-# 414 "debug-printer.c"
+# 423 "debug-printer.c"
     cdl_string(printer, token_to_string((node->end_token)));
   }
 
-# 416 "debug-printer.c"
+# 425 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 419 "debug-printer.c"
+# 428 "debug-printer.c"
 void buffer_append_dbg_typedef_node(cdl_printer_t* printer, typedef_node_t* node)
-# 420 "debug-printer.c"
+# 429 "debug-printer.c"
 {
 
-# 421 "debug-printer.c"
+# 430 "debug-printer.c"
   cdl_start_table(printer);
 
-# 422 "debug-printer.c"
+# 431 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 423 "debug-printer.c"
+# 432 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_TYPEDEF");
 
-# 424 "debug-printer.c"
+# 433 "debug-printer.c"
   if (((node->name)!=((void *)0)))
 
-# 424 "debug-printer.c"
+# 433 "debug-printer.c"
   {
 
-# 425 "debug-printer.c"
+# 434 "debug-printer.c"
     cdl_key(printer, "name");
 
-# 426 "debug-printer.c"
+# 435 "debug-printer.c"
     cdl_string(printer, token_to_string((node->name)));
   }
 
-# 428 "debug-printer.c"
+# 437 "debug-printer.c"
   if (((node->type_node)!=((void *)0)))
 
-# 428 "debug-printer.c"
+# 437 "debug-printer.c"
   {
 
-# 429 "debug-printer.c"
+# 438 "debug-printer.c"
     cdl_key(printer, "type_node");
 
-# 430 "debug-printer.c"
+# 439 "debug-printer.c"
     buffer_append_dbg_type_node(printer, (node->type_node));
   }
 
-# 432 "debug-printer.c"
+# 441 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 435 "debug-printer.c"
+# 444 "debug-printer.c"
 void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable_definition_node_t* node)
-# 436 "debug-printer.c"
+# 445 "debug-printer.c"
 {
 
-# 437 "debug-printer.c"
+# 446 "debug-printer.c"
   cdl_start_table(printer);
 
-# 438 "debug-printer.c"
+# 447 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 439 "debug-printer.c"
+# 448 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_VARIABLE_DEFINITION");
 
-# 440 "debug-printer.c"
+# 449 "debug-printer.c"
   if (((node->name)!=((void *)0)))
 
-# 440 "debug-printer.c"
+# 449 "debug-printer.c"
   {
 
-# 441 "debug-printer.c"
+# 450 "debug-printer.c"
     cdl_key(printer, "name");
 
-# 442 "debug-printer.c"
+# 451 "debug-printer.c"
     cdl_string(printer, token_to_string((node->name)));
   }
 
-# 444 "debug-printer.c"
+# 453 "debug-printer.c"
   if (((node->type)!=((void *)0)))
 
-# 444 "debug-printer.c"
+# 453 "debug-printer.c"
   {
 
-# 445 "debug-printer.c"
+# 454 "debug-printer.c"
     cdl_key(printer, "type");
 
-# 446 "debug-printer.c"
+# 455 "debug-printer.c"
     buffer_append_dbg_type_node(printer, (node->type));
   }
 
-# 448 "debug-printer.c"
+# 457 "debug-printer.c"
   if (((node->value)!=((void *)0)))
 
-# 448 "debug-printer.c"
+# 457 "debug-printer.c"
   {
 
-# 449 "debug-printer.c"
+# 458 "debug-printer.c"
     cdl_key(printer, "value");
 
-# 450 "debug-printer.c"
+# 459 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->value));
   }
 
-# 452 "debug-printer.c"
+# 461 "debug-printer.c"
   if (((node->storage_class_specifier)!=((void *)0)))
 
-# 452 "debug-printer.c"
+# 461 "debug-printer.c"
   {
 
-# 453 "debug-printer.c"
+# 462 "debug-printer.c"
     cdl_key(printer, "storage_class_specifier");
 
-# 454 "debug-printer.c"
+# 463 "debug-printer.c"
     cdl_string(printer, token_to_string((node->storage_class_specifier)));
   }
 
-# 456 "debug-printer.c"
+# 465 "debug-printer.c"
   if (((node->suffixes)!=((void *)0)))
 
-# 456 "debug-printer.c"
+# 465 "debug-printer.c"
   {
 
-# 457 "debug-printer.c"
+# 466 "debug-printer.c"
     cdl_key(printer, "suffixes");
 
-# 458 "debug-printer.c"
+# 467 "debug-printer.c"
     cdl_start_array(printer);
 
-# 459 "debug-printer.c"
+# 468 "debug-printer.c"
     for (
       uint64_t i = 0;
       (i<((node->suffixes)->length));
       (i++))
 
-# 459 "debug-printer.c"
+# 468 "debug-printer.c"
     {
       parse_node_t* suffix = value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*));
 
-# 462 "debug-printer.c"
+# 471 "debug-printer.c"
       buffer_append_dbg_parse_node(printer, suffix);
     }
 
-# 464 "debug-printer.c"
+# 473 "debug-printer.c"
     cdl_end_array(printer);
   }
 
-# 466 "debug-printer.c"
+# 475 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 469 "debug-printer.c"
+# 478 "debug-printer.c"
 void buffer_append_dbg_attribute_node(cdl_printer_t* printer, attribute_node_t* node)
-# 470 "debug-printer.c"
+# 479 "debug-printer.c"
 {
 
-# 471 "debug-printer.c"
+# 480 "debug-printer.c"
   cdl_start_table(printer);
 
-# 472 "debug-printer.c"
+# 481 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 473 "debug-printer.c"
+# 482 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_ATTRIBUTE");
 
-# 474 "debug-printer.c"
+# 483 "debug-printer.c"
   if (((node->inner_start_token)!=((void *)0)))
 
-# 474 "debug-printer.c"
+# 483 "debug-printer.c"
   {
 
-# 475 "debug-printer.c"
+# 484 "debug-printer.c"
     cdl_key(printer, "inner_start_token");
 
-# 476 "debug-printer.c"
+# 485 "debug-printer.c"
     cdl_string(printer, token_to_string((node->inner_start_token)));
   }
 
-# 478 "debug-printer.c"
+# 487 "debug-printer.c"
   if (((node->inner_end_token)!=((void *)0)))
 
-# 478 "debug-printer.c"
+# 487 "debug-printer.c"
   {
 
-# 479 "debug-printer.c"
+# 488 "debug-printer.c"
     cdl_key(printer, "inner_end_token");
 
-# 480 "debug-printer.c"
+# 489 "debug-printer.c"
     cdl_string(printer, token_to_string((node->inner_end_token)));
   }
 
-# 482 "debug-printer.c"
+# 491 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 492 "debug-printer.c"
+# 501 "debug-printer.c"
 void buffer_append_dbg_empty_statement_node(cdl_printer_t* printer, empty_statement_node_t* node)
-# 493 "debug-printer.c"
+# 502 "debug-printer.c"
 {
 
-# 494 "debug-printer.c"
+# 503 "debug-printer.c"
   cdl_start_table(printer);
-
-# 495 "debug-printer.c"
-  cdl_key(printer, "tag");
-
-# 496 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_EMPTY_STATEMENT");
-
-# 497 "debug-printer.c"
-  cdl_end_table(printer);
-}
-
-
-# 503 "debug-printer.c"
-void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node)
-# 503 "debug-printer.c"
-{
 
 # 504 "debug-printer.c"
-  cdl_start_table(printer);
-
-# 505 "debug-printer.c"
   cdl_key(printer, "tag");
 
+# 505 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_EMPTY_STATEMENT");
+
 # 506 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_BLOCK");
-
-# 507 "debug-printer.c"
-  cdl_key(printer, "statements");
-
-# 508 "debug-printer.c"
-  buffer_append_dbg_node_list(printer, (node->statements));
-
-# 509 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
 # 512 "debug-printer.c"
-void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node)
-# 513 "debug-printer.c"
+void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node)
+# 512 "debug-printer.c"
 {
 
-# 514 "debug-printer.c"
+# 513 "debug-printer.c"
   cdl_start_table(printer);
 
-# 515 "debug-printer.c"
+# 514 "debug-printer.c"
   cdl_key(printer, "tag");
 
+# 515 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_BLOCK");
+
 # 516 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_IF_STATEMENT");
+  cdl_key(printer, "statements");
 
 # 517 "debug-printer.c"
-  if (((node->if_condition)!=((void *)0)))
-
-# 517 "debug-printer.c"
-  {
+  buffer_append_dbg_node_list(printer, (node->statements));
 
 # 518 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 521 "debug-printer.c"
+void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node)
+# 522 "debug-printer.c"
+{
+
+# 523 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 524 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 525 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_IF_STATEMENT");
+
+# 526 "debug-printer.c"
+  if (((node->if_condition)!=((void *)0)))
+
+# 526 "debug-printer.c"
+  {
+
+# 527 "debug-printer.c"
     cdl_key(printer, "if_condition");
 
-# 519 "debug-printer.c"
+# 528 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->if_condition));
   }
 
-# 521 "debug-printer.c"
+# 530 "debug-printer.c"
   if (((node->if_true)!=((void *)0)))
 
-# 521 "debug-printer.c"
+# 530 "debug-printer.c"
   {
 
-# 522 "debug-printer.c"
+# 531 "debug-printer.c"
     cdl_key(printer, "if_true");
 
-# 523 "debug-printer.c"
+# 532 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->if_true));
   }
 
-# 525 "debug-printer.c"
+# 534 "debug-printer.c"
   if (((node->if_else)!=((void *)0)))
 
-# 525 "debug-printer.c"
+# 534 "debug-printer.c"
   {
 
-# 526 "debug-printer.c"
+# 535 "debug-printer.c"
     cdl_key(printer, "if_else");
 
-# 527 "debug-printer.c"
+# 536 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->if_else));
   }
 
-# 529 "debug-printer.c"
+# 538 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 533 "debug-printer.c"
+# 542 "debug-printer.c"
 void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t* node)
-# 534 "debug-printer.c"
+# 543 "debug-printer.c"
 {
 
-# 535 "debug-printer.c"
+# 544 "debug-printer.c"
   cdl_start_table(printer);
 
-# 536 "debug-printer.c"
+# 545 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 537 "debug-printer.c"
+# 546 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_WHILE_STATEMENT");
 
-# 538 "debug-printer.c"
+# 547 "debug-printer.c"
   if (((node->condition)!=((void *)0)))
 
-# 538 "debug-printer.c"
+# 547 "debug-printer.c"
   {
 
-# 539 "debug-printer.c"
+# 548 "debug-printer.c"
     cdl_key(printer, "condition");
 
-# 540 "debug-printer.c"
+# 549 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->condition));
   }
 
-# 542 "debug-printer.c"
+# 551 "debug-printer.c"
   if (((node->body)!=((void *)0)))
 
-# 542 "debug-printer.c"
+# 551 "debug-printer.c"
   {
 
-# 543 "debug-printer.c"
+# 552 "debug-printer.c"
     cdl_key(printer, "body");
 
-# 544 "debug-printer.c"
+# 553 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->body));
   }
 
-# 546 "debug-printer.c"
+# 555 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 549 "debug-printer.c"
+# 558 "debug-printer.c"
 void buffer_append_dbg_for_node(cdl_printer_t* printer, for_statement_node_t* node)
-# 550 "debug-printer.c"
+# 559 "debug-printer.c"
 {
 
-# 551 "debug-printer.c"
+# 560 "debug-printer.c"
   cdl_start_table(printer);
 
-# 552 "debug-printer.c"
+# 561 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 553 "debug-printer.c"
+# 562 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_FOR_STATEMENT");
 
-# 554 "debug-printer.c"
+# 563 "debug-printer.c"
   if (((node->for_init)!=((void *)0)))
 
-# 554 "debug-printer.c"
+# 563 "debug-printer.c"
   {
 
-# 555 "debug-printer.c"
+# 564 "debug-printer.c"
     cdl_key(printer, "for_init");
 
-# 556 "debug-printer.c"
+# 565 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->for_init));
   }
 
-# 558 "debug-printer.c"
+# 567 "debug-printer.c"
   if (((node->for_test)!=((void *)0)))
 
-# 558 "debug-printer.c"
+# 567 "debug-printer.c"
   {
 
-# 559 "debug-printer.c"
+# 568 "debug-printer.c"
     cdl_key(printer, "for_test");
 
-# 560 "debug-printer.c"
+# 569 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->for_test));
   }
 
-# 562 "debug-printer.c"
+# 571 "debug-printer.c"
   if (((node->for_increment)!=((void *)0)))
 
-# 562 "debug-printer.c"
+# 571 "debug-printer.c"
   {
 
-# 563 "debug-printer.c"
+# 572 "debug-printer.c"
     cdl_key(printer, "for_increment");
 
-# 564 "debug-printer.c"
+# 573 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->for_increment));
   }
 
-# 566 "debug-printer.c"
+# 575 "debug-printer.c"
   if (((node->for_body)!=((void *)0)))
 
-# 566 "debug-printer.c"
+# 575 "debug-printer.c"
   {
 
-# 567 "debug-printer.c"
+# 576 "debug-printer.c"
     cdl_key(printer, "for_body");
 
-# 568 "debug-printer.c"
+# 577 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->for_body));
   }
 
-# 570 "debug-printer.c"
+# 579 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 573 "debug-printer.c"
+# 582 "debug-printer.c"
 void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node)
-# 574 "debug-printer.c"
+# 583 "debug-printer.c"
 {
 
-# 575 "debug-printer.c"
+# 584 "debug-printer.c"
   cdl_start_table(printer);
 
-# 576 "debug-printer.c"
+# 585 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 577 "debug-printer.c"
+# 586 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_DO_STATEMENT");
 
-# 578 "debug-printer.c"
+# 587 "debug-printer.c"
   if (((node->body)!=((void *)0)))
 
-# 578 "debug-printer.c"
+# 587 "debug-printer.c"
   {
 
-# 579 "debug-printer.c"
+# 588 "debug-printer.c"
     cdl_key(printer, "body");
 
-# 580 "debug-printer.c"
+# 589 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->body));
   }
 
-# 582 "debug-printer.c"
+# 591 "debug-printer.c"
   if (((node->condition)!=((void *)0)))
 
-# 582 "debug-printer.c"
+# 591 "debug-printer.c"
   {
 
-# 583 "debug-printer.c"
+# 592 "debug-printer.c"
     cdl_key(printer, "condition");
 
-# 584 "debug-printer.c"
+# 593 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->condition));
   }
 
-# 586 "debug-printer.c"
+# 595 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 589 "debug-printer.c"
+# 598 "debug-printer.c"
 void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statement_node_t* node)
-# 590 "debug-printer.c"
+# 599 "debug-printer.c"
 {
 
-# 591 "debug-printer.c"
+# 600 "debug-printer.c"
   cdl_start_table(printer);
 
-# 592 "debug-printer.c"
+# 601 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 593 "debug-printer.c"
+# 602 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_BREAK_STATEMENT");
 
-# 594 "debug-printer.c"
+# 603 "debug-printer.c"
   if (((node->break_keyword_token)!=((void *)0)))
 
-# 594 "debug-printer.c"
+# 603 "debug-printer.c"
   {
 
-# 595 "debug-printer.c"
+# 604 "debug-printer.c"
     cdl_key(printer, "break_keyword_token");
 
-# 596 "debug-printer.c"
+# 605 "debug-printer.c"
     cdl_string(printer, token_to_string((node->break_keyword_token)));
   }
 
-# 598 "debug-printer.c"
+# 607 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 601 "debug-printer.c"
+# 610 "debug-printer.c"
 void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_statement_node_t* node)
-# 602 "debug-printer.c"
+# 611 "debug-printer.c"
 {
 
-# 603 "debug-printer.c"
+# 612 "debug-printer.c"
   cdl_start_table(printer);
 
-# 604 "debug-printer.c"
+# 613 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 605 "debug-printer.c"
+# 614 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_CONTINUE_STATEMENT");
 
-# 606 "debug-printer.c"
+# 615 "debug-printer.c"
   if (((node->continue_keyword_token)!=((void *)0)))
 
-# 606 "debug-printer.c"
+# 615 "debug-printer.c"
   {
 
-# 607 "debug-printer.c"
+# 616 "debug-printer.c"
     cdl_key(printer, "continue_keyword_token");
 
-# 608 "debug-printer.c"
+# 617 "debug-printer.c"
     cdl_string(printer, token_to_string((node->continue_keyword_token)));
   }
 
-# 610 "debug-printer.c"
+# 619 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 613 "debug-printer.c"
+# 622 "debug-printer.c"
 void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statement_node_t* node)
-# 614 "debug-printer.c"
+# 623 "debug-printer.c"
 {
 
-# 615 "debug-printer.c"
+# 624 "debug-printer.c"
   cdl_start_table(printer);
 
-# 616 "debug-printer.c"
+# 625 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 617 "debug-printer.c"
+# 626 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_LABEL_STATEMENT");
 
-# 618 "debug-printer.c"
+# 627 "debug-printer.c"
   if (((node->label)!=((void *)0)))
 
-# 618 "debug-printer.c"
+# 627 "debug-printer.c"
   {
 
-# 619 "debug-printer.c"
+# 628 "debug-printer.c"
     cdl_key(printer, "label");
 
-# 620 "debug-printer.c"
+# 629 "debug-printer.c"
     cdl_string(printer, token_to_string((node->label)));
   }
 
-# 622 "debug-printer.c"
+# 631 "debug-printer.c"
   cdl_end_table(printer);
 }
 
-
-# 625 "debug-printer.c"
-void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t* node)
-# 626 "debug-printer.c"
-{
-
-# 627 "debug-printer.c"
-  cdl_start_table(printer);
-
-# 628 "debug-printer.c"
-  cdl_key(printer, "tag");
-
-# 629 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_CASE_LABEL");
-
-# 630 "debug-printer.c"
-  if (((node->expression)!=((void *)0)))
-
-# 630 "debug-printer.c"
-  {
-
-# 631 "debug-printer.c"
-    cdl_key(printer, "expression");
-
-# 632 "debug-printer.c"
-    buffer_append_dbg_parse_node(printer, (node->expression));
-  }
 
 # 634 "debug-printer.c"
-  cdl_end_table(printer);
-}
+void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t* node)
+# 635 "debug-printer.c"
+{
 
+# 636 "debug-printer.c"
+  cdl_start_table(printer);
 
 # 637 "debug-printer.c"
-void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_node_t* node)
+  cdl_key(printer, "tag");
+
 # 638 "debug-printer.c"
-{
+  cdl_string(printer, "PARSE_NODE_CASE_LABEL");
 
 # 639 "debug-printer.c"
-  cdl_start_table(printer);
+  if (((node->expression)!=((void *)0)))
+
+# 639 "debug-printer.c"
+  {
 
 # 640 "debug-printer.c"
-  cdl_key(printer, "tag");
+    cdl_key(printer, "expression");
 
 # 641 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_DEFAULT_LABEL");
+    buffer_append_dbg_parse_node(printer, (node->expression));
+  }
 
-# 642 "debug-printer.c"
+# 643 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 645 "debug-printer.c"
-void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node)
 # 646 "debug-printer.c"
-{
-
+void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_node_t* node)
 # 647 "debug-printer.c"
-  cdl_start_table(printer);
+{
 
 # 648 "debug-printer.c"
-  cdl_key(printer, "tag");
+  cdl_start_table(printer);
 
 # 649 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_RETURN_STATEMENT");
+  cdl_key(printer, "tag");
 
 # 650 "debug-printer.c"
-  if (((node->expression)!=((void *)0)))
-
-# 650 "debug-printer.c"
-  {
+  cdl_string(printer, "PARSE_NODE_DEFAULT_LABEL");
 
 # 651 "debug-printer.c"
-    cdl_key(printer, "expression");
+  cdl_end_table(printer);
+}
 
-# 652 "debug-printer.c"
-    buffer_append_dbg_parse_node(printer, (node->expression));
-  }
 
 # 654 "debug-printer.c"
-  cdl_end_table(printer);
-}
-
-
-# 657 "debug-printer.c"
-void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, expression_statement_node_t* node)
-# 658 "debug-printer.c"
+void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node)
+# 655 "debug-printer.c"
 {
 
-# 659 "debug-printer.c"
+# 656 "debug-printer.c"
   cdl_start_table(printer);
 
-# 660 "debug-printer.c"
+# 657 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 661 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_EXPRESSION_STATEMENT");
+# 658 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_RETURN_STATEMENT");
 
-# 662 "debug-printer.c"
+# 659 "debug-printer.c"
   if (((node->expression)!=((void *)0)))
 
-# 662 "debug-printer.c"
+# 659 "debug-printer.c"
   {
 
-# 663 "debug-printer.c"
+# 660 "debug-printer.c"
     cdl_key(printer, "expression");
 
-# 664 "debug-printer.c"
+# 661 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->expression));
   }
 
-# 666 "debug-printer.c"
+# 663 "debug-printer.c"
   cdl_end_table(printer);
 }
 
+
+# 666 "debug-printer.c"
+void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, expression_statement_node_t* node)
+# 667 "debug-printer.c"
+{
+
+# 668 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 669 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 670 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_EXPRESSION_STATEMENT");
 
 # 671 "debug-printer.c"
-void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t* node)
+  if (((node->expression)!=((void *)0)))
+
+# 671 "debug-printer.c"
+  {
+
 # 672 "debug-printer.c"
-{
+    cdl_key(printer, "expression");
 
 # 673 "debug-printer.c"
-  cdl_start_table(printer);
-
-# 674 "debug-printer.c"
-  cdl_key(printer, "tag");
+    buffer_append_dbg_parse_node(printer, (node->expression));
+  }
 
 # 675 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_IDENTIFIER");
-
-# 676 "debug-printer.c"
-  cdl_key(printer, "token");
-
-# 677 "debug-printer.c"
-  cdl_string(printer, token_to_string((node->token)));
-
-# 678 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
+# 680 "debug-printer.c"
+void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t* node)
 # 681 "debug-printer.c"
-void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* node)
-# 682 "debug-printer.c"
 {
 
-# 683 "debug-printer.c"
+# 682 "debug-printer.c"
   cdl_start_table(printer);
 
-# 684 "debug-printer.c"
+# 683 "debug-printer.c"
   cdl_key(printer, "tag");
 
+# 684 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_IDENTIFIER");
+
 # 685 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_OPERATOR");
+  cdl_key(printer, "token");
 
 # 686 "debug-printer.c"
-  cdl_key(printer, "operator");
+  cdl_string(printer, token_to_string((node->token)));
 
 # 687 "debug-printer.c"
-  cdl_string(printer, token_to_string((node->operator)));
+  cdl_end_table(printer);
+}
 
-# 688 "debug-printer.c"
-  if (((node->left)!=((void *)0)))
-
-# 688 "debug-printer.c"
-  {
-
-# 689 "debug-printer.c"
-    cdl_key(printer, "left");
 
 # 690 "debug-printer.c"
+void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* node)
+# 691 "debug-printer.c"
+{
+
+# 692 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 693 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 694 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_OPERATOR");
+
+# 695 "debug-printer.c"
+  cdl_key(printer, "operator");
+
+# 696 "debug-printer.c"
+  cdl_string(printer, token_to_string((node->operator)));
+
+# 697 "debug-printer.c"
+  if (((node->left)!=((void *)0)))
+
+# 697 "debug-printer.c"
+  {
+
+# 698 "debug-printer.c"
+    cdl_key(printer, "left");
+
+# 699 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->left));
   }
 
-# 692 "debug-printer.c"
+# 701 "debug-printer.c"
   if (((node->right)!=((void *)0)))
 
-# 692 "debug-printer.c"
+# 701 "debug-printer.c"
   {
 
-# 693 "debug-printer.c"
+# 702 "debug-printer.c"
     cdl_key(printer, "right");
 
-# 694 "debug-printer.c"
+# 703 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->right));
   }
 
-# 696 "debug-printer.c"
+# 705 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 699 "debug-printer.c"
+# 708 "debug-printer.c"
 void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node)
-# 699 "debug-printer.c"
+# 708 "debug-printer.c"
 {
 
-# 700 "debug-printer.c"
+# 709 "debug-printer.c"
   cdl_start_table(printer);
-
-# 701 "debug-printer.c"
-  cdl_key(printer, "tag");
-
-# 702 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_CALL");
-
-# 703 "debug-printer.c"
-  cdl_key(printer, "function");
-
-# 704 "debug-printer.c"
-  buffer_append_dbg_parse_node(printer, (node->function));
-
-# 705 "debug-printer.c"
-  cdl_key(printer, "args");
-
-# 706 "debug-printer.c"
-  buffer_append_dbg_node_list(printer, (node->args));
-
-# 707 "debug-printer.c"
-  cdl_end_table(printer);
-}
-
 
 # 710 "debug-printer.c"
-void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node_t* node)
-# 711 "debug-printer.c"
-{
-
-# 712 "debug-printer.c"
-  cdl_start_table(printer);
-
-# 713 "debug-printer.c"
   cdl_key(printer, "tag");
 
+# 711 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_CALL");
+
+# 712 "debug-printer.c"
+  cdl_key(printer, "function");
+
+# 713 "debug-printer.c"
+  buffer_append_dbg_parse_node(printer, (node->function));
+
 # 714 "debug-printer.c"
-  cdl_string(printer, "PARSE_NODE_CONDITIONAL");
+  cdl_key(printer, "args");
 
 # 715 "debug-printer.c"
-  if (((node->condition)!=((void *)0)))
-
-# 715 "debug-printer.c"
-  {
+  buffer_append_dbg_node_list(printer, (node->args));
 
 # 716 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 719 "debug-printer.c"
+void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node_t* node)
+# 720 "debug-printer.c"
+{
+
+# 721 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 722 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 723 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_CONDITIONAL");
+
+# 724 "debug-printer.c"
+  if (((node->condition)!=((void *)0)))
+
+# 724 "debug-printer.c"
+  {
+
+# 725 "debug-printer.c"
     cdl_key(printer, "condition");
 
-# 717 "debug-printer.c"
+# 726 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->condition));
   }
 
-# 719 "debug-printer.c"
+# 728 "debug-printer.c"
   if (((node->expr_if_true)!=((void *)0)))
 
-# 719 "debug-printer.c"
+# 728 "debug-printer.c"
   {
 
-# 720 "debug-printer.c"
+# 729 "debug-printer.c"
     cdl_key(printer, "expr_if_true");
 
-# 721 "debug-printer.c"
+# 730 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->expr_if_true));
   }
 
-# 723 "debug-printer.c"
+# 732 "debug-printer.c"
   if (((node->expr_if_false)!=((void *)0)))
 
-# 723 "debug-printer.c"
+# 732 "debug-printer.c"
   {
 
-# 724 "debug-printer.c"
+# 733 "debug-printer.c"
     cdl_key(printer, "expr_if_false");
 
-# 725 "debug-printer.c"
+# 734 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->expr_if_false));
   }
 
-# 727 "debug-printer.c"
+# 736 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 730 "debug-printer.c"
+# 739 "debug-printer.c"
 void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node_t* node)
-# 731 "debug-printer.c"
+# 740 "debug-printer.c"
 {
 
-# 732 "debug-printer.c"
+# 741 "debug-printer.c"
   cdl_start_table(printer);
 
-# 733 "debug-printer.c"
+# 742 "debug-printer.c"
   cdl_key(printer, "tag");
 
-# 734 "debug-printer.c"
+# 743 "debug-printer.c"
   cdl_string(printer, "PARSE_NODE_SWITCH_STATEMENT");
 
-# 735 "debug-printer.c"
+# 744 "debug-printer.c"
   if (((node->expression)!=((void *)0)))
 
-# 735 "debug-printer.c"
+# 744 "debug-printer.c"
   {
 
-# 736 "debug-printer.c"
+# 745 "debug-printer.c"
     cdl_key(printer, "expression");
 
-# 737 "debug-printer.c"
+# 746 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->expression));
   }
 
-# 739 "debug-printer.c"
+# 748 "debug-printer.c"
   if (((node->block)!=((void *)0)))
 
-# 739 "debug-printer.c"
+# 748 "debug-printer.c"
   {
 
-# 740 "debug-printer.c"
+# 749 "debug-printer.c"
     cdl_key(printer, "block");
 
-# 741 "debug-printer.c"
+# 750 "debug-printer.c"
     buffer_append_dbg_parse_node(printer, (node->block));
   }
 
-# 743 "debug-printer.c"
+# 752 "debug-printer.c"
   cdl_end_table(printer);
 }
 
 
-# 756 "debug-printer.c"
-void debug_append_tokens(buffer_t* buffer, value_array_t* tokens)
+# 755 "debug-printer.c"
+void buffer_append_dbg_compound_literal(cdl_printer_t* printer, compound_literal_node_t* node)
 # 756 "debug-printer.c"
 {
 
 # 757 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 758 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 759 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_COMPOUND_LITERAL");
+
+# 760 "debug-printer.c"
+  if (((node->type_node)!=((void *)0)))
+
+# 760 "debug-printer.c"
+  {
+
+# 761 "debug-printer.c"
+    cdl_key(printer, "type_node");
+
+# 762 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->type_node));
+  }
+
+# 764 "debug-printer.c"
+  cdl_key(printer, "initializers");
+
+# 765 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->initializers));
+
+# 766 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 769 "debug-printer.c"
+void buffer_append_dbg_designated_initializer(cdl_printer_t* printer, designated_initializer_node_t* node)
+# 770 "debug-printer.c"
+{
+
+# 771 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 772 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 773 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_DESIGNATED_INITIALIZER");
+
+# 774 "debug-printer.c"
+  if (((node->index_expression)!=((void *)0)))
+
+# 774 "debug-printer.c"
+  {
+
+# 775 "debug-printer.c"
+    cdl_key(printer, "index_expression");
+
+# 776 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->index_expression));
+  }
+
+# 778 "debug-printer.c"
+  if (((node->member_name)!=((void *)0)))
+
+# 778 "debug-printer.c"
+  {
+
+# 779 "debug-printer.c"
+    cdl_key(printer, "member_name");
+
+# 780 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->member_name)));
+  }
+
+# 782 "debug-printer.c"
+  if (((node->value)!=((void *)0)))
+
+# 782 "debug-printer.c"
+  {
+
+# 783 "debug-printer.c"
+    cdl_key(printer, "value");
+
+# 784 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->value));
+  }
+
+# 786 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 799 "debug-printer.c"
+void debug_append_tokens(buffer_t* buffer, value_array_t* tokens)
+# 799 "debug-printer.c"
+{
+
+# 800 "debug-printer.c"
   for (
     int i = 0;
     (i<(tokens->length));
     (i++))
 
-# 757 "debug-printer.c"
+# 800 "debug-printer.c"
   {
     token_t* token = token_at(tokens, i);
 
-# 759 "debug-printer.c"
+# 802 "debug-printer.c"
     buffer_append_sub_buffer(buffer, (token->start), (token->end), (token->buffer));
   }
 }
@@ -14452,875 +14664,874 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node)
     return append_call_node(printer, to_call_node(node));
 
 # 118 "c-file-printer.c"
-    default:
+    case PARSE_NODE_COMPOUND_LITERAL:
 
 # 119 "c-file-printer.c"
+    return append_compound_literal_node(printer, to_compound_literal_node(node));
+
+# 122 "c-file-printer.c"
+    case PARSE_NODE_DESIGNATED_INITIALIZER:
+
+# 123 "c-file-printer.c"
+    return append_designated_initializer_node(printer, to_designated_initializer_node(node));
+
+# 126 "c-file-printer.c"
+    default:
+
+# 127 "c-file-printer.c"
     break;
   }
 
-# 121 "c-file-printer.c"
+# 129 "c-file-printer.c"
   log_fatal("No C file appender for %s", parse_node_type_to_string((node->tag)));
 
-# 122 "c-file-printer.c"
+# 130 "c-file-printer.c"
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 
-# 132 "c-file-printer.c"
+# 140 "c-file-printer.c"
 printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* node)
-# 133 "c-file-printer.c"
+# 141 "c-file-printer.c"
 {
 
-# 135 "c-file-printer.c"
+# 143 "c-file-printer.c"
   for (
     int i = 0;
     (i<node_list_length((node->attributes)));
     (i++))
 
-# 135 "c-file-printer.c"
+# 143 "c-file-printer.c"
   {
 
-# 136 "c-file-printer.c"
+# 144 "c-file-printer.c"
     append_c_attribute_node(printer, to_attribute_node(node_list_get((node->attributes), i)));
 
-# 138 "c-file-printer.c"
+# 146 "c-file-printer.c"
     append_string(printer, " ");
   }
 
-# 141 "c-file-printer.c"
+# 149 "c-file-printer.c"
   if (((node->storage_class_specifier)!=((void *)0)))
 
-# 141 "c-file-printer.c"
+# 149 "c-file-printer.c"
   {
 
-# 142 "c-file-printer.c"
+# 150 "c-file-printer.c"
     append_token(printer, (node->storage_class_specifier));
 
-# 143 "c-file-printer.c"
+# 151 "c-file-printer.c"
     append_string(printer, " ");
   }
 
-# 146 "c-file-printer.c"
+# 154 "c-file-printer.c"
   for (
     int i = 0;
     (i<token_list_length((node->function_specifiers)));
     (i++))
 
-# 146 "c-file-printer.c"
+# 154 "c-file-printer.c"
   {
 
-# 147 "c-file-printer.c"
+# 155 "c-file-printer.c"
     append_token(printer, token_list_get((node->function_specifiers), i));
 
-# 148 "c-file-printer.c"
+# 156 "c-file-printer.c"
     append_string(printer, " ");
   }
 
-# 151 "c-file-printer.c"
+# 159 "c-file-printer.c"
   append_type_node(printer, (node->return_type));
 
-# 152 "c-file-printer.c"
+# 160 "c-file-printer.c"
   printer_space(printer);
 
-# 153 "c-file-printer.c"
+# 161 "c-file-printer.c"
   append_token(printer, (node->function_name));
 
-# 154 "c-file-printer.c"
+# 162 "c-file-printer.c"
   append_string(printer, "(");
 
-# 156 "c-file-printer.c"
+# 164 "c-file-printer.c"
   for (
     int i = 0;
     (i<node_list_length((node->function_args)));
     (i++))
 
-# 156 "c-file-printer.c"
+# 164 "c-file-printer.c"
   {
 
-# 157 "c-file-printer.c"
+# 165 "c-file-printer.c"
     if ((i>0))
 
-# 157 "c-file-printer.c"
+# 165 "c-file-printer.c"
     {
 
-# 158 "c-file-printer.c"
+# 166 "c-file-printer.c"
       append_string(printer, ", ");
     }
     function_argument_node_t* arg_node = to_function_argument_node(node_list_get((node->function_args), i));
 
-# 162 "c-file-printer.c"
+# 170 "c-file-printer.c"
     append_c_function_argument_node(printer, arg_node);
   }
 
-# 164 "c-file-printer.c"
+# 172 "c-file-printer.c"
   append_string(printer, ")");
 
-# 165 "c-file-printer.c"
+# 173 "c-file-printer.c"
   return printer;
 }
 
 
-# 168 "c-file-printer.c"
+# 176 "c-file-printer.c"
 printer_t* append_c_function_node_prototype(printer_t* printer, function_node_t* node)
-# 169 "c-file-printer.c"
+# 177 "c-file-printer.c"
 {
 
-# 170 "c-file-printer.c"
+# 178 "c-file-printer.c"
   append_c_function_node_prefix(printer, node);
 
-# 171 "c-file-printer.c"
+# 179 "c-file-printer.c"
   append_string(printer, ";\n");
 
-# 172 "c-file-printer.c"
+# 180 "c-file-printer.c"
   return printer;
 }
 
 
-# 175 "c-file-printer.c"
+# 183 "c-file-printer.c"
 printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct_node_t* node)
-# 176 "c-file-printer.c"
+# 184 "c-file-printer.c"
 {
   uint64_t start = ((node->start_token)->start);
   uint64_t end = ((node->end_token)->end);
 
-# 179 "c-file-printer.c"
+# 187 "c-file-printer.c"
   buffer_append_sub_buffer((printer->buffer), start, end, ((node->start_token)->buffer));
 
-# 181 "c-file-printer.c"
+# 189 "c-file-printer.c"
   return printer;
 }
 
 
-# 184 "c-file-printer.c"
+# 192 "c-file-printer.c"
 printer_t* append_c_function_node_and_body(printer_t* printer, function_node_t* node)
-# 185 "c-file-printer.c"
+# 193 "c-file-printer.c"
 {
 
-# 186 "c-file-printer.c"
+# 194 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 186 "c-file-printer.c"
+# 194 "c-file-printer.c"
   {
 
-# 187 "c-file-printer.c"
+# 195 "c-file-printer.c"
     append_line_directive(printer, (node->function_name));
   }
 
-# 189 "c-file-printer.c"
+# 197 "c-file-printer.c"
   append_c_function_node_prefix(printer, node);
 
-# 190 "c-file-printer.c"
+# 198 "c-file-printer.c"
   append_parse_node(printer, (node->body));
 
-# 191 "c-file-printer.c"
+# 199 "c-file-printer.c"
   printer_newline(printer);
 
-# 192 "c-file-printer.c"
+# 200 "c-file-printer.c"
   return printer;
 }
 
 
-# 195 "c-file-printer.c"
+# 203 "c-file-printer.c"
 printer_t* append_c_function_argument_node(printer_t* printer, function_argument_node_t* node)
-# 196 "c-file-printer.c"
+# 204 "c-file-printer.c"
 {
 
-# 197 "c-file-printer.c"
+# 205 "c-file-printer.c"
   if ((node->is_var_args))
 
-# 197 "c-file-printer.c"
+# 205 "c-file-printer.c"
   {
 
-# 198 "c-file-printer.c"
+# 206 "c-file-printer.c"
     append_string(printer, "...");
   }
   else
 
-# 199 "c-file-printer.c"
+# 207 "c-file-printer.c"
   {
 
-# 200 "c-file-printer.c"
+# 208 "c-file-printer.c"
     append_type_node(printer, (node->arg_type));
 
-# 201 "c-file-printer.c"
+# 209 "c-file-printer.c"
     if (((node->arg_name)!=((void *)0)))
 
-# 201 "c-file-printer.c"
+# 209 "c-file-printer.c"
     {
 
-# 202 "c-file-printer.c"
+# 210 "c-file-printer.c"
       printer_space(printer);
 
-# 203 "c-file-printer.c"
+# 211 "c-file-printer.c"
       append_token(printer, (node->arg_name));
     }
   }
 
-# 206 "c-file-printer.c"
+# 214 "c-file-printer.c"
   return printer;
 }
 
 
-# 214 "c-file-printer.c"
+# 222 "c-file-printer.c"
 printer_t* append_type_node(printer_t* printer, type_node_t* node)
-# 214 "c-file-printer.c"
+# 222 "c-file-printer.c"
 {
 
-# 216 "c-file-printer.c"
+# 224 "c-file-printer.c"
   if ((((node->qualifiers)&TYPE_QUALIFIER_CONST)==TYPE_QUALIFIER_CONST))
 
-# 216 "c-file-printer.c"
+# 224 "c-file-printer.c"
   {
 
-# 217 "c-file-printer.c"
+# 225 "c-file-printer.c"
     append_string(printer, "const ");
   }
 
-# 219 "c-file-printer.c"
+# 227 "c-file-printer.c"
   if ((((node->qualifiers)&TYPE_QUALIFIER_VOLATILE)==TYPE_QUALIFIER_VOLATILE))
 
-# 219 "c-file-printer.c"
+# 227 "c-file-printer.c"
   {
 
-# 220 "c-file-printer.c"
+# 228 "c-file-printer.c"
     append_string(printer, "volatile ");
   }
 
-# 222 "c-file-printer.c"
+# 230 "c-file-printer.c"
   if ((((node->qualifiers)&TYPE_QUALIFIER_RESTRICT)==TYPE_QUALIFIER_RESTRICT))
 
-# 222 "c-file-printer.c"
+# 230 "c-file-printer.c"
   {
 
-# 223 "c-file-printer.c"
+# 231 "c-file-printer.c"
     append_string(printer, "restrict ");
   }
 
-# 226 "c-file-printer.c"
+# 234 "c-file-printer.c"
   switch ((node->type_node_kind))
 
-# 226 "c-file-printer.c"
+# 234 "c-file-printer.c"
   {
 
-# 227 "c-file-printer.c"
+# 235 "c-file-printer.c"
     case TYPE_NODE_KIND_POINTER:
 
-# 228 "c-file-printer.c"
+# 236 "c-file-printer.c"
     append_type_node(printer, to_type_node(node_list_get((node->type_args), 0)));
 
-# 229 "c-file-printer.c"
+# 237 "c-file-printer.c"
     append_string(printer, "*");
 
-# 230 "c-file-printer.c"
+# 238 "c-file-printer.c"
     break;
 
-# 232 "c-file-printer.c"
+# 240 "c-file-printer.c"
     case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
 
-# 233 "c-file-printer.c"
+# 241 "c-file-printer.c"
     case TYPE_NODE_KIND_TYPENAME:
 
-# 234 "c-file-printer.c"
+# 242 "c-file-printer.c"
     if (((node->type_name)!=((void *)0)))
-
-# 234 "c-file-printer.c"
-    {
-
-# 235 "c-file-printer.c"
-      append_token(printer, (node->type_name));
-    }
-
-# 237 "c-file-printer.c"
-    break;
-
-# 239 "c-file-printer.c"
-    case TYPE_NODE_KIND_TYPE_EXPRESSION:
-
-# 240 "c-file-printer.c"
-    if (token_matches((node->type_name), "fn_t"))
-
-# 240 "c-file-printer.c"
-    {
-
-# 241 "c-file-printer.c"
-      append_fn_type_node(printer, node);
-    }
-    else
 
 # 242 "c-file-printer.c"
     {
 
+# 243 "c-file-printer.c"
+      append_token(printer, (node->type_name));
+    }
+
+# 245 "c-file-printer.c"
+    break;
+
 # 247 "c-file-printer.c"
+    case TYPE_NODE_KIND_TYPE_EXPRESSION:
+
+# 248 "c-file-printer.c"
+    if (token_matches((node->type_name), "fn_t"))
+
+# 248 "c-file-printer.c"
+    {
+
+# 249 "c-file-printer.c"
+      append_fn_type_node(printer, node);
+    }
+    else
+
+# 250 "c-file-printer.c"
+    {
+
+# 255 "c-file-printer.c"
       append_parse_node(printer, (node->user_type));
     }
 
-# 249 "c-file-printer.c"
-    break;
-
-# 251 "c-file-printer.c"
-    case TYPE_NODE_KIND_ARRAY:
-
-# 252 "c-file-printer.c"
-    append_string(printer, "typeof(");
-
-# 253 "c-file-printer.c"
-    append_type_node(printer, to_type_node(node_list_get((node->type_args), 0)));
-
-# 254 "c-file-printer.c"
-    append_string(printer, "[])");
-
-# 255 "c-file-printer.c"
-    break;
-
 # 257 "c-file-printer.c"
-    case TYPE_NODE_KIND_TYPEOF:
-
-# 258 "c-file-printer.c"
-    append_string(printer, "typeof(");
+    break;
 
 # 259 "c-file-printer.c"
-    append_type_node(printer, to_type_node((node->user_type)));
+    case TYPE_NODE_KIND_ARRAY:
 
 # 260 "c-file-printer.c"
-    append_string(printer, ")");
+    append_string(printer, "typeof(");
 
 # 261 "c-file-printer.c"
-    break;
+    append_type_node(printer, to_type_node(node_list_get((node->type_args), 0)));
+
+# 262 "c-file-printer.c"
+    append_string(printer, "[])");
 
 # 263 "c-file-printer.c"
-    default:
+    break;
 
-# 264 "c-file-printer.c"
-    log_fatal("type_node_kind is not expected %s", type_node_kind_to_string((node->type_node_kind)));
+# 265 "c-file-printer.c"
+    case TYPE_NODE_KIND_TYPEOF:
 
 # 266 "c-file-printer.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
+    append_string(printer, "typeof(");
 
 # 267 "c-file-printer.c"
+    append_type_node(printer, to_type_node((node->user_type)));
+
+# 268 "c-file-printer.c"
+    append_string(printer, ")");
+
+# 269 "c-file-printer.c"
+    break;
+
+# 271 "c-file-printer.c"
+    default:
+
+# 272 "c-file-printer.c"
+    log_fatal("type_node_kind is not expected %s", type_node_kind_to_string((node->type_node_kind)));
+
+# 274 "c-file-printer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 275 "c-file-printer.c"
     break;
   }
 
-# 270 "c-file-printer.c"
+# 278 "c-file-printer.c"
   return printer;
 }
 
 
-# 280 "c-file-printer.c"
+# 288 "c-file-printer.c"
 printer_t* append_fn_type_node(printer_t* printer, type_node_t* node)
-# 280 "c-file-printer.c"
+# 288 "c-file-printer.c"
 {
 
-# 281 "c-file-printer.c"
+# 289 "c-file-printer.c"
   append_token(printer, (node->type_name));
 
-# 282 "c-file-printer.c"
+# 290 "c-file-printer.c"
   append_string(printer, "(");
 
-# 283 "c-file-printer.c"
+# 291 "c-file-printer.c"
   for (
     int i = 0;
     (i<node_list_length((node->type_args)));
     (i++))
 
-# 283 "c-file-printer.c"
+# 291 "c-file-printer.c"
   {
 
-# 284 "c-file-printer.c"
+# 292 "c-file-printer.c"
     if ((i>0))
 
-# 284 "c-file-printer.c"
+# 292 "c-file-printer.c"
     {
 
-# 285 "c-file-printer.c"
+# 293 "c-file-printer.c"
       append_string(printer, ", ");
     }
 
-# 287 "c-file-printer.c"
+# 295 "c-file-printer.c"
     append_parse_node(printer, node_list_get((node->type_args), i));
   }
 
-# 289 "c-file-printer.c"
+# 297 "c-file-printer.c"
   append_string(printer, ")");
 
-# 290 "c-file-printer.c"
+# 298 "c-file-printer.c"
   return printer;
 }
 
 
-# 293 "c-file-printer.c"
+# 301 "c-file-printer.c"
 printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node)
-# 293 "c-file-printer.c"
+# 301 "c-file-printer.c"
 {
 
-# 306 "c-file-printer.c"
+# 314 "c-file-printer.c"
   append_c_raw_token_span(printer, (node->inner_start_token), (node->inner_end_token));
 
-# 308 "c-file-printer.c"
+# 316 "c-file-printer.c"
   return printer;
 }
 
 
-# 317 "c-file-printer.c"
+# 325 "c-file-printer.c"
 printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, token_t* end_token)
-# 318 "c-file-printer.c"
+# 326 "c-file-printer.c"
 {
 
-# 319 "c-file-printer.c"
+# 327 "c-file-printer.c"
   if (((start_token->buffer)!=(end_token->buffer)))
 
-# 319 "c-file-printer.c"
+# 327 "c-file-printer.c"
   {
 
-# 320 "c-file-printer.c"
+# 328 "c-file-printer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 322 "c-file-printer.c"
+# 330 "c-file-printer.c"
   buffer_append_sub_buffer((printer->buffer), (start_token->start), (end_token->end), (start_token->buffer));
 
-# 324 "c-file-printer.c"
+# 332 "c-file-printer.c"
   return printer;
 }
 
 
-# 327 "c-file-printer.c"
+# 335 "c-file-printer.c"
 printer_t* append_enum_node(printer_t* printer, enum_node_t* node)
-# 327 "c-file-printer.c"
+# 335 "c-file-printer.c"
 {
 
-# 329 "c-file-printer.c"
+# 337 "c-file-printer.c"
   append_string(printer, "enum ");
 
-# 330 "c-file-printer.c"
+# 338 "c-file-printer.c"
   if (((node->name)!=((void *)0)))
 
-# 330 "c-file-printer.c"
+# 338 "c-file-printer.c"
   {
 
-# 331 "c-file-printer.c"
+# 339 "c-file-printer.c"
     append_token(printer, (node->name));
 
-# 332 "c-file-printer.c"
+# 340 "c-file-printer.c"
     printer_newline(printer);
   }
 
-# 334 "c-file-printer.c"
+# 342 "c-file-printer.c"
   if ((node->partial_definition))
 
-# 334 "c-file-printer.c"
+# 342 "c-file-printer.c"
   {
 
-# 335 "c-file-printer.c"
+# 343 "c-file-printer.c"
     return printer;
   }
 
-# 338 "c-file-printer.c"
+# 346 "c-file-printer.c"
   append_string(printer, "{\n");
 
-# 339 "c-file-printer.c"
+# 347 "c-file-printer.c"
   printer_increase_indent(printer);
 
-# 341 "c-file-printer.c"
+# 349 "c-file-printer.c"
   for (
     int i = 0;
     (i<node_list_length((node->elements)));
     (i++))
 
-# 341 "c-file-printer.c"
+# 349 "c-file-printer.c"
   {
 
-# 342 "c-file-printer.c"
+# 350 "c-file-printer.c"
     printer_indent(printer);
 
-# 343 "c-file-printer.c"
+# 351 "c-file-printer.c"
     append_enum_element(printer, to_enum_element_node(node_list_get((node->elements), i)));
 
-# 345 "c-file-printer.c"
+# 353 "c-file-printer.c"
     append_string(printer, ",\n");
   }
 
-# 347 "c-file-printer.c"
+# 355 "c-file-printer.c"
   append_string(printer, "}");
 
-# 348 "c-file-printer.c"
+# 356 "c-file-printer.c"
   printer_decrease_indent(printer);
 
-# 350 "c-file-printer.c"
+# 358 "c-file-printer.c"
   return printer;
 }
 
 
-# 353 "c-file-printer.c"
+# 361 "c-file-printer.c"
 printer_t* append_enum_element(printer_t* printer, enum_element_t* node)
-# 353 "c-file-printer.c"
+# 361 "c-file-printer.c"
 {
 
-# 354 "c-file-printer.c"
+# 362 "c-file-printer.c"
   append_token(printer, (node->name));
 
-# 355 "c-file-printer.c"
+# 363 "c-file-printer.c"
   if (((node->value_expr)!=((void *)0)))
 
-# 355 "c-file-printer.c"
+# 363 "c-file-printer.c"
   {
 
-# 356 "c-file-printer.c"
+# 364 "c-file-printer.c"
     append_string(printer, " = ");
 
-# 357 "c-file-printer.c"
+# 365 "c-file-printer.c"
     append_parse_node(printer, (node->value_expr));
   }
 
-# 359 "c-file-printer.c"
+# 367 "c-file-printer.c"
   return printer;
 }
 
 
-# 368 "c-file-printer.c"
+# 376 "c-file-printer.c"
 printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string)
-# 369 "c-file-printer.c"
+# 377 "c-file-printer.c"
 {
 
-# 370 "c-file-printer.c"
+# 378 "c-file-printer.c"
   append_string(printer, "char* ");
 
-# 371 "c-file-printer.c"
+# 379 "c-file-printer.c"
   append_string(printer, to_string_fn_prefix);
 
-# 372 "c-file-printer.c"
+# 380 "c-file-printer.c"
   append_string(printer, "_to_string(");
 
-# 373 "c-file-printer.c"
+# 381 "c-file-printer.c"
   append_string(printer, type_string);
 
-# 374 "c-file-printer.c"
+# 382 "c-file-printer.c"
   append_string(printer, " value) {\n");
 
-# 375 "c-file-printer.c"
+# 383 "c-file-printer.c"
   printer_increase_indent(printer);
 
-# 376 "c-file-printer.c"
+# 384 "c-file-printer.c"
   printer_indent(printer);
 
-# 377 "c-file-printer.c"
+# 385 "c-file-printer.c"
   append_string(printer, "switch (value) {\n");
 
-# 378 "c-file-printer.c"
+# 386 "c-file-printer.c"
   printer_indent(printer);
 
-# 380 "c-file-printer.c"
+# 388 "c-file-printer.c"
   for (
     int i = 0;
     (i<node_list_length((node->elements)));
     (i++))
 
-# 380 "c-file-printer.c"
+# 388 "c-file-printer.c"
   {
     enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
 
-# 383 "c-file-printer.c"
-    printer_indent(printer);
-
-# 384 "c-file-printer.c"
-    append_string(printer, "case ");
-
-# 385 "c-file-printer.c"
-    append_token(printer, (element->name));
-
-# 386 "c-file-printer.c"
-    append_string(printer, ":\n");
-
-# 387 "c-file-printer.c"
-    printer_increase_indent(printer);
-
-# 388 "c-file-printer.c"
-    printer_indent(printer);
-
-# 389 "c-file-printer.c"
-    append_string(printer, "return \"");
-
-# 390 "c-file-printer.c"
-    append_token(printer, (element->name));
-
 # 391 "c-file-printer.c"
-    append_string(printer, "\";\n");
+    printer_indent(printer);
 
 # 392 "c-file-printer.c"
+    append_string(printer, "case ");
+
+# 393 "c-file-printer.c"
+    append_token(printer, (element->name));
+
+# 394 "c-file-printer.c"
+    append_string(printer, ":\n");
+
+# 395 "c-file-printer.c"
+    printer_increase_indent(printer);
+
+# 396 "c-file-printer.c"
+    printer_indent(printer);
+
+# 397 "c-file-printer.c"
+    append_string(printer, "return \"");
+
+# 398 "c-file-printer.c"
+    append_token(printer, (element->name));
+
+# 399 "c-file-printer.c"
+    append_string(printer, "\";\n");
+
+# 400 "c-file-printer.c"
     printer_decrease_indent(printer);
   }
 
-# 395 "c-file-printer.c"
-  printer_indent(printer);
-
-# 396 "c-file-printer.c"
-  append_string(printer, "default:\n");
-
-# 398 "c-file-printer.c"
-  printer_increase_indent(printer);
-
-# 399 "c-file-printer.c"
-  printer_indent(printer);
-
-# 400 "c-file-printer.c"
-  append_string(printer, "return \"<<unknown-");
-
-# 401 "c-file-printer.c"
-  append_string(printer, to_string_fn_prefix);
-
-# 402 "c-file-printer.c"
-  append_string(printer, ">>\";\n");
-
 # 403 "c-file-printer.c"
-  printer_decrease_indent(printer);
+  printer_indent(printer);
 
 # 404 "c-file-printer.c"
-  printer_indent(printer);
-
-# 405 "c-file-printer.c"
-  append_string(printer, "}\n");
+  append_string(printer, "default:\n");
 
 # 406 "c-file-printer.c"
-  printer_decrease_indent(printer);
+  printer_increase_indent(printer);
 
 # 407 "c-file-printer.c"
-  append_string(printer, "}\n\n");
+  printer_indent(printer);
+
+# 408 "c-file-printer.c"
+  append_string(printer, "return \"<<unknown-");
 
 # 409 "c-file-printer.c"
+  append_string(printer, to_string_fn_prefix);
+
+# 410 "c-file-printer.c"
+  append_string(printer, ">>\";\n");
+
+# 411 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 412 "c-file-printer.c"
+  printer_indent(printer);
+
+# 413 "c-file-printer.c"
+  append_string(printer, "}\n");
+
+# 414 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 415 "c-file-printer.c"
+  append_string(printer, "}\n\n");
+
+# 417 "c-file-printer.c"
   return printer;
 }
 
 
-# 418 "c-file-printer.c"
+# 426 "c-file-printer.c"
 printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string)
-# 419 "c-file-printer.c"
+# 427 "c-file-printer.c"
 {
 
-# 420 "c-file-printer.c"
+# 428 "c-file-printer.c"
   append_string(printer, type_string);
 
-# 421 "c-file-printer.c"
+# 429 "c-file-printer.c"
   append_string(printer, " string_to_");
 
-# 422 "c-file-printer.c"
+# 430 "c-file-printer.c"
   append_string(printer, to_string_fn_prefix);
 
-# 423 "c-file-printer.c"
+# 431 "c-file-printer.c"
   append_string(printer, "(char* value) {\n");
 
-# 424 "c-file-printer.c"
+# 432 "c-file-printer.c"
   printer_increase_indent(printer);
 
-# 426 "c-file-printer.c"
+# 434 "c-file-printer.c"
   for (
     int i = 0;
     (i<node_list_length((node->elements)));
     (i++))
 
-# 426 "c-file-printer.c"
+# 434 "c-file-printer.c"
   {
     enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
 
-# 429 "c-file-printer.c"
-    printer_indent(printer);
-
-# 430 "c-file-printer.c"
-    append_string(printer, "if (strcmp(value, \"");
-
-# 431 "c-file-printer.c"
-    append_token(printer, (element->name));
-
-# 432 "c-file-printer.c"
-    append_string(printer, "\") == 0) {\n");
-
-# 433 "c-file-printer.c"
-    printer_increase_indent(printer);
-
-# 434 "c-file-printer.c"
-    printer_indent(printer);
-
-# 435 "c-file-printer.c"
-    append_string(printer, "return ");
-
-# 436 "c-file-printer.c"
-    append_token(printer, (element->name));
-
 # 437 "c-file-printer.c"
-    append_string(printer, ";\n");
+    printer_indent(printer);
 
 # 438 "c-file-printer.c"
-    printer_decrease_indent(printer);
+    append_string(printer, "if (strcmp(value, \"");
 
 # 439 "c-file-printer.c"
-    printer_indent(printer);
+    append_token(printer, (element->name));
 
 # 440 "c-file-printer.c"
+    append_string(printer, "\") == 0) {\n");
+
+# 441 "c-file-printer.c"
+    printer_increase_indent(printer);
+
+# 442 "c-file-printer.c"
+    printer_indent(printer);
+
+# 443 "c-file-printer.c"
+    append_string(printer, "return ");
+
+# 444 "c-file-printer.c"
+    append_token(printer, (element->name));
+
+# 445 "c-file-printer.c"
+    append_string(printer, ";\n");
+
+# 446 "c-file-printer.c"
+    printer_decrease_indent(printer);
+
+# 447 "c-file-printer.c"
+    printer_indent(printer);
+
+# 448 "c-file-printer.c"
     append_string(printer, "}\n");
   }
 
-# 442 "c-file-printer.c"
+# 450 "c-file-printer.c"
   printer_indent(printer);
 
-# 443 "c-file-printer.c"
+# 451 "c-file-printer.c"
   append_string(printer, "return 0;\n");
 
-# 444 "c-file-printer.c"
+# 452 "c-file-printer.c"
   printer_decrease_indent(printer);
 
-# 445 "c-file-printer.c"
+# 453 "c-file-printer.c"
   append_string(printer, "}\n\n");
 
-# 447 "c-file-printer.c"
+# 455 "c-file-printer.c"
   return printer;
 }
 
 
-# 450 "c-file-printer.c"
+# 458 "c-file-printer.c"
 printer_t* append_field_node(printer_t* printer, field_node_t* node)
-# 450 "c-file-printer.c"
+# 458 "c-file-printer.c"
 {
 
-# 451 "c-file-printer.c"
+# 459 "c-file-printer.c"
   append_type_node(printer, (node->type));
 
-# 452 "c-file-printer.c"
+# 460 "c-file-printer.c"
   append_string(printer, " ");
 
-# 453 "c-file-printer.c"
+# 461 "c-file-printer.c"
   if (((node->name)!=((void *)0)))
 
-# 453 "c-file-printer.c"
+# 461 "c-file-printer.c"
   {
 
-# 454 "c-file-printer.c"
+# 462 "c-file-printer.c"
     append_token(printer, (node->name));
   }
 
-# 456 "c-file-printer.c"
+# 464 "c-file-printer.c"
   if ((node->suffixes))
 
-# 456 "c-file-printer.c"
+# 464 "c-file-printer.c"
   {
 
-# 457 "c-file-printer.c"
+# 465 "c-file-printer.c"
     for (
       int i = 0;
       (i<((node->suffixes)->length));
       (i++))
 
-# 457 "c-file-printer.c"
+# 465 "c-file-printer.c"
     {
 
-# 458 "c-file-printer.c"
+# 466 "c-file-printer.c"
       append_parse_node(printer, value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*)));
     }
   }
 
-# 464 "c-file-printer.c"
+# 472 "c-file-printer.c"
   return printer;
 }
 
 
-# 470 "c-file-printer.c"
+# 478 "c-file-printer.c"
 printer_t* append_struct_node(printer_t* printer, struct_node_t* node)
-# 470 "c-file-printer.c"
+# 478 "c-file-printer.c"
 {
 
-# 471 "c-file-printer.c"
+# 479 "c-file-printer.c"
   append_string(printer, (((node->tag)==PARSE_NODE_UNION) ? "union " : "struct "));
 
-# 472 "c-file-printer.c"
+# 480 "c-file-printer.c"
   if (((node->name)!=((void *)0)))
 
-# 472 "c-file-printer.c"
+# 480 "c-file-printer.c"
   {
 
-# 473 "c-file-printer.c"
+# 481 "c-file-printer.c"
     append_token(printer, (node->name));
   }
 
-# 476 "c-file-printer.c"
+# 484 "c-file-printer.c"
   if ((!(node->partial_definition)))
 
-# 476 "c-file-printer.c"
+# 484 "c-file-printer.c"
   {
 
-# 477 "c-file-printer.c"
+# 485 "c-file-printer.c"
     append_string(printer, " {\n");
 
-# 478 "c-file-printer.c"
+# 486 "c-file-printer.c"
     printer_increase_indent(printer);
 
-# 479 "c-file-printer.c"
+# 487 "c-file-printer.c"
     for (
       int i = 0;
       (i<node_list_length((node->fields)));
       (i++))
 
-# 479 "c-file-printer.c"
+# 487 "c-file-printer.c"
     {
 
-# 480 "c-file-printer.c"
+# 488 "c-file-printer.c"
       printer_indent(printer);
 
-# 481 "c-file-printer.c"
+# 489 "c-file-printer.c"
       append_field_node(printer, to_field_node(node_list_get((node->fields), i)));
 
-# 482 "c-file-printer.c"
+# 490 "c-file-printer.c"
       append_string(printer, ";\n");
     }
 
-# 484 "c-file-printer.c"
+# 492 "c-file-printer.c"
     printer_decrease_indent(printer);
 
-# 485 "c-file-printer.c"
+# 493 "c-file-printer.c"
     append_string(printer, "}");
   }
 
-# 488 "c-file-printer.c"
+# 496 "c-file-printer.c"
   return printer;
 }
 
 
-# 494 "c-file-printer.c"
+# 502 "c-file-printer.c"
 printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node)
-# 494 "c-file-printer.c"
+# 502 "c-file-printer.c"
 {
 
-# 495 "c-file-printer.c"
+# 503 "c-file-printer.c"
   append_string(printer, "typedef ");
 
-# 496 "c-file-printer.c"
+# 504 "c-file-printer.c"
   append_type_node(printer, (node->type_node));
 
-# 497 "c-file-printer.c"
+# 505 "c-file-printer.c"
   append_string(printer, " ");
 
-# 498 "c-file-printer.c"
+# 506 "c-file-printer.c"
   append_token(printer, (node->name));
 
-# 499 "c-file-printer.c"
+# 507 "c-file-printer.c"
   append_string(printer, ";\n");
 
-# 500 "c-file-printer.c"
-  return printer;
-}
-
-
-# 506 "c-file-printer.c"
-printer_t* append_cpp_include_node(printer_t* printer, cpp_include_node_t* node)
-# 507 "c-file-printer.c"
-{
-
 # 508 "c-file-printer.c"
-  append_string(printer, (node->text));
-
-# 509 "c-file-printer.c"
   return printer;
 }
 
 
-# 515 "c-file-printer.c"
-printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node)
+# 514 "c-file-printer.c"
+printer_t* append_cpp_include_node(printer_t* printer, cpp_include_node_t* node)
 # 515 "c-file-printer.c"
 {
 
@@ -15333,985 +15544,998 @@ printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node)
 
 
 # 523 "c-file-printer.c"
-printer_t* append_variable_definition_node(printer_t* printer, variable_definition_node_t* node, boolean_t is_library)
-# 525 "c-file-printer.c"
+printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node)
+# 523 "c-file-printer.c"
 {
 
-# 526 "c-file-printer.c"
+# 524 "c-file-printer.c"
+  append_string(printer, (node->text));
+
+# 525 "c-file-printer.c"
+  return printer;
+}
+
+
+# 531 "c-file-printer.c"
+printer_t* append_variable_definition_node(printer_t* printer, variable_definition_node_t* node, boolean_t is_library)
+# 533 "c-file-printer.c"
+{
+
+# 534 "c-file-printer.c"
   printer_indent(printer);
   boolean_t is_header_file = (!is_library);
 
-# 528 "c-file-printer.c"
+# 536 "c-file-printer.c"
   if (((node->storage_class_specifier)!=((void *)0)))
 
-# 528 "c-file-printer.c"
+# 536 "c-file-printer.c"
   {
 
-# 529 "c-file-printer.c"
+# 537 "c-file-printer.c"
     append_token(printer, (node->storage_class_specifier));
 
-# 530 "c-file-printer.c"
+# 538 "c-file-printer.c"
     append_string(printer, " ");
   }
   else
 
-# 531 "c-file-printer.c"
+# 539 "c-file-printer.c"
   if (is_header_file)
 
-# 531 "c-file-printer.c"
+# 539 "c-file-printer.c"
   {
 
-# 532 "c-file-printer.c"
+# 540 "c-file-printer.c"
     append_string(printer, "extern ");
   }
 
-# 535 "c-file-printer.c"
+# 543 "c-file-printer.c"
   append_type_node(printer, (node->type));
 
-# 536 "c-file-printer.c"
+# 544 "c-file-printer.c"
   append_string(printer, " ");
 
-# 537 "c-file-printer.c"
+# 545 "c-file-printer.c"
   append_token(printer, (node->name));
 
-# 538 "c-file-printer.c"
+# 546 "c-file-printer.c"
   if ((node->suffixes))
 
-# 538 "c-file-printer.c"
+# 546 "c-file-printer.c"
   {
 
-# 539 "c-file-printer.c"
+# 547 "c-file-printer.c"
     for (
       int i = 0;
       (i<((node->suffixes)->length));
       (i++))
 
-# 539 "c-file-printer.c"
+# 547 "c-file-printer.c"
     {
 
-# 540 "c-file-printer.c"
+# 548 "c-file-printer.c"
       append_parse_node(printer, value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*)));
     }
   }
 
-# 544 "c-file-printer.c"
+# 552 "c-file-printer.c"
   if ((is_library&&((node->value)!=((void *)0))))
 
-# 544 "c-file-printer.c"
+# 552 "c-file-printer.c"
   {
 
-# 545 "c-file-printer.c"
+# 553 "c-file-printer.c"
     append_string(printer, " = ");
 
-# 546 "c-file-printer.c"
+# 554 "c-file-printer.c"
     append_parse_node(printer, (node->value));
   }
 
-# 548 "c-file-printer.c"
+# 556 "c-file-printer.c"
   append_string(printer, ";\n");
 
-# 549 "c-file-printer.c"
+# 557 "c-file-printer.c"
   return printer;
 }
 
 
-# 555 "c-file-printer.c"
+# 563 "c-file-printer.c"
 printer_t* append_literal_node(printer_t* printer, literal_node_t* node)
-# 555 "c-file-printer.c"
+# 563 "c-file-printer.c"
 {
 
-# 556 "c-file-printer.c"
+# 564 "c-file-printer.c"
   if (((node->token)!=((void *)0)))
 
-# 556 "c-file-printer.c"
+# 564 "c-file-printer.c"
   {
 
-# 557 "c-file-printer.c"
+# 565 "c-file-printer.c"
     append_token(printer, (node->token));
   }
   else
 
-# 558 "c-file-printer.c"
+# 566 "c-file-printer.c"
   if (((node->initializer_node)!=((void *)0)))
 
-# 558 "c-file-printer.c"
+# 566 "c-file-printer.c"
   {
 
-# 559 "c-file-printer.c"
+# 567 "c-file-printer.c"
     if (((node->initializer_type)!=((void *)0)))
 
-# 559 "c-file-printer.c"
+# 567 "c-file-printer.c"
     {
 
-# 560 "c-file-printer.c"
+# 568 "c-file-printer.c"
       append_string(printer, "((");
 
-# 561 "c-file-printer.c"
+# 569 "c-file-printer.c"
       append_parse_node(printer, (node->initializer_type));
 
-# 562 "c-file-printer.c"
+# 570 "c-file-printer.c"
       append_string(printer, ") ");
     }
 
-# 564 "c-file-printer.c"
+# 572 "c-file-printer.c"
     append_balanced_construct_node(printer, to_balanced_construct_node((node->initializer_node)));
 
-# 566 "c-file-printer.c"
+# 574 "c-file-printer.c"
     if (((node->initializer_type)!=((void *)0)))
 
-# 566 "c-file-printer.c"
+# 574 "c-file-printer.c"
     {
 
-# 567 "c-file-printer.c"
+# 575 "c-file-printer.c"
       append_string(printer, ")");
     }
   }
   else
 
-# 569 "c-file-printer.c"
+# 577 "c-file-printer.c"
   if ((((node->tokens)!=((void *)0))&&(((node->tokens)->length)>0)))
-
-# 569 "c-file-printer.c"
-  {
-
-# 570 "c-file-printer.c"
-    for (
-      uint64_t i = 0;
-      (i<((node->tokens)->length));
-      (i++))
-
-# 570 "c-file-printer.c"
-    {
-
-# 571 "c-file-printer.c"
-      if ((i>0))
-
-# 571 "c-file-printer.c"
-      {
-
-# 572 "c-file-printer.c"
-        append_string(printer, " ");
-      }
-      token_t* token = value_array_get_ptr((node->tokens), i, typeof(token_t*));
-
-# 575 "c-file-printer.c"
-      append_token(printer, token);
-    }
-  }
-  else
 
 # 577 "c-file-printer.c"
   {
 
 # 578 "c-file-printer.c"
+    for (
+      uint64_t i = 0;
+      (i<((node->tokens)->length));
+      (i++))
+
+# 578 "c-file-printer.c"
+    {
+
+# 579 "c-file-printer.c"
+      if ((i>0))
+
+# 579 "c-file-printer.c"
+      {
+
+# 580 "c-file-printer.c"
+        append_string(printer, " ");
+      }
+      token_t* token = value_array_get_ptr((node->tokens), i, typeof(token_t*));
+
+# 583 "c-file-printer.c"
+      append_token(printer, token);
+    }
+  }
+  else
+
+# 585 "c-file-printer.c"
+  {
+
+# 586 "c-file-printer.c"
     append_string(printer, "FIXME");
   }
 
-# 580 "c-file-printer.c"
+# 588 "c-file-printer.c"
   return printer;
 }
 
 
-# 586 "c-file-printer.c"
+# 594 "c-file-printer.c"
 printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node)
-# 586 "c-file-printer.c"
+# 594 "c-file-printer.c"
 {
 
-# 587 "c-file-printer.c"
+# 595 "c-file-printer.c"
   if (((node->token)==((void *)0)))
 
-# 587 "c-file-printer.c"
+# 595 "c-file-printer.c"
   {
 
-# 588 "c-file-printer.c"
+# 596 "c-file-printer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 590 "c-file-printer.c"
+# 598 "c-file-printer.c"
   if (token_matches((node->token), "nullptr"))
 
-# 590 "c-file-printer.c"
+# 598 "c-file-printer.c"
   {
 
-# 591 "c-file-printer.c"
+# 599 "c-file-printer.c"
     append_string(printer, "((void *)0)");
   }
   else
 
-# 592 "c-file-printer.c"
+# 600 "c-file-printer.c"
   {
 
-# 593 "c-file-printer.c"
+# 601 "c-file-printer.c"
     append_token(printer, (node->token));
   }
 
-# 595 "c-file-printer.c"
+# 603 "c-file-printer.c"
   return printer;
 }
 
 
-# 605 "c-file-printer.c"
+# 613 "c-file-printer.c"
 printer_t* append_empty_statement_node(printer_t* printer, empty_statement_node_t* node)
-# 606 "c-file-printer.c"
+# 614 "c-file-printer.c"
 {
 
-# 607 "c-file-printer.c"
+# 615 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 607 "c-file-printer.c"
+# 615 "c-file-printer.c"
   {
 
-# 608 "c-file-printer.c"
+# 616 "c-file-printer.c"
     append_line_directive(printer, (node->semi_colon_token));
   }
 
-# 610 "c-file-printer.c"
+# 618 "c-file-printer.c"
   printer_indent(printer);
 
-# 611 "c-file-printer.c"
+# 619 "c-file-printer.c"
   append_string(printer, ";\n");
 
-# 612 "c-file-printer.c"
+# 620 "c-file-printer.c"
   return printer;
 }
 
 
-# 618 "c-file-printer.c"
+# 626 "c-file-printer.c"
 printer_t* append_break_statement_node(printer_t* printer, break_statement_node_t* node)
-# 619 "c-file-printer.c"
+# 627 "c-file-printer.c"
 {
 
-# 620 "c-file-printer.c"
+# 628 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 620 "c-file-printer.c"
+# 628 "c-file-printer.c"
   {
 
-# 621 "c-file-printer.c"
+# 629 "c-file-printer.c"
     append_line_directive(printer, (node->break_keyword_token));
   }
 
-# 623 "c-file-printer.c"
+# 631 "c-file-printer.c"
   printer_indent(printer);
 
-# 624 "c-file-printer.c"
+# 632 "c-file-printer.c"
   append_string(printer, "break;\n");
 
-# 625 "c-file-printer.c"
+# 633 "c-file-printer.c"
   return printer;
 }
 
 
-# 631 "c-file-printer.c"
+# 639 "c-file-printer.c"
 printer_t* append_continue_statement_node(printer_t* printer, continue_statement_node_t* node)
-# 632 "c-file-printer.c"
+# 640 "c-file-printer.c"
 {
 
-# 633 "c-file-printer.c"
+# 641 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 633 "c-file-printer.c"
+# 641 "c-file-printer.c"
   {
 
-# 634 "c-file-printer.c"
+# 642 "c-file-printer.c"
     append_line_directive(printer, (node->continue_keyword_token));
   }
 
-# 636 "c-file-printer.c"
+# 644 "c-file-printer.c"
   printer_indent(printer);
 
-# 637 "c-file-printer.c"
+# 645 "c-file-printer.c"
   append_string(printer, "continue;\n");
 
-# 638 "c-file-printer.c"
+# 646 "c-file-printer.c"
   return printer;
 }
 
 
-# 644 "c-file-printer.c"
+# 652 "c-file-printer.c"
 printer_t* append_label_statement_node(printer_t* printer, label_statement_node_t* node)
-# 645 "c-file-printer.c"
+# 653 "c-file-printer.c"
 {
 
-# 646 "c-file-printer.c"
+# 654 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 646 "c-file-printer.c"
+# 654 "c-file-printer.c"
   {
 
-# 647 "c-file-printer.c"
+# 655 "c-file-printer.c"
     append_line_directive(printer, (node->label));
   }
 
-# 649 "c-file-printer.c"
+# 657 "c-file-printer.c"
   printer_indent(printer);
 
-# 650 "c-file-printer.c"
+# 658 "c-file-printer.c"
   append_token(printer, (node->label));
 
-# 651 "c-file-printer.c"
+# 659 "c-file-printer.c"
   append_string(printer, ":\n");
 
-# 652 "c-file-printer.c"
+# 660 "c-file-printer.c"
   return printer;
 }
 
 
-# 658 "c-file-printer.c"
+# 666 "c-file-printer.c"
 printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node)
-# 658 "c-file-printer.c"
+# 666 "c-file-printer.c"
 {
 
-# 659 "c-file-printer.c"
+# 667 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 659 "c-file-printer.c"
+# 667 "c-file-printer.c"
   {
 
-# 660 "c-file-printer.c"
+# 668 "c-file-printer.c"
     append_line_directive(printer, (node->first_token));
   }
 
-# 662 "c-file-printer.c"
+# 670 "c-file-printer.c"
   printer_indent(printer);
 
-# 663 "c-file-printer.c"
+# 671 "c-file-printer.c"
   append_string(printer, "case ");
 
-# 664 "c-file-printer.c"
+# 672 "c-file-printer.c"
   append_parse_node(printer, (node->expression));
 
-# 665 "c-file-printer.c"
+# 673 "c-file-printer.c"
   append_string(printer, ":\n");
 
-# 666 "c-file-printer.c"
+# 674 "c-file-printer.c"
   return printer;
 }
 
 
-# 672 "c-file-printer.c"
+# 680 "c-file-printer.c"
 printer_t* append_default_label_node(printer_t* printer, default_label_node_t* node)
-# 673 "c-file-printer.c"
+# 681 "c-file-printer.c"
 {
 
-# 674 "c-file-printer.c"
+# 682 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 674 "c-file-printer.c"
+# 682 "c-file-printer.c"
   {
 
-# 675 "c-file-printer.c"
+# 683 "c-file-printer.c"
     append_line_directive(printer, (node->default_token));
   }
 
-# 677 "c-file-printer.c"
+# 685 "c-file-printer.c"
   printer_indent(printer);
 
-# 678 "c-file-printer.c"
+# 686 "c-file-printer.c"
   append_string(printer, "default:\n");
 
-# 679 "c-file-printer.c"
+# 687 "c-file-printer.c"
   return printer;
 }
 
-
-# 685 "c-file-printer.c"
-printer_t* append_expression_statement_node(printer_t* printer, expression_statement_node_t* node)
-# 686 "c-file-printer.c"
-{
-
-# 687 "c-file-printer.c"
-  if ((printer->output_line_directives))
-
-# 687 "c-file-printer.c"
-  {
-
-# 688 "c-file-printer.c"
-    append_line_directive(printer, (node->first_token));
-  }
-
-# 690 "c-file-printer.c"
-  printer_indent(printer);
-
-# 691 "c-file-printer.c"
-  append_parse_node(printer, (node->expression));
-
-# 692 "c-file-printer.c"
-  append_string(printer, ";\n");
 
 # 693 "c-file-printer.c"
+printer_t* append_expression_statement_node(printer_t* printer, expression_statement_node_t* node)
+# 694 "c-file-printer.c"
+{
+
+# 695 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 695 "c-file-printer.c"
+  {
+
+# 696 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 698 "c-file-printer.c"
+  printer_indent(printer);
+
+# 699 "c-file-printer.c"
+  append_parse_node(printer, (node->expression));
+
+# 700 "c-file-printer.c"
+  append_string(printer, ";\n");
+
+# 701 "c-file-printer.c"
   return printer;
 }
 
 
-# 699 "c-file-printer.c"
+# 707 "c-file-printer.c"
 printer_t* append_block_node(printer_t* printer, block_node_t* node)
-# 699 "c-file-printer.c"
+# 707 "c-file-printer.c"
 {
 
-# 700 "c-file-printer.c"
+# 708 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 700 "c-file-printer.c"
+# 708 "c-file-printer.c"
   {
 
-# 701 "c-file-printer.c"
+# 709 "c-file-printer.c"
     append_line_directive(printer, (node->first_token));
   }
-
-# 703 "c-file-printer.c"
-  printer_indent(printer);
-
-# 704 "c-file-printer.c"
-  append_string(printer, "{\n");
-
-# 705 "c-file-printer.c"
-  printer_increase_indent(printer);
-  uint64_t length = node_list_length((node->statements));
-
-# 707 "c-file-printer.c"
-  for (
-    uint64_t i = 0;
-    (i<length);
-    (i++))
-
-# 707 "c-file-printer.c"
-  {
-
-# 708 "c-file-printer.c"
-    append_parse_node(printer, node_list_get((node->statements), i));
-  }
-
-# 710 "c-file-printer.c"
-  printer_decrease_indent(printer);
 
 # 711 "c-file-printer.c"
   printer_indent(printer);
 
 # 712 "c-file-printer.c"
-  append_string(printer, "}\n");
+  append_string(printer, "{\n");
 
 # 713 "c-file-printer.c"
+  printer_increase_indent(printer);
+  uint64_t length = node_list_length((node->statements));
+
+# 715 "c-file-printer.c"
+  for (
+    uint64_t i = 0;
+    (i<length);
+    (i++))
+
+# 715 "c-file-printer.c"
+  {
+
+# 716 "c-file-printer.c"
+    append_parse_node(printer, node_list_get((node->statements), i));
+  }
+
+# 718 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 719 "c-file-printer.c"
+  printer_indent(printer);
+
+# 720 "c-file-printer.c"
+  append_string(printer, "}\n");
+
+# 721 "c-file-printer.c"
   return printer;
 }
 
 
-# 719 "c-file-printer.c"
+# 727 "c-file-printer.c"
 printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* node)
-# 720 "c-file-printer.c"
+# 728 "c-file-printer.c"
 {
 
-# 721 "c-file-printer.c"
-  if ((printer->output_line_directives))
-
-# 721 "c-file-printer.c"
-  {
-
-# 722 "c-file-printer.c"
-    append_line_directive(printer, (node->first_token));
-  }
-
-# 724 "c-file-printer.c"
-  printer_indent(printer);
-
-# 725 "c-file-printer.c"
-  append_string(printer, "if (");
-
-# 726 "c-file-printer.c"
-  append_parse_node(printer, (node->if_condition));
-
-# 727 "c-file-printer.c"
-  append_string(printer, ")\n");
-
-# 728 "c-file-printer.c"
-  append_parse_node(printer, (node->if_true));
-
 # 729 "c-file-printer.c"
-  if ((node->if_else))
+  if ((printer->output_line_directives))
 
 # 729 "c-file-printer.c"
   {
 
 # 730 "c-file-printer.c"
-    printer_indent(printer);
-
-# 731 "c-file-printer.c"
-    append_string(printer, "else\n");
+    append_line_directive(printer, (node->first_token));
+  }
 
 # 732 "c-file-printer.c"
+  printer_indent(printer);
+
+# 733 "c-file-printer.c"
+  append_string(printer, "if (");
+
+# 734 "c-file-printer.c"
+  append_parse_node(printer, (node->if_condition));
+
+# 735 "c-file-printer.c"
+  append_string(printer, ")\n");
+
+# 736 "c-file-printer.c"
+  append_parse_node(printer, (node->if_true));
+
+# 737 "c-file-printer.c"
+  if ((node->if_else))
+
+# 737 "c-file-printer.c"
+  {
+
+# 738 "c-file-printer.c"
+    printer_indent(printer);
+
+# 739 "c-file-printer.c"
+    append_string(printer, "else\n");
+
+# 740 "c-file-printer.c"
     append_parse_node(printer, (node->if_else));
   }
 
-# 734 "c-file-printer.c"
+# 742 "c-file-printer.c"
   return printer;
 }
 
-
-# 740 "c-file-printer.c"
-printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node)
-# 741 "c-file-printer.c"
-{
-
-# 742 "c-file-printer.c"
-  if ((printer->output_line_directives))
-
-# 742 "c-file-printer.c"
-  {
-
-# 743 "c-file-printer.c"
-    append_line_directive(printer, (node->first_token));
-  }
-
-# 745 "c-file-printer.c"
-  printer_indent(printer);
-
-# 746 "c-file-printer.c"
-  append_string(printer, "while (");
-
-# 747 "c-file-printer.c"
-  append_parse_node(printer, (node->condition));
 
 # 748 "c-file-printer.c"
-  append_string(printer, ")\n");
-
+printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node)
 # 749 "c-file-printer.c"
-  append_parse_node(printer, (node->body));
+{
 
 # 750 "c-file-printer.c"
-  return printer;
-}
+  if ((printer->output_line_directives))
 
+# 750 "c-file-printer.c"
+  {
+
+# 751 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 753 "c-file-printer.c"
+  printer_indent(printer);
+
+# 754 "c-file-printer.c"
+  append_string(printer, "while (");
+
+# 755 "c-file-printer.c"
+  append_parse_node(printer, (node->condition));
 
 # 756 "c-file-printer.c"
-printer_t* append_switch_statement_node(printer_t* printer, switch_statement_node_t* node)
-# 757 "c-file-printer.c"
-{
-
-# 758 "c-file-printer.c"
-  if ((printer->output_line_directives))
-
-# 758 "c-file-printer.c"
-  {
-
-# 759 "c-file-printer.c"
-    append_line_directive(printer, (node->first_token));
-  }
-
-# 761 "c-file-printer.c"
-  printer_indent(printer);
-
-# 762 "c-file-printer.c"
-  append_string(printer, "switch (");
-
-# 763 "c-file-printer.c"
-  append_parse_node(printer, (node->expression));
-
-# 764 "c-file-printer.c"
   append_string(printer, ")\n");
 
-# 765 "c-file-printer.c"
-  append_parse_node(printer, (node->block));
+# 757 "c-file-printer.c"
+  append_parse_node(printer, (node->body));
 
-# 766 "c-file-printer.c"
+# 758 "c-file-printer.c"
   return printer;
 }
 
 
-# 772 "c-file-printer.c"
-printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* node)
-# 773 "c-file-printer.c"
+# 764 "c-file-printer.c"
+printer_t* append_switch_statement_node(printer_t* printer, switch_statement_node_t* node)
+# 765 "c-file-printer.c"
 {
 
-# 774 "c-file-printer.c"
+# 766 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 774 "c-file-printer.c"
+# 766 "c-file-printer.c"
   {
 
-# 775 "c-file-printer.c"
+# 767 "c-file-printer.c"
     append_line_directive(printer, (node->first_token));
   }
 
-# 777 "c-file-printer.c"
+# 769 "c-file-printer.c"
   printer_indent(printer);
 
-# 779 "c-file-printer.c"
-  append_string(printer, "for (\n");
+# 770 "c-file-printer.c"
+  append_string(printer, "switch (");
+
+# 771 "c-file-printer.c"
+  append_parse_node(printer, (node->expression));
+
+# 772 "c-file-printer.c"
+  append_string(printer, ")\n");
+
+# 773 "c-file-printer.c"
+  append_parse_node(printer, (node->block));
+
+# 774 "c-file-printer.c"
+  return printer;
+}
+
 
 # 780 "c-file-printer.c"
-  printer_increase_indent(printer);
+printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* node)
+# 781 "c-file-printer.c"
+{
 
-# 783 "c-file-printer.c"
-  if (((node->for_init)!=((void *)0)))
+# 782 "c-file-printer.c"
+  if ((printer->output_line_directives))
 
-# 783 "c-file-printer.c"
+# 782 "c-file-printer.c"
   {
 
-# 784 "c-file-printer.c"
+# 783 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 785 "c-file-printer.c"
+  printer_indent(printer);
+
+# 787 "c-file-printer.c"
+  append_string(printer, "for (\n");
+
+# 788 "c-file-printer.c"
+  printer_increase_indent(printer);
+
+# 791 "c-file-printer.c"
+  if (((node->for_init)!=((void *)0)))
+
+# 791 "c-file-printer.c"
+  {
+
+# 792 "c-file-printer.c"
     append_parse_node(printer, (node->for_init));
   }
   else
 
-# 785 "c-file-printer.c"
+# 793 "c-file-printer.c"
   {
 
-# 786 "c-file-printer.c"
+# 794 "c-file-printer.c"
     printer_indent(printer);
 
-# 787 "c-file-printer.c"
+# 795 "c-file-printer.c"
     append_string(printer, ";\n");
   }
-
-# 791 "c-file-printer.c"
-  printer_indent(printer);
-
-# 792 "c-file-printer.c"
-  if (((node->for_test)!=((void *)0)))
-
-# 792 "c-file-printer.c"
-  {
-
-# 793 "c-file-printer.c"
-    append_parse_node(printer, (node->for_test));
-  }
-
-# 795 "c-file-printer.c"
-  append_string(printer, ";");
-
-# 796 "c-file-printer.c"
-  printer_newline(printer);
 
 # 799 "c-file-printer.c"
   printer_indent(printer);
 
 # 800 "c-file-printer.c"
-  if (((node->for_increment)!=((void *)0)))
+  if (((node->for_test)!=((void *)0)))
 
 # 800 "c-file-printer.c"
   {
 
 # 801 "c-file-printer.c"
-    append_parse_node(printer, (node->for_increment));
+    append_parse_node(printer, (node->for_test));
   }
 
 # 803 "c-file-printer.c"
-  append_string(printer, ")\n");
+  append_string(printer, ";");
 
 # 804 "c-file-printer.c"
-  printer_decrease_indent(printer);
+  printer_newline(printer);
 
-# 805 "c-file-printer.c"
-  append_parse_node(printer, (node->for_body));
+# 807 "c-file-printer.c"
+  printer_indent(printer);
 
-# 806 "c-file-printer.c"
-  return printer;
-}
+# 808 "c-file-printer.c"
+  if (((node->for_increment)!=((void *)0)))
 
+# 808 "c-file-printer.c"
+  {
+
+# 809 "c-file-printer.c"
+    append_parse_node(printer, (node->for_increment));
+  }
+
+# 811 "c-file-printer.c"
+  append_string(printer, ")\n");
 
 # 812 "c-file-printer.c"
-printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* node)
+  printer_decrease_indent(printer);
+
 # 813 "c-file-printer.c"
-{
+  append_parse_node(printer, (node->for_body));
 
 # 814 "c-file-printer.c"
-  if ((printer->output_line_directives))
-
-# 814 "c-file-printer.c"
-  {
-
-# 815 "c-file-printer.c"
-    append_line_directive(printer, (node->first_token));
-  }
-
-# 817 "c-file-printer.c"
-  printer_indent(printer);
-
-# 818 "c-file-printer.c"
-  append_string(printer, "do");
-
-# 819 "c-file-printer.c"
-  append_parse_node(printer, (node->body));
-
-# 820 "c-file-printer.c"
-  printer_indent(printer);
-
-# 821 "c-file-printer.c"
-  append_string(printer, "while (");
-
-# 822 "c-file-printer.c"
-  append_parse_node(printer, (node->condition));
-
-# 823 "c-file-printer.c"
-  append_string(printer, ");\n");
-
-# 824 "c-file-printer.c"
   return printer;
 }
 
 
-# 831 "c-file-printer.c"
-printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node)
-# 832 "c-file-printer.c"
+# 820 "c-file-printer.c"
+printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* node)
+# 821 "c-file-printer.c"
 {
 
-# 833 "c-file-printer.c"
+# 822 "c-file-printer.c"
   if ((printer->output_line_directives))
 
-# 833 "c-file-printer.c"
+# 822 "c-file-printer.c"
   {
 
-# 834 "c-file-printer.c"
+# 823 "c-file-printer.c"
     append_line_directive(printer, (node->first_token));
   }
 
-# 836 "c-file-printer.c"
+# 825 "c-file-printer.c"
   printer_indent(printer);
 
-# 837 "c-file-printer.c"
-  append_string(printer, "return");
+# 826 "c-file-printer.c"
+  append_string(printer, "do");
 
-# 838 "c-file-printer.c"
-  if (((node->expression)!=((void *)0)))
+# 827 "c-file-printer.c"
+  append_parse_node(printer, (node->body));
 
-# 838 "c-file-printer.c"
-  {
+# 828 "c-file-printer.c"
+  printer_indent(printer);
+
+# 829 "c-file-printer.c"
+  append_string(printer, "while (");
+
+# 830 "c-file-printer.c"
+  append_parse_node(printer, (node->condition));
+
+# 831 "c-file-printer.c"
+  append_string(printer, ");\n");
+
+# 832 "c-file-printer.c"
+  return printer;
+}
+
 
 # 839 "c-file-printer.c"
+printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node)
+# 840 "c-file-printer.c"
+{
+
+# 841 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 841 "c-file-printer.c"
+  {
+
+# 842 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 844 "c-file-printer.c"
+  printer_indent(printer);
+
+# 845 "c-file-printer.c"
+  append_string(printer, "return");
+
+# 846 "c-file-printer.c"
+  if (((node->expression)!=((void *)0)))
+
+# 846 "c-file-printer.c"
+  {
+
+# 847 "c-file-printer.c"
     append_string(printer, " ");
 
-# 840 "c-file-printer.c"
+# 848 "c-file-printer.c"
     append_parse_node(printer, (node->expression));
   }
 
-# 842 "c-file-printer.c"
+# 850 "c-file-printer.c"
   append_string(printer, ";\n");
 
-# 843 "c-file-printer.c"
+# 851 "c-file-printer.c"
   return printer;
 }
 
 
-# 849 "c-file-printer.c"
+# 857 "c-file-printer.c"
 printer_t* append_operator_node(printer_t* printer, operator_node_t* node)
-# 849 "c-file-printer.c"
+# 857 "c-file-printer.c"
 {
 
-# 850 "c-file-printer.c"
+# 858 "c-file-printer.c"
   if (token_matches((node->operator), "cast"))
 
-# 850 "c-file-printer.c"
+# 858 "c-file-printer.c"
   {
 
-# 851 "c-file-printer.c"
+# 859 "c-file-printer.c"
     append_string(printer, "(/*CAST*/(");
 
-# 852 "c-file-printer.c"
+# 860 "c-file-printer.c"
     append_parse_node(printer, (node->left));
 
-# 853 "c-file-printer.c"
+# 861 "c-file-printer.c"
     append_string(printer, ") ");
 
-# 854 "c-file-printer.c"
+# 862 "c-file-printer.c"
     append_parse_node(printer, (node->right));
 
-# 855 "c-file-printer.c"
+# 863 "c-file-printer.c"
     append_string(printer, ")");
 
-# 856 "c-file-printer.c"
+# 864 "c-file-printer.c"
     return printer;
   }
 
-# 859 "c-file-printer.c"
+# 867 "c-file-printer.c"
   if (token_matches((node->operator), "block_expr"))
 
-# 859 "c-file-printer.c"
+# 867 "c-file-printer.c"
   {
 
-# 860 "c-file-printer.c"
+# 868 "c-file-printer.c"
     return append_parse_node(printer, (node->left));
   }
 
-# 863 "c-file-printer.c"
+# 871 "c-file-printer.c"
   if (token_matches((node->operator), "typeof"))
 
-# 863 "c-file-printer.c"
-  {
-
-# 865 "c-file-printer.c"
-    append_string(printer, "typeof(");
-
-# 866 "c-file-printer.c"
-    append_parse_node(printer, (node->left));
-
-# 867 "c-file-printer.c"
-    append_string(printer, ")");
-
-# 868 "c-file-printer.c"
-    return printer;
-  }
-
 # 871 "c-file-printer.c"
-  append_string(printer, "(");
-
-# 872 "c-file-printer.c"
-  if (((node->left)!=((void *)0)))
-
-# 872 "c-file-printer.c"
   {
 
 # 873 "c-file-printer.c"
+    append_string(printer, "typeof(");
+
+# 874 "c-file-printer.c"
+    append_parse_node(printer, (node->left));
+
+# 875 "c-file-printer.c"
+    append_string(printer, ")");
+
+# 876 "c-file-printer.c"
+    return printer;
+  }
+
+# 879 "c-file-printer.c"
+  append_string(printer, "(");
+
+# 880 "c-file-printer.c"
+  if (((node->left)!=((void *)0)))
+
+# 880 "c-file-printer.c"
+  {
+
+# 881 "c-file-printer.c"
     append_parse_node(printer, (node->left));
   }
 
-# 875 "c-file-printer.c"
+# 883 "c-file-printer.c"
   append_token(printer, (node->operator));
 
-# 876 "c-file-printer.c"
-  if (token_matches((node->operator), "sizeof"))
-
-# 876 "c-file-printer.c"
-  {
-
-# 877 "c-file-printer.c"
-    append_string(printer, "(");
-  }
-
-# 879 "c-file-printer.c"
-  if (((node->right)!=((void *)0)))
-
-# 879 "c-file-printer.c"
-  {
-
-# 880 "c-file-printer.c"
-    append_parse_node(printer, (node->right));
-  }
-
-# 882 "c-file-printer.c"
-  if (token_matches((node->operator), "sizeof"))
-
-# 882 "c-file-printer.c"
-  {
-
-# 883 "c-file-printer.c"
-    append_string(printer, ")");
-  }
-  else
-
 # 884 "c-file-printer.c"
-  if (token_matches((node->operator), "["))
+  if (token_matches((node->operator), "sizeof"))
 
 # 884 "c-file-printer.c"
   {
 
 # 885 "c-file-printer.c"
-    append_string(printer, "]");
+    append_string(printer, "(");
   }
 
 # 887 "c-file-printer.c"
-  append_string(printer, ")");
+  if (((node->right)!=((void *)0)))
+
+# 887 "c-file-printer.c"
+  {
 
 # 888 "c-file-printer.c"
+    append_parse_node(printer, (node->right));
+  }
+
+# 890 "c-file-printer.c"
+  if (token_matches((node->operator), "sizeof"))
+
+# 890 "c-file-printer.c"
+  {
+
+# 891 "c-file-printer.c"
+    append_string(printer, ")");
+  }
+  else
+
+# 892 "c-file-printer.c"
+  if (token_matches((node->operator), "["))
+
+# 892 "c-file-printer.c"
+  {
+
+# 893 "c-file-printer.c"
+    append_string(printer, "]");
+  }
+
+# 895 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 896 "c-file-printer.c"
   return printer;
 }
 
 
-# 894 "c-file-printer.c"
+# 902 "c-file-printer.c"
 printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node)
-# 895 "c-file-printer.c"
+# 903 "c-file-printer.c"
 {
 
-# 896 "c-file-printer.c"
+# 904 "c-file-printer.c"
   append_string(printer, "(");
 
-# 897 "c-file-printer.c"
-  if (((node->condition)!=((void *)0)))
-
-# 897 "c-file-printer.c"
-  {
-
-# 898 "c-file-printer.c"
-    append_parse_node(printer, (node->condition));
-  }
-
-# 900 "c-file-printer.c"
-  append_string(printer, " ? ");
-
-# 901 "c-file-printer.c"
-  if (((node->expr_if_true)!=((void *)0)))
-
-# 901 "c-file-printer.c"
-  {
-
-# 902 "c-file-printer.c"
-    append_parse_node(printer, (node->expr_if_true));
-  }
-
-# 904 "c-file-printer.c"
-  append_string(printer, " : ");
-
 # 905 "c-file-printer.c"
-  if (((node->expr_if_false)!=((void *)0)))
+  if (((node->condition)!=((void *)0)))
 
 # 905 "c-file-printer.c"
   {
 
 # 906 "c-file-printer.c"
-    append_parse_node(printer, (node->expr_if_false));
+    append_parse_node(printer, (node->condition));
   }
 
 # 908 "c-file-printer.c"
-  append_string(printer, ")");
+  append_string(printer, " ? ");
 
 # 909 "c-file-printer.c"
+  if (((node->expr_if_true)!=((void *)0)))
+
+# 909 "c-file-printer.c"
+  {
+
+# 910 "c-file-printer.c"
+    append_parse_node(printer, (node->expr_if_true));
+  }
+
+# 912 "c-file-printer.c"
+  append_string(printer, " : ");
+
+# 913 "c-file-printer.c"
+  if (((node->expr_if_false)!=((void *)0)))
+
+# 913 "c-file-printer.c"
+  {
+
+# 914 "c-file-printer.c"
+    append_parse_node(printer, (node->expr_if_false));
+  }
+
+# 916 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 917 "c-file-printer.c"
   return printer;
 }
 
 
-# 915 "c-file-printer.c"
+# 923 "c-file-printer.c"
 printer_t* append_call_node(printer_t* printer, call_node_t* node)
-# 915 "c-file-printer.c"
+# 923 "c-file-printer.c"
 {
 
-# 916 "c-file-printer.c"
+# 924 "c-file-printer.c"
   append_parse_node(printer, (node->function));
 
-# 917 "c-file-printer.c"
+# 925 "c-file-printer.c"
   append_string(printer, "(");
 
-# 918 "c-file-printer.c"
+# 926 "c-file-printer.c"
   for (
     int i = 0;
     (i<node_list_length((node->args)));
     (i++))
 
-# 918 "c-file-printer.c"
+# 926 "c-file-printer.c"
   {
 
-# 919 "c-file-printer.c"
+# 927 "c-file-printer.c"
     if ((i>0))
 
-# 919 "c-file-printer.c"
+# 927 "c-file-printer.c"
     {
 
-# 920 "c-file-printer.c"
+# 928 "c-file-printer.c"
       append_string(printer, ", ");
     }
 
-# 922 "c-file-printer.c"
+# 930 "c-file-printer.c"
     append_parse_node(printer, node_list_get((node->args), i));
   }
 
-# 924 "c-file-printer.c"
+# 932 "c-file-printer.c"
   append_string(printer, ")");
 
-# 925 "c-file-printer.c"
+# 933 "c-file-printer.c"
   return printer;
 }
 
 
-# 932 "c-file-printer.c"
+# 940 "c-file-printer.c"
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string)
-# 933 "c-file-printer.c"
+# 941 "c-file-printer.c"
 {
   char* code_template = "enum_metadata_t* ${fn_prefix}_metadata() {\n" "${element_constructions}" "    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {\n" "        .name = \"${enum_name}\",\n" "        .elements = ${previous_var_address}\n" "    };\n" "    return &enum_metadata_result;\n" "}\n\n";
   char* field_template = "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n" "        .next = ${previous_var_address},\n" "        .name = \"${element_name}\",\n" "        .value = ${element_name}\n" "    };\n";
@@ -16319,101 +16543,172 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char*
   buffer_t* buf = make_buffer(128);
   char* previous_var_address = "((void*)0)";
 
-# 960 "c-file-printer.c"
+# 968 "c-file-printer.c"
   for (
     int i = 0;
     (i<node_list_length((node->elements)));
     (i++))
 
-# 960 "c-file-printer.c"
+# 968 "c-file-printer.c"
   {
     enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
     char* var_id = string_printf("var_%d", i);
     char* element_name = token_to_string((element->name));
 
-# 966 "c-file-printer.c"
+# 974 "c-file-printer.c"
     buffer_clear(buf);
 
-# 967 "c-file-printer.c"
+# 975 "c-file-printer.c"
     buffer_append_string(buf, field_template);
 
-# 968 "c-file-printer.c"
+# 976 "c-file-printer.c"
     buffer_replace_all(buf, "${var_id}", var_id);
 
-# 969 "c-file-printer.c"
+# 977 "c-file-printer.c"
     buffer_replace_all(buf, "${previous_var_address}", previous_var_address);
 
-# 970 "c-file-printer.c"
+# 978 "c-file-printer.c"
     buffer_replace_all(buf, "${element_name}", element_name);
 
-# 972 "c-file-printer.c"
+# 980 "c-file-printer.c"
     buffer_append_buffer(element_constructions, buf);
 
-# 973 "c-file-printer.c"
+# 981 "c-file-printer.c"
     (previous_var_address=string_printf("&%s", var_id));
   }
   buffer_t* code = buffer_append_string(make_buffer(128), code_template);
 
-# 977 "c-file-printer.c"
+# 985 "c-file-printer.c"
   buffer_replace_all(code, "${fn_prefix}", fn_prefix);
 
-# 978 "c-file-printer.c"
+# 986 "c-file-printer.c"
   buffer_replace_all(code, "${enum_name}", type_string);
 
-# 979 "c-file-printer.c"
+# 987 "c-file-printer.c"
   buffer_replace_all(code, "${previous_var_address}", previous_var_address);
 
-# 980 "c-file-printer.c"
+# 988 "c-file-printer.c"
   buffer_replace_all(code, "${element_constructions}", buffer_to_c_string(element_constructions));
 
-# 983 "c-file-printer.c"
+# 991 "c-file-printer.c"
   return buffer_append_buffer(buffer, code);
 }
 
 
-# 986 "c-file-printer.c"
+# 994 "c-file-printer.c"
 printer_t* append_line_directive(printer_t* printer, token_t* token)
-# 986 "c-file-printer.c"
+# 994 "c-file-printer.c"
 {
 
-# 987 "c-file-printer.c"
+# 995 "c-file-printer.c"
   if ((token==((void *)0)))
 
-# 987 "c-file-printer.c"
+# 995 "c-file-printer.c"
   {
 
-# 988 "c-file-printer.c"
+# 996 "c-file-printer.c"
     buffer_printf((printer->buffer), "\n// (no 'first token') provided)\n");
 
-# 989 "c-file-printer.c"
+# 997 "c-file-printer.c"
     return printer;
   }
 
-# 991 "c-file-printer.c"
+# 999 "c-file-printer.c"
   if (((printer->symbol_table)==((void *)0)))
 
-# 991 "c-file-printer.c"
+# 999 "c-file-printer.c"
   {
 
-# 992 "c-file-printer.c"
+# 1000 "c-file-printer.c"
     log_fatal("printer->symbol_table is not set.");
 
-# 993 "c-file-printer.c"
+# 1001 "c-file-printer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
   file_t* file = symbol_table_token_to_file((printer->symbol_table), token);
 
-# 996 "c-file-printer.c"
+# 1004 "c-file-printer.c"
   if ((file!=((void *)0)))
 
-# 996 "c-file-printer.c"
+# 1004 "c-file-printer.c"
   {
 
-# 997 "c-file-printer.c"
+# 1005 "c-file-printer.c"
     buffer_printf((printer->buffer), "\n# %d \"%s\"\n", (token->line_number), ((file==((void *)0)) ? "fixme.c" : (file->file_name)));
   }
 
-# 1000 "c-file-printer.c"
+# 1008 "c-file-printer.c"
+  return printer;
+}
+
+
+# 1011 "c-file-printer.c"
+printer_t* append_compound_literal_node(printer_t* printer, compound_literal_node_t* node)
+# 1012 "c-file-printer.c"
+{
+
+# 1013 "c-file-printer.c"
+  append_string(printer, "(");
+
+# 1014 "c-file-printer.c"
+  append_parse_node(printer, (node->type_node));
+
+# 1015 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 1016 "c-file-printer.c"
+  append_string(printer, "{");
+
+# 1018 "c-file-printer.c"
+  for (
+    int i = 0;
+    (i<node_list_length((node->initializers)));
+    (i++))
+
+# 1018 "c-file-printer.c"
+  {
+
+# 1019 "c-file-printer.c"
+    if ((i>0))
+
+# 1019 "c-file-printer.c"
+    {
+
+# 1020 "c-file-printer.c"
+      append_string(printer, ", ");
+    }
+    parse_node_t* initializer = node_list_get((node->initializers), i);
+
+# 1023 "c-file-printer.c"
+    append_parse_node(printer, initializer);
+  }
+
+# 1026 "c-file-printer.c"
+  append_string(printer, "}");
+
+# 1027 "c-file-printer.c"
+  return printer;
+}
+
+
+# 1031 "c-file-printer.c"
+printer_t* append_designated_initializer_node(printer_t* printer, designated_initializer_node_t* node)
+# 1032 "c-file-printer.c"
+{
+
+# 1033 "c-file-printer.c"
+  append_string(printer, ".");
+
+# 1034 "c-file-printer.c"
+  append_token(printer, (node->member_name));
+
+# 1035 "c-file-printer.c"
+  append_string(printer, "=");
+
+# 1036 "c-file-printer.c"
+  append_parse_node(printer, (node->value));
+
+# 1037 "c-file-printer.c"
   return printer;
 }
 
@@ -17549,1163 +17844,1185 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence)
 # 204 "pratt-parser.c"
     return pstate_error(pstate, saved_position, PARSE_ERROR_EOF);
   }
-  pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(token);
-
-# 207 "pratt-parser.c"
-  if (((prefix_instruction.operation)==PRATT_PARSE_UNKNOWN))
-
-# 207 "pratt-parser.c"
-  {
+  pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(pstate, token);
 
 # 208 "pratt-parser.c"
-    log_debug("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
+  if (((prefix_instruction.operation)==PRATT_PARSE_UNKNOWN))
+
+# 208 "pratt-parser.c"
+  {
 
 # 209 "pratt-parser.c"
+    log_debug("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
+
+# 210 "pratt-parser.c"
     return pstate_error(pstate, saved_position, PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL);
   }
 
-# 213 "pratt-parser.c"
+# 214 "pratt-parser.c"
   if ((!pratt_handle_instruction(pstate, prefix_instruction, ((void *)0))))
 
-# 213 "pratt-parser.c"
+# 214 "pratt-parser.c"
   {
 
-# 214 "pratt-parser.c"
+# 215 "pratt-parser.c"
     log_debug("(RETURNING ERROR) handle instruction\n", token_to_string(token));
 
-# 215 "pratt-parser.c"
+# 216 "pratt-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
   parse_node_t* left = pstate_get_result_node(pstate);
 
-# 220 "pratt-parser.c"
+# 221 "pratt-parser.c"
   while (1)
 
-# 220 "pratt-parser.c"
+# 221 "pratt-parser.c"
   {
     pratt_parser_instruction_t infix_instruction = get_infix_instruction(pstate_peek(pstate, 0));
 
-# 223 "pratt-parser.c"
+# 224 "pratt-parser.c"
     if ((((infix_instruction.operation)==PRATT_PARSE_UNKNOWN)||(precedence>=(infix_instruction.precedence))))
 
-# 224 "pratt-parser.c"
+# 225 "pratt-parser.c"
     {
 
-# 225 "pratt-parser.c"
+# 226 "pratt-parser.c"
       return pstate_set_result_node(pstate, left);
     }
 
-# 227 "pratt-parser.c"
+# 228 "pratt-parser.c"
     if ((!pratt_handle_instruction(pstate, infix_instruction, left)))
 
-# 227 "pratt-parser.c"
+# 228 "pratt-parser.c"
     {
 
-# 228 "pratt-parser.c"
+# 229 "pratt-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
 
-# 230 "pratt-parser.c"
+# 231 "pratt-parser.c"
     (left=pstate_get_result_node(pstate));
   }
 
-# 234 "pratt-parser.c"
+# 235 "pratt-parser.c"
   return ((void *)0);
 }
 
 
-# 242 "pratt-parser.c"
+# 243 "pratt-parser.c"
 pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left)
-# 244 "pratt-parser.c"
+# 245 "pratt-parser.c"
 {
   uint64_t saved_position = (pstate->position);
   token_t* token = pstate_peek(pstate, 0);
 
-# 248 "pratt-parser.c"
+# 249 "pratt-parser.c"
   switch ((instruction.operation))
 
-# 248 "pratt-parser.c"
+# 249 "pratt-parser.c"
   {
 
-# 249 "pratt-parser.c"
+# 250 "pratt-parser.c"
     case PRATT_PARSE_BINARY_OPERATOR:
 
-# 250 "pratt-parser.c"
+# 251 "pratt-parser.c"
     do
-# 250 "pratt-parser.c"
+# 251 "pratt-parser.c"
     {
 
-# 251 "pratt-parser.c"
+# 252 "pratt-parser.c"
       pstate_advance(pstate);
       int recursive_precedence = (instruction.precedence);
 
-# 253 "pratt-parser.c"
+# 254 "pratt-parser.c"
       if ((precedence_to_associativity(recursive_precedence)==LEFT_TO_RIGHT))
 
-# 253 "pratt-parser.c"
+# 254 "pratt-parser.c"
       {
 
-# 254 "pratt-parser.c"
+# 255 "pratt-parser.c"
         (recursive_precedence++);
       }
       else
 
-# 255 "pratt-parser.c"
+# 256 "pratt-parser.c"
       {
 
-# 256 "pratt-parser.c"
+# 257 "pratt-parser.c"
         (recursive_precedence--);
       }
 
-# 258 "pratt-parser.c"
+# 259 "pratt-parser.c"
       if ((!pratt_parse_expression(pstate, recursive_precedence)))
 
-# 258 "pratt-parser.c"
+# 259 "pratt-parser.c"
       {
 
-# 259 "pratt-parser.c"
+# 260 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
 
-# 262 "pratt-parser.c"
+# 263 "pratt-parser.c"
       ((result->operator)=token);
 
-# 263 "pratt-parser.c"
+# 264 "pratt-parser.c"
       ((result->left)=left);
 
-# 264 "pratt-parser.c"
+# 265 "pratt-parser.c"
       ((result->right)=pstate_get_result_node(pstate));
 
-# 265 "pratt-parser.c"
+# 266 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 268 "pratt-parser.c"
+# 269 "pratt-parser.c"
     case PRATT_PARSE_IDENTIFIER:
 
-# 269 "pratt-parser.c"
+# 270 "pratt-parser.c"
     do
-# 269 "pratt-parser.c"
+# 270 "pratt-parser.c"
     {
 
-# 270 "pratt-parser.c"
+# 271 "pratt-parser.c"
       pstate_advance(pstate);
       identifier_node_t* result = malloc_identifier_node();
 
-# 272 "pratt-parser.c"
+# 273 "pratt-parser.c"
       ((result->token)=token);
 
-# 273 "pratt-parser.c"
+# 274 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 276 "pratt-parser.c"
+# 277 "pratt-parser.c"
     case PRATT_PARSE_LITERAL:
 
-# 277 "pratt-parser.c"
+# 278 "pratt-parser.c"
     return parse_literal_node(pstate);
 
-# 279 "pratt-parser.c"
+# 280 "pratt-parser.c"
     case PRATT_PARSE_PREFIX_OPERATOR:
 
-# 280 "pratt-parser.c"
+# 281 "pratt-parser.c"
     do
-# 280 "pratt-parser.c"
+# 281 "pratt-parser.c"
     {
 
-# 281 "pratt-parser.c"
+# 282 "pratt-parser.c"
       pstate_advance(pstate);
 
-# 282 "pratt-parser.c"
+# 283 "pratt-parser.c"
       if ((!pratt_parse_expression(pstate, (instruction.precedence))))
 
-# 282 "pratt-parser.c"
+# 283 "pratt-parser.c"
       {
 
-# 283 "pratt-parser.c"
+# 284 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
 
-# 286 "pratt-parser.c"
+# 287 "pratt-parser.c"
       ((result->operator)=token);
 
-# 287 "pratt-parser.c"
+# 288 "pratt-parser.c"
       if ((left!=((void *)0)))
 
-# 287 "pratt-parser.c"
+# 288 "pratt-parser.c"
       {
 
-# 288 "pratt-parser.c"
+# 289 "pratt-parser.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-# 290 "pratt-parser.c"
+# 291 "pratt-parser.c"
       ((result->left)=((void *)0));
 
-# 291 "pratt-parser.c"
+# 292 "pratt-parser.c"
       ((result->right)=pstate_get_result_node(pstate));
 
-# 292 "pratt-parser.c"
+# 293 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 295 "pratt-parser.c"
+# 296 "pratt-parser.c"
     case PRATT_PARSE_POSTFIX_OPERATOR:
 
-# 296 "pratt-parser.c"
+# 297 "pratt-parser.c"
     do
-# 296 "pratt-parser.c"
+# 297 "pratt-parser.c"
     {
 
-# 297 "pratt-parser.c"
+# 298 "pratt-parser.c"
       pstate_advance(pstate);
       operator_node_t* result = malloc_operator_node();
 
-# 299 "pratt-parser.c"
+# 300 "pratt-parser.c"
       ((result->operator)=token);
 
-# 300 "pratt-parser.c"
+# 301 "pratt-parser.c"
       ((result->left)=left);
 
-# 301 "pratt-parser.c"
+# 302 "pratt-parser.c"
       ((result->right)=((void *)0));
 
-# 302 "pratt-parser.c"
+# 303 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 305 "pratt-parser.c"
+# 306 "pratt-parser.c"
     case PRATT_PARSE_SUB_EXPRESSION:
 
-# 306 "pratt-parser.c"
+# 307 "pratt-parser.c"
     do
-# 306 "pratt-parser.c"
+# 307 "pratt-parser.c"
     {
 
-# 307 "pratt-parser.c"
+# 308 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, "(")))
 
-# 307 "pratt-parser.c"
+# 308 "pratt-parser.c"
       {
 
-# 308 "pratt-parser.c"
+# 309 "pratt-parser.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-# 310 "pratt-parser.c"
+# 311 "pratt-parser.c"
       if ((!pratt_parse_expression(pstate, 0)))
 
-# 310 "pratt-parser.c"
+# 311 "pratt-parser.c"
       {
 
-# 311 "pratt-parser.c"
+# 312 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* inner_expression = pstate_get_result_node(pstate);
 
-# 314 "pratt-parser.c"
+# 315 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, ")")))
 
-# 314 "pratt-parser.c"
+# 315 "pratt-parser.c"
       {
 
-# 315 "pratt-parser.c"
+# 316 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
 
-# 317 "pratt-parser.c"
+# 318 "pratt-parser.c"
       return pstate_set_result_node(pstate, inner_expression);
     }
     while (0);
 
-# 319 "pratt-parser.c"
+# 320 "pratt-parser.c"
     break;
 
-# 321 "pratt-parser.c"
+# 322 "pratt-parser.c"
     case PRATT_PARSE_INDEX_EXPRESSION:
 
-# 322 "pratt-parser.c"
+# 323 "pratt-parser.c"
     do
-# 322 "pratt-parser.c"
+# 323 "pratt-parser.c"
     {
-
-# 323 "pratt-parser.c"
-      if ((!pstate_expect_token_string(pstate, "[")))
-
-# 323 "pratt-parser.c"
-      {
 
 # 324 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "[")))
+
+# 324 "pratt-parser.c"
+      {
+
+# 325 "pratt-parser.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
-
-# 326 "pratt-parser.c"
-      if ((!pratt_parse_expression(pstate, 0)))
-
-# 326 "pratt-parser.c"
-      {
 
 # 327 "pratt-parser.c"
-        return pstate_propagate_error(pstate, saved_position);
-      }
-      parse_node_t* inner_expression = pstate_get_result_node(pstate);
-
-# 330 "pratt-parser.c"
-      if ((!pstate_expect_token_string(pstate, "]")))
-
-# 330 "pratt-parser.c"
-      {
-
-# 331 "pratt-parser.c"
-        return pstate_propagate_error(pstate, saved_position);
-      }
-      operator_node_t* result = malloc_operator_node();
-
-# 334 "pratt-parser.c"
-      ((result->operator)=token);
-
-# 335 "pratt-parser.c"
-      ((result->left)=left);
-
-# 336 "pratt-parser.c"
-      ((result->right)=inner_expression);
-
-# 337 "pratt-parser.c"
-      return pstate_set_result_node(pstate, to_node(result));
-    }
-    while (0);
-
-# 339 "pratt-parser.c"
-    break;
-
-# 341 "pratt-parser.c"
-    case PRATT_PARSE_SIZEOF:
-
-# 342 "pratt-parser.c"
-    do
-# 342 "pratt-parser.c"
-    {
-
-# 343 "pratt-parser.c"
-      if ((!pstate_expect_token_string(pstate, "sizeof")))
-
-# 343 "pratt-parser.c"
-      {
-
-# 344 "pratt-parser.c"
-        fatal_error(ERROR_ILLEGAL_STATE);
-      }
-
-# 346 "pratt-parser.c"
-      if ((!pstate_expect_token_string(pstate, "(")))
-
-# 346 "pratt-parser.c"
-      {
-
-# 347 "pratt-parser.c"
-        return pstate_propagate_error(pstate, saved_position);
-      }
-
-# 354 "pratt-parser.c"
       if ((!pratt_parse_expression(pstate, 0)))
 
-# 354 "pratt-parser.c"
+# 327 "pratt-parser.c"
       {
 
-# 355 "pratt-parser.c"
+# 328 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* inner_expression = pstate_get_result_node(pstate);
 
-# 358 "pratt-parser.c"
-      if ((!pstate_expect_token_string(pstate, ")")))
+# 331 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "]")))
 
-# 358 "pratt-parser.c"
+# 331 "pratt-parser.c"
       {
 
-# 359 "pratt-parser.c"
+# 332 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
 
-# 362 "pratt-parser.c"
+# 335 "pratt-parser.c"
       ((result->operator)=token);
 
-# 363 "pratt-parser.c"
+# 336 "pratt-parser.c"
+      ((result->left)=left);
+
+# 337 "pratt-parser.c"
       ((result->right)=inner_expression);
 
-# 364 "pratt-parser.c"
+# 338 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 366 "pratt-parser.c"
+# 340 "pratt-parser.c"
     break;
 
-# 368 "pratt-parser.c"
-    case PRATT_PARSE_CAST_MACRO:
+# 342 "pratt-parser.c"
+    case PRATT_PARSE_SIZEOF:
 
-# 369 "pratt-parser.c"
+# 343 "pratt-parser.c"
     do
-# 369 "pratt-parser.c"
+# 343 "pratt-parser.c"
     {
 
-# 370 "pratt-parser.c"
-      if ((!pstate_expect_token_string(pstate, "cast")))
+# 344 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "sizeof")))
 
-# 370 "pratt-parser.c"
+# 344 "pratt-parser.c"
       {
 
-# 371 "pratt-parser.c"
+# 345 "pratt-parser.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-# 373 "pratt-parser.c"
+# 347 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, "(")))
 
-# 373 "pratt-parser.c"
+# 347 "pratt-parser.c"
       {
 
-# 374 "pratt-parser.c"
+# 348 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
 
-# 376 "pratt-parser.c"
-      if ((!parse_type_node(pstate)))
+# 355 "pratt-parser.c"
+      if ((!pratt_parse_expression(pstate, 0)))
 
-# 376 "pratt-parser.c"
+# 355 "pratt-parser.c"
       {
 
+# 356 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      parse_node_t* inner_expression = pstate_get_result_node(pstate);
+
+# 359 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, ")")))
+
+# 359 "pratt-parser.c"
+      {
+
+# 360 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+      operator_node_t* result = malloc_operator_node();
+
+# 363 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 364 "pratt-parser.c"
+      ((result->right)=inner_expression);
+
+# 365 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 367 "pratt-parser.c"
+    break;
+
+# 369 "pratt-parser.c"
+    case PRATT_PARSE_CAST_MACRO:
+
+# 370 "pratt-parser.c"
+    do
+# 370 "pratt-parser.c"
+    {
+
+# 371 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "cast")))
+
+# 371 "pratt-parser.c"
+      {
+
+# 372 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 374 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "(")))
+
+# 374 "pratt-parser.c"
+      {
+
+# 375 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
 # 377 "pratt-parser.c"
+      if ((!parse_type_node(pstate)))
+
+# 377 "pratt-parser.c"
+      {
+
+# 378 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* type_node = pstate_get_result_node(pstate);
 
-# 380 "pratt-parser.c"
+# 381 "pratt-parser.c"
       if (((!pstate_expect_token_string(pstate, ","))||(!pratt_parse_expression(pstate, PRECEDENCE_ASSIGNMENT))))
 
-# 381 "pratt-parser.c"
+# 382 "pratt-parser.c"
       {
 
-# 382 "pratt-parser.c"
+# 383 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* expression = pstate_get_result_node(pstate);
 
-# 385 "pratt-parser.c"
+# 386 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, ")")))
 
-# 385 "pratt-parser.c"
+# 386 "pratt-parser.c"
       {
 
-# 386 "pratt-parser.c"
+# 387 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
 
-# 389 "pratt-parser.c"
+# 390 "pratt-parser.c"
       ((result->operator)=token);
 
-# 390 "pratt-parser.c"
+# 391 "pratt-parser.c"
       ((result->left)=type_node);
 
-# 391 "pratt-parser.c"
+# 392 "pratt-parser.c"
       ((result->right)=expression);
 
-# 392 "pratt-parser.c"
+# 393 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 394 "pratt-parser.c"
+# 395 "pratt-parser.c"
     break;
 
-# 398 "pratt-parser.c"
+# 399 "pratt-parser.c"
     case PRATT_PARSE_BLOCK_EXPR:
 
-# 399 "pratt-parser.c"
+# 400 "pratt-parser.c"
     do
-# 399 "pratt-parser.c"
+# 400 "pratt-parser.c"
     {
 
-# 400 "pratt-parser.c"
+# 401 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, "block_expr")))
 
-# 400 "pratt-parser.c"
+# 401 "pratt-parser.c"
       {
 
-# 401 "pratt-parser.c"
+# 402 "pratt-parser.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-# 403 "pratt-parser.c"
+# 404 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, "(")))
 
-# 403 "pratt-parser.c"
+# 404 "pratt-parser.c"
       {
 
-# 404 "pratt-parser.c"
+# 405 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
 
-# 406 "pratt-parser.c"
+# 407 "pratt-parser.c"
       if ((!parse_block(pstate)))
 
-# 406 "pratt-parser.c"
+# 407 "pratt-parser.c"
       {
 
-# 407 "pratt-parser.c"
+# 408 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* block_node = pstate_get_result_node(pstate);
 
-# 410 "pratt-parser.c"
+# 411 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, ")")))
 
-# 410 "pratt-parser.c"
+# 411 "pratt-parser.c"
       {
 
-# 411 "pratt-parser.c"
+# 412 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
 
-# 414 "pratt-parser.c"
+# 415 "pratt-parser.c"
       ((result->operator)=token);
 
-# 415 "pratt-parser.c"
+# 416 "pratt-parser.c"
       ((result->left)=block_node);
 
-# 416 "pratt-parser.c"
+# 417 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 418 "pratt-parser.c"
+# 419 "pratt-parser.c"
     break;
 
-# 422 "pratt-parser.c"
+# 423 "pratt-parser.c"
     case PRATT_PARSE_TYPE_OF:
 
-# 423 "pratt-parser.c"
+# 424 "pratt-parser.c"
     do
-# 423 "pratt-parser.c"
+# 424 "pratt-parser.c"
     {
 
-# 424 "pratt-parser.c"
+# 425 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, "typeof")))
 
-# 424 "pratt-parser.c"
+# 425 "pratt-parser.c"
       {
 
-# 425 "pratt-parser.c"
+# 426 "pratt-parser.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-# 427 "pratt-parser.c"
+# 428 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, "(")))
 
-# 427 "pratt-parser.c"
+# 428 "pratt-parser.c"
       {
 
-# 428 "pratt-parser.c"
+# 429 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
 
-# 430 "pratt-parser.c"
+# 431 "pratt-parser.c"
       if ((!parse_type_node(pstate)))
 
-# 430 "pratt-parser.c"
+# 431 "pratt-parser.c"
       {
 
-# 431 "pratt-parser.c"
+# 432 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* type_node = pstate_get_result_node(pstate);
 
-# 434 "pratt-parser.c"
+# 435 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, ")")))
 
-# 434 "pratt-parser.c"
+# 435 "pratt-parser.c"
       {
 
-# 435 "pratt-parser.c"
+# 436 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       operator_node_t* result = malloc_operator_node();
 
-# 438 "pratt-parser.c"
+# 439 "pratt-parser.c"
       ((result->operator)=token);
 
-# 439 "pratt-parser.c"
+# 440 "pratt-parser.c"
       ((result->left)=type_node);
 
-# 440 "pratt-parser.c"
+# 441 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 442 "pratt-parser.c"
+# 443 "pratt-parser.c"
     break;
 
-# 444 "pratt-parser.c"
+# 445 "pratt-parser.c"
     case PRATT_PARSE_CALL:
 
-# 445 "pratt-parser.c"
+# 446 "pratt-parser.c"
     do
-# 445 "pratt-parser.c"
+# 446 "pratt-parser.c"
     {
 
-# 446 "pratt-parser.c"
+# 447 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, "(")))
 
-# 446 "pratt-parser.c"
+# 447 "pratt-parser.c"
       {
 
-# 447 "pratt-parser.c"
+# 448 "pratt-parser.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
       call_node_t* result = malloc_call_node();
 
-# 450 "pratt-parser.c"
+# 451 "pratt-parser.c"
       ((result->function)=left);
       boolean_t expect_comma = false;
 
-# 452 "pratt-parser.c"
+# 453 "pratt-parser.c"
       while ((!token_matches(pstate_peek(pstate, 0), ")")))
 
-# 452 "pratt-parser.c"
+# 453 "pratt-parser.c"
       {
 
-# 453 "pratt-parser.c"
+# 454 "pratt-parser.c"
         if (expect_comma)
 
-# 453 "pratt-parser.c"
+# 454 "pratt-parser.c"
         {
 
-# 454 "pratt-parser.c"
+# 455 "pratt-parser.c"
           if ((!pstate_expect_token_string(pstate, ",")))
 
-# 454 "pratt-parser.c"
+# 455 "pratt-parser.c"
           {
 
-# 455 "pratt-parser.c"
+# 456 "pratt-parser.c"
             return pstate_propagate_error(pstate, saved_position);
           }
         }
         else
 
-# 457 "pratt-parser.c"
+# 458 "pratt-parser.c"
         {
 
-# 458 "pratt-parser.c"
+# 459 "pratt-parser.c"
           (expect_comma=true);
         }
 
-# 460 "pratt-parser.c"
+# 461 "pratt-parser.c"
         if ((!pratt_parse_expression(pstate, PRECEDENCE_ASSIGNMENT)))
 
-# 460 "pratt-parser.c"
+# 461 "pratt-parser.c"
         {
 
-# 461 "pratt-parser.c"
+# 462 "pratt-parser.c"
           return pstate_propagate_error(pstate, saved_position);
         }
 
-# 463 "pratt-parser.c"
+# 464 "pratt-parser.c"
         node_list_add_node((&(result->args)), pstate_get_result_node(pstate));
       }
 
-# 465 "pratt-parser.c"
+# 466 "pratt-parser.c"
       if ((!pstate_expect_token_string(pstate, ")")))
 
-# 465 "pratt-parser.c"
+# 466 "pratt-parser.c"
       {
 
-# 466 "pratt-parser.c"
+# 467 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
 
-# 468 "pratt-parser.c"
+# 469 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 470 "pratt-parser.c"
+# 471 "pratt-parser.c"
     break;
 
-# 472 "pratt-parser.c"
+# 473 "pratt-parser.c"
     case PRATT_PARSE_CONDITIONAL:
 
-# 473 "pratt-parser.c"
+# 474 "pratt-parser.c"
     do
-# 473 "pratt-parser.c"
+# 474 "pratt-parser.c"
     {
 
-# 474 "pratt-parser.c"
+# 475 "pratt-parser.c"
       pstate_advance(pstate);
       int recursive_precedence = (instruction.precedence);
 
-# 476 "pratt-parser.c"
+# 477 "pratt-parser.c"
       if ((!pratt_parse_expression(pstate, recursive_precedence)))
 
-# 476 "pratt-parser.c"
+# 477 "pratt-parser.c"
       {
 
-# 477 "pratt-parser.c"
+# 478 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* expr_if_true = pstate_get_result_node(pstate);
 
-# 480 "pratt-parser.c"
+# 481 "pratt-parser.c"
       if (((!pstate_expect_token_string(pstate, ":"))||(!pratt_parse_expression(pstate, recursive_precedence))))
 
-# 481 "pratt-parser.c"
+# 482 "pratt-parser.c"
       {
 
-# 482 "pratt-parser.c"
+# 483 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* expr_if_false = pstate_get_result_node(pstate);
       conditional_node_t* result = malloc_conditional_node();
 
-# 486 "pratt-parser.c"
+# 487 "pratt-parser.c"
       ((result->condition)=left);
 
-# 487 "pratt-parser.c"
+# 488 "pratt-parser.c"
       ((result->expr_if_true)=expr_if_true);
 
-# 488 "pratt-parser.c"
+# 489 "pratt-parser.c"
       ((result->expr_if_false)=expr_if_false);
 
-# 489 "pratt-parser.c"
+# 490 "pratt-parser.c"
       return pstate_set_result_node(pstate, to_node(result));
     }
     while (0);
 
-# 492 "pratt-parser.c"
+# 493 "pratt-parser.c"
     default:
 
-# 493 "pratt-parser.c"
+# 494 "pratt-parser.c"
     break;
   }
 
-# 495 "pratt-parser.c"
+# 496 "pratt-parser.c"
   return pstate_error(pstate, saved_position, PARSE_ERROR_UNHANDLED_INSTRUCTION);
 }
 
 
-# 510 "pratt-parser.c"
-pratt_parser_instruction_t get_prefix_instruction(token_t* token)
-# 510 "pratt-parser.c"
+# 511 "pratt-parser.c"
+pratt_parser_instruction_t get_prefix_instruction(pstate_t* pstate, token_t* token)
+# 512 "pratt-parser.c"
 {
 
-# 511 "pratt-parser.c"
+# 513 "pratt-parser.c"
   switch ((token->type))
 
-# 511 "pratt-parser.c"
+# 513 "pratt-parser.c"
   {
 
-# 513 "pratt-parser.c"
+# 515 "pratt-parser.c"
     case TOKEN_TYPE_IDENTIFIER:
 
-# 514 "pratt-parser.c"
+# 516 "pratt-parser.c"
     if (token_matches(token, "sizeof"))
 
-# 514 "pratt-parser.c"
+# 516 "pratt-parser.c"
     {
 
-# 515 "pratt-parser.c"
+# 517 "pratt-parser.c"
       return make_parser_instruction(token, PRATT_PARSE_SIZEOF, PRECEDENCE_UNARY);
     }
 
-# 518 "pratt-parser.c"
+# 520 "pratt-parser.c"
     if (token_matches(token, "cast"))
 
-# 518 "pratt-parser.c"
+# 520 "pratt-parser.c"
     {
 
-# 519 "pratt-parser.c"
+# 521 "pratt-parser.c"
       return make_parser_instruction(token, PRATT_PARSE_CAST_MACRO, PRECEDENCE_UNARY);
     }
 
-# 522 "pratt-parser.c"
+# 524 "pratt-parser.c"
     if (token_matches(token, "typeof"))
 
-# 522 "pratt-parser.c"
+# 524 "pratt-parser.c"
     {
 
-# 523 "pratt-parser.c"
+# 525 "pratt-parser.c"
       return make_parser_instruction(token, PRATT_PARSE_TYPE_OF, PRECEDENCE_UNARY);
     }
 
-# 526 "pratt-parser.c"
+# 528 "pratt-parser.c"
     if (token_matches(token, "block_expr"))
 
-# 526 "pratt-parser.c"
+# 528 "pratt-parser.c"
     {
 
-# 527 "pratt-parser.c"
+# 529 "pratt-parser.c"
       return make_parser_instruction(token, PRATT_PARSE_BLOCK_EXPR, PRECEDENCE_UNARY);
     }
 
-# 530 "pratt-parser.c"
+# 532 "pratt-parser.c"
     if (token_matches(token, "compound_literal"))
 
-# 530 "pratt-parser.c"
+# 532 "pratt-parser.c"
     {
 
-# 531 "pratt-parser.c"
+# 533 "pratt-parser.c"
       return make_parser_instruction(token, PRATT_PARSE_LITERAL, PRECEDENCE_UNARY);
     }
 
-# 534 "pratt-parser.c"
+# 536 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_IDENTIFIER, PRECEDENCE_PRIMARY);
 
-# 537 "pratt-parser.c"
+# 539 "pratt-parser.c"
     case TOKEN_TYPE_INTEGER_LITERAL:
 
-# 538 "pratt-parser.c"
+# 540 "pratt-parser.c"
     case TOKEN_TYPE_FLOAT_LITERAL:
 
-# 539 "pratt-parser.c"
+# 541 "pratt-parser.c"
     case TOKEN_TYPE_STRING_LITERAL:
 
-# 540 "pratt-parser.c"
+# 542 "pratt-parser.c"
     case TOKEN_TYPE_CHARACTER_LITERAL:
 
-# 541 "pratt-parser.c"
+# 543 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_LITERAL, PRECEDENCE_PRIMARY);
 
-# 544 "pratt-parser.c"
+# 546 "pratt-parser.c"
     case TOKEN_TYPE_PUNCTUATION:
 
-# 545 "pratt-parser.c"
+# 547 "pratt-parser.c"
     break;
 
-# 547 "pratt-parser.c"
+# 549 "pratt-parser.c"
     default:
 
-# 548 "pratt-parser.c"
+# 550 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_UNKNOWN, PRECEDENCE_UNKNOWN);
   }
 
-# 552 "pratt-parser.c"
+# 554 "pratt-parser.c"
   if (token_matches(token, "("))
 
-# 552 "pratt-parser.c"
+# 554 "pratt-parser.c"
   {
-
-# 553 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_SUB_EXPRESSION, PRECEDENCE_PRIMARY);
-  }
+    uint64_t saved_position = (pstate->position);
 
 # 558 "pratt-parser.c"
-  if (((((((((token_matches(token, "+")||token_matches(token, "-"))||token_matches(token, "~"))||token_matches(token, "!"))||token_matches(token, "!"))||token_matches(token, "++"))||token_matches(token, "--"))||token_matches(token, "*"))||token_matches(token, "&")))
+    if (parse_compound_literal(pstate))
+
+# 558 "pratt-parser.c"
+    {
+
+# 559 "pratt-parser.c"
+      pstate_rollback(pstate, saved_position);
+
+# 560 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_LITERAL, PRECEDENCE_PRIMARY);
+    }
+    else
 
 # 562 "pratt-parser.c"
-  {
+    {
 
 # 563 "pratt-parser.c"
+      pstate_ignore_error(pstate);
+
+# 564 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_SUB_EXPRESSION, PRECEDENCE_PRIMARY);
+    }
+  }
+
+# 570 "pratt-parser.c"
+  if (((((((((token_matches(token, "+")||token_matches(token, "-"))||token_matches(token, "~"))||token_matches(token, "!"))||token_matches(token, "!"))||token_matches(token, "++"))||token_matches(token, "--"))||token_matches(token, "*"))||token_matches(token, "&")))
+
+# 574 "pratt-parser.c"
+  {
+
+# 575 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_PREFIX_OPERATOR, PRECEDENCE_UNARY);
   }
 
-# 567 "pratt-parser.c"
+# 579 "pratt-parser.c"
   return ((pratt_parser_instruction_t) {0});
 }
 
 
-# 577 "pratt-parser.c"
+# 589 "pratt-parser.c"
 pratt_parser_instruction_t get_infix_instruction(token_t* token)
-# 577 "pratt-parser.c"
+# 589 "pratt-parser.c"
 {
 
-# 578 "pratt-parser.c"
+# 590 "pratt-parser.c"
   if ((token_matches(token, "+")||token_matches(token, "-")))
 
-# 578 "pratt-parser.c"
+# 590 "pratt-parser.c"
   {
 
-# 579 "pratt-parser.c"
+# 591 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_ADDITIVE);
   }
 
-# 582 "pratt-parser.c"
+# 594 "pratt-parser.c"
   if (((token_matches(token, "*")||token_matches(token, "/"))||token_matches(token, "%")))
-
-# 583 "pratt-parser.c"
-  {
-
-# 584 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_MULTIPICITIVE);
-  }
-
-# 587 "pratt-parser.c"
-  if ((token_matches(token, "<<")||token_matches(token, ">>")))
-
-# 587 "pratt-parser.c"
-  {
-
-# 588 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_SHIFT);
-  }
-
-# 591 "pratt-parser.c"
-  if (token_matches(token, "||"))
-
-# 591 "pratt-parser.c"
-  {
-
-# 592 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_LOGICAL_OR);
-  }
-
-# 595 "pratt-parser.c"
-  if (token_matches(token, "&&"))
 
 # 595 "pratt-parser.c"
   {
 
 # 596 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_LOGICAL_AND);
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_MULTIPICITIVE);
   }
 
 # 599 "pratt-parser.c"
-  if (token_matches(token, "|"))
+  if ((token_matches(token, "<<")||token_matches(token, ">>")))
 
 # 599 "pratt-parser.c"
   {
 
 # 600 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_OR);
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_SHIFT);
   }
 
 # 603 "pratt-parser.c"
-  if (token_matches(token, "^"))
+  if (token_matches(token, "||"))
 
 # 603 "pratt-parser.c"
   {
 
 # 604 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_XOR);
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_LOGICAL_OR);
   }
 
 # 607 "pratt-parser.c"
-  if (token_matches(token, "&"))
+  if (token_matches(token, "&&"))
 
 # 607 "pratt-parser.c"
   {
 
 # 608 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_AND);
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_LOGICAL_AND);
   }
 
 # 611 "pratt-parser.c"
-  if ((token_matches(token, "==")||token_matches(token, "!=")))
+  if (token_matches(token, "|"))
 
 # 611 "pratt-parser.c"
   {
 
 # 612 "pratt-parser.c"
-    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_EQUALITY);
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_OR);
   }
 
 # 615 "pratt-parser.c"
-  if ((((token_matches(token, "<")||token_matches(token, "<="))||token_matches(token, ">"))||token_matches(token, ">=")))
+  if (token_matches(token, "^"))
 
-# 616 "pratt-parser.c"
+# 615 "pratt-parser.c"
   {
 
-# 617 "pratt-parser.c"
+# 616 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_XOR);
+  }
+
+# 619 "pratt-parser.c"
+  if (token_matches(token, "&"))
+
+# 619 "pratt-parser.c"
+  {
+
+# 620 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_AND);
+  }
+
+# 623 "pratt-parser.c"
+  if ((token_matches(token, "==")||token_matches(token, "!=")))
+
+# 623 "pratt-parser.c"
+  {
+
+# 624 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_EQUALITY);
+  }
+
+# 627 "pratt-parser.c"
+  if ((((token_matches(token, "<")||token_matches(token, "<="))||token_matches(token, ">"))||token_matches(token, ">=")))
+
+# 628 "pratt-parser.c"
+  {
+
+# 629 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_RELATIONAL);
   }
 
-# 620 "pratt-parser.c"
+# 632 "pratt-parser.c"
   if ((token_matches(token, "->")||token_matches(token, ".")))
 
-# 620 "pratt-parser.c"
+# 632 "pratt-parser.c"
   {
 
-# 621 "pratt-parser.c"
+# 633 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_POSTFIX);
   }
 
-# 624 "pratt-parser.c"
+# 636 "pratt-parser.c"
   if ((token_matches(token, "++")||token_matches(token, "--")))
 
-# 624 "pratt-parser.c"
+# 636 "pratt-parser.c"
   {
 
-# 625 "pratt-parser.c"
+# 637 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_POSTFIX_OPERATOR, PRECEDENCE_POSTFIX);
   }
 
-# 628 "pratt-parser.c"
+# 640 "pratt-parser.c"
   if (((((((((((token_matches(token, "=")||token_matches(token, "+="))||token_matches(token, "-="))||token_matches(token, "*="))||token_matches(token, "/="))||token_matches(token, "%="))||token_matches(token, "&="))||token_matches(token, "^="))||token_matches(token, "|="))||token_matches(token, "<<="))||token_matches(token, ">>=")))
 
-# 633 "pratt-parser.c"
+# 645 "pratt-parser.c"
   {
 
-# 634 "pratt-parser.c"
+# 646 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_ASSIGNMENT);
   }
 
-# 637 "pratt-parser.c"
+# 649 "pratt-parser.c"
   if (token_matches(token, "["))
 
-# 637 "pratt-parser.c"
+# 649 "pratt-parser.c"
   {
 
-# 638 "pratt-parser.c"
+# 650 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_INDEX_EXPRESSION, PRECEDENCE_POSTFIX);
   }
 
-# 641 "pratt-parser.c"
+# 653 "pratt-parser.c"
   if (token_matches(token, "("))
 
-# 641 "pratt-parser.c"
+# 653 "pratt-parser.c"
   {
 
-# 642 "pratt-parser.c"
+# 654 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_CALL, PRECEDENCE_POSTFIX);
   }
 
-# 644 "pratt-parser.c"
+# 656 "pratt-parser.c"
   if (token_matches(token, "?"))
 
-# 644 "pratt-parser.c"
+# 656 "pratt-parser.c"
   {
 
-# 645 "pratt-parser.c"
+# 657 "pratt-parser.c"
     return make_parser_instruction(token, PRATT_PARSE_CONDITIONAL, PRECEDENCE_CONDITIONAL);
   }
 
-# 649 "pratt-parser.c"
+# 661 "pratt-parser.c"
   return ((pratt_parser_instruction_t) {0});
 }
 
 
-# 663 "pratt-parser.c"
+# 675 "pratt-parser.c"
 associativity_t precedence_to_associativity(precedence_t precedence)
-# 663 "pratt-parser.c"
+# 675 "pratt-parser.c"
 {
 
-# 664 "pratt-parser.c"
+# 676 "pratt-parser.c"
   switch (precedence)
 
-# 664 "pratt-parser.c"
+# 676 "pratt-parser.c"
   {
 
-# 665 "pratt-parser.c"
-    case PRECEDENCE_PRIMARY:
-
-# 666 "pratt-parser.c"
-    return LEFT_TO_RIGHT;
-
-# 667 "pratt-parser.c"
-    case PRECEDENCE_POSTFIX:
-
-# 668 "pratt-parser.c"
-    return LEFT_TO_RIGHT;
-
-# 669 "pratt-parser.c"
-    case PRECEDENCE_UNARY:
-
-# 670 "pratt-parser.c"
-    return RIGHT_TO_LEFT;
-
-# 671 "pratt-parser.c"
-    case PRECEDENCE_MULTIPICITIVE:
-
-# 672 "pratt-parser.c"
-    return LEFT_TO_RIGHT;
-
-# 673 "pratt-parser.c"
-    case PRECEDENCE_ADDITIVE:
-
-# 674 "pratt-parser.c"
-    return LEFT_TO_RIGHT;
-
-# 675 "pratt-parser.c"
-    case PRECEDENCE_SHIFT:
-
-# 676 "pratt-parser.c"
-    return LEFT_TO_RIGHT;
-
 # 677 "pratt-parser.c"
-    case PRECEDENCE_RELATIONAL:
+    case PRECEDENCE_PRIMARY:
 
 # 678 "pratt-parser.c"
     return LEFT_TO_RIGHT;
 
 # 679 "pratt-parser.c"
-    case PRECEDENCE_EQUALITY:
+    case PRECEDENCE_POSTFIX:
 
 # 680 "pratt-parser.c"
     return LEFT_TO_RIGHT;
 
 # 681 "pratt-parser.c"
-    case PRECEDENCE_AND:
+    case PRECEDENCE_UNARY:
 
 # 682 "pratt-parser.c"
-    return LEFT_TO_RIGHT;
+    return RIGHT_TO_LEFT;
 
 # 683 "pratt-parser.c"
-    case PRECEDENCE_XOR:
+    case PRECEDENCE_MULTIPICITIVE:
 
 # 684 "pratt-parser.c"
     return LEFT_TO_RIGHT;
 
 # 685 "pratt-parser.c"
-    case PRECEDENCE_OR:
+    case PRECEDENCE_ADDITIVE:
 
 # 686 "pratt-parser.c"
     return LEFT_TO_RIGHT;
 
 # 687 "pratt-parser.c"
-    case PRECEDENCE_LOGICAL_AND:
+    case PRECEDENCE_SHIFT:
 
 # 688 "pratt-parser.c"
     return LEFT_TO_RIGHT;
 
 # 689 "pratt-parser.c"
-    case PRECEDENCE_LOGICAL_OR:
+    case PRECEDENCE_RELATIONAL:
 
 # 690 "pratt-parser.c"
     return LEFT_TO_RIGHT;
 
 # 691 "pratt-parser.c"
-    case PRECEDENCE_CONDITIONAL:
+    case PRECEDENCE_EQUALITY:
 
 # 692 "pratt-parser.c"
-    return RIGHT_TO_LEFT;
+    return LEFT_TO_RIGHT;
 
 # 693 "pratt-parser.c"
-    case PRECEDENCE_ASSIGNMENT:
+    case PRECEDENCE_AND:
 
 # 694 "pratt-parser.c"
-    return RIGHT_TO_LEFT;
+    return LEFT_TO_RIGHT;
 
 # 695 "pratt-parser.c"
-    case PRECEDENCE_COMMA:
+    case PRECEDENCE_XOR:
 
 # 696 "pratt-parser.c"
     return LEFT_TO_RIGHT;
 
 # 697 "pratt-parser.c"
-    default:
+    case PRECEDENCE_OR:
 
 # 698 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 699 "pratt-parser.c"
+    case PRECEDENCE_LOGICAL_AND:
+
+# 700 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 701 "pratt-parser.c"
+    case PRECEDENCE_LOGICAL_OR:
+
+# 702 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 703 "pratt-parser.c"
+    case PRECEDENCE_CONDITIONAL:
+
+# 704 "pratt-parser.c"
+    return RIGHT_TO_LEFT;
+
+# 705 "pratt-parser.c"
+    case PRECEDENCE_ASSIGNMENT:
+
+# 706 "pratt-parser.c"
+    return RIGHT_TO_LEFT;
+
+# 707 "pratt-parser.c"
+    case PRECEDENCE_COMMA:
+
+# 708 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 709 "pratt-parser.c"
+    default:
+
+# 710 "pratt-parser.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 700 "pratt-parser.c"
+# 712 "pratt-parser.c"
   return 0;
 }
 
@@ -21120,389 +21437,447 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate)
 }
 
 
-# 57 "literal-parser.c"
+# 73 "literal-parser.c"
 pstatus_t parse_literal_node(pstate_t* pstate)
-# 57 "literal-parser.c"
+# 73 "literal-parser.c"
 {
   uint64_t saved_position = (pstate->position);
 
-# 59 "literal-parser.c"
+# 75 "literal-parser.c"
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_STRING_LITERAL))
 
-# 59 "literal-parser.c"
+# 75 "literal-parser.c"
   {
     literal_node_t* result = malloc_literal_node();
 
-# 61 "literal-parser.c"
+# 77 "literal-parser.c"
     ((result->tokens)=make_value_array(1));
 
-# 62 "literal-parser.c"
+# 78 "literal-parser.c"
     value_array_add((result->tokens), ptr_to_value(pstate_get_result_token(pstate)));
 
-# 64 "literal-parser.c"
+# 80 "literal-parser.c"
     while (pstate_expect_token_type(pstate, TOKEN_TYPE_STRING_LITERAL))
 
-# 64 "literal-parser.c"
+# 80 "literal-parser.c"
     {
 
-# 65 "literal-parser.c"
+# 81 "literal-parser.c"
       value_array_add((result->tokens), ptr_to_value(pstate_get_result_token(pstate)));
     }
 
-# 68 "literal-parser.c"
+# 84 "literal-parser.c"
     pstate_ignore_error(pstate);
 
-# 69 "literal-parser.c"
+# 85 "literal-parser.c"
     return pstate_set_result_node(pstate, to_node(result));
   }
 
-# 72 "literal-parser.c"
+# 88 "literal-parser.c"
   if (((pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_INTEGER_LITERAL)||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_FLOAT_LITERAL))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_CHARACTER_LITERAL)))
 
-# 77 "literal-parser.c"
+# 93 "literal-parser.c"
   {
     literal_node_t* result = malloc_literal_node();
 
-# 79 "literal-parser.c"
+# 95 "literal-parser.c"
     ((result->tokens)=make_value_array(1));
 
-# 80 "literal-parser.c"
+# 96 "literal-parser.c"
     value_array_add((result->tokens), ptr_to_value(pstate_get_result_token(pstate)));
 
-# 82 "literal-parser.c"
+# 98 "literal-parser.c"
     return pstate_set_result_node(pstate, to_node(result));
   }
   else
-
-# 83 "literal-parser.c"
-  {
-
-# 84 "literal-parser.c"
-    pstate_ignore_error(pstate);
-  }
-
-# 87 "literal-parser.c"
-  if (pstate_match_token_string(pstate, "{"))
-
-# 87 "literal-parser.c"
-  {
-
-# 88 "literal-parser.c"
-    if ((!parse_balanced_construct(pstate)))
-
-# 88 "literal-parser.c"
-    {
-
-# 89 "literal-parser.c"
-      return pstate_propagate_error(pstate, saved_position);
-    }
-    literal_node_t* result = malloc_literal_node();
-
-# 92 "literal-parser.c"
-    ((result->initializer_node)=pstate_get_result_node(pstate));
-
-# 93 "literal-parser.c"
-    return pstate_set_result_node(pstate, to_node(result));
-  }
-
-# 99 "literal-parser.c"
-  if (pstate_match_token_string(pstate, "compound_literal"))
 
 # 99 "literal-parser.c"
   {
 
 # 100 "literal-parser.c"
-    pstate_advance(pstate);
+    pstate_ignore_error(pstate);
+  }
 
-# 101 "literal-parser.c"
-    if (((!pstate_expect_token_string(pstate, "("))||(!parse_type_node(pstate))))
+# 103 "literal-parser.c"
+  if (pstate_match_token_string(pstate, "{"))
 
-# 101 "literal-parser.c"
+# 103 "literal-parser.c"
+  {
+
+# 104 "literal-parser.c"
+    if ((!parse_balanced_construct(pstate)))
+
+# 104 "literal-parser.c"
     {
 
-# 102 "literal-parser.c"
+# 105 "literal-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+    literal_node_t* result = malloc_literal_node();
+
+# 108 "literal-parser.c"
+    ((result->initializer_node)=pstate_get_result_node(pstate));
+
+# 109 "literal-parser.c"
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+
+# 115 "literal-parser.c"
+  if (pstate_match_token_string(pstate, "compound_literal"))
+
+# 115 "literal-parser.c"
+  {
+
+# 116 "literal-parser.c"
+    pstate_advance(pstate);
+
+# 117 "literal-parser.c"
+    if (((!pstate_expect_token_string(pstate, "("))||(!parse_type_node(pstate))))
+
+# 117 "literal-parser.c"
+    {
+
+# 118 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
     parse_node_t* type_node = pstate_get_result_node(pstate);
 
-# 105 "literal-parser.c"
+# 121 "literal-parser.c"
     if ((!pstate_expect_token_string(pstate, ",")))
 
-# 105 "literal-parser.c"
+# 121 "literal-parser.c"
     {
 
-# 106 "literal-parser.c"
+# 122 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
 
-# 108 "literal-parser.c"
+# 124 "literal-parser.c"
     if ((!parse_balanced_construct(pstate)))
 
-# 108 "literal-parser.c"
+# 124 "literal-parser.c"
     {
 
-# 109 "literal-parser.c"
+# 125 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
     parse_node_t* initializer_node = pstate_get_result_node(pstate);
 
-# 112 "literal-parser.c"
+# 128 "literal-parser.c"
     if ((!pstate_expect_token_string(pstate, ")")))
 
-# 112 "literal-parser.c"
+# 128 "literal-parser.c"
     {
 
-# 113 "literal-parser.c"
+# 129 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
     literal_node_t* result = malloc_literal_node();
 
-# 117 "literal-parser.c"
+# 133 "literal-parser.c"
     ((result->initializer_node)=initializer_node);
 
-# 118 "literal-parser.c"
+# 134 "literal-parser.c"
     ((result->initializer_type)=type_node);
 
-# 119 "literal-parser.c"
+# 135 "literal-parser.c"
     return pstate_set_result_node(pstate, to_node(result));
   }
 
-# 122 "literal-parser.c"
+# 138 "literal-parser.c"
   if (parse_compound_literal(pstate))
 
-# 122 "literal-parser.c"
+# 138 "literal-parser.c"
   {
 
-# 123 "literal-parser.c"
+# 139 "literal-parser.c"
     return true;
   }
   else
 
-# 124 "literal-parser.c"
+# 140 "literal-parser.c"
   {
 
-# 125 "literal-parser.c"
+# 141 "literal-parser.c"
     pstate_ignore_error(pstate);
   }
 
-# 128 "literal-parser.c"
+# 144 "literal-parser.c"
   if (((((((pstate_expect_token_string(pstate, "NULL")||pstate_expect_token_string(pstate_ignore_error(pstate), "nullptr"))||pstate_expect_token_string(pstate_ignore_error(pstate), "true"))||pstate_expect_token_string(pstate_ignore_error(pstate), "false"))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_INTEGER_LITERAL))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_FLOAT_LITERAL))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_CHARACTER_LITERAL)))
 
-# 137 "literal-parser.c"
+# 153 "literal-parser.c"
   {
     literal_node_t* result = malloc_literal_node();
 
-# 139 "literal-parser.c"
+# 155 "literal-parser.c"
     ((result->token)=pstate_get_result_token(pstate));
 
-# 140 "literal-parser.c"
+# 156 "literal-parser.c"
     return pstate_set_result_node(pstate, to_node(result));
   }
 
-# 143 "literal-parser.c"
+# 159 "literal-parser.c"
   return pstate_error(pstate, saved_position, PARSE_ERROR_NOT_LITERAL_NODE);
 }
 
 
-# 147 "literal-parser.c"
+# 163 "literal-parser.c"
 pstatus_t parse_compound_literal(pstate_t* pstate)
-# 147 "literal-parser.c"
+# 163 "literal-parser.c"
 {
+
+# 164 "literal-parser.c"
+  log_info("Trying to parse a casted compound literal...");
   uint64_t saved_position = (pstate->position);
 
-# 149 "literal-parser.c"
+# 167 "literal-parser.c"
   if ((!pstate_expect_token_string(pstate, "(")))
 
-# 149 "literal-parser.c"
+# 167 "literal-parser.c"
   {
 
-# 150 "literal-parser.c"
+# 168 "literal-parser.c"
+    log_info("Failed to match expected token '('...");
+
+# 169 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
 
-# 152 "literal-parser.c"
+# 171 "literal-parser.c"
+  log_info("MATCHED token '('...");
+
+# 172 "literal-parser.c"
   if ((!parse_type_node(pstate)))
 
-# 152 "literal-parser.c"
+# 172 "literal-parser.c"
   {
 
-# 153 "literal-parser.c"
+# 173 "literal-parser.c"
+    log_info("Failed to match a parse type node...");
+
+# 174 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 176 "literal-parser.c"
+  log_info("MATCHED type...");
   parse_node_t* type_node = pstate_get_result_node(pstate);
 
-# 156 "literal-parser.c"
+# 178 "literal-parser.c"
   if ((!pstate_expect_token_string(pstate, ")")))
 
-# 156 "literal-parser.c"
+# 178 "literal-parser.c"
   {
 
-# 157 "literal-parser.c"
+# 179 "literal-parser.c"
+    log_info("Failed to match expected token ')'...");
+
+# 180 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
 
-# 159 "literal-parser.c"
+# 182 "literal-parser.c"
+  log_info("MATCHED ')'...");
+
+# 183 "literal-parser.c"
   if ((!pstate_expect_token_string(pstate, "{")))
 
-# 159 "literal-parser.c"
+# 183 "literal-parser.c"
   {
 
-# 160 "literal-parser.c"
+# 184 "literal-parser.c"
+    log_info("Failed to match expected token '{'...");
+
+# 185 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 187 "literal-parser.c"
+  log_info("MATCHED '{'...");
   node_list_t initializers = ((node_list_t) {0});
 
-# 164 "literal-parser.c"
+# 190 "literal-parser.c"
   while (true)
 
-# 164 "literal-parser.c"
+# 190 "literal-parser.c"
   {
 
-# 165 "literal-parser.c"
+# 191 "literal-parser.c"
     if (pstate_is_eof(pstate))
 
-# 165 "literal-parser.c"
+# 191 "literal-parser.c"
     {
 
-# 166 "literal-parser.c"
+# 192 "literal-parser.c"
+      log_info("Didn't find a matching '}' before EOF...");
+
+# 193 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
 
-# 168 "literal-parser.c"
+# 195 "literal-parser.c"
     if (pstate_match_token_string(pstate, "}"))
 
-# 168 "literal-parser.c"
+# 195 "literal-parser.c"
     {
 
-# 169 "literal-parser.c"
+# 196 "literal-parser.c"
+      log_info("MATCHED expected token '}'...");
+
+# 197 "literal-parser.c"
       pstate_advance(pstate);
 
-# 170 "literal-parser.c"
+# 198 "literal-parser.c"
       break;
     }
 
-# 173 "literal-parser.c"
+# 201 "literal-parser.c"
     if ((node_list_length(initializers)>0))
 
-# 173 "literal-parser.c"
+# 201 "literal-parser.c"
     {
 
-# 174 "literal-parser.c"
-      if (pstate_match_token_string(pstate, ","))
+# 202 "literal-parser.c"
+      if ((!pstate_expect_token_string(pstate, ",")))
 
-# 174 "literal-parser.c"
+# 202 "literal-parser.c"
       {
 
-# 175 "literal-parser.c"
-        pstate_advance(pstate);
-      }
-      else
+# 203 "literal-parser.c"
+        log_info("Failed to match expected token ','...");
 
-# 176 "literal-parser.c"
-      {
-
-# 177 "literal-parser.c"
+# 204 "literal-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 206 "literal-parser.c"
+      log_info("MATCHED expected token ','...");
     }
 
-# 181 "literal-parser.c"
+# 209 "literal-parser.c"
     if (parse_designated_initializer_node(pstate))
 
-# 181 "literal-parser.c"
+# 209 "literal-parser.c"
     {
+
+# 210 "literal-parser.c"
+      log_info("MATCHED designated initializer...");
       parse_node_t* initializer = pstate_get_result_node(pstate);
 
-# 183 "literal-parser.c"
+# 212 "literal-parser.c"
       node_list_add_node((&initializers), initializer);
     }
     else
 
-# 184 "literal-parser.c"
-    if (parse_literal_node(pstate))
-
-# 184 "literal-parser.c"
+# 213 "literal-parser.c"
     {
-      parse_node_t* initializer = pstate_get_result_node(pstate);
 
-# 186 "literal-parser.c"
-      node_list_add_node((&initializers), initializer);
+# 214 "literal-parser.c"
+      log_info("Failed to match a designated initializer (trying literal node)...");
+
+# 216 "literal-parser.c"
+      if (parse_literal_node(pstate))
+
+# 216 "literal-parser.c"
+      {
+
+# 217 "literal-parser.c"
+        log_info("MATCHED literal...");
+        parse_node_t* initializer = pstate_get_result_node(pstate);
+
+# 219 "literal-parser.c"
+        node_list_add_node((&initializers), initializer);
+      }
+      else
+
+# 220 "literal-parser.c"
+      {
+
+# 221 "literal-parser.c"
+        log_info("Failed to match designated initializer or literal...");
+
+# 222 "literal-parser.c"
+        return pstate_error(pstate, saved_position, PARSE_ERROR_BAD_INITIALIZER);
+      }
     }
   }
   compound_literal_node_t* result = malloc_compound_literal_node();
 
-# 191 "literal-parser.c"
+# 229 "literal-parser.c"
   ((result->type_node)=type_node);
 
-# 192 "literal-parser.c"
+# 230 "literal-parser.c"
   ((result->initializers)=initializers);
 
-# 193 "literal-parser.c"
+# 231 "literal-parser.c"
   pstate_set_result_node(pstate, to_node(result));
 
-# 195 "literal-parser.c"
+# 233 "literal-parser.c"
   return true;
 }
 
 
-# 199 "literal-parser.c"
+# 237 "literal-parser.c"
 pstatus_t parse_designated_initializer_node(pstate_t* pstate)
-# 199 "literal-parser.c"
+# 237 "literal-parser.c"
 {
+
+# 238 "literal-parser.c"
+  log_info("Trying to parse a designated_initializer_node...");
   uint64_t saved_position = (pstate->position);
 
-# 204 "literal-parser.c"
+# 244 "literal-parser.c"
   if ((!pstate_expect_token_string(pstate, ".")))
 
-# 204 "literal-parser.c"
+# 244 "literal-parser.c"
   {
 
-# 205 "literal-parser.c"
+# 245 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
 
-# 207 "literal-parser.c"
+# 247 "literal-parser.c"
   if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
 
-# 207 "literal-parser.c"
+# 247 "literal-parser.c"
   {
 
-# 208 "literal-parser.c"
+# 248 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
   token_t* member_name = pstate_get_result_token(pstate);
 
-# 213 "literal-parser.c"
+# 253 "literal-parser.c"
   if ((!pstate_expect_token_string(pstate, "=")))
 
-# 213 "literal-parser.c"
+# 253 "literal-parser.c"
   {
 
-# 214 "literal-parser.c"
+# 254 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
 
-# 217 "literal-parser.c"
+# 257 "literal-parser.c"
   if ((!parse_expression(pstate)))
 
-# 217 "literal-parser.c"
+# 257 "literal-parser.c"
   {
 
-# 218 "literal-parser.c"
+# 258 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
   designated_initializer_node_t* result = malloc_designated_initializer_node();
 
-# 222 "literal-parser.c"
+# 262 "literal-parser.c"
   ((result->member_name)=member_name);
 
-# 223 "literal-parser.c"
+# 263 "literal-parser.c"
   ((result->value)=pstate_get_result_node(pstate));
 
-# 224 "literal-parser.c"
+# 264 "literal-parser.c"
   pstate_set_result_node(pstate, to_node(result));
 
-# 226 "literal-parser.c"
+# 266 "literal-parser.c"
   return true;
 }
 
@@ -21735,102 +22110,1409 @@ printer_t* printer_decrease_indent(printer_t* printer)
 }
 
 
-# 36 "main.c"
-void do_print_tokens(value_array_t* tokens, char* message)
-# 36 "main.c"
+# 25 "linearizer.c"
+void linearize_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node)
+# 26 "linearizer.c"
 {
 
-# 37 "main.c"
-  if (FLAG_print_tokens_show_tokens)
+# 27 "linearizer.c"
+  switch ((node->tag))
 
-# 37 "main.c"
+# 27 "linearizer.c"
   {
-    buffer_t* buffer = make_buffer(((tokens->length)*60));
 
-# 42 "main.c"
-    for (
-      int j = 0;
-      (j<(tokens->length));
-      (j++))
+# 28 "linearizer.c"
+    case PARSE_NODE_BLOCK:
 
-# 42 "main.c"
-    {
-      token_t* token = token_at(tokens, j);
+# 29 "linearizer.c"
+    linearize_block(target_block, tmp_provider, to_block_node(node));
 
-# 44 "main.c"
-      (buffer=append_token_debug_string(buffer, (*token)));
+# 30 "linearizer.c"
+    break;
 
-# 45 "main.c"
-      (buffer=buffer_append_string(buffer, "\n"));
-    }
+# 31 "linearizer.c"
+    case PARSE_NODE_BREAK_STATEMENT:
 
-# 47 "main.c"
-    fprintf(stdout, "** %s **\n%s\n", message, buffer_to_c_string(buffer));
+# 32 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 33 "linearizer.c"
+    break;
+
+# 34 "linearizer.c"
+    case PARSE_NODE_CALL:
+
+# 35 "linearizer.c"
+    break;
+
+# 36 "linearizer.c"
+    case PARSE_NODE_CASE_LABEL:
+
+# 37 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 38 "linearizer.c"
+    break;
+
+# 39 "linearizer.c"
+    case PARSE_NODE_COMPOUND_LITERAL:
+
+# 40 "linearizer.c"
+    break;
+
+# 41 "linearizer.c"
+    case PARSE_NODE_CONDITIONAL:
+
+# 43 "linearizer.c"
+    break;
+
+# 44 "linearizer.c"
+    case PARSE_NODE_CONTINUE_STATEMENT:
+
+# 45 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 46 "linearizer.c"
+    break;
+
+# 47 "linearizer.c"
+    case PARSE_NODE_DEFAULT_LABEL:
+
+# 48 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 49 "linearizer.c"
+    break;
+
+# 50 "linearizer.c"
+    case PARSE_NODE_DESIGNATED_INITIALIZER:
+
+# 51 "linearizer.c"
+    break;
+
+# 52 "linearizer.c"
+    case PARSE_NODE_DO_STATEMENT:
+
+# 53 "linearizer.c"
+    break;
+
+# 54 "linearizer.c"
+    case PARSE_NODE_EMPTY_STATEMENT:
+
+# 57 "linearizer.c"
+    break;
+
+# 58 "linearizer.c"
+    case PARSE_NODE_EXPRESSION_STATEMENT:
+
+# 61 "linearizer.c"
+    break;
+
+# 62 "linearizer.c"
+    case PARSE_NODE_FOR_STATEMENT:
+
+# 64 "linearizer.c"
+    break;
+
+# 65 "linearizer.c"
+    case PARSE_NODE_IF_STATEMENT:
+
+# 67 "linearizer.c"
+    break;
+
+# 68 "linearizer.c"
+    case PARSE_NODE_LABEL_STATEMENT:
+
+# 69 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 70 "linearizer.c"
+    break;
+
+# 71 "linearizer.c"
+    case PARSE_NODE_RETURN_STATEMENT:
+
+# 72 "linearizer.c"
+    break;
+
+# 73 "linearizer.c"
+    case PARSE_NODE_SWITCH_STATEMENT:
+
+# 74 "linearizer.c"
+    break;
+
+# 75 "linearizer.c"
+    case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 76 "linearizer.c"
+    break;
+
+# 77 "linearizer.c"
+    case PARSE_NODE_WHILE_STATEMENT:
+
+# 78 "linearizer.c"
+    break;
+
+# 80 "linearizer.c"
+    case PARSE_NODE_BALANCED_CONSTRUCT:
+
+# 81 "linearizer.c"
+    default:
+
+# 82 "linearizer.c"
+    log_fatal("Unexpected input node to linearizer %s", parse_node_type_to_string((node->tag)));
+
+# 84 "linearizer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 51 "main.c"
-void print_tokens(void)
-# 51 "main.c"
+# 94 "linearizer.c"
+void linearize_expression(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node, token_t* target)
+# 96 "linearizer.c"
 {
 
+# 97 "linearizer.c"
+  switch ((node->tag))
+
+# 97 "linearizer.c"
+  {
+
+# 98 "linearizer.c"
+    case PARSE_NODE_CALL:
+
+# 99 "linearizer.c"
+    break;
+
+# 100 "linearizer.c"
+    case PARSE_NODE_COMPOUND_LITERAL:
+
+# 101 "linearizer.c"
+    break;
+
+# 102 "linearizer.c"
+    case PARSE_NODE_CONDITIONAL:
+
+# 104 "linearizer.c"
+    break;
+
+# 105 "linearizer.c"
+    case PARSE_NODE_IDENTIFIER:
+
+# 107 "linearizer.c"
+    break;
+
+# 108 "linearizer.c"
+    case PARSE_NODE_LITERAL:
+
+# 109 "linearizer.c"
+    break;
+
+# 110 "linearizer.c"
+    case PARSE_NODE_OPERATOR:
+
+# 111 "linearizer.c"
+    break;
+
+# 112 "linearizer.c"
+    case PARSE_NODE_TYPE:
+
+# 113 "linearizer.c"
+    break;
+
+# 114 "linearizer.c"
+    case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 115 "linearizer.c"
+    break;
+
+# 116 "linearizer.c"
+    case PARSE_NODE_BALANCED_CONSTRUCT:
+
+# 117 "linearizer.c"
+    break;
+
+# 118 "linearizer.c"
+    default:
+
+# 119 "linearizer.c"
+    log_fatal("Unexpected input node to linearizer %s", parse_node_type_to_string((node->tag)));
+
+# 121 "linearizer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 125 "linearizer.c"
+void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider, block_node_t* node)
+# 126 "linearizer.c"
+{
+  uint64_t length = node_list_length((node->statements));
+
+# 128 "linearizer.c"
+  for (
+    uint64_t i = 0;
+    (i<length);
+    (i++))
+
+# 128 "linearizer.c"
+  {
+
+# 129 "linearizer.c"
+    linearize_statement(target_block, tmp_provider, node_list_get((node->statements), i));
+  }
+}
+
+
+# 158 "linearizer.c"
+tmp_provider_t* make_tmp_provider()
+# 158 "linearizer.c"
+{
+  tmp_provider_t* result = malloc_struct(tmp_provider_t);
+
+# 160 "linearizer.c"
+  ((result->get)=(&tmp_provider_get));
+
+# 161 "linearizer.c"
+  return result;
+}
+
+
+# 164 "linearizer.c"
+token_t* tmp_provider_get(tmp_provider_t* data)
+# 164 "linearizer.c"
+{
+  token_t* result = malloc_struct(token_t);
+
+# 166 "linearizer.c"
+  ((result->buffer)=make_buffer(8));
+
+# 167 "linearizer.c"
+  buffer_printf((result->buffer), "tmp__%d", ((data->count)++));
+
+# 168 "linearizer.c"
+  ((result->end)=((result->buffer)->length));
+
+# 169 "linearizer.c"
+  return result;
+}
+
+
+# 15 "main.c"
+int main(int argc, char** argv)
+# 15 "main.c"
+{
+
+# 16 "main.c"
+  configure_fatal_errors(((fatal_error_config_t) {
+                                                 .catch_sigsegv = true,
+                                             }));
+
+# 20 "main.c"
+  logger_init();
+
+# 22 "main.c"
+  configure_flags();
+  char* error = flag_parse_command_line(argc, argv);
+
+# 25 "main.c"
+  if (error)
+
+# 25 "main.c"
+  {
+
+# 26 "main.c"
+    flag_print_help(stderr, error);
+
+# 27 "main.c"
+    exit(1);
+  }
+
+# 30 "main.c"
+  if (FLAG_print_command_line)
+
+# 30 "main.c"
+  {
+
+# 31 "main.c"
+    fprintf(stderr, "Command Line:");
+
+# 32 "main.c"
+    for (
+      int i = 0;
+      (i<argc);
+      (i++))
+
+# 32 "main.c"
+    {
+
+# 33 "main.c"
+      fprintf(stderr, " %s", (argv[i]));
+    }
+
+# 35 "main.c"
+    fprintf(stderr, "\n");
+  }
+
+# 38 "main.c"
+  if ((FLAG_command==((void *)0)))
+
+# 38 "main.c"
+  {
+
+# 43 "main.c"
+    fatal_error(ERROR_BAD_COMMAND_LINE);
+  }
+  else
+
+# 44 "main.c"
+  if (string_equal("archive", FLAG_command))
+
+# 44 "main.c"
+  {
+
+# 45 "main.c"
+    archive_command();
+  }
+  else
+
+# 46 "main.c"
+  if (string_equal("generate-header-file", FLAG_command))
+
+# 46 "main.c"
+  {
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+
+# 48 "main.c"
+    generate_header_file_command(command_line_comment);
+  }
+  else
+
+# 49 "main.c"
+  if (string_equal("generate-library", FLAG_command))
+
+# 49 "main.c"
+  {
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+
+# 51 "main.c"
+    generate_library_command(command_line_comment);
+  }
+  else
+
 # 52 "main.c"
-  log_info("print_tokens()");
-  value_array_t* files = read_files(FLAG_files);
+  if (string_equal("build", FLAG_command))
+
+# 52 "main.c"
+  {
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+
+# 54 "main.c"
+    build_command(command_line_comment);
+  }
+  else
 
 # 55 "main.c"
+  if (string_equal("test", FLAG_command))
+
+# 55 "main.c"
+  {
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+
+# 57 "main.c"
+    test_command(command_line_comment);
+  }
+  else
+
+# 58 "main.c"
+  if (string_equal("print-tokens", FLAG_command))
+
+# 58 "main.c"
+  {
+
+# 59 "main.c"
+    print_tokens();
+  }
+  else
+
+# 60 "main.c"
+  {
+
+# 61 "main.c"
+    fprintf(stderr, "Unknown command: %s\n", FLAG_command);
+  }
+
+# 64 "main.c"
+  exit(0);
+}
+
+
+# 75 "main.c"
+buffer_t* command_line_args_to_buffer(int argc, char** argv)
+# 75 "main.c"
+{
+  buffer_t* output = make_buffer((argc*5));
+
+# 78 "main.c"
+  buffer_printf(output, "// Full Compiler Command Line:\n//\n");
+
+# 79 "main.c"
+  for (
+    int i = 0;
+    (i<argc);
+    (i++))
+
+# 79 "main.c"
+  {
+
+# 80 "main.c"
+    buffer_printf(output, "//%s%s\n", ((i>0) ? "    " : " "), (argv[i]));
+  }
+
+# 83 "main.c"
+  buffer_append_string(output, "\n");
+
+# 84 "main.c"
+  buffer_append_string(output, "// These checksums are currently easy to fake for example by using a\n");
+
+# 87 "main.c"
+  buffer_append_string(output, "// hacked git in the PATH at the time this compile was run.\n");
+
+# 89 "main.c"
+  buffer_append_string(output, "//\n");
+
+# 91 "main.c"
   for (
     int i = 0;
     (i<(FLAG_files->length));
     (i++))
 
-# 55 "main.c"
+# 91 "main.c"
+  {
+    char* filename = (value_array_get(FLAG_files, i).str);
+    buffer_t* git_hash = git_hash_object(filename);
+
+# 95 "main.c"
+    buffer_replace_all(git_hash, "\n", "");
+
+# 96 "main.c"
+    buffer_append_string(output, "// git cat-file -p ");
+
+# 97 "main.c"
+    buffer_append_buffer(output, git_hash);
+
+# 98 "main.c"
+    buffer_printf(output, " > %s\n", filename);
+  }
+
+# 101 "main.c"
+  return output;
+}
+
+
+# 8 "archive-command.c"
+void archive_command(void)
+# 8 "archive-command.c"
+{
+
+# 9 "archive-command.c"
+  generate_archive_file();
+
+# 10 "archive-command.c"
+  log_info("Exiting normally.");
+
+# 11 "archive-command.c"
+  exit(0);
+}
+
+
+# 14 "archive-command.c"
+void generate_archive_file(void)
+# 14 "archive-command.c"
+{
+
+# 15 "archive-command.c"
+  if ((FLAG_archive_output_file==((void *)0)))
+
+# 15 "archive-command.c"
+  {
+
+# 16 "archive-command.c"
+    log_fatal("Must specify the archive output file name");
+
+# 17 "archive-command.c"
+    exit((-1));
+  }
+
+# 19 "archive-command.c"
+  if (((FLAG_files==((void *)0))||((FLAG_files->length)==0)))
+
+# 19 "archive-command.c"
+  {
+
+# 20 "archive-command.c"
+    log_warn("No archive members specified.");
+
+# 21 "archive-command.c"
+    exit((-1));
+  }
+  FILE* out = fopen(FLAG_archive_output_file, "w");
+
+# 26 "archive-command.c"
+  for (
+    int i = 0;
+    (i<(FLAG_files->length));
+    (i++))
+
+# 26 "archive-command.c"
+  {
+
+# 27 "archive-command.c"
+    oarchive_append_header_and_file_contents(out, (value_array_get(FLAG_files, i).str));
+  }
+
+# 30 "archive-command.c"
+  fclose(out);
+}
+
+
+# 8 "build-command.c"
+void build_command(buffer_t* command_line_comment)
+# 8 "build-command.c"
+{
+
+# 9 "build-command.c"
+  if (string_is_null_or_empty(FLAG_c_output_file))
+
+# 9 "build-command.c"
+  {
+
+# 10 "build-command.c"
+    log_fatal("Must supply --c-output-file");
+
+# 11 "build-command.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 13 "build-command.c"
+  if (string_is_null_or_empty(FLAG_binary_output_file))
+
+# 13 "build-command.c"
+  {
+
+# 14 "build-command.c"
+    log_fatal("Must supply --binary-output-file");
+
+# 15 "build-command.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 17 "build-command.c"
+  generate_c_output_file(true, command_line_comment);
+  int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
+
+# 19 "build-command.c"
+  if ((status==0))
+
+# 19 "build-command.c"
+  {
+
+# 20 "build-command.c"
+    log_info("Exiting normally.");
+
+# 21 "build-command.c"
+    exit(0);
+  }
+  else
+
+# 22 "build-command.c"
+  {
+
+# 23 "build-command.c"
+    log_warn("Exiting abnormally.");
+
+# 24 "build-command.c"
+    exit(status);
+  }
+}
+
+
+# 15 "generate-c-output-file.c"
+void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment)
+# 16 "generate-c-output-file.c"
+{
+  boolean_t is_header_file = (!is_library);
+  symbol_table_t* symbol_table = make_symbol_table();
+
+# 21 "generate-c-output-file.c"
+  parse_and_add_top_level_definitions(symbol_table, FLAG_files, FLAG_use_statement_parser);
+
+# 23 "generate-c-output-file.c"
+  dump_symbol_table("initial parse", symbol_table);
+
+# 24 "generate-c-output-file.c"
+  if (FLAG_generate_enum_convertors)
+
+# 24 "generate-c-output-file.c"
+  {
+
+# 25 "generate-c-output-file.c"
+    srcgen_enum_to_string_converters(symbol_table);
+
+# 26 "generate-c-output-file.c"
+    dump_symbol_table("enum to string generation", symbol_table);
+  }
+
+# 28 "generate-c-output-file.c"
+  split_structure_typedefs(symbol_table);
+
+# 29 "generate-c-output-file.c"
+  dump_symbol_table("split structures", symbol_table);
+
+# 30 "generate-c-output-file.c"
+  reorder_symbol_table_typedefs(symbol_table);
+
+# 31 "generate-c-output-file.c"
+  dump_symbol_table("reorder typedefs", symbol_table);
+
+# 32 "generate-c-output-file.c"
+  reorder_symbol_table_structures(symbol_table);
+
+# 33 "generate-c-output-file.c"
+  dump_symbol_table("reorder structures", symbol_table);
+  buffer_t* buffer = make_buffer((1024*8));
+  printer_t* printer = make_printer(buffer, symbol_table, 2);
+
+# 38 "generate-c-output-file.c"
+  add_generated_c_file_header(buffer);
+  char* guard_name = "_HEADER_FILE_GUARD_";
+
+# 42 "generate-c-output-file.c"
+  if (is_header_file)
+
+# 42 "generate-c-output-file.c"
+  {
+
+# 43 "generate-c-output-file.c"
+    buffer_printf(buffer, "#ifndef %s\n#define %s\n\n", guard_name, guard_name);
+  }
+
+# 46 "generate-c-output-file.c"
+  buffer_append_buffer(buffer, get_reflection_header_buffer());
+  boolean_t append_newline_after_system_includes = false;
+
+# 49 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== system includes ==========\n\n");
+  string_hashtable_t* system_includes_set = make_string_hashtable(19);
+
+# 51 "generate-c-output-file.c"
+  for (
+    uint64_t i = 0;
+    (i<((symbol_table->system_includes)->length));
+    (i++))
+
+# 51 "generate-c-output-file.c"
+  {
+
+# 52 "generate-c-output-file.c"
+    (append_newline_after_system_includes=true);
+    cpp_include_node_t* node = value_array_get_ptr((symbol_table->system_includes), i, typeof(cpp_include_node_t*));
+    char* include_statement = include_node_to_string(node);
+
+# 56 "generate-c-output-file.c"
+    if ((FLAG_omit_c_armyknife_include&&string_starts_with(include_statement, "#include <c-armyknife-lib")))
+
+# 57 "generate-c-output-file.c"
+    {
+
+# 58 "generate-c-output-file.c"
+      continue;
+    }
+
+# 60 "generate-c-output-file.c"
+    if ((!is_ok(string_ht_find(system_includes_set, include_statement))))
+
+# 60 "generate-c-output-file.c"
+    {
+
+# 61 "generate-c-output-file.c"
+      (system_includes_set=string_ht_insert(system_includes_set, include_statement, boolean_to_value(true)));
+
+# 63 "generate-c-output-file.c"
+      buffer_append_string(buffer, include_statement);
+    }
+  }
+
+# 66 "generate-c-output-file.c"
+  if (append_newline_after_system_includes)
+
+# 66 "generate-c-output-file.c"
+  {
+
+# 67 "generate-c-output-file.c"
+    buffer_append_string(buffer, "\n");
+  }
+
+# 72 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== defines ==========\n\n");
+
+# 73 "generate-c-output-file.c"
+  for (
+    uint64_t i = 0;
+    (i<((symbol_table->defines)->length));
+    (i++))
+
+# 73 "generate-c-output-file.c"
+  {
+    cpp_define_node_t* node = value_array_get_ptr((symbol_table->defines), i, typeof(cpp_define_node_t*));
+
+# 76 "generate-c-output-file.c"
+    append_cpp_define_node(printer, node);
+
+# 77 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+
+# 80 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== enums ==========\n\n");
+
+# 82 "generate-c-output-file.c"
+  for (
+    int i = 0;
+    (i<(((symbol_table->enums)->ordered_bindings)->length));
+    (i++))
+
+# 82 "generate-c-output-file.c"
+  {
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->enums)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+    enum_node_t* enum_node = to_enum_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
+
+# 88 "generate-c-output-file.c"
+    append_enum_node(printer, enum_node);
+
+# 89 "generate-c-output-file.c"
+    append_string(printer, ";\n\n");
+  }
+
+# 92 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== typedefs ==========\n\n");
+
+# 93 "generate-c-output-file.c"
+  for (
+    int i = 0;
+    (i<(((symbol_table->typedefs)->ordered_bindings)->length));
+    (i++))
+
+# 93 "generate-c-output-file.c"
+  {
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->typedefs)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+    typedef_node_t* typedef_node = to_typedef_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
+
+# 99 "generate-c-output-file.c"
+    append_typedef_node(printer, typedef_node);
+
+# 100 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+
+# 103 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== stuctures/unions ==========\n\n");
+
+# 104 "generate-c-output-file.c"
+  for (
+    int i = 0;
+    (i<(((symbol_table->structures)->ordered_bindings)->length));
+    (i++))
+
+# 104 "generate-c-output-file.c"
+  {
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->structures)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+    struct_node_t* struct_node = get_full_structure_definition_node(binding);
+
+# 109 "generate-c-output-file.c"
+    if ((struct_node==((void *)0)))
+
+# 109 "generate-c-output-file.c"
+    {
+
+# 110 "generate-c-output-file.c"
+      (struct_node=value_array_get_ptr((binding->definition_nodes), 0, typeof(struct_node_t*)));
+    }
+
+# 113 "generate-c-output-file.c"
+    append_struct_node(printer, struct_node);
+
+# 114 "generate-c-output-file.c"
+    append_string(printer, ";\n\n");
+  }
+  boolean_t append_newline_after_variables = false;
+
+# 118 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== global variables ==========\n\n");
+
+# 119 "generate-c-output-file.c"
+  for (
+    int i = 0;
+    (i<(((symbol_table->variables)->ordered_bindings)->length));
+    (i++))
+
+# 119 "generate-c-output-file.c"
+  {
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->variables)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 123 "generate-c-output-file.c"
+    append_variable_definition_node(printer, value_array_get_ptr((binding->definition_nodes), 0, typeof(variable_definition_node_t*)), is_library);
+
+# 128 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+
+# 131 "generate-c-output-file.c"
+  if (append_newline_after_variables)
+
+# 131 "generate-c-output-file.c"
+  {
+
+# 132 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+  boolean_t append_newline_after_prototypes = false;
+
+# 136 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== function prototypes ==========\n\n");
+
+# 138 "generate-c-output-file.c"
+  for (
+    int i = 0;
+    (i<(((symbol_table->functions)->ordered_bindings)->length));
+    (i++))
+
+# 138 "generate-c-output-file.c"
+  {
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+    function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
+
+# 144 "generate-c-output-file.c"
+    if ((!is_inlined_function(function_node)))
+
+# 144 "generate-c-output-file.c"
+    {
+
+# 145 "generate-c-output-file.c"
+      (append_newline_after_prototypes=true);
+
+# 146 "generate-c-output-file.c"
+      append_c_function_node_prototype(printer, function_node);
+    }
+  }
+
+# 149 "generate-c-output-file.c"
+  if (append_newline_after_prototypes)
+
+# 149 "generate-c-output-file.c"
+  {
+
+# 150 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+  boolean_t append_newline_after_inlines = false;
+
+# 154 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== inlined functions ==========\n\n");
+
+# 156 "generate-c-output-file.c"
+  for (
+    int i = 0;
+    (i<(((symbol_table->functions)->ordered_bindings)->length));
+    (i++))
+
+# 156 "generate-c-output-file.c"
+  {
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+    function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
+
+# 162 "generate-c-output-file.c"
+    if (is_inlined_function(function_node))
+
+# 162 "generate-c-output-file.c"
+    {
+
+# 163 "generate-c-output-file.c"
+      (append_newline_after_inlines=true);
+
+# 164 "generate-c-output-file.c"
+      append_c_function_node_and_body(printer, function_node);
+    }
+  }
+
+# 168 "generate-c-output-file.c"
+  if (append_newline_after_inlines)
+
+# 168 "generate-c-output-file.c"
+  {
+
+# 169 "generate-c-output-file.c"
+    buffer_append_string(buffer, "\n");
+  }
+  boolean_t append_newline_after_functions = false;
+
+# 173 "generate-c-output-file.c"
+  if (is_library)
+
+# 173 "generate-c-output-file.c"
+  {
+
+# 174 "generate-c-output-file.c"
+    buffer_append_string(buffer, "// ========== functions ==========\n\n");
+
+# 175 "generate-c-output-file.c"
+    for (
+      int i = 0;
+      (i<(((symbol_table->functions)->ordered_bindings)->length));
+      (i++))
+
+# 176 "generate-c-output-file.c"
+    {
+      symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 180 "generate-c-output-file.c"
+      for (
+        int j = 0;
+        (j<((binding->definition_nodes)->length));
+        (j++))
+
+# 180 "generate-c-output-file.c"
+      {
+        function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), j).ptr)));
+
+# 183 "generate-c-output-file.c"
+        if (((!is_inlined_function(function_node))&&((function_node->body)!=((void *)0))))
+
+# 184 "generate-c-output-file.c"
+        {
+
+# 185 "generate-c-output-file.c"
+          (append_newline_after_functions=true);
+
+# 186 "generate-c-output-file.c"
+          if (false)
+
+# 186 "generate-c-output-file.c"
+          {
+
+# 187 "generate-c-output-file.c"
+            buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
+          }
+
+# 189 "generate-c-output-file.c"
+          append_c_function_node_and_body(printer, function_node);
+        }
+      }
+    }
+  }
+
+# 194 "generate-c-output-file.c"
+  if (append_newline_after_functions)
+
+# 194 "generate-c-output-file.c"
+  {
+
+# 195 "generate-c-output-file.c"
+    buffer_append_string(buffer, "\n");
+  }
+
+# 198 "generate-c-output-file.c"
+  if (is_header_file)
+
+# 198 "generate-c-output-file.c"
+  {
+
+# 199 "generate-c-output-file.c"
+    buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
+  }
+
+# 202 "generate-c-output-file.c"
+  buffer_append_buffer(buffer, command_line_overview_comment);
+
+# 204 "generate-c-output-file.c"
+  if ((FLAG_c_output_file==((void *)0)))
+
+# 204 "generate-c-output-file.c"
+  {
+
+# 205 "generate-c-output-file.c"
+    fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
+  }
+  else
+
+# 206 "generate-c-output-file.c"
+  {
+
+# 207 "generate-c-output-file.c"
+    log_info("Attempting to write buffer to %s", FLAG_c_output_file);
+
+# 209 "generate-c-output-file.c"
+    buffer_write_file(buffer, FLAG_c_output_file);
+  }
+}
+
+
+# 214 "generate-c-output-file.c"
+boolean_t is_inlined_function(function_node_t* node)
+# 214 "generate-c-output-file.c"
+{
+
+# 215 "generate-c-output-file.c"
+  return (token_matches((node->storage_class_specifier), "static")&&token_list_contains((node->function_specifiers), "inline"));
+}
+
+
+# 219 "generate-c-output-file.c"
+void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table)
+# 219 "generate-c-output-file.c"
+{
+
+# 220 "generate-c-output-file.c"
+  if (FLAG_dump_symbol_table)
+
+# 220 "generate-c-output-file.c"
+  {
+
+# 221 "generate-c-output-file.c"
+    fprintf(stderr, "==================================================================" "====\n");
+
+# 224 "generate-c-output-file.c"
+    fprintf(stderr, "%s\n", phase_name);
+
+# 225 "generate-c-output-file.c"
+    fprintf(stderr, "==================================================================" "====\n\n");
+    buffer_t* buffer = make_buffer(128);
+
+# 229 "generate-c-output-file.c"
+    (buffer=symbol_table_stats(buffer, symbol_table));
+
+# 230 "generate-c-output-file.c"
+    buffer_append_dgb_symbol_table(make_cdl_printer(buffer), symbol_table);
+
+# 232 "generate-c-output-file.c"
+    fprintf(stderr, "%s", buffer_to_c_string(buffer));
+  }
+}
+
+
+# 236 "generate-c-output-file.c"
+char* include_node_to_string(cpp_include_node_t* node)
+# 236 "generate-c-output-file.c"
+{
+  buffer_t* buffer = make_buffer(32);
+  printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
+
+# 239 "generate-c-output-file.c"
+  append_cpp_include_node(printer, node);
+  char* include_statement = buffer_to_c_string(buffer);
+
+# 241 "generate-c-output-file.c"
+  return include_statement;
+}
+
+
+# 244 "generate-c-output-file.c"
+void add_generated_c_file_header(buffer_t* buffer)
+# 244 "generate-c-output-file.c"
+{
+
+# 245 "generate-c-output-file.c"
+  buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
+
+# 246 "generate-c-output-file.c"
+  buffer_printf(buffer, "// This is a generated file, so you generally don't want to edit it!\n");
+
+# 249 "generate-c-output-file.c"
+  buffer_printf(buffer, "// The bottom of the file has more information about it's " "creation.\n\n\n");
+}
+
+
+# 10 "generate-header-file-command.c"
+void generate_header_file_command(buffer_t* command_line_overview_comment)
+# 10 "generate-header-file-command.c"
+{
+
+# 11 "generate-header-file-command.c"
+  generate_c_output_file(false, command_line_overview_comment);
+
+# 12 "generate-header-file-command.c"
+  log_info("Exiting normally.");
+
+# 13 "generate-header-file-command.c"
+  exit(0);
+}
+
+
+# 8 "generate-library-command.c"
+void generate_library_command(buffer_t* command_line_overview_comment)
+# 8 "generate-library-command.c"
+{
+
+# 9 "generate-library-command.c"
+  generate_c_output_file(true, command_line_overview_comment);
+
+# 10 "generate-library-command.c"
+  log_info("Exiting normally.");
+
+# 11 "generate-library-command.c"
+  exit(0);
+}
+
+
+# 1 "c-compiler-backend.c"
+int invoke_c_compiler(char* input_file, char* output_file)
+# 1 "c-compiler-backend.c"
+{
+  value_array_t* argv = c_compiler_command_line(input_file, output_file);
+
+# 4 "c-compiler-backend.c"
+  log_warn("Invoking C compiler with these arguments: %s", buffer_to_c_string(join_array_of_strings(argv, " ")));
+  sub_process_t* sub_process = make_sub_process(argv);
+
+# 7 "c-compiler-backend.c"
+  sub_process_launch(sub_process);
+  buffer_t* buffer = make_buffer(1);
+
+# 10 "c-compiler-backend.c"
+  do
+# 10 "c-compiler-backend.c"
+  {
+
+# 11 "c-compiler-backend.c"
+    sub_process_read(sub_process, buffer, buffer);
+
+# 12 "c-compiler-backend.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 14 "c-compiler-backend.c"
+  sub_process_read(sub_process, buffer, buffer);
+
+# 15 "c-compiler-backend.c"
+  sub_process_wait(sub_process);
+
+# 17 "c-compiler-backend.c"
+  log_warn(">>> Exit Status %d <<<\n%s", (sub_process->exit_code), buffer_to_c_string(buffer));
+
+# 20 "c-compiler-backend.c"
+  return (sub_process->exit_code);
+}
+
+
+# 23 "c-compiler-backend.c"
+value_array_t* c_compiler_command_line(char* input_file, char* output_file)
+# 23 "c-compiler-backend.c"
+{
+
+# 24 "c-compiler-backend.c"
+  if ((((string_equal("clang", FLAG_c_compiler)||string_equal("gcc", FLAG_c_compiler))||string_equal("tcc", FLAG_c_compiler))||string_equal("zig", FLAG_c_compiler)))
+
+# 27 "c-compiler-backend.c"
+  {
+    value_array_t* argv = make_value_array(2);
+
+# 29 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value(FLAG_c_compiler));
+
+# 30 "c-compiler-backend.c"
+    if (string_equal("zig", FLAG_c_compiler))
+
+# 30 "c-compiler-backend.c"
+    {
+
+# 31 "c-compiler-backend.c"
+      value_array_add(argv, str_to_value("cc"));
+    }
+
+# 33 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-g"));
+
+# 34 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-rdynamic"));
+
+# 35 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-O3"));
+
+# 36 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-std=gnu99"));
+
+# 37 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-o"));
+
+# 38 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value(output_file));
+
+# 39 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value(input_file));
+
+# 40 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-lgc"));
+
+# 41 "c-compiler-backend.c"
+    return argv;
+  }
+  else
+
+# 42 "c-compiler-backend.c"
+  {
+
+# 43 "c-compiler-backend.c"
+    log_fatal("Unknown C compiler %s\n", FLAG_c_compiler);
+
+# 44 "c-compiler-backend.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+}
+
+
+# 22 "git-hash-object.c"
+buffer_t* git_hash_object(char* filename)
+# 22 "git-hash-object.c"
+{
+  value_array_t* argv = make_value_array(2);
+
+# 24 "git-hash-object.c"
+  value_array_add(argv, str_to_value("git"));
+
+# 25 "git-hash-object.c"
+  value_array_add(argv, str_to_value("hash-object"));
+
+# 26 "git-hash-object.c"
+  value_array_add(argv, str_to_value(filename));
+  sub_process_t* sub_process = make_sub_process(argv);
+
+# 29 "git-hash-object.c"
+  sub_process_launch(sub_process);
+  buffer_t* buffer = make_buffer(1);
+
+# 32 "git-hash-object.c"
+  do
+# 32 "git-hash-object.c"
+  {
+
+# 33 "git-hash-object.c"
+    sub_process_read(sub_process, buffer, ((void *)0));
+
+# 34 "git-hash-object.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 36 "git-hash-object.c"
+  sub_process_read(sub_process, buffer, ((void *)0));
+
+# 37 "git-hash-object.c"
+  sub_process_wait(sub_process);
+
+# 39 "git-hash-object.c"
+  return buffer;
+}
+
+
+# 1 "print-tokens.c"
+void do_print_tokens(value_array_t* tokens, char* message)
+# 1 "print-tokens.c"
+{
+
+# 2 "print-tokens.c"
+  if (FLAG_print_tokens_show_tokens)
+
+# 2 "print-tokens.c"
+  {
+    buffer_t* buffer = make_buffer(((tokens->length)*60));
+
+# 7 "print-tokens.c"
+    for (
+      int j = 0;
+      (j<(tokens->length));
+      (j++))
+
+# 7 "print-tokens.c"
+    {
+      token_t* token = token_at(tokens, j);
+
+# 9 "print-tokens.c"
+      (buffer=append_token_debug_string(buffer, (*token)));
+
+# 10 "print-tokens.c"
+      (buffer=buffer_append_string(buffer, "\n"));
+    }
+
+# 12 "print-tokens.c"
+    fprintf(stdout, "** %s **\n%s\n", message, buffer_to_c_string(buffer));
+  }
+}
+
+
+# 16 "print-tokens.c"
+void print_tokens(void)
+# 16 "print-tokens.c"
+{
+
+# 17 "print-tokens.c"
+  log_info("print_tokens()");
+  value_array_t* files = read_files(FLAG_files);
+
+# 20 "print-tokens.c"
+  for (
+    int i = 0;
+    (i<(FLAG_files->length));
+    (i++))
+
+# 20 "print-tokens.c"
   {
     file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
 
-# 58 "main.c"
+# 23 "print-tokens.c"
     fprintf(stdout, "====================================================\n");
 
-# 59 "main.c"
+# 24 "print-tokens.c"
     fprintf(stdout, "====> Processing %s\n", (file->file_name));
 
-# 60 "main.c"
+# 25 "print-tokens.c"
     fprintf(stdout, "====================================================\n");
     tokenizer_result_t tokenizer_result = tokenize((file->data));
 
-# 64 "main.c"
+# 29 "print-tokens.c"
     if ((tokenizer_result.tokenizer_error_code))
 
-# 64 "main.c"
+# 29 "print-tokens.c"
     {
 
-# 65 "main.c"
+# 30 "print-tokens.c"
       log_warn("Tokenizer error: \"%s\"::%d -- %d", (value_array_get(FLAG_files, i).str), (tokenizer_result.tokenizer_error_position), (tokenizer_result.tokenizer_error_code));
 
-# 69 "main.c"
+# 34 "print-tokens.c"
       continue;
     }
     value_array_t* tokens = (tokenizer_result.tokens);
 
-# 74 "main.c"
+# 39 "print-tokens.c"
     if (FLAG_print_tokens_show_appended_tokens)
 
-# 74 "main.c"
+# 39 "print-tokens.c"
     {
       buffer_t* appended_tokens = make_buffer(1);
 
-# 76 "main.c"
+# 41 "print-tokens.c"
       debug_append_tokens(appended_tokens, tokens);
 
-# 77 "main.c"
+# 42 "print-tokens.c"
       fprintf(stdout, "%s", buffer_to_c_string(appended_tokens));
     }
 
-# 80 "main.c"
+# 45 "print-tokens.c"
     do_print_tokens(tokens, "before xform tokens");
 
-# 82 "main.c"
+# 47 "print-tokens.c"
     (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
                 .keep_whitespace = FLAG_print_tokens_include_whitespace,
                 .keep_comments = FLAG_print_tokens_include_comments,
@@ -21838,49 +23520,49 @@ void print_tokens(void)
                 .keep_c_preprocessor_lines = false,
             })));
 
-# 93 "main.c"
+# 58 "print-tokens.c"
     do_print_tokens(tokens, "after xform tokens");
 
-# 95 "main.c"
+# 60 "print-tokens.c"
     if (FLAG_print_tokens_parse_and_print)
 
-# 95 "main.c"
+# 60 "print-tokens.c"
     {
       pstate_t pstate = ((pstate_t) {.tokens = tokens,
                      .use_statement_parser = FLAG_use_statement_parser});
 
-# 99 "main.c"
+# 64 "print-tokens.c"
       ;
 
-# 100 "main.c"
+# 65 "print-tokens.c"
       if ((!parse_declarations((&pstate))))
 
-# 100 "main.c"
+# 65 "print-tokens.c"
       {
 
-# 101 "main.c"
+# 66 "print-tokens.c"
         (((pstate.error).file_name)=(file->file_name));
         buffer_t* buffer = make_buffer(1);
 
-# 103 "main.c"
+# 68 "print-tokens.c"
         (buffer=buffer_append_human_readable_error(buffer, (&(pstate.error))));
 
-# 104 "main.c"
+# 69 "print-tokens.c"
         log_fatal("%s", buffer_to_c_string(buffer));
 
-# 105 "main.c"
+# 70 "print-tokens.c"
         fatal_error(ERROR_ILLEGAL_INPUT);
       }
       else
 
-# 106 "main.c"
+# 71 "print-tokens.c"
       {
         buffer_t* buffer = make_buffer(1024);
 
-# 108 "main.c"
+# 73 "print-tokens.c"
         buffer_append_dbg_parse_node(make_cdl_printer(buffer), pstate_get_result_node((&pstate)));
 
-# 110 "main.c"
+# 75 "print-tokens.c"
         fprintf(stdout, "** Parse Nodes %s **\n%s\n", (file->file_name), buffer_to_c_string(buffer));
       }
     }
@@ -21888,729 +23570,24 @@ void print_tokens(void)
 }
 
 
-# 117 "main.c"
-void configure_flags(void)
-# 117 "main.c"
+# 6 "parse-test.c"
+void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer)
+# 7 "parse-test.c"
 {
+  tokenizer_result_t tokenizer_result = tokenize(input_buffer);
 
-# 118 "main.c"
-  flag_program_name("omni-c");
-
-# 119 "main.c"
-  flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
-
-# 124 "main.c"
-  flag_boolean("--print-command-line", (&FLAG_print_command_line));
-
-# 125 "main.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 127 "main.c"
-  configure_regular_commands();
-
-# 129 "main.c"
-  configure_print_tokens_command();
-
-# 130 "main.c"
-  configure_parse_expression();
-
-# 131 "main.c"
-  configure_parse_statement();
-}
-
-
-# 134 "main.c"
-void configure_parse_expression(void)
-# 134 "main.c"
-{
-
-# 135 "main.c"
-  flag_command("parse-expression", (&FLAG_command));
-
-# 136 "main.c"
-  flag_description("** UNIT TESTING **");
-
-# 137 "main.c"
-  flag_string("--expression", (&FLAG_expression));
-
-# 138 "main.c"
-  flag_boolean("--to-c", (&FLAG_to_c));
-}
-
-
-# 141 "main.c"
-void configure_parse_statement(void)
-# 141 "main.c"
-{
-
-# 142 "main.c"
-  flag_command("parse-statement", (&FLAG_command));
-
-# 143 "main.c"
-  flag_description("** UNIT TESTING **");
-
-# 144 "main.c"
-  flag_string("--statement", (&FLAG_statement));
-}
-
-
-# 147 "main.c"
-void configure_print_tokens_command(void)
-# 147 "main.c"
-{
-
-# 148 "main.c"
-  flag_command("print-tokens", (&FLAG_command));
-
-# 149 "main.c"
-  flag_description("** UNIT TESTING **");
-
-# 150 "main.c"
-  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
-
-# 151 "main.c"
-  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
-
-# 152 "main.c"
-  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
-
-# 153 "main.c"
-  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
-
-# 154 "main.c"
-  flag_boolean("--show-appended-tokens", (&FLAG_print_tokens_show_appended_tokens));
-
-# 156 "main.c"
-  flag_file_args((&FLAG_files));
-}
-
-
-# 159 "main.c"
-void configure_regular_commands(void)
-# 159 "main.c"
-{
-
-# 160 "main.c"
-  flag_command("generate-header-file", (&FLAG_command));
-
-# 161 "main.c"
-  flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
-
-# 164 "main.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 165 "main.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
-
-# 166 "main.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
-
-# 167 "main.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 168 "main.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
-
-# 170 "main.c"
-  flag_file_args((&FLAG_files));
-
-# 172 "main.c"
-  flag_command("generate-library", (&FLAG_command));
-
-# 173 "main.c"
-  flag_description("create a single C file 'library' of C99 code; most users will prefer " "'build'");
-
-# 176 "main.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 177 "main.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
-
-# 178 "main.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
-
-# 179 "main.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 180 "main.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
-
-# 181 "main.c"
-  flag_file_args((&FLAG_files));
-
-# 183 "main.c"
-  flag_command("build", (&FLAG_command));
-
-# 184 "main.c"
-  flag_description("build an executable by generating the C code and invoking the C " "compiler");
-
-# 187 "main.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 188 "main.c"
-  flag_string("--binary-output-file", (&FLAG_binary_output_file));
-
-# 189 "main.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
-
-# 190 "main.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
-
-# 191 "main.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 192 "main.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
-
-# 193 "main.c"
-  flag_string("--c-compiler", (&FLAG_c_compiler));
-
-# 194 "main.c"
-  flag_file_args((&FLAG_files));
-
-# 196 "main.c"
-  flag_command("archive", (&FLAG_command));
-
-# 197 "main.c"
-  flag_description("create an archive of unprocessed source files");
-
-# 198 "main.c"
-  flag_string("--archive-output-file", (&FLAG_archive_output_file));
-
-# 199 "main.c"
-  flag_description("the target path of the output archive");
-
-# 200 "main.c"
-  flag_file_args((&FLAG_files));
-}
-
-
-# 203 "main.c"
-boolean_t is_inlined_function(function_node_t* node)
-# 203 "main.c"
-{
-
-# 204 "main.c"
-  return (token_matches((node->storage_class_specifier), "static")&&token_list_contains((node->function_specifiers), "inline"));
-}
-
-
-# 208 "main.c"
-void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table)
-# 208 "main.c"
-{
-
-# 209 "main.c"
-  if (FLAG_dump_symbol_table)
-
-# 209 "main.c"
-  {
-
-# 210 "main.c"
-    fprintf(stderr, "==================================================================" "====\n");
-
-# 213 "main.c"
-    fprintf(stderr, "%s\n", phase_name);
-
-# 214 "main.c"
-    fprintf(stderr, "==================================================================" "====\n\n");
-    buffer_t* buffer = make_buffer(128);
-
-# 218 "main.c"
-    (buffer=symbol_table_stats(buffer, symbol_table));
-
-# 219 "main.c"
-    buffer_append_dgb_symbol_table(make_cdl_printer(buffer), symbol_table);
-
-# 221 "main.c"
-    fprintf(stderr, "%s", buffer_to_c_string(buffer));
-  }
-}
-
-
-# 225 "main.c"
-char* include_node_to_string(cpp_include_node_t* node)
-# 225 "main.c"
-{
-  buffer_t* buffer = make_buffer(32);
-  printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
-
-# 228 "main.c"
-  append_cpp_include_node(printer, node);
-  char* include_statement = buffer_to_c_string(buffer);
-
-# 230 "main.c"
-  return include_statement;
-}
-
-
-# 239 "main.c"
-void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment)
-# 240 "main.c"
-{
-  boolean_t is_header_file = (!is_library);
-  symbol_table_t* symbol_table = make_symbol_table();
-
-# 245 "main.c"
-  parse_and_add_top_level_definitions(symbol_table, FLAG_files, FLAG_use_statement_parser);
-
-# 247 "main.c"
-  dump_symbol_table("initial parse", symbol_table);
-
-# 248 "main.c"
-  if (FLAG_generate_enum_convertors)
-
-# 248 "main.c"
-  {
-
-# 249 "main.c"
-    srcgen_enum_to_string_converters(symbol_table);
-
-# 250 "main.c"
-    dump_symbol_table("enum to string generation", symbol_table);
-  }
-
-# 252 "main.c"
-  split_structure_typedefs(symbol_table);
-
-# 253 "main.c"
-  dump_symbol_table("split structures", symbol_table);
-
-# 254 "main.c"
-  reorder_symbol_table_typedefs(symbol_table);
-
-# 255 "main.c"
-  dump_symbol_table("reorder typedefs", symbol_table);
-
-# 256 "main.c"
-  reorder_symbol_table_structures(symbol_table);
-
-# 257 "main.c"
-  dump_symbol_table("reorder structures", symbol_table);
-  buffer_t* buffer = make_buffer((1024*8));
-  printer_t* printer = make_printer(buffer, symbol_table, 2);
-
-# 262 "main.c"
-  add_generated_c_file_header(buffer);
-  char* guard_name = "_HEADER_FILE_GUARD_";
-
-# 266 "main.c"
-  if (is_header_file)
-
-# 266 "main.c"
-  {
-
-# 267 "main.c"
-    buffer_printf(buffer, "#ifndef %s\n#define %s\n\n", guard_name, guard_name);
-  }
-
-# 270 "main.c"
-  buffer_append_buffer(buffer, get_reflection_header_buffer());
-  boolean_t append_newline_after_system_includes = false;
-
-# 273 "main.c"
-  buffer_append_string(buffer, "// ========== system includes ==========\n\n");
-  string_hashtable_t* system_includes_set = make_string_hashtable(19);
-
-# 275 "main.c"
-  for (
-    uint64_t i = 0;
-    (i<((symbol_table->system_includes)->length));
-    (i++))
-
-# 275 "main.c"
-  {
-
-# 276 "main.c"
-    (append_newline_after_system_includes=true);
-    cpp_include_node_t* node = value_array_get_ptr((symbol_table->system_includes), i, typeof(cpp_include_node_t*));
-    char* include_statement = include_node_to_string(node);
-
-# 280 "main.c"
-    if ((FLAG_omit_c_armyknife_include&&string_starts_with(include_statement, "#include <c-armyknife-lib")))
-
-# 281 "main.c"
-    {
-
-# 282 "main.c"
-      continue;
-    }
-
-# 284 "main.c"
-    if ((!is_ok(string_ht_find(system_includes_set, include_statement))))
-
-# 284 "main.c"
-    {
-
-# 285 "main.c"
-      (system_includes_set=string_ht_insert(system_includes_set, include_statement, boolean_to_value(true)));
-
-# 287 "main.c"
-      buffer_append_string(buffer, include_statement);
-    }
-  }
-
-# 290 "main.c"
-  if (append_newline_after_system_includes)
-
-# 290 "main.c"
-  {
-
-# 291 "main.c"
-    buffer_append_string(buffer, "\n");
-  }
-
-# 296 "main.c"
-  buffer_append_string(buffer, "// ========== defines ==========\n\n");
-
-# 297 "main.c"
-  for (
-    uint64_t i = 0;
-    (i<((symbol_table->defines)->length));
-    (i++))
-
-# 297 "main.c"
-  {
-    cpp_define_node_t* node = value_array_get_ptr((symbol_table->defines), i, typeof(cpp_define_node_t*));
-
-# 300 "main.c"
-    append_cpp_define_node(printer, node);
-
-# 301 "main.c"
-    append_string(printer, "\n");
-  }
-
-# 304 "main.c"
-  buffer_append_string(buffer, "// ========== enums ==========\n\n");
-
-# 306 "main.c"
-  for (
-    int i = 0;
-    (i<(((symbol_table->enums)->ordered_bindings)->length));
-    (i++))
-
-# 306 "main.c"
-  {
-    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->enums)->ordered_bindings), i, typeof(symbol_table_binding_t*));
-    enum_node_t* enum_node = to_enum_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
-
-# 312 "main.c"
-    append_enum_node(printer, enum_node);
-
-# 313 "main.c"
-    append_string(printer, ";\n\n");
-  }
-
-# 316 "main.c"
-  buffer_append_string(buffer, "// ========== typedefs ==========\n\n");
-
-# 317 "main.c"
-  for (
-    int i = 0;
-    (i<(((symbol_table->typedefs)->ordered_bindings)->length));
-    (i++))
-
-# 317 "main.c"
-  {
-    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->typedefs)->ordered_bindings), i, typeof(symbol_table_binding_t*));
-    typedef_node_t* typedef_node = to_typedef_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
-
-# 323 "main.c"
-    append_typedef_node(printer, typedef_node);
-
-# 324 "main.c"
-    append_string(printer, "\n");
-  }
-
-# 327 "main.c"
-  buffer_append_string(buffer, "// ========== stuctures/unions ==========\n\n");
-
-# 328 "main.c"
-  for (
-    int i = 0;
-    (i<(((symbol_table->structures)->ordered_bindings)->length));
-    (i++))
-
-# 328 "main.c"
-  {
-    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->structures)->ordered_bindings), i, typeof(symbol_table_binding_t*));
-    struct_node_t* struct_node = get_full_structure_definition_node(binding);
-
-# 333 "main.c"
-    if ((struct_node==((void *)0)))
-
-# 333 "main.c"
-    {
-
-# 334 "main.c"
-      (struct_node=value_array_get_ptr((binding->definition_nodes), 0, typeof(struct_node_t*)));
-    }
-
-# 337 "main.c"
-    append_struct_node(printer, struct_node);
-
-# 338 "main.c"
-    append_string(printer, ";\n\n");
-  }
-  boolean_t append_newline_after_variables = false;
-
-# 342 "main.c"
-  buffer_append_string(buffer, "// ========== global variables ==========\n\n");
-
-# 343 "main.c"
-  for (
-    int i = 0;
-    (i<(((symbol_table->variables)->ordered_bindings)->length));
-    (i++))
-
-# 343 "main.c"
-  {
-    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->variables)->ordered_bindings), i, typeof(symbol_table_binding_t*));
-
-# 347 "main.c"
-    append_variable_definition_node(printer, value_array_get_ptr((binding->definition_nodes), 0, typeof(variable_definition_node_t*)), is_library);
-
-# 352 "main.c"
-    append_string(printer, "\n");
-  }
-
-# 355 "main.c"
-  if (append_newline_after_variables)
-
-# 355 "main.c"
-  {
-
-# 356 "main.c"
-    append_string(printer, "\n");
-  }
-  boolean_t append_newline_after_prototypes = false;
-
-# 360 "main.c"
-  buffer_append_string(buffer, "// ========== function prototypes ==========\n\n");
-
-# 362 "main.c"
-  for (
-    int i = 0;
-    (i<(((symbol_table->functions)->ordered_bindings)->length));
-    (i++))
-
-# 362 "main.c"
-  {
-    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
-    function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
-
-# 368 "main.c"
-    if ((!is_inlined_function(function_node)))
-
-# 368 "main.c"
-    {
-
-# 369 "main.c"
-      (append_newline_after_prototypes=true);
-
-# 370 "main.c"
-      append_c_function_node_prototype(printer, function_node);
-    }
-  }
-
-# 373 "main.c"
-  if (append_newline_after_prototypes)
-
-# 373 "main.c"
-  {
-
-# 374 "main.c"
-    append_string(printer, "\n");
-  }
-  boolean_t append_newline_after_inlines = false;
-
-# 378 "main.c"
-  buffer_append_string(buffer, "// ========== inlined functions ==========\n\n");
-
-# 380 "main.c"
-  for (
-    int i = 0;
-    (i<(((symbol_table->functions)->ordered_bindings)->length));
-    (i++))
-
-# 380 "main.c"
-  {
-    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
-    function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
-
-# 386 "main.c"
-    if (is_inlined_function(function_node))
-
-# 386 "main.c"
-    {
-
-# 387 "main.c"
-      (append_newline_after_inlines=true);
-
-# 388 "main.c"
-      append_c_function_node_and_body(printer, function_node);
-    }
-  }
-
-# 392 "main.c"
-  if (append_newline_after_inlines)
-
-# 392 "main.c"
-  {
-
-# 393 "main.c"
-    buffer_append_string(buffer, "\n");
-  }
-  boolean_t append_newline_after_functions = false;
-
-# 397 "main.c"
-  if (is_library)
-
-# 397 "main.c"
-  {
-
-# 398 "main.c"
-    buffer_append_string(buffer, "// ========== functions ==========\n\n");
-
-# 399 "main.c"
-    for (
-      int i = 0;
-      (i<(((symbol_table->functions)->ordered_bindings)->length));
-      (i++))
-
-# 400 "main.c"
-    {
-      symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
-
-# 404 "main.c"
-      for (
-        int j = 0;
-        (j<((binding->definition_nodes)->length));
-        (j++))
-
-# 404 "main.c"
-      {
-        function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), j).ptr)));
-
-# 407 "main.c"
-        if (((!is_inlined_function(function_node))&&((function_node->body)!=((void *)0))))
-
-# 408 "main.c"
-        {
-
-# 409 "main.c"
-          (append_newline_after_functions=true);
-
-# 410 "main.c"
-          if (false)
-
-# 410 "main.c"
-          {
-
-# 411 "main.c"
-            buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
-          }
-
-# 413 "main.c"
-          append_c_function_node_and_body(printer, function_node);
-        }
-      }
-    }
-  }
-
-# 418 "main.c"
-  if (append_newline_after_functions)
-
-# 418 "main.c"
-  {
-
-# 419 "main.c"
-    buffer_append_string(buffer, "\n");
-  }
-
-# 422 "main.c"
-  if (is_header_file)
-
-# 422 "main.c"
-  {
-
-# 423 "main.c"
-    buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
-  }
-
-# 426 "main.c"
-  buffer_append_buffer(buffer, command_line_overview_comment);
-
-# 428 "main.c"
-  if ((FLAG_c_output_file==((void *)0)))
-
-# 428 "main.c"
-  {
-
-# 429 "main.c"
-    fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
-  }
-  else
-
-# 430 "main.c"
-  {
-
-# 431 "main.c"
-    log_info("Attempting to write buffer to %s", FLAG_c_output_file);
-
-# 433 "main.c"
-    buffer_write_file(buffer, FLAG_c_output_file);
-  }
-}
-
-
-# 438 "main.c"
-void add_generated_c_file_header(buffer_t* buffer)
-# 438 "main.c"
-{
-
-# 439 "main.c"
-  buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
-
-# 440 "main.c"
-  buffer_printf(buffer, "// This is a generated file, so you generally don't want to edit it!\n");
-
-# 443 "main.c"
-  buffer_printf(buffer, "// The bottom of the file has more information about it's " "creation.\n\n\n");
-}
-
-
-# 448 "main.c"
-void parse_expression_string_and_print_parse_tree(char* expression)
-# 448 "main.c"
-{
-
-# 449 "main.c"
-  if ((expression==((void *)0)))
-
-# 449 "main.c"
-  {
-
-# 450 "main.c"
-    log_fatal("Expression not specified!");
-
-# 451 "main.c"
-    fatal_error(ERROR_ILLEGAL_INPUT);
-  }
-  tokenizer_result_t tokenizer_result = tokenize(buffer_append_string(make_buffer(1), expression));
-
-# 455 "main.c"
+# 9 "parse-test.c"
   if ((tokenizer_result.tokenizer_error_code))
 
-# 455 "main.c"
+# 9 "parse-test.c"
   {
 
-# 456 "main.c"
+# 10 "parse-test.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
   value_array_t* tokens = (tokenizer_result.tokens);
 
-# 459 "main.c"
+# 14 "parse-test.c"
   (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
                                    .keep_whitespace = false,
                                    .keep_comments = false,
@@ -22619,80 +23596,80 @@ void parse_expression_string_and_print_parse_tree(char* expression)
                                })));
   pstate_t pstate = ((pstate_t) {0});
 
-# 469 "main.c"
+# 24 "parse-test.c"
   ((pstate.use_statement_parser)=true);
 
-# 470 "main.c"
+# 25 "parse-test.c"
   ((pstate.tokens)=tokens);
 
-# 471 "main.c"
+# 26 "parse-test.c"
   if ((!parse_expression((&pstate))))
 
-# 471 "main.c"
+# 26 "parse-test.c"
   {
 
-# 472 "main.c"
+# 27 "parse-test.c"
     fprintf(stderr, "FAIL\n");
 
-# 473 "main.c"
+# 28 "parse-test.c"
     exit(1);
   }
   parse_node_t* node = pstate_get_result_node((&pstate));
 
-# 476 "main.c"
+# 31 "parse-test.c"
   if ((!pstate_expect_token_string((&pstate), ";")))
 
-# 476 "main.c"
+# 31 "parse-test.c"
   {
 
-# 477 "main.c"
+# 32 "parse-test.c"
     fprintf(stderr, "FAIL (expected ';')\n");
 
-# 478 "main.c"
+# 33 "parse-test.c"
     exit(1);
   }
   buffer_t* output = make_buffer(1);
 
-# 481 "main.c"
+# 36 "parse-test.c"
   buffer_append_dbg_parse_node(make_cdl_printer(output), node);
 
-# 482 "main.c"
+# 37 "parse-test.c"
   if (FLAG_to_c)
 
-# 482 "main.c"
+# 37 "parse-test.c"
   {
 
-# 483 "main.c"
+# 38 "parse-test.c"
     buffer_append_string(output, "\n// C Output\n");
     printer_t* printer = make_printer(output, make_symbol_table(), 2);
 
-# 485 "main.c"
+# 40 "parse-test.c"
     append_parse_node(printer, node);
   }
 
-# 487 "main.c"
+# 42 "parse-test.c"
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
 
-# 490 "main.c"
-void parse_statement_string_and_print_parse_tree(char* expression)
-# 490 "main.c"
+# 45 "parse-test.c"
+void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer)
+# 45 "parse-test.c"
 {
-  tokenizer_result_t tokenizer_result = tokenize(buffer_append_string(make_buffer(1), expression));
+  tokenizer_result_t tokenizer_result = tokenize(input_buffer);
 
-# 493 "main.c"
+# 47 "parse-test.c"
   if ((tokenizer_result.tokenizer_error_code))
 
-# 493 "main.c"
+# 47 "parse-test.c"
   {
 
-# 494 "main.c"
+# 48 "parse-test.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
   value_array_t* tokens = (tokenizer_result.tokens);
 
-# 497 "main.c"
+# 51 "parse-test.c"
   (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
                                    .keep_whitespace = false,
                                    .keep_comments = false,
@@ -22701,529 +23678,388 @@ void parse_statement_string_and_print_parse_tree(char* expression)
                                })));
   pstate_t state = ((pstate_t) {0});
 
-# 506 "main.c"
+# 60 "parse-test.c"
   ((state.use_statement_parser)=true);
 
-# 507 "main.c"
+# 61 "parse-test.c"
   ((state.tokens)=tokens);
   pstatus_t status = parse_statement((&state));
 
-# 509 "main.c"
+# 63 "parse-test.c"
   if ((!status))
 
-# 509 "main.c"
+# 63 "parse-test.c"
   {
 
-# 510 "main.c"
+# 64 "parse-test.c"
     fprintf(stderr, "FAIL");
 
-# 511 "main.c"
+# 65 "parse-test.c"
     exit(1);
   }
   parse_node_t* node = pstate_get_result_node((&state));
   buffer_t* output = make_buffer(1);
 
-# 515 "main.c"
+# 69 "parse-test.c"
   buffer_append_dbg_parse_node(make_cdl_printer(output), node);
 
-# 516 "main.c"
+# 70 "parse-test.c"
   buffer_append_string(output, "\n// C Output\n");
   printer_t* printer = make_printer(output, make_symbol_table(), 2);
 
-# 518 "main.c"
+# 72 "parse-test.c"
   append_parse_node(printer, node);
 
-# 519 "main.c"
+# 73 "parse-test.c"
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
 
-# 543 "main.c"
-buffer_t* git_hash_object(char* filename)
-# 543 "main.c"
-{
-  value_array_t* argv = make_value_array(2);
-
-# 545 "main.c"
-  value_array_add(argv, str_to_value("git"));
-
-# 546 "main.c"
-  value_array_add(argv, str_to_value("hash-object"));
-
-# 547 "main.c"
-  value_array_add(argv, str_to_value(filename));
-  sub_process_t* sub_process = make_sub_process(argv);
-
-# 550 "main.c"
-  sub_process_launch(sub_process);
-  buffer_t* buffer = make_buffer(1);
-
-# 553 "main.c"
-  do
-# 553 "main.c"
-  {
-
-# 554 "main.c"
-    sub_process_read(sub_process, buffer, ((void *)0));
-
-# 555 "main.c"
-    usleep(5);
-  }
-  while (is_sub_process_running(sub_process));
-
-# 557 "main.c"
-  sub_process_read(sub_process, buffer, ((void *)0));
-
-# 558 "main.c"
-  sub_process_wait(sub_process);
-
-# 560 "main.c"
-  return buffer;
-}
-
-
-# 571 "main.c"
-buffer_t* command_line_args_to_buffer(int argc, char** argv)
-# 571 "main.c"
-{
-  buffer_t* output = make_buffer((argc*5));
-
-# 574 "main.c"
-  buffer_printf(output, "// Full Compiler Command Line:\n//\n");
-
-# 575 "main.c"
-  for (
-    int i = 0;
-    (i<argc);
-    (i++))
-
-# 575 "main.c"
-  {
-
-# 576 "main.c"
-    buffer_printf(output, "//%s%s\n", ((i>0) ? "    " : " "), (argv[i]));
-  }
-
-# 579 "main.c"
-  buffer_append_string(output, "\n");
-
-# 580 "main.c"
-  buffer_append_string(output, "// These checksums are currently easy to fake for example by using a\n");
-
-# 583 "main.c"
-  buffer_append_string(output, "// hacked git in the PATH at the time this compile was run.\n");
-
-# 585 "main.c"
-  buffer_append_string(output, "//\n");
-
-# 587 "main.c"
-  for (
-    int i = 0;
-    (i<(FLAG_files->length));
-    (i++))
-
-# 587 "main.c"
-  {
-    char* filename = (value_array_get(FLAG_files, i).str);
-    buffer_t* git_hash = git_hash_object(filename);
-
-# 591 "main.c"
-    buffer_replace_all(git_hash, "\n", "");
-
-# 592 "main.c"
-    buffer_append_string(output, "// git cat-file -p ");
-
-# 593 "main.c"
-    buffer_append_buffer(output, git_hash);
-
-# 594 "main.c"
-    buffer_printf(output, " > %s\n", filename);
-  }
-
-# 597 "main.c"
-  return output;
-}
-
-
-# 600 "main.c"
-value_array_t* c_compiler_command_line(char* input_file, char* output_file)
-# 600 "main.c"
+# 13 "test-command.c"
+void test_command(buffer_t* command_line_comment)
+# 13 "test-command.c"
 {
 
-# 601 "main.c"
-  if ((((string_equal("clang", FLAG_c_compiler)||string_equal("gcc", FLAG_c_compiler))||string_equal("tcc", FLAG_c_compiler))||string_equal("zig", FLAG_c_compiler)))
+# 14 "test-command.c"
+  handle_if_internal_test();
 
-# 604 "main.c"
-  {
-    value_array_t* argv = make_value_array(2);
+# 16 "test-command.c"
+  if (((FLAG_files->length)==0))
 
-# 606 "main.c"
-    value_array_add(argv, str_to_value(FLAG_c_compiler));
-
-# 607 "main.c"
-    if (string_equal("zig", FLAG_c_compiler))
-
-# 607 "main.c"
-    {
-
-# 608 "main.c"
-      value_array_add(argv, str_to_value("cc"));
-    }
-
-# 610 "main.c"
-    value_array_add(argv, str_to_value("-g"));
-
-# 611 "main.c"
-    value_array_add(argv, str_to_value("-rdynamic"));
-
-# 612 "main.c"
-    value_array_add(argv, str_to_value("-O3"));
-
-# 613 "main.c"
-    value_array_add(argv, str_to_value("-std=gnu99"));
-
-# 614 "main.c"
-    value_array_add(argv, str_to_value("-o"));
-
-# 615 "main.c"
-    value_array_add(argv, str_to_value(output_file));
-
-# 616 "main.c"
-    value_array_add(argv, str_to_value(input_file));
-
-# 617 "main.c"
-    value_array_add(argv, str_to_value("-lgc"));
-
-# 618 "main.c"
-    return argv;
-  }
-  else
-
-# 619 "main.c"
+# 16 "test-command.c"
   {
 
-# 620 "main.c"
-    log_fatal("Unknown C compiler %s\n", FLAG_c_compiler);
+# 17 "test-command.c"
+    log_fatal("At least one file is required when using the test command.");
 
-# 621 "main.c"
-    fatal_error(ERROR_ILLEGAL_INPUT);
-  }
-}
-
-
-# 625 "main.c"
-int invoke_c_compiler(char* input_file, char* output_file)
-# 625 "main.c"
-{
-  value_array_t* argv = c_compiler_command_line(input_file, output_file);
-
-# 628 "main.c"
-  log_warn("Invoking C compiler with these arguments: %s", buffer_to_c_string(join_array_of_strings(argv, " ")));
-  sub_process_t* sub_process = make_sub_process(argv);
-
-# 631 "main.c"
-  sub_process_launch(sub_process);
-  buffer_t* buffer = make_buffer(1);
-
-# 634 "main.c"
-  do
-# 634 "main.c"
-  {
-
-# 635 "main.c"
-    sub_process_read(sub_process, buffer, buffer);
-
-# 636 "main.c"
-    usleep(5);
-  }
-  while (is_sub_process_running(sub_process));
-
-# 638 "main.c"
-  sub_process_read(sub_process, buffer, buffer);
-
-# 639 "main.c"
-  sub_process_wait(sub_process);
-
-# 641 "main.c"
-  log_warn(">>> Exit Status %d <<<\n%s", (sub_process->exit_code), buffer_to_c_string(buffer));
-
-# 644 "main.c"
-  return (sub_process->exit_code);
-}
-
-
-# 647 "main.c"
-void generate_archive_file(void)
-# 647 "main.c"
-{
-
-# 648 "main.c"
-  if ((FLAG_archive_output_file==((void *)0)))
-
-# 648 "main.c"
-  {
-
-# 649 "main.c"
-    log_fatal("Must specify the archive output file name");
-
-# 650 "main.c"
-    exit((-1));
-  }
-
-# 652 "main.c"
-  if (((FLAG_files==((void *)0))||((FLAG_files->length)==0)))
-
-# 652 "main.c"
-  {
-
-# 653 "main.c"
-    log_warn("No archive members specified.");
-
-# 654 "main.c"
-    exit((-1));
-  }
-  FILE* out = fopen(FLAG_archive_output_file, "w");
-
-# 659 "main.c"
-  for (
-    int i = 0;
-    (i<(FLAG_files->length));
-    (i++))
-
-# 659 "main.c"
-  {
-
-# 660 "main.c"
-    oarchive_append_header_and_file_contents(out, (value_array_get(FLAG_files, i).str));
-  }
-
-# 663 "main.c"
-  fclose(out);
-}
-
-
-# 666 "main.c"
-int main(int argc, char** argv)
-# 666 "main.c"
-{
-
-# 667 "main.c"
-  configure_fatal_errors(((fatal_error_config_t) {
-                                                 .catch_sigsegv = true,
-                                             }));
-
-# 671 "main.c"
-  logger_init();
-
-# 673 "main.c"
-  configure_flags();
-  char* error = flag_parse_command_line(argc, argv);
-
-# 676 "main.c"
-  if (error)
-
-# 676 "main.c"
-  {
-
-# 677 "main.c"
-    flag_print_help(stderr, error);
-
-# 678 "main.c"
+# 18 "test-command.c"
     exit(1);
   }
+  char* rand_binary_file_name = "/tmp/foo";
 
-# 681 "main.c"
-  if (FLAG_print_command_line)
+# 24 "test-command.c"
+  if (string_is_null_or_empty(FLAG_binary_output_file))
 
-# 681 "main.c"
+# 24 "test-command.c"
   {
 
-# 682 "main.c"
-    fprintf(stderr, "Command Line:");
+# 25 "test-command.c"
+    (FLAG_binary_output_file=rand_binary_file_name);
+  }
 
-# 683 "main.c"
-    for (
-      int i = 0;
-      (i<argc);
-      (i++))
+# 27 "test-command.c"
+  if (string_is_null_or_empty(FLAG_c_output_file))
 
-# 683 "main.c"
+# 27 "test-command.c"
+  {
+
+# 28 "test-command.c"
+    (FLAG_c_output_file=string_printf("%s.test.c", FLAG_binary_output_file));
+  }
+
+# 35 "test-command.c"
+  generate_c_output_file(true, command_line_comment);
+  int error_status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
+
+# 39 "test-command.c"
+  if (error_status)
+
+# 39 "test-command.c"
+  {
+
+# 40 "test-command.c"
+    log_fatal("The underlying C compiler produced an error compiling the test(s).");
+
+# 44 "test-command.c"
+    exit(error_status);
+  }
+
+# 47 "test-command.c"
+  run_test_binary(rand_binary_file_name);
+}
+
+
+# 50 "test-command.c"
+void run_test_binary(char* rand_binary_file_name)
+# 50 "test-command.c"
+{
+
+# 51 "test-command.c"
+  log_fatal("RUN TEST BINARY!");
+
+# 52 "test-command.c"
+  exit(1);
+}
+
+
+# 55 "test-command.c"
+void handle_if_internal_test(void)
+# 55 "test-command.c"
+{
+
+# 56 "test-command.c"
+  for (
+    int i = 0;
+    (i<(FLAG_files->length));
+    (i++))
+
+# 56 "test-command.c"
+  {
+    char* filename = (value_array_get(FLAG_files, i).str);
+
+# 58 "test-command.c"
+    if (string_ends_with(filename, ".expr"))
+
+# 58 "test-command.c"
     {
 
-# 684 "main.c"
-      fprintf(stderr, " %s", (argv[i]));
-    }
-
-# 686 "main.c"
-    fprintf(stderr, "\n");
-  }
-
-# 689 "main.c"
-  if ((FLAG_command==((void *)0)))
-
-# 689 "main.c"
-  {
-
-# 694 "main.c"
-    fatal_error(ERROR_BAD_COMMAND_LINE);
-  }
-  else
-
-# 695 "main.c"
-  if (string_equal("archive", FLAG_command))
-
-# 695 "main.c"
-  {
-
-# 696 "main.c"
-    generate_archive_file();
-
-# 697 "main.c"
-    log_info("Exiting normally.");
-
-# 698 "main.c"
-    exit(0);
-  }
-  else
-
-# 699 "main.c"
-  if (string_equal("generate-header-file", FLAG_command))
-
-# 699 "main.c"
-  {
-
-# 700 "main.c"
-    generate_c_output_file(false, command_line_args_to_buffer(argc, argv));
-
-# 701 "main.c"
-    log_info("Exiting normally.");
-
-# 702 "main.c"
-    exit(0);
-  }
-  else
-
-# 703 "main.c"
-  if (string_equal("generate-library", FLAG_command))
-
-# 703 "main.c"
-  {
-
-# 704 "main.c"
-    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
-
-# 705 "main.c"
-    log_info("Exiting normally.");
-
-# 706 "main.c"
-    exit(0);
-  }
-  else
-
-# 707 "main.c"
-  if (string_equal("build", FLAG_command))
-
-# 707 "main.c"
-  {
-
-# 708 "main.c"
-    if (string_is_null_or_empty(FLAG_c_output_file))
-
-# 708 "main.c"
-    {
-
-# 709 "main.c"
-      log_fatal("Must supply --c-output-file");
-
-# 710 "main.c"
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-
-# 712 "main.c"
-    if (string_is_null_or_empty(FLAG_binary_output_file))
-
-# 712 "main.c"
-    {
-
-# 713 "main.c"
-      log_fatal("Must supply --binary-output-file");
-
-# 714 "main.c"
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-
-# 716 "main.c"
-    generate_c_output_file(true, command_line_args_to_buffer(argc, argv));
-    int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
-
-# 718 "main.c"
-    if ((status==0))
-
-# 718 "main.c"
-    {
-
-# 719 "main.c"
-      log_info("Exiting normally.");
-
-# 720 "main.c"
-      exit(0);
+# 60 "test-command.c"
+      handle_expression_test(filename);
     }
     else
 
-# 721 "main.c"
+# 61 "test-command.c"
+    if (string_ends_with(filename, ".stmt"))
+
+# 61 "test-command.c"
     {
 
-# 722 "main.c"
-      log_warn("Exiting abnormally.");
-
-# 723 "main.c"
-      exit(status);
+# 63 "test-command.c"
+      handle_statement_test(filename);
     }
   }
-  else
+}
 
-# 725 "main.c"
-  if (string_equal("parse-expression", FLAG_command))
 
-# 725 "main.c"
-  {
+# 68 "test-command.c"
+void handle_statement_test(char* file_name)
+# 68 "test-command.c"
+{
 
-# 726 "main.c"
-    parse_expression_string_and_print_parse_tree(FLAG_expression);
-  }
-  else
+# 69 "test-command.c"
+  parse_statement_string_and_print_parse_tree_from_buffer(buffer_read_file(file_name));
 
-# 727 "main.c"
-  if (string_equal("parse-statement", FLAG_command))
-
-# 727 "main.c"
-  {
-
-# 728 "main.c"
-    parse_statement_string_and_print_parse_tree(FLAG_statement);
-  }
-  else
-
-# 729 "main.c"
-  if (string_equal("print-tokens", FLAG_command))
-
-# 729 "main.c"
-  {
-
-# 730 "main.c"
-    print_tokens();
-  }
-  else
-
-# 731 "main.c"
-  {
-
-# 732 "main.c"
-    fprintf(stderr, "Unknown command: %s\n", FLAG_command);
-  }
-
-# 735 "main.c"
+# 71 "test-command.c"
   exit(0);
+}
+
+
+# 74 "test-command.c"
+void handle_expression_test(char* file_name)
+# 74 "test-command.c"
+{
+
+# 75 "test-command.c"
+  parse_expression_string_and_print_parse_tree_from_buffer(buffer_read_file(file_name));
+
+# 77 "test-command.c"
+  exit(0);
+}
+
+
+# 31 "flags.c"
+void configure_flags(void)
+# 31 "flags.c"
+{
+
+# 32 "flags.c"
+  flag_program_name("omni-c");
+
+# 33 "flags.c"
+  flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
+
+# 38 "flags.c"
+  flag_boolean("--print-command-line", (&FLAG_print_command_line));
+
+# 39 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 41 "flags.c"
+  configure_regular_commands();
+
+# 43 "flags.c"
+  configure_print_tokens_command();
+
+# 44 "flags.c"
+  configure_parse_expression();
+
+# 45 "flags.c"
+  configure_parse_statement();
+}
+
+
+# 48 "flags.c"
+void configure_parse_expression(void)
+# 48 "flags.c"
+{
+
+# 49 "flags.c"
+  flag_command("parse-expression", (&FLAG_command));
+
+# 50 "flags.c"
+  flag_description("** UNIT TESTING **");
+
+# 51 "flags.c"
+  flag_string("--expression", (&FLAG_expression));
+
+# 52 "flags.c"
+  flag_boolean("--to-c", (&FLAG_to_c));
+}
+
+
+# 55 "flags.c"
+void configure_parse_statement(void)
+# 55 "flags.c"
+{
+
+# 56 "flags.c"
+  flag_command("parse-statement", (&FLAG_command));
+
+# 57 "flags.c"
+  flag_description("** UNIT TESTING **");
+
+# 58 "flags.c"
+  flag_string("--statement", (&FLAG_statement));
+}
+
+
+# 61 "flags.c"
+void configure_print_tokens_command(void)
+# 61 "flags.c"
+{
+
+# 62 "flags.c"
+  flag_command("print-tokens", (&FLAG_command));
+
+# 63 "flags.c"
+  flag_description("** UNIT TESTING **");
+
+# 64 "flags.c"
+  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
+
+# 65 "flags.c"
+  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
+
+# 66 "flags.c"
+  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
+
+# 67 "flags.c"
+  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
+
+# 68 "flags.c"
+  flag_boolean("--show-appended-tokens", (&FLAG_print_tokens_show_appended_tokens));
+
+# 70 "flags.c"
+  flag_file_args((&FLAG_files));
+}
+
+
+# 73 "flags.c"
+void configure_regular_commands(void)
+# 73 "flags.c"
+{
+
+# 74 "flags.c"
+  flag_command("generate-header-file", (&FLAG_command));
+
+# 75 "flags.c"
+  flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
+
+# 78 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 79 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 80 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 81 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 82 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 84 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 86 "flags.c"
+  flag_command("generate-library", (&FLAG_command));
+
+# 87 "flags.c"
+  flag_description("create a single C file 'library' of C99 code; most users will prefer " "'build'");
+
+# 90 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 91 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 92 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 93 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 94 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 95 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 97 "flags.c"
+  flag_command("build", (&FLAG_command));
+
+# 98 "flags.c"
+  flag_description("build an executable by generating the C code and invoking the C " "compiler");
+
+# 101 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 102 "flags.c"
+  flag_string("--binary-output-file", (&FLAG_binary_output_file));
+
+# 103 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 104 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 105 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 106 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 107 "flags.c"
+  flag_string("--c-compiler", (&FLAG_c_compiler));
+
+# 108 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 110 "flags.c"
+  flag_command("archive", (&FLAG_command));
+
+# 111 "flags.c"
+  flag_description("create an archive of unprocessed source files");
+
+# 112 "flags.c"
+  flag_string("--archive-output-file", (&FLAG_archive_output_file));
+
+# 113 "flags.c"
+  flag_description("the target path of the output archive");
+
+# 114 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 116 "flags.c"
+  flag_command("test", (&FLAG_command));
+
+# 117 "flags.c"
+  flag_description("compile and run all unit tests in the input files");
+
+# 120 "flags.c"
+  flag_file_args((&FLAG_files));
 }
 
 
@@ -24148,6 +24984,8 @@ char* parse_error_code_to_string(parse_error_code_t value){
     return "PARSE_ERROR_EOF";
   case PARSE_ERROR_UNHANDLED_INSTRUCTION:
     return "PARSE_ERROR_UNHANDLED_INSTRUCTION";
+  case PARSE_ERROR_BAD_INITIALIZER:
+    return "PARSE_ERROR_BAD_INITIALIZER";
   default:
     return "<<unknown-parse_error_code>>";
   }
@@ -24215,6 +25053,9 @@ parse_error_code_t string_to_parse_error_code(char* value){
   }
   if (strcmp(value, "PARSE_ERROR_UNHANDLED_INSTRUCTION") == 0) {
     return PARSE_ERROR_UNHANDLED_INSTRUCTION;
+  }
+  if (strcmp(value, "PARSE_ERROR_BAD_INITIALIZER") == 0) {
+    return PARSE_ERROR_BAD_INITIALIZER;
   }
   return 0;
 }
@@ -24324,9 +25165,14 @@ enum_metadata_t* parse_error_code_metadata(){
         .name = "PARSE_ERROR_UNHANDLED_INSTRUCTION",
         .value = PARSE_ERROR_UNHANDLED_INSTRUCTION
     };
+    static enum_element_metadata_t var_21 = (enum_element_metadata_t) {
+        .next = &var_20,
+        .name = "PARSE_ERROR_BAD_INITIALIZER",
+        .value = PARSE_ERROR_BAD_INITIALIZER
+    };
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "parse_error_code_t",
-        .elements = &var_20
+        .elements = &var_21
     };
     return &enum_metadata_result;
 }
@@ -25567,7 +26413,19 @@ enum_metadata_t* type_node_kind_metadata(){
 //    balanced-construct-parser.c
 //    printer.c
 //    global-includes.c
+//    linearizer.c
 //    main.c
+//    archive-command.c
+//    build-command.c
+//    generate-c-output-file.c
+//    generate-header-file-command.c
+//    generate-library-command.c
+//    c-compiler-backend.c
+//    git-hash-object.c
+//    print-tokens.c
+//    parse-test.c
+//    test-command.c
+//    flags.c
 //    /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
 
 // These checksums are currently easy to fake for example by using a
@@ -25596,7 +26454,7 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 1d0266094b9c0915098e1352edbc8d62ee77abb0 > lib/value-tree.c
 // git cat-file -p 8d8502036da69d42e740206185219ba74887f34a > lib/string-tree.c
 // git cat-file -p 1ccb428c8923e3d6aad2473fcf93f08c66c0f7db > lib/flag.c
-// git cat-file -p f92b16dde49a695a28f50a43d46a753935e40024 > lib/io.c
+// git cat-file -p 543faf4237803799d6444d6d6a4f152f9d3f763e > lib/io.c
 // git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976 > lib/terminal.c
 // git cat-file -p f1d5e507966591d900a0301e08fad74c425b02e0 > lib/tokenizer.c
 // git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd > lib/random.c
@@ -25609,30 +26467,42 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p 6c0a741ef33f143d100f562fbb6624a0e4b0bb39 > keywords.c
 // git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
 // git cat-file -p 519bac76f7060874edf686e186bbd0127c492875 > file-reader.c
-// git cat-file -p 004af75f97ab6e1a5c9176e991a9f17f6e07d515 > compiler-errors.c
+// git cat-file -p a94a2ff9f9b9076fedcb6cbdf3856c6375ed5858 > compiler-errors.c
 // git cat-file -p 7188ecb3f4f5b2ddbb91624982c6d81868672f02 > lexer.c
 // git cat-file -p 0b1ed82677427f66828e3ccbad7c004541d0a0ca > token-list.c
 // git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
 // git cat-file -p bc27a1fa5e0e46e5be7efb58913bf35141b3d84d > parser.c
-// git cat-file -p 93f67393615462ba6d0dfb65979007280ae43e50 > pstate.c
+// git cat-file -p 49b13cd86350d1eb6328735ae29f83547a6a0bb6 > pstate.c
 // git cat-file -p 33f0b96b151a7506a48abca978bed1a25410fe61 > declaration-parser.c
 // git cat-file -p 67c4a0e6f2de51b5ed41c289ff9575d4a21a0c68 > node-list.c
-// git cat-file -p fd66d6ae20a88b0cccad5b19b09e4fa61c28792a > debug-printer.c
-// git cat-file -p 3c2da52b70818ac42e587f1a31e477ce7d046d6c > c-file-printer.c
+// git cat-file -p 6dae49ca9725db800cc717883d73ec282d2af495 > debug-printer.c
+// git cat-file -p be7ea85b676b868643a0e5b63197cfb4e8da9626 > c-file-printer.c
 // git cat-file -p 47fe4a94a6ba151764cfb98f6d995a8c47fb3e01 > symbol-table.c
 // git cat-file -p b246b13119ee9f082fbf88b642b914b6d0b7fb7d > source-to-source.c
 // git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af > preprocessor.c
 // git cat-file -p 52af4fa58ea28535587766f2912d174b3856816f > header-file-extractor.c
 // git cat-file -p 7e7f49598c2d9701253f09009d7012618ade9339 > symbol-table-builder.c
 // git cat-file -p 1ef0ccd414c4831d299ebfe679272b61dcc98699 > srcgen.c
-// git cat-file -p 2c7444aaad7eb274e29ca6fa490305a17a88c862 > pratt-parser.c
+// git cat-file -p 81b559ab192944991c3e5c893cbded1bf8bdf007 > pratt-parser.c
 // git cat-file -p f923613065cf23c91a715e7e4661647d6a8a08c6 > statement-parser.c
 // git cat-file -p 3f07bb1029d51a41d0a1e7b7ffe8095f7df1b518 > type-parser.c
 // git cat-file -p 9e037abaf89da4c6ea500ebf09b2bb3cd64a570a > user-type-parser.c
 // git cat-file -p 17bb7334f2306be9c30ef56bbd46456bf20824c9 > variable-definition-parser.c
-// git cat-file -p 9d05a19accd8aad90f0eebd7490a271f447b0e52 > literal-parser.c
+// git cat-file -p 2cd0f86d2cb8f14b5e1ec5eb42d95158480a00ec > literal-parser.c
 // git cat-file -p 1d763bad1a86fe024fae36db07e66a5c160393c9 > balanced-construct-parser.c
 // git cat-file -p a1246b1440b1757d6547a3b3f595d5bb0646849a > printer.c
 // git cat-file -p ea1a646a86f833872d5be645ae3403283baf459f > global-includes.c
-// git cat-file -p e6c66e3900bdf556d55ae31ee6fc5f826c43afe9 > main.c
+// git cat-file -p dcba6ccde20f5fa481e0a952281a8220da5c6bcb > linearizer.c
+// git cat-file -p 860f4de4bf509722c1cf90fa4b5e1f62f09364d9 > main.c
+// git cat-file -p 0454a5add5006737a0f3fca664fb707837742680 > archive-command.c
+// git cat-file -p 5edb92a256e071efa5859b3d24b7d92edea60011 > build-command.c
+// git cat-file -p 552280e129573f2e08a45bdf26a6595c558dbb05 > generate-c-output-file.c
+// git cat-file -p cfdecb5e6bab51c39c5369bf750ba0a7fccf1423 > generate-header-file-command.c
+// git cat-file -p bb60f5efa5f10341f69ae17fb9944551fe685134 > generate-library-command.c
+// git cat-file -p 96cf80aaffbbdd213ffeeda46411de2c8c1f986f > c-compiler-backend.c
+// git cat-file -p 42dadc0ee36e8cc16f36fd2d4d66751e09808097 > git-hash-object.c
+// git cat-file -p cfaccebe12df4a35e44380c7809ae428a7a72f2f > print-tokens.c
+// git cat-file -p 300dbd1dc7273fa58016143b372d689cabc18b1f > parse-test.c
+// git cat-file -p 4c1d8e1a36466ab1513135fd304541f86cfdf372 > test-command.c
+// git cat-file -p 6302d0b40a0562b3b566de289df2bafcda663438 > flags.c
 // git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
