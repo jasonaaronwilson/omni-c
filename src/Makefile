@@ -116,18 +116,18 @@ ${BUILD_DIR}/bin/lib.oar: ${C_ARMYKNIFE_SRC_C}
 	${STABLE_BINARY_PATH} archive ${C_ARMYKNIFE_SRC_C} --archive-output-file=${BUILD_DIR}/bin/lib.oar
 
 ${BUILD_DIR}/bin/omni-c: ${BUILD_DIR}/bin/omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} lib
-	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/omni-c.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/omni-c.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/omni-c -std=gnu99 ${BUILD_DIR}/omni-c.c -lgc
 
 # Test --dump-symbol-table=true -- not recommend within emacs since
 # it's output handling is so slow though any fast enough terminal like
 # gnome terminal or if you redirect to a file.
 ${BUILD_DIR}/bin/self: ${BUILD_DIR}/bin/omni-c
-	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/self.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/self.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/self ${BUILD_DIR}/self.c -lgc
 
 ${BUILD_DIR}/bin/selfself: ${BUILD_DIR}/bin/omni-c ${BUILD_DIR}/bin/self
-	/usr/bin/time --portability ${BUILD_DIR}/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/selfself.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	/usr/bin/time --portability ${BUILD_DIR}/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/selfself.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
 	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/selfself -std=gnu99 ${BUILD_DIR}/selfself.c -lgc
 
 # clang-format will take multiple files but if a file is missing it
