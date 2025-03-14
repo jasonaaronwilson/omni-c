@@ -2,6 +2,9 @@
 
 ## Cleanup & Build
 
+1. "print-tokens" is maybe not the worst utility available. maybe
+   start a tokenizer tool?
+
 1. put git hashes into archives (optionally and conditionally add
 time-stamps?)
 
