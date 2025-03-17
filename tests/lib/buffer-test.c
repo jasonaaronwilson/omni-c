@@ -3,6 +3,7 @@
 //
 
 #include <stdlib.h>
+#include <ctype.h>
 // #include <stdbool.h>
 // #include <stdint.h>
 
@@ -290,30 +291,4 @@ void test_buffer_byte_target(void) {
   target->write_byte(target, 'H');
   target->write_byte(target, 'i');
   test_assert_string_equal("Hi", buffer_to_c_string(buffer));
-}
-
-int main(int argc, char** argv) {
-  test_buffer_c_substring();
-  test_append_byte();
-  test_append_string();
-  test_buffer_from_string();
-  test_buffer_small_printf();
-  test_buffer_large_printf();
-  test_buffer_medium_printf();
-  test_buffer_string_printf();
-  test_buffer_utf8_decode();
-  test_buffer_match_string_at();
-  test_buffer_adjust_region();
-  test_buffer_replace_all();
-  test_buffer_region_contains();
-  test_buffer_beginning_of_line();
-  test_buffer_end_of_line();
-  test_buffer_append_buffer();
-  test_buffer_append_sub_buffer();
-  test_buffer_to_uppercase();
-  test_buffer_to_lowercase();
-  test_buffer_replace_matching_byte();
-  test_buffer_byte_source();
-  test_buffer_byte_target();
-  exit(0);
 }

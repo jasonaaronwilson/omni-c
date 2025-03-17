@@ -1,3 +1,10 @@
+typedef output_file_type_t = enum {
+  OUTPUT_TYPE_UNKNOWN,
+  OUTPUT_TYPE_C_HEADER_FILE,
+  OUTPUT_TYPE_C_LIBRARY_FILE,
+  OUTPUT_TYPE_C_UNIT_TEST_FILE,
+};
+
 /**
  * @function generate_c_output_file
  *
@@ -12,10 +19,10 @@
  * by taking in a struct OR better yet, first refactor into
  * self-standing logical parts and THEN refactor.
  */
-void generate_c_output_file(boolean_t is_library,
+void generate_c_output_file(output_file_type_t output_type,
                             buffer_t* command_line_overview_comment) {
 
-  boolean_t is_header_file = !is_library;
+  boolean_t is_header_file = output_type == OUTPUT_TYPE_C_HEADER_FILE;
 
   symbol_table_t* symbol_table = make_symbol_table();
   parse_and_add_top_level_definitions(symbol_table, FLAG_files,
@@ -124,7 +131,7 @@ void generate_c_output_file(boolean_t is_library,
         printer,
         value_array_get_ptr(binding->definition_nodes, 0,
                             typeof(variable_definition_node_t*)),
-        is_library);
+        !is_header_file);
     append_string(printer, "\n");
   }
 
@@ -169,8 +176,13 @@ void generate_c_output_file(boolean_t is_library,
     buffer_append_string(buffer, "\n");
   }
 
+  /* ================================================================================ */
+  buffer_t* test_main_function_buffer = make_buffer(1);
+  buffer_printf(test_main_function_buffer, "int main(int argc, char** argv) {\n");
+  /* ================================================================================ */
+
   boolean_t append_newline_after_functions = false;
-  if (is_library) {
+  if (!is_header_file) {
     buffer_append_string(buffer, "// ========== functions ==========\n\n");
     for (int i = 0; i < symbol_table->functions->ordered_bindings->length;
          i++) {
@@ -183,10 +195,10 @@ void generate_c_output_file(boolean_t is_library,
         if (!is_inlined_function(function_node)
             && function_node->body != nullptr) {
           append_newline_after_functions = true;
-          if (false) {
-            buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
-          }
           append_c_function_node_and_body(printer, function_node);
+	  if (is_unit_test_function(function_node)) {
+	    buffer_printf(test_main_function_buffer, "    %s();\n", token_to_string(function_node->function_name));
+	  }
         }
       }
     }
@@ -194,9 +206,15 @@ void generate_c_output_file(boolean_t is_library,
   if (append_newline_after_functions) {
     buffer_append_string(buffer, "\n");
   }
+  buffer_printf(test_main_function_buffer, "    exit(0);\n");
+  buffer_printf(test_main_function_buffer, "}\n\n");
 
   if (is_header_file) {
     buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
+  }
+
+  if (output_type == OUTPUT_TYPE_C_UNIT_TEST_FILE) {
+    buffer_append_buffer(buffer, test_main_function_buffer);
   }
 
   buffer_append_buffer(buffer, command_line_overview_comment);
@@ -209,6 +227,14 @@ void generate_c_output_file(boolean_t is_library,
     buffer_write_file(buffer, FLAG_c_output_file);
     // make_file_read_only(FLAG_c_output_file);
   }
+}
+
+// This could be improved by just looking at the signature of the
+// function.
+boolean_t is_unit_test_function(function_node_t* node) {
+  char* function_name = token_to_string(node->function_name);
+  return string_starts_with(function_name, "test_") &&
+    !string_equal(function_name, "test_fail_and_exit");
 }
 
 boolean_t is_inlined_function(function_node_t* node) {

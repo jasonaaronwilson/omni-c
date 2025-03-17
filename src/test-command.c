@@ -1,14 +1,13 @@
 /**
  * @function test_command
  *
- * This command is used to run unit tests. The source files are read
- * and processed like an ordinary build but an additional main()
- * routine is automatically generated for all functions that have a
- * signature like `void test_<*>(void);`.
+ * The source files are read and processed like an ordinary build but
+ * an additional main() * routine is automatically generated for all
+ * functions that have a * signature like `void test_*(void);`.
  *
- * The special file extensions .expr and .stmt are treated specially
- * to faciltate "unit testing" the lexer, parser, the debug printer,
- * and the C appender.
+ * If the only input are files with .expr or .stmt, then internal test
+ * behavior is used instead (lexing + parsing + parse tree printing +
+ * printing as C) is performed instead.
  */
 void test_command(buffer_t* command_line_comment) {
   handle_if_internal_test();
@@ -32,7 +31,7 @@ void test_command(buffer_t* command_line_comment) {
   // --c-output-file to command_line_comment).
 
   /* ----- We need to be able to hook into generate_c_output_file ----- */
-  generate_c_output_file(true, command_line_comment);
+  generate_c_output_file(OUTPUT_TYPE_C_UNIT_TEST_FILE, command_line_comment);
 
   int error_status
       = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
@@ -47,9 +46,26 @@ void test_command(buffer_t* command_line_comment) {
   run_test_binary(rand_binary_file_name);
 }
 
-void run_test_binary(char* rand_binary_file_name) {
-  log_fatal("RUN TEST BINARY!");
-  exit(1);
+void run_test_binary(char* binary_file_name) {
+  log_info("Running test binary %s", binary_file_name);
+
+  value_array_t* argv = make_value_array(1);
+  value_array_add(argv, str_to_value(binary_file_name));
+
+  buffer_t* child_stdin = make_buffer(1);
+  buffer_t* child_stdout = make_buffer(1);
+  buffer_t* child_stderr = make_buffer(1);
+
+  sub_process_t* sub_process = make_sub_process(argv);
+  sub_process_launch_and_wait(sub_process, child_stdin, child_stdout, child_stderr);
+
+  if (sub_process->exit_code) {
+    log_warn("The test binary was NOT happy.");
+  } else {
+    log_warn("The test binary was happy. Thank kier and Lumon.");
+  }
+
+  exit(sub_process->exit_code);
 }
 
 void handle_if_internal_test(void) {

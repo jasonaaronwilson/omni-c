@@ -14,7 +14,7 @@ void build_command(buffer_t* command_line_comment) {
     log_fatal("Must supply --binary-output-file");
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
-  generate_c_output_file(true, command_line_comment);
+  generate_c_output_file(OUTPUT_TYPE_C_LIBRARY_FILE, command_line_comment);
   int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
   if (status == 0) {
     log_info("Exiting normally.");
