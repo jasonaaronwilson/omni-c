@@ -42,7 +42,8 @@ void parse_expression_string_and_print_parse_tree_from_buffer(
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
-void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer) {
+void parse_statement_string_and_print_parse_tree_from_buffer(
+    buffer_t* input_buffer) {
   tokenizer_result_t tokenizer_result = tokenize(input_buffer);
   if (tokenizer_result.tokenizer_error_code) {
     fatal_error(ERROR_ILLEGAL_INPUT);

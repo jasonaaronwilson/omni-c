@@ -57,12 +57,15 @@ void run_test_binary(char* binary_file_name) {
   buffer_t* child_stderr = make_buffer(1);
 
   sub_process_t* sub_process = make_sub_process(argv);
-  sub_process_launch_and_wait(sub_process, child_stdin, child_stdout, child_stderr);
+  sub_process_launch_and_wait(sub_process, child_stdin, child_stdout,
+                              child_stderr);
 
   if (sub_process->exit_code) {
     log_warn("The test binary was NOT happy.");
+    log_warn("   Child stdout was %s\n", buffer_to_c_string(child_stdin));
+    log_warn("   Child stderr was %s\n", buffer_to_c_string(child_stderr));
   } else {
-    log_warn("The test binary was happy. Thank kier and Lumon.");
+    log_warn("The test binary was happy. :)");
   }
 
   exit(sub_process->exit_code);

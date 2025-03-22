@@ -176,10 +176,17 @@ void generate_c_output_file(output_file_type_t output_type,
     buffer_append_string(buffer, "\n");
   }
 
-  /* ================================================================================ */
+  /* ================================================================================
+   */
   buffer_t* test_main_function_buffer = make_buffer(1);
-  buffer_printf(test_main_function_buffer, "int main(int argc, char** argv) {\n");
-  /* ================================================================================ */
+  buffer_append_string(test_main_function_buffer,
+                       "void do_start_test(char* fn_name) {\n    "
+                       "fprintf(stderr, \"Testing %s...\\n\", fn_name);\n}\n");
+
+  buffer_printf(test_main_function_buffer,
+                "int main(int argc, char** argv) {\n");
+  /* ================================================================================
+   */
 
   boolean_t append_newline_after_functions = false;
   if (!is_header_file) {
@@ -196,9 +203,12 @@ void generate_c_output_file(output_file_type_t output_type,
             && function_node->body != nullptr) {
           append_newline_after_functions = true;
           append_c_function_node_and_body(printer, function_node);
-	  if (is_unit_test_function(function_node)) {
-	    buffer_printf(test_main_function_buffer, "    %s();\n", token_to_string(function_node->function_name));
-	  }
+          if (is_unit_test_function(function_node)) {
+            char* fn_name = token_to_string(function_node->function_name);
+            buffer_printf(test_main_function_buffer,
+                          "    do_start_test(\"%s\");\n", fn_name);
+            buffer_printf(test_main_function_buffer, "    %s();\n", fn_name);
+          }
         }
       }
     }
@@ -233,8 +243,8 @@ void generate_c_output_file(output_file_type_t output_type,
 // function.
 boolean_t is_unit_test_function(function_node_t* node) {
   char* function_name = token_to_string(node->function_name);
-  return string_starts_with(function_name, "test_") &&
-    !string_equal(function_name, "test_fail_and_exit");
+  return string_starts_with(function_name, "test_")
+         && !string_equal(function_name, "test_fail_and_exit");
 }
 
 boolean_t is_inlined_function(function_node_t* node) {
