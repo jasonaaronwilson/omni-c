@@ -2,9 +2,6 @@
 /// Test string-tree.c
 ///
 
-#include <stdio.h>
-#include <stdlib.h>
-
 void test_tree() {
   string_tree_t* tree = NULL;
   value_result_t value = {0};
@@ -138,10 +135,4 @@ void test_random_insertion_and_deletion() {
       test_assert(is_ok(lookup_result));
     }
   }
-}
-
-int main(int argc, char** argv) {
-  test_tree();
-  test_random_insertion_and_deletion();
-  exit(0);
 }

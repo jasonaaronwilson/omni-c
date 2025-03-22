@@ -2,8 +2,6 @@
 /// Test string-hashtable.c
 ///
 
-#include <stdlib.h>
-
 void test_string_ht() {
   string_hashtable_t* ht = make_string_hashtable(2);
   value_result_t value = {0};
@@ -90,10 +88,4 @@ void test_ht_random() {
 
   log_test("The final bucket count of the hashtable is %lu",
            cast(value_hashtable_t*, ht)->n_buckets);
-}
-
-int main(int argc, char** argv) {
-  test_string_ht();
-  test_ht_random();
-  exit(0);
 }

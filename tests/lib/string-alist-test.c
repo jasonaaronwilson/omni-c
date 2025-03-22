@@ -2,9 +2,6 @@
 /// Test string-alist.c
 ///
 
-#include <stdio.h>
-#include <stdlib.h>
-
 void test_alist() {
   string_alist_t* list = NULL;
   value_result_t value = {0};
@@ -78,10 +75,4 @@ void test_alist_random() {
       test_assert(is_ok(alist_find(list, uint64_to_string(next))));
     }
   }
-}
-
-int main(int argc, char** argv) {
-  test_alist();
-  test_alist_random();
-  exit(0);
 }
