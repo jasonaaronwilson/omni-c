@@ -2,10 +2,6 @@
 // Test some operations on byte-arrays
 //
 
-#include <stdlib.h>
-
-#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 8
-
 void test_cdl_printer() {
   cdl_printer_t* printer = make_cdl_printer(make_buffer(1));
   cdl_start_table(printer);
@@ -40,9 +36,4 @@ void test_cdl_printer() {
   cdl_end_table(printer);
   cdl_end_table(printer);
   fprintf(stdout, "%s", buffer_to_c_string(printer->buffer));
-}
-
-int main(int argc, char** argv) {
-  test_cdl_printer();
-  exit(0);
 }

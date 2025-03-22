@@ -2,13 +2,6 @@
 // Test some operations on byte-arrays
 //
 
-#include <stdlib.h>
-#include <ctype.h>
-// #include <stdbool.h>
-// #include <stdint.h>
-
-// #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 8
-
 void test_append_byte() {
   buffer_t* buffer = make_buffer(1);
 

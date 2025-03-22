@@ -9,6 +9,8 @@
  * (or inserted into) them reducing large classes of errors.
  */
 
+#include <ctype.h>
+
 // struct buffer_t {}; didn't work but *should* have!
 
 // This forumulation is legal in omni-c and kind of "Go"ish. There

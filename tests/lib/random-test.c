@@ -24,9 +24,3 @@ void test_random_next_u64_bellow() {
     fprintf(stderr, "%d -- %d\n", i, counts[i]);
   }
 }
-
-int main(int argc, char** argv) {
-  test_random_next();
-  test_random_next_u64_bellow();
-  exit(0);
-}
