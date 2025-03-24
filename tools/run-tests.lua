@@ -1,17 +1,19 @@
 #!/usr/bin/env lua
 
 local TestType = {
+    -- This is a unit test automatically linked with "lib"
+    LIB_UNIT_TEST = 1,
     -- The script handles it's own logic
-    SCRIPT = 1,
+    SCRIPT = 2,
     -- The file will be extracted as both a header file and a source
     -- file and compiled with gcc
-    PARSE_TEST = 2,
+    PARSE_TEST = 3,
     -- The same as PARSE_TEST except additionally the compiled program
     -- is run
-    EXECUTE_TEST = 3,
+    EXECUTE_TEST = 4,
     -- The input file is parsed and printed and then compared to a
     -- golden file
-    PARSE_PRINT_TEST = 4,
+    PARSE_PRINT_TEST = 5,
 }
 
 local omni_c_root = os.getenv("OMNI_C_ROOT")
@@ -67,6 +69,9 @@ end
 local function get_test_type(filename)
    if ends_with(filename, ".sh") then
       return TestType.SCRIPT
+   elseif contains(filename, "lib/") then
+      -- Major Kludge. Not even tests/lib!
+      return TestType.LIB_UNIT_TEST
    elseif ends_with(filename, ".expr") or ends_with(filename, ".stmt") then
       return TestType.PARSE_PRINT_TEST
    else
@@ -151,9 +156,14 @@ for _, arg in ipairs(arg) do
 
   local exit_status = false
   local test_type = get_test_type(arg)
+
   local omni_c_exec = get_omni_c_executable()
 
-  if test_type == TestType.SCRIPT then
+  if test_type == TestType.LIB_UNIT_TEST then
+     print("TestType.LIB_UNIT_TEST:", arg)
+     local lib_archive = build_dir .. "/bin/lib.oar"
+     exit_status = os.execute(omni_c_exec .. " test " .. lib_archive .. " " .. arg)
+  elseif test_type == TestType.SCRIPT then
      print("TestType.SCRIPT:", arg)
      exit_status = os.execute(arg)
   elseif test_type == TestType.PARSE_TEST then

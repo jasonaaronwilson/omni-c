@@ -37,7 +37,7 @@ TESTS := $(wildcard ${OMNI_C_ROOT}/tests/*.c ${OMNI_C_ROOT}/tests/expressions/*.
 # lib/tests/value-hashtable-test.sh
 # lib/tests/logger-test.sh
 LIB_TESTS := \
-	${OMNI_C_ROOT}/tests/lib/buffer-test.sh \
+	${OMNI_C_ROOT}/tests/lib/buffer-test.c \
 	${OMNI_C_ROOT}/tests/lib/cdl-printer-test.sh \
 	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
 	${OMNI_C_ROOT}/tests/lib/io-test.sh \
