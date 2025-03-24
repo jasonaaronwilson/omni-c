@@ -39,21 +39,22 @@ TESTS := $(wildcard ${OMNI_C_ROOT}/tests/*.c ${OMNI_C_ROOT}/tests/expressions/*.
 LIB_TESTS := \
 	${OMNI_C_ROOT}/tests/lib/buffer-test.c \
 	${OMNI_C_ROOT}/tests/lib/cdl-printer-test.c \
-	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
-	${OMNI_C_ROOT}/tests/lib/io-test.sh \
-	${OMNI_C_ROOT}/tests/lib/random-test.sh \
-	${OMNI_C_ROOT}/tests/lib/splitjoin-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-alist-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-hashtable-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-tokenizer-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-tree-test.sh \
-	${OMNI_C_ROOT}/tests/lib/string-util-test.sh \
-	${OMNI_C_ROOT}/tests/lib/sub-process-test.sh \
-	${OMNI_C_ROOT}/tests/lib/terminal-test.sh \
+	${OMNI_C_ROOT}/tests/lib/random-test.c \
+	${OMNI_C_ROOT}/tests/lib/splitjoin-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-alist-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-hashtable-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-tokenizer-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-tree-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-util-test.c \
+	${OMNI_C_ROOT}/tests/lib/sub-process-test.c \
+	${OMNI_C_ROOT}/tests/lib/terminal-test.c \
 	${OMNI_C_ROOT}/tests/lib/uint64-test.c \
 	${OMNI_C_ROOT}/tests/lib/value-alist-test.c \
 	${OMNI_C_ROOT}/tests/lib/value-array-test.c \
-	${OMNI_C_ROOT}/tests/lib/value-tree-test.c
+	${OMNI_C_ROOT}/tests/lib/value-tree-test.c \
+	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
+	${OMNI_C_ROOT}/tests/lib/io-test.sh
+
 
 TESTS += $(LIB_TESTS)
 
