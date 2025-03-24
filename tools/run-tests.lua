@@ -1,5 +1,19 @@
 #!/usr/bin/env lua
 
+local TestType = {
+    -- The script handles it's own logic
+    SCRIPT = 1,
+    -- The file will be extracted as both a header file and a source
+    -- file and compiled with gcc
+    PARSE_TEST = 2,
+    -- The same as PARSE_TEST except additionally the compiled program
+    -- is run
+    EXECUTE_TEST = 3,
+    -- The input file is parsed and printed and then compared to a
+    -- golden file
+    PARSE_PRINT_TEST = 4,
+}
+
 local omni_c_root = os.getenv("OMNI_C_ROOT")
 local build_dir = os.getenv("BUILD_DIR")
 
@@ -49,20 +63,6 @@ end
 function contains(str, substr)
   return str:find(substr) ~= nil
 end
-
-local TestType = {
-    -- The script handles it's own logic
-    SCRIPT = 1,
-    -- The file will be extracted as both a header file and a source
-    -- file and compiled with gcc
-    PARSE_TEST = 2,
-    -- The same as PARSE_TEST except additionally the compiled program
-    -- is run
-    EXECUTE_TEST = 3,
-    -- The input file is parsed and printed and then compared to a
-    -- golden file
-    PARSE_PRINT_TEST = 4,
-}
 
 local function get_test_type(filename)
    if ends_with(filename, ".sh") then
