@@ -69,8 +69,3 @@ void check_values(value_tree_t* t) {
     check_values(t->right);
   }
 }
-
-int main(int argc, char** argv) {
-  test_tree();
-  exit(0);
-}

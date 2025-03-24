@@ -105,9 +105,3 @@ void test_ht_random() {
 
   log_test("The final bucket count of the hashtable is %lu", ht->n_buckets);
 }
-
-int main(int argc, char** argv) {
-  test_value_ht();
-  test_ht_random();
-  exit(0);
-}

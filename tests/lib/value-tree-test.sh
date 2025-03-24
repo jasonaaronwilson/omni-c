@@ -1,3 +1,4 @@
 #!/bin/bash
-exec ${OMNI_C_ROOT}/tests/lib/build-and-run.sh ${OMNI_C_ROOT}/tests/lib/value-tree-test.c value-tree-test
-
+readonly OMNI_CC_PATH="${BUILD_DIR}/bin/omni-c"
+readonly LIB_PATH="${BUILD_DIR}/bin/lib.oar"
+exec ${OMNI_CC_PATH} test ${LIB_PATH} ${OMNI_C_ROOT}/tests/lib/value-tree-test.c

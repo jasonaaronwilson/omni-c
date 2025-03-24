@@ -2,9 +2,6 @@
 /// Test value-alist.c
 ///
 
-#include <stdio.h>
-#include <stdlib.h>
-
 void test_value_alist() {
   value_alist_t* list = NULL;
   value_result_t value = {0};
@@ -84,10 +81,4 @@ void test_value_alist_random() {
           list, cmp_string_values, str_to_value(uint64_to_string(next)))));
     }
   }
-}
-
-int main(int argc, char** argv) {
-  test_value_alist();
-  test_value_alist_random();
-  exit(0);
 }
