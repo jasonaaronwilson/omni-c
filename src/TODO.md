@@ -11,9 +11,9 @@ time-stamps?)
 1. detect the same "source path" for a file and error out if they are
 the same.
 
-1. ooops, tests still write an .out file to the tests/ directory but
-   something kind of cleans them up? that's on run-tests.lua and we
-   just touched that code?
+1. do tests still write an .out file to the tests/ directory?
+
+1. convert lib/*.sh tests to some kind of "large" test?
 
 ## our source code only uses nullptr instead of NULL
 
