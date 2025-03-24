@@ -2,7 +2,7 @@
 /// Test string-tree.c
 ///
 
-void test_tree() {
+void test_tree(void) {
   string_tree_t* tree = NULL;
   value_result_t value = {0};
 

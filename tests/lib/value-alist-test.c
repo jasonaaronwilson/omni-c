@@ -2,7 +2,7 @@
 /// Test value-alist.c
 ///
 
-void test_value_alist() {
+void test_value_alist(void) {
   value_alist_t* list = NULL;
   value_result_t value = {0};
 
@@ -47,7 +47,7 @@ void test_value_alist() {
   // clang-format on
 }
 
-void test_value_alist_random() {
+void test_value_alist_random(void) {
   value_alist_t* list = NULL;
 
   int iterations = 1000;

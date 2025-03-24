@@ -2,7 +2,7 @@
 // Test some operations on byte-arrays
 //
 
-void test_append_byte() {
+void test_append_byte(void) {
   buffer_t* buffer = make_buffer(1);
 
   test_assert(buffer_length(buffer) == strlen(""));
@@ -24,7 +24,7 @@ void test_append_byte() {
   free_bytes(buffer);
 }
 
-void test_append_string() {
+void test_append_string(void) {
   buffer_t* buffer = make_buffer(3);
   buffer = buffer_append_string(buffer, "Hello");
   buffer = buffer_append_string(buffer, " ");
@@ -46,7 +46,7 @@ void test_buffer_from_string(void) {
   free_bytes(buffer);
 }
 
-void test_buffer_c_substring() {
+void test_buffer_c_substring(void) {
   buffer_t* buffer = make_buffer(3);
   buffer = buffer_append_string(buffer, "abcdefghijklmnop");
   test_assert(string_equal("", buffer_c_substring(buffer, 0, 0)));

@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 
-void test_value_array_add() {
+void test_value_array_add(void) {
   value_array_t* array = make_value_array(1);
   value_array_add(array, str_to_value("a"));
   value_array_add(array, str_to_value("b"));
@@ -18,7 +18,7 @@ void test_value_array_add() {
   test_assert(string_equal("f", value_array_get(array, 5).str));
 }
 
-void test_replace() {
+void test_replace(void) {
   value_array_t* array = make_value_array(1);
   value_array_add(array, str_to_value("a"));
   value_array_add(array, str_to_value("b"));
@@ -32,7 +32,7 @@ void test_replace() {
   test_assert(string_equal("C", value_array_get(array, 2).str));
 }
 
-void test_push_pop() {
+void test_push_pop(void) {
   value_array_t* array = make_value_array(1);
   value_array_push(array, str_to_value("a"));
   value_array_push(array, str_to_value("b"));
@@ -43,7 +43,7 @@ void test_push_pop() {
   test_assert(string_equal("a", value_array_pop(array).str));
 }
 
-void test_insert_at_and_delete_at() {
+void test_insert_at_and_delete_at(void) {
   value_array_t* array = make_value_array(1);
   value_array_insert_at(array, 0, str_to_value("a"));
 
@@ -91,7 +91,7 @@ void check_for_zero_or_duplicates(value_array_t* array) {
   }
 }
 
-void test_insert_at_and_delete_at_random() {
+void test_insert_at_and_delete_at_random(void) {
   value_array_t* array = make_value_array(1);
 
   random_state_t state = random_state_for_test();

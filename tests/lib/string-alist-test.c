@@ -2,7 +2,7 @@
 /// Test string-alist.c
 ///
 
-void test_alist() {
+void test_alist(void) {
   string_alist_t* list = NULL;
   value_result_t value = {0};
 
@@ -46,7 +46,7 @@ void test_alist() {
   // clang-format on
 }
 
-void test_alist_random() {
+void test_alist_random(void) {
   string_alist_t* list = NULL;
 
   int iterations = 1000;

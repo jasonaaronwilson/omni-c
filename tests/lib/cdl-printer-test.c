@@ -2,7 +2,7 @@
 // Test some operations on byte-arrays
 //
 
-void test_cdl_printer() {
+void test_cdl_printer(void) {
   cdl_printer_t* printer = make_cdl_printer(make_buffer(1));
   cdl_start_table(printer);
   cdl_key(printer, "number");

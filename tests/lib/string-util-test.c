@@ -32,7 +32,7 @@
     }                                                                          \
   } while (0)
 
-void test_utf8_decode_ascii() {
+void test_utf8_decode_ascii(void) {
   TEST_VALID_UTF8_SEQUENCE('A', 1, 'A');
   TEST_VALID_UTF8_SEQUENCE('Z', 1, 'Z');
   TEST_VALID_UTF8_SEQUENCE('a', 1, 'a');
@@ -41,12 +41,12 @@ void test_utf8_decode_ascii() {
   TEST_VALID_UTF8_SEQUENCE('9', 1, '9');
 }
 
-void test_utf8_decode_two_bytes() {
+void test_utf8_decode_two_bytes(void) {
   TEST_VALID_UTF8_SEQUENCE(0xc9, 2, 0xc3, 0x89);
   TEST_VALID_UTF8_SEQUENCE(0xe9, 2, 0xc3, 0xa9);
 }
 
-void test_utf8_decode_three_bytes() {
+void test_utf8_decode_three_bytes(void) {
   // https://www.isthisthingon.org/unicode/index.phtml
 
   // These may not map to a common unicode character but they should
@@ -66,7 +66,7 @@ void test_utf8_decode_three_bytes() {
     test_assert(result.code_point == 0);                                       \
   } while (0)
 
-void test_utf8_decode_invalid_sequences() {
+void test_utf8_decode_invalid_sequences(void) {
   // From Chat GPT3.5
   TEST_INVALID_UTF8_SEQUENCE(0xff, 0xff);
 
@@ -105,7 +105,7 @@ void check_illegal(char* value) {
   test_assert(is_not_ok(result));
 }
 
-void test_number_parsing() {
+void test_number_parsing(void) {
   check_legal("0", 0);
   check_legal("1", 1);
   check_legal("64", 64);
@@ -127,7 +127,7 @@ void test_number_parsing() {
   check_illegal("0b");
 }
 
-void test_is_null_or_empty() {
+void test_is_null_or_empty(void) {
   if (!(string_is_null_or_empty(NULL))) {
     test_fail("string_is_null_or_empty");
   }
@@ -139,7 +139,7 @@ void test_is_null_or_empty() {
   }
 }
 
-void test_string_equal() {
+void test_string_equal(void) {
   if (!(string_equal("abc", "abc"))) {
     test_fail("string_equal");
   }
@@ -148,7 +148,7 @@ void test_string_equal() {
   }
 }
 
-void test_starts_with() {
+void test_starts_with(void) {
   if (!(string_starts_with("The quick brown fox", "The quick"))) {
     test_fail("string_starts_with");
   }
@@ -157,7 +157,7 @@ void test_starts_with() {
   }
 }
 
-void test_ends_with() {
+void test_ends_with(void) {
   if (!(string_ends_with("The quick brown fox", "brown fox"))) {
     test_fail("string_ends_with");
   }
@@ -166,7 +166,7 @@ void test_ends_with() {
   }
 }
 
-void test_string_contains_char() {
+void test_string_contains_char(void) {
   if (!(string_contains_char("The quick brown fox", 'q'))) {
     test_fail("string_contains_char");
   }
@@ -175,7 +175,7 @@ void test_string_contains_char() {
   }
 }
 
-void test_string_index_of_char() {
+void test_string_index_of_char(void) {
   if (string_index_of_char("The quick brown fox", 'q') != 4) {
     test_fail("string_index_of_char");
   }
@@ -184,7 +184,7 @@ void test_string_index_of_char() {
   }
 }
 
-void test_string_left_pad() {
+void test_string_left_pad(void) {
   test_assert_string_equal("      ", string_left_pad("", 6, ' '));
   test_assert_string_equal("   abc", string_left_pad("abc", 6, ' '));
   test_assert_string_equal("abcxyz", string_left_pad("abcxyz", 6, ' '));
@@ -192,7 +192,7 @@ void test_string_left_pad() {
                            string_left_pad("abcdefghijklmnop", 6, ' '));
 }
 
-void test_string_right_pad() {
+void test_string_right_pad(void) {
   test_assert_string_equal("      ", string_right_pad("", 6, ' '));
   test_assert_string_equal("abc   ", string_right_pad("abc", 6, ' '));
   test_assert_string_equal("abcxyz", string_right_pad("abcxyz", 6, ' '));
@@ -200,7 +200,7 @@ void test_string_right_pad() {
                            string_right_pad("abcdefghijklmnop", 6, ' '));
 }
 
-void test_string_truncate() {
+void test_string_truncate(void) {
   test_assert_string_equal("123", string_truncate("123", 5, "..."));
   test_assert_string_equal("12345", string_truncate("12345", 5, "..."));
   // test_assert_string_equal("12345...", string_truncate("123456", 5, "..."));

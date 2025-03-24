@@ -2,14 +2,14 @@
 // Test some operations on uint64_t
 //
 
-void test_uint64_highest_bit_set() {
+void test_uint64_highest_bit_set(void) {
   test_assert(0 == uint64_highest_bit_set(1ULL << 0));
   for (int i = 0; i < 64; i++) {
     test_assert(i == uint64_highest_bit_set(cast(uint64_t, 1) << i));
   }
 }
 
-void test_uint64_highest_bit_set_random() {
+void test_uint64_highest_bit_set_random(void) {
   random_state_t state = random_state_for_test();
   for (int i = 0; i < 64; i++) {
     uint64_t next = random_next(&state);
@@ -28,7 +28,7 @@ void test_uint64_highest_bit_set_random() {
   }
 }
 
-void test_min_max() {
+void test_min_max(void) {
   test_assert(min(100, 50) == 50);
   test_assert(max(100, 50) == 100);
 

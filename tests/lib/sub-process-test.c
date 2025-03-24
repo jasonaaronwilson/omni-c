@@ -54,7 +54,7 @@ void test_sub_process_write(void) {
   printf("%s\n\n", buffer_to_c_string(buffer_in));
 }
 
-void test_sub_process_launch_and_wait() {
+void test_sub_process_launch_and_wait(void) {
   char* inline_script
       = "echo 'This goes to stdout'\n"
         "echo 'This goes to stderr' >&2\n"
@@ -78,7 +78,7 @@ void test_sub_process_launch_and_wait() {
   printf("%s\n\n", buffer_to_c_string(buffer_child_stderr));
 }
 
-void FIXME_test_sub_process_launch_and_wait_no_stdin() {
+void FIXME_test_sub_process_launch_and_wait_no_stdin(void) {
   char* inline_script
       = "echo 'This goes to stdout'\n"
         "echo 'This goes to stderr' >&2\n"

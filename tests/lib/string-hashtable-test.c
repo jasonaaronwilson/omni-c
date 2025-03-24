@@ -2,7 +2,7 @@
 /// Test string-hashtable.c
 ///
 
-void test_string_ht() {
+void test_string_ht(void) {
   string_hashtable_t* ht = make_string_hashtable(2);
   value_result_t value = {0};
 
@@ -46,7 +46,7 @@ void test_string_ht() {
   // clang-format on
 }
 
-void test_ht_random() {
+void test_ht_random(void) {
   string_hashtable_t* ht = make_string_hashtable(3);
 
   int iterations = 1000;

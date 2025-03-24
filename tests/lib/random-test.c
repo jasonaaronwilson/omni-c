@@ -2,9 +2,7 @@
 // Test some operations on byte-arrays
 //
 
-#include <stdlib.h>
-
-void test_random_next() {
+void test_random_next(void) {
   random_state_t state = random_state_for_test();
   for (int i = 0; i < 10; i++) {
     uint64_t next = random_next(&state);
@@ -12,7 +10,7 @@ void test_random_next() {
   }
 }
 
-void test_random_next_u64_bellow() {
+void test_random_next_u64_bellow(void) {
   int counts[100] = {0};
   random_state_t state = random_state_for_test();
   for (int i = 0; i < 1000000; i++) {
