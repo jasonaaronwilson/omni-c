@@ -2,9 +2,7 @@
 // Manual Test for our simple terminal support.
 //
 
-#include <stdlib.h>
-
-int main(int argc, char** argv) {
+void test_terminal(void) {
   buffer_t* buffer = make_buffer(100);
 
   buffer = term_clear_screen(buffer);
@@ -54,5 +52,4 @@ int main(int argc, char** argv) {
   // TODO(jawilson): ability to query the initial foreground and
   // background color so we can reset the terminal back to it's
   // initial state?
-  exit(0);
 }

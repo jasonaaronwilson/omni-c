@@ -2,8 +2,6 @@
 // Test Sub Processes
 //
 
-#include <stdlib.h>
-
 void test_sub_process_read(void) {
   value_array_t* argv = make_value_array(1);
   value_array_add(argv, str_to_value("/usr/bin/ls"));
@@ -80,7 +78,7 @@ void test_sub_process_launch_and_wait() {
   printf("%s\n\n", buffer_to_c_string(buffer_child_stderr));
 }
 
-void test_sub_process_launch_and_wait_no_stdin() {
+void FIXME_test_sub_process_launch_and_wait_no_stdin() {
   char* inline_script
       = "echo 'This goes to stdout'\n"
         "echo 'This goes to stderr' >&2\n"
@@ -102,12 +100,4 @@ void test_sub_process_launch_and_wait_no_stdin() {
 
   printf("%s\n\n", buffer_to_c_string(buffer_child_stdout));
   printf("%s\n\n", buffer_to_c_string(buffer_child_stderr));
-}
-
-
-int main(int argc, char** argv) {
-  test_sub_process_read();
-  test_sub_process_write();
-  test_sub_process_launch_and_wait();
-  exit(0);
 }

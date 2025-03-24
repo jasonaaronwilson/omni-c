@@ -36,10 +36,3 @@ void test_min_max() {
   test_assert(min(100, -50) == -50);
   test_assert(max(-100, -50) == -50);
 }
-
-int main(int argc, char** argv) {
-  test_uint64_highest_bit_set();
-  test_uint64_highest_bit_set_random();
-  test_min_max();
-  exit(0);
-}
