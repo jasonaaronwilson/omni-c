@@ -105,6 +105,7 @@ typedef struct {
 #include <string.h>
 #include <gc.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -115,7 +116,6 @@ typedef struct {
 #include <time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <ctype.h>
 
 // ========== defines ==========
 
@@ -1057,6 +1057,13 @@ typedef struct balanced_construct_node_S balanced_construct_node_t;
 typedef struct printer_S printer_t;
 
 typedef struct tmp_provider_t__generated_S tmp_provider_t;
+
+typedef enum {
+  OUTPUT_TYPE_UNKNOWN,
+  OUTPUT_TYPE_C_HEADER_FILE,
+  OUTPUT_TYPE_C_LIBRARY_FILE,
+  OUTPUT_TYPE_C_UNIT_TEST_FILE,
+} output_file_type_t;
 
 // ========== stuctures/unions ==========
 
@@ -2303,7 +2310,8 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv);
 void archive_command(void);
 void generate_archive_file(void);
 void build_command(buffer_t* command_line_comment);
-void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment);
+void generate_c_output_file(output_file_type_t output_type, buffer_t* command_line_overview_comment);
+boolean_t is_unit_test_function(function_node_t* node);
 boolean_t is_inlined_function(function_node_t* node);
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table);
 char* include_node_to_string(cpp_include_node_t* node);
@@ -2318,7 +2326,7 @@ void print_tokens(void);
 void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer);
 void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer);
 void test_command(buffer_t* command_line_comment);
-void run_test_binary(char* rand_binary_file_name);
+void run_test_binary(char* binary_file_name);
 void handle_if_internal_test(void);
 void handle_statement_test(char* file_name);
 void handle_expression_test(char* file_name);
@@ -2379,6 +2387,9 @@ enum_metadata_t* type_qualifier_metadata();
 char* type_node_kind_to_string(type_node_kind_t value);
 type_node_kind_t string_to_type_node_kind(char* value);
 enum_metadata_t* type_node_kind_metadata();
+char* output_file_type_to_string(output_file_type_t value);
+output_file_type_t string_to_output_file_type(char* value);
+enum_metadata_t* output_file_type_metadata();
 
 // ========== inlined functions ==========
 
@@ -5449,684 +5460,684 @@ utf8_decode_result_t utf8_decode(const uint8_t* array)
 }
 
 
-# 46 "lib/buffer.c"
+# 48 "lib/buffer.c"
 buffer_t* make_buffer(uint64_t initial_capacity)
-# 46 "lib/buffer.c"
+# 48 "lib/buffer.c"
 {
   buffer_t* result = malloc_struct(buffer_t);
 
-# 48 "lib/buffer.c"
+# 50 "lib/buffer.c"
   if ((initial_capacity<16))
 
-# 48 "lib/buffer.c"
+# 50 "lib/buffer.c"
   {
 
-# 49 "lib/buffer.c"
+# 51 "lib/buffer.c"
     (initial_capacity=16);
   }
 
-# 51 "lib/buffer.c"
+# 53 "lib/buffer.c"
   if ((initial_capacity>0))
 
-# 51 "lib/buffer.c"
+# 53 "lib/buffer.c"
   {
 
-# 52 "lib/buffer.c"
+# 54 "lib/buffer.c"
     ((result->capacity)=initial_capacity);
 
-# 53 "lib/buffer.c"
+# 55 "lib/buffer.c"
     ((result->elements)=malloc_bytes(initial_capacity));
   }
 
-# 55 "lib/buffer.c"
+# 57 "lib/buffer.c"
   return result;
 }
 
 
-# 63 "lib/buffer.c"
+# 65 "lib/buffer.c"
 uint64_t buffer_length(buffer_t* array)
-# 63 "lib/buffer.c"
+# 65 "lib/buffer.c"
 {
 
-# 63 "lib/buffer.c"
+# 65 "lib/buffer.c"
   return (array->length);
 }
 
 
-# 70 "lib/buffer.c"
+# 72 "lib/buffer.c"
 void buffer_clear(buffer_t* buffer)
-# 70 "lib/buffer.c"
+# 72 "lib/buffer.c"
 {
 
-# 71 "lib/buffer.c"
+# 73 "lib/buffer.c"
   for (
     int i = 0;
     (i<(buffer->capacity));
     (i++))
 
-# 71 "lib/buffer.c"
+# 73 "lib/buffer.c"
   {
 
-# 72 "lib/buffer.c"
+# 74 "lib/buffer.c"
     (((buffer->elements)[i])=0);
   }
 
-# 74 "lib/buffer.c"
+# 76 "lib/buffer.c"
   ((buffer->length)=0);
 }
 
 
-# 82 "lib/buffer.c"
+# 84 "lib/buffer.c"
 uint8_t buffer_get(buffer_t* buffer, uint64_t position)
-# 82 "lib/buffer.c"
+# 84 "lib/buffer.c"
 {
 
-# 83 "lib/buffer.c"
+# 85 "lib/buffer.c"
   if ((position<(buffer->length)))
-
-# 83 "lib/buffer.c"
-  {
-
-# 84 "lib/buffer.c"
-    return ((buffer->elements)[position]);
-  }
-  else
 
 # 85 "lib/buffer.c"
   {
 
 # 86 "lib/buffer.c"
+    return ((buffer->elements)[position]);
+  }
+  else
+
+# 87 "lib/buffer.c"
+  {
+
+# 88 "lib/buffer.c"
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 
-# 89 "lib/buffer.c"
+# 91 "lib/buffer.c"
     return 0;
   }
 }
 
 
-# 100 "lib/buffer.c"
+# 102 "lib/buffer.c"
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end)
-# 100 "lib/buffer.c"
+# 102 "lib/buffer.c"
 {
 
-# 101 "lib/buffer.c"
+# 103 "lib/buffer.c"
   if ((buffer==((void *)0)))
 
-# 101 "lib/buffer.c"
+# 103 "lib/buffer.c"
   {
 
-# 102 "lib/buffer.c"
+# 104 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
 
-# 105 "lib/buffer.c"
+# 107 "lib/buffer.c"
   if ((start>end))
 
-# 105 "lib/buffer.c"
+# 107 "lib/buffer.c"
   {
 
-# 106 "lib/buffer.c"
+# 108 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
   uint64_t copy_length = (end-start);
   char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
 
-# 111 "lib/buffer.c"
+# 113 "lib/buffer.c"
   if ((copy_length>0))
 
-# 111 "lib/buffer.c"
+# 113 "lib/buffer.c"
   {
 
-# 112 "lib/buffer.c"
+# 114 "lib/buffer.c"
     memcpy(result, (&((buffer->elements)[start])), copy_length);
   }
 
-# 114 "lib/buffer.c"
+# 116 "lib/buffer.c"
   ((result[copy_length])='\0');
 
-# 115 "lib/buffer.c"
+# 117 "lib/buffer.c"
   return result;
 }
 
 
-# 124 "lib/buffer.c"
+# 126 "lib/buffer.c"
 char* buffer_to_c_string(buffer_t* buffer)
-# 124 "lib/buffer.c"
+# 126 "lib/buffer.c"
 {
 
-# 125 "lib/buffer.c"
+# 127 "lib/buffer.c"
   return buffer_c_substring(buffer, 0, (buffer->length));
 }
 
 
-# 133 "lib/buffer.c"
+# 135 "lib/buffer.c"
 buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element)
-# 133 "lib/buffer.c"
+# 135 "lib/buffer.c"
 {
 
-# 134 "lib/buffer.c"
+# 136 "lib/buffer.c"
   if (((buffer->length)<(buffer->capacity)))
 
-# 134 "lib/buffer.c"
+# 136 "lib/buffer.c"
   {
 
-# 135 "lib/buffer.c"
+# 137 "lib/buffer.c"
     (((buffer->elements)[(buffer->length)])=element);
 
-# 136 "lib/buffer.c"
+# 138 "lib/buffer.c"
     ((buffer->length)++);
 
-# 137 "lib/buffer.c"
+# 139 "lib/buffer.c"
     return buffer;
   }
 
-# 139 "lib/buffer.c"
+# 141 "lib/buffer.c"
   (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
 
-# 140 "lib/buffer.c"
+# 142 "lib/buffer.c"
   return buffer_append_byte(buffer, element);
 }
 
 
-# 148 "lib/buffer.c"
+# 150 "lib/buffer.c"
 buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes)
-# 149 "lib/buffer.c"
+# 151 "lib/buffer.c"
 {
 
-# 151 "lib/buffer.c"
+# 153 "lib/buffer.c"
   for (
     int i = 0;
     (i<n_bytes);
     (i++))
 
-# 151 "lib/buffer.c"
+# 153 "lib/buffer.c"
   {
 
-# 152 "lib/buffer.c"
+# 154 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (bytes[i])));
   }
 
-# 154 "lib/buffer.c"
+# 156 "lib/buffer.c"
   return buffer;
 }
 
 
-# 163 "lib/buffer.c"
+# 165 "lib/buffer.c"
 buffer_t* buffer_append_string(buffer_t* buffer, const char* str)
-# 163 "lib/buffer.c"
+# 165 "lib/buffer.c"
 {
 
-# 164 "lib/buffer.c"
+# 166 "lib/buffer.c"
   return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
 }
 
 
-# 175 "lib/buffer.c"
+# 177 "lib/buffer.c"
 extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity)
-# 175 "lib/buffer.c"
+# 177 "lib/buffer.c"
 {
 
-# 176 "lib/buffer.c"
+# 178 "lib/buffer.c"
   if (((buffer->capacity)<capacity))
 
-# 176 "lib/buffer.c"
+# 178 "lib/buffer.c"
   {
     uint8_t* new_elements = malloc_bytes(capacity);
 
-# 178 "lib/buffer.c"
+# 180 "lib/buffer.c"
     memcpy(new_elements, (buffer->elements), (buffer->length));
 
-# 179 "lib/buffer.c"
+# 181 "lib/buffer.c"
     free_bytes((buffer->elements));
 
-# 180 "lib/buffer.c"
+# 182 "lib/buffer.c"
     ((buffer->elements)=new_elements);
 
-# 181 "lib/buffer.c"
+# 183 "lib/buffer.c"
     ((buffer->capacity)=capacity);
   }
 
-# 183 "lib/buffer.c"
+# 185 "lib/buffer.c"
   return buffer;
 }
 
 
-# 197 "lib/buffer.c"
+# 199 "lib/buffer.c"
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...)
-# 197 "lib/buffer.c"
+# 199 "lib/buffer.c"
 {
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
 
-# 200 "lib/buffer.c"
+# 202 "lib/buffer.c"
   do
-# 200 "lib/buffer.c"
+# 202 "lib/buffer.c"
   {
     va_list args;
 
-# 202 "lib/buffer.c"
+# 204 "lib/buffer.c"
     va_start(args, format);
 
-# 203 "lib/buffer.c"
+# 205 "lib/buffer.c"
     (n_bytes=vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args));
 
-# 205 "lib/buffer.c"
+# 207 "lib/buffer.c"
     va_end(args);
   }
   while (0);
 
-# 208 "lib/buffer.c"
+# 210 "lib/buffer.c"
   if ((n_bytes<BUFFER_PRINTF_INITIAL_BUFFER_SIZE))
 
-# 208 "lib/buffer.c"
+# 210 "lib/buffer.c"
   {
 
-# 209 "lib/buffer.c"
+# 211 "lib/buffer.c"
     return buffer_append_string(buffer, cbuffer);
   }
   else
 
-# 210 "lib/buffer.c"
+# 212 "lib/buffer.c"
   {
     char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
     va_list args;
 
-# 216 "lib/buffer.c"
+# 218 "lib/buffer.c"
     va_start(args, format);
     int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
 
-# 218 "lib/buffer.c"
+# 220 "lib/buffer.c"
     va_end(args);
 
-# 219 "lib/buffer.c"
+# 221 "lib/buffer.c"
     if ((n_bytes_second!=n_bytes))
 
-# 219 "lib/buffer.c"
+# 221 "lib/buffer.c"
     {
 
-# 220 "lib/buffer.c"
+# 222 "lib/buffer.c"
       fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
     }
 
-# 222 "lib/buffer.c"
+# 224 "lib/buffer.c"
     (buffer=buffer_append_string(buffer, result));
 
-# 223 "lib/buffer.c"
+# 225 "lib/buffer.c"
     free_bytes(result);
 
-# 224 "lib/buffer.c"
+# 226 "lib/buffer.c"
     return buffer;
   }
 }
 
 
-# 235 "lib/buffer.c"
+# 237 "lib/buffer.c"
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count)
-# 236 "lib/buffer.c"
+# 238 "lib/buffer.c"
 {
 
-# 237 "lib/buffer.c"
+# 239 "lib/buffer.c"
   for (
     int i = 0;
     (i<count);
     (i++))
 
-# 237 "lib/buffer.c"
+# 239 "lib/buffer.c"
   {
 
-# 238 "lib/buffer.c"
+# 240 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, byte));
   }
 
-# 240 "lib/buffer.c"
+# 242 "lib/buffer.c"
   return buffer;
 }
 
 
-# 249 "lib/buffer.c"
+# 251 "lib/buffer.c"
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position)
-# 249 "lib/buffer.c"
+# 251 "lib/buffer.c"
 {
 
-# 250 "lib/buffer.c"
+# 252 "lib/buffer.c"
   if ((position>=(buffer->length)))
 
-# 250 "lib/buffer.c"
+# 252 "lib/buffer.c"
   {
 
-# 251 "lib/buffer.c"
+# 253 "lib/buffer.c"
     return ((utf8_decode_result_t) {.error = true});
   }
   utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
 
-# 254 "lib/buffer.c"
+# 256 "lib/buffer.c"
   if ((result.error))
 
-# 254 "lib/buffer.c"
+# 256 "lib/buffer.c"
   {
 
-# 255 "lib/buffer.c"
+# 257 "lib/buffer.c"
     return result;
   }
 
-# 257 "lib/buffer.c"
+# 259 "lib/buffer.c"
   if (((position+(result.num_bytes))>(buffer->length)))
 
-# 257 "lib/buffer.c"
+# 259 "lib/buffer.c"
   {
 
-# 258 "lib/buffer.c"
+# 260 "lib/buffer.c"
     return ((utf8_decode_result_t) {.error = true});
   }
 
-# 260 "lib/buffer.c"
+# 262 "lib/buffer.c"
   return result;
 }
 
 
-# 275 "lib/buffer.c"
+# 277 "lib/buffer.c"
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
-# 276 "lib/buffer.c"
+# 278 "lib/buffer.c"
 {
 
-# 277 "lib/buffer.c"
+# 279 "lib/buffer.c"
   if ((code_point<0x80))
 
-# 277 "lib/buffer.c"
+# 279 "lib/buffer.c"
   {
 
-# 279 "lib/buffer.c"
+# 281 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, code_point));
 
-# 280 "lib/buffer.c"
+# 282 "lib/buffer.c"
     return buffer;
   }
   else
-
-# 281 "lib/buffer.c"
-  if ((code_point<0x800))
-
-# 281 "lib/buffer.c"
-  {
 
 # 283 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
+  if ((code_point<0x800))
 
-# 284 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+# 283 "lib/buffer.c"
+  {
 
 # 285 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
+
+# 286 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+
+# 287 "lib/buffer.c"
     return buffer;
   }
   else
-
-# 286 "lib/buffer.c"
-  if ((code_point<0x10000))
-
-# 286 "lib/buffer.c"
-  {
 
 # 288 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
+  if ((code_point<0x10000))
 
-# 289 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+# 288 "lib/buffer.c"
+  {
 
 # 290 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+    (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
 
 # 291 "lib/buffer.c"
-    return buffer;
-  }
-  else
-
-# 292 "lib/buffer.c"
-  if ((code_point<=0x10FFFF))
-
-# 292 "lib/buffer.c"
-  {
-
-# 294 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
-
-# 295 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
-
-# 296 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
 
-# 297 "lib/buffer.c"
+# 292 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
 
-# 298 "lib/buffer.c"
+# 293 "lib/buffer.c"
     return buffer;
   }
   else
 
-# 299 "lib/buffer.c"
+# 294 "lib/buffer.c"
+  if ((code_point<=0x10FFFF))
+
+# 294 "lib/buffer.c"
   {
 
+# 296 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
+
+# 297 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
+
+# 298 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+
+# 299 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+
+# 300 "lib/buffer.c"
+    return buffer;
+  }
+  else
+
 # 301 "lib/buffer.c"
+  {
+
+# 303 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
 
-# 302 "lib/buffer.c"
+# 304 "lib/buffer.c"
     return 0;
   }
 }
 
 
-# 310 "lib/buffer.c"
+# 312 "lib/buffer.c"
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str)
-# 311 "lib/buffer.c"
+# 313 "lib/buffer.c"
 {
 
-# 312 "lib/buffer.c"
+# 314 "lib/buffer.c"
   for (
     uint64_t pos = start_position;
     true;
     (pos++))
 
-# 312 "lib/buffer.c"
+# 314 "lib/buffer.c"
   {
     uint8_t byte_str = ((/*CAST*/(uint8_t*) str)[(pos-start_position)]);
 
-# 314 "lib/buffer.c"
+# 316 "lib/buffer.c"
     if ((byte_str==0))
 
-# 314 "lib/buffer.c"
+# 316 "lib/buffer.c"
     {
 
-# 315 "lib/buffer.c"
+# 317 "lib/buffer.c"
       return true;
     }
 
-# 317 "lib/buffer.c"
+# 319 "lib/buffer.c"
     if ((pos>=buffer_length(buffer)))
 
-# 317 "lib/buffer.c"
+# 319 "lib/buffer.c"
     {
 
-# 318 "lib/buffer.c"
+# 320 "lib/buffer.c"
       return false;
     }
     uint8_t byte_buf = buffer_get(buffer, pos);
 
-# 321 "lib/buffer.c"
+# 323 "lib/buffer.c"
     if ((byte_str!=byte_buf))
 
-# 321 "lib/buffer.c"
+# 323 "lib/buffer.c"
     {
 
-# 322 "lib/buffer.c"
+# 324 "lib/buffer.c"
       return false;
     }
   }
 
-# 326 "lib/buffer.c"
+# 328 "lib/buffer.c"
   return false;
 }
 
 
-# 336 "lib/buffer.c"
+# 338 "lib/buffer.c"
 buffer_t* buffer_from_string(char* string)
-# 336 "lib/buffer.c"
+# 338 "lib/buffer.c"
 {
   buffer_t* result = make_buffer(strlen(string));
 
-# 338 "lib/buffer.c"
+# 340 "lib/buffer.c"
   (result=buffer_append_string(result, string));
 
-# 339 "lib/buffer.c"
+# 341 "lib/buffer.c"
   return result;
 }
 
 
-# 349 "lib/buffer.c"
+# 351 "lib/buffer.c"
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width)
-# 350 "lib/buffer.c"
+# 352 "lib/buffer.c"
 {
 
-# 352 "lib/buffer.c"
+# 354 "lib/buffer.c"
   if ((start>end))
 
-# 352 "lib/buffer.c"
+# 354 "lib/buffer.c"
   {
 
-# 353 "lib/buffer.c"
+# 355 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
   uint64_t original_width = (end-start);
 
-# 356 "lib/buffer.c"
+# 358 "lib/buffer.c"
   if ((original_width>new_width))
 
-# 356 "lib/buffer.c"
+# 358 "lib/buffer.c"
   {
     uint64_t difference = (original_width-new_width);
     uint64_t tail_length = ((buffer->length)-end);
 
-# 361 "lib/buffer.c"
+# 363 "lib/buffer.c"
     memmove((&((buffer->elements)[(end-difference)])), (&((buffer->elements)[end])), tail_length);
 
-# 363 "lib/buffer.c"
+# 365 "lib/buffer.c"
     ((buffer->length)-=difference);
   }
   else
 
-# 364 "lib/buffer.c"
+# 366 "lib/buffer.c"
   if ((original_width<new_width))
 
-# 364 "lib/buffer.c"
+# 366 "lib/buffer.c"
   {
     uint64_t difference = (new_width-original_width);
     uint64_t tail_length = ((buffer->length)-end);
 
-# 369 "lib/buffer.c"
+# 371 "lib/buffer.c"
     (buffer=buffer_increase_capacity(buffer, ((buffer->length)+difference)));
 
-# 370 "lib/buffer.c"
+# 372 "lib/buffer.c"
     memmove((&((buffer->elements)[(end+difference)])), (&((buffer->elements)[end])), tail_length);
 
-# 372 "lib/buffer.c"
+# 374 "lib/buffer.c"
     ((buffer->length)+=difference);
   }
 
-# 374 "lib/buffer.c"
+# 376 "lib/buffer.c"
   return buffer;
 }
 
 
-# 383 "lib/buffer.c"
+# 385 "lib/buffer.c"
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text)
-# 384 "lib/buffer.c"
+# 386 "lib/buffer.c"
 {
   int len_original = strlen(original_text);
   int len_replacement = strlen(replacement_text);
 
-# 387 "lib/buffer.c"
+# 389 "lib/buffer.c"
   if ((len_original<(buffer->length)))
 
-# 387 "lib/buffer.c"
+# 389 "lib/buffer.c"
   {
     uint64_t pos = 0;
 
-# 389 "lib/buffer.c"
+# 391 "lib/buffer.c"
     while ((pos<=((buffer->length)-len_original)))
 
-# 389 "lib/buffer.c"
+# 391 "lib/buffer.c"
     {
 
-# 390 "lib/buffer.c"
+# 392 "lib/buffer.c"
       if (buffer_match_string_at(buffer, pos, original_text))
 
-# 390 "lib/buffer.c"
+# 392 "lib/buffer.c"
       {
 
-# 391 "lib/buffer.c"
+# 393 "lib/buffer.c"
         (buffer=buffer_adjust_region(buffer, pos, (pos+len_original), len_replacement));
 
-# 393 "lib/buffer.c"
+# 395 "lib/buffer.c"
         memmove((&((buffer->elements)[pos])), replacement_text, len_replacement);
 
-# 394 "lib/buffer.c"
+# 396 "lib/buffer.c"
         (pos+=len_replacement);
       }
       else
 
-# 395 "lib/buffer.c"
+# 397 "lib/buffer.c"
       {
 
-# 396 "lib/buffer.c"
+# 398 "lib/buffer.c"
         (pos++);
       }
     }
   }
 
-# 400 "lib/buffer.c"
+# 402 "lib/buffer.c"
   return buffer;
 }
 
 
-# 403 "lib/buffer.c"
+# 405 "lib/buffer.c"
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position)
-# 404 "lib/buffer.c"
+# 406 "lib/buffer.c"
 {
   uint64_t line = 1;
   uint64_t column = 1;
 
-# 410 "lib/buffer.c"
+# 412 "lib/buffer.c"
   for (
     uint64_t pos = 0;
     (pos<position);
     (pos++))
 
-# 410 "lib/buffer.c"
+# 412 "lib/buffer.c"
   {
     uint8_t ch = buffer_get(buffer, pos);
 
-# 412 "lib/buffer.c"
+# 414 "lib/buffer.c"
     if ((ch=='\n'))
 
-# 412 "lib/buffer.c"
+# 414 "lib/buffer.c"
     {
 
-# 413 "lib/buffer.c"
+# 415 "lib/buffer.c"
       (line++);
 
-# 414 "lib/buffer.c"
+# 416 "lib/buffer.c"
       (column=1);
     }
     else
 
-# 415 "lib/buffer.c"
+# 417 "lib/buffer.c"
     {
 
-# 416 "lib/buffer.c"
+# 418 "lib/buffer.c"
       (column++);
     }
   }
 
-# 419 "lib/buffer.c"
+# 421 "lib/buffer.c"
   return ((line_and_column_t) {
                                                  .line = line,
                                                  .column = column,
@@ -6134,203 +6145,203 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t 
 }
 
 
-# 430 "lib/buffer.c"
+# 432 "lib/buffer.c"
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text)
-# 431 "lib/buffer.c"
+# 433 "lib/buffer.c"
 {
 
-# 432 "lib/buffer.c"
+# 434 "lib/buffer.c"
   for (
     int i = start;
     (i<end);
     (i++))
 
-# 432 "lib/buffer.c"
+# 434 "lib/buffer.c"
   {
 
-# 433 "lib/buffer.c"
+# 435 "lib/buffer.c"
     if (buffer_match_string_at(buffer, i, text))
 
-# 433 "lib/buffer.c"
+# 435 "lib/buffer.c"
     {
 
-# 434 "lib/buffer.c"
+# 436 "lib/buffer.c"
       return true;
     }
   }
 
-# 437 "lib/buffer.c"
+# 439 "lib/buffer.c"
   return false;
 }
 
 
-# 448 "lib/buffer.c"
+# 450 "lib/buffer.c"
 buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement)
-# 449 "lib/buffer.c"
+# 451 "lib/buffer.c"
 {
 
-# 450 "lib/buffer.c"
+# 452 "lib/buffer.c"
   for (
     int i = 0;
     (i<(buffer->length));
     (i++))
 
-# 450 "lib/buffer.c"
+# 452 "lib/buffer.c"
   {
 
-# 451 "lib/buffer.c"
+# 453 "lib/buffer.c"
     if ((((buffer->elements)[i])==original))
 
-# 451 "lib/buffer.c"
+# 453 "lib/buffer.c"
     {
 
-# 452 "lib/buffer.c"
+# 454 "lib/buffer.c"
       (((buffer->elements)[i])=replacement);
     }
   }
 
-# 455 "lib/buffer.c"
+# 457 "lib/buffer.c"
   return buffer;
 }
 
 
-# 465 "lib/buffer.c"
+# 467 "lib/buffer.c"
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
-# 465 "lib/buffer.c"
+# 467 "lib/buffer.c"
 {
   uint64_t position = start;
 
-# 467 "lib/buffer.c"
+# 469 "lib/buffer.c"
   while ((position>0))
 
-# 467 "lib/buffer.c"
+# 469 "lib/buffer.c"
   {
 
-# 468 "lib/buffer.c"
+# 470 "lib/buffer.c"
     (position--);
 
-# 469 "lib/buffer.c"
+# 471 "lib/buffer.c"
     if ((buffer_get(buffer, position)=='\n'))
 
-# 469 "lib/buffer.c"
+# 471 "lib/buffer.c"
     {
 
-# 470 "lib/buffer.c"
+# 472 "lib/buffer.c"
       return (position+1);
     }
   }
 
-# 473 "lib/buffer.c"
+# 475 "lib/buffer.c"
   return position;
 }
 
 
-# 484 "lib/buffer.c"
+# 486 "lib/buffer.c"
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start)
-# 484 "lib/buffer.c"
+# 486 "lib/buffer.c"
 {
   uint64_t position = start;
 
-# 486 "lib/buffer.c"
+# 488 "lib/buffer.c"
   while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
 
-# 486 "lib/buffer.c"
+# 488 "lib/buffer.c"
   {
 
-# 487 "lib/buffer.c"
+# 489 "lib/buffer.c"
     (position++);
   }
 
-# 489 "lib/buffer.c"
+# 491 "lib/buffer.c"
   return position;
 }
 
 
-# 499 "lib/buffer.c"
+# 501 "lib/buffer.c"
 extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer)
-# 499 "lib/buffer.c"
+# 501 "lib/buffer.c"
 {
 
-# 500 "lib/buffer.c"
+# 502 "lib/buffer.c"
   return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
 }
 
 
-# 511 "lib/buffer.c"
+# 513 "lib/buffer.c"
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer)
-# 514 "lib/buffer.c"
+# 516 "lib/buffer.c"
 {
 
-# 515 "lib/buffer.c"
+# 517 "lib/buffer.c"
   if ((buffer==src_buffer))
 
-# 515 "lib/buffer.c"
+# 517 "lib/buffer.c"
   {
 
-# 516 "lib/buffer.c"
+# 518 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 518 "lib/buffer.c"
+# 520 "lib/buffer.c"
   for (
     uint64_t position = start_position;
     (position<end_position);
     (position++))
 
-# 519 "lib/buffer.c"
+# 521 "lib/buffer.c"
   {
 
-# 520 "lib/buffer.c"
+# 522 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
   }
 
-# 522 "lib/buffer.c"
+# 524 "lib/buffer.c"
   return buffer;
 }
 
 
-# 534 "lib/buffer.c"
+# 536 "lib/buffer.c"
 buffer_t* buffer_to_uppercase(buffer_t* buffer)
-# 534 "lib/buffer.c"
+# 536 "lib/buffer.c"
 {
 
-# 535 "lib/buffer.c"
+# 537 "lib/buffer.c"
   for (
     uint64_t i = 0;
     (i<(buffer->length));
     (i++))
 
-# 535 "lib/buffer.c"
+# 537 "lib/buffer.c"
   {
 
-# 536 "lib/buffer.c"
+# 538 "lib/buffer.c"
     (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
   }
 
-# 538 "lib/buffer.c"
+# 540 "lib/buffer.c"
   return buffer;
 }
 
 
-# 550 "lib/buffer.c"
+# 552 "lib/buffer.c"
 buffer_t* buffer_to_lowercase(buffer_t* buffer)
-# 550 "lib/buffer.c"
+# 552 "lib/buffer.c"
 {
 
-# 551 "lib/buffer.c"
+# 553 "lib/buffer.c"
   for (
     uint64_t i = 0;
     (i<(buffer->length));
     (i++))
 
-# 551 "lib/buffer.c"
+# 553 "lib/buffer.c"
   {
 
-# 552 "lib/buffer.c"
+# 554 "lib/buffer.c"
     (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
   }
 
-# 554 "lib/buffer.c"
+# 556 "lib/buffer.c"
   return buffer;
 }
 
@@ -22710,7 +22721,7 @@ void build_command(buffer_t* command_line_comment)
   }
 
 # 17 "build-command.c"
-  generate_c_output_file(true, command_line_comment);
+  generate_c_output_file(OUTPUT_TYPE_C_LIBRARY_FILE, command_line_comment);
   int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
 
 # 19 "build-command.c"
@@ -22739,497 +22750,535 @@ void build_command(buffer_t* command_line_comment)
 }
 
 
-# 15 "generate-c-output-file.c"
-void generate_c_output_file(boolean_t is_library, buffer_t* command_line_overview_comment)
-# 16 "generate-c-output-file.c"
+# 22 "generate-c-output-file.c"
+void generate_c_output_file(output_file_type_t output_type, buffer_t* command_line_overview_comment)
+# 23 "generate-c-output-file.c"
 {
-  boolean_t is_header_file = (!is_library);
+  boolean_t is_header_file = (output_type==OUTPUT_TYPE_C_HEADER_FILE);
   symbol_table_t* symbol_table = make_symbol_table();
 
-# 21 "generate-c-output-file.c"
+# 28 "generate-c-output-file.c"
   parse_and_add_top_level_definitions(symbol_table, FLAG_files, FLAG_use_statement_parser);
 
-# 23 "generate-c-output-file.c"
+# 30 "generate-c-output-file.c"
   dump_symbol_table("initial parse", symbol_table);
 
-# 24 "generate-c-output-file.c"
+# 31 "generate-c-output-file.c"
   if (FLAG_generate_enum_convertors)
 
-# 24 "generate-c-output-file.c"
+# 31 "generate-c-output-file.c"
   {
 
-# 25 "generate-c-output-file.c"
+# 32 "generate-c-output-file.c"
     srcgen_enum_to_string_converters(symbol_table);
 
-# 26 "generate-c-output-file.c"
+# 33 "generate-c-output-file.c"
     dump_symbol_table("enum to string generation", symbol_table);
   }
 
-# 28 "generate-c-output-file.c"
+# 35 "generate-c-output-file.c"
   split_structure_typedefs(symbol_table);
 
-# 29 "generate-c-output-file.c"
+# 36 "generate-c-output-file.c"
   dump_symbol_table("split structures", symbol_table);
 
-# 30 "generate-c-output-file.c"
+# 37 "generate-c-output-file.c"
   reorder_symbol_table_typedefs(symbol_table);
 
-# 31 "generate-c-output-file.c"
+# 38 "generate-c-output-file.c"
   dump_symbol_table("reorder typedefs", symbol_table);
 
-# 32 "generate-c-output-file.c"
+# 39 "generate-c-output-file.c"
   reorder_symbol_table_structures(symbol_table);
 
-# 33 "generate-c-output-file.c"
+# 40 "generate-c-output-file.c"
   dump_symbol_table("reorder structures", symbol_table);
   buffer_t* buffer = make_buffer((1024*8));
   printer_t* printer = make_printer(buffer, symbol_table, 2);
 
-# 38 "generate-c-output-file.c"
+# 45 "generate-c-output-file.c"
   add_generated_c_file_header(buffer);
   char* guard_name = "_HEADER_FILE_GUARD_";
 
-# 42 "generate-c-output-file.c"
+# 49 "generate-c-output-file.c"
   if (is_header_file)
 
-# 42 "generate-c-output-file.c"
+# 49 "generate-c-output-file.c"
   {
 
-# 43 "generate-c-output-file.c"
+# 50 "generate-c-output-file.c"
     buffer_printf(buffer, "#ifndef %s\n#define %s\n\n", guard_name, guard_name);
   }
 
-# 46 "generate-c-output-file.c"
+# 53 "generate-c-output-file.c"
   buffer_append_buffer(buffer, get_reflection_header_buffer());
   boolean_t append_newline_after_system_includes = false;
 
-# 49 "generate-c-output-file.c"
+# 56 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== system includes ==========\n\n");
   string_hashtable_t* system_includes_set = make_string_hashtable(19);
 
-# 51 "generate-c-output-file.c"
+# 58 "generate-c-output-file.c"
   for (
     uint64_t i = 0;
     (i<((symbol_table->system_includes)->length));
     (i++))
 
-# 51 "generate-c-output-file.c"
+# 58 "generate-c-output-file.c"
   {
 
-# 52 "generate-c-output-file.c"
+# 59 "generate-c-output-file.c"
     (append_newline_after_system_includes=true);
     cpp_include_node_t* node = value_array_get_ptr((symbol_table->system_includes), i, typeof(cpp_include_node_t*));
     char* include_statement = include_node_to_string(node);
 
-# 56 "generate-c-output-file.c"
+# 63 "generate-c-output-file.c"
     if ((FLAG_omit_c_armyknife_include&&string_starts_with(include_statement, "#include <c-armyknife-lib")))
 
-# 57 "generate-c-output-file.c"
+# 64 "generate-c-output-file.c"
     {
 
-# 58 "generate-c-output-file.c"
+# 65 "generate-c-output-file.c"
       continue;
     }
 
-# 60 "generate-c-output-file.c"
+# 67 "generate-c-output-file.c"
     if ((!is_ok(string_ht_find(system_includes_set, include_statement))))
 
-# 60 "generate-c-output-file.c"
+# 67 "generate-c-output-file.c"
     {
 
-# 61 "generate-c-output-file.c"
+# 68 "generate-c-output-file.c"
       (system_includes_set=string_ht_insert(system_includes_set, include_statement, boolean_to_value(true)));
 
-# 63 "generate-c-output-file.c"
+# 70 "generate-c-output-file.c"
       buffer_append_string(buffer, include_statement);
     }
   }
 
-# 66 "generate-c-output-file.c"
+# 73 "generate-c-output-file.c"
   if (append_newline_after_system_includes)
 
-# 66 "generate-c-output-file.c"
+# 73 "generate-c-output-file.c"
   {
 
-# 67 "generate-c-output-file.c"
+# 74 "generate-c-output-file.c"
     buffer_append_string(buffer, "\n");
   }
 
-# 72 "generate-c-output-file.c"
+# 79 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== defines ==========\n\n");
 
-# 73 "generate-c-output-file.c"
+# 80 "generate-c-output-file.c"
   for (
     uint64_t i = 0;
     (i<((symbol_table->defines)->length));
     (i++))
 
-# 73 "generate-c-output-file.c"
+# 80 "generate-c-output-file.c"
   {
     cpp_define_node_t* node = value_array_get_ptr((symbol_table->defines), i, typeof(cpp_define_node_t*));
 
-# 76 "generate-c-output-file.c"
+# 83 "generate-c-output-file.c"
     append_cpp_define_node(printer, node);
 
-# 77 "generate-c-output-file.c"
+# 84 "generate-c-output-file.c"
     append_string(printer, "\n");
   }
 
-# 80 "generate-c-output-file.c"
+# 87 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== enums ==========\n\n");
 
-# 82 "generate-c-output-file.c"
+# 89 "generate-c-output-file.c"
   for (
     int i = 0;
     (i<(((symbol_table->enums)->ordered_bindings)->length));
     (i++))
 
-# 82 "generate-c-output-file.c"
+# 89 "generate-c-output-file.c"
   {
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->enums)->ordered_bindings), i, typeof(symbol_table_binding_t*));
     enum_node_t* enum_node = to_enum_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
 
-# 88 "generate-c-output-file.c"
+# 95 "generate-c-output-file.c"
     append_enum_node(printer, enum_node);
 
-# 89 "generate-c-output-file.c"
+# 96 "generate-c-output-file.c"
     append_string(printer, ";\n\n");
   }
 
-# 92 "generate-c-output-file.c"
+# 99 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== typedefs ==========\n\n");
 
-# 93 "generate-c-output-file.c"
+# 100 "generate-c-output-file.c"
   for (
     int i = 0;
     (i<(((symbol_table->typedefs)->ordered_bindings)->length));
     (i++))
 
-# 93 "generate-c-output-file.c"
+# 100 "generate-c-output-file.c"
   {
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->typedefs)->ordered_bindings), i, typeof(symbol_table_binding_t*));
     typedef_node_t* typedef_node = to_typedef_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
 
-# 99 "generate-c-output-file.c"
+# 106 "generate-c-output-file.c"
     append_typedef_node(printer, typedef_node);
 
-# 100 "generate-c-output-file.c"
+# 107 "generate-c-output-file.c"
     append_string(printer, "\n");
   }
 
-# 103 "generate-c-output-file.c"
+# 110 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== stuctures/unions ==========\n\n");
 
-# 104 "generate-c-output-file.c"
+# 111 "generate-c-output-file.c"
   for (
     int i = 0;
     (i<(((symbol_table->structures)->ordered_bindings)->length));
     (i++))
 
-# 104 "generate-c-output-file.c"
+# 111 "generate-c-output-file.c"
   {
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->structures)->ordered_bindings), i, typeof(symbol_table_binding_t*));
     struct_node_t* struct_node = get_full_structure_definition_node(binding);
 
-# 109 "generate-c-output-file.c"
+# 116 "generate-c-output-file.c"
     if ((struct_node==((void *)0)))
 
-# 109 "generate-c-output-file.c"
+# 116 "generate-c-output-file.c"
     {
 
-# 110 "generate-c-output-file.c"
+# 117 "generate-c-output-file.c"
       (struct_node=value_array_get_ptr((binding->definition_nodes), 0, typeof(struct_node_t*)));
     }
 
-# 113 "generate-c-output-file.c"
+# 120 "generate-c-output-file.c"
     append_struct_node(printer, struct_node);
 
-# 114 "generate-c-output-file.c"
+# 121 "generate-c-output-file.c"
     append_string(printer, ";\n\n");
   }
   boolean_t append_newline_after_variables = false;
 
-# 118 "generate-c-output-file.c"
+# 125 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== global variables ==========\n\n");
 
-# 119 "generate-c-output-file.c"
+# 126 "generate-c-output-file.c"
   for (
     int i = 0;
     (i<(((symbol_table->variables)->ordered_bindings)->length));
     (i++))
 
-# 119 "generate-c-output-file.c"
+# 126 "generate-c-output-file.c"
   {
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->variables)->ordered_bindings), i, typeof(symbol_table_binding_t*));
 
-# 123 "generate-c-output-file.c"
-    append_variable_definition_node(printer, value_array_get_ptr((binding->definition_nodes), 0, typeof(variable_definition_node_t*)), is_library);
+# 130 "generate-c-output-file.c"
+    append_variable_definition_node(printer, value_array_get_ptr((binding->definition_nodes), 0, typeof(variable_definition_node_t*)), (!is_header_file));
 
-# 128 "generate-c-output-file.c"
+# 135 "generate-c-output-file.c"
     append_string(printer, "\n");
   }
 
-# 131 "generate-c-output-file.c"
+# 138 "generate-c-output-file.c"
   if (append_newline_after_variables)
 
-# 131 "generate-c-output-file.c"
+# 138 "generate-c-output-file.c"
   {
 
-# 132 "generate-c-output-file.c"
+# 139 "generate-c-output-file.c"
     append_string(printer, "\n");
   }
   boolean_t append_newline_after_prototypes = false;
 
-# 136 "generate-c-output-file.c"
+# 143 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== function prototypes ==========\n\n");
 
-# 138 "generate-c-output-file.c"
+# 145 "generate-c-output-file.c"
   for (
     int i = 0;
     (i<(((symbol_table->functions)->ordered_bindings)->length));
     (i++))
 
-# 138 "generate-c-output-file.c"
+# 145 "generate-c-output-file.c"
   {
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
     function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
 
-# 144 "generate-c-output-file.c"
+# 151 "generate-c-output-file.c"
     if ((!is_inlined_function(function_node)))
 
-# 144 "generate-c-output-file.c"
+# 151 "generate-c-output-file.c"
     {
 
-# 145 "generate-c-output-file.c"
+# 152 "generate-c-output-file.c"
       (append_newline_after_prototypes=true);
 
-# 146 "generate-c-output-file.c"
+# 153 "generate-c-output-file.c"
       append_c_function_node_prototype(printer, function_node);
     }
   }
 
-# 149 "generate-c-output-file.c"
+# 156 "generate-c-output-file.c"
   if (append_newline_after_prototypes)
 
-# 149 "generate-c-output-file.c"
+# 156 "generate-c-output-file.c"
   {
 
-# 150 "generate-c-output-file.c"
+# 157 "generate-c-output-file.c"
     append_string(printer, "\n");
   }
   boolean_t append_newline_after_inlines = false;
 
-# 154 "generate-c-output-file.c"
+# 161 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== inlined functions ==========\n\n");
 
-# 156 "generate-c-output-file.c"
+# 163 "generate-c-output-file.c"
   for (
     int i = 0;
     (i<(((symbol_table->functions)->ordered_bindings)->length));
     (i++))
 
-# 156 "generate-c-output-file.c"
+# 163 "generate-c-output-file.c"
   {
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
     function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
 
-# 162 "generate-c-output-file.c"
+# 169 "generate-c-output-file.c"
     if (is_inlined_function(function_node))
 
-# 162 "generate-c-output-file.c"
+# 169 "generate-c-output-file.c"
     {
 
-# 163 "generate-c-output-file.c"
+# 170 "generate-c-output-file.c"
       (append_newline_after_inlines=true);
 
-# 164 "generate-c-output-file.c"
+# 171 "generate-c-output-file.c"
       append_c_function_node_and_body(printer, function_node);
     }
   }
 
-# 168 "generate-c-output-file.c"
+# 175 "generate-c-output-file.c"
   if (append_newline_after_inlines)
 
-# 168 "generate-c-output-file.c"
+# 175 "generate-c-output-file.c"
   {
 
-# 169 "generate-c-output-file.c"
+# 176 "generate-c-output-file.c"
     buffer_append_string(buffer, "\n");
   }
+  buffer_t* test_main_function_buffer = make_buffer(1);
+
+# 182 "generate-c-output-file.c"
+  buffer_append_string(test_main_function_buffer, "void do_start_test(char* fn_name) {\n    " "fprintf(stderr, \"Testing %s...\\n\", fn_name);\n}\n");
+
+# 186 "generate-c-output-file.c"
+  buffer_printf(test_main_function_buffer, "int main(int argc, char** argv) {\n");
   boolean_t append_newline_after_functions = false;
 
-# 173 "generate-c-output-file.c"
-  if (is_library)
+# 192 "generate-c-output-file.c"
+  if ((!is_header_file))
 
-# 173 "generate-c-output-file.c"
+# 192 "generate-c-output-file.c"
   {
 
-# 174 "generate-c-output-file.c"
+# 193 "generate-c-output-file.c"
     buffer_append_string(buffer, "// ========== functions ==========\n\n");
 
-# 175 "generate-c-output-file.c"
+# 194 "generate-c-output-file.c"
     for (
       int i = 0;
       (i<(((symbol_table->functions)->ordered_bindings)->length));
       (i++))
 
-# 176 "generate-c-output-file.c"
+# 195 "generate-c-output-file.c"
     {
       symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
 
-# 180 "generate-c-output-file.c"
+# 199 "generate-c-output-file.c"
       for (
         int j = 0;
         (j<((binding->definition_nodes)->length));
         (j++))
 
-# 180 "generate-c-output-file.c"
+# 199 "generate-c-output-file.c"
       {
         function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), j).ptr)));
 
-# 183 "generate-c-output-file.c"
+# 202 "generate-c-output-file.c"
         if (((!is_inlined_function(function_node))&&((function_node->body)!=((void *)0))))
 
-# 184 "generate-c-output-file.c"
+# 203 "generate-c-output-file.c"
         {
 
-# 185 "generate-c-output-file.c"
+# 204 "generate-c-output-file.c"
           (append_newline_after_functions=true);
 
-# 186 "generate-c-output-file.c"
-          if (false)
-
-# 186 "generate-c-output-file.c"
-          {
-
-# 187 "generate-c-output-file.c"
-            buffer_printf(buffer, "/* i=%d j=%d */\n", i, j);
-          }
-
-# 189 "generate-c-output-file.c"
+# 205 "generate-c-output-file.c"
           append_c_function_node_and_body(printer, function_node);
+
+# 206 "generate-c-output-file.c"
+          if (is_unit_test_function(function_node))
+
+# 206 "generate-c-output-file.c"
+          {
+            char* fn_name = token_to_string((function_node->function_name));
+
+# 208 "generate-c-output-file.c"
+            buffer_printf(test_main_function_buffer, "    do_start_test(\"%s\");\n", fn_name);
+
+# 210 "generate-c-output-file.c"
+            buffer_printf(test_main_function_buffer, "    %s();\n", fn_name);
+          }
         }
       }
     }
   }
 
-# 194 "generate-c-output-file.c"
+# 216 "generate-c-output-file.c"
   if (append_newline_after_functions)
 
-# 194 "generate-c-output-file.c"
+# 216 "generate-c-output-file.c"
   {
 
-# 195 "generate-c-output-file.c"
+# 217 "generate-c-output-file.c"
     buffer_append_string(buffer, "\n");
   }
 
-# 198 "generate-c-output-file.c"
+# 219 "generate-c-output-file.c"
+  buffer_printf(test_main_function_buffer, "    exit(0);\n");
+
+# 220 "generate-c-output-file.c"
+  buffer_printf(test_main_function_buffer, "}\n\n");
+
+# 222 "generate-c-output-file.c"
   if (is_header_file)
 
-# 198 "generate-c-output-file.c"
+# 222 "generate-c-output-file.c"
   {
 
-# 199 "generate-c-output-file.c"
+# 223 "generate-c-output-file.c"
     buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
   }
 
-# 202 "generate-c-output-file.c"
-  buffer_append_buffer(buffer, command_line_overview_comment);
+# 226 "generate-c-output-file.c"
+  if ((output_type==OUTPUT_TYPE_C_UNIT_TEST_FILE))
 
-# 204 "generate-c-output-file.c"
-  if ((FLAG_c_output_file==((void *)0)))
-
-# 204 "generate-c-output-file.c"
+# 226 "generate-c-output-file.c"
   {
 
-# 205 "generate-c-output-file.c"
+# 227 "generate-c-output-file.c"
+    buffer_append_buffer(buffer, test_main_function_buffer);
+  }
+
+# 230 "generate-c-output-file.c"
+  buffer_append_buffer(buffer, command_line_overview_comment);
+
+# 232 "generate-c-output-file.c"
+  if ((FLAG_c_output_file==((void *)0)))
+
+# 232 "generate-c-output-file.c"
+  {
+
+# 233 "generate-c-output-file.c"
     fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
   }
   else
 
-# 206 "generate-c-output-file.c"
+# 234 "generate-c-output-file.c"
   {
 
-# 207 "generate-c-output-file.c"
+# 235 "generate-c-output-file.c"
     log_info("Attempting to write buffer to %s", FLAG_c_output_file);
 
-# 209 "generate-c-output-file.c"
+# 237 "generate-c-output-file.c"
     buffer_write_file(buffer, FLAG_c_output_file);
   }
 }
 
 
-# 214 "generate-c-output-file.c"
+# 244 "generate-c-output-file.c"
+boolean_t is_unit_test_function(function_node_t* node)
+# 244 "generate-c-output-file.c"
+{
+  char* function_name = token_to_string((node->function_name));
+
+# 246 "generate-c-output-file.c"
+  return (string_starts_with(function_name, "test_")&&(!string_equal(function_name, "test_fail_and_exit")));
+}
+
+
+# 250 "generate-c-output-file.c"
 boolean_t is_inlined_function(function_node_t* node)
-# 214 "generate-c-output-file.c"
+# 250 "generate-c-output-file.c"
 {
 
-# 215 "generate-c-output-file.c"
+# 251 "generate-c-output-file.c"
   return (token_matches((node->storage_class_specifier), "static")&&token_list_contains((node->function_specifiers), "inline"));
 }
 
 
-# 219 "generate-c-output-file.c"
+# 255 "generate-c-output-file.c"
 void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table)
-# 219 "generate-c-output-file.c"
+# 255 "generate-c-output-file.c"
 {
 
-# 220 "generate-c-output-file.c"
+# 256 "generate-c-output-file.c"
   if (FLAG_dump_symbol_table)
 
-# 220 "generate-c-output-file.c"
+# 256 "generate-c-output-file.c"
   {
 
-# 221 "generate-c-output-file.c"
+# 257 "generate-c-output-file.c"
     fprintf(stderr, "==================================================================" "====\n");
 
-# 224 "generate-c-output-file.c"
+# 260 "generate-c-output-file.c"
     fprintf(stderr, "%s\n", phase_name);
 
-# 225 "generate-c-output-file.c"
+# 261 "generate-c-output-file.c"
     fprintf(stderr, "==================================================================" "====\n\n");
     buffer_t* buffer = make_buffer(128);
 
-# 229 "generate-c-output-file.c"
+# 265 "generate-c-output-file.c"
     (buffer=symbol_table_stats(buffer, symbol_table));
 
-# 230 "generate-c-output-file.c"
+# 266 "generate-c-output-file.c"
     buffer_append_dgb_symbol_table(make_cdl_printer(buffer), symbol_table);
 
-# 232 "generate-c-output-file.c"
+# 268 "generate-c-output-file.c"
     fprintf(stderr, "%s", buffer_to_c_string(buffer));
   }
 }
 
 
-# 236 "generate-c-output-file.c"
+# 272 "generate-c-output-file.c"
 char* include_node_to_string(cpp_include_node_t* node)
-# 236 "generate-c-output-file.c"
+# 272 "generate-c-output-file.c"
 {
   buffer_t* buffer = make_buffer(32);
   printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
 
-# 239 "generate-c-output-file.c"
+# 275 "generate-c-output-file.c"
   append_cpp_include_node(printer, node);
   char* include_statement = buffer_to_c_string(buffer);
 
-# 241 "generate-c-output-file.c"
+# 277 "generate-c-output-file.c"
   return include_statement;
 }
 
 
-# 244 "generate-c-output-file.c"
+# 280 "generate-c-output-file.c"
 void add_generated_c_file_header(buffer_t* buffer)
-# 244 "generate-c-output-file.c"
+# 280 "generate-c-output-file.c"
 {
 
-# 245 "generate-c-output-file.c"
+# 281 "generate-c-output-file.c"
   buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
 
-# 246 "generate-c-output-file.c"
+# 282 "generate-c-output-file.c"
   buffer_printf(buffer, "// This is a generated file, so you generally don't want to edit it!\n");
 
-# 249 "generate-c-output-file.c"
+# 285 "generate-c-output-file.c"
   buffer_printf(buffer, "// The bottom of the file has more information about it's " "creation.\n\n\n");
 }
 
@@ -23240,12 +23289,12 @@ void generate_header_file_command(buffer_t* command_line_overview_comment)
 {
 
 # 11 "generate-header-file-command.c"
-  generate_c_output_file(false, command_line_overview_comment);
-
-# 12 "generate-header-file-command.c"
-  log_info("Exiting normally.");
+  generate_c_output_file(OUTPUT_TYPE_C_HEADER_FILE, command_line_overview_comment);
 
 # 13 "generate-header-file-command.c"
+  log_info("Exiting normally.");
+
+# 14 "generate-header-file-command.c"
   exit(0);
 }
 
@@ -23256,12 +23305,12 @@ void generate_library_command(buffer_t* command_line_overview_comment)
 {
 
 # 9 "generate-library-command.c"
-  generate_c_output_file(true, command_line_overview_comment);
-
-# 10 "generate-library-command.c"
-  log_info("Exiting normally.");
+  generate_c_output_file(OUTPUT_TYPE_C_LIBRARY_FILE, command_line_overview_comment);
 
 # 11 "generate-library-command.c"
+  log_info("Exiting normally.");
+
+# 12 "generate-library-command.c"
   exit(0);
 }
 
@@ -23654,22 +23703,22 @@ void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_bu
 
 # 45 "parse-test.c"
 void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer)
-# 45 "parse-test.c"
+# 46 "parse-test.c"
 {
   tokenizer_result_t tokenizer_result = tokenize(input_buffer);
 
-# 47 "parse-test.c"
+# 48 "parse-test.c"
   if ((tokenizer_result.tokenizer_error_code))
 
-# 47 "parse-test.c"
+# 48 "parse-test.c"
   {
 
-# 48 "parse-test.c"
+# 49 "parse-test.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
   value_array_t* tokens = (tokenizer_result.tokens);
 
-# 51 "parse-test.c"
+# 52 "parse-test.c"
   (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
                                    .keep_whitespace = false,
                                    .keep_comments = false,
@@ -23678,181 +23727,216 @@ void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buf
                                })));
   pstate_t state = ((pstate_t) {0});
 
-# 60 "parse-test.c"
+# 61 "parse-test.c"
   ((state.use_statement_parser)=true);
 
-# 61 "parse-test.c"
+# 62 "parse-test.c"
   ((state.tokens)=tokens);
   pstatus_t status = parse_statement((&state));
 
-# 63 "parse-test.c"
+# 64 "parse-test.c"
   if ((!status))
 
-# 63 "parse-test.c"
+# 64 "parse-test.c"
   {
 
-# 64 "parse-test.c"
+# 65 "parse-test.c"
     fprintf(stderr, "FAIL");
 
-# 65 "parse-test.c"
+# 66 "parse-test.c"
     exit(1);
   }
   parse_node_t* node = pstate_get_result_node((&state));
   buffer_t* output = make_buffer(1);
 
-# 69 "parse-test.c"
+# 70 "parse-test.c"
   buffer_append_dbg_parse_node(make_cdl_printer(output), node);
 
-# 70 "parse-test.c"
+# 71 "parse-test.c"
   buffer_append_string(output, "\n// C Output\n");
   printer_t* printer = make_printer(output, make_symbol_table(), 2);
 
-# 72 "parse-test.c"
+# 73 "parse-test.c"
   append_parse_node(printer, node);
 
-# 73 "parse-test.c"
+# 74 "parse-test.c"
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
 }
 
 
-# 13 "test-command.c"
+# 12 "test-command.c"
 void test_command(buffer_t* command_line_comment)
-# 13 "test-command.c"
+# 12 "test-command.c"
 {
 
-# 14 "test-command.c"
+# 13 "test-command.c"
   handle_if_internal_test();
 
-# 16 "test-command.c"
+# 15 "test-command.c"
   if (((FLAG_files->length)==0))
 
-# 16 "test-command.c"
+# 15 "test-command.c"
   {
 
-# 17 "test-command.c"
+# 16 "test-command.c"
     log_fatal("At least one file is required when using the test command.");
 
-# 18 "test-command.c"
+# 17 "test-command.c"
     exit(1);
   }
   char* rand_binary_file_name = "/tmp/foo";
 
-# 24 "test-command.c"
+# 23 "test-command.c"
   if (string_is_null_or_empty(FLAG_binary_output_file))
 
-# 24 "test-command.c"
+# 23 "test-command.c"
   {
 
-# 25 "test-command.c"
+# 24 "test-command.c"
     (FLAG_binary_output_file=rand_binary_file_name);
   }
 
-# 27 "test-command.c"
+# 26 "test-command.c"
   if (string_is_null_or_empty(FLAG_c_output_file))
 
-# 27 "test-command.c"
+# 26 "test-command.c"
   {
 
-# 28 "test-command.c"
+# 27 "test-command.c"
     (FLAG_c_output_file=string_printf("%s.test.c", FLAG_binary_output_file));
   }
 
-# 35 "test-command.c"
-  generate_c_output_file(true, command_line_comment);
+# 34 "test-command.c"
+  generate_c_output_file(OUTPUT_TYPE_C_UNIT_TEST_FILE, command_line_comment);
   int error_status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
 
-# 39 "test-command.c"
+# 38 "test-command.c"
   if (error_status)
 
-# 39 "test-command.c"
+# 38 "test-command.c"
   {
 
-# 40 "test-command.c"
+# 39 "test-command.c"
     log_fatal("The underlying C compiler produced an error compiling the test(s).");
 
-# 44 "test-command.c"
+# 43 "test-command.c"
     exit(error_status);
   }
 
-# 47 "test-command.c"
+# 46 "test-command.c"
   run_test_binary(rand_binary_file_name);
 }
 
 
-# 50 "test-command.c"
-void run_test_binary(char* rand_binary_file_name)
-# 50 "test-command.c"
+# 49 "test-command.c"
+void run_test_binary(char* binary_file_name)
+# 49 "test-command.c"
 {
 
-# 51 "test-command.c"
-  log_fatal("RUN TEST BINARY!");
+# 50 "test-command.c"
+  log_info("Running test binary %s", binary_file_name);
+  value_array_t* argv = make_value_array(1);
 
-# 52 "test-command.c"
-  exit(1);
+# 53 "test-command.c"
+  value_array_add(argv, str_to_value(binary_file_name));
+  buffer_t* child_stdin = make_buffer(1);
+  buffer_t* child_stdout = make_buffer(1);
+  buffer_t* child_stderr = make_buffer(1);
+  sub_process_t* sub_process = make_sub_process(argv);
+
+# 60 "test-command.c"
+  sub_process_launch_and_wait(sub_process, child_stdin, child_stdout, child_stderr);
+
+# 63 "test-command.c"
+  if ((sub_process->exit_code))
+
+# 63 "test-command.c"
+  {
+
+# 64 "test-command.c"
+    log_warn("The test binary was NOT happy.");
+
+# 65 "test-command.c"
+    log_warn("   Child stdout was %s\n", buffer_to_c_string(child_stdin));
+
+# 66 "test-command.c"
+    log_warn("   Child stderr was %s\n", buffer_to_c_string(child_stderr));
+  }
+  else
+
+# 67 "test-command.c"
+  {
+
+# 68 "test-command.c"
+    log_warn("The test binary was happy. :)");
+  }
+
+# 71 "test-command.c"
+  exit((sub_process->exit_code));
 }
 
 
-# 55 "test-command.c"
+# 74 "test-command.c"
 void handle_if_internal_test(void)
-# 55 "test-command.c"
+# 74 "test-command.c"
 {
 
-# 56 "test-command.c"
+# 75 "test-command.c"
   for (
     int i = 0;
     (i<(FLAG_files->length));
     (i++))
 
-# 56 "test-command.c"
+# 75 "test-command.c"
   {
     char* filename = (value_array_get(FLAG_files, i).str);
 
-# 58 "test-command.c"
+# 77 "test-command.c"
     if (string_ends_with(filename, ".expr"))
 
-# 58 "test-command.c"
+# 77 "test-command.c"
     {
 
-# 60 "test-command.c"
+# 79 "test-command.c"
       handle_expression_test(filename);
     }
     else
 
-# 61 "test-command.c"
+# 80 "test-command.c"
     if (string_ends_with(filename, ".stmt"))
 
-# 61 "test-command.c"
+# 80 "test-command.c"
     {
 
-# 63 "test-command.c"
+# 82 "test-command.c"
       handle_statement_test(filename);
     }
   }
 }
 
 
-# 68 "test-command.c"
+# 87 "test-command.c"
 void handle_statement_test(char* file_name)
-# 68 "test-command.c"
+# 87 "test-command.c"
 {
 
-# 69 "test-command.c"
+# 88 "test-command.c"
   parse_statement_string_and_print_parse_tree_from_buffer(buffer_read_file(file_name));
 
-# 71 "test-command.c"
+# 90 "test-command.c"
   exit(0);
 }
 
 
-# 74 "test-command.c"
+# 93 "test-command.c"
 void handle_expression_test(char* file_name)
-# 74 "test-command.c"
+# 93 "test-command.c"
 {
 
-# 75 "test-command.c"
+# 94 "test-command.c"
   parse_expression_string_and_print_parse_tree_from_buffer(buffer_read_file(file_name));
 
-# 77 "test-command.c"
+# 96 "test-command.c"
   exit(0);
 }
 
@@ -26344,6 +26428,62 @@ enum_metadata_t* type_node_kind_metadata(){
     };
     return &enum_metadata_result;
 }
+char* output_file_type_to_string(output_file_type_t value){
+  switch (value) {
+    case OUTPUT_TYPE_UNKNOWN:
+    return "OUTPUT_TYPE_UNKNOWN";
+  case OUTPUT_TYPE_C_HEADER_FILE:
+    return "OUTPUT_TYPE_C_HEADER_FILE";
+  case OUTPUT_TYPE_C_LIBRARY_FILE:
+    return "OUTPUT_TYPE_C_LIBRARY_FILE";
+  case OUTPUT_TYPE_C_UNIT_TEST_FILE:
+    return "OUTPUT_TYPE_C_UNIT_TEST_FILE";
+  default:
+    return "<<unknown-output_file_type>>";
+  }
+}
+output_file_type_t string_to_output_file_type(char* value){
+  if (strcmp(value, "OUTPUT_TYPE_UNKNOWN") == 0) {
+    return OUTPUT_TYPE_UNKNOWN;
+  }
+  if (strcmp(value, "OUTPUT_TYPE_C_HEADER_FILE") == 0) {
+    return OUTPUT_TYPE_C_HEADER_FILE;
+  }
+  if (strcmp(value, "OUTPUT_TYPE_C_LIBRARY_FILE") == 0) {
+    return OUTPUT_TYPE_C_LIBRARY_FILE;
+  }
+  if (strcmp(value, "OUTPUT_TYPE_C_UNIT_TEST_FILE") == 0) {
+    return OUTPUT_TYPE_C_UNIT_TEST_FILE;
+  }
+  return 0;
+}
+enum_metadata_t* output_file_type_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "OUTPUT_TYPE_UNKNOWN",
+        .value = OUTPUT_TYPE_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "OUTPUT_TYPE_C_HEADER_FILE",
+        .value = OUTPUT_TYPE_C_HEADER_FILE
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "OUTPUT_TYPE_C_LIBRARY_FILE",
+        .value = OUTPUT_TYPE_C_LIBRARY_FILE
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "OUTPUT_TYPE_C_UNIT_TEST_FILE",
+        .value = OUTPUT_TYPE_C_UNIT_TEST_FILE
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "output_file_type_t",
+        .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
 
 // Full Compiler Command Line:
 //
@@ -26352,38 +26492,7 @@ enum_metadata_t* type_node_kind_metadata(){
 //    --use-statement-parser=true
 //    --omit-c-armyknife-include=true
 //    --c-output-file=/home/jawilson/src/omni-c/build-dir/omni-c.c
-//    lib/omni-c.c
-//    lib/min-max.c
-//    lib/boolean.c
-//    lib/compound-literal.c
-//    lib/fn.c
-//    lib/leb128.c
-//    lib/fatal-error.c
-//    lib/value.c
-//    lib/gc-allocate.c
-//    lib/uint64.c
-//    lib/string-util.c
-//    lib/logger.c
-//    lib/utf8-decoder.c
-//    lib/buffer.c
-//    lib/byte-stream.c
-//    lib/value-array.c
-//    lib/value-alist.c
-//    lib/string-alist.c
-//    lib/value-hashtable.c
-//    lib/string-hashtable.c
-//    lib/value-tree.c
-//    lib/string-tree.c
-//    lib/flag.c
-//    lib/io.c
-//    lib/terminal.c
-//    lib/tokenizer.c
-//    lib/random.c
-//    lib/cdl-printer.c
-//    lib/sub-process.c
-//    lib/splitjoin.c
-//    lib/oarchive.c
-//    lib/test.c
+//    /home/jawilson/src/omni-c/build-dir/bin/lib.oar
 //    mode.c
 //    keywords.c
 //    file.c
@@ -26431,38 +26540,7 @@ enum_metadata_t* type_node_kind_metadata(){
 // These checksums are currently easy to fake for example by using a
 // hacked git in the PATH at the time this compile was run.
 //
-// git cat-file -p 613ecb5073e9f6b8b3d2a2deb77a3040a0388d62 > lib/omni-c.c
-// git cat-file -p 58637a0049c50cf56fe40e9b2a9de543c095785a > lib/min-max.c
-// git cat-file -p 34c0f39b6f480c7ce9cb93fd79586d8900323bdf > lib/boolean.c
-// git cat-file -p bafe73cf643ee7eaf31f00c45d2ba446e8eba75a > lib/compound-literal.c
-// git cat-file -p 410a738d9b347300ac5cb091d8ebe87c5d9c7588 > lib/fn.c
-// git cat-file -p 35485aa76c4e839b7b7511a1e88913c5b7e54053 > lib/leb128.c
-// git cat-file -p f0dc18c1fe99776d4fc87d538344c111342ad10e > lib/fatal-error.c
-// git cat-file -p 89bcbe94972d0735935a4a43ccbfc7a67f6f4e6d > lib/value.c
-// git cat-file -p 370981574e9bb6b426bf03982b46d340a9d510bc > lib/gc-allocate.c
-// git cat-file -p fbd604e90e7d4f7b4c4d66801313e8d0e41025ab > lib/uint64.c
-// git cat-file -p 78058c8251adf1a3664f16e043c4c19f4454a263 > lib/string-util.c
-// git cat-file -p 20249a8bdf4b73beb31749c1a059600223b1dd37 > lib/logger.c
-// git cat-file -p 01d1c058798c5549bc283296ea79d5419a1b8bd0 > lib/utf8-decoder.c
-// git cat-file -p aa6ee8f5be5115c1c6585ee454754a22542480e5 > lib/buffer.c
-// git cat-file -p 800182d499c344faba101baa94359c9c585a77a1 > lib/byte-stream.c
-// git cat-file -p 1f8694a528399660a81e3a72fac3a3314c77eee2 > lib/value-array.c
-// git cat-file -p e5cc5167198373956762e1b8f96f71bcb6343ba4 > lib/value-alist.c
-// git cat-file -p c560ad207e743ce3b364b58540b81a7051072f0a > lib/string-alist.c
-// git cat-file -p e8c7b621cbbcfe1f3807635aa3d329f73e0db429 > lib/value-hashtable.c
-// git cat-file -p 741b85af593dda43aeb84bd32ec3ed36c8f85c55 > lib/string-hashtable.c
-// git cat-file -p 1d0266094b9c0915098e1352edbc8d62ee77abb0 > lib/value-tree.c
-// git cat-file -p 8d8502036da69d42e740206185219ba74887f34a > lib/string-tree.c
-// git cat-file -p 1ccb428c8923e3d6aad2473fcf93f08c66c0f7db > lib/flag.c
-// git cat-file -p 543faf4237803799d6444d6d6a4f152f9d3f763e > lib/io.c
-// git cat-file -p 19ca1105e05dedea799ae80d8feeb6eb22b74976 > lib/terminal.c
-// git cat-file -p f1d5e507966591d900a0301e08fad74c425b02e0 > lib/tokenizer.c
-// git cat-file -p 421d3674f0800a77e5a52d255ae2b58f2c031ccd > lib/random.c
-// git cat-file -p c4db2805aa9ad2dbf641dec703d2c57d087aad56 > lib/cdl-printer.c
-// git cat-file -p c8e79201ff43c4457146a87b79243e7b7b4a6c05 > lib/sub-process.c
-// git cat-file -p 846d04fa56c6bc8811a8ffdf1fd15991bd31e03d > lib/splitjoin.c
-// git cat-file -p fbc6df051ad9a1e3a0c09f1e2b07274607eefc28 > lib/oarchive.c
-// git cat-file -p 6d13af369d7152831ca19c4c8202aea995544067 > lib/test.c
+// git cat-file -p 3e73010b6a2baf79f3cc59db5f944f7867a81396 > /home/jawilson/src/omni-c/build-dir/bin/lib.oar
 // git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
 // git cat-file -p 6c0a741ef33f143d100f562fbb6624a0e4b0bb39 > keywords.c
 // git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
@@ -26495,14 +26573,14 @@ enum_metadata_t* type_node_kind_metadata(){
 // git cat-file -p dcba6ccde20f5fa481e0a952281a8220da5c6bcb > linearizer.c
 // git cat-file -p 860f4de4bf509722c1cf90fa4b5e1f62f09364d9 > main.c
 // git cat-file -p 0454a5add5006737a0f3fca664fb707837742680 > archive-command.c
-// git cat-file -p 5edb92a256e071efa5859b3d24b7d92edea60011 > build-command.c
-// git cat-file -p 552280e129573f2e08a45bdf26a6595c558dbb05 > generate-c-output-file.c
-// git cat-file -p cfdecb5e6bab51c39c5369bf750ba0a7fccf1423 > generate-header-file-command.c
-// git cat-file -p bb60f5efa5f10341f69ae17fb9944551fe685134 > generate-library-command.c
+// git cat-file -p 9894b0b701f73ede7de57c59052ef1a01d5d7f4f > build-command.c
+// git cat-file -p 97164d99bde2d7b0a6b5afffd0386ad209c6547c > generate-c-output-file.c
+// git cat-file -p 27f7c678152a252c8b32d08e069a98a2c2537840 > generate-header-file-command.c
+// git cat-file -p 2b99df738d6b7f0dd59d87d6befbb0a3bdcfc6bd > generate-library-command.c
 // git cat-file -p 96cf80aaffbbdd213ffeeda46411de2c8c1f986f > c-compiler-backend.c
 // git cat-file -p 42dadc0ee36e8cc16f36fd2d4d66751e09808097 > git-hash-object.c
 // git cat-file -p cfaccebe12df4a35e44380c7809ae428a7a72f2f > print-tokens.c
-// git cat-file -p 300dbd1dc7273fa58016143b372d689cabc18b1f > parse-test.c
-// git cat-file -p 4c1d8e1a36466ab1513135fd304541f86cfdf372 > test-command.c
+// git cat-file -p da2c76b993b03e6a545a4402da4bedeffbc72f90 > parse-test.c
+// git cat-file -p 73de727b90c7c551e39b54ec604d7c25da6aa5ea > test-command.c
 // git cat-file -p 6302d0b40a0562b3b566de289df2bafcda663438 > flags.c
 // git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
