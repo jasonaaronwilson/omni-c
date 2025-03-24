@@ -1,7 +1,34 @@
 # Omni-C
 
-An extended C programming language with convenience and safety
-enhancement features.
+## The Pitch
+
+1. Fast - omni-c is fundamentally C and compiles to C and can call C
+   libraries (or even custom assembly). All of the hard work of the
+   clang, gcc, msvc tool-chains are thus available when you choose one
+   of those as your backend. You could also use Fil-C or TrapC for
+   even more memory safety or even "zig cc" if you want to integrate
+   with zig.
+
+2. Familiar - omni-c should be very familar to anyone that knows C. The
+   code you write can look just like it would in C unless you want to
+   use more advanced features. For generics, it will look a lot like
+   C++ (and Java) but the semantics are somewhat simpler. This is a
+   less radical departure than Rust or Go which both have good ideas
+   that got incorporated into omni-c.
+
+3. Fun - unlike plain C, certain things that should be trivial, like
+   moving a function from one file to another, is actually trivial. I
+   never found it fun to worry about header files or order of
+   declarations or how to write the type of a function pointer with
+   it's strange syntax, so I fixed it. For folks finding C++ or Java
+   too complex because of OOP but who still like the "subject object
+   ..." syntax of methods calls, that will soon become available as
+   simple syntactic sugar.
+
+## The Description
+
+Omni C is an extended C programming language with convenience and
+safety enhancement features.
 
 The main features beyound C is an independent declaration order (so
 you never have to write a header file again), an enhanced standard
@@ -12,7 +39,8 @@ example, enum to string and string to enum conversion.)
 
 Since Omni C is a transpiler, code quality should be similar to the
 underlying C compiler used (gcc, clang, tcc, msvc, etc., and we may
-"poly-fill" to even older C standards than C99).
+"poly-fill" (aka back-ported to older environments automatically) to
+even older C standards than C99).
 
 ## Using Omni C
 
@@ -23,7 +51,7 @@ like so:
   omni-c build --executable=my_program *.c sub-directory/*.c
 ```
 
-(There are other options like source archives to help structure larger
+(There are other options like archives to help structure larger
 programs, or you can use or output more standard C libraries with
 header files. We will eventually have a (versioned) package mechanism
 like all other modern languages so you can stand on the shoulders of
@@ -198,6 +226,3 @@ readable names.
   to work.
 * (Older status messages have been trimmed but you can find them in
   older versions of this file).
-
-In summary, this project is in flight but unforunately only has a
-single developer.
