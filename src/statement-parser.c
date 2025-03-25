@@ -51,6 +51,8 @@ typedef empty_statement_node_t = struct {
 
 /**
  * @structure block_node_t
+ *
+ * Represents a sequence of statements.
  */
 typedef block_node_t = struct {
   parse_node_type_t tag;
@@ -125,17 +127,6 @@ typedef continue_statement_node_t = struct {
 typedef label_statement_node_t = struct {
   parse_node_type_t tag;
   token_t* label;
-};
-
-/**
- * @structure variable_statement_node_t
- */
-typedef variable_statement_node_t = struct {
-  parse_node_type_t tag;
-  token_t* first_token;
-  // type
-  // name
-  parse_node_t* expression;
 };
 
 /**
