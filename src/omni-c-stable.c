@@ -1631,18 +1631,32 @@ struct tmp_provider_t__generated_S {
 
 // ========== global variables ==========
 
+
+# 85 "lib/fatal-error.c"
 fatal_error_config_t fatal_error_config = {0};
 
+
+# 93 "lib/logger.c"
 logger_state_t global_logger_state;
 
+
+# 196 "lib/flag.c"
 program_descriptor_t* current_program;
 
+
+# 197 "lib/flag.c"
 command_descriptor_t* current_command;
 
+
+# 198 "lib/flag.c"
 flag_descriptor_t* current_flag;
 
+
+# 45 "lib/random.c"
 random_state_t shared_random_state = {0};
 
+
+# 1 "keywords.c"
 char* c_keywords_array[] = {
     /* C89/C90 Keywords */
     "auto", "break", "case", "char", "const", "continue", "default", "do",
@@ -1661,6 +1675,8 @@ char* c_keywords_array[] = {
     /* C23 Keywords */
     "true", "false", "nullptr"};
 
+
+# 19 "keywords.c"
 char* c_builtin_types_array[] = {
     "char",   // Single character
     "short",  // Short integer
@@ -1679,6 +1695,8 @@ char* c_builtin_types_array[] = {
     "_Imaginary" // Imaginary number representation
 };
 
+
+# 37 "keywords.c"
 char* cpp_keywords_array[] = {
     // C++98 Keywords (includes most C keywords)
     "asm",      // Inline assembly
@@ -1719,38 +1737,72 @@ char* cpp_keywords_array[] = {
     "co_return", // Used with coroutines
 };
 
+
+# 77 "keywords.c"
 string_hashtable_t* c_keywords_ht = ((void *)0);
 
+
+# 78 "keywords.c"
 string_hashtable_t* c_builtin_types_ht = ((void *)0);
 
+
+# 80 "keywords.c"
 string_hashtable_t* cpp_keywords_ht = ((void *)0);
 
+
+# 81 "keywords.c"
 string_hashtable_t* cpp_builtin_types_ht = ((void *)0);
 
+
+# 83 "keywords.c"
 string_hashtable_t* oc_keywords_ht = ((void *)0);
 
+
+# 84 "keywords.c"
 string_hashtable_t* oc_builtin_types_ht = ((void *)0);
 
+
+# 120 "compiler-errors.c"
 char* formatted_snippet = "======================================================================\n" "{error-prefix-lines}" "{error-highlight-on}" "{error-current-line}" "{error-highlight-off}" "{error-suffix-lines}" "\n======================================================================" "\n";
 
+
+# 174 "compiler-errors.c"
 char* parse_error_unknown = "A parse error has occurred but the error message is unavailable.\n" "{formatted_snippet}";
 
+
+# 178 "compiler-errors.c"
 char* error_field_width_or_semicolon = "A parse error has occurred while trying to read a structure or union " "field.\n" "{formatted_snippet}" "Expected a field width or a semi-colon.";
 
+
+# 184 "compiler-errors.c"
 char* error_open_brace_expected = "A parse error has occurred while trying to parse after an opening '[' " "character. Expected a closing ']'.\n" "{formatted_snippet}";
 
+
+# 189 "compiler-errors.c"
 char* error_open_semicolon_expected = "A parse error has occurred since a semicolon was expected.\n" "{formatted_snippet}";
 
+
+# 193 "compiler-errors.c"
 char* error_unrecognized_top_level_declaration = "Unable to parse a top-level declaration.\n" "{formatted_snippet}" "\nVariables, functions, " "structures, unions, and typedefs are currently supported.\n\n" "(Additionally, C pre-processor directives are allowed but " "are currently skipped before parsing.)";
 
+
+# 201 "compiler-errors.c"
 char* error_conflicting_storage_class_specifier = "Conflicting storage class specifiers.\n" "{formatted_snippet}" "\nA storage class specifier is either static, extern, auto, or " "register\n" "For each 'declaration', only one of them is allowed.";
 
+
+# 208 "compiler-errors.c"
 char* error_conflicting_function_specifier = "Conflicting function specifier.\n" "{formatted_snippet}" "\nThe only known function specifier is inline so you likely repeated " "it.";
 
+
+# 214 "compiler-errors.c"
 char* error_expected_open_paren_for_underscore_attribute = "This doesn't look like a valid attribute specification.\n" "{formatted_snippet}" "\nAttributes roughly look like __attribute__((...))\n" "\nYou might have unbalanced parens...";
 
+
+# 220 "compiler-errors.c"
 char* error_expected_matching_close_paren_after_underscore_attribute = "This doesn't look like a valid attribute specification.\n" "{formatted_snippet}" "\nAttributes roughly look like __attribute__((...))\n" "\nYou might have unbalanced parens...";
 
+
+# 383 "lexer.c"
 char* c_punctuation[] = {
     "!=",
     "%=",
@@ -1817,44 +1869,84 @@ char* c_punctuation[] = {
     "\\\n",
 };
 
+
+# 10 "flags.c"
 value_array_t* FLAG_files = ((void *)0);
 
+
+# 11 "flags.c"
 char* FLAG_command = ((void *)0);
 
+
+# 12 "flags.c"
 boolean_t FLAG_print_command_line = true;
 
+
+# 13 "flags.c"
 boolean_t FLAG_include_unnamed_nodes = false;
 
+
+# 14 "flags.c"
 boolean_t FLAG_print_tokens_show_tokens = false;
 
+
+# 15 "flags.c"
 boolean_t FLAG_print_tokens_include_whitespace = false;
 
+
+# 16 "flags.c"
 boolean_t FLAG_print_tokens_include_comments = false;
 
+
+# 17 "flags.c"
 boolean_t FLAG_print_tokens_parse_and_print = true;
 
+
+# 18 "flags.c"
 boolean_t FLAG_print_tokens_show_appended_tokens = true;
 
+
+# 19 "flags.c"
 char* FLAG_c_output_file = ((void *)0);
 
+
+# 20 "flags.c"
 char* FLAG_binary_output_file = ((void *)0);
 
+
+# 21 "flags.c"
 char* FLAG_archive_output_file = ((void *)0);
 
+
+# 22 "flags.c"
 boolean_t FLAG_generate_enum_convertors = true;
 
+
+# 23 "flags.c"
 char* FLAG_expression = ((void *)0);
 
+
+# 24 "flags.c"
 char* FLAG_statement = ((void *)0);
 
+
+# 25 "flags.c"
 boolean_t FLAG_dump_symbol_table = false;
 
+
+# 26 "flags.c"
 boolean_t FLAG_use_statement_parser = true;
 
+
+# 27 "flags.c"
 boolean_t FLAG_to_c = true;
 
+
+# 28 "flags.c"
 boolean_t FLAG_omit_c_armyknife_include = false;
 
+
+# 29 "flags.c"
 char* FLAG_c_compiler = "clang";
 
 // ========== function prototypes ==========
@@ -2693,6 +2785,8 @@ static inline boolean_t token_matches(token_t* token, char* str)
 # 49 "lexer.c"
     return false;
   }
+
+# 51 "lexer.c"
   int str_len = strlen(str);
 
 # 52 "lexer.c"
@@ -2724,6 +2818,8 @@ static inline boolean_t token_contains(token_t* token, char* str)
 static inline token_t* heap_allocate_token(token_t token)
 # 572 "lexer.c"
 {
+
+# 573 "lexer.c"
   token_t* result = malloc_struct(token_t);
 
 # 574 "lexer.c"
@@ -2821,8 +2917,16 @@ static inline boolean_t token_list_contains(token_list_t token_list, char* token
 
 # 71 "token-list.c"
   for (
+
+# 71 "token-list.c"
+
+# 71 "token-list.c"
     int i = 0;
+
+# 71 "token-list.c"
     (i<token_list_length(token_list));
+
+# 71 "token-list.c"
     (i++))
 
 # 71 "token-list.c"
@@ -3038,6 +3142,8 @@ static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr)
 static inline declarations_node_t* malloc_declarations(void)
 # 255 "declaration-parser.c"
 {
+
+# 256 "declaration-parser.c"
   declarations_node_t* result = malloc_struct(declarations_node_t);
 
 # 257 "declaration-parser.c"
@@ -3052,6 +3158,8 @@ static inline declarations_node_t* malloc_declarations(void)
 static inline function_node_t* malloc_function_node(void)
 # 261 "declaration-parser.c"
 {
+
+# 262 "declaration-parser.c"
   function_node_t* result = malloc_struct(function_node_t);
 
 # 263 "declaration-parser.c"
@@ -3066,6 +3174,8 @@ static inline function_node_t* malloc_function_node(void)
 static inline function_argument_node_t* malloc_function_argument_node(void)
 # 267 "declaration-parser.c"
 {
+
+# 268 "declaration-parser.c"
   function_argument_node_t* result = malloc_struct(function_argument_node_t);
 
 # 269 "declaration-parser.c"
@@ -3080,6 +3190,8 @@ static inline function_argument_node_t* malloc_function_argument_node(void)
 static inline typedef_node_t* malloc_typedef_node(void)
 # 273 "declaration-parser.c"
 {
+
+# 274 "declaration-parser.c"
   typedef_node_t* result = malloc_struct(typedef_node_t);
 
 # 275 "declaration-parser.c"
@@ -3094,6 +3206,8 @@ static inline typedef_node_t* malloc_typedef_node(void)
 static inline attribute_node_t* malloc_attribute_node(void)
 # 279 "declaration-parser.c"
 {
+
+# 280 "declaration-parser.c"
   attribute_node_t* result = malloc_struct(attribute_node_t);
 
 # 281 "declaration-parser.c"
@@ -3108,6 +3222,8 @@ static inline attribute_node_t* malloc_attribute_node(void)
 static inline cpp_include_node_t* malloc_cpp_include_node(void)
 # 285 "declaration-parser.c"
 {
+
+# 286 "declaration-parser.c"
   cpp_include_node_t* result = malloc_struct(cpp_include_node_t);
 
 # 287 "declaration-parser.c"
@@ -3122,6 +3238,8 @@ static inline cpp_include_node_t* malloc_cpp_include_node(void)
 static inline cpp_define_node_t* malloc_cpp_define_node(void)
 # 291 "declaration-parser.c"
 {
+
+# 292 "declaration-parser.c"
   cpp_define_node_t* result = malloc_struct(cpp_define_node_t);
 
 # 293 "declaration-parser.c"
@@ -3266,6 +3384,8 @@ static inline char* remove_type_suffix_1(char* typename)
 static inline operator_node_t* malloc_operator_node(void)
 # 111 "pratt-parser.c"
 {
+
+# 112 "pratt-parser.c"
   operator_node_t* result = malloc_struct(operator_node_t);
 
 # 113 "pratt-parser.c"
@@ -3280,6 +3400,8 @@ static inline operator_node_t* malloc_operator_node(void)
 static inline identifier_node_t* malloc_identifier_node(void)
 # 117 "pratt-parser.c"
 {
+
+# 118 "pratt-parser.c"
   identifier_node_t* result = malloc_struct(identifier_node_t);
 
 # 119 "pratt-parser.c"
@@ -3294,6 +3416,8 @@ static inline identifier_node_t* malloc_identifier_node(void)
 static inline call_node_t* malloc_call_node(void)
 # 123 "pratt-parser.c"
 {
+
+# 124 "pratt-parser.c"
   call_node_t* result = malloc_struct(call_node_t);
 
 # 125 "pratt-parser.c"
@@ -3308,6 +3432,8 @@ static inline call_node_t* malloc_call_node(void)
 static inline conditional_node_t* malloc_conditional_node(void)
 # 129 "pratt-parser.c"
 {
+
+# 130 "pratt-parser.c"
   conditional_node_t* result = malloc_struct(conditional_node_t);
 
 # 131 "pratt-parser.c"
@@ -3412,6 +3538,8 @@ static inline pratt_parser_instruction_t make_parser_instruction(token_t* token,
 static inline type_node_t* malloc_type_node(void)
 # 65 "type-parser.c"
 {
+
+# 66 "type-parser.c"
   type_node_t* result = malloc_struct(type_node_t);
 
 # 67 "type-parser.c"
@@ -3566,6 +3694,8 @@ static inline enum_element_t* to_enum_element_node(parse_node_t* ptr)
 static inline enum_node_t* malloc_enum_node(void)
 # 153 "user-type-parser.c"
 {
+
+# 154 "user-type-parser.c"
   enum_node_t* result = malloc_struct(enum_node_t);
 
 # 155 "user-type-parser.c"
@@ -3580,6 +3710,8 @@ static inline enum_node_t* malloc_enum_node(void)
 static inline enum_element_t* malloc_enum_element(void)
 # 159 "user-type-parser.c"
 {
+
+# 160 "user-type-parser.c"
   enum_element_t* result = malloc_struct(enum_element_t);
 
 # 161 "user-type-parser.c"
@@ -3594,6 +3726,8 @@ static inline enum_element_t* malloc_enum_element(void)
 static inline struct_node_t* malloc_struct_node(void)
 # 165 "user-type-parser.c"
 {
+
+# 166 "user-type-parser.c"
   struct_node_t* result = malloc_struct(struct_node_t);
 
 # 167 "user-type-parser.c"
@@ -3608,6 +3742,8 @@ static inline struct_node_t* malloc_struct_node(void)
 static inline union_node_t* malloc_union_node(void)
 # 171 "user-type-parser.c"
 {
+
+# 172 "user-type-parser.c"
   union_node_t* result = malloc_struct(union_node_t);
 
 # 173 "user-type-parser.c"
@@ -3622,6 +3758,8 @@ static inline union_node_t* malloc_union_node(void)
 static inline field_node_t* malloc_field_node(void)
 # 177 "user-type-parser.c"
 {
+
+# 178 "user-type-parser.c"
   field_node_t* result = malloc_struct(field_node_t);
 
 # 179 "user-type-parser.c"
@@ -3656,6 +3794,8 @@ static inline variable_definition_node_t* to_variable_definition_node(parse_node
 static inline variable_definition_node_t* malloc_variable_definition_node(void)
 # 33 "variable-definition-parser.c"
 {
+
+# 34 "variable-definition-parser.c"
   variable_definition_node_t* result = malloc_struct(variable_definition_node_t);
 
 # 36 "variable-definition-parser.c"
@@ -3670,6 +3810,8 @@ static inline variable_definition_node_t* malloc_variable_definition_node(void)
 static inline literal_node_t* malloc_literal_node(void)
 # 37 "literal-parser.c"
 {
+
+# 38 "literal-parser.c"
   literal_node_t* result = malloc_struct(literal_node_t);
 
 # 39 "literal-parser.c"
@@ -3684,6 +3826,8 @@ static inline literal_node_t* malloc_literal_node(void)
 static inline compound_literal_node_t* malloc_compound_literal_node(void)
 # 43 "literal-parser.c"
 {
+
+# 44 "literal-parser.c"
   compound_literal_node_t* result = malloc_struct(compound_literal_node_t);
 
 # 45 "literal-parser.c"
@@ -3718,6 +3862,8 @@ static inline compound_literal_node_t* to_compound_literal_node(parse_node_t* pt
 static inline designated_initializer_node_t* malloc_designated_initializer_node(void)
 # 58 "literal-parser.c"
 {
+
+# 59 "literal-parser.c"
   designated_initializer_node_t* result = malloc_struct(designated_initializer_node_t);
 
 # 61 "literal-parser.c"
@@ -3772,6 +3918,8 @@ static inline balanced_construct_node_t* to_balanced_construct_node(parse_node_t
 static inline balanced_construct_node_t* malloc_balanced_construct_node()
 # 35 "balanced-construct-parser.c"
 {
+
+# 36 "balanced-construct-parser.c"
   balanced_construct_node_t* result = malloc_struct(balanced_construct_node_t);
 
 # 37 "balanced-construct-parser.c"
@@ -3789,13 +3937,19 @@ static inline balanced_construct_node_t* malloc_balanced_construct_node()
 unsigned encode_sleb_128(int64_t Value, uint8_t* p)
 # 80 "lib/leb128.c"
 {
+
+# 81 "lib/leb128.c"
   uint8_t* orig_p = p;
+
+# 82 "lib/leb128.c"
   int More;
 
 # 83 "lib/leb128.c"
   do
 # 83 "lib/leb128.c"
   {
+
+# 84 "lib/leb128.c"
     uint8_t Byte = (Value&0x7f);
 
 # 86 "lib/leb128.c"
@@ -3824,12 +3978,16 @@ unsigned encode_sleb_128(int64_t Value, uint8_t* p)
 unsigned encode_uleb_128(uint64_t Value, uint8_t* p)
 # 104 "lib/leb128.c"
 {
+
+# 105 "lib/leb128.c"
   uint8_t* orig_p = p;
 
 # 106 "lib/leb128.c"
   do
 # 106 "lib/leb128.c"
   {
+
+# 107 "lib/leb128.c"
     uint8_t Byte = (Value&0x7f);
 
 # 108 "lib/leb128.c"
@@ -3855,8 +4013,14 @@ unsigned encode_uleb_128(uint64_t Value, uint8_t* p)
 unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
 # 122 "lib/leb128.c"
 {
+
+# 123 "lib/leb128.c"
   const uint8_t* orig_p = p;
+
+# 124 "lib/leb128.c"
   uint64_t Value = 0;
+
+# 125 "lib/leb128.c"
   unsigned Shift = 0;
 
 # 126 "lib/leb128.c"
@@ -3869,11 +4033,15 @@ unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
 
 # 127 "lib/leb128.c"
     {
+
+# 128 "lib/leb128.c"
       unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
 
 # 130 "lib/leb128.c"
       return result;
     }
+
+# 132 "lib/leb128.c"
     uint64_t Slice = ((*p)&0x7f);
 
 # 133 "lib/leb128.c"
@@ -3881,6 +4049,8 @@ unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
 
 # 133 "lib/leb128.c"
     {
+
+# 134 "lib/leb128.c"
       unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_TOO_BIG});
 
 # 136 "lib/leb128.c"
@@ -3894,6 +4064,8 @@ unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
     (Shift+=7);
   }
   while (((*(p++))>=128));
+
+# 141 "lib/leb128.c"
   unsigned_decode_result result = ((unsigned_decode_result) {Value, cast(unsigned, p - orig_p)});
 
 # 143 "lib/leb128.c"
@@ -3905,9 +4077,17 @@ unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
 signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
 # 151 "lib/leb128.c"
 {
+
+# 152 "lib/leb128.c"
   const uint8_t* orig_p = p;
+
+# 153 "lib/leb128.c"
   int64_t Value = 0;
+
+# 154 "lib/leb128.c"
   unsigned Shift = 0;
+
+# 155 "lib/leb128.c"
   uint8_t Byte;
 
 # 156 "lib/leb128.c"
@@ -3920,6 +4100,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
 
 # 157 "lib/leb128.c"
     {
+
+# 158 "lib/leb128.c"
       signed_decode_result result = ((signed_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
 
 # 160 "lib/leb128.c"
@@ -3928,6 +4110,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
 
 # 162 "lib/leb128.c"
     (Byte=(*p));
+
+# 163 "lib/leb128.c"
     uint64_t Slice = (Byte&0x7f);
 
 # 166 "lib/leb128.c"
@@ -3935,6 +4119,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
 
 # 167 "lib/leb128.c"
     {
+
+# 168 "lib/leb128.c"
       signed_decode_result result = ((signed_decode_result) {0, ERROR_TOO_BIG});
 
 # 170 "lib/leb128.c"
@@ -3957,6 +4143,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
 
 # 178 "lib/leb128.c"
   (Value|=((-1ULL)<<Shift));
+
+# 179 "lib/leb128.c"
   signed_decode_result result = ((signed_decode_result) {Value, (p - orig_p)});
 
 # 181 "lib/leb128.c"
@@ -3983,6 +4171,8 @@ _Noreturn void fatal_error_impl(char* file, int line, int error_code)
 
 # 124 "lib/fatal-error.c"
   fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
+
+# 125 "lib/fatal-error.c"
   char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
 
 # 126 "lib/fatal-error.c"
@@ -3990,6 +4180,8 @@ _Noreturn void fatal_error_impl(char* file, int line, int error_code)
 
 # 126 "lib/fatal-error.c"
   {
+
+# 127 "lib/fatal-error.c"
     value_result_t sleep_time = string_parse_uint64(sleep_str);
 
 # 128 "lib/fatal-error.c"
@@ -4178,14 +4370,28 @@ void print_backtrace()
   do
 # 150 "lib/fatal-error.c"
   {
+
+# 151 "lib/fatal-error.c"
     void* array[10];
+
+# 152 "lib/fatal-error.c"
     int size = backtrace(array, 10);
+
+# 153 "lib/fatal-error.c"
     char** strings = backtrace_symbols(array, size);
 
 # 156 "lib/fatal-error.c"
     for (
+
+# 156 "lib/fatal-error.c"
+
+# 156 "lib/fatal-error.c"
       int i = 0;
+
+# 156 "lib/fatal-error.c"
       (i<size);
+
+# 156 "lib/fatal-error.c"
       (i++))
 
 # 156 "lib/fatal-error.c"
@@ -4222,6 +4428,8 @@ void print_error_code_name(int error_code)
 char* get_command_line()
 # 102 "lib/fatal-error.c"
 {
+
+# 103 "lib/fatal-error.c"
   buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
 
 # 105 "lib/fatal-error.c"
@@ -4236,7 +4444,11 @@ char* get_command_line()
 char* get_program_path()
 # 109 "lib/fatal-error.c"
 {
+
+# 110 "lib/fatal-error.c"
   char buf[4096];
+
+# 111 "lib/fatal-error.c"
   int n = readlink("/proc/self/exe", buf, (sizeof(buf)));
 
 # 112 "lib/fatal-error.c"
@@ -4293,6 +4505,8 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount)
 # 86 "lib/gc-allocate.c"
     fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
+
+# 89 "lib/gc-allocate.c"
   uint8_t* result = GC_malloc(amount);
 
 # 91 "lib/gc-allocate.c"
@@ -4314,6 +4528,8 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount)
 uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount)
 # 105 "lib/gc-allocate.c"
 {
+
+# 106 "lib/gc-allocate.c"
   uint8_t* result = checked_malloc(file, line, amount);
 
 # 107 "lib/gc-allocate.c"
@@ -4458,7 +4674,11 @@ int string_starts_with(const char* str1, const char* str2)
 int string_ends_with(const char* str1, const char* str2)
 # 82 "lib/string-util.c"
 {
+
+# 83 "lib/string-util.c"
   size_t len1 = strlen(str1);
+
+# 84 "lib/string-util.c"
   size_t len2 = strlen(str2);
 
 # 86 "lib/string-util.c"
@@ -4500,12 +4720,22 @@ int string_index_of_char(const char* str, char ch)
 # 114 "lib/string-util.c"
     return (-1);
   }
+
+# 116 "lib/string-util.c"
   int str_length = strlen(str);
 
 # 117 "lib/string-util.c"
   for (
+
+# 117 "lib/string-util.c"
+
+# 117 "lib/string-util.c"
     int i = 0;
+
+# 117 "lib/string-util.c"
     (i<str_length);
+
+# 117 "lib/string-util.c"
     (i++))
 
 # 117 "lib/string-util.c"
@@ -4531,6 +4761,8 @@ int string_index_of_char(const char* str, char ch)
 char* uint64_to_string(uint64_t number)
 # 310 "lib/string-util.c"
 {
+
+# 311 "lib/string-util.c"
   char buffer[32];
 
 # 312 "lib/string-util.c"
@@ -4555,6 +4787,8 @@ uint64_t string_hash(const char* str)
 char* string_substring(const char* str, int start, int end)
 # 140 "lib/string-util.c"
 {
+
+# 141 "lib/string-util.c"
   uint64_t len = strlen(str);
 
 # 142 "lib/string-util.c"
@@ -4566,13 +4800,25 @@ char* string_substring(const char* str, int start, int end)
 # 143 "lib/string-util.c"
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
   }
+
+# 145 "lib/string-util.c"
   int result_size = ((end-start)+1);
+
+# 146 "lib/string-util.c"
   char* result = (/*CAST*/(char*) malloc_bytes(result_size));
 
 # 147 "lib/string-util.c"
   for (
+
+# 147 "lib/string-util.c"
+
+# 147 "lib/string-util.c"
     int i = start;
+
+# 147 "lib/string-util.c"
     (i<end);
+
+# 147 "lib/string-util.c"
     (i++))
 
 # 147 "lib/string-util.c"
@@ -4630,7 +4876,11 @@ value_result_t string_parse_uint64(const char* string)
 value_result_t string_parse_uint64_dec(const char* string)
 # 154 "lib/string-util.c"
 {
+
+# 155 "lib/string-util.c"
   uint64_t len = strlen(string);
+
+# 156 "lib/string-util.c"
   uint64_t integer = 0;
 
 # 158 "lib/string-util.c"
@@ -4645,12 +4895,22 @@ value_result_t string_parse_uint64_dec(const char* string)
 
 # 163 "lib/string-util.c"
   for (
+
+# 163 "lib/string-util.c"
+
+# 163 "lib/string-util.c"
     int i = 0;
+
+# 163 "lib/string-util.c"
     (i<len);
+
+# 163 "lib/string-util.c"
     (i++))
 
 # 163 "lib/string-util.c"
   {
+
+# 164 "lib/string-util.c"
     char ch = (string[i]);
 
 # 165 "lib/string-util.c"
@@ -4662,6 +4922,8 @@ value_result_t string_parse_uint64_dec(const char* string)
 # 166 "lib/string-util.c"
       return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
+
+# 170 "lib/string-util.c"
     uint64_t digit = ((string[i])-'0');
 
 # 171 "lib/string-util.c"
@@ -4677,7 +4939,11 @@ value_result_t string_parse_uint64_dec(const char* string)
 value_result_t string_parse_uint64_hex(const char* string)
 # 222 "lib/string-util.c"
 {
+
+# 223 "lib/string-util.c"
   uint64_t len = strlen(string);
+
+# 224 "lib/string-util.c"
   uint64_t integer = 0;
 
 # 226 "lib/string-util.c"
@@ -4692,12 +4958,22 @@ value_result_t string_parse_uint64_hex(const char* string)
 
 # 231 "lib/string-util.c"
   for (
+
+# 231 "lib/string-util.c"
+
+# 231 "lib/string-util.c"
     int i = 0;
+
+# 231 "lib/string-util.c"
     (i<len);
+
+# 231 "lib/string-util.c"
     (i++))
 
 # 231 "lib/string-util.c"
   {
+
+# 232 "lib/string-util.c"
     char ch = (string[i]);
 
 # 233 "lib/string-util.c"
@@ -4709,6 +4985,8 @@ value_result_t string_parse_uint64_hex(const char* string)
 # 234 "lib/string-util.c"
       return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
+
+# 238 "lib/string-util.c"
     uint64_t digit = hex_digit_to_value(ch);
 
 # 239 "lib/string-util.c"
@@ -4724,7 +5002,11 @@ value_result_t string_parse_uint64_hex(const char* string)
 value_result_t string_parse_uint64_bin(const char* string)
 # 182 "lib/string-util.c"
 {
+
+# 183 "lib/string-util.c"
   uint64_t len = strlen(string);
+
+# 184 "lib/string-util.c"
   uint64_t integer = 0;
 
 # 186 "lib/string-util.c"
@@ -4739,12 +5021,22 @@ value_result_t string_parse_uint64_bin(const char* string)
 
 # 191 "lib/string-util.c"
   for (
+
+# 191 "lib/string-util.c"
+
+# 191 "lib/string-util.c"
     int i = 0;
+
+# 191 "lib/string-util.c"
     (i<len);
+
+# 191 "lib/string-util.c"
     (i++))
 
 # 191 "lib/string-util.c"
   {
+
+# 192 "lib/string-util.c"
     char ch = (string[i]);
 
 # 193 "lib/string-util.c"
@@ -4756,6 +5048,8 @@ value_result_t string_parse_uint64_bin(const char* string)
 # 194 "lib/string-util.c"
       return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
+
+# 198 "lib/string-util.c"
     uint64_t digit = ((string[i])-'0');
 
 # 199 "lib/string-util.c"
@@ -4781,7 +5075,11 @@ char* string_duplicate(const char* src)
 # 279 "lib/string-util.c"
     return NULL;
   }
+
+# 281 "lib/string-util.c"
   int len = (strlen(src)+1);
+
+# 282 "lib/string-util.c"
   char* result = (/*CAST*/(char*) malloc_bytes(len));
 
 # 283 "lib/string-util.c"
@@ -4806,7 +5104,11 @@ char* string_append(const char* a, const char* b)
 # 296 "lib/string-util.c"
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
+
+# 298 "lib/string-util.c"
   int total_length = ((strlen(a)+strlen(b))+1);
+
+# 299 "lib/string-util.c"
   char* result = (/*CAST*/(char*) malloc_bytes(total_length));
 
 # 300 "lib/string-util.c"
@@ -4834,15 +5136,31 @@ char* string_left_pad(const char* str, int n, char ch)
 # 324 "lib/string-util.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
+
+# 327 "lib/string-util.c"
   int input_length = strlen(str);
+
+# 330 "lib/string-util.c"
   int padding_needed = (n-input_length);
+
+# 338 "lib/string-util.c"
   int len = 1;
+
+# 340 "lib/string-util.c"
   buffer_t* buffer = make_buffer(len);
 
 # 341 "lib/string-util.c"
   for (
+
+# 341 "lib/string-util.c"
+
+# 341 "lib/string-util.c"
     int i = 0;
+
+# 341 "lib/string-util.c"
     (i<padding_needed);
+
+# 341 "lib/string-util.c"
     (i++))
 
 # 341 "lib/string-util.c"
@@ -4854,6 +5172,8 @@ char* string_left_pad(const char* str, int n, char ch)
 
 # 344 "lib/string-util.c"
   (buffer=buffer_append_string(buffer, str));
+
+# 345 "lib/string-util.c"
   char* result = buffer_to_c_string(buffer);
 
 # 346 "lib/string-util.c"
@@ -4878,9 +5198,17 @@ char* string_right_pad(const char* str, int n, char ch)
 # 358 "lib/string-util.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
+
+# 361 "lib/string-util.c"
   int input_length = strlen(str);
+
+# 364 "lib/string-util.c"
   int padding_needed = (n-input_length);
+
+# 372 "lib/string-util.c"
   int len = 1;
+
+# 374 "lib/string-util.c"
   buffer_t* buffer = make_buffer(len);
 
 # 375 "lib/string-util.c"
@@ -4888,8 +5216,16 @@ char* string_right_pad(const char* str, int n, char ch)
 
 # 376 "lib/string-util.c"
   for (
+
+# 376 "lib/string-util.c"
+
+# 376 "lib/string-util.c"
     int i = 0;
+
+# 376 "lib/string-util.c"
     (i<padding_needed);
+
+# 376 "lib/string-util.c"
     (i++))
 
 # 376 "lib/string-util.c"
@@ -4898,6 +5234,8 @@ char* string_right_pad(const char* str, int n, char ch)
 # 377 "lib/string-util.c"
     (buffer=buffer_append_byte(buffer, ch));
   }
+
+# 379 "lib/string-util.c"
   char* result = buffer_to_c_string(buffer);
 
 # 380 "lib/string-util.c"
@@ -4912,13 +5250,19 @@ char* string_right_pad(const char* str, int n, char ch)
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
 # 428 "lib/string-util.c"
 {
+
+# 429 "lib/string-util.c"
   char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+
+# 430 "lib/string-util.c"
   int n_bytes = 0;
 
 # 431 "lib/string-util.c"
   do
 # 431 "lib/string-util.c"
   {
+
+# 432 "lib/string-util.c"
     va_list args;
 
 # 433 "lib/string-util.c"
@@ -4937,6 +5281,8 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
 
 # 439 "lib/string-util.c"
   {
+
+# 440 "lib/string-util.c"
     char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
 
 # 441 "lib/string-util.c"
@@ -4949,11 +5295,17 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
 
 # 443 "lib/string-util.c"
   {
+
+# 444 "lib/string-util.c"
     char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
+
+# 445 "lib/string-util.c"
     va_list args;
 
 # 446 "lib/string-util.c"
     va_start(args, format);
+
+# 447 "lib/string-util.c"
     int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
 
 # 448 "lib/string-util.c"
@@ -4979,16 +5331,28 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
 char* string_truncate(char* str, int limit, char* at_limit_suffix)
 # 394 "lib/string-util.c"
 {
+
+# 396 "lib/string-util.c"
   buffer_t* buffer = make_buffer(limit);
 
 # 397 "lib/string-util.c"
   for (
+
+# 397 "lib/string-util.c"
+
+# 397 "lib/string-util.c"
     int i = 0;
+
+# 397 "lib/string-util.c"
     ;
+
+# 397 "lib/string-util.c"
     (i++))
 
 # 397 "lib/string-util.c"
   {
+
+# 398 "lib/string-util.c"
     char ch = (str[i]);
 
 # 399 "lib/string-util.c"
@@ -4996,6 +5360,8 @@ char* string_truncate(char* str, int limit, char* at_limit_suffix)
 
 # 399 "lib/string-util.c"
     {
+
+# 400 "lib/string-util.c"
       char* result = buffer_to_c_string(buffer);
 
 # 401 "lib/string-util.c"
@@ -5018,6 +5384,8 @@ char* string_truncate(char* str, int limit, char* at_limit_suffix)
 # 407 "lib/string-util.c"
     (buffer=buffer_append_string(buffer, at_limit_suffix));
   }
+
+# 409 "lib/string-util.c"
   char* result = buffer_to_c_string(buffer);
 
 # 410 "lib/string-util.c"
@@ -5032,11 +5400,23 @@ char* string_truncate(char* str, int limit, char* at_limit_suffix)
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed)
 # 496 "lib/string-util.c"
 {
+
+# 497 "lib/string-util.c"
   const uint64_t m = 0x880355f21e6d1965ULL;
+
+# 498 "lib/string-util.c"
   const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
+
+# 499 "lib/string-util.c"
   const uint64_t* end = (pos+(len/8));
+
+# 500 "lib/string-util.c"
   const unsigned char* pos2;
+
+# 501 "lib/string-util.c"
   uint64_t h = (seed^(len*m));
+
+# 502 "lib/string-util.c"
   uint64_t v;
 
 # 504 "lib/string-util.c"
@@ -5125,6 +5505,8 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed)
 void logger_init(void)
 # 262 "lib/logger.c"
 {
+
+# 263 "lib/logger.c"
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
 
 # 264 "lib/logger.c"
@@ -5132,6 +5514,8 @@ void logger_init(void)
 
 # 264 "lib/logger.c"
   {
+
+# 265 "lib/logger.c"
     value_result_t parsed = string_parse_uint64(level_string);
 
 # 266 "lib/logger.c"
@@ -5147,6 +5531,8 @@ void logger_init(void)
 
 # 268 "lib/logger.c"
     {
+
+# 269 "lib/logger.c"
       value_result_t parsed = parse_log_level_enum(level_string);
 
 # 270 "lib/logger.c"
@@ -5171,6 +5557,8 @@ void logger_init(void)
 
 # 278 "lib/logger.c"
   fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
+
+# 282 "lib/logger.c"
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
 
 # 289 "lib/logger.c"
@@ -5213,6 +5601,8 @@ void logger_init(void)
 __attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...)
 # 336 "lib/logger.c"
 {
+
+# 338 "lib/logger.c"
   FILE* output = (global_logger_state.output);
 
 # 342 "lib/logger.c"
@@ -5233,6 +5623,8 @@ __attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_numb
 
 # 347 "lib/logger.c"
     fprintf(output, "%s ", logger_level_to_string(level));
+
+# 348 "lib/logger.c"
     va_list args;
 
 # 349 "lib/logger.c"
@@ -5393,6 +5785,8 @@ char* logger_level_to_string(int level)
 utf8_decode_result_t utf8_decode(const uint8_t* array)
 # 34 "lib/utf8-decoder.c"
 {
+
+# 35 "lib/utf8-decoder.c"
   uint8_t firstByte = (array[0]);
 
 # 36 "lib/utf8-decoder.c"
@@ -5458,6 +5852,8 @@ utf8_decode_result_t utf8_decode(const uint8_t* array)
 buffer_t* make_buffer(uint64_t initial_capacity)
 # 48 "lib/buffer.c"
 {
+
+# 49 "lib/buffer.c"
   buffer_t* result = malloc_struct(buffer_t);
 
 # 50 "lib/buffer.c"
@@ -5505,8 +5901,16 @@ void buffer_clear(buffer_t* buffer)
 
 # 73 "lib/buffer.c"
   for (
+
+# 73 "lib/buffer.c"
+
+# 73 "lib/buffer.c"
     int i = 0;
+
+# 73 "lib/buffer.c"
     (i<(buffer->capacity));
+
+# 73 "lib/buffer.c"
     (i++))
 
 # 73 "lib/buffer.c"
@@ -5573,7 +5977,11 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end)
 # 108 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
+
+# 111 "lib/buffer.c"
   uint64_t copy_length = (end-start);
+
+# 112 "lib/buffer.c"
   char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
 
 # 113 "lib/buffer.c"
@@ -5640,8 +6048,16 @@ buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes
 
 # 153 "lib/buffer.c"
   for (
+
+# 153 "lib/buffer.c"
+
+# 153 "lib/buffer.c"
     int i = 0;
+
+# 153 "lib/buffer.c"
     (i<n_bytes);
+
+# 153 "lib/buffer.c"
     (i++))
 
 # 153 "lib/buffer.c"
@@ -5676,6 +6092,8 @@ extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity)
 
 # 178 "lib/buffer.c"
   {
+
+# 179 "lib/buffer.c"
     uint8_t* new_elements = malloc_bytes(capacity);
 
 # 180 "lib/buffer.c"
@@ -5700,13 +6118,19 @@ extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity)
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...)
 # 199 "lib/buffer.c"
 {
+
+# 200 "lib/buffer.c"
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
+
+# 201 "lib/buffer.c"
   int n_bytes = 0;
 
 # 202 "lib/buffer.c"
   do
 # 202 "lib/buffer.c"
   {
+
+# 203 "lib/buffer.c"
     va_list args;
 
 # 204 "lib/buffer.c"
@@ -5733,11 +6157,17 @@ __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, 
 
 # 212 "lib/buffer.c"
   {
+
+# 216 "lib/buffer.c"
     char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
+
+# 217 "lib/buffer.c"
     va_list args;
 
 # 218 "lib/buffer.c"
     va_start(args, format);
+
+# 219 "lib/buffer.c"
     int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
 
 # 220 "lib/buffer.c"
@@ -5772,8 +6202,16 @@ extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int
 
 # 239 "lib/buffer.c"
   for (
+
+# 239 "lib/buffer.c"
+
+# 239 "lib/buffer.c"
     int i = 0;
+
+# 239 "lib/buffer.c"
     (i<count);
+
+# 239 "lib/buffer.c"
     (i++))
 
 # 239 "lib/buffer.c"
@@ -5802,6 +6240,8 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position)
 # 253 "lib/buffer.c"
     return ((utf8_decode_result_t) {.error = true});
   }
+
+# 255 "lib/buffer.c"
   utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
 
 # 256 "lib/buffer.c"
@@ -5927,12 +6367,22 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char
 
 # 314 "lib/buffer.c"
   for (
+
+# 314 "lib/buffer.c"
+
+# 314 "lib/buffer.c"
     uint64_t pos = start_position;
+
+# 314 "lib/buffer.c"
     true;
+
+# 314 "lib/buffer.c"
     (pos++))
 
 # 314 "lib/buffer.c"
   {
+
+# 315 "lib/buffer.c"
     uint8_t byte_str = ((/*CAST*/(uint8_t*) str)[(pos-start_position)]);
 
 # 316 "lib/buffer.c"
@@ -5954,6 +6404,8 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char
 # 320 "lib/buffer.c"
       return false;
     }
+
+# 322 "lib/buffer.c"
     uint8_t byte_buf = buffer_get(buffer, pos);
 
 # 323 "lib/buffer.c"
@@ -5976,6 +6428,8 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char
 buffer_t* buffer_from_string(char* string)
 # 338 "lib/buffer.c"
 {
+
+# 339 "lib/buffer.c"
   buffer_t* result = make_buffer(strlen(string));
 
 # 340 "lib/buffer.c"
@@ -6000,6 +6454,8 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, u
 # 355 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
+
+# 357 "lib/buffer.c"
   uint64_t original_width = (end-start);
 
 # 358 "lib/buffer.c"
@@ -6007,7 +6463,11 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, u
 
 # 358 "lib/buffer.c"
   {
+
+# 361 "lib/buffer.c"
     uint64_t difference = (original_width-new_width);
+
+# 362 "lib/buffer.c"
     uint64_t tail_length = ((buffer->length)-end);
 
 # 363 "lib/buffer.c"
@@ -6023,7 +6483,11 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, u
 
 # 366 "lib/buffer.c"
   {
+
+# 369 "lib/buffer.c"
     uint64_t difference = (new_width-original_width);
+
+# 370 "lib/buffer.c"
     uint64_t tail_length = ((buffer->length)-end);
 
 # 371 "lib/buffer.c"
@@ -6045,7 +6509,11 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, u
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text)
 # 386 "lib/buffer.c"
 {
+
+# 387 "lib/buffer.c"
   int len_original = strlen(original_text);
+
+# 388 "lib/buffer.c"
   int len_replacement = strlen(replacement_text);
 
 # 389 "lib/buffer.c"
@@ -6053,6 +6521,8 @@ buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replac
 
 # 389 "lib/buffer.c"
   {
+
+# 390 "lib/buffer.c"
     uint64_t pos = 0;
 
 # 391 "lib/buffer.c"
@@ -6096,17 +6566,31 @@ buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replac
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position)
 # 406 "lib/buffer.c"
 {
+
+# 407 "lib/buffer.c"
   uint64_t line = 1;
+
+# 408 "lib/buffer.c"
   uint64_t column = 1;
 
 # 412 "lib/buffer.c"
   for (
+
+# 412 "lib/buffer.c"
+
+# 412 "lib/buffer.c"
     uint64_t pos = 0;
+
+# 412 "lib/buffer.c"
     (pos<position);
+
+# 412 "lib/buffer.c"
     (pos++))
 
 # 412 "lib/buffer.c"
   {
+
+# 413 "lib/buffer.c"
     uint8_t ch = buffer_get(buffer, pos);
 
 # 414 "lib/buffer.c"
@@ -6146,8 +6630,16 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
 
 # 434 "lib/buffer.c"
   for (
+
+# 434 "lib/buffer.c"
+
+# 434 "lib/buffer.c"
     int i = start;
+
+# 434 "lib/buffer.c"
     (i<end);
+
+# 434 "lib/buffer.c"
     (i++))
 
 # 434 "lib/buffer.c"
@@ -6176,8 +6668,16 @@ buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8
 
 # 452 "lib/buffer.c"
   for (
+
+# 452 "lib/buffer.c"
+
+# 452 "lib/buffer.c"
     int i = 0;
+
+# 452 "lib/buffer.c"
     (i<(buffer->length));
+
+# 452 "lib/buffer.c"
     (i++))
 
 # 452 "lib/buffer.c"
@@ -6203,6 +6703,8 @@ buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
 # 467 "lib/buffer.c"
 {
+
+# 468 "lib/buffer.c"
   uint64_t position = start;
 
 # 469 "lib/buffer.c"
@@ -6234,6 +6736,8 @@ uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start)
 # 486 "lib/buffer.c"
 {
+
+# 487 "lib/buffer.c"
   uint64_t position = start;
 
 # 488 "lib/buffer.c"
@@ -6278,8 +6782,16 @@ extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_posit
 
 # 520 "lib/buffer.c"
   for (
+
+# 520 "lib/buffer.c"
+
+# 520 "lib/buffer.c"
     uint64_t position = start_position;
+
+# 520 "lib/buffer.c"
     (position<end_position);
+
+# 520 "lib/buffer.c"
     (position++))
 
 # 521 "lib/buffer.c"
@@ -6301,8 +6813,16 @@ buffer_t* buffer_to_uppercase(buffer_t* buffer)
 
 # 537 "lib/buffer.c"
   for (
+
+# 537 "lib/buffer.c"
+
+# 537 "lib/buffer.c"
     uint64_t i = 0;
+
+# 537 "lib/buffer.c"
     (i<(buffer->length));
+
+# 537 "lib/buffer.c"
     (i++))
 
 # 537 "lib/buffer.c"
@@ -6324,8 +6844,16 @@ buffer_t* buffer_to_lowercase(buffer_t* buffer)
 
 # 553 "lib/buffer.c"
   for (
+
+# 553 "lib/buffer.c"
+
+# 553 "lib/buffer.c"
     uint64_t i = 0;
+
+# 553 "lib/buffer.c"
     (i<(buffer->length));
+
+# 553 "lib/buffer.c"
     (i++))
 
 # 553 "lib/buffer.c"
@@ -6344,10 +6872,14 @@ buffer_t* buffer_to_lowercase(buffer_t* buffer)
 byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer)
 # 17 "lib/byte-stream.c"
 {
+
+# 18 "lib/byte-stream.c"
   byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
 
 # 19 "lib/byte-stream.c"
   ((result->read_byte)=(&buffer_stream_source_read));
+
+# 20 "lib/byte-stream.c"
   buffer_byte_stream_source_data_t* data = malloc_struct(buffer_byte_stream_source_data_t);
 
 # 21 "lib/byte-stream.c"
@@ -6368,7 +6900,11 @@ byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer)
 uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
 # 32 "lib/byte-stream.c"
 {
+
+# 33 "lib/byte-stream.c"
   buffer_byte_stream_source_data_t* data = (/*CAST*/(buffer_byte_stream_source_data_t*) (source->data));
+
+# 34 "lib/byte-stream.c"
   uint8_t result = 0;
 
 # 35 "lib/byte-stream.c"
@@ -6401,10 +6937,14 @@ uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_b
 byte_stream_source_t* cstring_to_byte_source(char* string)
 # 46 "lib/byte-stream.c"
 {
+
+# 47 "lib/byte-stream.c"
   byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
 
 # 48 "lib/byte-stream.c"
   ((result->read_byte)=(&cstring_stream_source_read));
+
+# 49 "lib/byte-stream.c"
   cstring_byte_stream_source_data_t* data = malloc_struct(cstring_byte_stream_source_data_t);
 
 # 50 "lib/byte-stream.c"
@@ -6428,7 +6968,11 @@ byte_stream_source_t* cstring_to_byte_source(char* string)
 uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
 # 63 "lib/byte-stream.c"
 {
+
+# 64 "lib/byte-stream.c"
   cstring_byte_stream_source_data_t* data = (/*CAST*/(cstring_byte_stream_source_data_t*) (source->data));
+
+# 65 "lib/byte-stream.c"
   uint8_t result = 0;
 
 # 66 "lib/byte-stream.c"
@@ -6461,6 +7005,8 @@ uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_
 byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer)
 # 77 "lib/byte-stream.c"
 {
+
+# 78 "lib/byte-stream.c"
   byte_stream_target_t* result = malloc_struct(byte_stream_target_t);
 
 # 79 "lib/byte-stream.c"
@@ -6478,6 +7024,8 @@ byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer)
 byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte)
 # 84 "lib/byte-stream.c"
 {
+
+# 85 "lib/byte-stream.c"
   buffer_t* buffer = (/*CAST*/(buffer_t*) (target->data));
 
 # 86 "lib/byte-stream.c"
@@ -6502,6 +7050,8 @@ value_array_t* make_value_array(uint64_t initial_capacity)
 # 68 "lib/value-array.c"
     (initial_capacity=1);
   }
+
+# 71 "lib/value-array.c"
   value_array_t* result = malloc_struct(value_array_t);
 
 # 72 "lib/value-array.c"
@@ -6598,7 +7148,11 @@ value_t value_array_pop(value_array_t* array)
 # 164 "lib/value-array.c"
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
+
+# 166 "lib/value-array.c"
   uint32_t last_index = ((array->length)-1);
+
+# 167 "lib/value-array.c"
   value_t result = value_array_get(array, last_index);
 
 # 168 "lib/value-array.c"
@@ -6648,8 +7202,16 @@ void value_array_insert_at(value_array_t* array, uint32_t position, value_t elem
 
 # 207 "lib/value-array.c"
   for (
+
+# 207 "lib/value-array.c"
+
+# 207 "lib/value-array.c"
     int64_t i = ((array->length)-1);
+
+# 207 "lib/value-array.c"
     (i>=position);
+
+# 207 "lib/value-array.c"
     (i--))
 
 # 207 "lib/value-array.c"
@@ -6671,12 +7233,22 @@ void value_array_insert_at(value_array_t* array, uint32_t position, value_t elem
 value_t value_array_delete_at(value_array_t* array, uint32_t position)
 # 223 "lib/value-array.c"
 {
+
+# 224 "lib/value-array.c"
   value_t result = value_array_get(array, position);
 
 # 225 "lib/value-array.c"
   for (
+
+# 225 "lib/value-array.c"
+
+# 225 "lib/value-array.c"
     int i = position;
+
+# 225 "lib/value-array.c"
     (i<((array->length)-1));
+
+# 225 "lib/value-array.c"
     (i++))
 
 # 225 "lib/value-array.c"
@@ -6704,6 +7276,8 @@ void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacit
 
 # 81 "lib/value-array.c"
   {
+
+# 82 "lib/value-array.c"
     uint32_t new_capacity = ((array->capacity)*2);
 
 # 83 "lib/value-array.c"
@@ -6715,12 +7289,22 @@ void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacit
 # 84 "lib/value-array.c"
       (new_capacity=required_capacity);
     }
+
+# 86 "lib/value-array.c"
     value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
 
 # 88 "lib/value-array.c"
     for (
+
+# 88 "lib/value-array.c"
+
+# 88 "lib/value-array.c"
       int i = 0;
+
+# 88 "lib/value-array.c"
       (i<(array->length));
+
+# 88 "lib/value-array.c"
       (i++))
 
 # 88 "lib/value-array.c"
@@ -6779,6 +7363,8 @@ value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn,
 value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value)
 # 59 "lib/value-alist.c"
 {
+
+# 60 "lib/value-alist.c"
   value_alist_t* result = malloc_struct(value_alist_t);
 
 # 61 "lib/value-alist.c"
@@ -6815,6 +7401,8 @@ value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_f
 
 # 81 "lib/value-alist.c"
   {
+
+# 82 "lib/value-alist.c"
     value_alist_t* result = (list->next);
 
 # 83 "lib/value-alist.c"
@@ -6836,6 +7424,8 @@ value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_f
 __attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list)
 # 116 "lib/value-alist.c"
 {
+
+# 117 "lib/value-alist.c"
   uint64_t result = 0;
 
 # 118 "lib/value-alist.c"
@@ -6870,6 +7460,8 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets)
 # 104 "lib/value-hashtable.c"
     (n_buckets=2);
   }
+
+# 106 "lib/value-hashtable.c"
   value_hashtable_t* result = malloc_struct(value_hashtable_t);
 
 # 107 "lib/value-hashtable.c"
@@ -6887,9 +7479,17 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets)
 value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value)
 # 121 "lib/value-hashtable.c"
 {
+
+# 122 "lib/value-hashtable.c"
   uint64_t hashcode = hash_fn(key);
+
+# 123 "lib/value-hashtable.c"
   int bucket = (hashcode%(ht->n_buckets));
+
+# 124 "lib/value-hashtable.c"
   value_alist_t* list = ((ht->buckets)[bucket]);
+
+# 125 "lib/value-hashtable.c"
   uint64_t len = value_alist_length(list);
 
 # 126 "lib/value-hashtable.c"
@@ -6897,6 +7497,8 @@ value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
 
 # 127 "lib/value-hashtable.c"
   (((ht->buckets)[bucket])=list);
+
+# 128 "lib/value-hashtable.c"
   uint64_t len_after = value_alist_length(list);
 
 # 129 "lib/value-hashtable.c"
@@ -6928,9 +7530,17 @@ value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
 value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
 # 149 "lib/value-hashtable.c"
 {
+
+# 150 "lib/value-hashtable.c"
   uint64_t hashcode = hash_fn(key);
+
+# 151 "lib/value-hashtable.c"
   int bucket = (hashcode%(ht->n_buckets));
+
+# 152 "lib/value-hashtable.c"
   value_alist_t* list = ((ht->buckets)[bucket]);
+
+# 153 "lib/value-hashtable.c"
   uint64_t len = value_alist_length(list);
 
 # 154 "lib/value-hashtable.c"
@@ -6938,6 +7548,8 @@ value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
 
 # 155 "lib/value-hashtable.c"
   (((ht->buckets)[bucket])=list);
+
+# 156 "lib/value-hashtable.c"
   uint64_t len_after = value_alist_length(list);
 
 # 157 "lib/value-hashtable.c"
@@ -6959,8 +7571,14 @@ value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
 value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
 # 169 "lib/value-hashtable.c"
 {
+
+# 170 "lib/value-hashtable.c"
   uint64_t hashcode = hash_fn(key);
+
+# 171 "lib/value-hashtable.c"
   int bucket = (hashcode%(ht->n_buckets));
+
+# 172 "lib/value-hashtable.c"
   value_alist_t* list = ((ht->buckets)[bucket]);
 
 # 173 "lib/value-hashtable.c"
@@ -6972,13 +7590,19 @@ value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value
 void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn)
 # 192 "lib/value-hashtable.c"
 {
+
+# 193 "lib/value-hashtable.c"
   uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
+
+# 194 "lib/value-hashtable.c"
   value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
 
 # 196 "lib/value-hashtable.c"
   value_ht_foreach(ht, key, value, 
 # 196 "lib/value-hashtable.c"
   {
+
+# 197 "lib/value-hashtable.c"
     value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
 
 # 203 "lib/value-hashtable.c"
@@ -6992,6 +7616,8 @@ void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_f
     }
   }
 );
+
+# 208 "lib/value-hashtable.c"
   value_alist_t** old_buckets = (ht->buckets);
 
 # 209 "lib/value-hashtable.c"
@@ -7025,6 +7651,8 @@ value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, valu
 # 94 "lib/value-tree.c"
     return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
   }
+
+# 97 "lib/value-tree.c"
   int cmp_result = cmp_fn(key, (t->key));
 
 # 98 "lib/value-tree.c"
@@ -7074,6 +7702,8 @@ value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, val
 # 162 "lib/value-tree.c"
     return make_value_tree_leaf(key, value);
   }
+
+# 164 "lib/value-tree.c"
   int cmp_result = cmp_fn(key, (t->key));
 
 # 165 "lib/value-tree.c"
@@ -7133,6 +7763,8 @@ value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, val
 # 231 "lib/value-tree.c"
     return t;
   }
+
+# 234 "lib/value-tree.c"
   int cmp_result = cmp_fn(key, (t->key));
 
 # 235 "lib/value-tree.c"
@@ -7176,6 +7808,8 @@ value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, val
 
 # 246 "lib/value-tree.c"
     {
+
+# 247 "lib/value-tree.c"
       value_tree_t* L = value_tree_successor(t);
 
 # 251 "lib/value-tree.c"
@@ -7191,6 +7825,8 @@ value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, val
 
 # 254 "lib/value-tree.c"
     {
+
+# 255 "lib/value-tree.c"
       value_tree_t* L = value_tree_predecessor(t);
 
 # 259 "lib/value-tree.c"
@@ -7264,6 +7900,8 @@ value_tree_t* value_tree_skew(value_tree_t* t)
 
 # 116 "lib/value-tree.c"
   {
+
+# 117 "lib/value-tree.c"
     value_tree_t* L = (t->left);
 
 # 118 "lib/value-tree.c"
@@ -7311,6 +7949,8 @@ value_tree_t* value_tree_split(value_tree_t* t)
 
 # 132 "lib/value-tree.c"
   {
+
+# 135 "lib/value-tree.c"
     value_tree_t* R = (t->right);
 
 # 136 "lib/value-tree.c"
@@ -7335,6 +7975,8 @@ value_tree_t* value_tree_split(value_tree_t* t)
 value_tree_t* make_value_tree_leaf(value_t key, value_t value)
 # 144 "lib/value-tree.c"
 {
+
+# 145 "lib/value-tree.c"
   value_tree_t* result = malloc_struct(value_tree_t);
 
 # 146 "lib/value-tree.c"
@@ -7361,6 +8003,8 @@ value_tree_t* value_tree_decrease_level(value_tree_t* t)
 
 # 188 "lib/value-tree.c"
   {
+
+# 189 "lib/value-tree.c"
     uint32_t should_be = (value_tree_min_level(((t->left)->level), ((t->right)->level))+1);
 
 # 191 "lib/value-tree.c"
@@ -7738,7 +8382,11 @@ char* flag_parse_command_line(int argc, char** argv)
 # 384 "lib/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+
+# 387 "lib/flag.c"
   int start = 1;
+
+# 388 "lib/flag.c"
   command_descriptor_t* command = NULL;
 
 # 389 "lib/flag.c"
@@ -7756,6 +8404,8 @@ char* flag_parse_command_line(int argc, char** argv)
 # 391 "lib/flag.c"
       return "This program requires a command but not enough arguments were " "given";
     }
+
+# 394 "lib/flag.c"
     char* name = (argv[1]);
 
 # 395 "lib/flag.c"
@@ -7782,17 +8432,31 @@ char* flag_parse_command_line(int argc, char** argv)
 # 402 "lib/flag.c"
     (start=2);
   }
+
+# 405 "lib/flag.c"
   value_array_t* files = make_value_array(argc);
+
+# 406 "lib/flag.c"
   boolean_t parse_flags = true;
 
 # 408 "lib/flag.c"
   for (
+
+# 408 "lib/flag.c"
+
+# 408 "lib/flag.c"
     int i = start;
+
+# 408 "lib/flag.c"
     (i<argc);
+
+# 408 "lib/flag.c"
     (i++))
 
 # 408 "lib/flag.c"
   {
+
+# 409 "lib/flag.c"
     char* arg = (argv[i]);
 
 # 410 "lib/flag.c"
@@ -7819,6 +8483,8 @@ char* flag_parse_command_line(int argc, char** argv)
 
 # 416 "lib/flag.c"
       {
+
+# 417 "lib/flag.c"
         flag_key_value_t key_value = flag_split_argument(arg);
 
 # 418 "lib/flag.c"
@@ -7830,6 +8496,8 @@ char* flag_parse_command_line(int argc, char** argv)
 # 419 "lib/flag.c"
           return string_printf("This argument is not a well formed flag: %s", arg);
         }
+
+# 422 "lib/flag.c"
         flag_descriptor_t* flag = flag_find_flag_descriptor(command, (key_value.key));
 
 # 424 "lib/flag.c"
@@ -7854,6 +8522,8 @@ char* flag_parse_command_line(int argc, char** argv)
 # 439 "lib/flag.c"
           ((key_value.value)=(argv[i]));
         }
+
+# 441 "lib/flag.c"
         char* error = parse_and_write_value(flag, key_value);
 
 # 442 "lib/flag.c"
@@ -7986,6 +8656,8 @@ command_descriptor_t* flag_find_command_descriptor(char* name)
 # 470 "lib/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+
+# 472 "lib/flag.c"
   value_result_t command_value = string_tree_find((current_program->commands), name);
 
 # 474 "lib/flag.c"
@@ -8018,6 +8690,8 @@ flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char
 
 # 488 "lib/flag.c"
   {
+
+# 489 "lib/flag.c"
     value_result_t command_flag_value = string_tree_find((command->flags), name);
 
 # 490 "lib/flag.c"
@@ -8030,6 +8704,8 @@ flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char
       return (/*CAST*/(flag_descriptor_t*) (command_flag_value.ptr));
     }
   }
+
+# 495 "lib/flag.c"
   value_result_t program_flag_value = string_tree_find((current_program->flags), name);
 
 # 497 "lib/flag.c"
@@ -8051,6 +8727,8 @@ flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char
 flag_key_value_t flag_split_argument(char* arg)
 # 521 "lib/flag.c"
 {
+
+# 522 "lib/flag.c"
   int equal_sign_index = string_index_of_char(arg, '=');
 
 # 523 "lib/flag.c"
@@ -8058,7 +8736,11 @@ flag_key_value_t flag_split_argument(char* arg)
 
 # 523 "lib/flag.c"
   {
+
+# 524 "lib/flag.c"
     char* key = string_substring(arg, 0, equal_sign_index);
+
+# 529 "lib/flag.c"
     char* value = string_substring(arg, (equal_sign_index+1), strlen(arg));
 
 # 530 "lib/flag.c"
@@ -8127,6 +8809,8 @@ char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value)
 char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value)
 # 562 "lib/flag.c"
 {
+
+# 563 "lib/flag.c"
   char* val = (key_value.value);
 
 # 564 "lib/flag.c"
@@ -8167,6 +8851,8 @@ char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_valu
 char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value)
 # 578 "lib/flag.c"
 {
+
+# 579 "lib/flag.c"
   value_result_t val_result = string_parse_uint64((key_value.value));
 
 # 580 "lib/flag.c"
@@ -8196,6 +8882,8 @@ char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value)
 # 590 "lib/flag.c"
 {
+
+# 591 "lib/flag.c"
   value_result_t val_result = string_tree_find((flag->enum_values), (key_value.value));
 
 # 593 "lib/flag.c"
@@ -8319,10 +9007,14 @@ void flag_print_flags(FILE* out, char* header, string_tree_t* flags)
 buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
 # 79 "lib/io.c"
 {
+
+# 81 "lib/io.c"
   uint64_t capacity = (bytes->capacity);
 
 # 84 "lib/io.c"
   {
+
+# 85 "lib/io.c"
     struct stat st;
 
 # 86 "lib/io.c"
@@ -8344,6 +9036,8 @@ buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
 
 # 93 "lib/io.c"
   (bytes=buffer_increase_capacity(bytes, capacity));
+
+# 95 "lib/io.c"
   FILE* file = fopen(file_name, "r");
 
 # 96 "lib/io.c"
@@ -8361,6 +9055,8 @@ buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input)
 # 109 "lib/io.c"
 {
+
+# 110 "lib/io.c"
   uint8_t buffer[1024];
 
 # 111 "lib/io.c"
@@ -8368,6 +9064,8 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t*
 
 # 111 "lib/io.c"
   {
+
+# 112 "lib/io.c"
     uint64_t n_read = fread(buffer, 1, (sizeof(buffer)), input);
 
 # 113 "lib/io.c"
@@ -8393,6 +9091,8 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t*
 void buffer_write_file(buffer_t* bytes, char* file_name)
 # 126 "lib/io.c"
 {
+
+# 127 "lib/io.c"
   FILE* file = fopen(file_name, "w");
 
 # 128 "lib/io.c"
@@ -8410,6 +9110,8 @@ void buffer_write_file(buffer_t* bytes, char* file_name)
 # 131 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+
+# 133 "lib/io.c"
   size_t bytes_written = fwrite((bytes->elements), 1, (bytes->length), file);
 
 # 134 "lib/io.c"
@@ -8456,6 +9158,8 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line)
 
 # 207 "lib/io.c"
   {
+
+# 208 "lib/io.c"
     int ch = fgetc(input);
 
 # 209 "lib/io.c"
@@ -8491,6 +9195,8 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line)
 extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes)
 # 228 "lib/io.c"
 {
+
+# 229 "lib/io.c"
   int file_number = fileno(input);
 
 # 230 "lib/io.c"
@@ -8505,7 +9211,11 @@ extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_
 
 # 243 "lib/io.c"
   fcntl(file_number, F_SETFL, (fcntl(file_number, F_GETFL)|O_NONBLOCK));
+
+# 245 "lib/io.c"
   uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
+
+# 246 "lib/io.c"
   char read_buffer[1024];
 
 # 249 "lib/io.c"
@@ -8513,6 +9223,8 @@ extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_
 
 # 249 "lib/io.c"
   {
+
+# 250 "lib/io.c"
     int bytes_read = read(file_number, read_buffer, (sizeof(read_buffer)));
 
 # 251 "lib/io.c"
@@ -8523,8 +9235,16 @@ extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_
 
 # 252 "lib/io.c"
       for (
+
+# 252 "lib/io.c"
+
+# 252 "lib/io.c"
         int i = 0;
+
+# 252 "lib/io.c"
         (i<bytes_read);
+
+# 252 "lib/io.c"
         (i++))
 
 # 252 "lib/io.c"
@@ -8590,6 +9310,8 @@ int file_peek_byte(FILE* input)
 # 286 "lib/io.c"
     return (-1);
   }
+
+# 288 "lib/io.c"
   int result = fgetc(input);
 
 # 292 "lib/io.c"
@@ -8631,6 +9353,8 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t s
 # 318 "lib/io.c"
     (size=ULLONG_MAX);
   }
+
+# 321 "lib/io.c"
   uint8_t buffer[FILE_COPY_STREAM_BUFFER_SIZE];
 
 # 322 "lib/io.c"
@@ -8638,7 +9362,11 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t s
 
 # 322 "lib/io.c"
   {
+
+# 323 "lib/io.c"
     int minimum = ((size<FILE_COPY_STREAM_BUFFER_SIZE) ? size : FILE_COPY_STREAM_BUFFER_SIZE);
+
+# 326 "lib/io.c"
     uint64_t n_read = fread(buffer, 1, minimum, input);
 
 # 327 "lib/io.c"
@@ -8680,6 +9408,8 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes)
 # 354 "lib/io.c"
       return;
     }
+
+# 356 "lib/io.c"
     int ch = fgetc(input);
 
 # 357 "lib/io.c"
@@ -8702,6 +9432,8 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes)
 buffer_t* buffer_read_file(char* file_name)
 # 68 "lib/io.c"
 {
+
+# 69 "lib/io.c"
   buffer_t* result = make_buffer(1);
 
 # 70 "lib/io.c"
@@ -8746,6 +9478,8 @@ void make_writable_if_exists(const char* file_name)
 # 170 "lib/io.c"
     return;
   }
+
+# 174 "lib/io.c"
   struct stat file_stat;
 
 # 175 "lib/io.c"
@@ -8760,6 +9494,8 @@ void make_writable_if_exists(const char* file_name)
 # 177 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+
+# 181 "lib/io.c"
   mode_t new_mode = ((file_stat.st_mode)|S_IWUSR);
 
 # 183 "lib/io.c"
@@ -8791,8 +9527,14 @@ __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color)
 # 225 "lib/terminal.c"
 {
+
+# 226 "lib/terminal.c"
   uint8_t blue = (color&0xff);
+
+# 227 "lib/terminal.c"
   uint8_t green = ((color>>8)&0xff);
+
+# 228 "lib/terminal.c"
   uint8_t red = ((color>>16)&0xff);
 
 # 231 "lib/terminal.c"
@@ -8804,8 +9546,14 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(b
 __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color)
 # 246 "lib/terminal.c"
 {
+
+# 247 "lib/terminal.c"
   uint8_t blue = (color&0xff);
+
+# 248 "lib/terminal.c"
   uint8_t green = ((color>>8)&0xff);
+
+# 249 "lib/terminal.c"
   uint8_t red = ((color>>16)&0xff);
 
 # 252 "lib/terminal.c"
@@ -8935,8 +9683,16 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
 
 # 377 "lib/terminal.c"
   for (
+
+# 377 "lib/terminal.c"
+
+# 377 "lib/terminal.c"
     uint64_t x = (x0+1);
+
+# 377 "lib/terminal.c"
     (x<x1);
+
+# 377 "lib/terminal.c"
     (x++))
 
 # 377 "lib/terminal.c"
@@ -8957,8 +9713,16 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
 
 # 385 "lib/terminal.c"
   for (
+
+# 385 "lib/terminal.c"
+
+# 385 "lib/terminal.c"
     uint64_t x = (x0+1);
+
+# 385 "lib/terminal.c"
     (x<x1);
+
+# 385 "lib/terminal.c"
     (x++))
 
 # 385 "lib/terminal.c"
@@ -8973,8 +9737,16 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
 
 # 391 "lib/terminal.c"
   for (
+
+# 391 "lib/terminal.c"
+
+# 391 "lib/terminal.c"
     int y = (y0+1);
+
+# 391 "lib/terminal.c"
     (y<y1);
+
+# 391 "lib/terminal.c"
     (y++))
 
 # 391 "lib/terminal.c"
@@ -8988,8 +9760,16 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
 
 # 395 "lib/terminal.c"
     for (
+
+# 395 "lib/terminal.c"
+
+# 395 "lib/terminal.c"
       int x = (x0+1);
+
+# 395 "lib/terminal.c"
       (x<x1);
+
+# 395 "lib/terminal.c"
       (x++))
 
 # 395 "lib/terminal.c"
@@ -9012,7 +9792,11 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
 extern struct termios term_echo_off()
 # 412 "lib/terminal.c"
 {
+
+# 413 "lib/terminal.c"
   struct termios oldt;
+
+# 414 "lib/terminal.c"
   struct termios newt;
 
 # 415 "lib/terminal.c"
@@ -9072,18 +9856,34 @@ value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters)
 value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters)
 # 61 "lib/tokenizer.c"
 {
+
+# 62 "lib/tokenizer.c"
   value_array_t* result = make_value_array(1);
+
+# 63 "lib/tokenizer.c"
   char token_data[1024];
+
+# 64 "lib/tokenizer.c"
   int cpos = 0;
 
 # 65 "lib/tokenizer.c"
   for (
+
+# 65 "lib/tokenizer.c"
+
+# 65 "lib/tokenizer.c"
     int i = 0;
+
+# 65 "lib/tokenizer.c"
     (i<length);
+
+# 65 "lib/tokenizer.c"
     (i++))
 
 # 65 "lib/tokenizer.c"
   {
+
+# 66 "lib/tokenizer.c"
     uint8_t ch = (str[i]);
 
 # 67 "lib/tokenizer.c"
@@ -9173,6 +9973,8 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
 
 # 97 "lib/random.c"
   return (random_next(state)%maximum);
+
+# 101 "lib/random.c"
   int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
 
 # 102 "lib/random.c"
@@ -9180,6 +9982,8 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
 
 # 102 "lib/random.c"
   {
+
+# 103 "lib/random.c"
     uint64_t n = random_next(state);
 
 # 104 "lib/random.c"
@@ -9225,8 +10029,14 @@ random_state_t* random_state(void)
 uint64_t random_next(random_state_t* state)
 # 73 "lib/random.c"
 {
+
+# 74 "lib/random.c"
   uint64_t s0 = (state->a);
+
+# 75 "lib/random.c"
   uint64_t s1 = (state->b);
+
+# 76 "lib/random.c"
   uint64_t result = (rotl((s0*5), 7)*9);
 
 # 77 "lib/random.c"
@@ -9247,6 +10057,8 @@ uint64_t random_next(random_state_t* state)
 cdl_printer_t* make_cdl_printer(buffer_t* buffer)
 # 38 "lib/cdl-printer.c"
 {
+
+# 39 "lib/cdl-printer.c"
   cdl_printer_t* result = malloc_struct(cdl_printer_t);
 
 # 40 "lib/cdl-printer.c"
@@ -9271,16 +10083,28 @@ void cdl_indent(cdl_printer_t* printer)
 boolean_t is_safe_string(char* string)
 # 49 "lib/cdl-printer.c"
 {
+
+# 50 "lib/cdl-printer.c"
   buffer_t* buffer = buffer_from_string(string);
 
 # 51 "lib/cdl-printer.c"
   for (
+
+# 51 "lib/cdl-printer.c"
+
+# 51 "lib/cdl-printer.c"
     int pos = 0;
+
+# 51 "lib/cdl-printer.c"
     (pos<buffer_length(buffer));
+
+# 51 "lib/cdl-printer.c"
     )
 
 # 51 "lib/cdl-printer.c"
   {
+
+# 52 "lib/cdl-printer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
 # 53 "lib/cdl-printer.c"
@@ -9292,6 +10116,8 @@ boolean_t is_safe_string(char* string)
 # 54 "lib/cdl-printer.c"
       fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
     }
+
+# 56 "lib/cdl-printer.c"
     uint32_t code_point = (decode_result.code_point);
 
 # 57 "lib/cdl-printer.c"
@@ -9524,6 +10350,8 @@ void cdl_end_table(cdl_printer_t* printer)
 sub_process_t* make_sub_process(value_array_t* argv)
 # 71 "lib/sub-process.c"
 {
+
+# 72 "lib/sub-process.c"
   sub_process_t* result = malloc_struct(sub_process_t);
 
 # 73 "lib/sub-process.c"
@@ -9541,6 +10369,8 @@ sub_process_t* make_sub_process(value_array_t* argv)
 boolean_t sub_process_launch(sub_process_t* sub_process)
 # 84 "lib/sub-process.c"
 {
+
+# 85 "lib/sub-process.c"
   uint64_t length = ((sub_process->argv)->length);
 
 # 86 "lib/sub-process.c"
@@ -9555,12 +10385,22 @@ boolean_t sub_process_launch(sub_process_t* sub_process)
 # 88 "lib/sub-process.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+
+# 92 "lib/sub-process.c"
   char** argv = (/*CAST*/(typeof(char**)) malloc_bytes(((length+1)*(sizeof(typeof(char*))))));
 
 # 94 "lib/sub-process.c"
   for (
+
+# 94 "lib/sub-process.c"
+
+# 94 "lib/sub-process.c"
     int i = 0;
+
+# 94 "lib/sub-process.c"
     (i<length);
+
+# 94 "lib/sub-process.c"
     (i++))
 
 # 94 "lib/sub-process.c"
@@ -9572,8 +10412,14 @@ boolean_t sub_process_launch(sub_process_t* sub_process)
 
 # 99 "lib/sub-process.c"
   ((argv[length])=NULL);
+
+# 104 "lib/sub-process.c"
   int stdin_pipe[2] = {0};
+
+# 105 "lib/sub-process.c"
   int stdout_pipe[2] = {0};
+
+# 106 "lib/sub-process.c"
   int stderr_pipe[2] = {0};
 
 # 107 "lib/sub-process.c"
@@ -9591,6 +10437,8 @@ boolean_t sub_process_launch(sub_process_t* sub_process)
 # 111 "lib/sub-process.c"
     return false;
   }
+
+# 115 "lib/sub-process.c"
   pid_t pid = fork();
 
 # 116 "lib/sub-process.c"
@@ -9641,6 +10489,8 @@ boolean_t sub_process_launch(sub_process_t* sub_process)
 
 # 136 "lib/sub-process.c"
     close((stderr_pipe[1]));
+
+# 139 "lib/sub-process.c"
     int exec_exit_status = execvp((argv[0]), argv);
 
 # 141 "lib/sub-process.c"
@@ -9691,11 +10541,17 @@ boolean_t sub_process_launch(sub_process_t* sub_process)
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position)
 # 168 "lib/sub-process.c"
 {
+
+# 169 "lib/sub-process.c"
   int stdin_fd = (sub_process->stdin);
+
+# 172 "lib/sub-process.c"
   int flags = fcntl(stdin_fd, F_GETFL, 0);
 
 # 173 "lib/sub-process.c"
   fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
+
+# 175 "lib/sub-process.c"
   ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
 
 # 178 "lib/sub-process.c"
@@ -9798,7 +10654,11 @@ void sub_process_wait(sub_process_t* sub_process)
 
 # 263 "lib/sub-process.c"
   {
+
+# 264 "lib/sub-process.c"
     int status = 0;
+
+# 265 "lib/sub-process.c"
     pid_t result = waitpid((sub_process->pid), (&status), 0);
 
 # 266 "lib/sub-process.c"
@@ -9814,6 +10674,8 @@ void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_std
 
 # 283 "lib/sub-process.c"
   sub_process_launch(sub_process);
+
+# 284 "lib/sub-process.c"
   uint64_t written = 0;
 
 # 285 "lib/sub-process.c"
@@ -9926,7 +10788,11 @@ boolean_t is_sub_process_running(sub_process_t* sub_process)
 # 243 "lib/sub-process.c"
     return false;
   }
+
+# 246 "lib/sub-process.c"
   int status = 0;
+
+# 247 "lib/sub-process.c"
   pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
 
 # 248 "lib/sub-process.c"
@@ -9951,12 +10817,22 @@ boolean_t is_sub_process_running(sub_process_t* sub_process)
 buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator)
 # 29 "lib/splitjoin.c"
 {
+
+# 30 "lib/splitjoin.c"
   buffer_t* result = make_buffer(1);
 
 # 31 "lib/splitjoin.c"
   for (
+
+# 31 "lib/splitjoin.c"
+
+# 31 "lib/splitjoin.c"
     int i = 0;
+
+# 31 "lib/splitjoin.c"
     (i<(array_of_strings->length));
+
+# 31 "lib/splitjoin.c"
     (i++))
 
 # 31 "lib/splitjoin.c"
@@ -9985,6 +10861,8 @@ buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator
 void oarchive_append_header_and_file_contents(FILE* out, char* filename)
 # 17 "lib/oarchive.c"
 {
+
+# 18 "lib/oarchive.c"
   buffer_t* contents = make_buffer(1);
 
 # 19 "lib/oarchive.c"
@@ -10007,8 +10885,16 @@ void oarchive_append_header_and_file_contents(FILE* out, char* filename)
 
 # 26 "lib/oarchive.c"
   for (
+
+# 26 "lib/oarchive.c"
+
+# 26 "lib/oarchive.c"
     uint64_t i = 0;
+
+# 26 "lib/oarchive.c"
     (i<(contents->length));
+
+# 26 "lib/oarchive.c"
     (i++))
 
 # 26 "lib/oarchive.c"
@@ -10024,6 +10910,8 @@ void oarchive_append_header_and_file_contents(FILE* out, char* filename)
 string_tree_t* oarchive_read_header(FILE* in)
 # 37 "lib/oarchive.c"
 {
+
+# 38 "lib/oarchive.c"
   string_tree_t* metadata = NULL;
 
 # 39 "lib/oarchive.c"
@@ -10044,10 +10932,14 @@ string_tree_t* oarchive_read_header(FILE* in)
 # 42 "lib/oarchive.c"
       break;
     }
+
+# 46 "lib/oarchive.c"
     buffer_t* key = make_buffer(8);
 
 # 47 "lib/oarchive.c"
     (key=buffer_read_until(key, in, '='));
+
+# 48 "lib/oarchive.c"
     buffer_t* value = make_buffer(8);
 
 # 49 "lib/oarchive.c"
@@ -10082,8 +10974,14 @@ void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callba
 
 # 89 "lib/oarchive.c"
   {
+
+# 90 "lib/oarchive.c"
     string_tree_t* metadata = oarchive_read_header(in);
+
+# 92 "lib/oarchive.c"
     int64_t size = 0;
+
+# 93 "lib/oarchive.c"
     value_result_t size_value = string_tree_find(metadata, "size");
 
 # 94 "lib/oarchive.c"
@@ -10099,6 +10997,8 @@ void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callba
 
 # 96 "lib/oarchive.c"
     {
+
+# 97 "lib/oarchive.c"
       value_result_t data_size = string_parse_uint64_dec((size_value.str));
 
 # 98 "lib/oarchive.c"
@@ -10122,6 +11022,8 @@ void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callba
         (size=(data_size.u64));
       }
     }
+
+# 108 "lib/oarchive.c"
     boolean_t skip_data = callback(in, metadata, size, callback_data);
 
 # 111 "lib/oarchive.c"
@@ -10144,6 +11046,8 @@ void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callba
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...)
 # 92 "lib/test.c"
 {
+
+# 93 "lib/test.c"
   va_list args;
 
 # 94 "lib/test.c"
@@ -10170,6 +11074,8 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
 void initialize_keyword_maps(void)
 # 86 "keywords.c"
 {
+
+# 92 "keywords.c"
   int num_keywords = ((sizeof(c_keywords_array))/(sizeof((c_keywords_array[0]))));
 
 # 93 "keywords.c"
@@ -10180,8 +11086,16 @@ void initialize_keyword_maps(void)
 
 # 95 "keywords.c"
   for (
+
+# 95 "keywords.c"
+
+# 95 "keywords.c"
     int i = 0;
+
+# 95 "keywords.c"
     (i<num_keywords);
+
+# 95 "keywords.c"
     (i++))
 
 # 95 "keywords.c"
@@ -10196,6 +11110,8 @@ void initialize_keyword_maps(void)
 # 100 "keywords.c"
     (cpp_keywords_ht=string_ht_insert(cpp_keywords_ht, (c_keywords_array[i]), u64_to_value(1)));
   }
+
+# 104 "keywords.c"
   int num_types = ((sizeof(c_builtin_types_array))/(sizeof((c_builtin_types_array[0]))));
 
 # 106 "keywords.c"
@@ -10206,8 +11122,16 @@ void initialize_keyword_maps(void)
 
 # 109 "keywords.c"
   for (
+
+# 109 "keywords.c"
+
+# 109 "keywords.c"
     int i = 0;
+
+# 109 "keywords.c"
     (i<num_types);
+
+# 109 "keywords.c"
     (i++))
 
 # 109 "keywords.c"
@@ -10323,16 +11247,28 @@ value_array_t* read_files(value_array_t* files)
 
 # 24 "file-reader.c"
   fprintf(stderr, "Parsing %d files...\n", (files->length));
+
+# 25 "file-reader.c"
   value_array_t* result = make_value_array((files->length));
 
 # 26 "file-reader.c"
   for (
+
+# 26 "file-reader.c"
+
+# 26 "file-reader.c"
     int i = 0;
+
+# 26 "file-reader.c"
     (i<(files->length));
+
+# 26 "file-reader.c"
     (i++))
 
 # 26 "file-reader.c"
   {
+
+# 27 "file-reader.c"
     char* file_name = (value_array_get(files, i).str);
 
 # 28 "file-reader.c"
@@ -10369,7 +11305,11 @@ value_array_t* read_files(value_array_t* files)
 file_t* read_file(char* file_name)
 # 45 "file-reader.c"
 {
+
+# 46 "file-reader.c"
   file_t* result = malloc_struct(file_t);
+
+# 48 "file-reader.c"
   buffer_t* buffer = make_buffer((1024*8));
 
 # 49 "file-reader.c"
@@ -10393,6 +11333,8 @@ file_t* read_file(char* file_name)
 void add_all_oarchive_members(value_array_t* result, char* archive_file_name)
 # 58 "file-reader.c"
 {
+
+# 59 "file-reader.c"
   FILE* in = fopen(archive_file_name, "r");
 
 # 60 "file-reader.c"
@@ -10407,6 +11349,8 @@ void add_all_oarchive_members(value_array_t* result, char* archive_file_name)
 boolean_t add_orachive_file(FILE* input, string_tree_t* metadata, int64_t size, void* callback_data)
 # 65 "file-reader.c"
 {
+
+# 66 "file-reader.c"
   value_result_t filename_value = string_tree_find(metadata, "filename");
 
 # 67 "file-reader.c"
@@ -10414,11 +11358,17 @@ boolean_t add_orachive_file(FILE* input, string_tree_t* metadata, int64_t size, 
 
 # 67 "file-reader.c"
   {
+
+# 68 "file-reader.c"
     char* file_name = (filename_value.str);
 
 # 69 "file-reader.c"
     log_info("Extracting %s from archive", file_name);
+
+# 70 "file-reader.c"
     file_t* read_file = malloc_struct(file_t);
+
+# 71 "file-reader.c"
     buffer_t* buffer = make_buffer(size);
 
 # 74 "file-reader.c"
@@ -10426,6 +11376,8 @@ boolean_t add_orachive_file(FILE* input, string_tree_t* metadata, int64_t size, 
 
 # 74 "file-reader.c"
     {
+
+# 75 "file-reader.c"
       int b = fgetc(input);
 
 # 76 "file-reader.c"
@@ -10498,18 +11450,34 @@ buffer_t* buffer_append_human_readable_error(buffer_t* buffer, compiler_error_t*
 src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location, int before_lines, int after_lines)
 # 96 "compiler-errors.c"
 {
+
+# 97 "compiler-errors.c"
   src_code_snippets_t result = {0};
+
+# 99 "compiler-errors.c"
   uint64_t current_begin = buffer_beginning_of_line(buffer, location);
+
+# 100 "compiler-errors.c"
   uint64_t current_end = buffer_end_of_line(buffer, location);
 
 # 102 "compiler-errors.c"
   ((result.current_line)=buffer_c_substring(buffer, current_begin, current_end));
+
+# 104 "compiler-errors.c"
   uint64_t prefix_begin = current_begin;
 
 # 105 "compiler-errors.c"
   for (
+
+# 105 "compiler-errors.c"
+
+# 105 "compiler-errors.c"
     int i = 0;
+
+# 105 "compiler-errors.c"
     ((i<before_lines)&&(prefix_begin>0));
+
+# 105 "compiler-errors.c"
     (i++))
 
 # 105 "compiler-errors.c"
@@ -10521,12 +11489,22 @@ src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location,
 
 # 108 "compiler-errors.c"
   ((result.previous_lines)=buffer_c_substring(buffer, prefix_begin, current_begin));
+
+# 111 "compiler-errors.c"
   uint64_t suffix_end = current_end;
 
 # 112 "compiler-errors.c"
   for (
+
+# 112 "compiler-errors.c"
+
+# 112 "compiler-errors.c"
     int i = 0;
+
+# 112 "compiler-errors.c"
     ((i<after_lines)&&(suffix_end<(buffer->length)));
+
+# 112 "compiler-errors.c"
     (i++))
 
 # 112 "compiler-errors.c"
@@ -10548,8 +11526,14 @@ src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location,
 char* do_common_replacements(char* template, compiler_error_t* error)
 # 130 "compiler-errors.c"
 {
+
+# 131 "compiler-errors.c"
   buffer_t* buffer = make_buffer(256);
+
+# 133 "compiler-errors.c"
   char* file_name = (error->file_name);
+
+# 134 "compiler-errors.c"
   src_code_snippets_t snippet = {0};
 
 # 136 "compiler-errors.c"
@@ -10557,6 +11541,8 @@ char* do_common_replacements(char* template, compiler_error_t* error)
 
 # 136 "compiler-errors.c"
   {
+
+# 137 "compiler-errors.c"
     line_and_column_t position_info = buffer_position_to_line_and_column(((error->error_token)->buffer), ((error->error_token)->start));
 
 # 141 "compiler-errors.c"
@@ -10620,6 +11606,8 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_e
 
 # 242 "compiler-errors.c"
   (buffer=buffer_printf(buffer, "\nparser error code = %d\n", (error->parse_error_code)));
+
+# 244 "compiler-errors.c"
   char* template = ((void *)0);
 
 # 245 "compiler-errors.c"
@@ -10709,6 +11697,8 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_e
 # 280 "compiler-errors.c"
     break;
   }
+
+# 283 "compiler-errors.c"
   char* template_string = do_common_replacements(template, error);
 
 # 284 "compiler-errors.c"
@@ -10730,7 +11720,11 @@ char* token_to_string(token_t* token)
 token_t* make_derived_token(token_t* source_token)
 # 111 "lexer.c"
 {
+
+# 112 "lexer.c"
   token_t* result = (/*CAST*/(token_t*) malloc_copy_of((/*CAST*/(uint8_t*) source_token), (sizeof(token_t))));
+
+# 114 "lexer.c"
   buffer_t* buffer = make_buffer(((source_token->end)-(source_token->start)));
 
 # 115 "lexer.c"
@@ -10754,6 +11748,8 @@ token_t* make_derived_token(token_t* source_token)
 __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, token_t token)
 # 132 "lexer.c"
 {
+
+# 133 "lexer.c"
   char* str = token_to_string((&token));
 
 # 134 "lexer.c"
@@ -10771,6 +11767,8 @@ __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t
 buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token)
 # 149 "lexer.c"
 {
+
+# 152 "lexer.c"
   char* str = token_to_string(token);
 
 # 153 "lexer.c"
@@ -10788,6 +11786,8 @@ buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token)
 token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position)
 # 182 "lexer.c"
 {
+
+# 183 "lexer.c"
   uint64_t pos = start_position;
 
 # 184 "lexer.c"
@@ -10795,6 +11795,8 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position)
 
 # 184 "lexer.c"
   {
+
+# 185 "lexer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
 # 186 "lexer.c"
@@ -10807,6 +11809,8 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position)
       return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
                                .error_position = pos});
     }
+
+# 191 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
 
 # 192 "lexer.c"
@@ -10877,6 +11881,8 @@ boolean_t is_identifier_start(uint32_t code_point)
 token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position)
 # 239 "lexer.c"
 {
+
+# 240 "lexer.c"
   uint64_t pos = start_position;
 
 # 241 "lexer.c"
@@ -10884,6 +11890,8 @@ token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position)
 
 # 241 "lexer.c"
   {
+
+# 242 "lexer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
 # 243 "lexer.c"
@@ -10896,6 +11904,8 @@ token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position)
       return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
                                .error_position = pos});
     }
+
+# 248 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
 
 # 249 "lexer.c"
@@ -10924,10 +11934,20 @@ token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position)
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position)
 # 280 "lexer.c"
 {
+
+# 281 "lexer.c"
   numeric_literal_encoding_t encoding = NUMERIC_LITERAL_ENCODING_UNDECIDED;
+
+# 282 "lexer.c"
   uint32_t previous_code_point = 0;
+
+# 284 "lexer.c"
   token_type_t token_type = TOKEN_TYPE_INTEGER_LITERAL;
+
+# 286 "lexer.c"
   uint64_t offset = 0;
+
+# 287 "lexer.c"
   uint64_t pos = start_position;
 
 # 288 "lexer.c"
@@ -10935,6 +11955,8 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position)
 
 # 288 "lexer.c"
   {
+
+# 289 "lexer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
 # 290 "lexer.c"
@@ -10947,6 +11969,8 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position)
       return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
                                .error_position = pos});
     }
+
+# 295 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
 
 # 297 "lexer.c"
@@ -10964,6 +11988,8 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position)
 
 # 301 "lexer.c"
     {
+
+# 302 "lexer.c"
       boolean_t changed = false;
 
 # 303 "lexer.c"
@@ -11152,12 +12178,22 @@ boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_p
 token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position)
 # 450 "lexer.c"
 {
+
+# 451 "lexer.c"
   int num_elements = ((sizeof(c_punctuation))/(sizeof((c_punctuation[0]))));
 
 # 452 "lexer.c"
   for (
+
+# 452 "lexer.c"
+
+# 452 "lexer.c"
     int i = 0;
+
+# 452 "lexer.c"
     (i<num_elements);
+
+# 452 "lexer.c"
     (i++))
 
 # 452 "lexer.c"
@@ -11207,8 +12243,16 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position)
 
 # 475 "lexer.c"
     for (
+
+# 475 "lexer.c"
+
+# 475 "lexer.c"
       uint64_t position = (start_position+2);
+
+# 475 "lexer.c"
       (position<(buffer->length));
+
+# 475 "lexer.c"
       (position++))
 
 # 476 "lexer.c"
@@ -11235,8 +12279,16 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position)
 
 # 487 "lexer.c"
     for (
+
+# 487 "lexer.c"
+
+# 487 "lexer.c"
       uint64_t position = (start_position+2);
+
+# 487 "lexer.c"
       (position<(buffer->length));
+
+# 487 "lexer.c"
       (position++))
 
 # 488 "lexer.c"
@@ -11290,8 +12342,16 @@ token_or_error_t tokenize_quoted_literal_common(buffer_t* buffer, uint64_t start
 
 # 523 "lexer.c"
   for (
+
+# 523 "lexer.c"
+
+# 523 "lexer.c"
     uint64_t position = (start_position+strlen(opening_sequence));
+
+# 523 "lexer.c"
     (position<(buffer->length));
+
+# 523 "lexer.c"
     )
 
 # 524 "lexer.c"
@@ -11371,10 +12431,20 @@ token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_pos
 tokenizer_result_t tokenize(buffer_t* buffer)
 # 598 "lexer.c"
 {
+
+# 599 "lexer.c"
   tokenizer_result_t result = {0};
+
+# 603 "lexer.c"
   value_array_t* result_tokens = make_value_array(1024);
+
+# 605 "lexer.c"
   uint64_t line_number = 1;
+
+# 606 "lexer.c"
   uint64_t column_number = 1;
+
+# 608 "lexer.c"
   uint32_t pos = 0;
 
 # 609 "lexer.c"
@@ -11382,6 +12452,8 @@ tokenizer_result_t tokenize(buffer_t* buffer)
 
 # 609 "lexer.c"
   {
+
+# 610 "lexer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
 # 611 "lexer.c"
@@ -11393,7 +12465,11 @@ tokenizer_result_t tokenize(buffer_t* buffer)
 # 612 "lexer.c"
       return ((tokenizer_result_t) {.tokenizer_error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR});
     }
+
+# 617 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
+
+# 618 "lexer.c"
     token_t* token = ((void *)0);
 
 # 620 "lexer.c"
@@ -11483,12 +12559,22 @@ tokenizer_result_t tokenize(buffer_t* buffer)
 
 # 641 "lexer.c"
       for (
+
+# 641 "lexer.c"
+
+# 641 "lexer.c"
         int i = (token->start);
+
+# 641 "lexer.c"
         (i<(token->end));
+
+# 641 "lexer.c"
         (i++))
 
 # 641 "lexer.c"
       {
+
+# 642 "lexer.c"
         uint8_t ch = buffer_get((token->buffer), i);
 
 # 643 "lexer.c"
@@ -11527,16 +12613,28 @@ tokenizer_result_t tokenize(buffer_t* buffer)
 value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options_t xform_options)
 # 37 "token-transformer.c"
 {
+
+# 38 "token-transformer.c"
   value_array_t* result = make_value_array((tokens->length));
 
 # 39 "token-transformer.c"
   for (
+
+# 39 "token-transformer.c"
+
+# 39 "token-transformer.c"
     int position = 0;
+
+# 39 "token-transformer.c"
     (position<(tokens->length));
+
+# 39 "token-transformer.c"
     (position++))
 
 # 39 "token-transformer.c"
   {
+
+# 40 "token-transformer.c"
     token_t* token = token_at(tokens, position);
 
 # 41 "token-transformer.c"
@@ -11732,6 +12830,8 @@ token_t* pstate_get_result_token(pstate_t* pstate)
 # 97 "pstate.c"
     ((pstate->error)=((compiler_error_t) {0}));
   }
+
+# 100 "pstate.c"
   token_t* token = (pstate->result_token);
 
 # 101 "pstate.c"
@@ -11759,6 +12859,8 @@ parse_node_t* pstate_get_result_node(pstate_t* pstate)
 # 114 "pstate.c"
     ((pstate->error)=((compiler_error_t) {0}));
   }
+
+# 117 "pstate.c"
   parse_node_t* result = (pstate->result_node);
 
 # 118 "pstate.c"
@@ -11786,6 +12888,8 @@ parse_node_t* pstate_get_optional_result_node(pstate_t* pstate)
 
 # 132 "pstate.c"
   ((pstate->error)=((compiler_error_t) {0}));
+
+# 133 "pstate.c"
   parse_node_t* result = (pstate->result_node);
 
 # 134 "pstate.c"
@@ -11823,6 +12927,8 @@ token_t* pstate_advance(pstate_t* pstate)
 # 158 "pstate.c"
     ((pstate->error)=((compiler_error_t) {0}));
   }
+
+# 161 "pstate.c"
   token_t* token = pstate_peek(pstate, 0);
 
 # 162 "pstate.c"
@@ -11837,6 +12943,8 @@ token_t* pstate_advance(pstate_t* pstate)
 boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string)
 # 171 "pstate.c"
 {
+
+# 172 "pstate.c"
   token_t* token = pstate_peek(pstate, 0);
 
 # 173 "pstate.c"
@@ -11848,6 +12956,8 @@ boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string)
 pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string)
 # 188 "pstate.c"
 {
+
+# 189 "pstate.c"
   token_t* token = pstate_peek(pstate, 0);
 
 # 190 "pstate.c"
@@ -11881,6 +12991,8 @@ pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string)
 pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type)
 # 209 "pstate.c"
 {
+
+# 210 "pstate.c"
   token_t* token = pstate_peek(pstate, 0);
 
 # 211 "pstate.c"
@@ -11933,7 +13045,11 @@ void pstate_rollback(pstate_t* pstate, uint64_t saved_position)
 pstatus_t parse_declarations(pstate_t* pstate)
 # 308 "declaration-parser.c"
 {
+
+# 309 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 310 "declaration-parser.c"
   declarations_node_t* result = malloc_declarations();
 
 # 311 "declaration-parser.c"
@@ -11965,6 +13081,8 @@ pstatus_t parse_declarations(pstate_t* pstate)
 pstatus_t parse_declaration(pstate_t* pstate)
 # 323 "declaration-parser.c"
 {
+
+# 324 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 325 "declaration-parser.c"
@@ -11986,6 +13104,8 @@ pstatus_t parse_declaration(pstate_t* pstate)
 pstatus_t parse_enum_node_declaration(pstate_t* pstate)
 # 343 "declaration-parser.c"
 {
+
+# 344 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 347 "declaration-parser.c"
@@ -11997,6 +13117,8 @@ pstatus_t parse_enum_node_declaration(pstate_t* pstate)
 # 348 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 350 "declaration-parser.c"
   parse_node_t* result = pstate_get_result_node(pstate);
 
 # 351 "declaration-parser.c"
@@ -12018,6 +13140,8 @@ pstatus_t parse_enum_node_declaration(pstate_t* pstate)
 pstatus_t parse_structure_node_declaration(pstate_t* pstate)
 # 363 "declaration-parser.c"
 {
+
+# 364 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 367 "declaration-parser.c"
@@ -12029,6 +13153,8 @@ pstatus_t parse_structure_node_declaration(pstate_t* pstate)
 # 368 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 370 "declaration-parser.c"
   parse_node_t* result = pstate_get_result_node(pstate);
 
 # 371 "declaration-parser.c"
@@ -12050,6 +13176,8 @@ pstatus_t parse_structure_node_declaration(pstate_t* pstate)
 pstatus_t parse_union_node_declaration(pstate_t* pstate)
 # 383 "declaration-parser.c"
 {
+
+# 384 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 387 "declaration-parser.c"
@@ -12061,6 +13189,8 @@ pstatus_t parse_union_node_declaration(pstate_t* pstate)
 # 388 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 390 "declaration-parser.c"
   parse_node_t* result = pstate_get_result_node(pstate);
 
 # 391 "declaration-parser.c"
@@ -12082,6 +13212,8 @@ pstatus_t parse_union_node_declaration(pstate_t* pstate)
 pstatus_t parse_attribute_node(pstate_t* pstate)
 # 403 "declaration-parser.c"
 {
+
+# 404 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 405 "declaration-parser.c"
@@ -12093,6 +13225,8 @@ pstatus_t parse_attribute_node(pstate_t* pstate)
 # 407 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 409 "declaration-parser.c"
   attribute_node_t* result = malloc_attribute_node();
 
 # 410 "declaration-parser.c"
@@ -12110,9 +13244,17 @@ pstatus_t parse_attribute_node(pstate_t* pstate)
 pstatus_t parse_function_node(pstate_t* pstate)
 # 421 "declaration-parser.c"
 {
+
+# 422 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 424 "declaration-parser.c"
   token_t* storage_class_specifier = ((void *)0);
+
+# 425 "declaration-parser.c"
   token_list_t function_specifiers = {0};
+
+# 426 "declaration-parser.c"
   node_list_t attributes = {0};
 
 # 428 "declaration-parser.c"
@@ -12189,6 +13331,8 @@ pstatus_t parse_function_node(pstate_t* pstate)
 # 453 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 455 "declaration-parser.c"
   type_node_t* return_type = to_type_node(pstate_get_result_node(pstate));
 
 # 457 "declaration-parser.c"
@@ -12200,6 +13344,8 @@ pstatus_t parse_function_node(pstate_t* pstate)
 # 458 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 460 "declaration-parser.c"
   token_t* fn_name = pstate_get_result_token(pstate);
 
 # 462 "declaration-parser.c"
@@ -12211,6 +13357,8 @@ pstatus_t parse_function_node(pstate_t* pstate)
 # 463 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 466 "declaration-parser.c"
   function_node_t* fn_node = malloc_function_node();
 
 # 467 "declaration-parser.c"
@@ -12288,7 +13436,11 @@ pstatus_t parse_function_node(pstate_t* pstate)
 pstatus_t parse_function_argument_node(pstate_t* pstate)
 # 499 "declaration-parser.c"
 {
+
+# 500 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 501 "declaration-parser.c"
   function_argument_node_t* result = malloc_function_argument_node();
 
 # 503 "declaration-parser.c"
@@ -12387,6 +13539,8 @@ pstatus_t parse_function_body_node(pstate_t* pstate)
 pstatus_t parse_typedef_node(pstate_t* pstate)
 # 547 "declaration-parser.c"
 {
+
+# 548 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 549 "declaration-parser.c"
@@ -12408,6 +13562,8 @@ pstatus_t parse_typedef_node(pstate_t* pstate)
 # 553 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 555 "declaration-parser.c"
   type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
 
 # 556 "declaration-parser.c"
@@ -12419,6 +13575,8 @@ pstatus_t parse_typedef_node(pstate_t* pstate)
 # 557 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 559 "declaration-parser.c"
   token_t* name = pstate_get_result_token(pstate);
 
 # 560 "declaration-parser.c"
@@ -12430,6 +13588,8 @@ pstatus_t parse_typedef_node(pstate_t* pstate)
 # 561 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 564 "declaration-parser.c"
   typedef_node_t* result = malloc_typedef_node();
 
 # 565 "declaration-parser.c"
@@ -12447,6 +13607,8 @@ pstatus_t parse_typedef_node(pstate_t* pstate)
 pstatus_t parse_improved_typedef_node(pstate_t* pstate)
 # 575 "declaration-parser.c"
 {
+
+# 576 "declaration-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 577 "declaration-parser.c"
@@ -12468,6 +13630,8 @@ pstatus_t parse_improved_typedef_node(pstate_t* pstate)
 # 581 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 583 "declaration-parser.c"
   token_t* name = pstate_get_result_token(pstate);
 
 # 585 "declaration-parser.c"
@@ -12489,6 +13653,8 @@ pstatus_t parse_improved_typedef_node(pstate_t* pstate)
 # 590 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 592 "declaration-parser.c"
   type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
 
 # 594 "declaration-parser.c"
@@ -12500,6 +13666,8 @@ pstatus_t parse_improved_typedef_node(pstate_t* pstate)
 # 595 "declaration-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 598 "declaration-parser.c"
   typedef_node_t* result = malloc_typedef_node();
 
 # 599 "declaration-parser.c"
@@ -12855,12 +14023,22 @@ void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list)
 
 # 179 "debug-printer.c"
   cdl_start_array(printer);
+
+# 180 "debug-printer.c"
   uint64_t length = node_list_length(list);
 
 # 181 "debug-printer.c"
   for (
+
+# 181 "debug-printer.c"
+
+# 181 "debug-printer.c"
     uint64_t i = 0;
+
+# 181 "debug-printer.c"
     (i<length);
+
+# 181 "debug-printer.c"
     (i++))
 
 # 181 "debug-printer.c"
@@ -12885,16 +14063,28 @@ void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, cha
 
 # 196 "debug-printer.c"
   cdl_start_array(printer);
+
+# 197 "debug-printer.c"
   uint64_t length = (tokens->length);
 
 # 198 "debug-printer.c"
   for (
+
+# 198 "debug-printer.c"
+
+# 198 "debug-printer.c"
     uint64_t i = 0;
+
+# 198 "debug-printer.c"
     (i<length);
+
+# 198 "debug-printer.c"
     (i++))
 
 # 198 "debug-printer.c"
   {
+
+# 199 "debug-printer.c"
     token_t* token = value_array_get_ptr(tokens, i, typeof(token_t*));
 
 # 200 "debug-printer.c"
@@ -13147,12 +14337,22 @@ void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node)
 
 # 288 "debug-printer.c"
     for (
+
+# 288 "debug-printer.c"
+
+# 288 "debug-printer.c"
       uint64_t i = 0;
+
+# 288 "debug-printer.c"
       (i<((node->suffixes)->length));
+
+# 288 "debug-printer.c"
       (i++))
 
 # 288 "debug-printer.c"
     {
+
+# 289 "debug-printer.c"
       parse_node_t* suffix = value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*));
 
 # 291 "debug-printer.c"
@@ -13637,12 +14837,22 @@ void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable
 
 # 468 "debug-printer.c"
     for (
+
+# 468 "debug-printer.c"
+
+# 468 "debug-printer.c"
       uint64_t i = 0;
+
+# 468 "debug-printer.c"
       (i<((node->suffixes)->length));
+
+# 468 "debug-printer.c"
       (i++))
 
 # 468 "debug-printer.c"
     {
+
+# 469 "debug-printer.c"
       parse_node_t* suffix = value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*));
 
 # 471 "debug-printer.c"
@@ -14490,12 +15700,22 @@ void debug_append_tokens(buffer_t* buffer, value_array_t* tokens)
 
 # 800 "debug-printer.c"
   for (
+
+# 800 "debug-printer.c"
+
+# 800 "debug-printer.c"
     int i = 0;
+
+# 800 "debug-printer.c"
     (i<(tokens->length));
+
+# 800 "debug-printer.c"
     (i++))
 
 # 800 "debug-printer.c"
   {
+
+# 801 "debug-printer.c"
     token_t* token = token_at(tokens, i);
 
 # 802 "debug-printer.c"
@@ -14702,8 +15922,16 @@ printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* no
 
 # 143 "c-file-printer.c"
   for (
+
+# 143 "c-file-printer.c"
+
+# 143 "c-file-printer.c"
     int i = 0;
+
+# 143 "c-file-printer.c"
     (i<node_list_length((node->attributes)));
+
+# 143 "c-file-printer.c"
     (i++))
 
 # 143 "c-file-printer.c"
@@ -14731,8 +15959,16 @@ printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* no
 
 # 154 "c-file-printer.c"
   for (
+
+# 154 "c-file-printer.c"
+
+# 154 "c-file-printer.c"
     int i = 0;
+
+# 154 "c-file-printer.c"
     (i<token_list_length((node->function_specifiers)));
+
+# 154 "c-file-printer.c"
     (i++))
 
 # 154 "c-file-printer.c"
@@ -14759,8 +15995,16 @@ printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* no
 
 # 164 "c-file-printer.c"
   for (
+
+# 164 "c-file-printer.c"
+
+# 164 "c-file-printer.c"
     int i = 0;
+
+# 164 "c-file-printer.c"
     (i<node_list_length((node->function_args)));
+
+# 164 "c-file-printer.c"
     (i++))
 
 # 164 "c-file-printer.c"
@@ -14775,6 +16019,8 @@ printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* no
 # 166 "c-file-printer.c"
       append_string(printer, ", ");
     }
+
+# 168 "c-file-printer.c"
     function_argument_node_t* arg_node = to_function_argument_node(node_list_get((node->function_args), i));
 
 # 170 "c-file-printer.c"
@@ -14809,7 +16055,11 @@ printer_t* append_c_function_node_prototype(printer_t* printer, function_node_t*
 printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct_node_t* node)
 # 184 "c-file-printer.c"
 {
+
+# 185 "c-file-printer.c"
   uint64_t start = ((node->start_token)->start);
+
+# 186 "c-file-printer.c"
   uint64_t end = ((node->end_token)->end);
 
 # 187 "c-file-printer.c"
@@ -15047,8 +16297,16 @@ printer_t* append_fn_type_node(printer_t* printer, type_node_t* node)
 
 # 291 "c-file-printer.c"
   for (
+
+# 291 "c-file-printer.c"
+
+# 291 "c-file-printer.c"
     int i = 0;
+
+# 291 "c-file-printer.c"
     (i<node_list_length((node->type_args)));
+
+# 291 "c-file-printer.c"
     (i++))
 
 # 291 "c-file-printer.c"
@@ -15151,8 +16409,16 @@ printer_t* append_enum_node(printer_t* printer, enum_node_t* node)
 
 # 349 "c-file-printer.c"
   for (
+
+# 349 "c-file-printer.c"
+
+# 349 "c-file-printer.c"
     int i = 0;
+
+# 349 "c-file-printer.c"
     (i<node_list_length((node->elements)));
+
+# 349 "c-file-printer.c"
     (i++))
 
 # 349 "c-file-printer.c"
@@ -15239,12 +16505,22 @@ printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to
 
 # 388 "c-file-printer.c"
   for (
+
+# 388 "c-file-printer.c"
+
+# 388 "c-file-printer.c"
     int i = 0;
+
+# 388 "c-file-printer.c"
     (i<node_list_length((node->elements)));
+
+# 388 "c-file-printer.c"
     (i++))
 
 # 388 "c-file-printer.c"
   {
+
+# 389 "c-file-printer.c"
     enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
 
 # 391 "c-file-printer.c"
@@ -15341,12 +16617,22 @@ printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to
 
 # 434 "c-file-printer.c"
   for (
+
+# 434 "c-file-printer.c"
+
+# 434 "c-file-printer.c"
     int i = 0;
+
+# 434 "c-file-printer.c"
     (i<node_list_length((node->elements)));
+
+# 434 "c-file-printer.c"
     (i++))
 
 # 434 "c-file-printer.c"
   {
+
+# 435 "c-file-printer.c"
     enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
 
 # 437 "c-file-printer.c"
@@ -15432,8 +16718,16 @@ printer_t* append_field_node(printer_t* printer, field_node_t* node)
 
 # 465 "c-file-printer.c"
     for (
+
+# 465 "c-file-printer.c"
+
+# 465 "c-file-printer.c"
       int i = 0;
+
+# 465 "c-file-printer.c"
       (i<((node->suffixes)->length));
+
+# 465 "c-file-printer.c"
       (i++))
 
 # 465 "c-file-printer.c"
@@ -15481,8 +16775,16 @@ printer_t* append_struct_node(printer_t* printer, struct_node_t* node)
 
 # 487 "c-file-printer.c"
     for (
+
+# 487 "c-file-printer.c"
+
+# 487 "c-file-printer.c"
       int i = 0;
+
+# 487 "c-file-printer.c"
       (i<node_list_length((node->fields)));
+
+# 487 "c-file-printer.c"
       (i++))
 
 # 487 "c-file-printer.c"
@@ -15578,6 +16880,8 @@ printer_t* append_variable_definition_node(printer_t* printer, variable_definiti
 
 # 537 "c-file-printer.c"
   printer_indent(printer);
+
+# 538 "c-file-printer.c"
   boolean_t is_header_file = (!is_library);
 
 # 539 "c-file-printer.c"
@@ -15621,8 +16925,16 @@ printer_t* append_variable_definition_node(printer_t* printer, variable_definiti
 
 # 550 "c-file-printer.c"
     for (
+
+# 550 "c-file-printer.c"
+
+# 550 "c-file-printer.c"
       int i = 0;
+
+# 550 "c-file-printer.c"
       (i<((node->suffixes)->length));
+
+# 550 "c-file-printer.c"
       (i++))
 
 # 550 "c-file-printer.c"
@@ -15715,8 +17027,16 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node)
 
 # 581 "c-file-printer.c"
     for (
+
+# 581 "c-file-printer.c"
+
+# 581 "c-file-printer.c"
       uint64_t i = 0;
+
+# 581 "c-file-printer.c"
       (i<((node->tokens)->length));
+
+# 581 "c-file-printer.c"
       (i++))
 
 # 581 "c-file-printer.c"
@@ -15731,6 +17051,8 @@ printer_t* append_literal_node(printer_t* printer, literal_node_t* node)
 # 583 "c-file-printer.c"
         append_string(printer, " ");
       }
+
+# 585 "c-file-printer.c"
       token_t* token = value_array_get_ptr((node->tokens), i, typeof(token_t*));
 
 # 586 "c-file-printer.c"
@@ -16006,12 +17328,22 @@ printer_t* append_block_node(printer_t* printer, block_node_t* node)
 
 # 716 "c-file-printer.c"
   printer_increase_indent(printer);
+
+# 717 "c-file-printer.c"
   uint64_t length = node_list_length((node->statements));
 
 # 718 "c-file-printer.c"
   for (
+
+# 718 "c-file-printer.c"
+
+# 718 "c-file-printer.c"
     uint64_t i = 0;
+
+# 718 "c-file-printer.c"
     (i<length);
+
+# 718 "c-file-printer.c"
     (i++))
 
 # 718 "c-file-printer.c"
@@ -16549,8 +17881,16 @@ printer_t* append_call_node(printer_t* printer, call_node_t* node)
 
 # 944 "c-file-printer.c"
   for (
+
+# 944 "c-file-printer.c"
+
+# 944 "c-file-printer.c"
     int i = 0;
+
+# 944 "c-file-printer.c"
     (i<node_list_length((node->args)));
+
+# 944 "c-file-printer.c"
     (i++))
 
 # 944 "c-file-printer.c"
@@ -16582,22 +17922,46 @@ printer_t* append_call_node(printer_t* printer, call_node_t* node)
 buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string)
 # 959 "c-file-printer.c"
 {
+
+# 961 "c-file-printer.c"
   char* code_template = "enum_metadata_t* ${fn_prefix}_metadata() {\n" "${element_constructions}" "    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {\n" "        .name = \"${enum_name}\",\n" "        .elements = ${previous_var_address}\n" "    };\n" "    return &enum_metadata_result;\n" "}\n\n";
+
+# 971 "c-file-printer.c"
   char* field_template = "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n" "        .next = ${previous_var_address},\n" "        .name = \"${element_name}\",\n" "        .value = ${element_name}\n" "    };\n";
+
+# 979 "c-file-printer.c"
   buffer_t* element_constructions = make_buffer(128);
+
+# 980 "c-file-printer.c"
   buffer_t* buf = make_buffer(128);
+
+# 982 "c-file-printer.c"
   char* previous_var_address = "((void*)0)";
 
 # 986 "c-file-printer.c"
   for (
+
+# 986 "c-file-printer.c"
+
+# 986 "c-file-printer.c"
     int i = 0;
+
+# 986 "c-file-printer.c"
     (i<node_list_length((node->elements)));
+
+# 986 "c-file-printer.c"
     (i++))
 
 # 986 "c-file-printer.c"
   {
+
+# 987 "c-file-printer.c"
     enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
+
+# 989 "c-file-printer.c"
     char* var_id = string_printf("var_%d", i);
+
+# 990 "c-file-printer.c"
     char* element_name = token_to_string((element->name));
 
 # 992 "c-file-printer.c"
@@ -16621,6 +17985,8 @@ buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char*
 # 999 "c-file-printer.c"
     (previous_var_address=string_printf("&%s", var_id));
   }
+
+# 1002 "c-file-printer.c"
   buffer_t* code = buffer_append_string(make_buffer(128), code_template);
 
 # 1003 "c-file-printer.c"
@@ -16670,6 +18036,8 @@ printer_t* append_line_directive(printer_t* printer, token_t* token)
 # 1019 "c-file-printer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+
+# 1021 "c-file-printer.c"
   file_t* file = symbol_table_token_to_file((printer->symbol_table), token);
 
 # 1022 "c-file-printer.c"
@@ -16706,8 +18074,16 @@ printer_t* append_compound_literal_node(printer_t* printer, compound_literal_nod
 
 # 1036 "c-file-printer.c"
   for (
+
+# 1036 "c-file-printer.c"
+
+# 1036 "c-file-printer.c"
     int i = 0;
+
+# 1036 "c-file-printer.c"
     (i<node_list_length((node->initializers)));
+
+# 1036 "c-file-printer.c"
     (i++))
 
 # 1036 "c-file-printer.c"
@@ -16722,6 +18098,8 @@ printer_t* append_compound_literal_node(printer_t* printer, compound_literal_nod
 # 1038 "c-file-printer.c"
       append_string(printer, ", ");
     }
+
+# 1040 "c-file-printer.c"
     parse_node_t* initializer = node_list_get((node->initializers), i);
 
 # 1041 "c-file-printer.c"
@@ -16762,6 +18140,8 @@ printer_t* append_designated_initializer_node(printer_t* printer, designated_ini
 symbol_table_map_t* make_symbol_table_map(void)
 # 85 "symbol-table.c"
 {
+
+# 86 "symbol-table.c"
   symbol_table_map_t* result = malloc_struct(symbol_table_map_t);
 
 # 87 "symbol-table.c"
@@ -16779,6 +18159,8 @@ symbol_table_map_t* make_symbol_table_map(void)
 symbol_table_t* make_symbol_table(void)
 # 92 "symbol-table.c"
 {
+
+# 93 "symbol-table.c"
   symbol_table_t* result = malloc_struct(symbol_table_t);
 
 # 94 "symbol-table.c"
@@ -16817,6 +18199,8 @@ symbol_table_t* make_symbol_table(void)
 symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_string)
 # 112 "symbol-table.c"
 {
+
+# 113 "symbol-table.c"
   value_result_t result = string_ht_find((map->ht), key_string);
 
 # 114 "symbol-table.c"
@@ -16838,6 +18222,8 @@ symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_
 parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char* key_string)
 # 129 "symbol-table.c"
 {
+
+# 130 "symbol-table.c"
   value_result_t result = string_ht_find((map->ht), key_string);
 
 # 131 "symbol-table.c"
@@ -16845,6 +18231,8 @@ parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char
 
 # 131 "symbol-table.c"
   {
+
+# 132 "symbol-table.c"
     symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (result.ptr));
 
 # 133 "symbol-table.c"
@@ -16870,6 +18258,8 @@ parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char
 void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string, parse_node_t* node)
 # 143 "symbol-table.c"
 {
+
+# 144 "symbol-table.c"
   value_result_t previous_binding = string_ht_find((map->ht), key_string);
 
 # 145 "symbol-table.c"
@@ -16877,6 +18267,8 @@ void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string
 
 # 145 "symbol-table.c"
   {
+
+# 146 "symbol-table.c"
     symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (previous_binding.ptr));
 
 # 148 "symbol-table.c"
@@ -16885,6 +18277,8 @@ void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string
 # 149 "symbol-table.c"
     return;
   }
+
+# 151 "symbol-table.c"
   symbol_table_binding_t* binding = malloc_struct(symbol_table_binding_t);
 
 # 152 "symbol-table.c"
@@ -16908,16 +18302,28 @@ void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string
 void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_node_t* root)
 # 171 "symbol-table.c"
 {
+
+# 172 "symbol-table.c"
   uint64_t length = node_list_length((root->declarations));
 
 # 173 "symbol-table.c"
   for (
+
+# 173 "symbol-table.c"
+
+# 173 "symbol-table.c"
     uint64_t i = 0;
+
+# 173 "symbol-table.c"
     (i<length);
+
+# 173 "symbol-table.c"
     (i++))
 
 # 173 "symbol-table.c"
   {
+
+# 174 "symbol-table.c"
     parse_node_t* node = node_list_get((root->declarations), i);
 
 # 175 "symbol-table.c"
@@ -17038,12 +18444,22 @@ void buffer_appennd_dbg_symbol_table_map(cdl_printer_t* printer, symbol_table_ma
 
 # 240 "symbol-table.c"
   for (
+
+# 240 "symbol-table.c"
+
+# 240 "symbol-table.c"
     int i = 0;
+
+# 240 "symbol-table.c"
     (i<((symbol_table_map->ordered_bindings)->length));
+
+# 240 "symbol-table.c"
     (i++))
 
 # 240 "symbol-table.c"
   {
+
+# 241 "symbol-table.c"
     symbol_table_binding_t* binding = value_array_get_ptr((symbol_table_map->ordered_bindings), i, typeof(symbol_table_binding_t*));
 
 # 243 "symbol-table.c"
@@ -17102,6 +18518,8 @@ void buffer_append_dgb_symbol_table(cdl_printer_t* printer, symbol_table_t* symb
 token_t* generate_struct_name_from_typedef_name(token_t* name)
 # 17 "source-to-source.c"
 {
+
+# 18 "source-to-source.c"
   token_t* generated = make_derived_token(name);
 
 # 19 "source-to-source.c"
@@ -17122,12 +18540,22 @@ void split_structure_typedefs(symbol_table_t* symbol_table)
 
 # 41 "source-to-source.c"
   for (
+
+# 41 "source-to-source.c"
+
+# 41 "source-to-source.c"
     int i = 0;
+
+# 41 "source-to-source.c"
     (i<(((symbol_table->typedefs)->ordered_bindings)->length));
+
+# 41 "source-to-source.c"
     (i++))
 
 # 41 "source-to-source.c"
   {
+
+# 42 "source-to-source.c"
     symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (value_array_get(((symbol_table->typedefs)->ordered_bindings), i).ptr));
 
 # 45 "source-to-source.c"
@@ -17139,6 +18567,8 @@ void split_structure_typedefs(symbol_table_t* symbol_table)
 # 46 "source-to-source.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
+
+# 48 "source-to-source.c"
     typedef_node_t* node = to_typedef_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
 
 # 50 "source-to-source.c"
@@ -17146,6 +18576,8 @@ void split_structure_typedefs(symbol_table_t* symbol_table)
 
 # 51 "source-to-source.c"
     {
+
+# 52 "source-to-source.c"
       struct_node_t* struct_node = to_struct_node(((node->type_node)->user_type));
 
 # 53 "source-to-source.c"
@@ -17166,6 +18598,8 @@ void split_structure_typedefs(symbol_table_t* symbol_table)
 
 # 60 "source-to-source.c"
         log_debug("Splitting %s off from %s", token_to_string((node->name)), token_to_string((struct_node->name)));
+
+# 74 "source-to-source.c"
         struct_node_t* partial_definition = malloc_struct_node();
 
 # 75 "source-to-source.c"
@@ -17189,17 +18623,31 @@ void split_structure_typedefs(symbol_table_t* symbol_table)
 void reorder_symbol_table_typedefs(symbol_table_t* symbol_table)
 # 129 "source-to-source.c"
 {
+
+# 130 "source-to-source.c"
   value_array_t* bindings = ((symbol_table->typedefs)->ordered_bindings);
+
+# 131 "source-to-source.c"
   value_array_t* reordered_bindings = make_value_array((bindings->length));
 
 # 132 "source-to-source.c"
   for (
+
+# 132 "source-to-source.c"
+
+# 132 "source-to-source.c"
     int i = 0;
+
+# 132 "source-to-source.c"
     (i<(bindings->length));
+
+# 132 "source-to-source.c"
     (i++))
 
 # 132 "source-to-source.c"
   {
+
+# 133 "source-to-source.c"
     symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (value_array_get(bindings, i).ptr));
 
 # 135 "source-to-source.c"
@@ -17234,8 +18682,14 @@ void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs
 # 147 "source-to-source.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
+
+# 149 "source-to-source.c"
     parse_node_t* node = (/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr));
+
+# 151 "source-to-source.c"
     typedef_node_t* typedef_node = to_typedef_node(node);
+
+# 152 "source-to-source.c"
     type_node_t* type_node = (typedef_node->type_node);
 
 # 154 "source-to-source.c"
@@ -17253,7 +18707,11 @@ void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs
 
 # 157 "source-to-source.c"
     {
+
+# 158 "source-to-source.c"
       char* type_name = token_to_string((type_node->type_name));
+
+# 159 "source-to-source.c"
       symbol_table_binding_t* dependent_binding = symbol_table_map_get(typedefs, type_name);
 
 # 161 "source-to-source.c"
@@ -17305,13 +18763,25 @@ struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* bindin
 
 # 189 "source-to-source.c"
   for (
+
+# 189 "source-to-source.c"
+
+# 189 "source-to-source.c"
     uint64_t i = 0;
+
+# 189 "source-to-source.c"
     (i<((binding->definition_nodes)->length));
+
+# 189 "source-to-source.c"
     (i++))
 
 # 189 "source-to-source.c"
   {
+
+# 190 "source-to-source.c"
     parse_node_t* node = (/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), i).ptr));
+
+# 192 "source-to-source.c"
     struct_node_t* structure_node = to_struct_node(node);
 
 # 193 "source-to-source.c"
@@ -17353,6 +18823,8 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
 
 # 211 "source-to-source.c"
   {
+
+# 212 "source-to-source.c"
     parse_node_t* user_type = (type_node->user_type);
 
 # 213 "source-to-source.c"
@@ -17360,6 +18832,8 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
 
 # 213 "source-to-source.c"
     {
+
+# 214 "source-to-source.c"
       struct_node_t* struct_node = to_struct_node(user_type);
 
 # 215 "source-to-source.c"
@@ -17367,12 +18841,20 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
 
 # 215 "source-to-source.c"
       {
+
+# 216 "source-to-source.c"
         char* key_name = token_to_string((struct_node->name));
+
+# 217 "source-to-source.c"
         symbol_table_binding_t* binding = symbol_table_map_get((symbol_table->structures), key_name);
+
+# 219 "source-to-source.c"
         buffer_t* buffer = make_buffer(10);
 
 # 220 "source-to-source.c"
         buffer_append_dgb_binding(make_cdl_printer(buffer), binding);
+
+# 221 "source-to-source.c"
         char* dbg_binding = buffer_to_c_string(buffer);
 
 # 222 "source-to-source.c"
@@ -17386,10 +18868,14 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
 # 229 "source-to-source.c"
     return ((void *)0);
   }
+
+# 233 "source-to-source.c"
   char* key_string = token_to_string((type_node->type_name));
 
 # 234 "source-to-source.c"
   log_debug("resolve_typename_to_structure_binding -- %d %s", (type_node->tag), key_string);
+
+# 236 "source-to-source.c"
   symbol_table_binding_t* typedef_binding = symbol_table_map_get((symbol_table->typedefs), key_string);
 
 # 238 "source-to-source.c"
@@ -17407,6 +18893,8 @@ symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* sy
 # 240 "source-to-source.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
+
+# 242 "source-to-source.c"
     typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr((typedef_binding->definition_nodes), 0, typeof(parse_node_t*)));
 
 # 244 "source-to-source.c"
@@ -17439,6 +18927,8 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
 
 # 256 "source-to-source.c"
     ((binding->visited)=true);
+
+# 257 "source-to-source.c"
     struct_node_t* structure_node = get_full_structure_definition_node(binding);
 
 # 258 "source-to-source.c"
@@ -17450,17 +18940,31 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
 # 261 "source-to-source.c"
       return;
     }
+
+# 263 "source-to-source.c"
     uint64_t length = node_list_length((structure_node->fields));
 
 # 264 "source-to-source.c"
     for (
+
+# 264 "source-to-source.c"
+
+# 264 "source-to-source.c"
       uint64_t i = 0;
+
+# 264 "source-to-source.c"
       (i<length);
+
+# 264 "source-to-source.c"
       (i++))
 
 # 264 "source-to-source.c"
     {
+
+# 265 "source-to-source.c"
       field_node_t* field = to_field_node(node_list_get((structure_node->fields), i));
+
+# 267 "source-to-source.c"
       type_node_t* type_node = (field->type);
 
 # 268 "source-to-source.c"
@@ -17468,6 +18972,8 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
 
 # 268 "source-to-source.c"
       {
+
+# 269 "source-to-source.c"
         symbol_table_binding_t* field_type_binding = resolve_typename_to_structure_binding(symbol_table, type_node);
 
 # 271 "source-to-source.c"
@@ -17492,17 +18998,31 @@ void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_tabl
 void reorder_symbol_table_structures(symbol_table_t* symbol_table)
 # 292 "source-to-source.c"
 {
+
+# 293 "source-to-source.c"
   value_array_t* bindings = ((symbol_table->structures)->ordered_bindings);
+
+# 294 "source-to-source.c"
   value_array_t* reordered_bindings = make_value_array((bindings->length));
 
 # 295 "source-to-source.c"
   for (
+
+# 295 "source-to-source.c"
+
+# 295 "source-to-source.c"
     int i = 0;
+
+# 295 "source-to-source.c"
     (i<(bindings->length));
+
+# 295 "source-to-source.c"
     (i++))
 
 # 295 "source-to-source.c"
   {
+
+# 296 "source-to-source.c"
     symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (value_array_get(bindings, i).ptr));
 
 # 298 "source-to-source.c"
@@ -17518,19 +19038,31 @@ void reorder_symbol_table_structures(symbol_table_t* symbol_table)
 c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position)
 # 50 "preprocessor.c"
 {
+
+# 52 "preprocessor.c"
   c_preprocessor_directive_range_t result = {0};
+
+# 59 "preprocessor.c"
   uint64_t position = start_position;
 
 # 60 "preprocessor.c"
   for (
 
 # 60 "preprocessor.c"
+
+# 60 "preprocessor.c"
     ;
+
+# 60 "preprocessor.c"
     (position<(tokens->length));
+
+# 60 "preprocessor.c"
     (position++))
 
 # 60 "preprocessor.c"
   {
+
+# 61 "preprocessor.c"
     token_t* token = token_at(tokens, position);
 
 # 62 "preprocessor.c"
@@ -17588,7 +19120,11 @@ c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_opti
 uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens, uint64_t start_position)
 # 83 "preprocessor.c"
 {
+
+# 84 "preprocessor.c"
   c_preprocessor_directive_range_t range = mark_c_preprocessor_directive(options, tokens, start_position);
+
+# 86 "preprocessor.c"
   token_t* directive_name = token_at(tokens, (start_position+1));
 
 # 88 "preprocessor.c"
@@ -17596,6 +19132,8 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_
 
 # 88 "preprocessor.c"
   {
+
+# 89 "preprocessor.c"
     cpp_include_node_t* node = malloc_cpp_include_node();
 
 # 90 "preprocessor.c"
@@ -17626,6 +19164,8 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_
 
 # 97 "preprocessor.c"
   {
+
+# 98 "preprocessor.c"
     cpp_define_node_t* node = malloc_cpp_define_node();
 
 # 99 "preprocessor.c"
@@ -17647,12 +19187,22 @@ void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_tab
 
 # 109 "preprocessor.c"
   for (
+
+# 109 "preprocessor.c"
+
+# 109 "preprocessor.c"
     uint64_t position = 0;
+
+# 109 "preprocessor.c"
     (position<(tokens->length));
+
+# 109 "preprocessor.c"
     )
 
 # 109 "preprocessor.c"
   {
+
+# 110 "preprocessor.c"
     token_t* token = token_at(tokens, position);
 
 # 111 "preprocessor.c"
@@ -17680,16 +19230,28 @@ void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_tab
 void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names, boolean_t use_statement_parser)
 # 14 "symbol-table-builder.c"
 {
+
+# 15 "symbol-table-builder.c"
   value_array_t* files = read_files(file_names);
 
 # 16 "symbol-table-builder.c"
   for (
+
+# 16 "symbol-table-builder.c"
+
+# 16 "symbol-table-builder.c"
     int i = 0;
+
+# 16 "symbol-table-builder.c"
     (i<(files->length));
+
+# 16 "symbol-table-builder.c"
     (i++))
 
 # 16 "symbol-table-builder.c"
   {
+
+# 17 "symbol-table-builder.c"
     file_t* file = (/*CAST*/(file_t*) (value_array_get(files, i).ptr));
 
 # 18 "symbol-table-builder.c"
@@ -17705,6 +19267,8 @@ void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_arr
 void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, char* file_name, boolean_t use_statement_parser)
 # 36 "symbol-table-builder.c"
 {
+
+# 37 "symbol-table-builder.c"
   tokenizer_result_t tokenizer_result = tokenize(buffer);
 
 # 38 "symbol-table-builder.c"
@@ -17719,6 +19283,8 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, c
 # 42 "symbol-table-builder.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
+
+# 44 "symbol-table-builder.c"
   value_array_t* tokens = (tokenizer_result.tokens);
 
 # 46 "symbol-table-builder.c"
@@ -17734,6 +19300,8 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, c
                                    .keep_javadoc_comments = false,
                                    .keep_c_preprocessor_lines = false,
                                })));
+
+# 62 "symbol-table-builder.c"
   pstate_t pstate = ((pstate_t) {.tokens = tokens, .use_statement_parser = use_statement_parser});
 
 # 65 "symbol-table-builder.c"
@@ -17744,6 +19312,8 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, c
 
 # 66 "symbol-table-builder.c"
     (((pstate.error).file_name)=file_name);
+
+# 67 "symbol-table-builder.c"
     buffer_t* buffer = make_buffer(1);
 
 # 68 "symbol-table-builder.c"
@@ -17755,6 +19325,8 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, c
 # 70 "symbol-table-builder.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
+
+# 73 "symbol-table-builder.c"
   declarations_node_t* root = to_declarations_node(pstate_get_result_node((&pstate)));
 
 # 75 "symbol-table-builder.c"
@@ -17766,17 +19338,31 @@ void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, c
 file_t* symbol_table_token_to_file(symbol_table_t* symbol_table, token_t* token)
 # 88 "symbol-table-builder.c"
 {
+
+# 89 "symbol-table-builder.c"
   value_array_t* files = (symbol_table->files);
+
+# 90 "symbol-table-builder.c"
   buffer_t* buffer = (token->buffer);
 
 # 91 "symbol-table-builder.c"
   for (
+
+# 91 "symbol-table-builder.c"
+
+# 91 "symbol-table-builder.c"
     int i = 0;
+
+# 91 "symbol-table-builder.c"
     (i<(files->length));
+
+# 91 "symbol-table-builder.c"
     (i++))
 
 # 91 "symbol-table-builder.c"
   {
+
+# 92 "symbol-table-builder.c"
     file_t* file = (/*CAST*/(file_t*) (value_array_get(files, i).ptr));
 
 # 93 "symbol-table-builder.c"
@@ -17799,18 +19385,34 @@ file_t* symbol_table_token_to_file(symbol_table_t* symbol_table, token_t* token)
 void srcgen_enum_to_string_converters(symbol_table_t* symbol_table)
 # 27 "srcgen.c"
 {
+
+# 28 "srcgen.c"
   buffer_t* buffer = make_buffer(1);
+
+# 29 "srcgen.c"
   printer_t* printer = make_printer(buffer, symbol_table, 2);
 
 # 31 "srcgen.c"
   for (
+
+# 31 "srcgen.c"
+
+# 31 "srcgen.c"
     int i = 0;
+
+# 31 "srcgen.c"
     (i<(((symbol_table->typedefs)->ordered_bindings)->length));
+
+# 31 "srcgen.c"
     (i++))
 
 # 31 "srcgen.c"
   {
+
+# 32 "srcgen.c"
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->typedefs)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 35 "srcgen.c"
     typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
 
 # 37 "srcgen.c"
@@ -17818,12 +19420,20 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table)
 
 # 37 "srcgen.c"
     {
+
+# 38 "srcgen.c"
       enum_node_t* enum_node = to_enum_node(((typedef_node->type_node)->user_type));
+
+# 39 "srcgen.c"
       char* enum_node_name = token_to_string((typedef_node->name));
 
 # 41 "srcgen.c"
       log_debug("Generating converters for %s", enum_node_name);
+
+# 43 "srcgen.c"
       char* to_string_prefix = remove_type_suffix_1(enum_node_name);
+
+# 44 "srcgen.c"
       char* enum_node_type_string = enum_node_name;
 
 # 46 "srcgen.c"
@@ -17839,16 +19449,34 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table)
 
 # 55 "srcgen.c"
   for (
+
+# 55 "srcgen.c"
+
+# 55 "srcgen.c"
     int i = 0;
+
+# 55 "srcgen.c"
     (i<(((symbol_table->enums)->ordered_bindings)->length));
+
+# 55 "srcgen.c"
     (i++))
 
 # 55 "srcgen.c"
   {
+
+# 56 "srcgen.c"
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->enums)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 59 "srcgen.c"
     enum_node_t* enum_node = to_enum_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
+
+# 61 "srcgen.c"
     char* enum_node_name = token_to_string((enum_node->name));
+
+# 62 "srcgen.c"
     char* to_string_prefix = remove_type_suffix_1(enum_node_name);
+
+# 63 "srcgen.c"
     char* enum_node_type_string = string_printf("enum %s", enum_node_name);
 
 # 64 "srcgen.c"
@@ -17877,7 +19505,11 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table)
 pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence)
 # 200 "pratt-parser.c"
 {
+
+# 201 "pratt-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 202 "pratt-parser.c"
   token_t* token = pstate_peek(pstate, 0);
 
 # 203 "pratt-parser.c"
@@ -17889,6 +19521,8 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence)
 # 204 "pratt-parser.c"
     return pstate_error(pstate, saved_position, PARSE_ERROR_EOF);
   }
+
+# 206 "pratt-parser.c"
   pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(pstate, token);
 
 # 208 "pratt-parser.c"
@@ -17916,6 +19550,8 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence)
 # 216 "pratt-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 219 "pratt-parser.c"
   parse_node_t* left = pstate_get_result_node(pstate);
 
 # 221 "pratt-parser.c"
@@ -17923,6 +19559,8 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence)
 
 # 221 "pratt-parser.c"
   {
+
+# 222 "pratt-parser.c"
     pratt_parser_instruction_t infix_instruction = get_infix_instruction(pstate_peek(pstate, 0));
 
 # 224 "pratt-parser.c"
@@ -17958,7 +19596,11 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence)
 pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left)
 # 245 "pratt-parser.c"
 {
+
+# 246 "pratt-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 247 "pratt-parser.c"
   token_t* token = pstate_peek(pstate, 0);
 
 # 249 "pratt-parser.c"
@@ -17977,6 +19619,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 
 # 252 "pratt-parser.c"
       pstate_advance(pstate);
+
+# 253 "pratt-parser.c"
       int recursive_precedence = (instruction.precedence);
 
 # 254 "pratt-parser.c"
@@ -18006,6 +19650,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 260 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 262 "pratt-parser.c"
       operator_node_t* result = malloc_operator_node();
 
 # 263 "pratt-parser.c"
@@ -18032,6 +19678,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 
 # 271 "pratt-parser.c"
       pstate_advance(pstate);
+
+# 272 "pratt-parser.c"
       identifier_node_t* result = malloc_identifier_node();
 
 # 273 "pratt-parser.c"
@@ -18068,6 +19716,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 284 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 286 "pratt-parser.c"
       operator_node_t* result = malloc_operator_node();
 
 # 287 "pratt-parser.c"
@@ -18104,6 +19754,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 
 # 298 "pratt-parser.c"
       pstate_advance(pstate);
+
+# 299 "pratt-parser.c"
       operator_node_t* result = malloc_operator_node();
 
 # 300 "pratt-parser.c"
@@ -18147,6 +19799,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 312 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 314 "pratt-parser.c"
       parse_node_t* inner_expression = pstate_get_result_node(pstate);
 
 # 315 "pratt-parser.c"
@@ -18194,6 +19848,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 328 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 330 "pratt-parser.c"
       parse_node_t* inner_expression = pstate_get_result_node(pstate);
 
 # 331 "pratt-parser.c"
@@ -18205,6 +19861,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 332 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 334 "pratt-parser.c"
       operator_node_t* result = malloc_operator_node();
 
 # 335 "pratt-parser.c"
@@ -18261,6 +19919,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 356 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 358 "pratt-parser.c"
       parse_node_t* inner_expression = pstate_get_result_node(pstate);
 
 # 359 "pratt-parser.c"
@@ -18272,6 +19932,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 360 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 362 "pratt-parser.c"
       operator_node_t* result = malloc_operator_node();
 
 # 363 "pratt-parser.c"
@@ -18325,6 +19987,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 378 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 380 "pratt-parser.c"
       parse_node_t* type_node = pstate_get_result_node(pstate);
 
 # 381 "pratt-parser.c"
@@ -18336,6 +20000,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 383 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 385 "pratt-parser.c"
       parse_node_t* expression = pstate_get_result_node(pstate);
 
 # 386 "pratt-parser.c"
@@ -18347,6 +20013,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 387 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 389 "pratt-parser.c"
       operator_node_t* result = malloc_operator_node();
 
 # 390 "pratt-parser.c"
@@ -18403,6 +20071,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 408 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 410 "pratt-parser.c"
       parse_node_t* block_node = pstate_get_result_node(pstate);
 
 # 411 "pratt-parser.c"
@@ -18414,6 +20084,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 412 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 414 "pratt-parser.c"
       operator_node_t* result = malloc_operator_node();
 
 # 415 "pratt-parser.c"
@@ -18467,6 +20139,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 432 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 434 "pratt-parser.c"
       parse_node_t* type_node = pstate_get_result_node(pstate);
 
 # 435 "pratt-parser.c"
@@ -18478,6 +20152,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 436 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 438 "pratt-parser.c"
       operator_node_t* result = malloc_operator_node();
 
 # 439 "pratt-parser.c"
@@ -18511,10 +20187,14 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 448 "pratt-parser.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
+
+# 450 "pratt-parser.c"
       call_node_t* result = malloc_call_node();
 
 # 451 "pratt-parser.c"
       ((result->function)=left);
+
+# 452 "pratt-parser.c"
       boolean_t expect_comma = false;
 
 # 453 "pratt-parser.c"
@@ -18590,6 +20270,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 
 # 475 "pratt-parser.c"
       pstate_advance(pstate);
+
+# 476 "pratt-parser.c"
       int recursive_precedence = (instruction.precedence);
 
 # 477 "pratt-parser.c"
@@ -18601,6 +20283,8 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 478 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 480 "pratt-parser.c"
       parse_node_t* expr_if_true = pstate_get_result_node(pstate);
 
 # 481 "pratt-parser.c"
@@ -18612,7 +20296,11 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
 # 483 "pratt-parser.c"
         return pstate_propagate_error(pstate, saved_position);
       }
+
+# 485 "pratt-parser.c"
       parse_node_t* expr_if_false = pstate_get_result_node(pstate);
+
+# 486 "pratt-parser.c"
       conditional_node_t* result = malloc_conditional_node();
 
 # 487 "pratt-parser.c"
@@ -18741,6 +20429,8 @@ pratt_parser_instruction_t get_prefix_instruction(pstate_t* pstate, token_t* tok
 
 # 554 "pratt-parser.c"
   {
+
+# 556 "pratt-parser.c"
     uint64_t saved_position = (pstate->position);
 
 # 558 "pratt-parser.c"
@@ -19076,6 +20766,8 @@ associativity_t precedence_to_associativity(precedence_t precedence)
 pstatus_t parse_statement(pstate_t* pstate)
 # 155 "statement-parser.c"
 {
+
+# 156 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 157 "statement-parser.c"
@@ -19097,6 +20789,8 @@ pstatus_t parse_statement(pstate_t* pstate)
 pstatus_t parse_block(pstate_t* pstate)
 # 180 "statement-parser.c"
 {
+
+# 181 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 182 "statement-parser.c"
@@ -19108,6 +20802,8 @@ pstatus_t parse_block(pstate_t* pstate)
 # 183 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 185 "statement-parser.c"
   block_node_t* result = make_block_node(token_at((pstate->tokens), saved_position));
 
 # 187 "statement-parser.c"
@@ -19139,6 +20835,8 @@ pstatus_t parse_block(pstate_t* pstate)
 pstatus_t parse_return_statement(pstate_t* pstate)
 # 199 "statement-parser.c"
 {
+
+# 200 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 201 "statement-parser.c"
@@ -19153,6 +20851,8 @@ pstatus_t parse_return_statement(pstate_t* pstate)
 
 # 204 "statement-parser.c"
   parse_expression(pstate);
+
+# 205 "statement-parser.c"
   parse_node_t* expr = pstate_get_optional_result_node(pstate);
 
 # 206 "statement-parser.c"
@@ -19174,6 +20874,8 @@ pstatus_t parse_return_statement(pstate_t* pstate)
 pstatus_t parse_if_statement(pstate_t* pstate)
 # 217 "statement-parser.c"
 {
+
+# 218 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 219 "statement-parser.c"
@@ -19185,6 +20887,8 @@ pstatus_t parse_if_statement(pstate_t* pstate)
 # 222 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 224 "statement-parser.c"
   parse_node_t* if_test = pstate_get_result_node(pstate);
 
 # 225 "statement-parser.c"
@@ -19196,7 +20900,11 @@ pstatus_t parse_if_statement(pstate_t* pstate)
 # 226 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 228 "statement-parser.c"
   parse_node_t* if_true = pstate_get_result_node(pstate);
+
+# 229 "statement-parser.c"
   parse_node_t* if_false = ((void *)0);
 
 # 230 "statement-parser.c"
@@ -19231,6 +20939,8 @@ pstatus_t parse_if_statement(pstate_t* pstate)
 pstatus_t parse_while_statement(pstate_t* pstate)
 # 246 "statement-parser.c"
 {
+
+# 247 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 248 "statement-parser.c"
@@ -19242,6 +20952,8 @@ pstatus_t parse_while_statement(pstate_t* pstate)
 # 251 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 253 "statement-parser.c"
   parse_node_t* while_test = pstate_get_result_node(pstate);
 
 # 254 "statement-parser.c"
@@ -19253,6 +20965,8 @@ pstatus_t parse_while_statement(pstate_t* pstate)
 # 255 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 257 "statement-parser.c"
   parse_node_t* while_body = pstate_get_result_node(pstate);
 
 # 258 "statement-parser.c"
@@ -19264,6 +20978,8 @@ pstatus_t parse_while_statement(pstate_t* pstate)
 pstatus_t parse_do_statement(pstate_t* pstate)
 # 267 "statement-parser.c"
 {
+
+# 268 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 269 "statement-parser.c"
@@ -19275,6 +20991,8 @@ pstatus_t parse_do_statement(pstate_t* pstate)
 # 270 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 272 "statement-parser.c"
   parse_node_t* do_while_body = pstate_get_result_node(pstate);
 
 # 273 "statement-parser.c"
@@ -19296,6 +21014,8 @@ pstatus_t parse_do_statement(pstate_t* pstate)
 # 278 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 280 "statement-parser.c"
   parse_node_t* do_while_condition = pstate_get_result_node(pstate);
 
 # 281 "statement-parser.c"
@@ -19317,6 +21037,8 @@ pstatus_t parse_do_statement(pstate_t* pstate)
 pstatus_t parse_for_statement(pstate_t* pstate)
 # 294 "statement-parser.c"
 {
+
+# 295 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 296 "statement-parser.c"
@@ -19338,7 +21060,11 @@ pstatus_t parse_for_statement(pstate_t* pstate)
 # 301 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 303 "statement-parser.c"
   parse_node_t* for_init = pstate_get_result_node(pstate);
+
+# 304 "statement-parser.c"
   parse_node_t* for_test = ((void *)0);
 
 # 305 "statement-parser.c"
@@ -19360,6 +21086,8 @@ pstatus_t parse_for_statement(pstate_t* pstate)
 # 309 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 311 "statement-parser.c"
   parse_node_t* for_increment = ((void *)0);
 
 # 312 "statement-parser.c"
@@ -19391,6 +21119,8 @@ pstatus_t parse_for_statement(pstate_t* pstate)
 # 319 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 321 "statement-parser.c"
   parse_node_t* for_body = pstate_get_result_node(pstate);
 
 # 322 "statement-parser.c"
@@ -19402,6 +21132,8 @@ pstatus_t parse_for_statement(pstate_t* pstate)
 pstatus_t parse_switch_statement(pstate_t* pstate)
 # 331 "statement-parser.c"
 {
+
+# 332 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 333 "statement-parser.c"
@@ -19413,6 +21145,8 @@ pstatus_t parse_switch_statement(pstate_t* pstate)
 # 336 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 338 "statement-parser.c"
   parse_node_t* switch_item = pstate_get_result_node(pstate);
 
 # 339 "statement-parser.c"
@@ -19424,6 +21158,8 @@ pstatus_t parse_switch_statement(pstate_t* pstate)
 # 340 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 342 "statement-parser.c"
   parse_node_t* block = pstate_get_result_node(pstate);
 
 # 343 "statement-parser.c"
@@ -19435,6 +21171,8 @@ pstatus_t parse_switch_statement(pstate_t* pstate)
 pstatus_t parse_case_label(pstate_t* pstate)
 # 352 "statement-parser.c"
 {
+
+# 353 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 354 "statement-parser.c"
@@ -19446,6 +21184,8 @@ pstatus_t parse_case_label(pstate_t* pstate)
 # 356 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 358 "statement-parser.c"
   parse_node_t* case_expr = pstate_get_result_node(pstate);
 
 # 359 "statement-parser.c"
@@ -19467,6 +21207,8 @@ pstatus_t parse_case_label(pstate_t* pstate)
 pstatus_t parse_expression_statement(pstate_t* pstate)
 # 373 "statement-parser.c"
 {
+
+# 374 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 375 "statement-parser.c"
@@ -19478,6 +21220,8 @@ pstatus_t parse_expression_statement(pstate_t* pstate)
 # 376 "statement-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 378 "statement-parser.c"
   parse_node_t* expr = pstate_get_result_node(pstate);
 
 # 379 "statement-parser.c"
@@ -19499,7 +21243,11 @@ pstatus_t parse_expression_statement(pstate_t* pstate)
 pstatus_t parse_goto_statement(pstate_t* pstate)
 # 390 "statement-parser.c"
 {
+
+# 391 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 392 "statement-parser.c"
   token_t* label_token = pstate_peek(pstate, 1);
 
 # 393 "statement-parser.c"
@@ -19521,7 +21269,11 @@ pstatus_t parse_goto_statement(pstate_t* pstate)
 pstatus_t parse_break_statement(pstate_t* pstate)
 # 406 "statement-parser.c"
 {
+
+# 407 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 408 "statement-parser.c"
   token_t* keyword_token = pstate_peek(pstate, 0);
 
 # 409 "statement-parser.c"
@@ -19543,7 +21295,11 @@ pstatus_t parse_break_statement(pstate_t* pstate)
 pstatus_t parse_continue_statement(pstate_t* pstate)
 # 420 "statement-parser.c"
 {
+
+# 421 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 422 "statement-parser.c"
   token_t* keyword_token = pstate_peek(pstate, 0);
 
 # 423 "statement-parser.c"
@@ -19565,7 +21321,11 @@ pstatus_t parse_continue_statement(pstate_t* pstate)
 pstatus_t parse_label_statement(pstate_t* pstate)
 # 434 "statement-parser.c"
 {
+
+# 435 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 436 "statement-parser.c"
   token_t* label_token = pstate_peek(pstate, 0);
 
 # 437 "statement-parser.c"
@@ -19587,7 +21347,11 @@ pstatus_t parse_label_statement(pstate_t* pstate)
 pstatus_t parse_default_label(pstate_t* pstate)
 # 448 "statement-parser.c"
 {
+
+# 449 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 450 "statement-parser.c"
   token_t* default_token = pstate_peek(pstate, 0);
 
 # 451 "statement-parser.c"
@@ -19609,7 +21373,11 @@ pstatus_t parse_default_label(pstate_t* pstate)
 pstatus_t parse_empty_statement(pstate_t* pstate)
 # 462 "statement-parser.c"
 {
+
+# 463 "statement-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 464 "statement-parser.c"
   token_t* semi_colon_token = pstate_peek(pstate, 0);
 
 # 465 "statement-parser.c"
@@ -19631,6 +21399,8 @@ pstatus_t parse_empty_statement(pstate_t* pstate)
 break_statement_node_t* make_break_statement(token_t* break_keyword_token)
 # 481 "statement-parser.c"
 {
+
+# 482 "statement-parser.c"
   break_statement_node_t* result = malloc_struct(break_statement_node_t);
 
 # 483 "statement-parser.c"
@@ -19668,6 +21438,8 @@ break_statement_node_t* to_break_statement_node(parse_node_t* ptr)
 continue_statement_node_t* make_continue_statement(token_t* keyword_token)
 # 508 "statement-parser.c"
 {
+
+# 509 "statement-parser.c"
   continue_statement_node_t* result = malloc_struct(continue_statement_node_t);
 
 # 510 "statement-parser.c"
@@ -19705,6 +21477,8 @@ continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr)
 label_statement_node_t* make_label_statement(token_t* label)
 # 535 "statement-parser.c"
 {
+
+# 536 "statement-parser.c"
   label_statement_node_t* result = malloc_struct(label_statement_node_t);
 
 # 537 "statement-parser.c"
@@ -19742,6 +21516,8 @@ label_statement_node_t* to_label_statement_node(parse_node_t* ptr)
 goto_statement_node_t* make_goto_statement(token_t* first_token, token_t* label)
 # 563 "statement-parser.c"
 {
+
+# 564 "statement-parser.c"
   goto_statement_node_t* result = malloc_struct(goto_statement_node_t);
 
 # 565 "statement-parser.c"
@@ -19782,6 +21558,8 @@ goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr)
 empty_statement_node_t* make_empty_statement(token_t* semi_colon_token)
 # 591 "statement-parser.c"
 {
+
+# 592 "statement-parser.c"
   empty_statement_node_t* result = malloc_struct(empty_statement_node_t);
 
 # 593 "statement-parser.c"
@@ -19819,6 +21597,8 @@ empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr)
 switch_statement_node_t* make_switch_statement(token_t* first_token, parse_node_t* expression, parse_node_t* block)
 # 620 "statement-parser.c"
 {
+
+# 621 "statement-parser.c"
   switch_statement_node_t* result = malloc_struct(switch_statement_node_t);
 
 # 622 "statement-parser.c"
@@ -19862,6 +21642,8 @@ switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr)
 case_label_node_t* make_case_label(token_t* first_token, parse_node_t* expression)
 # 650 "statement-parser.c"
 {
+
+# 651 "statement-parser.c"
   case_label_node_t* result = malloc_struct(case_label_node_t);
 
 # 652 "statement-parser.c"
@@ -19902,6 +21684,8 @@ case_label_node_t* to_case_label_node(parse_node_t* ptr)
 default_label_node_t* make_default_label(token_t* default_token)
 # 678 "statement-parser.c"
 {
+
+# 679 "statement-parser.c"
   default_label_node_t* result = malloc_struct(default_label_node_t);
 
 # 680 "statement-parser.c"
@@ -19939,6 +21723,8 @@ default_label_node_t* to_default_label_node(parse_node_t* ptr)
 block_node_t* make_block_node(token_t* first_token)
 # 706 "statement-parser.c"
 {
+
+# 707 "statement-parser.c"
   block_node_t* result = malloc_struct(block_node_t);
 
 # 708 "statement-parser.c"
@@ -19976,6 +21762,8 @@ block_node_t* to_block_node(parse_node_t* ptr)
 for_statement_node_t* make_for_statement(token_t* first_token, parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body)
 # 738 "statement-parser.c"
 {
+
+# 739 "statement-parser.c"
   for_statement_node_t* result = malloc_struct(for_statement_node_t);
 
 # 740 "statement-parser.c"
@@ -20025,6 +21813,8 @@ for_statement_node_t* to_for_statement_node(parse_node_t* ptr)
 if_statement_node_t* make_if_statement(token_t* first_token, parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else)
 # 772 "statement-parser.c"
 {
+
+# 773 "statement-parser.c"
   if_statement_node_t* result = malloc_struct(if_statement_node_t);
 
 # 774 "statement-parser.c"
@@ -20071,6 +21861,8 @@ if_statement_node_t* to_if_statement_node(parse_node_t* ptr)
 expression_statement_node_t* make_expression_statement_node(token_t* first_token, parse_node_t* expression)
 # 804 "statement-parser.c"
 {
+
+# 805 "statement-parser.c"
   expression_statement_node_t* result = malloc_struct(expression_statement_node_t);
 
 # 807 "statement-parser.c"
@@ -20111,6 +21903,8 @@ expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr)
 return_statement_node_t* make_return_statement(token_t* first_token, parse_node_t* expression)
 # 834 "statement-parser.c"
 {
+
+# 835 "statement-parser.c"
   return_statement_node_t* result = malloc_struct(return_statement_node_t);
 
 # 836 "statement-parser.c"
@@ -20151,6 +21945,8 @@ return_statement_node_t* to_return_statement_node(parse_node_t* ptr)
 while_statement_node_t* make_while_statement(token_t* first_token, parse_node_t* condition, parse_node_t* body)
 # 864 "statement-parser.c"
 {
+
+# 865 "statement-parser.c"
   while_statement_node_t* result = malloc_struct(while_statement_node_t);
 
 # 866 "statement-parser.c"
@@ -20194,6 +21990,8 @@ while_statement_node_t* to_while_statement_node(parse_node_t* ptr)
 do_statement_node_t* make_do_statement(token_t* first_token, parse_node_t* body, parse_node_t* condition)
 # 894 "statement-parser.c"
 {
+
+# 895 "statement-parser.c"
   do_statement_node_t* result = malloc_struct(do_statement_node_t);
 
 # 896 "statement-parser.c"
@@ -20237,6 +22035,8 @@ do_statement_node_t* to_do_statement_node(parse_node_t* ptr)
 pstatus_t parse_type_node(pstate_t* pstate)
 # 94 "type-parser.c"
 {
+
+# 95 "type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 97 "type-parser.c"
@@ -20248,7 +22048,11 @@ pstatus_t parse_type_node(pstate_t* pstate)
 # 98 "type-parser.c"
     return true;
   }
+
+# 101 "type-parser.c"
   type_node_t* result = malloc_type_node();
+
+# 103 "type-parser.c"
   type_qualifier_t qualifiers = TYPE_QUALIFIER_NONE;
 
 # 106 "type-parser.c"
@@ -20263,7 +22067,11 @@ pstatus_t parse_type_node(pstate_t* pstate)
 # 108 "type-parser.c"
     (qualifiers|=TYPE_QUALIFIER_CONST);
   }
+
+# 112 "type-parser.c"
   canonical_type_result_t canonical_type_result = parse_canonical_type(pstate);
+
+# 113 "type-parser.c"
   token_t* type_name = (canonical_type_result.canonical_type);
 
 # 115 "type-parser.c"
@@ -20339,6 +22147,8 @@ pstatus_t parse_type_node(pstate_t* pstate)
 
 # 135 "type-parser.c"
     {
+
+# 136 "type-parser.c"
       type_node_t* ptr_result = malloc_type_node();
 
 # 137 "type-parser.c"
@@ -20360,6 +22170,8 @@ pstatus_t parse_type_node(pstate_t* pstate)
 
 # 141 "type-parser.c"
       pstate_advance(pstate);
+
+# 142 "type-parser.c"
       type_node_t* array_result = malloc_type_node();
 
 # 143 "type-parser.c"
@@ -20373,6 +22185,8 @@ pstatus_t parse_type_node(pstate_t* pstate)
 
 # 145 "type-parser.c"
       {
+
+# 146 "type-parser.c"
         literal_node_t* literal = malloc_literal_node();
 
 # 147 "type-parser.c"
@@ -20431,6 +22245,8 @@ pstatus_t parse_type_node(pstate_t* pstate)
 canonical_type_result_t make_type_token_result(char* str, int consumed_tokens)
 # 167 "type-parser.c"
 {
+
+# 168 "type-parser.c"
   token_t* canonical_token = malloc_struct(typeof(token_t));
 
 # 169 "type-parser.c"
@@ -20454,6 +22270,8 @@ canonical_type_result_t make_type_token_result(char* str, int consumed_tokens)
 pstatus_t parse_typeof_node(pstate_t* pstate)
 # 178 "type-parser.c"
 {
+
+# 179 "type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 180 "type-parser.c"
@@ -20485,6 +22303,8 @@ pstatus_t parse_typeof_node(pstate_t* pstate)
 # 187 "type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 189 "type-parser.c"
   parse_node_t* type_node = pstate_get_result_node(pstate);
 
 # 190 "type-parser.c"
@@ -20496,6 +22316,8 @@ pstatus_t parse_typeof_node(pstate_t* pstate)
 # 191 "type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 194 "type-parser.c"
   type_node_t* result = malloc_type_node();
 
 # 195 "type-parser.c"
@@ -20513,8 +22335,14 @@ pstatus_t parse_typeof_node(pstate_t* pstate)
 canonical_type_result_t parse_canonical_type(pstate_t* pstate)
 # 207 "type-parser.c"
 {
+
+# 208 "type-parser.c"
   token_t* a = pstate_peek(pstate, 0);
+
+# 209 "type-parser.c"
   token_t* b = pstate_peek(pstate, 1);
+
+# 210 "type-parser.c"
   token_t* c = pstate_peek(pstate, 2);
 
 # 212 "type-parser.c"
@@ -20746,7 +22574,11 @@ canonical_type_result_t parse_canonical_type(pstate_t* pstate)
 pstatus_t parse_function_type(pstate_t* pstate)
 # 323 "type-parser.c"
 {
+
+# 324 "type-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 326 "type-parser.c"
   token_t* fn_t_token = pstate_peek(pstate, 0);
 
 # 328 "type-parser.c"
@@ -20758,6 +22590,8 @@ pstatus_t parse_function_type(pstate_t* pstate)
 # 330 "type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 333 "type-parser.c"
   type_node_t* result = malloc_type_node();
 
 # 334 "type-parser.c"
@@ -20808,6 +22642,8 @@ pstatus_t parse_function_type(pstate_t* pstate)
 pstatus_t parse_function_type_argument(pstate_t* pstate)
 # 364 "type-parser.c"
 {
+
+# 365 "type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 368 "type-parser.c"
@@ -20829,6 +22665,8 @@ pstatus_t parse_function_type_argument(pstate_t* pstate)
 # 374 "type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 378 "type-parser.c"
   token_t* suffix = pstate_peek(pstate, 0);
 
 # 379 "type-parser.c"
@@ -20850,6 +22688,8 @@ pstatus_t parse_function_type_argument(pstate_t* pstate)
 pstatus_t parse_structure_node(pstate_t* pstate)
 # 186 "user-type-parser.c"
 {
+
+# 187 "user-type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 188 "user-type-parser.c"
@@ -20861,6 +22701,8 @@ pstatus_t parse_structure_node(pstate_t* pstate)
 # 189 "user-type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 191 "user-type-parser.c"
   struct_node_t* result = malloc_struct_node();
 
 # 193 "user-type-parser.c"
@@ -20944,6 +22786,8 @@ pstatus_t parse_structure_node(pstate_t* pstate)
 pstatus_t parse_field_node(pstate_t* pstate)
 # 222 "user-type-parser.c"
 {
+
+# 223 "user-type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 224 "user-type-parser.c"
@@ -20955,6 +22799,8 @@ pstatus_t parse_field_node(pstate_t* pstate)
 # 225 "user-type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 227 "user-type-parser.c"
   type_node_t* field_type = to_type_node(pstate_get_result_node(pstate));
 
 # 228 "user-type-parser.c"
@@ -20969,6 +22815,8 @@ pstatus_t parse_field_node(pstate_t* pstate)
 # 230 "user-type-parser.c"
     pstate_ignore_error(pstate);
   }
+
+# 233 "user-type-parser.c"
   token_t* field_name = pstate_get_result_token(pstate);
 
 # 234 "user-type-parser.c"
@@ -20988,6 +22836,8 @@ pstatus_t parse_field_node(pstate_t* pstate)
 # 238 "user-type-parser.c"
     pstate_ignore_error(pstate);
   }
+
+# 241 "user-type-parser.c"
   value_array_t* suffixes = ((void *)0);
 
 # 243 "user-type-parser.c"
@@ -21029,6 +22879,8 @@ pstatus_t parse_field_node(pstate_t* pstate)
 # 254 "user-type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 256 "user-type-parser.c"
   field_node_t* result = malloc_field_node();
 
 # 257 "user-type-parser.c"
@@ -21049,6 +22901,8 @@ pstatus_t parse_field_node(pstate_t* pstate)
 pstatus_t parse_union_node(pstate_t* pstate)
 # 266 "user-type-parser.c"
 {
+
+# 267 "user-type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 268 "user-type-parser.c"
@@ -21060,6 +22914,8 @@ pstatus_t parse_union_node(pstate_t* pstate)
 # 269 "user-type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 271 "user-type-parser.c"
   union_node_t* result = malloc_union_node();
 
 # 273 "user-type-parser.c"
@@ -21143,6 +22999,8 @@ pstatus_t parse_union_node(pstate_t* pstate)
 pstatus_t parse_user_type_node(pstate_t* pstate)
 # 304 "user-type-parser.c"
 {
+
+# 305 "user-type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 306 "user-type-parser.c"
@@ -21169,6 +23027,8 @@ pstatus_t parse_user_type_node(pstate_t* pstate)
 pstatus_t parse_enum_node(pstate_t* pstate)
 # 320 "user-type-parser.c"
 {
+
+# 321 "user-type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 322 "user-type-parser.c"
@@ -21180,6 +23040,8 @@ pstatus_t parse_enum_node(pstate_t* pstate)
 # 323 "user-type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 325 "user-type-parser.c"
   enum_node_t* result = malloc_enum_node();
 
 # 327 "user-type-parser.c"
@@ -21258,6 +23120,8 @@ pstatus_t parse_enum_node(pstate_t* pstate)
 pstatus_t parse_enum_element_node(pstate_t* pstate)
 # 359 "user-type-parser.c"
 {
+
+# 360 "user-type-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 361 "user-type-parser.c"
@@ -21269,7 +23133,11 @@ pstatus_t parse_enum_element_node(pstate_t* pstate)
 # 362 "user-type-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 364 "user-type-parser.c"
   token_t* name = pstate_get_result_token(pstate);
+
+# 365 "user-type-parser.c"
   parse_node_t* value_expr = ((void *)0);
 
 # 366 "user-type-parser.c"
@@ -21301,6 +23169,8 @@ pstatus_t parse_enum_element_node(pstate_t* pstate)
 # 374 "user-type-parser.c"
     pstate_ignore_error(pstate);
   }
+
+# 377 "user-type-parser.c"
   enum_element_t* result = malloc_enum_element();
 
 # 378 "user-type-parser.c"
@@ -21328,6 +23198,8 @@ pstatus_t parse_expression(pstate_t* pstate)
 pstatus_t parse_initializer(pstate_t* pstate)
 # 54 "variable-definition-parser.c"
 {
+
+# 56 "variable-definition-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 57 "variable-definition-parser.c"
@@ -21349,7 +23221,11 @@ pstatus_t parse_initializer(pstate_t* pstate)
 pstatus_t parse_variable_definition_node(pstate_t* pstate)
 # 70 "variable-definition-parser.c"
 {
+
+# 71 "variable-definition-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 72 "variable-definition-parser.c"
   token_t* storage_class_specifier = ((void *)0);
 
 # 74 "variable-definition-parser.c"
@@ -21384,6 +23260,8 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate)
 # 84 "variable-definition-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 86 "variable-definition-parser.c"
   type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
 
 # 87 "variable-definition-parser.c"
@@ -21395,7 +23273,11 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate)
 # 88 "variable-definition-parser.c"
     return pstate_error(pstate, saved_position, PARSE_ERROR_IDENTIFIER_EXPECTED);
   }
+
+# 91 "variable-definition-parser.c"
   token_t* name = pstate_get_result_token(pstate);
+
+# 93 "variable-definition-parser.c"
   variable_definition_node_t* result = malloc_variable_definition_node();
 
 # 94 "variable-definition-parser.c"
@@ -21486,6 +23368,8 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate)
 pstatus_t parse_literal_node(pstate_t* pstate)
 # 73 "literal-parser.c"
 {
+
+# 74 "literal-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 75 "literal-parser.c"
@@ -21493,6 +23377,8 @@ pstatus_t parse_literal_node(pstate_t* pstate)
 
 # 75 "literal-parser.c"
   {
+
+# 76 "literal-parser.c"
     literal_node_t* result = malloc_literal_node();
 
 # 77 "literal-parser.c"
@@ -21523,6 +23409,8 @@ pstatus_t parse_literal_node(pstate_t* pstate)
 
 # 93 "literal-parser.c"
   {
+
+# 94 "literal-parser.c"
     literal_node_t* result = malloc_literal_node();
 
 # 95 "literal-parser.c"
@@ -21558,6 +23446,8 @@ pstatus_t parse_literal_node(pstate_t* pstate)
 # 105 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
+
+# 107 "literal-parser.c"
     literal_node_t* result = malloc_literal_node();
 
 # 108 "literal-parser.c"
@@ -21585,6 +23475,8 @@ pstatus_t parse_literal_node(pstate_t* pstate)
 # 118 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
+
+# 120 "literal-parser.c"
     parse_node_t* type_node = pstate_get_result_node(pstate);
 
 # 121 "literal-parser.c"
@@ -21606,6 +23498,8 @@ pstatus_t parse_literal_node(pstate_t* pstate)
 # 125 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
+
+# 127 "literal-parser.c"
     parse_node_t* initializer_node = pstate_get_result_node(pstate);
 
 # 128 "literal-parser.c"
@@ -21617,6 +23511,8 @@ pstatus_t parse_literal_node(pstate_t* pstate)
 # 129 "literal-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
+
+# 132 "literal-parser.c"
     literal_node_t* result = malloc_literal_node();
 
 # 133 "literal-parser.c"
@@ -21652,6 +23548,8 @@ pstatus_t parse_literal_node(pstate_t* pstate)
 
 # 153 "literal-parser.c"
   {
+
+# 154 "literal-parser.c"
     literal_node_t* result = malloc_literal_node();
 
 # 155 "literal-parser.c"
@@ -21673,6 +23571,8 @@ pstatus_t parse_compound_literal(pstate_t* pstate)
 
 # 164 "literal-parser.c"
   log_info("Trying to parse a casted compound literal...");
+
+# 166 "literal-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 167 "literal-parser.c"
@@ -21706,6 +23606,8 @@ pstatus_t parse_compound_literal(pstate_t* pstate)
 
 # 176 "literal-parser.c"
   log_info("MATCHED type...");
+
+# 177 "literal-parser.c"
   parse_node_t* type_node = pstate_get_result_node(pstate);
 
 # 178 "literal-parser.c"
@@ -21739,6 +23641,8 @@ pstatus_t parse_compound_literal(pstate_t* pstate)
 
 # 187 "literal-parser.c"
   log_info("MATCHED '{'...");
+
+# 188 "literal-parser.c"
   node_list_t initializers = ((node_list_t) {0});
 
 # 190 "literal-parser.c"
@@ -21807,6 +23711,8 @@ pstatus_t parse_compound_literal(pstate_t* pstate)
 
 # 210 "literal-parser.c"
       log_info("MATCHED designated initializer...");
+
+# 211 "literal-parser.c"
       parse_node_t* initializer = pstate_get_result_node(pstate);
 
 # 212 "literal-parser.c"
@@ -21828,6 +23734,8 @@ pstatus_t parse_compound_literal(pstate_t* pstate)
 
 # 217 "literal-parser.c"
         log_info("MATCHED literal...");
+
+# 218 "literal-parser.c"
         parse_node_t* initializer = pstate_get_result_node(pstate);
 
 # 219 "literal-parser.c"
@@ -21846,6 +23754,8 @@ pstatus_t parse_compound_literal(pstate_t* pstate)
       }
     }
   }
+
+# 228 "literal-parser.c"
   compound_literal_node_t* result = malloc_compound_literal_node();
 
 # 229 "literal-parser.c"
@@ -21869,6 +23779,8 @@ pstatus_t parse_designated_initializer_node(pstate_t* pstate)
 
 # 238 "literal-parser.c"
   log_info("Trying to parse a designated_initializer_node...");
+
+# 240 "literal-parser.c"
   uint64_t saved_position = (pstate->position);
 
 # 244 "literal-parser.c"
@@ -21890,6 +23802,8 @@ pstatus_t parse_designated_initializer_node(pstate_t* pstate)
 # 248 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 251 "literal-parser.c"
   token_t* member_name = pstate_get_result_token(pstate);
 
 # 253 "literal-parser.c"
@@ -21911,6 +23825,8 @@ pstatus_t parse_designated_initializer_node(pstate_t* pstate)
 # 258 "literal-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
+
+# 261 "literal-parser.c"
   designated_initializer_node_t* result = malloc_designated_initializer_node();
 
 # 262 "literal-parser.c"
@@ -21931,9 +23847,17 @@ pstatus_t parse_designated_initializer_node(pstate_t* pstate)
 pstatus_t parse_balanced_construct(pstate_t* pstate)
 # 48 "balanced-construct-parser.c"
 {
+
+# 49 "balanced-construct-parser.c"
   uint64_t saved_position = (pstate->position);
+
+# 51 "balanced-construct-parser.c"
   int open_parens = 0;
+
+# 52 "balanced-construct-parser.c"
   int open_brackets = 0;
+
+# 53 "balanced-construct-parser.c"
   int open_braces = 0;
 
 # 54 "balanced-construct-parser.c"
@@ -22025,6 +23949,8 @@ pstatus_t parse_balanced_construct(pstate_t* pstate)
 # 75 "balanced-construct-parser.c"
     return pstate_error(pstate, saved_position, PARSE_ERROR_OPEN_BRACE_EXPECTED);
   }
+
+# 79 "balanced-construct-parser.c"
   balanced_construct_node_t* result = malloc_balanced_construct_node();
 
 # 80 "balanced-construct-parser.c"
@@ -22042,6 +23968,8 @@ pstatus_t parse_balanced_construct(pstate_t* pstate)
 printer_t* make_printer(buffer_t* buffer, symbol_table_t* symbol_table, int indent_width)
 # 22 "printer.c"
 {
+
+# 23 "printer.c"
   printer_t* result = malloc_struct(printer_t);
 
 # 24 "printer.c"
@@ -22397,12 +24325,22 @@ void linearize_expression(block_node_t* target_block, tmp_provider_t* tmp_provid
 void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider, block_node_t* node)
 # 127 "linearizer.c"
 {
+
+# 128 "linearizer.c"
   uint64_t length = node_list_length((node->statements));
 
 # 129 "linearizer.c"
   for (
+
+# 129 "linearizer.c"
+
+# 129 "linearizer.c"
     uint64_t i = 0;
+
+# 129 "linearizer.c"
     (i<length);
+
+# 129 "linearizer.c"
     (i++))
 
 # 129 "linearizer.c"
@@ -22418,6 +24356,8 @@ void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider, b
 void linearize_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, call_node_t* node)
 # 142 "linearizer.c"
 {
+
+# 143 "linearizer.c"
   call_node_t* rewritten = malloc_call_node();
 
 # 144 "linearizer.c"
@@ -22433,6 +24373,8 @@ void linearize_call_node(block_node_t* target_block, tmp_provider_t* tmp_provide
 
 # 146 "linearizer.c"
   {
+
+# 147 "linearizer.c"
     token_t* fn_ptr_target = (tmp_provider->get)(tmp_provider);
 
 # 148 "linearizer.c"
@@ -22444,13 +24386,25 @@ void linearize_call_node(block_node_t* target_block, tmp_provider_t* tmp_provide
 
 # 153 "linearizer.c"
   for (
+
+# 153 "linearizer.c"
+
+# 153 "linearizer.c"
     int i = 0;
+
+# 153 "linearizer.c"
     (i<node_list_length((node->args)));
+
+# 153 "linearizer.c"
     (i++))
 
 # 153 "linearizer.c"
   {
+
+# 154 "linearizer.c"
     parse_node_t* arg = node_list_get((node->args), i);
+
+# 155 "linearizer.c"
     token_t* arg_target = (tmp_provider->get)(tmp_provider);
 
 # 156 "linearizer.c"
@@ -22469,6 +24423,8 @@ void linearize_call_node(block_node_t* target_block, tmp_provider_t* tmp_provide
 tmp_provider_t* make_tmp_provider()
 # 186 "linearizer.c"
 {
+
+# 187 "linearizer.c"
   tmp_provider_t* result = malloc_struct(tmp_provider_t);
 
 # 188 "linearizer.c"
@@ -22483,6 +24439,8 @@ tmp_provider_t* make_tmp_provider()
 token_t* tmp_provider_get(tmp_provider_t* data)
 # 192 "linearizer.c"
 {
+
+# 193 "linearizer.c"
   token_t* result = malloc_struct(token_t);
 
 # 194 "linearizer.c"
@@ -22503,6 +24461,8 @@ token_t* tmp_provider_get(tmp_provider_t* data)
 parse_node_t* tmp_to_var_reference(token_t* tmp)
 # 200 "linearizer.c"
 {
+
+# 201 "linearizer.c"
   identifier_node_t* result = malloc_identifier_node();
 
 # 202 "linearizer.c"
@@ -22528,6 +24488,8 @@ int main(int argc, char** argv)
 
 # 22 "main.c"
   configure_flags();
+
+# 24 "main.c"
   char* error = flag_parse_command_line(argc, argv);
 
 # 25 "main.c"
@@ -22554,8 +24516,16 @@ int main(int argc, char** argv)
 
 # 32 "main.c"
     for (
+
+# 32 "main.c"
+
+# 32 "main.c"
       int i = 0;
+
+# 32 "main.c"
       (i<argc);
+
+# 32 "main.c"
       (i++))
 
 # 32 "main.c"
@@ -22596,6 +24566,8 @@ int main(int argc, char** argv)
 
 # 46 "main.c"
   {
+
+# 47 "main.c"
     buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
 
 # 48 "main.c"
@@ -22608,6 +24580,8 @@ int main(int argc, char** argv)
 
 # 49 "main.c"
   {
+
+# 50 "main.c"
     buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
 
 # 51 "main.c"
@@ -22620,6 +24594,8 @@ int main(int argc, char** argv)
 
 # 52 "main.c"
   {
+
+# 53 "main.c"
     buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
 
 # 54 "main.c"
@@ -22632,6 +24608,8 @@ int main(int argc, char** argv)
 
 # 55 "main.c"
   {
+
+# 56 "main.c"
     buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
 
 # 57 "main.c"
@@ -22666,6 +24644,8 @@ int main(int argc, char** argv)
 buffer_t* command_line_args_to_buffer(int argc, char** argv)
 # 75 "main.c"
 {
+
+# 76 "main.c"
   buffer_t* output = make_buffer((argc*5));
 
 # 78 "main.c"
@@ -22673,8 +24653,16 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv)
 
 # 79 "main.c"
   for (
+
+# 79 "main.c"
+
+# 79 "main.c"
     int i = 0;
+
+# 79 "main.c"
     (i<argc);
+
+# 79 "main.c"
     (i++))
 
 # 79 "main.c"
@@ -22698,13 +24686,25 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv)
 
 # 91 "main.c"
   for (
+
+# 91 "main.c"
+
+# 91 "main.c"
     int i = 0;
+
+# 91 "main.c"
     (i<(FLAG_files->length));
+
+# 91 "main.c"
     (i++))
 
 # 91 "main.c"
   {
+
+# 92 "main.c"
     char* filename = (value_array_get(FLAG_files, i).str);
+
+# 94 "main.c"
     buffer_t* git_hash = git_hash_object(filename);
 
 # 95 "main.c"
@@ -22771,12 +24771,22 @@ void generate_archive_file(void)
 # 21 "archive-command.c"
     exit((-1));
   }
+
+# 25 "archive-command.c"
   FILE* out = fopen(FLAG_archive_output_file, "w");
 
 # 26 "archive-command.c"
   for (
+
+# 26 "archive-command.c"
+
+# 26 "archive-command.c"
     int i = 0;
+
+# 26 "archive-command.c"
     (i<(FLAG_files->length));
+
+# 26 "archive-command.c"
     (i++))
 
 # 26 "archive-command.c"
@@ -22824,6 +24834,8 @@ void build_command(buffer_t* command_line_comment)
 
 # 17 "build-command.c"
   generate_c_output_file(OUTPUT_TYPE_C_LIBRARY_FILE, command_line_comment);
+
+# 18 "build-command.c"
   int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
 
 # 19 "build-command.c"
@@ -22856,7 +24868,11 @@ void build_command(buffer_t* command_line_comment)
 void generate_c_output_file(output_file_type_t output_type, buffer_t* command_line_overview_comment)
 # 23 "generate-c-output-file.c"
 {
+
+# 25 "generate-c-output-file.c"
   boolean_t is_header_file = (output_type==OUTPUT_TYPE_C_HEADER_FILE);
+
+# 27 "generate-c-output-file.c"
   symbol_table_t* symbol_table = make_symbol_table();
 
 # 28 "generate-c-output-file.c"
@@ -22895,11 +24911,17 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 40 "generate-c-output-file.c"
   dump_symbol_table("reorder structures", symbol_table);
+
+# 42 "generate-c-output-file.c"
   buffer_t* buffer = make_buffer((1024*8));
+
+# 43 "generate-c-output-file.c"
   printer_t* printer = make_printer(buffer, symbol_table, 2);
 
 # 45 "generate-c-output-file.c"
   add_generated_c_file_header(buffer);
+
+# 47 "generate-c-output-file.c"
   char* guard_name = "_HEADER_FILE_GUARD_";
 
 # 49 "generate-c-output-file.c"
@@ -22914,16 +24936,28 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 53 "generate-c-output-file.c"
   buffer_append_buffer(buffer, get_reflection_header_buffer());
+
+# 55 "generate-c-output-file.c"
   boolean_t append_newline_after_system_includes = false;
 
 # 56 "generate-c-output-file.c"
   buffer_append_string(buffer, "// ========== system includes ==========\n\n");
+
+# 57 "generate-c-output-file.c"
   string_hashtable_t* system_includes_set = make_string_hashtable(19);
 
 # 58 "generate-c-output-file.c"
   for (
+
+# 58 "generate-c-output-file.c"
+
+# 58 "generate-c-output-file.c"
     uint64_t i = 0;
+
+# 58 "generate-c-output-file.c"
     (i<((symbol_table->system_includes)->length));
+
+# 58 "generate-c-output-file.c"
     (i++))
 
 # 58 "generate-c-output-file.c"
@@ -22931,7 +24965,11 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 59 "generate-c-output-file.c"
     (append_newline_after_system_includes=true);
+
+# 60 "generate-c-output-file.c"
     cpp_include_node_t* node = value_array_get_ptr((symbol_table->system_includes), i, typeof(cpp_include_node_t*));
+
+# 62 "generate-c-output-file.c"
     char* include_statement = include_node_to_string(node);
 
 # 63 "generate-c-output-file.c"
@@ -22973,12 +25011,22 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 80 "generate-c-output-file.c"
   for (
+
+# 80 "generate-c-output-file.c"
+
+# 80 "generate-c-output-file.c"
     uint64_t i = 0;
+
+# 80 "generate-c-output-file.c"
     (i<((symbol_table->defines)->length));
+
+# 80 "generate-c-output-file.c"
     (i++))
 
 # 80 "generate-c-output-file.c"
   {
+
+# 81 "generate-c-output-file.c"
     cpp_define_node_t* node = value_array_get_ptr((symbol_table->defines), i, typeof(cpp_define_node_t*));
 
 # 83 "generate-c-output-file.c"
@@ -22993,13 +25041,25 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 89 "generate-c-output-file.c"
   for (
+
+# 89 "generate-c-output-file.c"
+
+# 89 "generate-c-output-file.c"
     int i = 0;
+
+# 89 "generate-c-output-file.c"
     (i<(((symbol_table->enums)->ordered_bindings)->length));
+
+# 89 "generate-c-output-file.c"
     (i++))
 
 # 89 "generate-c-output-file.c"
   {
+
+# 90 "generate-c-output-file.c"
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->enums)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 93 "generate-c-output-file.c"
     enum_node_t* enum_node = to_enum_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
 
 # 95 "generate-c-output-file.c"
@@ -23014,13 +25074,25 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 100 "generate-c-output-file.c"
   for (
+
+# 100 "generate-c-output-file.c"
+
+# 100 "generate-c-output-file.c"
     int i = 0;
+
+# 100 "generate-c-output-file.c"
     (i<(((symbol_table->typedefs)->ordered_bindings)->length));
+
+# 100 "generate-c-output-file.c"
     (i++))
 
 # 100 "generate-c-output-file.c"
   {
+
+# 101 "generate-c-output-file.c"
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->typedefs)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 104 "generate-c-output-file.c"
     typedef_node_t* typedef_node = to_typedef_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
 
 # 106 "generate-c-output-file.c"
@@ -23035,13 +25107,25 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 111 "generate-c-output-file.c"
   for (
+
+# 111 "generate-c-output-file.c"
+
+# 111 "generate-c-output-file.c"
     int i = 0;
+
+# 111 "generate-c-output-file.c"
     (i<(((symbol_table->structures)->ordered_bindings)->length));
+
+# 111 "generate-c-output-file.c"
     (i++))
 
 # 111 "generate-c-output-file.c"
   {
+
+# 112 "generate-c-output-file.c"
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->structures)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 115 "generate-c-output-file.c"
     struct_node_t* struct_node = get_full_structure_definition_node(binding);
 
 # 116 "generate-c-output-file.c"
@@ -23060,6 +25144,8 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 # 121 "generate-c-output-file.c"
     append_string(printer, ";\n\n");
   }
+
+# 124 "generate-c-output-file.c"
   boolean_t append_newline_after_variables = false;
 
 # 125 "generate-c-output-file.c"
@@ -23067,12 +25153,22 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 126 "generate-c-output-file.c"
   for (
+
+# 126 "generate-c-output-file.c"
+
+# 126 "generate-c-output-file.c"
     int i = 0;
+
+# 126 "generate-c-output-file.c"
     (i<(((symbol_table->variables)->ordered_bindings)->length));
+
+# 126 "generate-c-output-file.c"
     (i++))
 
 # 126 "generate-c-output-file.c"
   {
+
+# 127 "generate-c-output-file.c"
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->variables)->ordered_bindings), i, typeof(symbol_table_binding_t*));
 
 # 130 "generate-c-output-file.c"
@@ -23091,6 +25187,8 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 # 139 "generate-c-output-file.c"
     append_string(printer, "\n");
   }
+
+# 142 "generate-c-output-file.c"
   boolean_t append_newline_after_prototypes = false;
 
 # 143 "generate-c-output-file.c"
@@ -23098,13 +25196,25 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 145 "generate-c-output-file.c"
   for (
+
+# 145 "generate-c-output-file.c"
+
+# 145 "generate-c-output-file.c"
     int i = 0;
+
+# 145 "generate-c-output-file.c"
     (i<(((symbol_table->functions)->ordered_bindings)->length));
+
+# 145 "generate-c-output-file.c"
     (i++))
 
 # 145 "generate-c-output-file.c"
   {
+
+# 146 "generate-c-output-file.c"
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 149 "generate-c-output-file.c"
     function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
 
 # 151 "generate-c-output-file.c"
@@ -23130,6 +25240,8 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 # 157 "generate-c-output-file.c"
     append_string(printer, "\n");
   }
+
+# 160 "generate-c-output-file.c"
   boolean_t append_newline_after_inlines = false;
 
 # 161 "generate-c-output-file.c"
@@ -23137,13 +25249,25 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 163 "generate-c-output-file.c"
   for (
+
+# 163 "generate-c-output-file.c"
+
+# 163 "generate-c-output-file.c"
     int i = 0;
+
+# 163 "generate-c-output-file.c"
     (i<(((symbol_table->functions)->ordered_bindings)->length));
+
+# 163 "generate-c-output-file.c"
     (i++))
 
 # 163 "generate-c-output-file.c"
   {
+
+# 164 "generate-c-output-file.c"
     symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 167 "generate-c-output-file.c"
     function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
 
 # 169 "generate-c-output-file.c"
@@ -23169,6 +25293,8 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 # 176 "generate-c-output-file.c"
     buffer_append_string(buffer, "\n");
   }
+
+# 181 "generate-c-output-file.c"
   buffer_t* test_main_function_buffer = make_buffer(1);
 
 # 182 "generate-c-output-file.c"
@@ -23176,6 +25302,8 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 186 "generate-c-output-file.c"
   buffer_printf(test_main_function_buffer, "int main(int argc, char** argv) {\n");
+
+# 191 "generate-c-output-file.c"
   boolean_t append_newline_after_functions = false;
 
 # 192 "generate-c-output-file.c"
@@ -23189,22 +25317,42 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 194 "generate-c-output-file.c"
     for (
+
+# 194 "generate-c-output-file.c"
+
+# 194 "generate-c-output-file.c"
       int i = 0;
+
+# 194 "generate-c-output-file.c"
       (i<(((symbol_table->functions)->ordered_bindings)->length));
+
+# 194 "generate-c-output-file.c"
       (i++))
 
 # 195 "generate-c-output-file.c"
     {
+
+# 196 "generate-c-output-file.c"
       symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
 
 # 199 "generate-c-output-file.c"
       for (
+
+# 199 "generate-c-output-file.c"
+
+# 199 "generate-c-output-file.c"
         int j = 0;
+
+# 199 "generate-c-output-file.c"
         (j<((binding->definition_nodes)->length));
+
+# 199 "generate-c-output-file.c"
         (j++))
 
 # 199 "generate-c-output-file.c"
       {
+
+# 200 "generate-c-output-file.c"
         function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), j).ptr)));
 
 # 202 "generate-c-output-file.c"
@@ -23224,6 +25372,8 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 
 # 206 "generate-c-output-file.c"
           {
+
+# 207 "generate-c-output-file.c"
             char* fn_name = token_to_string((function_node->function_name));
 
 # 208 "generate-c-output-file.c"
@@ -23303,6 +25453,8 @@ void generate_c_output_file(output_file_type_t output_type, buffer_t* command_li
 boolean_t is_unit_test_function(function_node_t* node)
 # 244 "generate-c-output-file.c"
 {
+
+# 245 "generate-c-output-file.c"
   char* function_name = token_to_string((node->function_name));
 
 # 246 "generate-c-output-file.c"
@@ -23339,6 +25491,8 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table)
 
 # 261 "generate-c-output-file.c"
     fprintf(stderr, "==================================================================" "====\n\n");
+
+# 264 "generate-c-output-file.c"
     buffer_t* buffer = make_buffer(128);
 
 # 265 "generate-c-output-file.c"
@@ -23357,11 +25511,17 @@ void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table)
 char* include_node_to_string(cpp_include_node_t* node)
 # 272 "generate-c-output-file.c"
 {
+
+# 273 "generate-c-output-file.c"
   buffer_t* buffer = make_buffer(32);
+
+# 274 "generate-c-output-file.c"
   printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
 
 # 275 "generate-c-output-file.c"
   append_cpp_include_node(printer, node);
+
+# 276 "generate-c-output-file.c"
   char* include_statement = buffer_to_c_string(buffer);
 
 # 277 "generate-c-output-file.c"
@@ -23421,14 +25581,20 @@ void generate_library_command(buffer_t* command_line_overview_comment)
 int invoke_c_compiler(char* input_file, char* output_file)
 # 1 "c-compiler-backend.c"
 {
+
+# 2 "c-compiler-backend.c"
   value_array_t* argv = c_compiler_command_line(input_file, output_file);
 
 # 4 "c-compiler-backend.c"
   log_warn("Invoking C compiler with these arguments: %s", buffer_to_c_string(join_array_of_strings(argv, " ")));
+
+# 6 "c-compiler-backend.c"
   sub_process_t* sub_process = make_sub_process(argv);
 
 # 7 "c-compiler-backend.c"
   sub_process_launch(sub_process);
+
+# 9 "c-compiler-backend.c"
   buffer_t* buffer = make_buffer(1);
 
 # 10 "c-compiler-backend.c"
@@ -23468,6 +25634,8 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file)
 
 # 27 "c-compiler-backend.c"
   {
+
+# 28 "c-compiler-backend.c"
     value_array_t* argv = make_value_array(2);
 
 # 29 "c-compiler-backend.c"
@@ -23528,6 +25696,8 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file)
 buffer_t* git_hash_object(char* filename)
 # 22 "git-hash-object.c"
 {
+
+# 23 "git-hash-object.c"
   value_array_t* argv = make_value_array(2);
 
 # 24 "git-hash-object.c"
@@ -23538,10 +25708,14 @@ buffer_t* git_hash_object(char* filename)
 
 # 26 "git-hash-object.c"
   value_array_add(argv, str_to_value(filename));
+
+# 28 "git-hash-object.c"
   sub_process_t* sub_process = make_sub_process(argv);
 
 # 29 "git-hash-object.c"
   sub_process_launch(sub_process);
+
+# 31 "git-hash-object.c"
   buffer_t* buffer = make_buffer(1);
 
 # 32 "git-hash-object.c"
@@ -23578,16 +25752,28 @@ void do_print_tokens(value_array_t* tokens, char* message)
 
 # 2 "print-tokens.c"
   {
+
+# 6 "print-tokens.c"
     buffer_t* buffer = make_buffer(((tokens->length)*60));
 
 # 7 "print-tokens.c"
     for (
+
+# 7 "print-tokens.c"
+
+# 7 "print-tokens.c"
       int j = 0;
+
+# 7 "print-tokens.c"
       (j<(tokens->length));
+
+# 7 "print-tokens.c"
       (j++))
 
 # 7 "print-tokens.c"
     {
+
+# 8 "print-tokens.c"
       token_t* token = token_at(tokens, j);
 
 # 9 "print-tokens.c"
@@ -23610,16 +25796,28 @@ void print_tokens(void)
 
 # 17 "print-tokens.c"
   log_info("print_tokens()");
+
+# 19 "print-tokens.c"
   value_array_t* files = read_files(FLAG_files);
 
 # 20 "print-tokens.c"
   for (
+
+# 20 "print-tokens.c"
+
+# 20 "print-tokens.c"
     int i = 0;
+
+# 20 "print-tokens.c"
     (i<(FLAG_files->length));
+
+# 20 "print-tokens.c"
     (i++))
 
 # 20 "print-tokens.c"
   {
+
+# 21 "print-tokens.c"
     file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
 
 # 23 "print-tokens.c"
@@ -23630,6 +25828,8 @@ void print_tokens(void)
 
 # 25 "print-tokens.c"
     fprintf(stdout, "====================================================\n");
+
+# 27 "print-tokens.c"
     tokenizer_result_t tokenizer_result = tokenize((file->data));
 
 # 29 "print-tokens.c"
@@ -23644,6 +25844,8 @@ void print_tokens(void)
 # 34 "print-tokens.c"
       continue;
     }
+
+# 37 "print-tokens.c"
     value_array_t* tokens = (tokenizer_result.tokens);
 
 # 39 "print-tokens.c"
@@ -23651,6 +25853,8 @@ void print_tokens(void)
 
 # 39 "print-tokens.c"
     {
+
+# 40 "print-tokens.c"
       buffer_t* appended_tokens = make_buffer(1);
 
 # 41 "print-tokens.c"
@@ -23679,6 +25883,8 @@ void print_tokens(void)
 
 # 60 "print-tokens.c"
     {
+
+# 61 "print-tokens.c"
       pstate_t pstate = ((pstate_t) {.tokens = tokens,
                      .use_statement_parser = FLAG_use_statement_parser});
 
@@ -23693,6 +25899,8 @@ void print_tokens(void)
 
 # 66 "print-tokens.c"
         (((pstate.error).file_name)=(file->file_name));
+
+# 67 "print-tokens.c"
         buffer_t* buffer = make_buffer(1);
 
 # 68 "print-tokens.c"
@@ -23708,6 +25916,8 @@ void print_tokens(void)
 
 # 71 "print-tokens.c"
       {
+
+# 72 "print-tokens.c"
         buffer_t* buffer = make_buffer(1024);
 
 # 73 "print-tokens.c"
@@ -23725,6 +25935,8 @@ void print_tokens(void)
 void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer)
 # 7 "parse-test.c"
 {
+
+# 8 "parse-test.c"
   tokenizer_result_t tokenizer_result = tokenize(input_buffer);
 
 # 9 "parse-test.c"
@@ -23736,6 +25948,8 @@ void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_bu
 # 10 "parse-test.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
+
+# 13 "parse-test.c"
   value_array_t* tokens = (tokenizer_result.tokens);
 
 # 14 "parse-test.c"
@@ -23745,6 +25959,8 @@ void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_bu
                                    .keep_javadoc_comments = false,
                                    .keep_c_preprocessor_lines = false,
                                })));
+
+# 23 "parse-test.c"
   pstate_t pstate = ((pstate_t) {0});
 
 # 24 "parse-test.c"
@@ -23765,6 +25981,8 @@ void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_bu
 # 28 "parse-test.c"
     exit(1);
   }
+
+# 30 "parse-test.c"
   parse_node_t* node = pstate_get_result_node((&pstate));
 
 # 31 "parse-test.c"
@@ -23779,6 +25997,8 @@ void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_bu
 # 33 "parse-test.c"
     exit(1);
   }
+
+# 35 "parse-test.c"
   buffer_t* output = make_buffer(1);
 
 # 36 "parse-test.c"
@@ -23792,6 +26012,8 @@ void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_bu
 
 # 38 "parse-test.c"
     buffer_append_string(output, "\n// C Output\n");
+
+# 39 "parse-test.c"
     printer_t* printer = make_printer(output, make_symbol_table(), 2);
 
 # 40 "parse-test.c"
@@ -23807,6 +26029,8 @@ void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_bu
 void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer)
 # 46 "parse-test.c"
 {
+
+# 47 "parse-test.c"
   tokenizer_result_t tokenizer_result = tokenize(input_buffer);
 
 # 48 "parse-test.c"
@@ -23818,6 +26042,8 @@ void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buf
 # 49 "parse-test.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
+
+# 51 "parse-test.c"
   value_array_t* tokens = (tokenizer_result.tokens);
 
 # 52 "parse-test.c"
@@ -23827,6 +26053,8 @@ void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buf
                                    .keep_javadoc_comments = false,
                                    .keep_c_preprocessor_lines = false,
                                })));
+
+# 60 "parse-test.c"
   pstate_t state = ((pstate_t) {0});
 
 # 61 "parse-test.c"
@@ -23834,6 +26062,8 @@ void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buf
 
 # 62 "parse-test.c"
   ((state.tokens)=tokens);
+
+# 63 "parse-test.c"
   pstatus_t status = parse_statement((&state));
 
 # 64 "parse-test.c"
@@ -23848,7 +26078,11 @@ void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buf
 # 66 "parse-test.c"
     exit(1);
   }
+
+# 68 "parse-test.c"
   parse_node_t* node = pstate_get_result_node((&state));
+
+# 69 "parse-test.c"
   buffer_t* output = make_buffer(1);
 
 # 70 "parse-test.c"
@@ -23856,6 +26090,8 @@ void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buf
 
 # 71 "parse-test.c"
   buffer_append_string(output, "\n// C Output\n");
+
+# 72 "parse-test.c"
   printer_t* printer = make_printer(output, make_symbol_table(), 2);
 
 # 73 "parse-test.c"
@@ -23886,6 +26122,8 @@ void test_command(buffer_t* command_line_comment)
 # 17 "test-command.c"
     exit(1);
   }
+
+# 21 "test-command.c"
   char* rand_binary_file_name = "/tmp/foo";
 
 # 23 "test-command.c"
@@ -23910,6 +26148,8 @@ void test_command(buffer_t* command_line_comment)
 
 # 34 "test-command.c"
   generate_c_output_file(OUTPUT_TYPE_C_UNIT_TEST_FILE, command_line_comment);
+
+# 36 "test-command.c"
   int error_status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
 
 # 38 "test-command.c"
@@ -23937,13 +26177,23 @@ void run_test_binary(char* binary_file_name)
 
 # 50 "test-command.c"
   log_info("Running test binary %s", binary_file_name);
+
+# 52 "test-command.c"
   value_array_t* argv = make_value_array(1);
 
 # 53 "test-command.c"
   value_array_add(argv, str_to_value(binary_file_name));
+
+# 55 "test-command.c"
   buffer_t* child_stdin = make_buffer(1);
+
+# 56 "test-command.c"
   buffer_t* child_stdout = make_buffer(1);
+
+# 57 "test-command.c"
   buffer_t* child_stderr = make_buffer(1);
+
+# 59 "test-command.c"
   sub_process_t* sub_process = make_sub_process(argv);
 
 # 60 "test-command.c"
@@ -23985,12 +26235,22 @@ void handle_if_internal_test(void)
 
 # 75 "test-command.c"
   for (
+
+# 75 "test-command.c"
+
+# 75 "test-command.c"
     int i = 0;
+
+# 75 "test-command.c"
     (i<(FLAG_files->length));
+
+# 75 "test-command.c"
     (i++))
 
 # 75 "test-command.c"
   {
+
+# 76 "test-command.c"
     char* filename = (value_array_get(FLAG_files, i).str);
 
 # 77 "test-command.c"
@@ -24253,6 +26513,8 @@ void configure_regular_commands(void)
 buffer_t* get_reflection_header_buffer(void)
 # 2 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
 {
+
+# 3 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
   uint8_t reflection_header[] = {
     0x23, 0x69, 0x66, 0x6E, 0x64, 0x65, 0x66, 0x20, 0x5F, 0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54,  // #ifndef _REFLECT
     0x49, 0x4F, 0x4E, 0x5F, 0x48, 0x5F, 0x0A, 0x23, 0x64, 0x65, 0x66, 0x69, 0x6E, 0x65, 0x20, 0x5F,  // ION_H_.#define _
@@ -24409,12 +26671,22 @@ buffer_t* get_reflection_header_buffer(void)
     0x66, 0x20, 0x2F, 0x2A, 0x20, 0x5F, 0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54, 0x49, 0x4F, 0x4E,  // f /* _REFLECTION
     0x5F, 0x48, 0x5F, 0x20, 0x2A, 0x2F, 0x0A,                                                        // _H_ */.
     };
+
+# 159 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
   buffer_t* result = make_buffer(2455);
 
 # 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
   for (
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
     int i = 0;
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
     (i<2455);
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
     (i++))
 
 # 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
