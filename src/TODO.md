@@ -2,6 +2,10 @@
 
 ## Cleanup & Build
 
+1. sometimes I use make_X and sometimes I used malloc_X. I think we
+   should use make_X and if we need an empty array_t, just allocate it
+   in the make_X routine (aka, constructor).
+
 1. fix "for" loop debug information which definitely causes errors to
    be reported on the wrong line since we introduce a newline in many
    cases where we don't follow it up with a line directive and then
