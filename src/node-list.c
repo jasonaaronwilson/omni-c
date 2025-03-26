@@ -1,11 +1,19 @@
 /**
  * @file node-list.c
  *
- * Because omni-c's growable arrays aren't generic, this provides a
- * handy wrapper that consolidates some annoying type-casting to one
- * place and also works better as a structure member since we delay
- * the creation of a backing value_array_t* until something is added
- * to the node-list.
+ * This tries to provide "zero is valid" semantics so automatic
+ * allocation of the underlying value_array_t is done rather than just
+ * allocate an array when the parent is created. In terms of clarity,
+ * I think this fails on several fronts.
+ *
+ * It's nice in that fewer unsafe casts are done because we use the
+ * somewhat (dynmaically safeish) to_XYZ_node "upcasts".
+ *
+ * I would never have tried this if we simply had generic type safe
+ * arrays with bounds checking (declared like array_t<parse_node_t*>).
+ * 
+ * It's kind of a failure TBH. Luckily the forward looking plan was
+ * always to get rid of this class in favor of array_t<parse_node_t*>.
  */
 
 /**

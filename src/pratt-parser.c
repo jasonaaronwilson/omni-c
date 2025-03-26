@@ -90,11 +90,11 @@ typedef struct {
  *
  * Represents a function call.
  */
-typedef struct {
+typedef call_node_t = struct {
   parse_node_type_t tag;
   parse_node_t* function;
   node_list_t args;
-} call_node_t;
+};
 
 /**
  * @structure conditional_node_t

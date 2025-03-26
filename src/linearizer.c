@@ -32,6 +32,7 @@ void linearize_statement(block_node_t* target_block,
     node_list_add_node(&target_block->statements, node);
     break;
   case PARSE_NODE_CALL:
+    linearize_call_node(target_block, tmp_provider, to_call_node(node));
     break;
   case PARSE_NODE_CASE_LABEL:
     node_list_add_node(&target_block->statements, node);
@@ -131,6 +132,32 @@ void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider,
   }
 }
 
+// struct call_node_t__generated_S {
+//  parse_node_type_t tag;
+//  parse_node_t* function;
+//  node_list_t args;
+// };
+
+void linearize_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, 
+			 call_node_t* node) {
+  call_node_t* rewritten = malloc_call_node();
+  if (node->function->tag == PARSE_NODE_IDENTIFIER) {
+    rewritten->function = node->function;
+  } else {
+    token_t* fn_ptr_target = tmp_provider->get(tmp_provider);
+    linearize_expression(target_block, tmp_provider, node->function, fn_ptr_target);
+    rewritten->function = tmp_to_var_reference(fn_ptr_target);
+  }
+
+  for (int i = 0; i < node_list_length(node->args); i++) {
+    parse_node_t* arg = node_list_get(node->args, i);
+    token_t* arg_target = tmp_provider->get(tmp_provider);
+    linearize_expression(target_block, tmp_provider, arg, arg_target);
+    node_list_add_node(&rewritten->args, tmp_to_var_reference(arg_target));
+  }
+  node_list_add_node(&target_block->statements, cast(parse_node_t*, rewritten));
+}
+
 /* ================================================================ */
 
 /**
@@ -167,4 +194,10 @@ token_t* tmp_provider_get(tmp_provider_t* data) {
   buffer_printf(result->buffer, "tmp__%d", data->count++);
   result->end = result->buffer->length;
   return result;
+}
+
+parse_node_t* tmp_to_var_reference(token_t* tmp) {
+  identifier_node_t* result = malloc_identifier_node();
+  result->token = tmp;
+  return cast(parse_node_t*, result);
 }
