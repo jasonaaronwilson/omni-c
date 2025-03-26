@@ -787,12 +787,22 @@ printer_t* append_for_statement_node(printer_t* printer,
   append_string(printer, "for (\n");
   printer_increase_indent(printer);
 
+  // Super kludge!
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
+
   // for_init
   if (node->for_init != nullptr) {
     append_parse_node(printer, node->for_init);
   } else {
     printer_indent(printer);
     append_string(printer, ";\n");
+  }
+
+  // Super kludge!
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
   }
 
   // for_test
@@ -802,6 +812,11 @@ printer_t* append_for_statement_node(printer_t* printer,
   }
   append_string(printer, ";");
   printer_newline(printer);
+
+  // Super kludge!
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
 
   // for_increment
   printer_indent(printer);

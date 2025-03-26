@@ -138,14 +138,15 @@ void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider,
 //  node_list_t args;
 // };
 
-void linearize_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, 
-			 call_node_t* node) {
+void linearize_call_node(block_node_t* target_block,
+                         tmp_provider_t* tmp_provider, call_node_t* node) {
   call_node_t* rewritten = malloc_call_node();
   if (node->function->tag == PARSE_NODE_IDENTIFIER) {
     rewritten->function = node->function;
   } else {
     token_t* fn_ptr_target = tmp_provider->get(tmp_provider);
-    linearize_expression(target_block, tmp_provider, node->function, fn_ptr_target);
+    linearize_expression(target_block, tmp_provider, node->function,
+                         fn_ptr_target);
     rewritten->function = tmp_to_var_reference(fn_ptr_target);
   }
 

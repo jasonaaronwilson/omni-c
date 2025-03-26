@@ -11,7 +11,7 @@
  *
  * I would never have tried this if we simply had generic type safe
  * arrays with bounds checking (declared like array_t<parse_node_t*>).
- * 
+ *
  * It's kind of a failure TBH. Luckily the forward looking plan was
  * always to get rid of this class in favor of array_t<parse_node_t*>.
  */
