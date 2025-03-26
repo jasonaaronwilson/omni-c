@@ -4,7 +4,7 @@
  * Represents a variable definition/declaration at the top-level or
  * inside of a function.
  */
-typedef struct variable_definition_node_S {
+typedef variable_definition_node_t = struct {
   parse_node_type_t tag;
   boolean_t is_global;
   token_t* storage_class_specifier; // static, extern, auto, register
@@ -13,7 +13,7 @@ typedef struct variable_definition_node_S {
   parse_node_t* value;
   // TODO(jawilson): put suffixes into the type
   value_array_t* suffixes;
-} variable_definition_node_t;
+};
 
 /**
  * @function to_variable_definition_node

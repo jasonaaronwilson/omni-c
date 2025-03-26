@@ -531,6 +531,9 @@ printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node) {
 printer_t* append_variable_definition_node(printer_t* printer,
                                            variable_definition_node_t* node,
                                            boolean_t is_library) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->name);
+  }
   printer_indent(printer);
   boolean_t is_header_file = !is_library;
   if (node->storage_class_specifier != nullptr) {
