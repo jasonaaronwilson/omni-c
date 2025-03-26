@@ -30,9 +30,9 @@ static inline balanced_construct_node_t*
 }
 
 /**
- * @function malloc_balanced_construct_node
+ * @function make_balanced_construct_node
  */
-static inline balanced_construct_node_t* malloc_balanced_construct_node() {
+static inline balanced_construct_node_t* make_balanced_construct_node() {
   balanced_construct_node_t* result = malloc_struct(balanced_construct_node_t);
   result->tag = PARSE_NODE_BALANCED_CONSTRUCT;
   return result;
@@ -76,7 +76,7 @@ pstatus_t parse_balanced_construct(pstate_t* pstate) {
                         PARSE_ERROR_OPEN_BRACE_EXPECTED);
   }
 
-  balanced_construct_node_t* result = malloc_balanced_construct_node();
+  balanced_construct_node_t* result = make_balanced_construct_node();
   result->start_token = token_at(pstate->tokens, saved_position);
   result->end_token = pstate_peek(pstate, -1);
 

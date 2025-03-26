@@ -150,31 +150,31 @@ static inline enum_element_t* to_enum_element_node(parse_node_t* ptr) {
   return cast(enum_element_t*, ptr);
 }
 
-static inline enum_node_t* malloc_enum_node(void) {
+static inline enum_node_t* make_enum_node(void) {
   enum_node_t* result = malloc_struct(enum_node_t);
   result->tag = PARSE_NODE_ENUM;
   return result;
 }
 
-static inline enum_element_t* malloc_enum_element(void) {
+static inline enum_element_t* make_enum_element(void) {
   enum_element_t* result = malloc_struct(enum_element_t);
   result->tag = PARSE_NODE_ENUM_ELEMENT;
   return result;
 }
 
-static inline struct_node_t* malloc_struct_node(void) {
+static inline struct_node_t* make_struct_node(void) {
   struct_node_t* result = malloc_struct(struct_node_t);
   result->tag = PARSE_NODE_STRUCT;
   return result;
 }
 
-static inline union_node_t* malloc_union_node(void) {
+static inline union_node_t* make_union_node(void) {
   union_node_t* result = malloc_struct(union_node_t);
   result->tag = PARSE_NODE_UNION;
   return result;
 }
 
-static inline field_node_t* malloc_field_node(void) {
+static inline field_node_t* make_field_node(void) {
   field_node_t* result = malloc_struct(field_node_t);
   result->tag = PARSE_NODE_FIELD;
   return result;
@@ -188,7 +188,7 @@ pstatus_t parse_structure_node(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, "struct")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  struct_node_t* result = malloc_struct_node();
+  struct_node_t* result = make_struct_node();
 
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
     result->name = pstate_get_result_token(pstate);
@@ -253,7 +253,7 @@ pstatus_t parse_field_node(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, ";")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  field_node_t* result = malloc_field_node();
+  field_node_t* result = make_field_node();
   result->type = field_type;
   result->name = field_name;
   result->suffixes = suffixes;
@@ -268,7 +268,7 @@ pstatus_t parse_union_node(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, "union")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  union_node_t* result = malloc_union_node();
+  union_node_t* result = make_union_node();
 
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
     result->name = pstate_get_result_token(pstate);
@@ -322,7 +322,7 @@ pstatus_t parse_enum_node(pstate_t* pstate) {
   if (!pstate_expect_token_string(pstate, "enum")) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  enum_node_t* result = malloc_enum_node();
+  enum_node_t* result = make_enum_node();
 
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
     result->name = pstate_get_result_token(pstate);
@@ -374,7 +374,7 @@ pstatus_t parse_enum_element_node(pstate_t* pstate) {
     pstate_ignore_error(pstate);
   }
 
-  enum_element_t* result = malloc_enum_element();
+  enum_element_t* result = make_enum_element();
   result->name = name;
   result->value_expr = value_expr;
 

@@ -140,7 +140,7 @@ void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider,
 
 void linearize_call_node(block_node_t* target_block,
                          tmp_provider_t* tmp_provider, call_node_t* node) {
-  call_node_t* rewritten = malloc_call_node();
+  call_node_t* rewritten = make_call_node();
   if (node->function->tag == PARSE_NODE_IDENTIFIER) {
     rewritten->function = node->function;
   } else {
@@ -198,7 +198,7 @@ token_t* tmp_provider_get(tmp_provider_t* data) {
 }
 
 parse_node_t* tmp_to_var_reference(token_t* tmp) {
-  identifier_node_t* result = malloc_identifier_node();
+  identifier_node_t* result = make_identifier_node();
   result->token = tmp;
   return cast(parse_node_t*, result);
 }

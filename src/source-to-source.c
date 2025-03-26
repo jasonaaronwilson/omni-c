@@ -71,7 +71,7 @@ void split_structure_typedefs(symbol_table_t* symbol_table) {
         // C) slightly easier by just needing to properly sort
         // typedefs and independently properly sorting structures.
 
-        struct_node_t* partial_definition = malloc_struct_node();
+        struct_node_t* partial_definition = make_struct_node();
         partial_definition->partial_definition = true;
         partial_definition->name = struct_node->name;
 

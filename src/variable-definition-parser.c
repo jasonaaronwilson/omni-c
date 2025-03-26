@@ -30,7 +30,7 @@ static inline variable_definition_node_t*
 }
 
 static inline variable_definition_node_t*
-    malloc_variable_definition_node(void) {
+    make_variable_definition_node(void) {
   variable_definition_node_t* result
       = malloc_struct(variable_definition_node_t);
   result->tag = PARSE_NODE_VARIABLE_DEFINITION;
@@ -90,7 +90,7 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   }
   token_t* name = pstate_get_result_token(pstate);
 
-  variable_definition_node_t* result = malloc_variable_definition_node();
+  variable_definition_node_t* result = make_variable_definition_node();
   result->type = type_node;
   result->name = name;
 

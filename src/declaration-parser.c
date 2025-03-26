@@ -252,43 +252,43 @@ static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr) {
 /* Node allocation and initialization (makes sure we have the right tag). */
 /* ====================================================================== */
 
-static inline declarations_node_t* malloc_declarations(void) {
+static inline declarations_node_t* make_declarations(void) {
   declarations_node_t* result = malloc_struct(declarations_node_t);
   result->tag = PARSE_NODE_DECLARATIONS;
   return result;
 }
 
-static inline function_node_t* malloc_function_node(void) {
+static inline function_node_t* make_function_node(void) {
   function_node_t* result = malloc_struct(function_node_t);
   result->tag = PARSE_NODE_FUNCTION;
   return result;
 }
 
-static inline function_argument_node_t* malloc_function_argument_node(void) {
+static inline function_argument_node_t* make_function_argument_node(void) {
   function_argument_node_t* result = malloc_struct(function_argument_node_t);
   result->tag = PARSE_NODE_FUNCTION_ARGUMENT;
   return result;
 }
 
-static inline typedef_node_t* malloc_typedef_node(void) {
+static inline typedef_node_t* make_typedef_node(void) {
   typedef_node_t* result = malloc_struct(typedef_node_t);
   result->tag = PARSE_NODE_TYPEDEF;
   return result;
 }
 
-static inline attribute_node_t* malloc_attribute_node(void) {
+static inline attribute_node_t* make_attribute_node(void) {
   attribute_node_t* result = malloc_struct(attribute_node_t);
   result->tag = PARSE_NODE_ATTRIBUTE;
   return result;
 }
 
-static inline cpp_include_node_t* malloc_cpp_include_node(void) {
+static inline cpp_include_node_t* make_cpp_include_node(void) {
   cpp_include_node_t* result = malloc_struct(cpp_include_node_t);
   result->tag = PARSE_NODE_CPP_INCLUDE;
   return result;
 }
 
-static inline cpp_define_node_t* malloc_cpp_define_node(void) {
+static inline cpp_define_node_t* make_cpp_define_node(void) {
   cpp_define_node_t* result = malloc_struct(cpp_define_node_t);
   result->tag = PARSE_NODE_CPP_DEFINE;
   return result;
@@ -307,7 +307,7 @@ static inline cpp_define_node_t* malloc_cpp_define_node(void) {
  */
 pstatus_t parse_declarations(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  declarations_node_t* result = malloc_declarations();
+  declarations_node_t* result = make_declarations();
   while (pstate->position < pstate->tokens->length) {
     if (!parse_declaration(pstate)) {
       return pstate_propagate_error(pstate, saved_position);
@@ -406,7 +406,7 @@ pstatus_t parse_attribute_node(pstate_t* pstate) {
       || !parse_balanced_construct(pstate)) {
     return pstate_propagate_error(pstate, saved_position);
   }
-  attribute_node_t* result = malloc_attribute_node();
+  attribute_node_t* result = make_attribute_node();
   result->inner_start_token = token_at(pstate->tokens, saved_position);
   result->inner_end_token = pstate_peek(pstate, -1);
   return pstate_set_result_node(pstate, to_node(result));
@@ -463,7 +463,7 @@ pstatus_t parse_function_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
 
-  function_node_t* fn_node = malloc_function_node();
+  function_node_t* fn_node = make_function_node();
   fn_node->attributes = attributes;
   fn_node->storage_class_specifier = storage_class_specifier;
   fn_node->function_specifiers = function_specifiers;
@@ -498,7 +498,7 @@ pstatus_t parse_function_node(pstate_t* pstate) {
  */
 pstatus_t parse_function_argument_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  function_argument_node_t* result = malloc_function_argument_node();
+  function_argument_node_t* result = make_function_argument_node();
 
   if (pstate_match_token_string(pstate, "...")) {
     pstate_advance(pstate);
@@ -561,7 +561,7 @@ pstatus_t parse_typedef_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
 
-  typedef_node_t* result = malloc_typedef_node();
+  typedef_node_t* result = make_typedef_node();
   result->type_node = type_node;
   result->name = name;
   return pstate_set_result_node(pstate, to_node(result));
@@ -595,7 +595,7 @@ pstatus_t parse_improved_typedef_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
 
-  typedef_node_t* result = malloc_typedef_node();
+  typedef_node_t* result = make_typedef_node();
   result->type_node = type_node;
   result->name = name;
   return pstate_set_result_node(pstate, to_node(result));

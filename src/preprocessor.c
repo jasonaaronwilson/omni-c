@@ -86,7 +86,7 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options,
   token_t* directive_name = token_at(tokens, start_position + 1);
   // skip whitespace above if necessary...
   if (token_matches(directive_name, "include")) {
-    cpp_include_node_t* node = malloc_cpp_include_node();
+    cpp_include_node_t* node = make_cpp_include_node();
     node->text = buffer_c_substring(range.buffer, range.buffer_start_position,
                                     range.buffer_end_position);
     if (string_contains_char(node->text, '<')) {
@@ -95,7 +95,7 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options,
       value_array_add(symbol_table->user_includes, ptr_to_value(node));
     }
   } else if (token_matches(directive_name, "define")) {
-    cpp_define_node_t* node = malloc_cpp_define_node();
+    cpp_define_node_t* node = make_cpp_define_node();
     node->text = buffer_c_substring(range.buffer, range.buffer_start_position,
                                     range.buffer_end_position);
     value_array_add(symbol_table->defines, ptr_to_value(node));

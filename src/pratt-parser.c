@@ -108,25 +108,25 @@ typedef struct {
   parse_node_t* expr_if_false;
 } conditional_node_t;
 
-static inline operator_node_t* malloc_operator_node(void) {
+static inline operator_node_t* make_operator_node(void) {
   operator_node_t* result = malloc_struct(operator_node_t);
   result->tag = PARSE_NODE_OPERATOR;
   return result;
 }
 
-static inline identifier_node_t* malloc_identifier_node(void) {
+static inline identifier_node_t* make_identifier_node(void) {
   identifier_node_t* result = malloc_struct(identifier_node_t);
   result->tag = PARSE_NODE_IDENTIFIER;
   return result;
 }
 
-static inline call_node_t* malloc_call_node(void) {
+static inline call_node_t* make_call_node(void) {
   call_node_t* result = malloc_struct(call_node_t);
   result->tag = PARSE_NODE_CALL;
   return result;
 }
 
-static inline conditional_node_t* malloc_conditional_node(void) {
+static inline conditional_node_t* make_conditional_node(void) {
   conditional_node_t* result = malloc_struct(conditional_node_t);
   result->tag = PARSE_NODE_CONDITIONAL;
   return result;
@@ -259,7 +259,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pratt_parse_expression(pstate, recursive_precedence)) {
         return pstate_propagate_error(pstate, saved_position);
       }
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
       result->operator= token;
       result->left = left;
       result->right = pstate_get_result_node(pstate);
@@ -269,7 +269,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
   case PRATT_PARSE_IDENTIFIER:
     do {
       pstate_advance(pstate);
-      identifier_node_t* result = malloc_identifier_node();
+      identifier_node_t* result = make_identifier_node();
       result->token = token;
       return pstate_set_result_node(pstate, to_node(result));
     } while (0);
@@ -283,7 +283,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pratt_parse_expression(pstate, instruction.precedence)) {
         return pstate_propagate_error(pstate, saved_position);
       }
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
       result->operator= token;
       if (left != nullptr) {
         fatal_error(ERROR_ILLEGAL_STATE);
@@ -296,7 +296,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
   case PRATT_PARSE_POSTFIX_OPERATOR:
     do {
       pstate_advance(pstate);
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
       result->operator= token;
       result->left = left;
       result->right = nullptr;
@@ -331,7 +331,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pstate_expect_token_string(pstate, "]")) {
         return pstate_propagate_error(pstate, saved_position);
       }
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
       result->operator= token;
       result->left = left;
       result->right = inner_expression;
@@ -359,7 +359,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pstate_expect_token_string(pstate, ")")) {
         return pstate_propagate_error(pstate, saved_position);
       }
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
       result->operator= token;
       result->right = inner_expression;
       return pstate_set_result_node(pstate, to_node(result));
@@ -386,7 +386,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pstate_expect_token_string(pstate, ")")) {
         return pstate_propagate_error(pstate, saved_position);
       }
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
       result->operator= token;
       result->left = type_node;
       result->right = expression;
@@ -411,7 +411,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pstate_expect_token_string(pstate, ")")) {
         return pstate_propagate_error(pstate, saved_position);
       }
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
       result->operator= token;
       result->left = block_node;
       return pstate_set_result_node(pstate, to_node(result));
@@ -435,7 +435,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pstate_expect_token_string(pstate, ")")) {
         return pstate_propagate_error(pstate, saved_position);
       }
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
       result->operator= token;
       result->left = type_node;
       return pstate_set_result_node(pstate, to_node(result));
@@ -447,7 +447,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
       if (!pstate_expect_token_string(pstate, "(")) {
         fatal_error(ERROR_ILLEGAL_STATE);
       }
-      call_node_t* result = malloc_call_node();
+      call_node_t* result = make_call_node();
       result->function = left;
       boolean_t expect_comma = false;
       while (!token_matches(pstate_peek(pstate, 0), ")")) {
@@ -483,7 +483,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate,
         return pstate_propagate_error(pstate, saved_position);
       }
       parse_node_t* expr_if_false = pstate_get_result_node(pstate);
-      conditional_node_t* result = malloc_conditional_node();
+      conditional_node_t* result = make_conditional_node();
       result->condition = left;
       result->expr_if_true = expr_if_true;
       result->expr_if_false = expr_if_false;

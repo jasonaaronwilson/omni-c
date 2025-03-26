@@ -34,13 +34,13 @@ typedef designated_initializer_node_t = struct {
   parse_node_t* value;
 };
 
-static inline literal_node_t* malloc_literal_node(void) {
+static inline literal_node_t* make_literal_node(void) {
   literal_node_t* result = malloc_struct(literal_node_t);
   result->tag = PARSE_NODE_LITERAL;
   return result;
 }
 
-static inline compound_literal_node_t* malloc_compound_literal_node(void) {
+static inline compound_literal_node_t* make_compound_literal_node(void) {
   compound_literal_node_t* result = malloc_struct(compound_literal_node_t);
   result->tag = PARSE_NODE_COMPOUND_LITERAL;
   return result;
@@ -55,7 +55,7 @@ static inline compound_literal_node_t*
 }
 
 static inline designated_initializer_node_t*
-    malloc_designated_initializer_node(void) {
+    make_designated_initializer_node(void) {
   designated_initializer_node_t* result
       = malloc_struct(designated_initializer_node_t);
   result->tag = PARSE_NODE_DESIGNATED_INITIALIZER;
@@ -73,7 +73,7 @@ static inline designated_initializer_node_t*
 pstatus_t parse_literal_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_STRING_LITERAL)) {
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
     result->tokens = make_value_array(1);
     value_array_add(result->tokens,
                     ptr_to_value(pstate_get_result_token(pstate)));
@@ -91,7 +91,7 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
                                   TOKEN_TYPE_FLOAT_LITERAL)
       || pstate_expect_token_type(pstate_ignore_error(pstate),
                                   TOKEN_TYPE_CHARACTER_LITERAL)) {
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
     result->tokens = make_value_array(1);
     value_array_add(result->tokens,
                     ptr_to_value(pstate_get_result_token(pstate)));
@@ -104,7 +104,7 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
     if (!parse_balanced_construct(pstate)) {
       return pstate_propagate_error(pstate, saved_position);
     }
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
     result->initializer_node = pstate_get_result_node(pstate);
     return pstate_set_result_node(pstate, to_node(result));
   }
@@ -129,7 +129,7 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
       return pstate_propagate_error(pstate, saved_position);
     }
 
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
     result->initializer_node = initializer_node;
     result->initializer_type = type_node;
     return pstate_set_result_node(pstate, to_node(result));
@@ -151,7 +151,7 @@ pstatus_t parse_literal_node(pstate_t* pstate) {
                                   TOKEN_TYPE_FLOAT_LITERAL)
       || pstate_expect_token_type(pstate_ignore_error(pstate),
                                   TOKEN_TYPE_CHARACTER_LITERAL)) {
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
     result->token = pstate_get_result_token(pstate);
     return pstate_set_result_node(pstate, to_node(result));
   }
@@ -225,7 +225,7 @@ pstatus_t parse_compound_literal(pstate_t* pstate) {
     }
   }
 
-  compound_literal_node_t* result = malloc_compound_literal_node();
+  compound_literal_node_t* result = make_compound_literal_node();
   result->type_node = type_node;
   result->initializers = initializers;
   pstate_set_result_node(pstate, to_node(result));
@@ -258,7 +258,7 @@ pstatus_t parse_designated_initializer_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
 
-  designated_initializer_node_t* result = malloc_designated_initializer_node();
+  designated_initializer_node_t* result = make_designated_initializer_node();
   result->member_name = member_name;
   result->value = pstate_get_result_node(pstate);
   pstate_set_result_node(pstate, to_node(result));

@@ -60,9 +60,9 @@ typedef struct type_node_S {
 } type_node_t;
 
 /**
- * @function malloc_type_node
+ * @function make_type_node
  */
-static inline type_node_t* malloc_type_node(void) {
+static inline type_node_t* make_type_node(void) {
   type_node_t* result = malloc_struct(type_node_t);
   result->tag = PARSE_NODE_TYPE;
   return result;
@@ -98,7 +98,7 @@ pstatus_t parse_type_node(pstate_t* pstate) {
     return true;
   }
 
-  type_node_t* result = malloc_type_node();
+  type_node_t* result = make_type_node();
 
   type_qualifier_t qualifiers = TYPE_QUALIFIER_NONE;
 
@@ -133,17 +133,17 @@ pstatus_t parse_type_node(pstate_t* pstate) {
 
   while (true) {
     if (pstate_expect_token_string(pstate, "*")) {
-      type_node_t* ptr_result = malloc_type_node();
+      type_node_t* ptr_result = make_type_node();
       ptr_result->type_node_kind = TYPE_NODE_KIND_POINTER;
       node_list_add_node(&ptr_result->type_args, to_node(result));
       result = ptr_result;
     } else if (token_matches(pstate_peek(pstate, 0), "[")) {
       pstate_advance(pstate);
-      type_node_t* array_result = malloc_type_node();
+      type_node_t* array_result = make_type_node();
       array_result->type_node_kind = TYPE_NODE_KIND_ARRAY;
       node_list_add_node(&array_result->type_args, to_node(result));
       if (pstate_expect_token_type(pstate, TOKEN_TYPE_INTEGER_LITERAL)) {
-        literal_node_t* literal = malloc_literal_node();
+        literal_node_t* literal = make_literal_node();
         literal->token = pstate_get_result_token(pstate);
         array_result->type_node_kind = TYPE_NODE_KIND_SIZED_ARRAY;
         node_list_add_node(&array_result->type_args, to_node(literal));
@@ -191,7 +191,7 @@ pstatus_t parse_typeof_node(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
 
-  type_node_t* result = malloc_type_node();
+  type_node_t* result = make_type_node();
   result->type_node_kind = TYPE_NODE_KIND_TYPEOF;
   result->user_type = type_node;
   return pstate_set_result_node(pstate, to_node(result));
@@ -330,7 +330,7 @@ pstatus_t parse_function_type(pstate_t* pstate) {
     return pstate_propagate_error(pstate, saved_position);
   }
 
-  type_node_t* result = malloc_type_node();
+  type_node_t* result = make_type_node();
   result->type_node_kind = TYPE_NODE_KIND_TYPE_EXPRESSION;
   result->type_name = fn_t_token;
 
