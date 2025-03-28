@@ -65,8 +65,8 @@ void linearize_statement(block_node_t* target_block,
     // blocks
     break;
   case PARSE_NODE_EXPRESSION_STATEMENT:
-    // linearize_expression_statement(target_block,
-    // to_expression_statement_node(node));
+    linearize_expression_statement(target_block, tmp_provider,
+                                   to_expression_statement_node(node));
     break;
   case PARSE_NODE_FOR_STATEMENT:
     // linearize_for_statement(target_block, to_for_statement_node(node));
@@ -200,6 +200,21 @@ void linearize_do_statement(block_node_t* target_block,
       &target_block->statements,
       to_node(make_do_statement(node->first_token, to_node(body),
                                 tmp_to_var_reference(condition_target))));
+}
+
+/*
+typedef expression_statement_node_t = struct {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* expression;
+};
+*/
+
+void linearize_expression_statement(block_node_t* target_block,
+                                    tmp_provider_t* tmp_provider,
+                                    expression_statement_node_t* node) {
+  token_t* target = tmp_provider->get(tmp_provider);
+  linearize_expression(target_block, tmp_provider, node->expression, target);
 }
 
 /* ================================================================ */
