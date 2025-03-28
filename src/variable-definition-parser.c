@@ -29,8 +29,7 @@ static inline variable_definition_node_t*
   return cast(variable_definition_node_t*, ptr);
 }
 
-static inline variable_definition_node_t*
-    make_variable_definition_node(void) {
+static inline variable_definition_node_t* make_variable_definition_node(void) {
   variable_definition_node_t* result
       = malloc_struct(variable_definition_node_t);
   result->tag = PARSE_NODE_VARIABLE_DEFINITION;

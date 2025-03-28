@@ -32,7 +32,8 @@ void linearize_statement(block_node_t* target_block,
     node_list_add_node(&target_block->statements, node);
     break;
   case PARSE_NODE_CALL:
-    linearize_call_node(target_block, tmp_provider, to_call_node(node));
+    linearize_statement_call_node(target_block, tmp_provider,
+                                  to_call_node(node));
     break;
   case PARSE_NODE_CASE_LABEL:
     node_list_add_node(&target_block->statements, node);
@@ -64,7 +65,8 @@ void linearize_statement(block_node_t* target_block,
     // linearize_for_statement(target_block, to_for_statement_node(node));
     break;
   case PARSE_NODE_IF_STATEMENT:
-    // linearize_if_statement(target_block, to_if_statement_node(node));
+    linearize_if_statement(target_block, tmp_provider,
+                           to_if_statement_node(node));
     break;
   case PARSE_NODE_LABEL_STATEMENT:
     node_list_add_node(&target_block->statements, node);
@@ -132,14 +134,10 @@ void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider,
   }
 }
 
-// struct call_node_t__generated_S {
-//  parse_node_type_t tag;
-//  parse_node_t* function;
-//  node_list_t args;
-// };
-
-void linearize_call_node(block_node_t* target_block,
-                         tmp_provider_t* tmp_provider, call_node_t* node) {
+// This is used when a statement is a call where the value is ignored
+void linearize_statement_call_node(block_node_t* target_block,
+                                   tmp_provider_t* tmp_provider,
+                                   call_node_t* node) {
   call_node_t* rewritten = make_call_node();
   if (node->function->tag == PARSE_NODE_IDENTIFIER) {
     rewritten->function = node->function;
@@ -156,7 +154,42 @@ void linearize_call_node(block_node_t* target_block,
     linearize_expression(target_block, tmp_provider, arg, arg_target);
     node_list_add_node(&rewritten->args, tmp_to_var_reference(arg_target));
   }
-  node_list_add_node(&target_block->statements, cast(parse_node_t*, rewritten));
+  node_list_add_node(&target_block->statements, to_node(rewritten));
+}
+
+/*
+typedef if_statement_node_t = struct {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* if_condition;
+  parse_node_t* if_true;
+  parse_node_t* if_else;
+};
+*/
+
+void linearize_if_statement(block_node_t* target_block,
+                            tmp_provider_t* tmp_provider,
+                            if_statement_node_t* node) {
+
+  token_t* condition_target = tmp_provider->get(tmp_provider);
+  linearize_expression(target_block, tmp_provider, node->if_condition,
+                       condition_target);
+  // fix first token?
+  block_node_t* if_true = make_block_node(nullptr);
+  if (node->if_true != nullptr) {
+    linearize_statement(if_true, tmp_provider, node->if_true);
+  }
+
+  block_node_t* if_else = make_block_node(nullptr);
+  if (node->if_else != nullptr) {
+    linearize_statement(if_else, tmp_provider, node->if_else);
+  }
+
+  node_list_add_node(
+      &target_block->statements,
+      to_node(make_if_statement(node->first_token,
+                                tmp_to_var_reference(condition_target),
+                                to_node(if_true), to_node(if_else))));
 }
 
 /* ================================================================ */
