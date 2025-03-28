@@ -39,8 +39,11 @@ void linearize_statement(block_node_t* target_block,
     node_list_add_node(&target_block->statements, node);
     break;
   case PARSE_NODE_COMPOUND_LITERAL:
+    // FIXME
+    node_list_add_node(&target_block->statements, node);
     break;
   case PARSE_NODE_CONDITIONAL:
+    // This shouldn't happen right?
     // linearize_conditional(target_block, to_conditional_node(node));
     break;
   case PARSE_NODE_CONTINUE_STATEMENT:
@@ -50,8 +53,12 @@ void linearize_statement(block_node_t* target_block,
     node_list_add_node(&target_block->statements, node);
     break;
   case PARSE_NODE_DESIGNATED_INITIALIZER:
+    // FIXME (or maybe this can't happen here, only as an expression?)
+    node_list_add_node(&target_block->statements, node);
     break;
   case PARSE_NODE_DO_STATEMENT:
+    linearize_do_statement(target_block, tmp_provider,
+                           to_do_statement_node(node));
     break;
   case PARSE_NODE_EMPTY_STATEMENT:
     // Empty statements either disappear or get converted into empty
@@ -157,16 +164,6 @@ void linearize_statement_call_node(block_node_t* target_block,
   node_list_add_node(&target_block->statements, to_node(rewritten));
 }
 
-/*
-typedef if_statement_node_t = struct {
-  parse_node_type_t tag;
-  token_t* first_token;
-  parse_node_t* if_condition;
-  parse_node_t* if_true;
-  parse_node_t* if_else;
-};
-*/
-
 void linearize_if_statement(block_node_t* target_block,
                             tmp_provider_t* tmp_provider,
                             if_statement_node_t* node) {
@@ -190,6 +187,19 @@ void linearize_if_statement(block_node_t* target_block,
       to_node(make_if_statement(node->first_token,
                                 tmp_to_var_reference(condition_target),
                                 to_node(if_true), to_node(if_else))));
+}
+
+void linearize_do_statement(block_node_t* target_block,
+                            tmp_provider_t* tmp_provider,
+                            do_statement_node_t* node) {
+  block_node_t* body = make_block_node(nullptr);
+  linearize_statement(body, tmp_provider, node->body);
+  token_t* condition_target = tmp_provider->get(tmp_provider);
+  linearize_expression(body, tmp_provider, node->condition, condition_target);
+  node_list_add_node(
+      &target_block->statements,
+      to_node(make_do_statement(node->first_token, to_node(body),
+                                tmp_to_var_reference(condition_target))));
 }
 
 /* ================================================================ */
