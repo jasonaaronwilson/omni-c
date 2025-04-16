@@ -232,7 +232,7 @@ void linearize_expression_statement(block_node_t* target_block,
  * necessarily a bad thing...)
  */
 typedef tmp_provider_t = struct {
-  fn_t(token_t*) get;
+  fn_t(token_t*, tmp_provider_t*) get;
   uint32_t count;
 };
 
