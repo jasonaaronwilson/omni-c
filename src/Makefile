@@ -52,9 +52,16 @@ $(shell mkdir -p ${BUILD_DIR}/bin ${BUILD_DIR}/gen-files ${BUILD_DIR}/tests ${BU
 STABLE_BINARY_PATH := ${BUILD_DIR}/bin/omni-c-stable
 OMNI_C := ${BUILD_DIR}/bin/omni-c
 
-WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr
+# no-unused-function could be interesting to look into
+WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr -Wno-error=parentheses-equality -Wno-unused-function
 CC_FLAGS := -g -rdynamic ${WARN_FLAGS}
 CC_FLAGS_OPT := ${CC_FLAGS} -O3 
+
+# --- Conditionally define flags for MacOS
+# If IS_MAC_OS is 'true', GC_INCLUDE_FLAG becomes '-I/path/include', else empty.
+GC_INCLUDE_FLAG := $(if $(filter true,${IS_MAC_OS}),-I${BREW_GC_PREFIX}/include)
+# If IS_MAC_OS is 'true', GC_LIBPATH_FLAG becomes '-L/path/lib', else empty.
+GC_LIBPATH_FLAG := $(if $(filter true,${IS_MAC_OS}),-L${BREW_GC_PREFIX}/lib)
 
 SRC_C_SELF := \
 	mode.c \
@@ -107,7 +114,7 @@ SRC_C := $(SRC_C_SELF)
 # ----------------------------------------------------------------------
 
 ${BUILD_DIR}/bin/omni-c-stable: omni-c-stable.c
-	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/omni-c-stable -std=gnu99 omni-c-stable.c -lgc
+	gcc ${CC_FLAGS_OPT} ${GC_INCLUDE_FLAG} -o ${BUILD_DIR}/bin/omni-c-stable -std=gnu99 omni-c-stable.c ${GC_LIBPATH_FLAG} -lgc
 
 ${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/tools/embed-file.lua
 	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header embed/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
@@ -116,19 +123,19 @@ ${BUILD_DIR}/bin/lib.oar: ${C_ARMYKNIFE_SRC_C}
 	${STABLE_BINARY_PATH} archive ${C_ARMYKNIFE_SRC_C} --archive-output-file=${BUILD_DIR}/bin/lib.oar
 
 ${BUILD_DIR}/bin/omni-c: ${BUILD_DIR}/bin/omni-c-stable ${BUILD_DIR}/gen-files/reflection-header.c ${C_ARMYKNIFE_SRC_C} ${SRC_C_SELF} lib
-	/usr/bin/time --portability ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/omni-c.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
-	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/omni-c -std=gnu99 ${BUILD_DIR}/omni-c.c -lgc
+	/usr/bin/time -p ${STABLE_BINARY_PATH} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/omni-c.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	gcc ${CC_FLAGS_OPT} ${GC_INCLUDE_FLAG} -o ${BUILD_DIR}/bin/omni-c -std=gnu99 ${BUILD_DIR}/omni-c.c ${GC_LIBPATH_FLAG} -lgc
 
 # Test --dump-symbol-table=true -- not recommend within emacs since
 # it's output handling is so slow though any fast enough terminal like
 # gnome terminal or if you redirect to a file.
 ${BUILD_DIR}/bin/self: ${BUILD_DIR}/bin/omni-c
-	/usr/bin/time --portability ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/self.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
-	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/self ${BUILD_DIR}/self.c -lgc
+	/usr/bin/time -p ${OMNI_C} generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/self.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	gcc ${CC_FLAGS_OPT} ${GC_INCLUDE_FLAG} -o ${BUILD_DIR}/bin/self ${BUILD_DIR}/self.c ${GC_LIBPATH_FLAG} -lgc
 
 ${BUILD_DIR}/bin/selfself: ${BUILD_DIR}/bin/omni-c ${BUILD_DIR}/bin/self
-	/usr/bin/time --portability ${BUILD_DIR}/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/selfself.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
-	gcc ${CC_FLAGS_OPT} -o ${BUILD_DIR}/bin/selfself -std=gnu99 ${BUILD_DIR}/selfself.c -lgc
+	/usr/bin/time -p ${BUILD_DIR}/bin/self generate-library --use-statement-parser=true --omit-c-armyknife-include=true --c-output-file=${BUILD_DIR}/selfself.c ${BUILD_DIR}/bin/lib.oar ${SRC_C_SELF} ${BUILD_DIR}/gen-files/reflection-header.c
+	gcc ${CC_FLAGS_OPT} ${GC_INCLUDE_FLAG} -o ${BUILD_DIR}/bin/selfself -std=gnu99 ${BUILD_DIR}/selfself.c ${GC_LIBPATH_FLAG} -lgc
 
 # clang-format will take multiple files but if a file is missing it
 # doesn't tell you which file is missing.
