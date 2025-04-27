@@ -1625,7 +1625,7 @@ struct printer_S {
 };
 
 struct tmp_provider_t__generated_S {
-  fn_t(token_t*) get;
+  fn_t(token_t*, tmp_provider_t*) get;
   uint32_t count;
 };
 
@@ -2387,7 +2387,10 @@ printer_t* printer_decrease_indent(printer_t* printer);
 void linearize_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node);
 void linearize_expression(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node, token_t* target);
 void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider, block_node_t* node);
-void linearize_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, call_node_t* node);
+void linearize_statement_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, call_node_t* node);
+void linearize_if_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, if_statement_node_t* node);
+void linearize_do_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, do_statement_node_t* node);
+void linearize_expression_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, expression_statement_node_t* node);
 tmp_provider_t* make_tmp_provider();
 token_t* tmp_provider_get(tmp_provider_t* data);
 parse_node_t* tmp_to_var_reference(token_t* tmp);
@@ -3139,7 +3142,7 @@ static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr)
 
 
 # 255 "declaration-parser.c"
-static inline declarations_node_t* malloc_declarations(void)
+static inline declarations_node_t* make_declarations(void)
 # 255 "declaration-parser.c"
 {
 
@@ -3155,7 +3158,7 @@ static inline declarations_node_t* malloc_declarations(void)
 
 
 # 261 "declaration-parser.c"
-static inline function_node_t* malloc_function_node(void)
+static inline function_node_t* make_function_node(void)
 # 261 "declaration-parser.c"
 {
 
@@ -3171,7 +3174,7 @@ static inline function_node_t* malloc_function_node(void)
 
 
 # 267 "declaration-parser.c"
-static inline function_argument_node_t* malloc_function_argument_node(void)
+static inline function_argument_node_t* make_function_argument_node(void)
 # 267 "declaration-parser.c"
 {
 
@@ -3187,7 +3190,7 @@ static inline function_argument_node_t* malloc_function_argument_node(void)
 
 
 # 273 "declaration-parser.c"
-static inline typedef_node_t* malloc_typedef_node(void)
+static inline typedef_node_t* make_typedef_node(void)
 # 273 "declaration-parser.c"
 {
 
@@ -3203,7 +3206,7 @@ static inline typedef_node_t* malloc_typedef_node(void)
 
 
 # 279 "declaration-parser.c"
-static inline attribute_node_t* malloc_attribute_node(void)
+static inline attribute_node_t* make_attribute_node(void)
 # 279 "declaration-parser.c"
 {
 
@@ -3219,7 +3222,7 @@ static inline attribute_node_t* malloc_attribute_node(void)
 
 
 # 285 "declaration-parser.c"
-static inline cpp_include_node_t* malloc_cpp_include_node(void)
+static inline cpp_include_node_t* make_cpp_include_node(void)
 # 285 "declaration-parser.c"
 {
 
@@ -3235,7 +3238,7 @@ static inline cpp_include_node_t* malloc_cpp_include_node(void)
 
 
 # 291 "declaration-parser.c"
-static inline cpp_define_node_t* malloc_cpp_define_node(void)
+static inline cpp_define_node_t* make_cpp_define_node(void)
 # 291 "declaration-parser.c"
 {
 
@@ -3381,7 +3384,7 @@ static inline char* remove_type_suffix_1(char* typename)
 
 
 # 111 "pratt-parser.c"
-static inline operator_node_t* malloc_operator_node(void)
+static inline operator_node_t* make_operator_node(void)
 # 111 "pratt-parser.c"
 {
 
@@ -3397,7 +3400,7 @@ static inline operator_node_t* malloc_operator_node(void)
 
 
 # 117 "pratt-parser.c"
-static inline identifier_node_t* malloc_identifier_node(void)
+static inline identifier_node_t* make_identifier_node(void)
 # 117 "pratt-parser.c"
 {
 
@@ -3413,7 +3416,7 @@ static inline identifier_node_t* malloc_identifier_node(void)
 
 
 # 123 "pratt-parser.c"
-static inline call_node_t* malloc_call_node(void)
+static inline call_node_t* make_call_node(void)
 # 123 "pratt-parser.c"
 {
 
@@ -3429,7 +3432,7 @@ static inline call_node_t* malloc_call_node(void)
 
 
 # 129 "pratt-parser.c"
-static inline conditional_node_t* malloc_conditional_node(void)
+static inline conditional_node_t* make_conditional_node(void)
 # 129 "pratt-parser.c"
 {
 
@@ -3535,7 +3538,7 @@ static inline pratt_parser_instruction_t make_parser_instruction(token_t* token,
 
 
 # 65 "type-parser.c"
-static inline type_node_t* malloc_type_node(void)
+static inline type_node_t* make_type_node(void)
 # 65 "type-parser.c"
 {
 
@@ -3691,7 +3694,7 @@ static inline enum_element_t* to_enum_element_node(parse_node_t* ptr)
 
 
 # 153 "user-type-parser.c"
-static inline enum_node_t* malloc_enum_node(void)
+static inline enum_node_t* make_enum_node(void)
 # 153 "user-type-parser.c"
 {
 
@@ -3707,7 +3710,7 @@ static inline enum_node_t* malloc_enum_node(void)
 
 
 # 159 "user-type-parser.c"
-static inline enum_element_t* malloc_enum_element(void)
+static inline enum_element_t* make_enum_element(void)
 # 159 "user-type-parser.c"
 {
 
@@ -3723,7 +3726,7 @@ static inline enum_element_t* malloc_enum_element(void)
 
 
 # 165 "user-type-parser.c"
-static inline struct_node_t* malloc_struct_node(void)
+static inline struct_node_t* make_struct_node(void)
 # 165 "user-type-parser.c"
 {
 
@@ -3739,7 +3742,7 @@ static inline struct_node_t* malloc_struct_node(void)
 
 
 # 171 "user-type-parser.c"
-static inline union_node_t* malloc_union_node(void)
+static inline union_node_t* make_union_node(void)
 # 171 "user-type-parser.c"
 {
 
@@ -3755,7 +3758,7 @@ static inline union_node_t* malloc_union_node(void)
 
 
 # 177 "user-type-parser.c"
-static inline field_node_t* malloc_field_node(void)
+static inline field_node_t* make_field_node(void)
 # 177 "user-type-parser.c"
 {
 
@@ -3790,24 +3793,24 @@ static inline variable_definition_node_t* to_variable_definition_node(parse_node
 }
 
 
-# 33 "variable-definition-parser.c"
-static inline variable_definition_node_t* malloc_variable_definition_node(void)
-# 33 "variable-definition-parser.c"
+# 32 "variable-definition-parser.c"
+static inline variable_definition_node_t* make_variable_definition_node(void)
+# 32 "variable-definition-parser.c"
 {
 
-# 34 "variable-definition-parser.c"
+# 33 "variable-definition-parser.c"
   variable_definition_node_t* result = malloc_struct(variable_definition_node_t);
 
-# 36 "variable-definition-parser.c"
+# 35 "variable-definition-parser.c"
   ((result->tag)=PARSE_NODE_VARIABLE_DEFINITION);
 
-# 37 "variable-definition-parser.c"
+# 36 "variable-definition-parser.c"
   return result;
 }
 
 
 # 37 "literal-parser.c"
-static inline literal_node_t* malloc_literal_node(void)
+static inline literal_node_t* make_literal_node(void)
 # 37 "literal-parser.c"
 {
 
@@ -3823,7 +3826,7 @@ static inline literal_node_t* malloc_literal_node(void)
 
 
 # 43 "literal-parser.c"
-static inline compound_literal_node_t* malloc_compound_literal_node(void)
+static inline compound_literal_node_t* make_compound_literal_node(void)
 # 43 "literal-parser.c"
 {
 
@@ -3859,7 +3862,7 @@ static inline compound_literal_node_t* to_compound_literal_node(parse_node_t* pt
 
 
 # 58 "literal-parser.c"
-static inline designated_initializer_node_t* malloc_designated_initializer_node(void)
+static inline designated_initializer_node_t* make_designated_initializer_node(void)
 # 58 "literal-parser.c"
 {
 
@@ -3915,7 +3918,7 @@ static inline balanced_construct_node_t* to_balanced_construct_node(parse_node_t
 
 
 # 35 "balanced-construct-parser.c"
-static inline balanced_construct_node_t* malloc_balanced_construct_node()
+static inline balanced_construct_node_t* make_balanced_construct_node()
 # 35 "balanced-construct-parser.c"
 {
 
@@ -13050,7 +13053,7 @@ pstatus_t parse_declarations(pstate_t* pstate)
   uint64_t saved_position = (pstate->position);
 
 # 310 "declaration-parser.c"
-  declarations_node_t* result = malloc_declarations();
+  declarations_node_t* result = make_declarations();
 
 # 311 "declaration-parser.c"
   while (((pstate->position)<((pstate->tokens)->length)))
@@ -13227,7 +13230,7 @@ pstatus_t parse_attribute_node(pstate_t* pstate)
   }
 
 # 409 "declaration-parser.c"
-  attribute_node_t* result = malloc_attribute_node();
+  attribute_node_t* result = make_attribute_node();
 
 # 410 "declaration-parser.c"
   ((result->inner_start_token)=token_at((pstate->tokens), saved_position));
@@ -13359,7 +13362,7 @@ pstatus_t parse_function_node(pstate_t* pstate)
   }
 
 # 466 "declaration-parser.c"
-  function_node_t* fn_node = malloc_function_node();
+  function_node_t* fn_node = make_function_node();
 
 # 467 "declaration-parser.c"
   ((fn_node->attributes)=attributes);
@@ -13441,7 +13444,7 @@ pstatus_t parse_function_argument_node(pstate_t* pstate)
   uint64_t saved_position = (pstate->position);
 
 # 501 "declaration-parser.c"
-  function_argument_node_t* result = malloc_function_argument_node();
+  function_argument_node_t* result = make_function_argument_node();
 
 # 503 "declaration-parser.c"
   if (pstate_match_token_string(pstate, "..."))
@@ -13590,7 +13593,7 @@ pstatus_t parse_typedef_node(pstate_t* pstate)
   }
 
 # 564 "declaration-parser.c"
-  typedef_node_t* result = malloc_typedef_node();
+  typedef_node_t* result = make_typedef_node();
 
 # 565 "declaration-parser.c"
   ((result->type_node)=type_node);
@@ -13668,7 +13671,7 @@ pstatus_t parse_improved_typedef_node(pstate_t* pstate)
   }
 
 # 598 "declaration-parser.c"
-  typedef_node_t* result = malloc_typedef_node();
+  typedef_node_t* result = make_typedef_node();
 
 # 599 "declaration-parser.c"
   ((result->type_node)=type_node);
@@ -18600,7 +18603,7 @@ void split_structure_typedefs(symbol_table_t* symbol_table)
         log_debug("Splitting %s off from %s", token_to_string((node->name)), token_to_string((struct_node->name)));
 
 # 74 "source-to-source.c"
-        struct_node_t* partial_definition = malloc_struct_node();
+        struct_node_t* partial_definition = make_struct_node();
 
 # 75 "source-to-source.c"
         ((partial_definition->partial_definition)=true);
@@ -19134,7 +19137,7 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_
   {
 
 # 89 "preprocessor.c"
-    cpp_include_node_t* node = malloc_cpp_include_node();
+    cpp_include_node_t* node = make_cpp_include_node();
 
 # 90 "preprocessor.c"
     ((node->text)=buffer_c_substring((range.buffer), (range.buffer_start_position), (range.buffer_end_position)));
@@ -19166,7 +19169,7 @@ uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_
   {
 
 # 98 "preprocessor.c"
-    cpp_define_node_t* node = malloc_cpp_define_node();
+    cpp_define_node_t* node = make_cpp_define_node();
 
 # 99 "preprocessor.c"
     ((node->text)=buffer_c_substring((range.buffer), (range.buffer_start_position), (range.buffer_end_position)));
@@ -19652,7 +19655,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       }
 
 # 262 "pratt-parser.c"
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
 
 # 263 "pratt-parser.c"
       ((result->operator)=token);
@@ -19680,7 +19683,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       pstate_advance(pstate);
 
 # 272 "pratt-parser.c"
-      identifier_node_t* result = malloc_identifier_node();
+      identifier_node_t* result = make_identifier_node();
 
 # 273 "pratt-parser.c"
       ((result->token)=token);
@@ -19718,7 +19721,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       }
 
 # 286 "pratt-parser.c"
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
 
 # 287 "pratt-parser.c"
       ((result->operator)=token);
@@ -19756,7 +19759,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       pstate_advance(pstate);
 
 # 299 "pratt-parser.c"
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
 
 # 300 "pratt-parser.c"
       ((result->operator)=token);
@@ -19863,7 +19866,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       }
 
 # 334 "pratt-parser.c"
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
 
 # 335 "pratt-parser.c"
       ((result->operator)=token);
@@ -19934,7 +19937,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       }
 
 # 362 "pratt-parser.c"
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
 
 # 363 "pratt-parser.c"
       ((result->operator)=token);
@@ -20015,7 +20018,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       }
 
 # 389 "pratt-parser.c"
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
 
 # 390 "pratt-parser.c"
       ((result->operator)=token);
@@ -20086,7 +20089,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       }
 
 # 414 "pratt-parser.c"
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
 
 # 415 "pratt-parser.c"
       ((result->operator)=token);
@@ -20154,7 +20157,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       }
 
 # 438 "pratt-parser.c"
-      operator_node_t* result = malloc_operator_node();
+      operator_node_t* result = make_operator_node();
 
 # 439 "pratt-parser.c"
       ((result->operator)=token);
@@ -20189,7 +20192,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       }
 
 # 450 "pratt-parser.c"
-      call_node_t* result = malloc_call_node();
+      call_node_t* result = make_call_node();
 
 # 451 "pratt-parser.c"
       ((result->function)=left);
@@ -20301,7 +20304,7 @@ pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t 
       parse_node_t* expr_if_false = pstate_get_result_node(pstate);
 
 # 486 "pratt-parser.c"
-      conditional_node_t* result = malloc_conditional_node();
+      conditional_node_t* result = make_conditional_node();
 
 # 487 "pratt-parser.c"
       ((result->condition)=left);
@@ -22050,7 +22053,7 @@ pstatus_t parse_type_node(pstate_t* pstate)
   }
 
 # 101 "type-parser.c"
-  type_node_t* result = malloc_type_node();
+  type_node_t* result = make_type_node();
 
 # 103 "type-parser.c"
   type_qualifier_t qualifiers = TYPE_QUALIFIER_NONE;
@@ -22149,7 +22152,7 @@ pstatus_t parse_type_node(pstate_t* pstate)
     {
 
 # 136 "type-parser.c"
-      type_node_t* ptr_result = malloc_type_node();
+      type_node_t* ptr_result = make_type_node();
 
 # 137 "type-parser.c"
       ((ptr_result->type_node_kind)=TYPE_NODE_KIND_POINTER);
@@ -22172,7 +22175,7 @@ pstatus_t parse_type_node(pstate_t* pstate)
       pstate_advance(pstate);
 
 # 142 "type-parser.c"
-      type_node_t* array_result = malloc_type_node();
+      type_node_t* array_result = make_type_node();
 
 # 143 "type-parser.c"
       ((array_result->type_node_kind)=TYPE_NODE_KIND_ARRAY);
@@ -22187,7 +22190,7 @@ pstatus_t parse_type_node(pstate_t* pstate)
       {
 
 # 146 "type-parser.c"
-        literal_node_t* literal = malloc_literal_node();
+        literal_node_t* literal = make_literal_node();
 
 # 147 "type-parser.c"
         ((literal->token)=pstate_get_result_token(pstate));
@@ -22318,7 +22321,7 @@ pstatus_t parse_typeof_node(pstate_t* pstate)
   }
 
 # 194 "type-parser.c"
-  type_node_t* result = malloc_type_node();
+  type_node_t* result = make_type_node();
 
 # 195 "type-parser.c"
   ((result->type_node_kind)=TYPE_NODE_KIND_TYPEOF);
@@ -22592,7 +22595,7 @@ pstatus_t parse_function_type(pstate_t* pstate)
   }
 
 # 333 "type-parser.c"
-  type_node_t* result = malloc_type_node();
+  type_node_t* result = make_type_node();
 
 # 334 "type-parser.c"
   ((result->type_node_kind)=TYPE_NODE_KIND_TYPE_EXPRESSION);
@@ -22703,7 +22706,7 @@ pstatus_t parse_structure_node(pstate_t* pstate)
   }
 
 # 191 "user-type-parser.c"
-  struct_node_t* result = malloc_struct_node();
+  struct_node_t* result = make_struct_node();
 
 # 193 "user-type-parser.c"
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
@@ -22881,7 +22884,7 @@ pstatus_t parse_field_node(pstate_t* pstate)
   }
 
 # 256 "user-type-parser.c"
-  field_node_t* result = malloc_field_node();
+  field_node_t* result = make_field_node();
 
 # 257 "user-type-parser.c"
   ((result->type)=field_type);
@@ -22916,7 +22919,7 @@ pstatus_t parse_union_node(pstate_t* pstate)
   }
 
 # 271 "user-type-parser.c"
-  union_node_t* result = malloc_union_node();
+  union_node_t* result = make_union_node();
 
 # 273 "user-type-parser.c"
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
@@ -23042,7 +23045,7 @@ pstatus_t parse_enum_node(pstate_t* pstate)
   }
 
 # 325 "user-type-parser.c"
-  enum_node_t* result = malloc_enum_node();
+  enum_node_t* result = make_enum_node();
 
 # 327 "user-type-parser.c"
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
@@ -23171,7 +23174,7 @@ pstatus_t parse_enum_element_node(pstate_t* pstate)
   }
 
 # 377 "user-type-parser.c"
-  enum_element_t* result = malloc_enum_element();
+  enum_element_t* result = make_enum_element();
 
 # 378 "user-type-parser.c"
   ((result->name)=name);
@@ -23184,182 +23187,182 @@ pstatus_t parse_enum_element_node(pstate_t* pstate)
 }
 
 
-# 45 "variable-definition-parser.c"
+# 44 "variable-definition-parser.c"
 pstatus_t parse_expression(pstate_t* pstate)
-# 45 "variable-definition-parser.c"
+# 44 "variable-definition-parser.c"
 {
 
-# 46 "variable-definition-parser.c"
+# 45 "variable-definition-parser.c"
   return pratt_parse_expression(pstate, 0);
 }
 
 
-# 54 "variable-definition-parser.c"
+# 53 "variable-definition-parser.c"
 pstatus_t parse_initializer(pstate_t* pstate)
-# 54 "variable-definition-parser.c"
+# 53 "variable-definition-parser.c"
 {
 
-# 56 "variable-definition-parser.c"
+# 55 "variable-definition-parser.c"
   uint64_t saved_position = (pstate->position);
 
-# 57 "variable-definition-parser.c"
+# 56 "variable-definition-parser.c"
   if (token_matches(pstate_peek(pstate, 0), "{"))
 
-# 57 "variable-definition-parser.c"
+# 56 "variable-definition-parser.c"
   {
 
-# 58 "variable-definition-parser.c"
+# 57 "variable-definition-parser.c"
     return parse_balanced_construct(pstate);
   }
 
-# 60 "variable-definition-parser.c"
+# 59 "variable-definition-parser.c"
   return pstate_error(pstate, saved_position, PARSE_ERROR_CLOSE_BRACKET_EXPECTED);
 }
 
 
-# 70 "variable-definition-parser.c"
+# 69 "variable-definition-parser.c"
 pstatus_t parse_variable_definition_node(pstate_t* pstate)
-# 70 "variable-definition-parser.c"
+# 69 "variable-definition-parser.c"
 {
 
-# 71 "variable-definition-parser.c"
+# 70 "variable-definition-parser.c"
   uint64_t saved_position = (pstate->position);
 
-# 72 "variable-definition-parser.c"
+# 71 "variable-definition-parser.c"
   token_t* storage_class_specifier = ((void *)0);
 
-# 74 "variable-definition-parser.c"
+# 73 "variable-definition-parser.c"
   while ((pstate_expect_token_string(pstate, "static")||pstate_expect_token_string(pstate_ignore_error(pstate), "extern")))
 
-# 75 "variable-definition-parser.c"
+# 74 "variable-definition-parser.c"
   {
 
-# 76 "variable-definition-parser.c"
+# 75 "variable-definition-parser.c"
     if ((storage_class_specifier!=((void *)0)))
 
-# 76 "variable-definition-parser.c"
+# 75 "variable-definition-parser.c"
     {
 
-# 77 "variable-definition-parser.c"
+# 76 "variable-definition-parser.c"
       return pstate_error(pstate, saved_position, PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);
     }
 
-# 80 "variable-definition-parser.c"
+# 79 "variable-definition-parser.c"
     (storage_class_specifier=pstate_get_result_token(pstate));
   }
 
-# 82 "variable-definition-parser.c"
+# 81 "variable-definition-parser.c"
   pstate_ignore_error(pstate);
 
-# 83 "variable-definition-parser.c"
+# 82 "variable-definition-parser.c"
   if ((!parse_type_node(pstate)))
 
-# 83 "variable-definition-parser.c"
+# 82 "variable-definition-parser.c"
   {
 
-# 84 "variable-definition-parser.c"
+# 83 "variable-definition-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
 
-# 86 "variable-definition-parser.c"
+# 85 "variable-definition-parser.c"
   type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
 
-# 87 "variable-definition-parser.c"
+# 86 "variable-definition-parser.c"
   if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
 
-# 87 "variable-definition-parser.c"
+# 86 "variable-definition-parser.c"
   {
 
-# 88 "variable-definition-parser.c"
+# 87 "variable-definition-parser.c"
     return pstate_error(pstate, saved_position, PARSE_ERROR_IDENTIFIER_EXPECTED);
   }
 
-# 91 "variable-definition-parser.c"
+# 90 "variable-definition-parser.c"
   token_t* name = pstate_get_result_token(pstate);
 
-# 93 "variable-definition-parser.c"
-  variable_definition_node_t* result = malloc_variable_definition_node();
+# 92 "variable-definition-parser.c"
+  variable_definition_node_t* result = make_variable_definition_node();
 
-# 94 "variable-definition-parser.c"
+# 93 "variable-definition-parser.c"
   ((result->type)=type_node);
 
-# 95 "variable-definition-parser.c"
+# 94 "variable-definition-parser.c"
   ((result->name)=name);
 
-# 97 "variable-definition-parser.c"
+# 96 "variable-definition-parser.c"
   while (pstate_match_token_string(pstate, "["))
 
-# 97 "variable-definition-parser.c"
+# 96 "variable-definition-parser.c"
   {
 
-# 98 "variable-definition-parser.c"
+# 97 "variable-definition-parser.c"
     if ((!parse_balanced_construct(pstate)))
 
-# 98 "variable-definition-parser.c"
+# 97 "variable-definition-parser.c"
     {
 
-# 99 "variable-definition-parser.c"
+# 98 "variable-definition-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
 
-# 101 "variable-definition-parser.c"
+# 100 "variable-definition-parser.c"
     if (((result->suffixes)==((void *)0)))
 
-# 101 "variable-definition-parser.c"
+# 100 "variable-definition-parser.c"
     {
 
-# 102 "variable-definition-parser.c"
+# 101 "variable-definition-parser.c"
       ((result->suffixes)=make_value_array(1));
     }
 
-# 104 "variable-definition-parser.c"
+# 103 "variable-definition-parser.c"
     value_array_add((result->suffixes), ptr_to_value(pstate_get_result_node(pstate)));
   }
 
-# 108 "variable-definition-parser.c"
+# 107 "variable-definition-parser.c"
   if (pstate_expect_token_string(pstate, "="))
 
-# 108 "variable-definition-parser.c"
+# 107 "variable-definition-parser.c"
   {
 
-# 109 "variable-definition-parser.c"
+# 108 "variable-definition-parser.c"
     if ((parse_initializer(pstate)||parse_expression(pstate_ignore_error(pstate))))
 
-# 110 "variable-definition-parser.c"
+# 109 "variable-definition-parser.c"
     {
 
-# 111 "variable-definition-parser.c"
+# 110 "variable-definition-parser.c"
       ((result->value)=pstate_get_result_node(pstate));
     }
     else
 
-# 112 "variable-definition-parser.c"
+# 111 "variable-definition-parser.c"
     {
 
-# 113 "variable-definition-parser.c"
+# 112 "variable-definition-parser.c"
       return pstate_propagate_error(pstate, saved_position);
     }
   }
   else
 
-# 115 "variable-definition-parser.c"
+# 114 "variable-definition-parser.c"
   {
 
-# 116 "variable-definition-parser.c"
+# 115 "variable-definition-parser.c"
     pstate_ignore_error(pstate);
   }
 
-# 119 "variable-definition-parser.c"
+# 118 "variable-definition-parser.c"
   if ((!pstate_expect_token_string(pstate, ";")))
 
-# 119 "variable-definition-parser.c"
+# 118 "variable-definition-parser.c"
   {
 
-# 120 "variable-definition-parser.c"
+# 119 "variable-definition-parser.c"
     return pstate_propagate_error(pstate, saved_position);
   }
 
-# 123 "variable-definition-parser.c"
+# 122 "variable-definition-parser.c"
   return pstate_set_result_node(pstate, to_node(result));
 }
 
@@ -23379,7 +23382,7 @@ pstatus_t parse_literal_node(pstate_t* pstate)
   {
 
 # 76 "literal-parser.c"
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
 
 # 77 "literal-parser.c"
     ((result->tokens)=make_value_array(1));
@@ -23411,7 +23414,7 @@ pstatus_t parse_literal_node(pstate_t* pstate)
   {
 
 # 94 "literal-parser.c"
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
 
 # 95 "literal-parser.c"
     ((result->tokens)=make_value_array(1));
@@ -23448,7 +23451,7 @@ pstatus_t parse_literal_node(pstate_t* pstate)
     }
 
 # 107 "literal-parser.c"
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
 
 # 108 "literal-parser.c"
     ((result->initializer_node)=pstate_get_result_node(pstate));
@@ -23513,7 +23516,7 @@ pstatus_t parse_literal_node(pstate_t* pstate)
     }
 
 # 132 "literal-parser.c"
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
 
 # 133 "literal-parser.c"
     ((result->initializer_node)=initializer_node);
@@ -23550,7 +23553,7 @@ pstatus_t parse_literal_node(pstate_t* pstate)
   {
 
 # 154 "literal-parser.c"
-    literal_node_t* result = malloc_literal_node();
+    literal_node_t* result = make_literal_node();
 
 # 155 "literal-parser.c"
     ((result->token)=pstate_get_result_token(pstate));
@@ -23756,7 +23759,7 @@ pstatus_t parse_compound_literal(pstate_t* pstate)
   }
 
 # 228 "literal-parser.c"
-  compound_literal_node_t* result = malloc_compound_literal_node();
+  compound_literal_node_t* result = make_compound_literal_node();
 
 # 229 "literal-parser.c"
   ((result->type_node)=type_node);
@@ -23827,7 +23830,7 @@ pstatus_t parse_designated_initializer_node(pstate_t* pstate)
   }
 
 # 261 "literal-parser.c"
-  designated_initializer_node_t* result = malloc_designated_initializer_node();
+  designated_initializer_node_t* result = make_designated_initializer_node();
 
 # 262 "literal-parser.c"
   ((result->member_name)=member_name);
@@ -23951,7 +23954,7 @@ pstatus_t parse_balanced_construct(pstate_t* pstate)
   }
 
 # 79 "balanced-construct-parser.c"
-  balanced_construct_node_t* result = malloc_balanced_construct_node();
+  balanced_construct_node_t* result = make_balanced_construct_node();
 
 # 80 "balanced-construct-parser.c"
   ((result->start_token)=token_at((pstate->tokens), saved_position));
@@ -24116,359 +24119,451 @@ void linearize_statement(block_node_t* target_block, tmp_provider_t* tmp_provide
     case PARSE_NODE_CALL:
 
 # 35 "linearizer.c"
-    linearize_call_node(target_block, tmp_provider, to_call_node(node));
-
-# 36 "linearizer.c"
-    break;
+    linearize_statement_call_node(target_block, tmp_provider, to_call_node(node));
 
 # 37 "linearizer.c"
-    case PARSE_NODE_CASE_LABEL:
+    break;
 
 # 38 "linearizer.c"
-    node_list_add_node((&(target_block->statements)), node);
+    case PARSE_NODE_CASE_LABEL:
 
 # 39 "linearizer.c"
-    break;
+    node_list_add_node((&(target_block->statements)), node);
 
 # 40 "linearizer.c"
-    case PARSE_NODE_COMPOUND_LITERAL:
-
-# 41 "linearizer.c"
     break;
 
-# 42 "linearizer.c"
-    case PARSE_NODE_CONDITIONAL:
+# 41 "linearizer.c"
+    case PARSE_NODE_COMPOUND_LITERAL:
+
+# 43 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
 
 # 44 "linearizer.c"
     break;
 
 # 45 "linearizer.c"
-    case PARSE_NODE_CONTINUE_STATEMENT:
-
-# 46 "linearizer.c"
-    node_list_add_node((&(target_block->statements)), node);
-
-# 47 "linearizer.c"
-    break;
+    case PARSE_NODE_CONDITIONAL:
 
 # 48 "linearizer.c"
-    case PARSE_NODE_DEFAULT_LABEL:
+    break;
 
 # 49 "linearizer.c"
-    node_list_add_node((&(target_block->statements)), node);
+    case PARSE_NODE_CONTINUE_STATEMENT:
 
 # 50 "linearizer.c"
-    break;
+    node_list_add_node((&(target_block->statements)), node);
 
 # 51 "linearizer.c"
-    case PARSE_NODE_DESIGNATED_INITIALIZER:
-
-# 52 "linearizer.c"
     break;
 
+# 52 "linearizer.c"
+    case PARSE_NODE_DEFAULT_LABEL:
+
 # 53 "linearizer.c"
-    case PARSE_NODE_DO_STATEMENT:
+    node_list_add_node((&(target_block->statements)), node);
 
 # 54 "linearizer.c"
     break;
 
 # 55 "linearizer.c"
-    case PARSE_NODE_EMPTY_STATEMENT:
+    case PARSE_NODE_DESIGNATED_INITIALIZER:
+
+# 57 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
 
 # 58 "linearizer.c"
     break;
 
 # 59 "linearizer.c"
-    case PARSE_NODE_EXPRESSION_STATEMENT:
+    case PARSE_NODE_DO_STATEMENT:
+
+# 60 "linearizer.c"
+    linearize_do_statement(target_block, tmp_provider, to_do_statement_node(node));
 
 # 62 "linearizer.c"
     break;
 
 # 63 "linearizer.c"
-    case PARSE_NODE_FOR_STATEMENT:
-
-# 65 "linearizer.c"
-    break;
+    case PARSE_NODE_EMPTY_STATEMENT:
 
 # 66 "linearizer.c"
-    case PARSE_NODE_IF_STATEMENT:
+    break;
+
+# 67 "linearizer.c"
+    case PARSE_NODE_EXPRESSION_STATEMENT:
 
 # 68 "linearizer.c"
-    break;
-
-# 69 "linearizer.c"
-    case PARSE_NODE_LABEL_STATEMENT:
+    linearize_expression_statement(target_block, tmp_provider, to_expression_statement_node(node));
 
 # 70 "linearizer.c"
-    node_list_add_node((&(target_block->statements)), node);
-
-# 71 "linearizer.c"
     break;
 
-# 72 "linearizer.c"
-    case PARSE_NODE_RETURN_STATEMENT:
+# 71 "linearizer.c"
+    case PARSE_NODE_FOR_STATEMENT:
 
 # 73 "linearizer.c"
     break;
 
 # 74 "linearizer.c"
-    case PARSE_NODE_SWITCH_STATEMENT:
+    case PARSE_NODE_IF_STATEMENT:
 
 # 75 "linearizer.c"
-    break;
-
-# 76 "linearizer.c"
-    case PARSE_NODE_VARIABLE_DEFINITION:
+    linearize_if_statement(target_block, tmp_provider, to_if_statement_node(node));
 
 # 77 "linearizer.c"
     break;
 
 # 78 "linearizer.c"
-    case PARSE_NODE_WHILE_STATEMENT:
+    case PARSE_NODE_LABEL_STATEMENT:
 
 # 79 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 80 "linearizer.c"
     break;
 
 # 81 "linearizer.c"
-    case PARSE_NODE_BALANCED_CONSTRUCT:
+    case PARSE_NODE_RETURN_STATEMENT:
 
 # 82 "linearizer.c"
-    default:
+    break;
 
 # 83 "linearizer.c"
-    log_fatal("Unexpected input node to linearizer %s", parse_node_type_to_string((node->tag)));
+    case PARSE_NODE_SWITCH_STATEMENT:
+
+# 84 "linearizer.c"
+    break;
 
 # 85 "linearizer.c"
+    case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 86 "linearizer.c"
+    break;
+
+# 87 "linearizer.c"
+    case PARSE_NODE_WHILE_STATEMENT:
+
+# 88 "linearizer.c"
+    break;
+
+# 90 "linearizer.c"
+    case PARSE_NODE_BALANCED_CONSTRUCT:
+
+# 91 "linearizer.c"
+    default:
+
+# 92 "linearizer.c"
+    log_fatal("Unexpected input node to linearizer %s", parse_node_type_to_string((node->tag)));
+
+# 94 "linearizer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 95 "linearizer.c"
+# 104 "linearizer.c"
 void linearize_expression(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node, token_t* target)
-# 97 "linearizer.c"
+# 106 "linearizer.c"
 {
 
-# 98 "linearizer.c"
+# 107 "linearizer.c"
   switch ((node->tag))
 
-# 98 "linearizer.c"
+# 107 "linearizer.c"
   {
 
-# 99 "linearizer.c"
+# 108 "linearizer.c"
     case PARSE_NODE_CALL:
 
-# 100 "linearizer.c"
-    break;
-
-# 101 "linearizer.c"
-    case PARSE_NODE_COMPOUND_LITERAL:
-
-# 102 "linearizer.c"
-    break;
-
-# 103 "linearizer.c"
-    case PARSE_NODE_CONDITIONAL:
-
-# 105 "linearizer.c"
-    break;
-
-# 106 "linearizer.c"
-    case PARSE_NODE_IDENTIFIER:
-
-# 108 "linearizer.c"
-    break;
-
 # 109 "linearizer.c"
-    case PARSE_NODE_LITERAL:
+    break;
 
 # 110 "linearizer.c"
-    break;
+    case PARSE_NODE_COMPOUND_LITERAL:
 
 # 111 "linearizer.c"
-    case PARSE_NODE_OPERATOR:
-
-# 112 "linearizer.c"
     break;
 
-# 113 "linearizer.c"
-    case PARSE_NODE_TYPE:
+# 112 "linearizer.c"
+    case PARSE_NODE_CONDITIONAL:
 
 # 114 "linearizer.c"
     break;
 
 # 115 "linearizer.c"
-    case PARSE_NODE_VARIABLE_DEFINITION:
-
-# 116 "linearizer.c"
-    break;
+    case PARSE_NODE_IDENTIFIER:
 
 # 117 "linearizer.c"
-    case PARSE_NODE_BALANCED_CONSTRUCT:
-
-# 118 "linearizer.c"
     break;
 
+# 118 "linearizer.c"
+    case PARSE_NODE_LITERAL:
+
 # 119 "linearizer.c"
-    default:
+    break;
 
 # 120 "linearizer.c"
-    log_fatal("Unexpected input node to linearizer %s", parse_node_type_to_string((node->tag)));
+    case PARSE_NODE_OPERATOR:
+
+# 121 "linearizer.c"
+    break;
 
 # 122 "linearizer.c"
+    case PARSE_NODE_TYPE:
+
+# 123 "linearizer.c"
+    break;
+
+# 124 "linearizer.c"
+    case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 125 "linearizer.c"
+    break;
+
+# 126 "linearizer.c"
+    case PARSE_NODE_BALANCED_CONSTRUCT:
+
+# 127 "linearizer.c"
+    break;
+
+# 128 "linearizer.c"
+    default:
+
+# 129 "linearizer.c"
+    log_fatal("Unexpected input node to linearizer %s", parse_node_type_to_string((node->tag)));
+
+# 131 "linearizer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 126 "linearizer.c"
+# 135 "linearizer.c"
 void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider, block_node_t* node)
-# 127 "linearizer.c"
+# 136 "linearizer.c"
 {
 
-# 128 "linearizer.c"
+# 137 "linearizer.c"
   uint64_t length = node_list_length((node->statements));
 
-# 129 "linearizer.c"
+# 138 "linearizer.c"
   for (
 
-# 129 "linearizer.c"
+# 138 "linearizer.c"
 
-# 129 "linearizer.c"
+# 138 "linearizer.c"
     uint64_t i = 0;
 
-# 129 "linearizer.c"
+# 138 "linearizer.c"
     (i<length);
 
-# 129 "linearizer.c"
+# 138 "linearizer.c"
     (i++))
 
-# 129 "linearizer.c"
+# 138 "linearizer.c"
   {
 
-# 130 "linearizer.c"
+# 139 "linearizer.c"
     linearize_statement(target_block, tmp_provider, node_list_get((node->statements), i));
   }
 }
 
 
-# 141 "linearizer.c"
-void linearize_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, call_node_t* node)
-# 142 "linearizer.c"
+# 145 "linearizer.c"
+void linearize_statement_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, call_node_t* node)
+# 147 "linearizer.c"
 {
 
-# 143 "linearizer.c"
-  call_node_t* rewritten = malloc_call_node();
+# 148 "linearizer.c"
+  call_node_t* rewritten = make_call_node();
 
-# 144 "linearizer.c"
+# 149 "linearizer.c"
   if ((((node->function)->tag)==PARSE_NODE_IDENTIFIER))
 
-# 144 "linearizer.c"
+# 149 "linearizer.c"
   {
 
-# 145 "linearizer.c"
+# 150 "linearizer.c"
     ((rewritten->function)=(node->function));
   }
   else
 
-# 146 "linearizer.c"
+# 151 "linearizer.c"
   {
 
-# 147 "linearizer.c"
+# 152 "linearizer.c"
     token_t* fn_ptr_target = (tmp_provider->get)(tmp_provider);
 
-# 148 "linearizer.c"
+# 153 "linearizer.c"
     linearize_expression(target_block, tmp_provider, (node->function), fn_ptr_target);
 
-# 150 "linearizer.c"
+# 155 "linearizer.c"
     ((rewritten->function)=tmp_to_var_reference(fn_ptr_target));
   }
 
-# 153 "linearizer.c"
+# 158 "linearizer.c"
   for (
 
-# 153 "linearizer.c"
+# 158 "linearizer.c"
 
-# 153 "linearizer.c"
+# 158 "linearizer.c"
     int i = 0;
 
-# 153 "linearizer.c"
+# 158 "linearizer.c"
     (i<node_list_length((node->args)));
 
-# 153 "linearizer.c"
+# 158 "linearizer.c"
     (i++))
 
-# 153 "linearizer.c"
+# 158 "linearizer.c"
   {
 
-# 154 "linearizer.c"
+# 159 "linearizer.c"
     parse_node_t* arg = node_list_get((node->args), i);
 
-# 155 "linearizer.c"
+# 160 "linearizer.c"
     token_t* arg_target = (tmp_provider->get)(tmp_provider);
 
-# 156 "linearizer.c"
+# 161 "linearizer.c"
     linearize_expression(target_block, tmp_provider, arg, arg_target);
 
-# 157 "linearizer.c"
+# 162 "linearizer.c"
     node_list_add_node((&(rewritten->args)), tmp_to_var_reference(arg_target));
   }
 
-# 159 "linearizer.c"
-  node_list_add_node((&(target_block->statements)), (/*CAST*/(parse_node_t*) rewritten));
+# 164 "linearizer.c"
+  node_list_add_node((&(target_block->statements)), to_node(rewritten));
 }
 
 
-# 186 "linearizer.c"
-tmp_provider_t* make_tmp_provider()
-# 186 "linearizer.c"
+# 167 "linearizer.c"
+void linearize_if_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, if_statement_node_t* node)
+# 169 "linearizer.c"
 {
 
-# 187 "linearizer.c"
-  tmp_provider_t* result = malloc_struct(tmp_provider_t);
+# 171 "linearizer.c"
+  token_t* condition_target = (tmp_provider->get)(tmp_provider);
 
-# 188 "linearizer.c"
-  ((result->get)=(&tmp_provider_get));
+# 172 "linearizer.c"
+  linearize_expression(target_block, tmp_provider, (node->if_condition), condition_target);
 
-# 189 "linearizer.c"
-  return result;
+# 175 "linearizer.c"
+  block_node_t* if_true = make_block_node(((void *)0));
+
+# 176 "linearizer.c"
+  if (((node->if_true)!=((void *)0)))
+
+# 176 "linearizer.c"
+  {
+
+# 177 "linearizer.c"
+    linearize_statement(if_true, tmp_provider, (node->if_true));
+  }
+
+# 180 "linearizer.c"
+  block_node_t* if_else = make_block_node(((void *)0));
+
+# 181 "linearizer.c"
+  if (((node->if_else)!=((void *)0)))
+
+# 181 "linearizer.c"
+  {
+
+# 182 "linearizer.c"
+    linearize_statement(if_else, tmp_provider, (node->if_else));
+  }
+
+# 185 "linearizer.c"
+  node_list_add_node((&(target_block->statements)), to_node(make_if_statement((node->first_token), tmp_to_var_reference(condition_target), to_node(if_true), to_node(if_else))));
 }
 
 
 # 192 "linearizer.c"
-token_t* tmp_provider_get(tmp_provider_t* data)
-# 192 "linearizer.c"
-{
-
-# 193 "linearizer.c"
-  token_t* result = malloc_struct(token_t);
-
+void linearize_do_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, do_statement_node_t* node)
 # 194 "linearizer.c"
-  ((result->buffer)=make_buffer(8));
+{
 
 # 195 "linearizer.c"
-  buffer_printf((result->buffer), "tmp__%d", ((data->count)++));
+  block_node_t* body = make_block_node(((void *)0));
 
 # 196 "linearizer.c"
-  ((result->end)=((result->buffer)->length));
+  linearize_statement(body, tmp_provider, (node->body));
 
 # 197 "linearizer.c"
+  token_t* condition_target = (tmp_provider->get)(tmp_provider);
+
+# 198 "linearizer.c"
+  linearize_expression(body, tmp_provider, (node->condition), condition_target);
+
+# 199 "linearizer.c"
+  node_list_add_node((&(target_block->statements)), to_node(make_do_statement((node->first_token), to_node(body), tmp_to_var_reference(condition_target))));
+}
+
+
+# 213 "linearizer.c"
+void linearize_expression_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, expression_statement_node_t* node)
+# 215 "linearizer.c"
+{
+
+# 216 "linearizer.c"
+  token_t* target = (tmp_provider->get)(tmp_provider);
+
+# 217 "linearizer.c"
+  linearize_expression(target_block, tmp_provider, (node->expression), target);
+}
+
+
+# 244 "linearizer.c"
+tmp_provider_t* make_tmp_provider()
+# 244 "linearizer.c"
+{
+
+# 245 "linearizer.c"
+  tmp_provider_t* result = malloc_struct(tmp_provider_t);
+
+# 246 "linearizer.c"
+  ((result->get)=(&tmp_provider_get));
+
+# 247 "linearizer.c"
   return result;
 }
 
 
-# 200 "linearizer.c"
-parse_node_t* tmp_to_var_reference(token_t* tmp)
-# 200 "linearizer.c"
+# 250 "linearizer.c"
+token_t* tmp_provider_get(tmp_provider_t* data)
+# 250 "linearizer.c"
 {
 
-# 201 "linearizer.c"
-  identifier_node_t* result = malloc_identifier_node();
+# 251 "linearizer.c"
+  token_t* result = malloc_struct(token_t);
 
-# 202 "linearizer.c"
+# 252 "linearizer.c"
+  ((result->buffer)=make_buffer(8));
+
+# 253 "linearizer.c"
+  buffer_printf((result->buffer), "tmp__%d", ((data->count)++));
+
+# 254 "linearizer.c"
+  ((result->end)=((result->buffer)->length));
+
+# 255 "linearizer.c"
+  return result;
+}
+
+
+# 258 "linearizer.c"
+parse_node_t* tmp_to_var_reference(token_t* tmp)
+# 258 "linearizer.c"
+{
+
+# 259 "linearizer.c"
+  identifier_node_t* result = make_identifier_node();
+
+# 260 "linearizer.c"
   ((result->token)=tmp);
 
-# 203 "linearizer.c"
+# 261 "linearizer.c"
   return (/*CAST*/(parse_node_t*) result);
 }
 
@@ -28925,26 +29020,26 @@ enum_metadata_t* output_file_type_metadata(){
 // git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
 // git cat-file -p bc27a1fa5e0e46e5be7efb58913bf35141b3d84d > parser.c
 // git cat-file -p 49b13cd86350d1eb6328735ae29f83547a6a0bb6 > pstate.c
-// git cat-file -p 33f0b96b151a7506a48abca978bed1a25410fe61 > declaration-parser.c
+// git cat-file -p 59daca2b0aa6f77689756a49fef16a9c7a125a6b > declaration-parser.c
 // git cat-file -p 9cadd0ec68236e71c10e779c1e4dd373420c1bde > node-list.c
 // git cat-file -p 6dae49ca9725db800cc717883d73ec282d2af495 > debug-printer.c
 // git cat-file -p 6eec8c9629b48b9591b235db40c57c5891715504 > c-file-printer.c
 // git cat-file -p 47fe4a94a6ba151764cfb98f6d995a8c47fb3e01 > symbol-table.c
-// git cat-file -p b246b13119ee9f082fbf88b642b914b6d0b7fb7d > source-to-source.c
-// git cat-file -p 1e79594833a28a98d4c1e991e46cc8247b2af3af > preprocessor.c
+// git cat-file -p 2c6810b4cf4949d8d850c1621506ea8c82690d72 > source-to-source.c
+// git cat-file -p 040136a4d86aa67bd622142500cecfcdbe582737 > preprocessor.c
 // git cat-file -p 52af4fa58ea28535587766f2912d174b3856816f > header-file-extractor.c
 // git cat-file -p 7e7f49598c2d9701253f09009d7012618ade9339 > symbol-table-builder.c
 // git cat-file -p 1ef0ccd414c4831d299ebfe679272b61dcc98699 > srcgen.c
-// git cat-file -p 3148c58fa22556163e420079c55d2304c5d91a51 > pratt-parser.c
+// git cat-file -p 9a607c9c85b417635448223383043e97bcb2d8c4 > pratt-parser.c
 // git cat-file -p 49394a81607fe626a9bce76b1ec01608939ae754 > statement-parser.c
-// git cat-file -p 3f07bb1029d51a41d0a1e7b7ffe8095f7df1b518 > type-parser.c
-// git cat-file -p 9e037abaf89da4c6ea500ebf09b2bb3cd64a570a > user-type-parser.c
-// git cat-file -p 86ad9cf8ff7ed367681e38640242e5c33ce710da > variable-definition-parser.c
-// git cat-file -p 2cd0f86d2cb8f14b5e1ec5eb42d95158480a00ec > literal-parser.c
-// git cat-file -p 1d763bad1a86fe024fae36db07e66a5c160393c9 > balanced-construct-parser.c
+// git cat-file -p 8708088a67b78081debbcec70d30be8673fa3ed8 > type-parser.c
+// git cat-file -p bdbab4c2452bc63d7e339f13ab55065656672fce > user-type-parser.c
+// git cat-file -p 4409031c17808fc31d9570e290b10c42bbcc7983 > variable-definition-parser.c
+// git cat-file -p ab21ab7d3d9844da0379a8b65fff8f8254143e5e > literal-parser.c
+// git cat-file -p e4f518156c8f554c965a6e1312572f755c17bf47 > balanced-construct-parser.c
 // git cat-file -p a1246b1440b1757d6547a3b3f595d5bb0646849a > printer.c
 // git cat-file -p ea1a646a86f833872d5be645ae3403283baf459f > global-includes.c
-// git cat-file -p 9fa0528f1ffcd11ce49ea7a0900b463962325136 > linearizer.c
+// git cat-file -p fce28a522e79bdfb5067438da1932144fa3435c0 > linearizer.c
 // git cat-file -p 860f4de4bf509722c1cf90fa4b5e1f62f09364d9 > main.c
 // git cat-file -p 0454a5add5006737a0f3fca664fb707837742680 > archive-command.c
 // git cat-file -p 9894b0b701f73ede7de57c59052ef1a01d5d7f4f > build-command.c
