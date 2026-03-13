@@ -5,7 +5,8 @@
  * intentionally minimal runtime. Since it's intended to be used as a
  * configuration language for a cross platform build tool (rather than
  * a real Scheme implementation), the tokenizer and parser accept a C
- * like syntax instead of a traditional s-expression syntax.
+ * like syntax instead of a traditional s-expression syntax. "and" and
+ * "or", always result in a boolean unlike scheme.
  */
 
 typedef atom_tag_t = enum {
@@ -26,8 +27,8 @@ typedef atom_tag_t = enum {
  *
  * Represents a "scheme" atom - either data or a tagged
  * pointer. Normally a Scheme implementation would try to fit these
- * into the same size as a pointer by taking advantage of low order
- * or high order bits of a pointer having predictable values.
+ * into the same size as a pointer by taking advantage of low order or
+ * high order bits of a pointer having predictable values.
  */
 typedef atom_t = struct {
   value_t value;
@@ -39,7 +40,7 @@ typedef atom_t = struct {
  *
  * Pair's are the building blocks of lists in Scheme. These ones are
  * probably quite a lot bigger than even the most basic
- * implementations because atom_t is naive.
+ * implementations because atom_t is very naive.
  */
 typedef pair_t = struct {
   atom_t car;
