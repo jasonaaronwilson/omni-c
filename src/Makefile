@@ -106,7 +106,8 @@ SRC_C_SELF := \
 	print-tokens.c \
 	parse-test.c \
 	test-command.c \
-	flags.c
+	flags.c \
+	roci/*.c
 
 SRC_C := $(SRC_C_SELF)
 
