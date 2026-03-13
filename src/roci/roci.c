@@ -65,7 +65,6 @@ atom_t roci_false = {.value = {.u64 = 0}, .tag = ATOM_TAG_BOOLEAN};
 
 atom_t roci_true = {.value = {.u64 = 1}, .tag = ATOM_TAG_BOOLEAN};
 
-
 /**
  * @function eval
  *
@@ -79,16 +78,7 @@ atom_t eval(env_t env, atom_t atom) {
     if (car.tag == ATOM_TAG_SYMBOL) {
       char* str = car.value.str;
       if (string_equal(str, "and")) {
-        atom = list->cdr;
-        while (atom.tag == ATOM_TAG_PAIR) {
-          car = list->car;
-          atom_t result = eval(env, car);
-          if (!roci_is_true(result)) {
-            return roci_false;
-          }
-          atom = list->cdr;
-        }
-        return roci_true;
+        return eval_and(env, list);
       }
 
       if (string_equal(str, "begin")) {
@@ -142,6 +132,26 @@ atom_t eval(env_t env, atom_t atom) {
   }
   // Everything else is self-evaluating.
   return atom;
+}
+
+/**
+ * @function eval_and
+ *
+ * Keep evaluating from left to right until all sub-expressions have
+ * been evaluated unless a sub-expression returns false. If any
+ * sub-expression results in a non-boolean value, return false.
+ */
+atom_t eval_and(env_t env, pair_t* list) {
+  atom_t atom = list->cdr;
+  while (atom.tag == ATOM_TAG_PAIR) {
+    atom_t car = list->car;
+    atom_t result = eval(env, car);
+    if (!roci_is_true(result)) {
+      return roci_false;
+    }
+    atom = list->cdr;
+  }
+  return roci_true;
 }
 
 pair_t* atom_to_pair(atom_t atom) {
