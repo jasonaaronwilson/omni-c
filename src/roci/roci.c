@@ -5,8 +5,9 @@
  * intentionally minimal runtime. Since it's intended to be used as a
  * configuration language for a cross platform build tool (rather than
  * a real Scheme implementation), the tokenizer and parser accept a C
- * like syntax instead of a traditional s-expression syntax. "and" and
- * "or", always result in a boolean unlike scheme.
+ * like syntax instead of a traditional s-expression syntax. One major
+ * change from "real" Scheme is that if/and/or only operate on actual
+ * booleans and will complain if given non boolean values.
  */
 
 typedef atom_tag_t = enum {
@@ -55,16 +56,14 @@ typedef pair_t = struct {
  */
 typedef env_t = struct {
   env_t* parent;
-  string_hashtable_t* bindings;  
+  string_hashtable_t* bindings;
 };
 
+atom_t roci_unknown = {.value = {.ptr = NULL}, .tag = ATOM_TAG_UNKNOWN};
 
-pair_t* atom_to_pair(atom_t atom) {
-  if (atom.tag != ATOM_TAG_PAIR) {
-    // signal an error
-  }
-  return cast(pair_t*, atom.value.ptr);
-}
+atom_t roci_false = {.value = {.u64 = 0}, .tag = ATOM_TAG_BOOLEAN};
+
+atom_t roci_true = {.value = {.u64 = 1}, .tag = ATOM_TAG_BOOLEAN};
 
 
 /**
@@ -76,26 +75,97 @@ atom_t eval(env_t env, atom_t atom) {
   if (atom.tag != ATOM_TAG_PAIR) {
     pair_t* list = atom_to_pair(atom);
     atom_t car = list->car;
+
     if (car.tag == ATOM_TAG_SYMBOL) {
       char* str = car.value.str;
       if (string_equal(str, "and")) {
+        atom = list->cdr;
+        while (atom.tag == ATOM_TAG_PAIR) {
+          car = list->car;
+          atom_t result = eval(env, car);
+          if (!roci_is_true(result)) {
+            return roci_false;
+          }
+          atom = list->cdr;
+        }
+        return roci_true;
       }
+
       if (string_equal(str, "begin")) {
+        atom_t result = roci_unknown;
+        atom = list->cdr;
+        while (atom.tag == ATOM_TAG_PAIR) {
+          car = list->car;
+          result = eval(env, car);
+          atom = list->cdr;
+        }
+        return result;
       }
+
       if (string_equal(str, "define")) {
+        // TODO(jawilson):
+        return roci_unknown;
       }
+
       if (string_equal(str, "if")) {
+        pair_t* args = atom_to_pair(list->cdr);
+        atom_t condition = eval(env, args->car);
+
+        if (condition.tag == ATOM_TAG_BOOLEAN && condition.value.u64 == 0) {
+          // Evaluate the 'else' branch
+          pair_t* else_part = atom_to_pair(args->cdr);
+          return eval(env, else_part->car);
+        } else {
+          // Evaluate the 'then' (true) branch
+          pair_t* then_part = atom_to_pair(args->cdr);
+          return eval(env, then_part->car);
+        }
       }
+
       if (string_equal(str, "lambda")) {
+        // TODO(jawilson):
+        return roci_unknown;
       }
       if (string_equal(str, "or")) {
+        // TODO(jawilson):
+        return roci_unknown;
       }
       if (string_equal(str, "set!")) {
+        // TODO(jawilson):
+        return roci_unknown;
       }
+
+      //
     }
     // Must be an "application", aka, call to a closure or primitive
     return atom;
   }
   // Everything else is self-evaluating.
   return atom;
+}
+
+pair_t* atom_to_pair(atom_t atom) {
+  if (atom.tag != ATOM_TAG_PAIR) {
+    roci_runtime_error(ROCI_RUNTIME_ERROR_PAIR_REQUIRED);
+  }
+  return cast(pair_t*, atom.value.ptr);
+}
+
+boolean_t roci_is_true(atom_t atom) {
+  return (atom.tag == ATOM_TAG_BOOLEAN) && (atom.value.u64 == 1);
+}
+
+boolean_t roci_is_false(atom_t atom) {
+  return (atom.tag == ATOM_TAG_BOOLEAN) && (atom.value.u64 == 0);
+}
+
+typedef roci_runtime_error_t = enum {
+  ROCI_RUNTIME_ERROR_UNKNOWN,
+  ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED,
+  ROCI_RUNTIME_ERROR_PAIR_REQUIRED,
+};
+
+void roci_runtime_error(roci_runtime_error_t runtime_error) {
+  log_fatal("A runtime error has occurred evaluating a roci script");
+  fatal_error(ERROR_ILLEGAL_STATE);
 }

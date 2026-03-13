@@ -82,6 +82,8 @@ typedef union {
   uint64_t i64;
   char* str;
   void* ptr;
+  // TODO: Gemini points out a pointer to a double is dumb
+  // here. Ooops.
   void* dbl;
 } value_t;
 
