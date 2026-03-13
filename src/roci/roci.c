@@ -82,14 +82,7 @@ atom_t eval(env_t env, atom_t atom) {
       }
 
       if (string_equal(str, "begin")) {
-        atom_t result = roci_unknown;
-        atom = list->cdr;
-        while (atom.tag == ATOM_TAG_PAIR) {
-          car = list->car;
-          result = eval(env, car);
-          atom = list->cdr;
-        }
-        return result;
+        return eval_begin(env, list);
       }
 
       if (string_equal(str, "define")) {
@@ -152,6 +145,23 @@ atom_t eval_and(env_t env, pair_t* list) {
     atom = list->cdr;
   }
   return roci_true;
+}
+
+/**
+ * @function eval_begin
+ *
+ * Keep evaluating from left to right until all sub-expressions have
+ * been evaluated. Return the result of the last evaluation.
+ */
+atom_t eval_begin(env_t env, pair_t* list) {
+  atom_t result = roci_false;
+  atom_t atom = list->cdr;
+  while (atom.tag == ATOM_TAG_PAIR) {
+    atom_t car = list->car;
+    result = eval(env, car);
+    atom = list->cdr;
+  }
+  return result;
 }
 
 pair_t* atom_to_pair(atom_t atom) {
