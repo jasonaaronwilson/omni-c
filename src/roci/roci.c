@@ -1,13 +1,23 @@
 /**
  * @file
  *
- * roci is an interpreter for a "nano" Scheme interpreter with an
- * intentionally minimal runtime. Since it's intended to be used as a
- * configuration language for a cross platform build tool (rather than
- * a real Scheme implementation), the tokenizer and parser accept a C
- * like syntax instead of a traditional s-expression syntax. One major
- * change from "real" Scheme is that if/and/or only operate on actual
- * booleans and will complain if given non boolean values.
+ * Roci is an interpreter for a "nano" Scheme interpreter with an
+ * intentionally minimal runtime (very limited I/O). It's intended to
+ * be used as a configuration language for a cross platform build tool
+ * (rather than a serious Scheme implementation -- or even a lame
+ * speed-run towards Greenspuns's tenth rule).
+ *
+ * The tokenizer and parser adhere to C like syntax instead of a
+ * traditional s-expression syntax.
+ *
+ * Unlike Javascript, you are going to still want those "semicolons"
+ * to terminate simple statements. If you can't offer that, go
+ *
+ * Another major change from "real" Scheme is that if/and/or only
+ * operate on actual booleans and will fatal error if given non boolean
+ * values.
+ *
+ * You want to kill my code...
  */
 
 typedef atom_tag_t = enum {
@@ -91,18 +101,6 @@ atom_t eval(env_t env, atom_t atom) {
       }
 
       if (string_equal(str, "if")) {
-        pair_t* args = atom_to_pair(list->cdr);
-        atom_t condition = eval(env, args->car);
-
-        if (condition.tag == ATOM_TAG_BOOLEAN && condition.value.u64 == 0) {
-          // Evaluate the 'else' branch
-          pair_t* else_part = atom_to_pair(args->cdr);
-          return eval(env, else_part->car);
-        } else {
-          // Evaluate the 'then' (true) branch
-          pair_t* then_part = atom_to_pair(args->cdr);
-          return eval(env, then_part->car);
-        }
       }
 
       if (string_equal(str, "lambda")) {
@@ -162,6 +160,37 @@ atom_t eval_begin(env_t env, pair_t* list) {
     atom = list->cdr;
   }
   return result;
+}
+
+/**
+ * @function eval_if
+ *
+ * Evaluate the conditional part of the expression. If it is not true
+ * or false, then sigal an error, otherwise evaluate the "true" arm
+ * (called in the consequence in SICP) or the "false" arm (called the
+ * alternative in SICP). In this format, the then part must always be
+ * present though the parser will assume the expression should return
+ * "false" which works because the parser also special cases "return"
+ * when parsing blocks so if statements never generate a value that
+ * can be bound to a variable or returned.
+ */
+atom_t eval_if(env_t env, pair_t* list) {
+  pair_t* args = atom_to_pair(list->cdr);
+  atom_t condition = eval(env, args->car);
+
+  if (condition.tag == ATOM_TAG_BOOLEAN) {
+    roci_runtime_error(ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED);
+  }
+
+  if (condition.tag == ATOM_TAG_BOOLEAN && condition.value.u64 == 1) {
+    // Evaluate the 'then' (true) branch (consequene)
+    pair_t* then_part = atom_to_pair(args->cdr);
+    return eval(env, then_part->car);
+  } else {
+    // Evaluate the 'else' branch (alternative)
+    pair_t* else_part = atom_to_pair(atom_to_pair(args->cdr)->cdr);
+    return eval(env, else_part->car);
+  }
 }
 
 pair_t* atom_to_pair(atom_t atom) {
