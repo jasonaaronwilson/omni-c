@@ -1,18 +1,13 @@
-//
+ //
 // Explanation of why this file is about this change massively:
 //
-// I've had a change of heart on the direction of this interpreter
-// (this one being so derivative). I've already accepted the "slight"
-// pain of not just using the built in "read" to be both the lexical
-// analyzer and the thing that side-steps the parsing process (only to
-// do that over and over again in the interpreter however cheap
-// compared to parsing, arguably not strictly worse than parsing
-// unless analyzed and measured).
+// I've had a change of heart on the direction for interpretaton.
 //
-// I fooled around on paper and I'm simply curious about how this
-// would work. I think we can use a tagged stack, tagged environment,
-// and an untagged heap (since we use a conservative collector).
-// 
+// I fooled around on paper and I'm simply curious about how a stack
+// machine would work with a tagged stack, tagged environment, and an
+// untagged heap (since we use a conservative collector). Eventually
+// we will need a tagged array.
+//
 // The idea to the tagged stack is to use two stack pointers, one to
 // 64bit words, and one 1/8 of the size to hold a convenient 8-bit
 // tag. (So two allocations instead of one, they can live anywhere, no
@@ -51,7 +46,7 @@
 // *super* crazy option.
 //
 // The simplest scheme laid out in memory looks like: header | opcode
-// stream | [?padding (nops!)?] | immediate stream.
+// stream | [?padding (nops!)?] | 64bit aligned immediate stream.
 //
 // If the opcode and immediate stream pointers have spatial locality,
 // that is probably going to be good for performance and this is the
@@ -69,222 +64,100 @@
 // dynamic dispatch based on the tag stack to find our next "dynamic"
 // target (a hash lookup) and create a sensible but unusual machine
 // that will require further insight.
-// 
 
 /**
  * @file
  *
- * Roci is an interpreter for a "nano" Scheme interpreter with an
+ * Roci is an interpreter for a "nano" Lisp/Scheme interpreter with an
  * intentionally minimal runtime (very limited I/O). It's intended to
- * be used as a configuration language for a cross platform build tool
- * (rather than a serious Scheme implementation -- or even a lame
- * speed-run towards Greenspuns's tenth rule).
+ * be used as a configuration language for a cross platform build tool.
  *
  * The tokenizer and parser adhere to C like syntax instead of a
  * traditional s-expression syntax.
- *
- * Unlike Javascript, you are going to still want those "semicolons"
- * to terminate simple statements. If you can't offer that, go
- *
- * Another major change from "real" Scheme is that if/and/or only
- * operate on actual booleans and will fatal error if given non boolean
- * values.
- *
- * You want to kill my code...
  */
 
-typedef atom_tag_t = enum {
-  ATOM_TAG_UNKNOWN,
-  ATOM_TAG_BOOLEAN,
-  ATOM_TAG_INTEGER,
-  ATOM_TAG_DOUBLE,
-  ATOM_TAG_STRING,
-  // Symbols are not currently interned
-  ATOM_TAG_SYMBOL,
-  ATOM_TAG_CLOSURE,
-  ATOM_TAG_C_PRIMITIVE,
-  ATOM_TAG_PAIR,
+// registers: arg_stack, env_stack, return_stack
+
+typedef roci_tag_t = enum {
+  ROCI_TAG_UNKNOWN,
+  ROCI_TAG_BOOLEAN,
+  ROCI_TAG_INTEGER,
+  ROCI_TAG_DOUBLE,
+  ROCI_TAG_STRING,
+  ROCI_TAG_SYMBOL,
+  ROCI_TAG_CLOSURE,
+  ROCI_TAG_C_PRIMITIVE,
+  ROCI_TAG_ARRAY,
 };
 
-/**
- * @structure atom_t
- *
- * Represents a "scheme" atom - either data or a tagged
- * pointer. Normally a Scheme implementation would try to fit these
- * into the same size as a pointer by taking advantage of low order or
- * high order bits of a pointer having predictable values.
- */
-typedef atom_t = struct {
-  value_t value;
-  atom_tag_t tag;
+typedef roci_opcode_t = enum {
+  ROCI_OPCODE_NOP,
+  ROCI_OPCODE_PUSH_BOOLEAN,
+  ROCI_OPCODE_PUSH_INTEGER,
+  ROCI_OPCODE_PUSH_DOUBLE,
+  ROCI_OPCODE_PUSH_STRING,
+  ROCI_OPCODE_PUSH_SYMBOL,
+
+  ROCI_OPCODE_NEW_ENVIRONMENT,
+  ROCI_OPCODE_DEFINE_VAR,
+  ROCI_OPCODE_GET_VAR,
+  ROCI_OPCODE_SET_VAR,
+
+  // Unconditional branch with a single target
+  ROCI_OPCODE_JUMP,
+  // Conditional branch with two branch targets and a conditional
+  ROCI_OPCODE_BRANCH,
+
+  ROCI_OPCODE_CALL_0,
+  ROCI_OPCODE_CALL_1,
+  ROCI_OPCODE_CALL_2,
+  ROCI_OPCODE_CALL_3,
+  ROCI_OPCODE_CALL_4,
+  ROCI_OPCODE_CALL_5,
+  ROCI_OPCODE_CALL_6,
+  ROCI_OPCODE_CALL_7,
+  ROCI_OPCODE_CALL_8,
+  ROCI_OPCODE_CALL_9,
+  ROCI_OPCODE_CALL_10,
+  ROCI_OPCODE_CALL_11,
+  ROCI_OPCODE_CALL_12,
+  ROCI_OPCODE_CALL_13,
+  ROCI_OPCODE_CALL_14,
+  ROCI_OPCODE_CALL_15,
+  ROCI_OPCODE_RETURN,
+
+  ROCI_OPCODE_TRAP = 255,
 };
 
-/**
- * @structure pair_t
- *
- * Pair's are the building blocks of lists in Scheme. These ones are
- * probably quite a lot bigger than even the most basic
- * implementations because atom_t is very naive.
- */
-typedef pair_t = struct {
-  atom_t car;
-  atom_t cdr;
+typedef roci_bb_t = struct {
+  uint32_t num_opcodes;
+  uint32_t num_data;
+  // opcodes + alignment nops
+  // data
 };
 
-/**
- * @structure env_t
- *
- * Represents a typical lexical environment. When parent is null, it
- * is often called the global environment.
- */
-typedef env_t = struct {
-  env_t* parent;
-  string_hashtable_t* bindings;
+typedef roci_bb_builder_t = struct {
+  uint64_t bblock_number;
+  roci_bb_t* bblock;
+  buffer_t* opcodes;
+  value_array_t* data;
+  uint64_t bb_next_true;
+  uint64_t bb_next_false;
 };
 
-atom_t roci_unknown = {.value = {.ptr = NULL}, .tag = ATOM_TAG_UNKNOWN};
+typedef roci_bb_builder_array_t = value_array_t;
 
-atom_t roci_false = {.value = {.u64 = 0}, .tag = ATOM_TAG_BOOLEAN};
-
-atom_t roci_true = {.value = {.u64 = 1}, .tag = ATOM_TAG_BOOLEAN};
-
-/**
- * @function eval
- *
- * This is obviously the heart of the interpreter.
- */
-atom_t eval(env_t env, atom_t atom) {
-  if (atom.tag != ATOM_TAG_PAIR) {
-    pair_t* list = atom_to_pair(atom);
-    atom_t car = list->car;
-
-    if (car.tag == ATOM_TAG_SYMBOL) {
-      char* str = car.value.str;
-      if (string_equal(str, "and")) {
-        return eval_and(env, list);
-      }
-
-      if (string_equal(str, "begin")) {
-        return eval_begin(env, list);
-      }
-
-      if (string_equal(str, "define")) {
-        // TODO(jawilson):
-        return roci_unknown;
-      }
-
-      if (string_equal(str, "if")) {
-      }
-
-      if (string_equal(str, "lambda")) {
-        // TODO(jawilson):
-        return roci_unknown;
-      }
-      if (string_equal(str, "or")) {
-        // TODO(jawilson):
-        return roci_unknown;
-      }
-      if (string_equal(str, "set!")) {
-        // TODO(jawilson):
-        return roci_unknown;
-      }
-
-      //
-    }
-    // Must be an "application", aka, call to a closure or primitive
-    return atom;
-  }
-  // Everything else is self-evaluating.
-  return atom;
-}
-
-/**
- * @function eval_and
- *
- * Keep evaluating from left to right until all sub-expressions have
- * been evaluated unless a sub-expression returns false. If any
- * sub-expression results in a non-boolean value, return false.
- */
-atom_t eval_and(env_t env, pair_t* list) {
-  atom_t atom = list->cdr;
-  while (atom.tag == ATOM_TAG_PAIR) {
-    atom_t car = list->car;
-    atom_t result = eval(env, car);
-    if (!roci_is_true(result)) {
-      return roci_false;
-    }
-    atom = list->cdr;
-  }
-  return roci_true;
-}
-
-/**
- * @function eval_begin
- *
- * Keep evaluating from left to right until all sub-expressions have
- * been evaluated. Return the result of the last evaluation.
- */
-atom_t eval_begin(env_t env, pair_t* list) {
-  atom_t result = roci_false;
-  atom_t atom = list->cdr;
-  while (atom.tag == ATOM_TAG_PAIR) {
-    atom_t car = list->car;
-    result = eval(env, car);
-    atom = list->cdr;
-  }
+roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
+  roci_bb_builder_t* result = malloc_struct(roci_bb_builder_t);
+  result->opcodes = make_buffer(10);
+  result->data = make_value_array(1);
+  value_array_add(bblocks, ptr_to_value(result));
   return result;
-}
-
-/**
- * @function eval_if
- *
- * Evaluate the conditional part of the expression. If it is not true
- * or false, then sigal an error, otherwise evaluate the "true" arm
- * (called in the consequence in SICP) or the "false" arm (called the
- * alternative in SICP). In this format, the then part must always be
- * present though the parser will assume the expression should return
- * "false" which works because the parser also special cases "return"
- * when parsing blocks so if statements never generate a value that
- * can be bound to a variable or returned.
- */
-atom_t eval_if(env_t env, pair_t* list) {
-  pair_t* args = atom_to_pair(list->cdr);
-  atom_t condition = eval(env, args->car);
-
-  if (condition.tag == ATOM_TAG_BOOLEAN) {
-    roci_runtime_error(ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED);
-  }
-
-  if (condition.tag == ATOM_TAG_BOOLEAN && condition.value.u64 == 1) {
-    // Evaluate the 'then' (true) branch (consequene)
-    pair_t* then_part = atom_to_pair(args->cdr);
-    return eval(env, then_part->car);
-  } else {
-    // Evaluate the 'else' branch (alternative)
-    pair_t* else_part = atom_to_pair(atom_to_pair(args->cdr)->cdr);
-    return eval(env, else_part->car);
-  }
-}
-
-pair_t* atom_to_pair(atom_t atom) {
-  if (atom.tag != ATOM_TAG_PAIR) {
-    roci_runtime_error(ROCI_RUNTIME_ERROR_PAIR_REQUIRED);
-  }
-  return cast(pair_t*, atom.value.ptr);
-}
-
-boolean_t roci_is_true(atom_t atom) {
-  return (atom.tag == ATOM_TAG_BOOLEAN) && (atom.value.u64 == 1);
-}
-
-boolean_t roci_is_false(atom_t atom) {
-  return (atom.tag == ATOM_TAG_BOOLEAN) && (atom.value.u64 == 0);
 }
 
 typedef roci_runtime_error_t = enum {
   ROCI_RUNTIME_ERROR_UNKNOWN,
   ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED,
-  ROCI_RUNTIME_ERROR_PAIR_REQUIRED,
 };
 
 void roci_runtime_error(roci_runtime_error_t runtime_error) {
