@@ -1,4 +1,4 @@
- //
+//
 // Explanation of why this file is about this change massively:
 //
 // I've had a change of heart on the direction for interpretaton.
@@ -76,8 +76,6 @@
  * traditional s-expression syntax.
  */
 
-// registers: arg_stack, env_stack, return_stack
-
 typedef roci_tag_t = enum {
   ROCI_TAG_UNKNOWN,
   ROCI_TAG_BOOLEAN,
@@ -91,7 +89,7 @@ typedef roci_tag_t = enum {
 };
 
 typedef roci_opcode_t = enum {
-  ROCI_OPCODE_NOP,
+  ROCI_OPCODE_TRAP,
   ROCI_OPCODE_PUSH_BOOLEAN,
   ROCI_OPCODE_PUSH_INTEGER,
   ROCI_OPCODE_PUSH_DOUBLE,
@@ -125,8 +123,6 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_CALL_14,
   ROCI_OPCODE_CALL_15,
   ROCI_OPCODE_RETURN,
-
-  ROCI_OPCODE_TRAP = 255,
 };
 
 typedef roci_bb_t = struct {
@@ -147,6 +143,18 @@ typedef roci_bb_builder_t = struct {
 
 typedef roci_bb_builder_array_t = value_array_t;
 
+typedef roci_runtime_error_t = enum {
+  ROCI_RUNTIME_ERROR_NONE,
+  ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED,
+};
+
+typedef roci_vm_state_t = struct {
+  value_array_t* arg_stack;
+  value_array_t* env_stack;
+  value_array_t* return_stack;
+  roci_runtime_error_t runtime_error;
+};
+
 roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
   roci_bb_builder_t* result = malloc_struct(roci_bb_builder_t);
   result->opcodes = make_buffer(10);
@@ -155,10 +163,32 @@ roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
   return result;
 }
 
-typedef roci_runtime_error_t = enum {
-  ROCI_RUNTIME_ERROR_UNKNOWN,
-  ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED,
-};
+/**
+ * @function
+ *
+ * Build and link all of the bblocks into the interpreter efficient
+ * format and return the address of the first bblock.
+ *
+ * If there are no bblocks, then NULL is returned.
+ *
+ * This is slightly tricky to use and will evolve over time at which
+ * time hopefully I will update the documentation.
+ */
+roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
+  return NULL;
+}
+
+/**
+ * @function
+ *
+ * Once a file is compiled into bblocks, this should be used to run
+ * that program fragment.
+ */
+roci_runtime_error_t roci_execute(roci_bb_t* entry_point) {
+  // TODO(jawilson): take a roci_env_t* top_level_environment
+  // TODO(jawilson): create a new roci_vm_state_t
+  return ROCI_RUNTIME_ERROR_NONE;
+}
 
 void roci_runtime_error(roci_runtime_error_t runtime_error) {
   log_fatal("A runtime error has occurred evaluating a roci script");
