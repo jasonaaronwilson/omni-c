@@ -90,7 +90,8 @@ typedef roci_tag_t = enum {
 
 typedef roci_opcode_t = enum {
   ROCI_OPCODE_TRAP,
-  ROCI_OPCODE_PUSH_BOOLEAN,
+  ROCI_OPCODE_PUSH_FALSE,
+  ROCI_OPCODE_PUSH_TRUE,
   ROCI_OPCODE_PUSH_INTEGER,
   ROCI_OPCODE_PUSH_DOUBLE,
   ROCI_OPCODE_PUSH_STRING,
@@ -101,10 +102,8 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_GET_VAR,
   ROCI_OPCODE_SET_VAR,
 
-  // Unconditional branch with a single target
-  ROCI_OPCODE_JUMP,
-  // Conditional branch with two branch targets and a conditional
-  ROCI_OPCODE_BRANCH,
+  ROCI_OPCODE_BR_FALSE,
+  ROCI_OPCODE_BR,
 
   ROCI_OPCODE_CALL_0,
   ROCI_OPCODE_CALL_1,
@@ -128,17 +127,15 @@ typedef roci_opcode_t = enum {
 typedef roci_bb_t = struct {
   uint32_t num_opcodes;
   uint32_t num_data;
-  // opcodes + alignment nops
   // data
+  // opcodes + alignment nops
 };
 
 typedef roci_bb_builder_t = struct {
   uint64_t bblock_number;
   roci_bb_t* bblock;
-  buffer_t* opcodes;
   value_array_t* data;
-  uint64_t bb_next_true;
-  uint64_t bb_next_false;
+  buffer_t* opcodes;
 };
 
 typedef roci_bb_builder_array_t = value_array_t;
@@ -155,6 +152,10 @@ typedef roci_vm_state_t = struct {
   roci_runtime_error_t runtime_error;
 };
 
+/**
+ * @function
+ *
+ */
 roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
   roci_bb_builder_t* result = malloc_struct(roci_bb_builder_t);
   result->opcodes = make_buffer(10);
@@ -174,9 +175,7 @@ roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
  * This is slightly tricky to use and will evolve over time at which
  * time hopefully I will update the documentation.
  */
-roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
-  return NULL;
-}
+roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) { return NULL; }
 
 /**
  * @function
@@ -190,7 +189,51 @@ roci_runtime_error_t roci_execute(roci_bb_t* entry_point) {
   return ROCI_RUNTIME_ERROR_NONE;
 }
 
+/**
+ * @function
+ *
+ */
 void roci_runtime_error(roci_runtime_error_t runtime_error) {
   log_fatal("A runtime error has occurred evaluating a roci script");
   fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+int roci_opcode_data(roci_opcode_t opcode) {
+  switch (opcode) {
+  case ROCI_OPCODE_PUSH_INTEGER:
+  case ROCI_OPCODE_PUSH_DOUBLE:
+  case ROCI_OPCODE_PUSH_STRING:
+  case ROCI_OPCODE_PUSH_SYMBOL:
+    return 1;
+
+  default:
+    return 0;
+  }
+}
+
+boolean_t roci_bblock_data(roci_opcode_t opcode) {
+  switch (opcode) {
+  case ROCI_OPCODE_BR_FALSE:
+  case ROCI_OPCODE_BR:
+  case ROCI_OPCODE_CALL_0:
+  case ROCI_OPCODE_CALL_1:
+  case ROCI_OPCODE_CALL_2:
+  case ROCI_OPCODE_CALL_3:
+  case ROCI_OPCODE_CALL_4:
+  case ROCI_OPCODE_CALL_5:
+  case ROCI_OPCODE_CALL_6:
+  case ROCI_OPCODE_CALL_7:
+  case ROCI_OPCODE_CALL_8:
+  case ROCI_OPCODE_CALL_9:
+  case ROCI_OPCODE_CALL_10:
+  case ROCI_OPCODE_CALL_11:
+  case ROCI_OPCODE_CALL_12:
+  case ROCI_OPCODE_CALL_13:
+  case ROCI_OPCODE_CALL_14:
+  case ROCI_OPCODE_CALL_15:
+    return true;
+
+  default:
+    return false;
+  }
 }
