@@ -125,8 +125,8 @@ typedef roci_opcode_t = enum {
 };
 
 typedef roci_bb_t = struct {
-  uint32_t num_opcodes;
   uint32_t num_data;
+  uint32_t num_opcodes;
   // data
   // opcodes + alignment nops
 };
@@ -142,14 +142,18 @@ typedef roci_bb_builder_array_t = value_array_t;
 
 typedef roci_runtime_error_t = enum {
   ROCI_RUNTIME_ERROR_NONE,
+  ROCI_RUNTIME_ERROR_TRAP,
+  ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE,
   ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED,
 };
 
 typedef roci_vm_state_t = struct {
-  value_array_t* arg_stack;
-  value_array_t* env_stack;
-  value_array_t* return_stack;
   roci_runtime_error_t runtime_error;
+  uint8_t* opcode_ptr;
+  uint64_t* data_ptr;
+  uint64_t* stack;
+  uint8_t* stack_tags;
+  roci_bb_t* return_stack;
 };
 
 /**
@@ -198,42 +202,29 @@ void roci_runtime_error(roci_runtime_error_t runtime_error) {
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
-int roci_opcode_data(roci_opcode_t opcode) {
-  switch (opcode) {
-  case ROCI_OPCODE_PUSH_INTEGER:
-  case ROCI_OPCODE_PUSH_DOUBLE:
-  case ROCI_OPCODE_PUSH_STRING:
-  case ROCI_OPCODE_PUSH_SYMBOL:
-    return 1;
+roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
+                                         roci_vm_state_t* state) {
+  state->opcode_ptr = cast(uint8_t*, bb) + 8 + bb->num_data * 8;
+  state->data_ptr = cast(uint64_t*, bb) + 1;
+  while (true) {
+    roci_opcode_t opcode = *(state->opcode_ptr++);
+    switch (opcode) {
+    case ROCI_OPCODE_TRAP:
+      return ROCI_RUNTIME_ERROR_TRAP;
 
-  default:
-    return 0;
+    case ROCI_OPCODE_PUSH_FALSE:
+      *(state->stack++) = 0;
+      *(state->stack_tags++) = ROCI_TAG_BOOLEAN;
+      break;
+
+    case ROCI_OPCODE_PUSH_TRUE:
+      *(state->stack++) = 1;
+      *(state->stack_tags++) = ROCI_TAG_BOOLEAN;
+      break;
+
+    default:
+      return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
+    }
   }
-}
-
-boolean_t roci_bblock_data(roci_opcode_t opcode) {
-  switch (opcode) {
-  case ROCI_OPCODE_BR_FALSE:
-  case ROCI_OPCODE_BR:
-  case ROCI_OPCODE_CALL_0:
-  case ROCI_OPCODE_CALL_1:
-  case ROCI_OPCODE_CALL_2:
-  case ROCI_OPCODE_CALL_3:
-  case ROCI_OPCODE_CALL_4:
-  case ROCI_OPCODE_CALL_5:
-  case ROCI_OPCODE_CALL_6:
-  case ROCI_OPCODE_CALL_7:
-  case ROCI_OPCODE_CALL_8:
-  case ROCI_OPCODE_CALL_9:
-  case ROCI_OPCODE_CALL_10:
-  case ROCI_OPCODE_CALL_11:
-  case ROCI_OPCODE_CALL_12:
-  case ROCI_OPCODE_CALL_13:
-  case ROCI_OPCODE_CALL_14:
-  case ROCI_OPCODE_CALL_15:
-    return true;
-
-  default:
-    return false;
-  }
+  return ROCI_RUNTIME_ERROR_NONE;
 }
