@@ -222,6 +222,26 @@ roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
       *(state->stack_tags++) = ROCI_TAG_BOOLEAN;
       break;
 
+    case ROCI_OPCODE_PUSH_INTEGER:
+      *(state->stack++) = *(state->data_ptr++);
+      *(state->stack_tags++) = ROCI_TAG_INTEGER;
+      break;
+
+    case ROCI_OPCODE_PUSH_DOUBLE:
+      *(state->stack++) = *(state->data_ptr++);
+      *(state->stack_tags++) = ROCI_TAG_DOUBLE;
+      break;
+
+    case ROCI_OPCODE_PUSH_STRING:
+      *(state->stack++) = *(state->data_ptr++);
+      *(state->stack_tags++) = ROCI_TAG_STRING;
+      break;
+
+    case ROCI_OPCODE_PUSH_SYMBOL:
+      *(state->stack++) = *(state->data_ptr++);
+      *(state->stack_tags++) = ROCI_TAG_SYMBOL;
+      break;
+
     default:
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
     }
