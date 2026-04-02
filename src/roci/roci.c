@@ -204,6 +204,7 @@ void roci_runtime_error(roci_runtime_error_t runtime_error) {
 
 roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
                                          roci_vm_state_t* state) {
+ start_bblock:
   state->opcode_ptr = cast(uint8_t*, bb) + 8 + bb->num_data * 8;
   state->data_ptr = cast(uint64_t*, bb) + 1;
   while (true) {
@@ -240,6 +241,24 @@ roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
     case ROCI_OPCODE_PUSH_SYMBOL:
       *(state->stack++) = *(state->data_ptr++);
       *(state->stack_tags++) = ROCI_TAG_SYMBOL;
+      break;
+
+    case ROCI_OPCODE_BR_FALSE:
+      roci_bb_t* taken_bb = cast(roci_bb_t*, state->data_ptr++);
+      roci_tag_t tag = *(--state->stack_tags);
+      uint64_t tos = *(--state->stack);
+      if (tag != ROCI_TAG_BOOLEAN) {
+        return ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED;
+      }
+      if (tos == 0) {
+        bb = taken_bb;
+        goto start_bblock;
+      }
+      break;
+
+    case ROCI_OPCODE_BR:
+      bb = cast(roci_bb_t*, *(state->data_ptr++));
+      goto start_bblock;
       break;
 
     default:
