@@ -123,6 +123,9 @@ printer_t* append_parse_node(printer_t* printer, parse_node_t* node) {
     return append_designated_initializer_node(
         printer, to_designated_initializer_node(node));
 
+  case PARSE_NODE_GOTO_STATEMENT:
+    return append_goto_statement_node(printer, to_goto_statement_node(node));
+
   default:
     break;
   }
@@ -865,6 +868,22 @@ printer_t* append_return_statement_node(printer_t* printer,
     append_string(printer, " ");
     append_parse_node(printer, node->expression);
   }
+  append_string(printer, ";\n");
+  return printer;
+}
+
+/**
+ * @function append_goto_statement_node
+ */
+printer_t* append_goto_statement_node(printer_t* printer,
+                                      goto_statement_node_t* node) {
+  if (printer->output_line_directives) {
+    append_line_directive(printer, node->first_token);
+  }
+  printer_indent(printer);
+  append_string(printer, "goto");
+  append_string(printer, " ");
+  append_token(printer, node->label);
   append_string(printer, ";\n");
   return printer;
 }

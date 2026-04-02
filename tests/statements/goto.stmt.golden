@@ -1,0 +1,8 @@
+{
+    tag = PARSE_NODE_GOTO_STATEMENT
+    label = heaven
+}
+
+// C Output
+goto heaven;
+
