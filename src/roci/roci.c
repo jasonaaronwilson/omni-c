@@ -1,13 +1,10 @@
 /**
  * @file
  *
- * Roci is an interpreter for a "nano" Lisp/Scheme interpreter with an
- * intentionally minimal runtime (very limited I/O). It's intended to
- * be used as a configuration language for a cross platform build tool
- * which does what "ninja" doesn't.
- *
- * The tokenizer and parser adhere to C like syntax instead of a
- * traditional s-expression syntax.
+ * Roci is an interpreter for a C syntax "nano" Lisp/Scheme
+ * interpreter with an intentionally minimal runtime (very limited
+ * I/O). It's intended to be used as a configuration language for a
+ * cross platform build tool which does what "ninja" doesn't.
  *
  * The VM is also a little unique because objects in the heap are
  * stored without tags but the stack and variable environments still
@@ -43,22 +40,7 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_BR_FALSE,
   ROCI_OPCODE_BR,
 
-  ROCI_OPCODE_CALL_0,
-  ROCI_OPCODE_CALL_1,
-  ROCI_OPCODE_CALL_2,
-  ROCI_OPCODE_CALL_3,
-  ROCI_OPCODE_CALL_4,
-  ROCI_OPCODE_CALL_5,
-  ROCI_OPCODE_CALL_6,
-  ROCI_OPCODE_CALL_7,
-  ROCI_OPCODE_CALL_8,
-  ROCI_OPCODE_CALL_9,
-  ROCI_OPCODE_CALL_10,
-  ROCI_OPCODE_CALL_11,
-  ROCI_OPCODE_CALL_12,
-  ROCI_OPCODE_CALL_13,
-  ROCI_OPCODE_CALL_14,
-  ROCI_OPCODE_CALL_15,
+  ROCI_OPCODE_CALL,
   ROCI_OPCODE_RETURN,
 };
 
@@ -91,7 +73,7 @@ typedef roci_vm_state_t = struct {
   uint64_t* data_ptr;
   uint64_t* stack;
   uint8_t* stack_tags;
-  roci_bb_t* return_stack;
+  roci_bb_t** return_stack;
 };
 
 /**
@@ -109,6 +91,14 @@ roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
 /**
  * @function
  *
+ */
+roci_bb_builder_t* get_bblock(roci_bb_builder_array_t* bblocks, int number) {
+  return value_array_get_ptr(bblocks, number, typeof(roci_bb_builder_t*));
+}
+
+/**
+ * @function
+ *
  * Build and link all of the bblocks into the interpreter efficient
  * format and return the address of the first bblock.
  *
@@ -117,7 +107,65 @@ roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
  * This is slightly tricky to use and will evolve over time at which
  * time hopefully I will update the documentation.
  */
-roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) { return NULL; }
+roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
+
+  // First allocate all of the bblocks before building the final
+  // contents so we can "link" everything properly.
+  for (int i = 0; i < bblocks->length; i++) {
+    roci_bb_builder_t* builder
+        = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
+    roci_bb_t* bblock
+        = malloc((1 + builder->data->length) * 8 + builder->opcodes->length);
+    bblock->num_data = builder->data->length;
+    bblock->num_opcodes = builder->opcodes->length;
+    builder->bblock = bblock;
+  }
+
+  // Now copy over opcodes and data converting bblock numbers to
+  // bblock addresses
+  for (int i = 0; i < bblocks->length; i++) {
+    copy_opcodes_and_link(
+        bblocks, value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*)));
+  }
+
+  return NULL;
+}
+
+void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
+                           roci_bb_builder_t* builder) {
+  roci_bb_t* bb = builder->bblock;
+  uint8_t* opcode_ptr = bblock_opcode_pointer(bb);
+  uint64_t* data_ptr = bblock_data_pointer(bb);
+  int dindex = 0;
+
+  for (int i = 0; i < builder->opcodes->length; i++) {
+    roci_opcode_t opcode = buffer_get(builder->opcodes, i);
+    *(opcode_ptr++) = opcode;
+    switch (opcode) {
+    case ROCI_OPCODE_PUSH_INTEGER:
+    case ROCI_OPCODE_PUSH_DOUBLE:
+    case ROCI_OPCODE_PUSH_STRING:
+    case ROCI_OPCODE_PUSH_SYMBOL:
+      *(data_ptr++) = value_array_get(builder->data, dindex++).u64;
+      break;
+
+    case ROCI_OPCODE_BR_FALSE:
+    case ROCI_OPCODE_BR:
+      uint64_t bb_number = value_array_get(builder->data, dindex++).u64;
+      *(data_ptr++) = bb_number_to_address(bblocks, bb_number);
+      break;
+
+    default:
+      break;
+    }
+  }
+}
+
+uint64_t bb_number_to_address(roci_bb_builder_array_t* bblocks, int bb_number) {
+  return cast(uint64_t, value_array_get_ptr(bblocks, bb_number,
+                                            typeof(roci_bb_builder_t*))
+                            ->bblock);
+}
 
 /**
  * @function
@@ -140,11 +188,19 @@ void roci_runtime_error(roci_runtime_error_t runtime_error) {
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
+inline uint8_t* bblock_opcode_pointer(roci_bb_t* bb) {
+  return cast(uint8_t*, bb) + 8 + bb->num_data * 8;
+}
+
+inline uint64_t* bblock_data_pointer(roci_bb_t* bb) {
+  return cast(uint64_t*, bb) + 1;
+}
+
 roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
                                          roci_vm_state_t* state) {
- start_bblock:
-  state->opcode_ptr = cast(uint8_t*, bb) + 8 + bb->num_data * 8;
-  state->data_ptr = cast(uint64_t*, bb) + 1;
+start_bblock:
+  state->opcode_ptr = bblock_opcode_pointer(bb);
+  state->data_ptr = bblock_data_pointer(bb);
   while (true) {
     roci_opcode_t opcode = *(state->opcode_ptr++);
     switch (opcode) {
@@ -197,7 +253,17 @@ roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
     case ROCI_OPCODE_BR:
       bb = cast(roci_bb_t*, *(state->data_ptr++));
       goto start_bblock;
+
+    case ROCI_OPCODE_CALL:
+      // HERE
       break;
+
+    case ROCI_OPCODE_RETURN:
+      bb = *(state->return_stack--);
+      if (bb == NULL) {
+        return ROCI_RUNTIME_ERROR_NONE;
+      }
+      goto start_bblock;
 
     default:
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
