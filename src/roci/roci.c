@@ -174,9 +174,12 @@ uint64_t bb_number_to_address(roci_bb_builder_array_t* bblocks, int bb_number) {
  * that program fragment.
  */
 roci_runtime_error_t roci_execute(roci_bb_t* entry_point) {
+  roci_vm_state_t* state = malloc_struct(roci_vm_state_t);
+  state->stack = cast(uint64_t*, malloc(256 * 8));
+  state->stack_tags = cast(uint8_t*, malloc(256));
+  state->return_stack = cast(roci_bb_t**, malloc(16 * 8));
   // TODO(jawilson): take a roci_env_t* top_level_environment
-  // TODO(jawilson): create a new roci_vm_state_t
-  return ROCI_RUNTIME_ERROR_NONE;
+  return roci_execute_bblock(entry_point, state);
 }
 
 /**
