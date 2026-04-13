@@ -14,7 +14,7 @@
  * ; Simple function implementing "return my_func(0x12345, 3.14, "Hello
  * world!")"
  * 0:
- *    push 0x12345 
+ *    push 0x12345
  *    push 3.14
  *    push "Hello world!"
  *    push 'my_func'
@@ -112,13 +112,13 @@ roci_bb_builder_array_t* roci_assemble(const char* source) {
         value_array_add(current_bb->data, ptr_to_value(sym_val));
 
       } else if (strncmp(p, "true", 4) == 0) {
-	// This feels a bit wrong since we don't know the character
-	// after "true"
+        // This feels a bit wrong since we don't know the character
+        // after "true"
         buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_TRUE);
         p += 4;
       } else if (strncmp(p, "false", 5) == 0) {
-	// This feels a bit wrong since we don't know the character
-	// after "false"
+        // This feels a bit wrong since we don't know the character
+        // after "false"
         buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
         p += 5;
       } else {
@@ -156,6 +156,8 @@ roci_bb_builder_array_t* roci_assemble(const char* source) {
       buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_RETURN);
     } else if (strcmp(mnemonic, "drop") == 0) {
       buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_DROP);
+    } else if (strcmp(mnemonic, "trap") == 0) {
+      buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_TRAP);
     } else {
       log_fatal("Assembler error: Unknown mnemonic.");
     }

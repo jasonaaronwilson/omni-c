@@ -106,6 +106,7 @@ SRC_C_SELF := \
 	print-tokens.c \
 	parse-test.c \
 	test-command.c \
+	test-assembler.c \
 	flags.c \
 	roci/*.c
 

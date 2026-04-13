@@ -111,11 +111,17 @@ roci_bb_builder_t* get_bblock(roci_bb_builder_array_t* bblocks, int number) {
  */
 roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
 
+  log_info("roci -- build_bblocks\n");
+
   // First allocate all of the bblocks before building the final
   // contents so we can "link" everything properly.
   for (int i = 0; i < bblocks->length; i++) {
     roci_bb_builder_t* builder
         = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
+
+    log_info("roci -- builder %d, %d\n", builder->data->length,
+             builder->opcodes->length);
+
     roci_bb_t* bblock
         = malloc((1 + builder->data->length) * 8 + builder->opcodes->length);
     bblock->num_data = builder->data->length;
@@ -130,7 +136,7 @@ roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
         bblocks, value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*)));
   }
 
-  return NULL;
+  return value_array_get_ptr(bblocks, 0, typeof(roci_bb_builder_t*))->bblock;
 }
 
 void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,

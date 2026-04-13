@@ -43,6 +43,7 @@ void configure_flags(void) {
   configure_print_tokens_command();
   configure_parse_expression();
   configure_parse_statement();
+  configure_test_assembler_command();
 }
 
 void configure_parse_expression(void) {
@@ -57,6 +58,13 @@ void configure_parse_statement(void) {
   flag_description("** UNIT TESTING **");
   flag_string("--statement", &FLAG_statement);
 }
+
+void configure_test_assembler_command(void) {
+  flag_command("test-assembler", &FLAG_command);
+  flag_description("Tests the assembler");
+  flag_file_args(&FLAG_files);
+}
+
 
 void configure_print_tokens_command(void) {
   flag_command("print-tokens", &FLAG_command);
