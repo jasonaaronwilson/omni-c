@@ -555,3 +555,9 @@ buffer_t* buffer_to_lowercase(buffer_t* buffer) {
   }
   return buffer;
 }
+
+boolean_t buffer_ends_with(buffer_t* buffer, char* str) {
+  // TODO(jawilson): don't cons
+  char* cstring = buffer_to_c_string(buffer);
+  return string_ends_with(cstring, str);
+}

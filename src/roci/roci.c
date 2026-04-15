@@ -54,7 +54,7 @@ typedef roci_bb_t = struct {
 };
 
 typedef roci_bb_builder_t = struct {
-  uint64_t bblock_number;
+  char* bblock_label;
   roci_bb_t* bblock;
   value_array_t* data;
   buffer_t* opcodes;
@@ -159,8 +159,8 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
 
     case ROCI_OPCODE_BR_FALSE:
     case ROCI_OPCODE_BR:
-      uint64_t bb_number = value_array_get(builder->data, dindex++).u64;
-      *(data_ptr++) = bb_number_to_address(bblocks, bb_number);
+      char* label = value_array_get_ptr(builder->data, dindex++, typeof(char*));
+      *(data_ptr++) = bb_label_to_address(bblocks, label);
       break;
 
     default:
@@ -169,10 +169,17 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
   }
 }
 
-uint64_t bb_number_to_address(roci_bb_builder_array_t* bblocks, int bb_number) {
-  return cast(uint64_t, value_array_get_ptr(bblocks, bb_number,
-                                            typeof(roci_bb_builder_t*))
-                            ->bblock);
+uint64_t bb_label_to_address(roci_bb_builder_array_t* bblocks, char* label) {
+  for (int i = 0; i < bblocks->length; i++) {
+    roci_bb_builder_t* builder
+        = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
+    if (string_equal(builder->bblock_label, label)) {
+      return cast(uint64_t, builder->bblock);
+    }
+  }
+  log_fatal("bblock with label %s not found", label);
+  fatal_error(ERROR_ILLEGAL_STATE);
+  return 0;
 }
 
 /**

@@ -7,6 +7,9 @@ void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
     case ROCI_OPCODE_TRAP:
       buffer_printf(buffer, "    trap\n");
       break;
+    case ROCI_OPCODE_DROP:
+      buffer_printf(buffer, "    drop\n");
+      break;
     case ROCI_OPCODE_RETURN:
       buffer_printf(buffer, "    return\n");
       break;
