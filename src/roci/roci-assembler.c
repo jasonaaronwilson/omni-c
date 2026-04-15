@@ -91,6 +91,27 @@ roci_bb_builder_array_t* roci_assemble(buffer_t* buffer) {
     }
 
     if (buffer_match_string_at(token, 0, "push")) {
+      position = read_roci_token(buffer, position, token);
+      if (buffer_length(buffer) == 0) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+      if (buffer_match_string_at(token, 0, "true")) {
+        buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_TRUE);
+      } else if (buffer_match_string_at(token, 0, "false")) {
+        buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
+      } else {
+        int first_char = buffer_get(token, 0);
+        if (isdigit(first_char)) {
+          buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
+          value_array_add(
+              current_bb->data,
+              u64_to_value(string_parse_uint64(buffer_to_c_string(token)).u64));
+        } else {
+          fatal_error(ERROR_ILLEGAL_STATE);
+        }
+      }
+
     } else if (buffer_match_string_at(token, 0, "drop")) {
       buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_DROP);
     } else if (buffer_match_string_at(token, 0, "br")) {
@@ -99,6 +120,7 @@ roci_bb_builder_array_t* roci_assemble(buffer_t* buffer) {
     } else if (buffer_match_string_at(token, 0, "br_false")) {
     } else if (buffer_match_string_at(token, 0, "call")) {
     } else if (buffer_match_string_at(token, 0, "return")) {
+      buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_RETURN);
     } else if (buffer_match_string_at(token, 0, "trap")) {
       buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_TRAP);
     }
