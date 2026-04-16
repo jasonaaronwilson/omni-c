@@ -105,16 +105,23 @@ roci_bb_builder_array_t* roci_assemble(buffer_t* buffer) {
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-      if (buffer_match_string_at(token, 0, "true")) {
+      int first_char = buffer_get(token, 0);
+
+      if (first_char == '"') {
+        buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_STRING);
+        value_array_add(
+            current_bb->data,
+            u64_to_value(
+                cast(uint64_t,
+                     buffer_c_substring(token, 1, buffer_length(token) - 1))));
+      } else if (buffer_match_string_at(token, 0, "true")) {
         buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_TRUE);
       } else if (buffer_match_string_at(token, 0, "false")) {
         buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
       } else {
-        int first_char = buffer_get(token, 0);
         if (isdigit(first_char)) {
           if (token_is_double(token)) {
             double dbl = string_parse_double(buffer_to_c_string(token));
-            log_info("JASON DOUBLE IS %lf", dbl);
             buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_DOUBLE);
             value_array_add(current_bb->data, dbl_to_value(dbl));
           } else {

@@ -26,6 +26,9 @@ void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
       buffer_printf(buffer, "    push %lf\n",
                     raw_double_to_double(*(data_ptr++)));
       break;
+    case ROCI_OPCODE_PUSH_STRING:
+      buffer_printf(buffer, "    push \"%s\"\n", cast(char*, *(data_ptr++)));
+      break;
     default:
       buffer_printf(buffer, "    <unknown-opcode>\n");
       break;
