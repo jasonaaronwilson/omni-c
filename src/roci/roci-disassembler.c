@@ -22,9 +22,19 @@ void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
     case ROCI_OPCODE_PUSH_FALSE:
       buffer_printf(buffer, "    push false\n");
       break;
+    case ROCI_OPCODE_PUSH_DOUBLE:
+      buffer_printf(buffer, "    push %lf\n",
+                    raw_double_to_double(*(data_ptr++)));
+      break;
     default:
       buffer_printf(buffer, "    <unknown-opcode>\n");
       break;
     }
   }
+}
+
+double raw_double_to_double(uint64_t raw_bits) {
+  double val = 0.0;
+  memcpy(&val, &raw_bits, sizeof(val));
+  return val;
 }
