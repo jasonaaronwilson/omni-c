@@ -561,3 +561,9 @@ boolean_t buffer_ends_with(buffer_t* buffer, char* str) {
   char* cstring = buffer_to_c_string(buffer);
   return string_ends_with(cstring, str);
 }
+
+boolean_t buffer_equal(buffer_t* buffer, char* str) {
+  // TODO(jawilson): don't cons
+  char* cstring = buffer_to_c_string(buffer);
+  return string_equal(cstring, str);
+}
