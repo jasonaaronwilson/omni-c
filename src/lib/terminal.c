@@ -1,9 +1,3 @@
-#line 2 "terminal.c"
-#ifndef _TERMINAL_H_
-#define _TERMINAL_H_
-
-#include <termios.h>
-
 /**
  * @file terminal.c
  *
@@ -164,46 +158,6 @@ struct term_keypress_S {
 #define KEY_RESIZE 103   /* Terminal resize event */
 
 typedef struct term_keypress_S term_keypress_t;
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_clear_screen(buffer_t* buffer);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_set_foreground_color(buffer_t* buffer, uint32_t color);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_set_background_color(buffer_t* buffer, uint32_t color);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_move_cursor_absolute(buffer_t* buffer, int x, int y);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_move_cursor_relative(buffer_t* buffer, int x, int y);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_bold(buffer_t* buffer);
-
-__attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_italic(buffer_t* buffer);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_underline(buffer_t* buffer);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_reset_formatting(buffer_t* buffer);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
-                  uint16_t y1, box_drawing_t* box);
-
-extern struct termios term_echo_off();
-extern void term_echo_restore(struct termios oldt);
-
-// TODO(jawilson): terminal queries like request cursor position
-
-#endif /* _TERMINAL_H_ */
 
 #define TERM_ESCAPE_START_STR "\033["
 #define TERM_ESCAPE_END_STR "m"

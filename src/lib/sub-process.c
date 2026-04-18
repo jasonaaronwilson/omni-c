@@ -1,7 +1,3 @@
-#line 2 "sub-process.c"
-#ifndef _SUB_PROCESS_H_
-#define _SUB_PROCESS_H_
-
 /**
  * @file sub-process.c
  *
@@ -38,30 +34,6 @@ typedef struct {
   int exit_signal;
 } sub_process_t;
 
-sub_process_t* make_sub_process(value_array_t* argv);
-
-boolean_t sub_process_launch(sub_process_t* sub_process);
-
-uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data,
-                           uint64_t start_position);
-
-void sub_process_close_stdin(sub_process_t* sub_process);
-
-void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,
-                      buffer_t* stderr);
-
-void sub_process_wait(sub_process_t* sub_process);
-
-void sub_process_launch_and_wait(sub_process_t* sub_process,
-                                 buffer_t* child_stdin, buffer_t* child_stdout,
-                                 buffer_t* child_stderr);
-
-#endif /* _SUB_PROCESS_H_ */
-
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
 /**
  * @function make_sub_process
