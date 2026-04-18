@@ -1,12 +1,8 @@
-#line 2 "min-max.c"
 /**
  * @file min-max.c
  *
  * Macros version of min and max functions.
  */
-
-#ifndef _MIN_MAX_H_
-#define _MIN_MAX_H_
 
 /**
  * @macro min
@@ -27,5 +23,3 @@
  * works for any type that can be compared with >.
  */
 #define max(a, b) ((a) > (b) ? (a) : (b))
-
-#endif /* _MIN_MAX_H_ */

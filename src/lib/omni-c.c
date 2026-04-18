@@ -1,8 +1,3 @@
-#line 2 "omni-c.c"
-
-#ifndef _OMNI_C_H_
-#define _OMNI_C_H_
-
 /**
  * @file omni-c.c
  *
@@ -32,5 +27,3 @@
  * it much easier to handle for now.
  */
 #define block_expr(block) block
-
-#endif /* _OMNI_C_H_ */
