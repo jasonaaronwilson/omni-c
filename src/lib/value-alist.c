@@ -1,12 +1,8 @@
-#line 2 "value-alist.c"
 /**
  * @file value-alist.c
  *
  * An association list (a type of map) from value_t to value_t.
  */
-
-#ifndef _VALUE_ALIST_H_
-#define _VALUE_ALIST_H_
 
 struct value_alist_S {
   struct value_alist_S* next;
@@ -15,20 +11,6 @@ struct value_alist_S {
 };
 
 typedef struct value_alist_S value_alist_t;
-
-extern value_result_t value_alist_find(value_alist_t* list,
-                                       value_comparison_fn cmp_fn, value_t key);
-
-__attribute__((warn_unused_result)) extern value_alist_t*
-    value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn,
-                       value_t key, value_t value);
-
-__attribute__((warn_unused_result)) extern value_alist_t*
-    value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn,
-                       value_t key);
-
-__attribute__((warn_unused_result)) extern uint64_t
-    value_alist_length(value_alist_t* list);
 
 /**
  * @macro value_alist_foreach
@@ -46,8 +28,6 @@ __attribute__((warn_unused_result)) extern uint64_t
       head = head->next;                                                       \
     }                                                                          \
   } while (0)
-
-#endif /* _VALUE_ALIST_H_ */
 
 /**
  * @function value_alist_insert

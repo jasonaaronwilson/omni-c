@@ -1,13 +1,8 @@
-#line 2 "utf8-decoder.c"
 /**
  * @file utf8-decoder.c
  *
  * A very basic UTF-8 decoder.
  */
-#ifndef _UTF8_DECODER_H_
-#define _UTF8_DECODER_H_
-
-#include <stdint.h>
 
 /**
  * @struct utf8_decode_result_t
@@ -21,10 +16,6 @@ struct utf8_decode_result_S {
 };
 
 typedef struct utf8_decode_result_S utf8_decode_result_t;
-
-extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
-
-#endif /* _UTF8_DECODER_H_ */
 
 /**
  * @function utf8_decode

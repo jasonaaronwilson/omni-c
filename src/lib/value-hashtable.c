@@ -7,9 +7,6 @@
  * use chaining which is considered slower than open addressing.
  */
 
-#ifndef _VALUE_HASHTABLE_H_
-#define _VALUE_HASHTABLE_H_
-
 /**
  * @compiliation_option ARMYKNIFE_HT_LOAD_FACTOR
  *
@@ -42,26 +39,6 @@ struct value_hashtable_S {
 
 typedef struct value_hashtable_S value_hashtable_t;
 
-extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
-
-extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht,
-                                          value_hash_fn hash_fn,
-                                          value_comparison_fn cmp_fn,
-                                          value_t key, value_t value);
-
-extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht,
-                                          value_hash_fn hash_fn,
-                                          value_comparison_fn cmp_fn,
-                                          value_t key);
-
-extern value_result_t value_ht_find(value_hashtable_t* ht,
-                                    value_hash_fn hash_fn,
-                                    value_comparison_fn cmp_fn, value_t key);
-
-extern void value_hashtable_upsize_internal(value_hashtable_t* ht,
-                                            value_hash_fn hash_fn,
-                                            value_comparison_fn cmp_fn);
-
 /**
  * @function value_ht_num_entries
  *
@@ -86,8 +63,6 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
       }                                                                        \
     }                                                                          \
   } while (0)
-
-#endif /* _VALUE_HASHTABLE_H_ */
 
 /**
  * @function make_value_hashtable

@@ -1,5 +1,3 @@
-#line 2 "value-array.c"
-
 /**
  * @file value-array.c
  *
@@ -11,9 +9,6 @@
  * required though we may scale this back to something more like 1.5X
  * for "large" arrays to save space.
  */
-
-#ifndef _VALUE_ARRAY_H_
-#define _VALUE_ARRAY_H_
 
 struct value_array_S {
   uint32_t length;
@@ -29,21 +24,8 @@ struct value_array_S {
  */
 typedef struct value_array_S value_array_t;
 
-extern value_array_t* make_value_array(uint64_t initial_capacity);
-extern value_t value_array_get(value_array_t* array, uint32_t index);
-extern void value_array_replace(value_array_t* array, uint32_t index,
-                                value_t element);
-extern void value_array_add(value_array_t* array, value_t element);
-extern void value_array_push(value_array_t* array, value_t element);
-extern value_t value_array_pop(value_array_t* array);
-extern void value_array_insert_at(value_array_t* array, uint32_t position,
-                                  value_t element);
-extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
-
 #define value_array_get_ptr(array, index_expression, cast_type)                \
   (cast(cast_type, value_array_get(array, index_expression).ptr))
-
-#endif /* _VALUE_ARRAY_H_ */
 
 /**
  * @function make_value_array

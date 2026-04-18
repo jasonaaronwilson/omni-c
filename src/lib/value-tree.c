@@ -1,5 +1,3 @@
-#line 2 "value-tree.c"
-
 /**
  * @file value-tree.c
  *
@@ -17,9 +15,6 @@
  * details.
  */
 
-#ifndef _VALUE_TREE_H_
-#define _VALUE_TREE_H_
-
 struct value_tree_S {
   value_t key;
   value_t value;
@@ -29,16 +24,6 @@ struct value_tree_S {
 };
 
 typedef struct value_tree_S value_tree_t;
-
-extern value_result_t value_tree_find(value_tree_t* t,
-                                      value_comparison_fn cmp_fn, value_t key);
-
-__attribute__((warn_unused_result)) extern value_tree_t*
-    value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key,
-                      value_t value);
-
-__attribute__((warn_unused_result)) extern value_tree_t*
-    value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
 
 /**
  * @macro value_tree_foreach
@@ -80,8 +65,6 @@ __attribute__((warn_unused_result)) extern value_tree_t*
       current = current->right;                                                \
     }                                                                          \
   } while (0)
-
-#endif /* _VALUE_TREE_H_ */
 
 /**
  * @function value_tree_find
