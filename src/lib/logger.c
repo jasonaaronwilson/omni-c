@@ -1,5 +1,3 @@
-#line 2 "logger.c"
-
 /**
  * @file logger.c
  *
@@ -63,12 +61,6 @@
  * may take less than a single cycle on a modern pipelined processor).
  */
 
-#ifndef _LOGGER_H_
-#define _LOGGER_H_
-
-#include <stdarg.h>
-#include <stdio.h>
-
 #define LOGGER_OFF 0
 #define LOGGER_TRACE 1
 #define LOGGER_DEBUG 2
@@ -89,14 +81,6 @@ typedef struct logger_state_S logger_state_t;
 #ifndef LOGGER_DEFAULT_LEVEL
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
-
-extern logger_state_t global_logger_state;
-
-extern void logger_init(void);
-
-__attribute__((format(printf, 5, 6))) extern void
-    logger_impl(char* file, int line_number, const char* function, int level,
-                char* format, ...);
 
 /**
  * @macro log_none
@@ -220,8 +204,6 @@ static inline boolean_t should_log_info() {
                 ##__VA_ARGS__);                                                \
   } while (0)
 
-#endif /* _LOGGER_H_ */
-
 logger_state_t global_logger_state
     = compound_literal(logger_state_t, {.level = LOGGER_DEFAULT_LEVEL});
 
@@ -243,9 +225,6 @@ value_result_t parse_log_level_enum(char* str) {
                             {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
   }
 }
-
-// FORWARD DECLARATION
-char* logger_level_to_string(int level);
 
 /**
  * @function logger_init

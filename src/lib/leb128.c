@@ -1,8 +1,3 @@
-#line 2 "leb128.c"
-
-#ifndef _LEB128_H_
-#define _LEB128_H_
-
 /**
  * @file leb128.c
  *
@@ -31,8 +26,6 @@
  * returned.
  */
 
-#include <stdint.h>
-
 #define ERROR_INSUFFICIENT_INPUT -1
 #define ERROR_TOO_BIG -2
 
@@ -47,15 +40,6 @@ typedef struct {
   // Negative values mean an error occurred.
   int size;
 } signed_decode_result;
-
-extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
-extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
-extern unsigned_decode_result decode_uleb_128(const uint8_t* p,
-                                              const uint8_t* end);
-extern signed_decode_result decode_sleb_128(const uint8_t* p,
-                                            const uint8_t* end);
-
-#endif /* _LEB128_H_ */
 
 //===- llvm/Support/LEB128.h - [SU]LEB128 utility functions -----*- C++ -*-===//
 //
