@@ -20,7 +20,7 @@
  * A structure to hold unicode code-points for each part of a box to
  * draw in the terminal.
  */
-struct box_drawing_S {
+typedef box_drawing_t = struct {
   uint32_t upper_left_corner;
   uint32_t upper_right_corner;
   uint32_t lower_left_corner;
@@ -31,8 +31,6 @@ struct box_drawing_S {
   uint32_t bottom_edge;
 };
 
-typedef struct box_drawing_S box_drawing_t;
-
 /**
  * @struct term_keypress_t
  *
@@ -40,7 +38,7 @@ typedef struct box_drawing_S box_drawing_t;
  * or key_code will be non-zero if n_bytes_consumed is greater than
  * zero.
  */
-struct term_keypress_S {
+typedef term_keypress_t = struct {
   uint32_t code_point;
   uint8_t key_code;
   uint8_t n_bytes_consumed;
@@ -156,8 +154,6 @@ struct term_keypress_S {
 #define KEY_UNDO 101     /* undo key */
 #define KEY_MOUSE 102    /* Mouse event has occurred */
 #define KEY_RESIZE 103   /* Terminal resize event */
-
-typedef struct term_keypress_S term_keypress_t;
 
 #define TERM_ESCAPE_START_STR "\033["
 #define TERM_ESCAPE_END_STR "m"

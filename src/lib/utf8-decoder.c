@@ -9,13 +9,11 @@
  *
  * Holds the result of utf8_decode.
  */
-struct utf8_decode_result_S {
+typedef utf8_decode_result_t =  struct {
   uint32_t code_point;
   uint8_t num_bytes;
   boolean_t error;
 };
-
-typedef struct utf8_decode_result_S utf8_decode_result_t;
 
 /**
  * @function utf8_decode
