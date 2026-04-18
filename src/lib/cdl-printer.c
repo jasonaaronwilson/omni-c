@@ -29,11 +29,11 @@
  * "comma-less data language", take your pick!
  */
 
-typedef struct {
+typedef cdl_printer_t = struct {
   buffer_t* buffer;
   char* key_token;
   int indention_level;
-} cdl_printer_t;
+};
 
 cdl_printer_t* make_cdl_printer(buffer_t* buffer) {
   cdl_printer_t* result = malloc_struct(cdl_printer_t);

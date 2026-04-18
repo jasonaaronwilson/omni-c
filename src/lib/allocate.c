@@ -142,7 +142,7 @@ static inline boolean_t should_log_memory_allocation() {
 #define START_PADDING_BYTE (170 & 0xff)
 #define END_PADDING_BYTE ((~START_PADDING_BYTE) & 0xff)
 
-struct memory_hashtable_bucket_S {
+typedef memory_hashtable_bucket_t = struct {
   // malloc will never allocated at address 0 so if this field is
   // zero, then this spot in the hashtable is occupied.
   uint64_t malloc_address;
@@ -150,8 +150,6 @@ struct memory_hashtable_bucket_S {
   char* allocation_filename;
   uint64_t allocation_line_number;
 };
-
-typedef struct memory_hashtable_bucket_S memory_hashtable_bucket_t;
 
 memory_hashtable_bucket_t memory_ht[ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE];
 

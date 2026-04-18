@@ -9,14 +9,6 @@
  * (or inserted into) them reducing large classes of errors.
  */
 
-#include <ctype.h>
-
-// struct buffer_t {}; didn't work but *should* have!
-
-// This forumulation is legal in omni-c and kind of "Go"ish. There
-// isn't a way to say "struct buffer_t" with this formulation anymore
-// in C. Maybe we should embrace this change. Hmmm.
-
 typedef buffer_t = struct {
   uint32_t length;
   uint32_t capacity;
