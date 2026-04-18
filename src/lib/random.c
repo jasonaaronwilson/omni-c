@@ -11,12 +11,10 @@
  * See: https://prng.di.unimi.it/xoroshiro128starstar.c
  */
 
-struct random_state_S {
+typedef random_state_t = struct {
   uint64_t a;
   uint64_t b;
 };
-
-typedef struct random_state_S random_state_t;
 
 /**
  * @function random_state_for_test

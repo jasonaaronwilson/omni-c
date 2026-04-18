@@ -18,7 +18,7 @@ typedef enum {
   EXIT_STATUS_ABNORMAL
 } sub_process_exit_status_t;
 
-typedef struct {
+typedef sub_process_t = struct {
   // launch parameters
   value_array_t* argv; // argv[0] is the program executable path
 
@@ -32,7 +32,7 @@ typedef struct {
   sub_process_exit_status_t exit_status;
   int exit_code;
   int exit_signal;
-} sub_process_t;
+};
 
 
 /**

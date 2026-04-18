@@ -69,14 +69,12 @@
 #define LOGGER_FATAL 5
 #define LOGGER_TEST 6
 
-struct logger_state_S {
+typedef logger_state_t = struct {
   boolean_t initialized;
   int level;
   char* logger_output_filename;
   FILE* output;
 };
-
-typedef struct logger_state_S logger_state_t;
 
 #ifndef LOGGER_DEFAULT_LEVEL
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
