@@ -1,5 +1,3 @@
-#line 2 "random.c"
-
 /**
  * @file random.c
  *
@@ -13,24 +11,12 @@
  * See: https://prng.di.unimi.it/xoroshiro128starstar.c
  */
 
-#ifndef _RANDOM_H_
-#define _RANDOM_H_
-
 struct random_state_S {
   uint64_t a;
   uint64_t b;
 };
 
 typedef struct random_state_S random_state_t;
-
-extern random_state_t random_state_for_test(void);
-extern uint64_t random_next_uint64(random_state_t* state);
-extern uint64_t random_next_uint64_below(random_state_t* state,
-                                         uint64_t maximum);
-
-#endif /* _RANDOM_H_ */
-
-#include <time.h>
 
 /**
  * @function random_state_for_test

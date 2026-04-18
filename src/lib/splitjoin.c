@@ -1,13 +1,3 @@
-#line 2 "splitjoin.c"
-
-#ifndef _SPLITJOIN_H_
-#define _SPLITJOIN_H_
-
-buffer_t* join_array_of_strings(value_array_t* array_of_strings,
-                                char* separator);
-
-#endif /* _SPLITJOIN_H_ */
-
 /**
  * @file splitjoin.c
  *
