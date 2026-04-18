@@ -1,14 +1,9 @@
-#line 2 "string-tree.c"
-
 /**
  * @file string-tree.c
  *
  * This is a balanced binary tree to associate a string to a value
  * using an underlying value-tree.c.
  */
-
-#ifndef _STRING_TREE_H_
-#define _STRING_TREE_H_
 
 struct string_tree_S {};
 
@@ -81,5 +76,3 @@ __attribute__((warn_unused_result)) static inline string_tree_t*
                          statements;                                           \
                        });                                                     \
   } while (0)
-
-#endif /* _STRING_TREE_H_ */
