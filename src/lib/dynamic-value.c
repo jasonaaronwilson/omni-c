@@ -1,4 +1,4 @@
-#line 2 "dynaic-value.c"
+#line 2 "dynamic-value.c"
 
 #ifndef _DYNAMIC_VALUE_H_
 #define _DYNAMIC_VALUE_H_

@@ -19,9 +19,6 @@
 // This is block is extraced to fatal-error.h
 // ======================================================================
 
-#ifndef _FATAL_ERROR_H_
-#define _FATAL_ERROR_H_
-
 struct fatal_error_config_S {
   boolean_t catch_sigsegv;
 };
@@ -61,18 +58,12 @@ typedef enum {
   ERROR_ILLEGAL_TERMINAL_COORDINATES,
 } error_code_t;
 
-extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
-extern const char* fatal_error_code_to_string(int error_code);
-extern void configure_fatal_errors(fatal_error_config_t config);
-
 /**
  * @macro fatal_error
  *
  * Terminates the program with a fatal error.
  */
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-#endif /* _FATAL_ERROR_H_ */
 
 // ======================================================================
 

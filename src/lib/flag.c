@@ -91,9 +91,6 @@
  * don't require an argument. --bubble-gum, --no-bubble-gum.
  */
 
-#ifndef _FLAG_H_
-#define _FLAG_H_
-
 /**
  * @enum flag_type_t
  */
@@ -139,29 +136,6 @@ struct flag_descriptor_S {
   // TODO(jawilson): add custom parser call back (and call back data).
 };
 typedef struct flag_descriptor_S flag_descriptor_t;
-
-extern void flag_program_name(char* name);
-extern void flag_description(char* description);
-extern void flag_file_args(value_array_t** write_back_ptr);
-extern void flag_command(char* name, char** write_back_ptr);
-
-extern void flag_boolean(char* name, boolean_t* write_back_ptr);
-extern void flag_string(char* name, char** write_back_ptr);
-extern void flag_uint64(char* name, uint64_t* write_back_ptr);
-extern void flag_int64(char* name, int64_t* write_back_ptr);
-extern void flag_double(char* name, double* write_back_ptr);
-extern void flag_enum(char* name, int* write_back_ptr);
-extern void flag_enum_64(char* name, uint64_t* write_back_ptr);
-extern void flag_enum_value(char* name, uint64_t value);
-extern void flag_alias(char* alias);
-
-// TODO(jawilson): flag_custom
-
-extern char* flag_parse_command_line(int argc, char** argv);
-
-extern void flag_print_help(FILE* out, char* error);
-
-#endif /* _FLAG_H_ */
 
 // Non exported data structures
 
