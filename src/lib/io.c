@@ -1,63 +1,9 @@
-#line 2 "io.c"
 /**
  * @file io.c
  *
  * This contains routines to read the contents of a file or write a
  * new file.
  */
-
-// ======================================================================
-// This is block is extraced to allocate.h
-// ======================================================================
-
-#ifndef _IO_H_
-#define _IO_H_
-
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <sys/select.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_file_contents(buffer_t* bytes, char* file_name);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_all(buffer_t* buffer, FILE* input);
-
-extern void buffer_write_file(buffer_t* bytes, char* file_name);
-
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
-
-extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input,
-                                         uint64_t max_bytes);
-
-extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer,
-                                                     int file_number,
-                                                     uint64_t max_bytes);
-
-int file_peek_byte(FILE* input);
-
-boolean_t file_eof(FILE* input);
-
-void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,
-                      uint64_t size);
-
-void file_skip_bytes(FILE* input, uint64_t n_bytes);
-
-#endif /* _IO_H_ */
-
-// ======================================================================
-
-#include <stdio.h>
-
-// This is optional...
-#include <sys/stat.h>
 
 /**
  * @function buffer_read_file

@@ -1,13 +1,7 @@
 /**
- * @file global-includes.c
+ * @file includes.c
  *
- * Since omni-c essentially concatenates all files in a library or
- * binary as one big compilation unit, we only need to have one copy
- * of each system include which we are going to start doing here. We
- * also don't need most header file includes (which will be done in
- * the next cleanup step).
  */
-
 #include <ctype.h>
 #include <errno.h>
 #include <execinfo.h>

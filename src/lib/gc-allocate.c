@@ -15,13 +15,6 @@
 #include <string.h>
 #include <gc.h>
 
-extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
-extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
-                                       uint64_t amount);
-extern void checked_free(char* file, int line, void* pointer);
-
-extern void check_memory_hashtable_padding();
-
 /**
  * @macro malloc_bytes
  *

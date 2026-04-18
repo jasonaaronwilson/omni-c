@@ -1,8 +1,3 @@
-#line 2 "fn.c"
-
-#ifndef _FN_H_
-#define _FN_H_
-
 /**
  * @file fn.c
  *
@@ -48,5 +43,3 @@
  */
 
 #define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
-
-#endif /* _FN_H_ */
