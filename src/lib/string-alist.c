@@ -1,4 +1,3 @@
-#line 2 "string-alist.c"
 /**
  * @file string-alist.c
  *
@@ -6,9 +5,6 @@
  *
  * This simply wraps value-alist.c.
  */
-
-#ifndef _STRING_ALIST_H_
-#define _STRING_ALIST_H_
 
 struct string_alist_S {};
 
@@ -78,5 +74,3 @@ __attribute__((warn_unused_result)) static inline uint64_t
                           statements;                                          \
                         });                                                    \
   } while (0)
-
-#endif /* _STRING_ALIST_H_ */

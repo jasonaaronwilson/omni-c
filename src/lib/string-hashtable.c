@@ -1,4 +1,3 @@
-#line 2 "string-hashtable.c"
 /**
  * @file string-hashtable.c
  *
@@ -6,9 +5,6 @@
  * "strings" to a value_t. This is an oqaque reference around a
  * value_hashtable.
  */
-
-#ifndef _STRING_HASHTABLE_H_
-#define _STRING_HASHTABLE_H_
 
 struct string_hashtable_S {};
 
@@ -88,5 +84,3 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
       statements;                                                              \
     });                                                                        \
   } while (0)
-
-#endif /* _STRING_HASHTABLE_H_ */
