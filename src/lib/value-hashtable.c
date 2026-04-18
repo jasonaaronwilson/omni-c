@@ -31,13 +31,11 @@
 #define AK_HT_UPSCALE_MULTIPLIER 1.75
 #endif /* AK_HT_UPSCALE_MULTIPLIER */
 
-struct value_hashtable_S {
+typedef value_hashtable_t = struct {
   uint64_t n_buckets;
   uint64_t n_entries;
   value_alist_t** buckets;
 };
-
-typedef struct value_hashtable_S value_hashtable_t;
 
 /**
  * @function value_ht_num_entries

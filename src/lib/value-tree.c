@@ -15,15 +15,13 @@
  * details.
  */
 
-struct value_tree_S {
+typedef value_tree_t = struct {
   value_t key;
   value_t value;
   uint32_t level;
-  struct value_tree_S* left;
-  struct value_tree_S* right;
+  value_tree_t* left;
+  value_tree_t* right;
 };
-
-typedef struct value_tree_S value_tree_t;
 
 /**
  * @macro value_tree_foreach

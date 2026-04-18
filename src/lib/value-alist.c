@@ -4,13 +4,11 @@
  * An association list (a type of map) from value_t to value_t.
  */
 
-struct value_alist_S {
-  struct value_alist_S* next;
+typedef value_alist_t = struct {
+  value_alist_t* next;
   value_t key;
   value_t value;
 };
-
-typedef struct value_alist_S value_alist_t;
 
 /**
  * @macro value_alist_foreach

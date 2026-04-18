@@ -10,19 +10,17 @@
  * for "large" arrays to save space.
  */
 
-struct value_array_S {
-  uint32_t length;
-  uint32_t capacity;
-  value_t* elements;
-};
-
 /**
  * @typedef value_array_t
  *
  * A growable array of 64bit "values" (so integers, doubles, and
  * pointers).
  */
-typedef struct value_array_S value_array_t;
+typedef value_array_t = struct {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
 
 #define value_array_get_ptr(array, index_expression, cast_type)                \
   (cast(cast_type, value_array_get(array, index_expression).ptr))
