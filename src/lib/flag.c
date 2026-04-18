@@ -106,16 +106,15 @@ typedef enum {
   flag_type_custom,
 } flag_type_t;
 
-struct program_descriptor_S {
+typedef program_descriptor_t = struct {
   char* name;
   char* description;
   string_tree_t* flags;
   string_tree_t* commands;
   value_array_t** write_back_file_args_ptr;
 };
-typedef struct program_descriptor_S program_descriptor_t;
 
-struct command_descriptor_S {
+typedef command_descriptor_t = struct {
   program_descriptor_t* program;
   char* name;
   char* description;
@@ -123,9 +122,8 @@ struct command_descriptor_S {
   value_array_t** write_back_file_args_ptr;
   string_tree_t* flags;
 };
-typedef struct command_descriptor_S command_descriptor_t;
 
-struct flag_descriptor_S {
+typedef flag_descriptor_t = struct {
   char* name;
   char* description;
   flag_type_t flag_type;
@@ -135,35 +133,12 @@ struct flag_descriptor_S {
   string_tree_t* enum_values;
   // TODO(jawilson): add custom parser call back (and call back data).
 };
-typedef struct flag_descriptor_S flag_descriptor_t;
 
 // Non exported data structures
-
-struct flag_key_value_S {
+typedef flag_key_value_t = struct flag_key_value_S {
   char* key;
   char* value;
 };
-typedef struct flag_key_value_S flag_key_value_t;
-
-// Non exported function prototypes
-
-command_descriptor_t* flag_find_command_descriptor(char* name);
-
-flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command,
-                                             char* name);
-
-flag_key_value_t flag_split_argument(char* arg);
-
-char* parse_and_write_value(flag_descriptor_t* flag,
-                            flag_key_value_t key_value);
-
-char* parse_and_write_boolean(flag_descriptor_t* flag,
-                              flag_key_value_t key_value);
-
-char* parse_and_write_uint64(flag_descriptor_t* flag,
-                             flag_key_value_t key_value);
-
-char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
 
 // Global Variables
 
