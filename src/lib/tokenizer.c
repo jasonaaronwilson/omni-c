@@ -3,22 +3,6 @@
  *
  */
 
-#ifndef _TOKENIZER_H_
-#define _TOKENIZER_H_
-
-extern value_array_t* string_tokenize(const char* str, const char* delimiters);
-extern value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
-extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length,
-                                            const char* delimiters);
-
-// TODO(jawilson):
-
-#endif /* _TOKENIZER_H_ */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 void add_duplicate(value_array_t* token_array, const char* data);
 
 /**

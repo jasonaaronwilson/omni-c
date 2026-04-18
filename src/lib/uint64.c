@@ -1,19 +1,9 @@
-#line 2 "uint64.c"
 /**
  * @file uint64.c
  *
  * Implement a couple of useful operations on uint64_t (which can
  * often be used for smaller types).
  */
-
-#ifndef _UINT64_H_
-#define _UINT64_H_
-
-#include <stdint.h>
-
-extern int uint64_highest_bit_set(uint64_t n);
-
-#endif /* _UINT64_H_ */
 
 /**
  * @function uint64_highest_bit_set
