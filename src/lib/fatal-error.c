@@ -19,11 +19,9 @@
 // This is block is extraced to fatal-error.h
 // ======================================================================
 
-struct fatal_error_config_S {
+typedef fatal_error_config_t = struct {
   boolean_t catch_sigsegv;
 };
-
-typedef struct fatal_error_config_S fatal_error_config_t;
 
 /**
  * @constants error_code_t
@@ -64,14 +62,6 @@ typedef enum {
  * Terminates the program with a fatal error.
  */
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-// ======================================================================
-
-#include <execinfo.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 fatal_error_config_t fatal_error_config = {0};
 

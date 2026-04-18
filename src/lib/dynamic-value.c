@@ -1,10 +1,3 @@
-#line 2 "dynamic-value.c"
-
-#ifndef _DYNAMIC_VALUE_H_
-#define _DYNAMIC_VALUE_H_
-
-#include <stdint.h>
-
 /**
  * @file dynamic-value.c
  *
@@ -46,15 +39,13 @@ typedef enum {
   AK_USER_DYNAMIC_VALUE_TAGS()
 } dynamic_value_tag_t;
 
-typedef struct dynamic_value_S {
+typedef dynamic_value_t = struct {
   dynamic_value_tag_t tag;
   union {
     uint64_t u64;
     int64_t i64;
     double dbl;
     char* str;
-    struct dynamic_array_S* dynamic_array;
+    dynamic_array_t* dynamic_array;
   };
-} dynamic_value_t;
-
-#endif /* _DYNAMIC_VALUE_H_ */
+};
