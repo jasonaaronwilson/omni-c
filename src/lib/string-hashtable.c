@@ -32,7 +32,7 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  *
  * Insert an association into the hashtable.
  */
-__attribute__((warn_unused_result)) static inline string_hashtable_t*
+static inline string_hashtable_t*
     string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
   return cast(string_hashtable_t*,
               value_ht_insert(to_value_hashtable(ht), hash_string_value,
@@ -45,7 +45,7 @@ __attribute__((warn_unused_result)) static inline string_hashtable_t*
  * Delete an association from the hashtable. It is not an error to
  * delete a key that doesn't exist in the hashtable.
  */
-__attribute__((warn_unused_result)) static inline string_hashtable_t*
+static inline string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key) {
   return cast(string_hashtable_t*,
               value_ht_delete(to_value_hashtable(ht), hash_string_value,
