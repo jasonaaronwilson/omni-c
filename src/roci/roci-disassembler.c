@@ -29,9 +29,6 @@ void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
     case ROCI_OPCODE_PUSH_STRING:
       buffer_printf(buffer, "    push \"%s\"\n", cast(char*, *(data_ptr++)));
       break;
-    case ROCI_OPCODE_PUSH_SYMBOL:
-      buffer_printf(buffer, "    push '%s'\n", cast(char*, *(data_ptr++)));
-      break;
     case ROCI_OPCODE_BR:
       buffer_printf(buffer, "    br %s\n", uint64_to_string(*(data_ptr++)));
       break;

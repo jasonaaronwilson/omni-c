@@ -17,7 +17,6 @@ typedef roci_tag_t = enum {
   ROCI_TAG_INTEGER,
   ROCI_TAG_DOUBLE,
   ROCI_TAG_STRING,
-  ROCI_TAG_SYMBOL,
   ROCI_TAG_CLOSURE,
   ROCI_TAG_C_PRIMITIVE,
   ROCI_TAG_ARRAY,
@@ -30,7 +29,6 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_PUSH_INTEGER,
   ROCI_OPCODE_PUSH_DOUBLE,
   ROCI_OPCODE_PUSH_STRING,
-  ROCI_OPCODE_PUSH_SYMBOL,
 
   ROCI_OPCODE_DROP,
 
@@ -164,7 +162,6 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
     case ROCI_OPCODE_PUSH_INTEGER:
     case ROCI_OPCODE_PUSH_DOUBLE:
     case ROCI_OPCODE_PUSH_STRING:
-    case ROCI_OPCODE_PUSH_SYMBOL:
     case ROCI_OPCODE_GET_VAR:
     case ROCI_OPCODE_SET_VAR:
     case ROCI_OPCODE_DEFINE_VAR:
@@ -262,11 +259,6 @@ start_bblock:
     case ROCI_OPCODE_PUSH_STRING:
       *(state->stack++) = *(state->data_ptr++);
       *(state->stack_tags++) = ROCI_TAG_STRING;
-      break;
-
-    case ROCI_OPCODE_PUSH_SYMBOL:
-      *(state->stack++) = *(state->data_ptr++);
-      *(state->stack_tags++) = ROCI_TAG_SYMBOL;
       break;
 
     case ROCI_OPCODE_BR_FALSE:

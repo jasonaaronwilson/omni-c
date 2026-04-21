@@ -114,13 +114,6 @@ roci_bb_builder_array_t* roci_assemble(buffer_t* buffer) {
             u64_to_value(
                 cast(uint64_t,
                      buffer_c_substring(token, 1, buffer_length(token) - 1))));
-      } else if (first_char == '\'') {
-        buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_SYMBOL);
-        value_array_add(
-            current_bb->data,
-            u64_to_value(
-                cast(uint64_t,
-                     buffer_c_substring(token, 1, buffer_length(token) - 1))));
       } else if (buffer_equal(token, "true")) {
         buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_PUSH_TRUE);
       } else if (buffer_equal(token, "false")) {
