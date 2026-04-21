@@ -44,13 +44,6 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_RETURN,
 };
 
-typedef roci_bb_t = struct {
-  uint32_t num_data;
-  uint32_t num_opcodes;
-  // data
-  // opcodes + alignment nops
-};
-
 typedef roci_runtime_error_t = enum {
   ROCI_RUNTIME_ERROR_NONE,
   ROCI_RUNTIME_ERROR_TRAP,
@@ -90,26 +83,6 @@ roci_runtime_error_t roci_execute(roci_bb_t* entry_point) {
 void roci_runtime_error(roci_runtime_error_t runtime_error) {
   log_fatal("A runtime error has occurred evaluating a roci script");
   fatal_error(ERROR_ILLEGAL_STATE);
-}
-
-/**
- * @function bblock_opcode_pointer
- *
- * Compute the initial opcode pointer from a fullly linked bblock.
- *
- */
-inline uint8_t* bblock_opcode_pointer(roci_bb_t* bb) {
-  return cast(uint8_t*, bb) + 8 + bb->num_data * 8;
-}
-
-/**
- * @function bblock_data_pointer
- *
- * Compute the initial data pointer from a fullly linked bblock.
- *
- */
-inline uint64_t* bblock_data_pointer(roci_bb_t* bb) {
-  return cast(uint64_t*, bb) + 1;
 }
 
 /**
