@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file roci.c
  *
  * Roci is an interpreter for a C syntax "nano" Lisp/Scheme
  * interpreter with an intentionally minimal runtime (very limited
@@ -7,8 +7,8 @@
  * cross platform build tool which does what "ninja" doesn't.
  *
  * The VM is also a little unique because objects in the heap are
- * stored without tags but the stack and variable environments still
- * track tags to conservatively provide some dynmaic type checking.
+ * stored without tags but the stack and environments track tags to
+ * conservatively provide some dynmaic type checking.
  */
 
 typedef roci_tag_t = enum {
@@ -88,7 +88,7 @@ typedef roci_env_t = struct {
 };
 
 /**
- * @function
+ * @function add_bblock
  *
  */
 roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
@@ -97,14 +97,6 @@ roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
   result->data = make_value_array(1);
   value_array_add(bblocks, ptr_to_value(result));
   return result;
-}
-
-/**
- * @function
- *
- */
-roci_bb_builder_t* get_bblock(roci_bb_builder_array_t* bblocks, int number) {
-  return value_array_get_ptr(bblocks, number, typeof(roci_bb_builder_t*));
 }
 
 /**

@@ -6,16 +6,17 @@
  * It deals with opcodes, constants, labels, and comments.
  *
  * ```
- * ; Simple function implementing
- * ; "return my_func(0x12345, 3.14, "Hello world!")"
- * 0:
+ * ;;; Simple function implementing
+ * ;;; "return my_func(0x12345, 3.14, "Hello world!")"
+ * bb_0:
  *    push 0x12345
  *    push 3.14
  *    push "Hello world!"
- *    push 'my_func'
- *    push 3
- *    call 1
- * 1:
+ *    push "my_func"
+ *    ; the bblock argument is the return address which makes this
+ *    ; assembly language kind of weird
+ *    call bb_1
+ * bb_1:
  *    return
  * ```
  */
