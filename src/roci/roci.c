@@ -166,6 +166,7 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
     case ROCI_OPCODE_PUSH_STRING:
     case ROCI_OPCODE_PUSH_SYMBOL:
     case ROCI_OPCODE_GET_VAR:
+    case ROCI_OPCODE_SET_VAR:
       *(data_ptr++) = value_array_get(builder->data, dindex++).u64;
       break;
 
@@ -302,15 +303,21 @@ start_bblock:
     case ROCI_OPCODE_DEFINE_VAR:
       break;
 
-    case ROCI_OPCODE_GET_VAR:
+    case ROCI_OPCODE_GET_VAR: {
       char* str = cast(char*, state->data_ptr++);
       roci_env_binding_t* binding = roci_get_var(state->env, str);
       *(state->stack++) = binding->value.u64;
       *(state->stack_tags++) = binding->tag;
       break;
+    }
 
-    case ROCI_OPCODE_SET_VAR:
+    case ROCI_OPCODE_SET_VAR: {
+      char* str = cast(char*, state->data_ptr++);
+      roci_tag_t tag = *(--state->stack_tags);
+      uint64_t tos = *(--state->stack);
+      roci_set_var(state->env, str, u64_to_value(tos), tag);
       break;
+    }
 
     default:
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;

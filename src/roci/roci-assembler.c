@@ -174,6 +174,14 @@ roci_bb_builder_array_t* roci_assemble(buffer_t* buffer) {
       buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_GET_VAR);
       value_array_add(current_bb->data,
                       str_to_value(buffer_to_c_string(token)));
+    } else if (buffer_equal(token, "set_var")) {
+      position = read_roci_token(buffer, position, token);
+      if (buffer_length(buffer) == 0) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_SET_VAR);
+      value_array_add(current_bb->data,
+                      str_to_value(buffer_to_c_string(token)));
     } else {
       log_fatal("unrecognized opcode '%s' at position %d",
                 buffer_to_c_string(token), buffer_length(token), position);
