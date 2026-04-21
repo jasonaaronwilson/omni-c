@@ -76,6 +76,7 @@ typedef roci_vm_state_t = struct {
   uint64_t* stack;
   uint8_t* stack_tags;
   roci_bb_t** return_stack;
+  roci_env_t* env;
 };
 
 typedef roci_env_binding_t = struct {
@@ -164,6 +165,7 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
     case ROCI_OPCODE_PUSH_DOUBLE:
     case ROCI_OPCODE_PUSH_STRING:
     case ROCI_OPCODE_PUSH_SYMBOL:
+    case ROCI_OPCODE_GET_VAR:
       *(data_ptr++) = value_array_get(builder->data, dindex++).u64;
       break;
 
@@ -293,6 +295,23 @@ start_bblock:
       }
       goto start_bblock;
 
+    case ROCI_OPCODE_NEW_ENVIRONMENT:
+      state->env = roci_new_env(state->env);
+      break;
+
+    case ROCI_OPCODE_DEFINE_VAR:
+      break;
+
+    case ROCI_OPCODE_GET_VAR:
+      char* str = cast(char*, state->data_ptr++);
+      roci_env_binding_t* binding = roci_get_var(state->env, str);
+      *(state->stack++) = binding->value.u64;
+      *(state->stack_tags++) = binding->tag;
+      break;
+
+    case ROCI_OPCODE_SET_VAR:
+      break;
+
     default:
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
     }
@@ -328,4 +347,11 @@ void roci_define_var(roci_env_t* env, char* name, value_t value,
   binding->value = value;
   binding->tag = tag;
   string_ht_insert(env->bindings, name, ptr_to_value(binding));
+}
+
+roci_env_t* roci_new_env(roci_env_t* parent) {
+  roci_env_t* result = malloc_struct(roci_env_t);
+  result->parent = parent;
+  result->bindings = make_string_hashtable(7);
+  return result;
 }

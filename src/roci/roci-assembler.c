@@ -42,15 +42,15 @@ uint64_t skip_whitespace_and_comments(buffer_t* buffer, uint64_t position) {
 
 uint64_t read_roci_token(buffer_t* buffer, uint64_t position, buffer_t* token) {
   log_info("read_roci_token");
-  position = skip_whitespace_and_comments(buffer, position);
   buffer_clear(token);
+  position = skip_whitespace_and_comments(buffer, position);
   while (position < buffer_length(buffer)) {
     int ch = buffer_get(buffer, position);
+    position++;
     if (isspace(ch)) {
       return position;
     }
     buffer_append_byte(token, ch);
-    position++;
   }
 
   return position;
@@ -166,6 +166,18 @@ roci_bb_builder_array_t* roci_assemble(buffer_t* buffer) {
       buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_RETURN);
     } else if (buffer_equal(token, "trap")) {
       buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_TRAP);
+    } else if (buffer_equal(token, "get_var")) {
+      position = read_roci_token(buffer, position, token);
+      if (buffer_length(buffer) == 0) {
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_GET_VAR);
+      value_array_add(current_bb->data,
+                      str_to_value(buffer_to_c_string(token)));
+    } else {
+      log_fatal("unrecognized opcode '%s' at position %d",
+                buffer_to_c_string(token), buffer_length(token), position);
+      fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
 

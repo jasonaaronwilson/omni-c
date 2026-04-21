@@ -39,6 +39,9 @@ void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
       buffer_printf(buffer, "    br_false %s\n",
                     uint64_to_string(*(data_ptr++)));
       break;
+    case ROCI_OPCODE_GET_VAR:
+      buffer_printf(buffer, "    get_var %s\n", cast(char*, *(data_ptr++)));
+      break;
     default:
       buffer_printf(buffer, "    <unknown-opcode>\n");
       break;
