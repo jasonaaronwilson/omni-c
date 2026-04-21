@@ -45,6 +45,9 @@ void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
     case ROCI_OPCODE_SET_VAR:
       buffer_printf(buffer, "    set_var %s\n", cast(char*, *(data_ptr++)));
       break;
+    case ROCI_OPCODE_DEFINE_VAR:
+      buffer_printf(buffer, "    define_var %s\n", cast(char*, *(data_ptr++)));
+      break;
     default:
       buffer_printf(buffer, "    <unknown-opcode>\n");
       break;
