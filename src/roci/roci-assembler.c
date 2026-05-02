@@ -89,7 +89,7 @@ roci_bb_builder_array_t* roci_assemble(buffer_t* buffer) {
     }
 
     if (buffer_ends_with(token, ":")) {
-      // Utilize the builder struct explicitly
+      // labels create new bblocks
       current_bb = add_bblock(bblocks);
       current_bb->bblock_label
           = buffer_c_substring(token, 0, buffer_length(token) - 1);
