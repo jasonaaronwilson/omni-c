@@ -39,6 +39,7 @@
 typedef roci_compile_time_error_t = enum {
   ROCI_COMPILE_TIME_ERROR_NONE,
   ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
+  ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
 };
 
 typedef roci_compiler_state_t = struct {
@@ -82,6 +83,7 @@ void roci_compile_statement(roci_compiler_state_t* state) {
     if (token_matches(token, ";")) {
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
     } else {
+      ++state->position;
       // TODO(jawilson): parse/compile expression
     }
   } else {
@@ -89,9 +91,32 @@ void roci_compile_statement(roci_compiler_state_t* state) {
   }
 }
 
-void roci_compile_expression(roci_compiler_state_t* state) {}
+void roci_compile_expression(roci_compiler_state_t* state) {
+  token_t* token = token_at(state->tokens, state->position);
+  if (token_matches(token, "fn")) {
+    // must be a closure
+  }
+
+  token_t* token_next = token_at(state->tokens, state->position + 1);
+  if (token_matches(token_next, "(")) {
+    // function call
+  } else if (token_matches(token_next, ";") || token_matches(token_next, ",")
+             || token_matches(token_next, ")")) {
+    // must be variable reference
+    ++state->position;
+    char* varname = token_to_string(token);
+    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_GET_VAR);
+    value_array_add(state->current_bb->data,
+                    u64_to_value(cast(uint64_t, varname)));
+  } else {
+    state->compiler_error = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION;
+  }
+}
 
 void roci_new_bblock(roci_compiler_state_t* state) {
   state->current_bb = add_bblock(state->bblocks);
-  state->current_bb->bblock_label = "FIXME";
+  // Label's only need to be uniquely named within a
+  // roci_bb_builder_array_t instance.
+  state->current_bb->bblock_label
+      = string_printf("bb_%l", state->bb_label_count++);
 }
