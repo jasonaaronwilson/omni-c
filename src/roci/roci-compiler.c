@@ -102,6 +102,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     // function call
   } else if (token_matches(token_next, ";") || token_matches(token_next, ",")
              || token_matches(token_next, ")")) {
+    // Acually could just be a number or a string!
     // must be variable reference
     ++state->position;
     char* varname = token_to_string(token);
