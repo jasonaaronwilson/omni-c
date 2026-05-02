@@ -1,7 +1,9 @@
 /**
  * @file
  *
- * This is a very simple assembler for testing the roci interpreter.
+ * This is a very simple assembler for testing the roci
+ * interpreter. (An assembler is not necessary for compiling and
+ * running roci - it uses roci_bb_builder_t directly).
  *
  * It deals with opcodes, constants, labels, and comments.
  *
