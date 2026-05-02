@@ -1,6 +1,8 @@
 /**
  * @file tokenizer.c
  *
+ * This file implements a simple tokenizer based on delimiters. This
+ * is not the tokenizer used by omni-c or roci for core functionality.
  */
 
 void add_duplicate(value_array_t* token_array, const char* data);
