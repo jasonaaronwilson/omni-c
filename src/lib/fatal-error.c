@@ -141,45 +141,9 @@ void print_backtrace() {
 #endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
 }
 
-const char* fatal_error_code_to_string(int error_code) {
-  switch (error_code) {
-  case ERROR_UKNOWN:
-    return "ERROR_UKNOWN";
-  case ERROR_MEMORY_ALLOCATION:
-    return "ERROR_MEMORY_ALLOCATION";
-  case ERROR_MEMORY_FREE_NULL:
-    return "ERROR_MEMORY_FREE_NULL";
-  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
-    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
-  case ERROR_ILLEGAL_INITIAL_CAPACITY:
-    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
-  case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
-    return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
-  case ERROR_ACCESS_OUT_OF_BOUNDS:
-    return "ERROR_ACCESS_OUT_OF_BOUNDS";
-  case ERROR_NOT_REACHED:
-    return "ERROR_NOT_REACHED";
-  case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
-    return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
-  case ERROR_UNIMPLEMENTED:
-    return "ERROR_UNIMPLEMENTED";
-  case ERROR_ILLEGAL_NULL_ARGUMENT:
-    return "ERROR_ILLEGAL_NULL_ARGUMENT";
-  case ERROR_ILLEGAL_ARGUMENT:
-    return "ERROR_ILLEGAL_ARGUMENT";
-  case ERROR_MEMORY_START_PADDING_ERROR:
-    return "ERROR_MEMORY_START_PADDING_ERROR";
-  case ERROR_MEMORY_END_PADDING_ERROR:
-    return "ERROR_MEMORY_END_PADDING_ERROR";
-
-  default:
-    return "error";
-  }
-}
-
 void print_error_code_name(int error_code) {
   fprintf(stderr, " ");
   fprintf(stderr, "*** ");
-  fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
+  fprintf(stderr, "%s", error_code_to_string(error_code));
   fprintf(stderr, " ***\n");
 }
