@@ -7,10 +7,7 @@ void test_assembler_command() {
     roci_bb_builder_array_t* builders = roci_assemble(file->data);
     value_array_t* bblocks = build_bblocks(builders);
     buffer_t* buffer = make_buffer(1);
-    for (int j = 0; i < bblocks->length; j++) {
-      bblock_to_buffer(buffer,
-                       value_array_get_ptr(bblocks, j, typeof(roci_bb_t*)));
-    }
+    disassemble_bblocks(bblocks, buffer);
     fprintf(stderr, buffer_to_c_string(buffer));
   }
 }
