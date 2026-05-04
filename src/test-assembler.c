@@ -1,3 +1,11 @@
+/**
+ * @function
+ *
+ * Run through a set of files assembling and disassembling them. It
+ * will be a bit difficult to test against golden files since the
+ * compiled bblock labels could appear anywhere in memory though
+ * removing any line ending in ":" maybe work out OK.
+ */
 void test_assembler_command() {
   log_info("test_assembler_command()\n");
   value_array_t* files = read_files(FLAG_files);

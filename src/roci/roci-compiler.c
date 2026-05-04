@@ -128,11 +128,17 @@ void roci_compile_expression(roci_compiler_state_t* state) {
       value_array_add(state->current_bb->data, parsed.val);
       break;
 
-      // case TOKEN_TYPE_FLOAT_LITERAL:
-      // break;
-      // case TOKEN_TYPE_STRING_LITERAL:
-      // break;
-      // case TOKEN_TYPE_CHARACTER_LITERAL:
+    case TOKEN_TYPE_FLOAT_LITERAL:
+      double dbl = string_parse_double(token_to_string(token));
+      buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_DOUBLE);
+      value_array_add(state->current_bb->data, dbl_to_value(dbl));
+      break;
+
+    case TOKEN_TYPE_STRING_LITERAL:
+      char* str = token_to_string(token);
+      buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_STRING);
+      value_array_add(state->current_bb->data, str_to_value(str));
+      break;
 
     default:
       log_fatal("unexpected token");
