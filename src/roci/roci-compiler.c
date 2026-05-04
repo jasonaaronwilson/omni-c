@@ -91,6 +91,19 @@ void roci_compile_statement(roci_compiler_state_t* state) {
     }
     buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_RETURN);
   } else if (token_matches(token, "if")) {
+    token_t* open = token_at(state->tokens, ++state->position);
+    if (!token_matches(open, "(")) {
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+    state->position++;
+    roci_compile_expression(state);
+    token_t* close = token_at(state->tokens, state->position);
+    if (!token_matches(close, ")")) {
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+    state->position++;
+    // {
+    // }
   } else if (token_matches(token, "while")) {
   } else {
     state->compiler_error = ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT;
@@ -113,9 +126,15 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     switch (token->type) {
     case TOKEN_TYPE_IDENTIFIER:
       char* varname = token_to_string(token);
-      buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_GET_VAR);
-      value_array_add(state->current_bb->data,
-                      u64_to_value(cast(uint64_t, varname)));
+      if (string_equal(varname, "true")) {
+        buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_TRUE);
+      } else if (string_equal(varname, "false")) {
+        buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
+      } else {
+        buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_GET_VAR);
+        value_array_add(state->current_bb->data,
+                        u64_to_value(cast(uint64_t, varname)));
+      }
       break;
 
     case TOKEN_TYPE_INTEGER_LITERAL:
