@@ -59,6 +59,8 @@ int main(int argc, char** argv) {
     print_tokens();
   } else if (string_equal("test-assembler", FLAG_command)) {
     test_assembler_command();
+  } else if (string_equal("roci", FLAG_command)) {
+    roci_command();
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

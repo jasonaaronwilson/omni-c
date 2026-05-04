@@ -31,20 +31,22 @@ roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks) {
  * @function
  *
  * Build and link all of the bblocks into the interpreter efficient
- * format and return the address of the first bblock.
- *
- * If there are no bblocks, then NULL is returned.
+ * format and return an array of the bblocks though usually only the
+ * first bblock is needed.
  *
  * This is slightly tricky to use and will evolve over time at which
  * time hopefully I will update the documentation.
  */
-roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
-
+value_array_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
   log_info("roci -- build_bblocks\n");
+
+  // bblocks->length
+  value_array_t* result = make_value_array(1);
 
   // First allocate all of the bblocks before building the final
   // contents so we can "link" everything properly.
   for (int i = 0; i < bblocks->length; i++) {
+    log_info("roci -- allocating %d\n", i);
     roci_bb_builder_t* builder
         = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
 
@@ -56,16 +58,20 @@ roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
     bblock->num_data = builder->data->length;
     bblock->num_opcodes = builder->opcodes->length;
     builder->bblock = bblock;
+    value_array_add(result, ptr_to_value(bblock));
+    log_info("roci -- allocated %d\n", i);
   }
 
   // Now copy over opcodes and data converting bblock numbers to
   // bblock addresses
   for (int i = 0; i < bblocks->length; i++) {
+    log_info("roci -- copying opcodes %d\n", i);
     copy_opcodes_and_link(
         bblocks, value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*)));
+    log_info("roci -- done copying opcodes %d\n", i);
   }
 
-  return value_array_get_ptr(bblocks, 0, typeof(roci_bb_builder_t*))->bblock;
+  return result;
 }
 
 void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,

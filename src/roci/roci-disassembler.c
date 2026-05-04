@@ -57,3 +57,10 @@ double raw_double_to_double(uint64_t raw_bits) {
   memcpy(&val, &raw_bits, sizeof(val));
   return val;
 }
+
+void disassemble_bblocks(value_array_t* bblocks, buffer_t* buffer) {
+  for (int i = 0; i < bblocks->length; i++) {
+    bblock_to_buffer(buffer,
+                     value_array_get_ptr(bblocks, i, typeof(roci_bb_t*)));
+  }
+}

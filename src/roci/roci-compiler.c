@@ -65,15 +65,18 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
   state->tokens = tokenizer_result.tokens;
   state->position = 0;
   roci_new_bblock(state);
+  roci_compile_tokens(state);
 }
 
 void roci_compile_tokens(roci_compiler_state_t* state) {
+  log_warn("roci_compile_tokens begin");
   while (state->position < state->tokens->length) {
     roci_compile_statement(state);
     if (state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
       return;
     }
   }
+  log_warn("roci_compile_tokens end");
 }
 
 void roci_compile_statement(roci_compiler_state_t* state) {
@@ -84,8 +87,11 @@ void roci_compile_statement(roci_compiler_state_t* state) {
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
     } else {
       ++state->position;
-      // TODO(jawilson): parse/compile expression
+      roci_compile_expression(state);
     }
+    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_RETURN);
+  } else if (token_matches(token, "if")) {
+  } else if (token_matches(token, "while")) {
   } else {
     state->compiler_error = ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT;
   }
@@ -95,6 +101,8 @@ void roci_compile_expression(roci_compiler_state_t* state) {
   token_t* token = token_at(state->tokens, state->position);
   if (token_matches(token, "fn")) {
     // must be a closure
+  } else if (token_matches(token, "(")) {
+    // parenthesized expression
   }
 
   token_t* token_next = token_at(state->tokens, state->position + 1);
@@ -102,22 +110,46 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     // function call
   } else if (token_matches(token_next, ";") || token_matches(token_next, ",")
              || token_matches(token_next, ")")) {
-    // Acually could just be a number or a string!
-    // must be variable reference
+    switch (token->type) {
+    case TOKEN_TYPE_IDENTIFIER:
+      char* varname = token_to_string(token);
+      buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_GET_VAR);
+      value_array_add(state->current_bb->data,
+                      u64_to_value(cast(uint64_t, varname)));
+      break;
+
+    case TOKEN_TYPE_INTEGER_LITERAL:
+      value_result_t parsed = string_parse_uint64(token_to_string(token));
+      if (parsed.nf_error != NF_OK) {
+        log_fatal("failed to parse integer");
+        fatal_error(ERROR_ILLEGAL_INPUT);
+      }
+      buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
+      value_array_add(state->current_bb->data, parsed.val);
+      break;
+
+      // case TOKEN_TYPE_FLOAT_LITERAL:
+      // break;
+      // case TOKEN_TYPE_STRING_LITERAL:
+      // break;
+      // case TOKEN_TYPE_CHARACTER_LITERAL:
+
+    default:
+      log_fatal("unexpected token");
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
     ++state->position;
-    char* varname = token_to_string(token);
-    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_GET_VAR);
-    value_array_add(state->current_bb->data,
-                    u64_to_value(cast(uint64_t, varname)));
   } else {
     state->compiler_error = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION;
   }
 }
 
 void roci_new_bblock(roci_compiler_state_t* state) {
+  log_warn("roci_new_bblock begin");
   state->current_bb = add_bblock(state->bblocks);
   // Label's only need to be uniquely named within a
   // roci_bb_builder_array_t instance.
   state->current_bb->bblock_label
-      = string_printf("bb_%l", state->bb_label_count++);
+      = string_printf("bb_%d", state->bb_label_count++);
+  log_warn("roci_new_bblock end");
 }
