@@ -62,7 +62,15 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
              tokenizer_result.tokenizer_error_code);
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
-  state->tokens = tokenizer_result.tokens;
+  state->tokens = transform_tokens(
+      tokenizer_result.tokens,
+      compound_literal(token_transformer_options_t,
+                       {
+                           .keep_whitespace = false,
+                           .keep_comments = false,
+                           .keep_javadoc_comments = false,
+                           .keep_c_preprocessor_lines = false,
+                       }));
   state->position = 0;
   roci_new_bblock(state);
   roci_compile_tokens(state);
