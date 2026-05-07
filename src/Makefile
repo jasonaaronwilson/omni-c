@@ -54,7 +54,7 @@ OMNI_C := ${BUILD_DIR}/bin/omni-c
 
 # no-unused-function could be interesting to look into
 # -Wno-error=parentheses-equality seems to have disappeared
-WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr -Wno-unused-function
+WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr -Wno-unused-function -Wno-unused-variable
 CC_FLAGS := -g -rdynamic ${WARN_FLAGS}
 CC_FLAGS_OPT := ${CC_FLAGS} -O3 
 

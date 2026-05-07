@@ -94,7 +94,7 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
       *(data_ptr++) = value_array_get(builder->data, dindex++).u64;
       break;
 
-    case ROCI_OPCODE_BR_FALSE:
+    case ROCI_OPCODE_BR_TRUE:
     case ROCI_OPCODE_BR:
       char* label = value_array_get_ptr(builder->data, dindex++, typeof(char*));
       *(data_ptr++) = bb_label_to_address(bblocks, label);

@@ -72,7 +72,7 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
                            .keep_c_preprocessor_lines = false,
                        }));
   state->position = 0;
-  roci_new_bblock(state);
+  state->current_bb = roci_new_bblock(state);
   roci_compile_tokens(state);
 }
 
@@ -81,7 +81,9 @@ void roci_compile_tokens(roci_compiler_state_t* state) {
   while (state->position < state->tokens->length) {
     roci_compile_statement(state);
     if (state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
-      return;
+      log_fatal("compiler error %s",
+                roci_compile_time_error_to_string(state->compiler_error));
+      fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
   log_warn("roci_compile_tokens end");
@@ -89,33 +91,103 @@ void roci_compile_tokens(roci_compiler_state_t* state) {
 
 void roci_compile_statement(roci_compiler_state_t* state) {
   token_t* token = token_at(state->tokens, state->position);
+  log_warn("CURRENT TOKEN IS %s", token_to_string(token));
   if (token_matches(token, "return")) {
-    token = token_at(state->tokens, ++state->position);
+    state->position++;
+    token = token_at(state->tokens, state->position);
     if (token_matches(token, ";")) {
+      state->position++;
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
     } else {
-      ++state->position;
       roci_compile_expression(state);
+      token = token_at(state->tokens, state->position);
+      if (token_matches(token, ";")) {
+        state->position++;
+      } else {
+        log_fatal("expected semicolon");
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
     }
     buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_RETURN);
   } else if (token_matches(token, "if")) {
-    token_t* open = token_at(state->tokens, ++state->position);
-    if (!token_matches(open, "(")) {
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-    state->position++;
-    roci_compile_expression(state);
-    token_t* close = token_at(state->tokens, state->position);
-    if (!token_matches(close, ")")) {
-      fatal_error(ERROR_ILLEGAL_INPUT);
-    }
-    state->position++;
-    // {
-    // }
+    roci_compile_if(state);
   } else if (token_matches(token, "while")) {
   } else {
-    state->compiler_error = ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT;
+    log_fatal("unexpected token %s", token_to_string(token));
+    fatal_error(ERROR_ILLEGAL_INPUT);
   }
+}
+
+void roci_compile_if(roci_compiler_state_t* state) {
+
+  token_t* open = token_at(state->tokens, ++state->position);
+  if (!token_matches(open, "(")) {
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+  state->position++;
+  roci_compile_expression(state);
+  token_t* close = token_at(state->tokens, state->position++);
+  if (!token_matches(close, ")")) {
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+  roci_bb_builder_t* if_bb = state->current_bb;
+
+  roci_bb_builder_t* true_bb = roci_compile_block(state);
+  roci_bb_builder_t* end_of_true_bb = state->current_bb;
+
+  buffer_append_byte(if_bb->opcodes, ROCI_OPCODE_BR_TRUE);
+  value_array_add(if_bb->data, ptr_to_value(true_bb->bblock_label));
+
+  roci_bb_builder_t* false_bb = nullptr;
+
+  token_t* peek_token = token_at(state->tokens, state->position);
+  if (token_matches(peek_token, "else")) {
+    state->position++;
+
+    roci_bb_builder_t* false_bb = roci_compile_block(state);
+    roci_bb_builder_t* after_bb = roci_new_bblock(state);
+
+    buffer_append_byte(if_bb->opcodes, ROCI_OPCODE_BR);
+    value_array_add(if_bb->data, ptr_to_value(false_bb->bblock_label));
+
+    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_BR);
+    value_array_add(state->current_bb->data,
+                    ptr_to_value(after_bb->bblock_label));
+
+    buffer_append_byte(end_of_true_bb->opcodes, ROCI_OPCODE_BR);
+    value_array_add(end_of_true_bb->data, ptr_to_value(after_bb->bblock_label));
+
+    state->current_bb = after_bb;
+  } else {
+    roci_bb_builder_t* after_bb = roci_new_bblock(state);
+    buffer_append_byte(end_of_true_bb->opcodes, ROCI_OPCODE_BR);
+    value_array_add(end_of_true_bb->data, ptr_to_value(after_bb->bblock_label));
+
+    buffer_append_byte(if_bb->opcodes, ROCI_OPCODE_BR);
+    value_array_add(if_bb->data, ptr_to_value(after_bb->bblock_label));
+
+    state->current_bb = after_bb;
+  }
+}
+
+roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
+  roci_bb_builder_t* result_bb = roci_new_bblock(state);
+  state->current_bb = result_bb;
+  token_t* open_b = token_at(state->tokens, state->position++);
+  if (!token_matches(open_b, "{")) {
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+  while (state->position < state->tokens->length) {
+    // TODO(jawilson): eof
+    roci_compile_statement(state);
+    token_t* close_b = token_at(state->tokens, state->position);
+    if (token_matches(close_b, "}")) {
+      state->position++;
+      return result_bb;
+    }
+  }
+  log_fatal("closing brace not found!");
+  fatal_error(ERROR_ILLEGAL_INPUT);
 }
 
 void roci_compile_expression(roci_compiler_state_t* state) {
@@ -177,12 +249,8 @@ void roci_compile_expression(roci_compiler_state_t* state) {
   }
 }
 
-void roci_new_bblock(roci_compiler_state_t* state) {
-  log_warn("roci_new_bblock begin");
-  state->current_bb = add_bblock(state->bblocks);
-  // Label's only need to be uniquely named within a
-  // roci_bb_builder_array_t instance.
-  state->current_bb->bblock_label
-      = string_printf("bb_%d", state->bb_label_count++);
-  log_warn("roci_new_bblock end");
+roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state) {
+  roci_bb_builder_t* result = add_bblock(state->bblocks);
+  result->bblock_label = string_printf("bb_%d", state->bb_label_count++);
+  return result;
 }

@@ -37,7 +37,7 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_GET_VAR,
   ROCI_OPCODE_SET_VAR,
 
-  ROCI_OPCODE_BR_FALSE,
+  ROCI_OPCODE_BR_TRUE,
   ROCI_OPCODE_BR,
 
   ROCI_OPCODE_CALL,
@@ -129,14 +129,14 @@ start_bblock:
       *(state->stack_tags++) = ROCI_TAG_STRING;
       break;
 
-    case ROCI_OPCODE_BR_FALSE:
+    case ROCI_OPCODE_BR_TRUE:
       roci_bb_t* taken_bb = cast(roci_bb_t*, state->data_ptr++);
       roci_tag_t tag = *(--state->stack_tags);
       uint64_t tos = *(--state->stack);
       if (tag != ROCI_TAG_BOOLEAN) {
         return ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED;
       }
-      if (tos == 0) {
+      if (tos != 0) {
         bb = taken_bb;
         goto start_bblock;
       }

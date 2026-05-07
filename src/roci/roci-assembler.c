@@ -149,12 +149,12 @@ roci_bb_builder_array_t* roci_assemble(buffer_t* buffer) {
       buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_BR);
       value_array_add(current_bb->data,
                       ptr_to_value(buffer_to_c_string(token)));
-    } else if (buffer_equal(token, "br_false")) {
+    } else if (buffer_equal(token, "br_true")) {
       position = read_roci_token(buffer, position, token);
       if (buffer_length(buffer) == 0) {
         fatal_error(ERROR_ILLEGAL_STATE);
       }
-      buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_BR_FALSE);
+      buffer_append_byte(current_bb->opcodes, ROCI_OPCODE_BR_TRUE);
       value_array_add(current_bb->data,
                       ptr_to_value(buffer_to_c_string(token)));
     } else if (buffer_equal(token, "call")) {

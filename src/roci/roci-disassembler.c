@@ -32,8 +32,8 @@ void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
     case ROCI_OPCODE_BR:
       buffer_printf(buffer, "    br %s\n", uint64_to_string(*(data_ptr++)));
       break;
-    case ROCI_OPCODE_BR_FALSE:
-      buffer_printf(buffer, "    br_false %s\n",
+    case ROCI_OPCODE_BR_TRUE:
+      buffer_printf(buffer, "    br_true %s\n",
                     uint64_to_string(*(data_ptr++)));
       break;
     case ROCI_OPCODE_GET_VAR:
