@@ -55,6 +55,13 @@ typedef roci_compiler_state_t = struct {
 
 void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
                          buffer_t* buffer) {
+  state->tokens = roci_tokenize_file(file_name, buffer);
+  state->position = 0;
+  state->current_bb = roci_new_bblock(state);
+  roci_compile_tokens(state);
+}
+
+value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer) {
   tokenizer_result_t tokenizer_result = tokenize(buffer);
   if (tokenizer_result.tokenizer_error_code) {
     log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name,
@@ -62,7 +69,7 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
              tokenizer_result.tokenizer_error_code);
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
-  state->tokens = transform_tokens(
+  return transform_tokens(
       tokenizer_result.tokens,
       compound_literal(token_transformer_options_t,
                        {
@@ -71,9 +78,6 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
                            .keep_javadoc_comments = false,
                            .keep_c_preprocessor_lines = false,
                        }));
-  state->position = 0;
-  state->current_bb = roci_new_bblock(state);
-  roci_compile_tokens(state);
 }
 
 void roci_compile_tokens(roci_compiler_state_t* state) {
