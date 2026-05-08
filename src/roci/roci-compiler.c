@@ -135,37 +135,23 @@ void roci_compile_if(roci_compiler_state_t* state) {
   roci_bb_builder_t* true_bb = roci_compile_block(state);
   roci_bb_builder_t* end_of_true_bb = state->current_bb;
 
-  buffer_append_byte(if_bb->opcodes, ROCI_OPCODE_BR_TRUE);
-  value_array_add(if_bb->data, ptr_to_value(true_bb->bblock_label));
+  roci_emit_br_true(if_bb, true_bb);
 
   roci_bb_builder_t* false_bb = nullptr;
 
   token_t* peek_token = token_at(state->tokens, state->position);
   if (token_matches(peek_token, "else")) {
     state->position++;
-
     roci_bb_builder_t* false_bb = roci_compile_block(state);
     roci_bb_builder_t* after_bb = roci_new_bblock(state);
-
-    buffer_append_byte(if_bb->opcodes, ROCI_OPCODE_BR);
-    value_array_add(if_bb->data, ptr_to_value(false_bb->bblock_label));
-
-    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_BR);
-    value_array_add(state->current_bb->data,
-                    ptr_to_value(after_bb->bblock_label));
-
-    buffer_append_byte(end_of_true_bb->opcodes, ROCI_OPCODE_BR);
-    value_array_add(end_of_true_bb->data, ptr_to_value(after_bb->bblock_label));
-
+    roci_emit_branch(if_bb, false_bb);
+    roci_emit_branch(state->current_bb, after_bb);
+    roci_emit_branch(end_of_true_bb, after_bb);
     state->current_bb = after_bb;
   } else {
     roci_bb_builder_t* after_bb = roci_new_bblock(state);
-    buffer_append_byte(end_of_true_bb->opcodes, ROCI_OPCODE_BR);
-    value_array_add(end_of_true_bb->data, ptr_to_value(after_bb->bblock_label));
-
-    buffer_append_byte(if_bb->opcodes, ROCI_OPCODE_BR);
-    value_array_add(if_bb->data, ptr_to_value(after_bb->bblock_label));
-
+    roci_emit_branch(end_of_true_bb, after_bb);
+    roci_emit_branch(if_bb, after_bb);
     state->current_bb = after_bb;
   }
 }
@@ -253,4 +239,16 @@ roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state) {
   roci_bb_builder_t* result = add_bblock(state->bblocks);
   result->bblock_label = string_printf("bb_%d", state->bb_label_count++);
   return result;
+}
+
+void roci_emit_branch(roci_bb_builder_t* src_bblock,
+                      roci_bb_builder_t* tgt_bblock) {
+  buffer_append_byte(src_bblock->opcodes, ROCI_OPCODE_BR);
+  value_array_add(src_bblock->data, ptr_to_value(tgt_bblock->bblock_label));
+}
+
+void roci_emit_br_true(roci_bb_builder_t* src_bblock,
+                       roci_bb_builder_t* tgt_bblock) {
+  buffer_append_byte(src_bblock->opcodes, ROCI_OPCODE_BR_TRUE);
+  value_array_add(src_bblock->data, ptr_to_value(tgt_bblock->bblock_label));
 }
