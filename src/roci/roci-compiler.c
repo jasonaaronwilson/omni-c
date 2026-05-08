@@ -159,16 +159,13 @@ void roci_compile_if(roci_compiler_state_t* state) {
 roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
   roci_bb_builder_t* result_bb = roci_new_bblock(state);
   state->current_bb = result_bb;
-  token_t* open_b = token_at(state->tokens, state->position++);
-  if (!token_matches(open_b, "{")) {
-    fatal_error(ERROR_ILLEGAL_INPUT);
-  }
+  roci_expect_token(state, "{");
+
   while (state->position < state->tokens->length) {
-    // TODO(jawilson): eof
     roci_compile_statement(state);
-    token_t* close_b = token_at(state->tokens, state->position);
+    token_t* close_b = roci_peek_token(state);
     if (token_matches(close_b, "}")) {
-      state->position++;
+      roci_skip_token(state);
       return result_bb;
     }
   }
@@ -281,5 +278,6 @@ void roci_expect_token(roci_compiler_state_t* state, char* token_string) {
   if (!token_matches(token, token_string)) {
     log_fatal("roci expected %s as the next token but got %s", token_string,
               token_to_string(token));
+    fatal_error(ERROR_ILLEGAL_INPUT);
   }
 }
