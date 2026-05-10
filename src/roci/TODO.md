@@ -12,3 +12,6 @@
 
 5. implement a simple roci parser
 
+6. maybe implement a simple dead code removal after a return or other
+   unconditional branch.
+

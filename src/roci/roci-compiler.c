@@ -51,8 +51,17 @@ typedef roci_compiler_state_t = struct {
   long position;
 };
 
-// value_array_t* file_names
-
+/**
+ * @function roci_compile_buffer
+ *
+ * This is the heart of the roci "interpreter". Rather than parse into
+ * a syntax tree and try to interpret, we actually parse and compile
+ * into the roci VM language and then execute *that*.
+ *
+ * Most people would be surprised to find a compiler inside of their
+ * compiler! This one is pretty simple though and will eventually
+ * remove a dependence on lua and other tools like GNU make.
+ */
 void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
                          buffer_t* buffer) {
   state->tokens = roci_tokenize_file(file_name, buffer);
@@ -61,6 +70,12 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
   roci_compile_tokens(state);
 }
 
+/**
+ * @function roci_tokenize_file
+ *
+ * Since roci is meant to look like C, we simply reuse the omni-c
+ * tokenizer.
+ */
 value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer) {
   tokenizer_result_t tokenizer_result = tokenize(buffer);
   if (tokenizer_result.tokenizer_error_code) {
@@ -80,7 +95,15 @@ value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer) {
                        }));
 }
 
+/**
+ * @function roci_tokenize_file
+ *
+ * Once tokenization is performed on a while, this function compiles
+ * everything in the file.
+ */
 void roci_compile_tokens(roci_compiler_state_t* state) {
+  // TODO(jawilson): make "return" illegal at this level. We can
+  // provide a function like exit though.
   log_warn("roci_compile_tokens begin");
   while (state->position < state->tokens->length) {
     roci_compile_statement(state);
@@ -93,20 +116,25 @@ void roci_compile_tokens(roci_compiler_state_t* state) {
   log_warn("roci_compile_tokens end");
 }
 
+/**
+ * @function roci_compile_statement
+ *
+ * Compile a roci statement.
+ */
 void roci_compile_statement(roci_compiler_state_t* state) {
-  token_t* token = token_at(state->tokens, state->position);
+  token_t* token = roci_peek_token(state);
   log_warn("CURRENT TOKEN IS %s", token_to_string(token));
   if (token_matches(token, "return")) {
-    state->position++;
-    token = token_at(state->tokens, state->position);
+    roci_skip_token(state);
+    token = roci_peek_token(state);
     if (token_matches(token, ";")) {
-      state->position++;
+      roci_skip_token(state);
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
     } else {
       roci_compile_expression(state);
-      token = token_at(state->tokens, state->position);
+      token = roci_peek_token(state);
       if (token_matches(token, ";")) {
-        state->position++;
+	roci_skip_token(state);
       } else {
         log_fatal("expected semicolon");
         fatal_error(ERROR_ILLEGAL_STATE);
@@ -122,18 +150,17 @@ void roci_compile_statement(roci_compiler_state_t* state) {
   }
 }
 
+/**
+ * @function roci_compile_if
+ *
+ * Compile a roci if statement.
+ */
 void roci_compile_if(roci_compiler_state_t* state) {
-
-  token_t* open = token_at(state->tokens, ++state->position);
-  if (!token_matches(open, "(")) {
-    fatal_error(ERROR_ILLEGAL_INPUT);
-  }
-  state->position++;
+  roci_expect_token(state, "if");
+  roci_expect_token(state, "(");
   roci_compile_expression(state);
-  token_t* close = token_at(state->tokens, state->position++);
-  if (!token_matches(close, ")")) {
-    fatal_error(ERROR_ILLEGAL_INPUT);
-  }
+  roci_expect_token(state, ")");
+
   roci_bb_builder_t* if_bb = state->current_bb;
 
   roci_bb_builder_t* true_bb = roci_compile_block(state);
@@ -143,9 +170,9 @@ void roci_compile_if(roci_compiler_state_t* state) {
 
   roci_bb_builder_t* false_bb = nullptr;
 
-  token_t* peek_token = token_at(state->tokens, state->position);
+  token_t* peek_token = roci_peek_token(state);
   if (token_matches(peek_token, "else")) {
-    state->position++;
+    roci_skip_token(state);
     roci_bb_builder_t* false_bb = roci_compile_block(state);
     roci_bb_builder_t* after_bb = roci_new_bblock(state);
     roci_emit_branch(if_bb, false_bb);
@@ -160,7 +187,17 @@ void roci_compile_if(roci_compiler_state_t* state) {
   }
 }
 
+/**
+ * @function roci_compile_block
+ *
+ * Compile a roci block. Blocks start with '{' and end with '}' and
+ * have zero or more statements inside of them. Eventually blocks will
+ * create new environments which will allow more abstraction.
+ */
 roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
+
+  // TODO(jawilson): create and "get over" a new lexical environment
+
   roci_bb_builder_t* result_bb = roci_new_bblock(state);
   state->current_bb = result_bb;
   roci_expect_token(state, "{");
@@ -177,8 +214,15 @@ roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
   fatal_error(ERROR_ILLEGAL_INPUT);
 }
 
+/**
+ * @function roci_compile_expression
+ *
+ * Compile a roci expression. The expressions allowed are quite
+ * limited unlike C hence zero effort to port/reuse the pratt parser
+ * we already had for omni-c.
+ */
 void roci_compile_expression(roci_compiler_state_t* state) {
-  token_t* token = token_at(state->tokens, state->position);
+  token_t* token = roci_peek_token(state);
   if (token_matches(token, "fn")) {
     // must be a closure
   } else if (token_matches(token, "(")) {
@@ -230,12 +274,22 @@ void roci_compile_expression(roci_compiler_state_t* state) {
       log_fatal("unexpected token");
       fatal_error(ERROR_ILLEGAL_INPUT);
     }
-    ++state->position;
+    roci_skip_token(state);
   } else {
     state->compiler_error = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION;
   }
 }
 
+/**
+ * @function roci_new_bblock
+ *
+ * Return a new roci_bb_builder_t*.
+ *
+ * The order of bblocks is technically not relevant but effort has
+ * been made above, for example compile_if, so that the disassembly
+ * looks like "real" assembly language will confuse us humans less. The
+ * person writing this is definitely not AI.
+ */
 roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state) {
   roci_bb_builder_t* result = add_bblock(state->bblocks);
   result->bblock_label = string_printf("bb_%d", state->bb_label_count++);
