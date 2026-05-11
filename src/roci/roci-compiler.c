@@ -125,29 +125,45 @@ void roci_compile_statement(roci_compiler_state_t* state) {
   token_t* token = roci_peek_token(state);
   log_warn("CURRENT TOKEN IS %s", token_to_string(token));
   if (token_matches(token, "return")) {
-    roci_skip_token(state);
-    token = roci_peek_token(state);
-    if (token_matches(token, ";")) {
-      roci_skip_token(state);
-      buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
-    } else {
-      roci_compile_expression(state);
-      token = roci_peek_token(state);
-      if (token_matches(token, ";")) {
-	roci_skip_token(state);
-      } else {
-        log_fatal("expected semicolon");
-        fatal_error(ERROR_ILLEGAL_STATE);
-      }
-    }
-    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_RETURN);
+    roci_compile_return(state);
   } else if (token_matches(token, "if")) {
     roci_compile_if(state);
+  } else if (token_matches(token, "let")) {
+    // roci_compile_let(state);
+    log_fatal("let isn't implemented yet!");
+    fatal_error(ERROR_ILLEGAL_INPUT);
   } else if (token_matches(token, "while")) {
+    log_fatal("while isn't implemented yet!");
+    fatal_error(ERROR_ILLEGAL_INPUT);
   } else {
     log_fatal("unexpected token %s", token_to_string(token));
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
+}
+
+/**
+ * @function roci_compile_return
+ *
+ * Compile a roci return statement.
+ *
+ * roci is a dynamic langage so we kind of need to return something in
+ * case the caller then assigns the value somewhere or uses it in a
+ * call. For now, we return false when there isn't an associated
+ * expression. (I'm thinking of having a mechanism to detect using
+ * "void" results when assigning to a variable or calling another
+ * function though this will bloat code (just a little) somewhere.)
+ */
+void roci_compile_return(roci_compiler_state_t* state) {
+  roci_expect_token(state, "return");
+  token_t* token = roci_peek_token(state);
+  if (token_matches(token, ";")) {
+    roci_skip_token(state);
+    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
+  } else {
+    roci_compile_expression(state);
+    roci_expect_token(state, ";");
+  }
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_RETURN);
 }
 
 /**
