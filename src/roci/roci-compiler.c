@@ -129,9 +129,7 @@ void roci_compile_statement(roci_compiler_state_t* state) {
   } else if (token_matches(token, "if")) {
     roci_compile_if(state);
   } else if (token_matches(token, "let")) {
-    // roci_compile_let(state);
-    log_fatal("let isn't implemented yet!");
-    fatal_error(ERROR_ILLEGAL_INPUT);
+    roci_compile_let(state);
   } else if (token_matches(token, "while")) {
     log_fatal("while isn't implemented yet!");
     fatal_error(ERROR_ILLEGAL_INPUT);
@@ -164,6 +162,31 @@ void roci_compile_return(roci_compiler_state_t* state) {
     roci_expect_token(state, ";");
   }
   buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_RETURN);
+}
+
+/**
+ * @function roci_compile_let
+ *
+ * Compile a roci let statement. This always creates a new binding
+ * kind of like ":=" in go.
+ *
+ * This binding will disappear once the current basic block finishes
+ * execution (unless it's captured in a closure, TBD).
+ *
+ * Currently it is legal to shadow the same name of a variable defined
+ * in a parent environment though this may change once we implement
+ * fluid_let.
+ */
+void roci_compile_let(roci_compiler_state_t* state) {
+  roci_expect_token(state, "let");
+  token_t* varname = roci_next_token(state);
+  // verify identifier
+  roci_expect_token(state, "=");
+  roci_compile_expression(state);
+  roci_expect_token(state, ";");
+  value_array_add(state->current_bb->data,
+                  str_to_value(token_to_string(varname)));
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_DEFINE_VAR);
 }
 
 /**
