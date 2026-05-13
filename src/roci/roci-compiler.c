@@ -66,7 +66,7 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
                          buffer_t* buffer) {
   state->tokens = roci_tokenize_file(file_name, buffer);
   state->position = 0;
-  state->current_bb = roci_new_bblock(state);
+  state->current_bb = roci_new_bblock(state, "bb_file_start");
   roci_compile_tokens(state);
 }
 
@@ -225,13 +225,13 @@ void roci_compile_if(roci_compiler_state_t* state) {
   if (token_matches(peek_token, "else")) {
     roci_skip_token(state);
     roci_bb_builder_t* false_bb = roci_compile_block(state);
-    roci_bb_builder_t* after_bb = roci_new_bblock(state);
+    roci_bb_builder_t* after_bb = roci_new_bblock(state, "if_after_bb");
     roci_emit_branch(if_bb, false_bb);
     roci_emit_branch(state->current_bb, after_bb);
     roci_emit_branch(end_of_true_bb, after_bb);
     state->current_bb = after_bb;
   } else {
-    roci_bb_builder_t* after_bb = roci_new_bblock(state);
+    roci_bb_builder_t* after_bb = roci_new_bblock(state, "if_after_bb");
     roci_emit_branch(end_of_true_bb, after_bb);
     roci_emit_branch(if_bb, after_bb);
     state->current_bb = after_bb;
@@ -241,15 +241,17 @@ void roci_compile_if(roci_compiler_state_t* state) {
 /**
  * @function roci_compile_block
  *
- * Compile a roci block. Blocks start with '{' and end with '}' and
- * have zero or more statements inside of them. Eventually blocks will
- * create new environments which will allow more abstraction.
+ * Compile a roci block and return the initial bblock.
+ *
+ * Blocks start with '{' and end with '}' and have zero or more
+ * statements inside of them. Eventually blocks will create new
+ * environments which will allow more abstraction.
  */
 roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
 
   // TODO(jawilson): create and "get over" a new lexical environment
 
-  roci_bb_builder_t* result_bb = roci_new_bblock(state);
+  roci_bb_builder_t* result_bb = roci_new_bblock(state, "block_bb_");
   state->current_bb = result_bb;
   roci_expect_token(state, "{");
 
@@ -271,7 +273,7 @@ void roci_compile_while(roci_compiler_state_t* state) {
   roci_expect_token(state, "(");
 
   // 1. Create a block for the condition and jump there
-  roci_bb_builder_t* cond_bb = roci_new_bblock(state);
+  roci_bb_builder_t* cond_bb = roci_new_bblock(state, "while_cond_bb");
   roci_emit_branch(state->current_bb, cond_bb);
   state->current_bb = cond_bb;
 
@@ -279,13 +281,12 @@ void roci_compile_while(roci_compiler_state_t* state) {
   roci_compile_expression(state);
   roci_expect_token(state, ")");
 
-  // 3. Linearly compile the body block
-  roci_bb_builder_t* body_bb = roci_new_bblock(state);
-  state->current_bb = body_bb;
-  roci_bb_builder_t* end_of_body_bb = roci_compile_block(state);
+  // 3. Compile the body
+  roci_bb_builder_t* body_bb = roci_compile_block(state);
+  roci_bb_builder_t* end_of_body_bb = state->current_bb;
 
   // 4. Create the exit block for when the loop finishes
-  roci_bb_builder_t* after_bb = roci_new_bblock(state);
+  roci_bb_builder_t* after_bb = roci_new_bblock(state, "while_after_bb");
 
   // Loop back: End of the body jumps back to the condition
   roci_emit_branch(end_of_body_bb, cond_bb);
@@ -375,6 +376,11 @@ void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str) {
   value_array_add(state->current_bb->data, str_to_value(str));
 }
 
+void roci_emit_comment(roci_bb_builder_t* bb, char* str) {
+  buffer_append_byte(bb->opcodes, ROCI_OPCODE_COMMENT);
+  value_array_add(bb->data, ptr_to_value(str));
+}
+
 /**
  * @function roci_new_bblock
  *
@@ -385,9 +391,15 @@ void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str) {
  * looks like "real" assembly language will confuse us humans less. The
  * person writing this is definitely not AI.
  */
-roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state) {
+roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state,
+                                   char* label_prefix) {
+  if (label_prefix == nullptr) {
+    label_prefix = "bb_";
+  }
   roci_bb_builder_t* result = add_bblock(state->bblocks);
-  result->bblock_label = string_printf("bb_%d", state->bb_label_count++);
+  result->bblock_label
+      = string_printf("%s%d", label_prefix, state->bb_label_count++);
+  roci_emit_comment(result, result->bblock_label);
   return result;
 }
 

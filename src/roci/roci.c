@@ -42,6 +42,8 @@ typedef roci_opcode_t = enum {
 
   ROCI_OPCODE_CALL,
   ROCI_OPCODE_RETURN,
+
+  ROCI_OPCODE_COMMENT,
 };
 
 typedef roci_runtime_error_t = enum {
@@ -184,6 +186,10 @@ start_bblock:
       roci_set_var(state->env, str, u64_to_value(tos), tag);
       break;
     }
+
+    case ROCI_OPCODE_COMMENT:
+      state->data_ptr++;
+      break;
 
     default:
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
