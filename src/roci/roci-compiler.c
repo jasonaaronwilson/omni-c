@@ -98,8 +98,8 @@ value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer) {
 /**
  * @function roci_tokenize_file
  *
- * Once tokenization is performed on a while, this function compiles
- * everything in the file.
+ * Once tokenization has been performed, compile all of the
+ * statements in the file.
  */
 void roci_compile_tokens(roci_compiler_state_t* state) {
   // TODO(jawilson): make "return" illegal at this level. We can
@@ -131,11 +131,9 @@ void roci_compile_statement(roci_compiler_state_t* state) {
   } else if (token_matches(token, "let")) {
     roci_compile_let(state);
   } else if (token_matches(token, "while")) {
-    log_fatal("while isn't implemented yet!");
-    fatal_error(ERROR_ILLEGAL_INPUT);
+    roci_compile_while(state);
   } else {
-    log_fatal("unexpected token %s", token_to_string(token));
-    fatal_error(ERROR_ILLEGAL_INPUT);
+    roci_compile_assignment(state);
   }
 }
 
@@ -156,12 +154,12 @@ void roci_compile_return(roci_compiler_state_t* state) {
   token_t* token = roci_peek_token(state);
   if (token_matches(token, ";")) {
     roci_skip_token(state);
-    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
+    roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
   } else {
     roci_compile_expression(state);
     roci_expect_token(state, ";");
   }
-  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_RETURN);
+  roci_emit_opcode(state, ROCI_OPCODE_RETURN);
 }
 
 /**
@@ -180,13 +178,29 @@ void roci_compile_return(roci_compiler_state_t* state) {
 void roci_compile_let(roci_compiler_state_t* state) {
   roci_expect_token(state, "let");
   token_t* varname = roci_next_token(state);
+  // TODO(jawilson): verify vraname is an identifier
+  roci_expect_token(state, "=");
+  roci_compile_expression(state);
+  roci_expect_token(state, ";");
+  roci_emit_token_string_datum(state, token_to_string(varname));
+  roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+}
+
+/**
+ * @function roci_compile_assignment
+ *
+ * Compile a roci assignment statement.
+ *
+ * Assignments look like "var = expr;".
+ */
+void roci_compile_assignment(roci_compiler_state_t* state) {
+  token_t* varname = roci_next_token(state);
   // verify identifier
   roci_expect_token(state, "=");
   roci_compile_expression(state);
   roci_expect_token(state, ";");
-  value_array_add(state->current_bb->data,
-                  str_to_value(token_to_string(varname)));
-  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_DEFINE_VAR);
+  roci_emit_token_string_datum(state, token_to_string(varname));
+  roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
 }
 
 /**
@@ -206,8 +220,6 @@ void roci_compile_if(roci_compiler_state_t* state) {
   roci_bb_builder_t* end_of_true_bb = state->current_bb;
 
   roci_emit_br_true(if_bb, true_bb);
-
-  roci_bb_builder_t* false_bb = nullptr;
 
   token_t* peek_token = roci_peek_token(state);
   if (token_matches(peek_token, "else")) {
@@ -253,6 +265,38 @@ roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
   fatal_error(ERROR_ILLEGAL_INPUT);
 }
 
+// This isn't quite right yet...
+void roci_compile_while(roci_compiler_state_t* state) {
+  roci_expect_token(state, "while");
+  roci_expect_token(state, "(");
+
+  // 1. Create a block for the condition and jump there
+  roci_bb_builder_t* cond_bb = roci_new_bblock(state);
+  roci_emit_branch(state->current_bb, cond_bb);
+  state->current_bb = cond_bb;
+
+  // 2. Compile the condition expression
+  roci_compile_expression(state);
+  roci_expect_token(state, ")");
+
+  // 3. Linearly compile the body block
+  roci_bb_builder_t* body_bb = roci_new_bblock(state);
+  state->current_bb = body_bb;
+  roci_bb_builder_t* end_of_body_bb = roci_compile_block(state);
+
+  // 4. Create the exit block for when the loop finishes
+  roci_bb_builder_t* after_bb = roci_new_bblock(state);
+
+  // Loop back: End of the body jumps back to the condition
+  roci_emit_branch(end_of_body_bb, cond_bb);
+
+  // Condition branches: If true, go to body. If false, go to after_bb.
+  roci_emit_br_true(cond_bb, body_bb);
+  roci_emit_branch(cond_bb, after_bb);
+
+  state->current_bb = after_bb;
+}
+
 /**
  * @function roci_compile_expression
  *
@@ -277,11 +321,11 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     case TOKEN_TYPE_IDENTIFIER:
       char* varname = token_to_string(token);
       if (string_equal(varname, "true")) {
-        buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_TRUE);
+        roci_emit_opcode(state, ROCI_OPCODE_PUSH_TRUE);
       } else if (string_equal(varname, "false")) {
-        buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_FALSE);
+        roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
       } else {
-        buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_GET_VAR);
+        roci_emit_opcode(state, ROCI_OPCODE_GET_VAR);
         value_array_add(state->current_bb->data,
                         u64_to_value(cast(uint64_t, varname)));
       }
@@ -317,6 +361,18 @@ void roci_compile_expression(roci_compiler_state_t* state) {
   } else {
     state->compiler_error = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION;
   }
+}
+
+/**
+ *
+ * A mini-library for emitting roci VM instructions.
+ */
+void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode) {
+  buffer_append_byte(state->current_bb->opcodes, opcode);
+}
+
+void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str) {
+  value_array_add(state->current_bb->data, str_to_value(str));
 }
 
 /**
