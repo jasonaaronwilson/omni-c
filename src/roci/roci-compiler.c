@@ -322,7 +322,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
 
   token_t* token_next = token_at(state->tokens, state->position + 1);
   if (token_matches(token_next, "(")) {
-    // function call
+    roci_compile_function_call(state);
   } else if (token_matches(token_next, ";") || token_matches(token_next, ",")
              || token_matches(token_next, ")")) {
     switch (token->type) {
