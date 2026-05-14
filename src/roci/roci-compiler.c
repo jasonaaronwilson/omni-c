@@ -133,7 +133,14 @@ void roci_compile_statement(roci_compiler_state_t* state) {
   } else if (token_matches(token, "while")) {
     roci_compile_while(state);
   } else {
-    roci_compile_assignment(state);
+    token = token_at(state->tokens, state->position + 1);
+    if (token_matches(token, "=")) {
+      roci_compile_assignment(state);
+    } else if (token_matches(token, "(")) {
+      roci_compile_function_call(state);
+      roci_expect_token(state, ";");
+      roci_emit_opcode(state, ROCI_OPCODE_DROP);
+    }
   }
 }
 
@@ -362,6 +369,34 @@ void roci_compile_expression(roci_compiler_state_t* state) {
   } else {
     state->compiler_error = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION;
   }
+}
+
+void roci_compile_function_call(roci_compiler_state_t* state) {
+  token_t* fn_name = roci_next_token(state);
+  roci_expect_token(state, "(");
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    if (token_matches(token, ")")) {
+      roci_skip_token(state);
+      break;
+    }
+    roci_compile_expression(state);
+    token = roci_peek_token(state);
+    if (token_matches(token, ",")) {
+      roci_skip_token(state);
+    } else if (!token_matches(token, ")")) {
+      log_fatal("Expected comma or close paren.");
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_STRING);
+  value_array_add(state->current_bb->data,
+                  str_to_value(token_to_string(fn_name)));
+  roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL);
+  value_array_add(state->current_bb->data,
+                  str_to_value(return_bb->bblock_label));
+  state->current_bb = return_bb;
 }
 
 /**

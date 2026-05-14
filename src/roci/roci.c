@@ -149,7 +149,8 @@ start_bblock:
       goto start_bblock;
 
     case ROCI_OPCODE_CALL:
-      // HERE
+      // STACK: arg0, ..., argn, fn_name
+      // DATUM: return-bblock
       break;
 
     case ROCI_OPCODE_RETURN:
