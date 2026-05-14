@@ -49,6 +49,7 @@ typedef roci_compiler_state_t = struct {
   roci_bb_builder_t* current_bb;
   value_array_t* tokens;
   long position;
+  long env_depth;
 };
 
 /**
@@ -166,7 +167,7 @@ void roci_compile_return(roci_compiler_state_t* state) {
     roci_compile_expression(state);
     roci_expect_token(state, ";");
   }
-  roci_emit_opcode(state, ROCI_OPCODE_RETURN);
+  roci_emit_return(state);
 }
 
 /**
@@ -185,7 +186,7 @@ void roci_compile_return(roci_compiler_state_t* state) {
 void roci_compile_let(roci_compiler_state_t* state) {
   roci_expect_token(state, "let");
   token_t* varname = roci_next_token(state);
-  // TODO(jawilson): verify vraname is an identifier
+  roci_verify_identifier(varname);
   roci_expect_token(state, "=");
   roci_compile_expression(state);
   roci_expect_token(state, ";");
@@ -256,10 +257,9 @@ void roci_compile_if(roci_compiler_state_t* state) {
  */
 roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
 
-  // TODO(jawilson): create and "get over" a new lexical environment
-
   roci_bb_builder_t* result_bb = roci_new_bblock(state, "block_bb_");
   state->current_bb = result_bb;
+  roci_emit_new_environment(state);
   roci_expect_token(state, "{");
 
   while (state->position < state->tokens->length) {
@@ -267,6 +267,7 @@ roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
     token_t* close_b = roci_peek_token(state);
     if (token_matches(close_b, "}")) {
       roci_skip_token(state);
+      roci_emit_drop_environment(state);
       return result_bb;
     }
   }
@@ -411,6 +412,25 @@ void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str) {
   value_array_add(state->current_bb->data, str_to_value(str));
 }
 
+void roci_emit_new_environment(roci_compiler_state_t* state) {
+  state->env_depth++;
+  roci_emit_opcode(state, ROCI_OPCODE_NEW_ENVIRONMENT);
+}
+
+void roci_emit_drop_environment(roci_compiler_state_t* state) {
+  state->env_depth--;
+  roci_emit_opcode(state, ROCI_OPCODE_DROP_ENVIRONMENT);
+}
+
+void roci_emit_return(roci_compiler_state_t* state) {
+  int depth = state->env_depth;
+  while (depth > 0) {
+    roci_emit_opcode(state, ROCI_OPCODE_DROP_ENVIRONMENT);
+    depth--;
+  }
+  roci_emit_opcode(state, ROCI_OPCODE_RETURN);
+}
+
 void roci_emit_comment(roci_bb_builder_t* bb, char* str) {
   buffer_append_byte(bb->opcodes, ROCI_OPCODE_COMMENT);
   value_array_add(bb->data, ptr_to_value(str));
@@ -480,4 +500,11 @@ void roci_expect_token(roci_compiler_state_t* state, char* token_string) {
               token_to_string(token));
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
+}
+
+void roci_verify_identifier(token_t* token) {
+  if (token->type != TOKEN_TYPE_IDENTIFIER) {
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+  // Make sure our unique keywords don't match either.
 }
