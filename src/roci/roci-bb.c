@@ -25,7 +25,7 @@ typedef roci_bb_t = struct {
  * bblock. Desipite num_opcodes, you should just stop looking after an
  * unconditional branch.
  */
-inline uint8_t* bblock_opcode_pointer(roci_bb_t* bb) {
+static inline uint8_t* bblock_opcode_pointer(roci_bb_t* bb) {
   return cast(uint8_t*, bb) + 8 + bb->num_data * 8;
 }
 
@@ -34,6 +34,6 @@ inline uint8_t* bblock_opcode_pointer(roci_bb_t* bb) {
  *
  * Compute the initial data pointer from a fullly linked bblock.
  */
-inline uint64_t* bblock_data_pointer(roci_bb_t* bb) {
+static inline uint64_t* bblock_data_pointer(roci_bb_t* bb) {
   return cast(uint64_t*, bb) + 1;
 }

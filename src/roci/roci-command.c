@@ -22,6 +22,11 @@ void roci_command(void) {
     value_array_t* bblocks = build_bblocks(state->bblocks);
     disassemble_bblocks(bblocks, buffer);
     fprintf(stderr, buffer_to_c_string(buffer));
+    if (true) {
+      roci_env_t* env = roci_new_env(nullptr);
+      roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
+      roci_execute(env, entry_point);
+    }
     state->bblocks = make_value_array(16);
   }
 

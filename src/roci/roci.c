@@ -70,12 +70,12 @@ typedef roci_vm_state_t = struct {
  * Once a file is compiled into bblocks, this should be used to run
  * that program fragment.
  */
-roci_runtime_error_t roci_execute(roci_bb_t* entry_point) {
+roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point) {
   roci_vm_state_t* state = malloc_struct(roci_vm_state_t);
   state->stack = cast(uint64_t*, malloc(256 * 8));
   state->stack_tags = cast(uint8_t*, malloc(256));
   state->return_stack = cast(roci_bb_t**, malloc(16 * 8));
-  // TODO(jawilson): take a roci_env_t* top_level_environment
+  state->env = env;
   return roci_execute_bblock(entry_point, state);
 }
 
