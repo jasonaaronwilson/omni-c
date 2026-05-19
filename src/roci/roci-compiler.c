@@ -400,8 +400,7 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
   state->current_bb = return_bb;
 }
 
-/**
- *
+/*
  * A mini-library for emitting roci VM instructions.
  */
 void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode) {

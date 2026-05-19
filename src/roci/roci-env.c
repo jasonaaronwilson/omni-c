@@ -1,7 +1,7 @@
 /**
  * @file roci-env.c
  *
- * This is a not particular clever abstraction for environments used
+ * This is a not particularly clever abstraction for environments used
  * by the roci VM.
  */
 
