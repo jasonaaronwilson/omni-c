@@ -277,6 +277,17 @@ char* uint64_to_string(uint64_t number) {
 }
 
 /**
+ * @function int64_to_string
+ *
+ * Convert a int64_t number to a string.
+ */
+char* int64_to_string(int64_t number) {
+  char buffer[32];
+  sprintf(buffer, "%ld", number);
+  return string_duplicate(buffer);
+}
+
+/**
  * @function string_left_pad
  *
  * Prepend left left padding (if necessary) to make it at least N

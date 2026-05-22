@@ -250,3 +250,16 @@ void test_string_duplicate(void) {
   test_assert(string_equal("The quick brown fox",
                            string_duplicate("The quick brown fox")));
 }
+
+void test_uint64_to_string(void) {
+  test_assert_string_equal("12345", uint64_to_string(12345UL));
+  test_assert_string_equal("1099511627520", uint64_to_string(0xffffffff00UL));
+  test_assert_string_equal("18446744073709551615", uint64_to_string(0xffffffffffffffffUL));
+}
+
+void test_int64_to_string(void) {
+  test_assert_string_equal("12345", int64_to_string(12345UL));
+  test_assert_string_equal("1099511627520", int64_to_string(0xffffffff00UL));
+  test_assert_string_equal("-1", int64_to_string(0xffffffffffffffffUL));
+  test_assert_string_equal("-9223372036854775808", int64_to_string(0x8000000000000000UL));
+}
