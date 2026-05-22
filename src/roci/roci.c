@@ -166,7 +166,7 @@ start_bblock:
       break;
 
     case ROCI_OPCODE_DEFINE_VAR: {
-      char* str = cast(char*, state->data_ptr++);
+      char* str = cast(char*, *(state->data_ptr++));
       roci_tag_t tag = *(--state->stack_tags);
       uint64_t tos = *(--state->stack);
       roci_define_var(state->env, str, u64_to_value(tos), tag);
