@@ -56,7 +56,8 @@ OMNI_C := ${BUILD_DIR}/bin/omni-c
 # -Wno-error=parentheses-equality seems to have disappeared
 WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr -Wno-unused-function -Wno-unused-variable
 CC_FLAGS := -g -rdynamic ${WARN_FLAGS}
-CC_FLAGS_OPT := ${CC_FLAGS} -O3 
+#  -O3 -- No optimization for now so that we can flipping debug properly
+CC_FLAGS_OPT := ${CC_FLAGS}
 
 # --- Conditionally define flags for MacOS
 # If IS_MAC_OS is 'true', GC_INCLUDE_FLAG becomes '-I/path/include', else empty.

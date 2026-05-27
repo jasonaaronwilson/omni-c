@@ -133,7 +133,7 @@ start_bblock:
       break;
 
     case ROCI_OPCODE_BR_TRUE:
-      roci_bb_t* taken_bb = cast(roci_bb_t*, state->data_ptr++);
+      roci_bb_t* taken_bb = cast(roci_bb_t*, *(state->data_ptr++));
       roci_tag_t tag = *(--state->stack_tags);
       uint64_t tos = *(--state->stack);
       if (tag != ROCI_TAG_BOOLEAN) {

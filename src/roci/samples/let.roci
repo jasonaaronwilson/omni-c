@@ -1,1 +1,8 @@
-let variable = 12345;
+let int_var = 12345;
+
+// We can't parse negative numbers yet. A quick hack could be done in
+roci_compile_expression...
+//
+// let neg_var = -8675309;
+
+let str_var = "Hello World!";

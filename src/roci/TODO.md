@@ -1,6 +1,6 @@
 # Roci TODO
 
-1. properly handle quoted strings
+1. properly handle quoted strings (and unescape)
 
 2. detect bblocks that don't end in an absolute branch plus remove
    dead code after absolute branches
