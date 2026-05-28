@@ -85,6 +85,10 @@ void roci_dump_binding(buffer_t* buffer, roci_env_binding_t* binding) {
   case ROCI_TAG_INTEGER:
     buffer_printf(buffer, "%s", uint64_to_string(binding->value.u64));
     break;
+  case ROCI_TAG_C_PRIMITIVE:
+    buffer_printf(buffer, "primitive<%s>",
+                  uint64_to_string(binding->value.u64));
+    break;
   default:
     fatal_error(ERROR_ILLEGAL_STATE);
   }
