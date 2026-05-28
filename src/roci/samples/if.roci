@@ -1,3 +1,9 @@
 if (true) {
    let int_var = 12345;
 }
+
+if (true) {
+   let int_var = 12345;
+} else {
+   let str_var = "foo";
+}
