@@ -54,6 +54,11 @@ typedef roci_runtime_error_t = enum {
   ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED,
 };
 
+typedef roci_closure_t = struct {
+  roci_bb_t* entry_point;
+  roci_env_t* env;
+};
+
 typedef roci_vm_state_t = struct {
   roci_runtime_error_t runtime_error;
   uint8_t* opcode_ptr;
@@ -63,6 +68,14 @@ typedef roci_vm_state_t = struct {
   roci_bb_t** return_stack;
   roci_env_t* env;
 };
+
+/**
+ * @typedef roci_c_primitive_t
+ *
+ * Type of a function that takes roci_vm_state_t (so arguments on the
+ * stack).
+ */
+typedef fn_t(void, roci_vm_state_t*) roci_c_primitive_t;
 
 /**
  * @function roci_execute
