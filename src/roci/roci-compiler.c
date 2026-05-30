@@ -401,6 +401,7 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
   state->current_bb = return_bb;
 }
 
+// state->env_depth
 void roci_compile_closure(roci_compiler_state_t* state) {
   roci_expect_token(state, "fn");
   roci_expect_token(state, "(");
@@ -409,7 +410,10 @@ void roci_compile_closure(roci_compiler_state_t* state) {
   int64_t arg_num = roci_collect_fn_args(state, args);
 
   roci_bb_builder_t* current_bb = state->current_bb;
+  int current_env_depth = state->env_depth;
+
   roci_bb_builder_t* fn_entry_bb = roci_new_bblock(state, "fn_header");
+  state->env_depth = 1; // calling a closure puts an item on the env stack
   state->current_bb = fn_entry_bb;
   roci_emit_new_environment(state);
   while (arg_num > 0) {
@@ -419,9 +423,12 @@ void roci_compile_closure(roci_compiler_state_t* state) {
   }
 
   roci_bb_builder_t* body_bb = roci_compile_block(state);
+  roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+  roci_emit_return(state);
 
   roci_emit_branch(fn_entry_bb, body_bb);
-  
+
+  state->env_depth = current_env_depth;
   state->current_bb = current_bb;
   roci_emit_token_string_datum(state, fn_entry_bb->bblock_label);
   roci_emit_opcode(state, ROCI_OPCODE_MAKE_CLOSURE);
