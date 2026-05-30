@@ -316,7 +316,8 @@ void roci_compile_while(roci_compiler_state_t* state) {
 void roci_compile_expression(roci_compiler_state_t* state) {
   token_t* token = roci_peek_token(state);
   if (token_matches(token, "fn")) {
-    // must be a closure
+    roci_compile_closure(state);
+    return;
   } else if (token_matches(token, "(")) {
     // parenthesized expression
   }
@@ -398,6 +399,52 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
   value_array_add(state->current_bb->data,
                   str_to_value(return_bb->bblock_label));
   state->current_bb = return_bb;
+}
+
+void roci_compile_closure(roci_compiler_state_t* state) {
+  roci_expect_token(state, "fn");
+  roci_expect_token(state, "(");
+
+  token_t* args[32];
+  int64_t arg_num = roci_collect_fn_args(state, args);
+
+  roci_bb_builder_t* current_bb = state->current_bb;
+  roci_bb_builder_t* fn_entry_bb = roci_new_bblock(state, "fn_header");
+  state->current_bb = fn_entry_bb;
+  roci_emit_new_environment(state);
+  while (arg_num > 0) {
+    token_t* varname = args[--arg_num];
+    roci_emit_token_string_datum(state, token_to_string(varname));
+    roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+  }
+
+  roci_bb_builder_t* body_bb = roci_compile_block(state);
+
+  roci_emit_branch(fn_entry_bb, body_bb);
+  
+  state->current_bb = current_bb;
+  roci_emit_token_string_datum(state, fn_entry_bb->bblock_label);
+  roci_emit_opcode(state, ROCI_OPCODE_MAKE_CLOSURE);
+}
+
+int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args) {
+  int64_t arg_num = 0;
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    if (token_matches(token, ")")) {
+      roci_skip_token(state);
+      break;
+    }
+    roci_verify_identifier(token);
+    roci_skip_token(state);
+
+    args[arg_num++] = token;
+    token = roci_peek_token(state);
+    if (token_matches(token, ",")) {
+      roci_skip_token(state);
+    }
+  }
+  return arg_num;
 }
 
 /*

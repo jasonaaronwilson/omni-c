@@ -1,0 +1,6 @@
+let foo = fn() {
+    let x = 1234;
+};
+let bar = fn(a, b, c) {
+    let x = 1234;
+};
