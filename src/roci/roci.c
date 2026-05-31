@@ -67,7 +67,7 @@ typedef roci_vm_state_t = struct {
   uint64_t* stack;
   uint8_t* stack_tags;
   roci_bb_t** return_stack;
-  roci_env_t* env;
+  roci_env_t** env_stack;
 };
 
 /**
@@ -89,7 +89,8 @@ roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point) {
   state->stack = cast(uint64_t*, malloc(256 * 8));
   state->stack_tags = cast(uint8_t*, malloc(256));
   state->return_stack = cast(roci_bb_t**, malloc(16 * 8));
-  state->env = env;
+  state->env_stack = cast(roci_env_t**, malloc(256 * 8));
+  roci_push_env(state, env);
   return roci_execute_bblock(entry_point, state);
 }
 
@@ -164,8 +165,19 @@ start_bblock:
       goto start_bblock;
 
     case ROCI_OPCODE_CALL:
-      // STACK: arg0, ..., argn, fn_name
+      // STACK: arg0, ..., argn, closure/primitive
       // DATUM: return-bblock
+      roci_value_t proc = roci_pop_value(state);
+      if (proc.tag == ROCI_TAG_C_PRIMITIVE) {
+      } else if (proc.tag == ROCI_TAG_CLOSURE) {
+	roci_closure_t* function = cast(roci_closure_t*, proc.datum);
+	roci_push_env(state, function->env);
+	roci_push_return_bb(state, cast(roci_bb_t*, *(state->data_ptr++)));
+	bb = cast(roci_bb_t*, proc.datum);
+	goto start_bblock;
+      } else {
+	fatal_error(ERROR_ILLEGAL_STATE);
+      }
       break;
 
     case ROCI_OPCODE_RETURN:
@@ -176,20 +188,20 @@ start_bblock:
       goto start_bblock;
 
     case ROCI_OPCODE_NEW_ENVIRONMENT:
-      state->env = roci_new_env(state->env);
+      roci_push_env(state, roci_new_env(roci_current_env(state)));
       break;
 
     case ROCI_OPCODE_DEFINE_VAR: {
       char* str = cast(char*, *(state->data_ptr++));
       roci_tag_t tag = *(--state->stack_tags);
       uint64_t tos = *(--state->stack);
-      roci_define_var(state->env, str, u64_to_value(tos), tag);
+      roci_define_var(roci_current_env(state), str, u64_to_value(tos), tag);
       break;
     }
 
     case ROCI_OPCODE_GET_VAR: {
       char* str = cast(char*, state->data_ptr++);
-      roci_env_binding_t* binding = roci_get_var(state->env, str);
+      roci_env_binding_t* binding = roci_get_var(roci_current_env(state), str);
       *(state->stack++) = binding->value.u64;
       *(state->stack_tags++) = binding->tag;
       break;
@@ -199,12 +211,16 @@ start_bblock:
       char* str = cast(char*, state->data_ptr++);
       roci_tag_t tag = *(--state->stack_tags);
       uint64_t tos = *(--state->stack);
-      roci_set_var(state->env, str, u64_to_value(tos), tag);
+      roci_set_var(roci_current_env(state), str, u64_to_value(tos), tag);
       break;
     }
 
     case ROCI_OPCODE_COMMENT:
       state->data_ptr++;
+      break;
+
+    case ROCI_OPCODE_DROP_ENVIRONMENT:
+      roci_pop_env(state);
       break;
 
     default:

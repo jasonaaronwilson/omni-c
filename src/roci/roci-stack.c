@@ -67,3 +67,40 @@ static inline char* roci_pop_string(roci_vm_state_t* state) {
   }
   return cast(char*, tos);
 }
+
+typedef roci_value_t = struct {
+  uint64_t datum;
+  roci_tag_t tag;
+};
+
+static inline roci_value_t roci_pop_value(roci_vm_state_t* state) {
+  roci_value_t value;
+  roci_tag_t tag = *(--state->stack_tags);
+  uint64_t tos = *(--state->stack);
+  if (tag == ROCI_TAG_CLOSURE || tag == ROCI_TAG_C_PRIMITIVE) {
+    value.datum = tos;
+    value.tag = tag;
+    return value;
+  }
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+static inline roci_env_t* roci_current_env(roci_vm_state_t* state) {
+  return *(state->env_stack - 1);
+}
+
+static inline void roci_push_env(roci_vm_state_t* state, roci_env_t* env) {
+  *(state->env_stack++) = env;
+}
+
+static inline roci_env_t* roci_pop_env(roci_vm_state_t* state) {
+  return *(--state->env_stack);
+}
+
+static inline void roci_push_return_bb(roci_vm_state_t* state, roci_bb_t* bblock) {
+  *(state->return_stack++) = bblock;
+}
+
+static inline roci_bb_t* roci_pop_return_bb(roci_vm_state_t* state) {
+  return *(--state->return_stack);
+}

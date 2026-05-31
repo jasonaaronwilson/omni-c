@@ -9,7 +9,7 @@
 
 void roci_primitive_print_env(roci_vm_state_t* state) {
   buffer_t* buffer = make_buffer(10);
-  roci_dump_env(state->env, buffer);
+  roci_dump_env(*state->env_stack, buffer);
   fprintf(stdout, "%s", buffer_to_c_string(buffer));
 }
 

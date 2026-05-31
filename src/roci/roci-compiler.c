@@ -401,7 +401,6 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
   state->current_bb = return_bb;
 }
 
-// state->env_depth
 void roci_compile_closure(roci_compiler_state_t* state) {
   roci_expect_token(state, "fn");
   roci_expect_token(state, "(");
