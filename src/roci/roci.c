@@ -113,10 +113,20 @@ void roci_runtime_error(roci_runtime_error_t runtime_error) {
  */
 roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
                                          roci_vm_state_t* state) {
+  boolean_t trace = 1;
+  buffer_t* buffer = make_buffer(80);
+
 start_bblock:
   state->opcode_ptr = bblock_opcode_pointer(bb);
   state->data_ptr = bblock_data_pointer(bb);
   while (true) {
+    if (trace) {
+      buffer_clear(buffer);
+      buffer_printf(buffer, "%s:     ", uint64_to_string(cast(uint64_t, state->opcode_ptr)));
+      roci_instruction_to_buffer(buffer, state->opcode_ptr, 
+				 state->data_ptr);
+      fprintf(stderr, "%s", buffer_to_c_string(buffer));
+    }
     roci_opcode_t opcode = *(state->opcode_ptr++);
     switch (opcode) {
     case ROCI_OPCODE_TRAP:
