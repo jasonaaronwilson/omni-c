@@ -174,6 +174,14 @@ start_bblock:
       bb = cast(roci_bb_t*, *(state->data_ptr++));
       goto start_bblock;
 
+    case ROCI_OPCODE_MAKE_CLOSURE:
+      // DATUM: function entry point bblock
+      roci_closure_t* closure = malloc_struct(roci_closure_t);
+      closure->entry_point = cast(roci_bb_t*, *(state->data_ptr++));
+      closure->env = roci_current_env(state);
+      roci_push_value(state, cast(uint64_t, closure), ROCI_TAG_CLOSURE);
+      break;
+
     case ROCI_OPCODE_CALL:
       // STACK: arg0, ..., argn, closure/primitive
       // DATUM: return-bblock
