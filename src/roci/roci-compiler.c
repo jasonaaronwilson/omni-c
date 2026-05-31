@@ -336,9 +336,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
       } else if (string_equal(varname, "false")) {
         roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
       } else {
-        roci_emit_opcode(state, ROCI_OPCODE_GET_VAR);
-        value_array_add(state->current_bb->data,
-                        u64_to_value(cast(uint64_t, varname)));
+	roci_emit_get_var(state->current_bb, varname);
       }
       break;
 
@@ -394,9 +392,9 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
-  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_STRING);
-  value_array_add(state->current_bb->data,
-                  str_to_value(token_to_string(fn_name)));
+
+  roci_emit_get_var(state->current_bb, token_to_string(fn_name));
+  
   roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
   buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL_0 + num_args);
   value_array_add(state->current_bb->data,
@@ -478,12 +476,12 @@ void roci_emit_drop_environment(roci_compiler_state_t* state) {
 }
 
 void roci_emit_return(roci_compiler_state_t* state) {
-  int depth = state->env_depth;
-  while (depth > 0) {
-    roci_emit_opcode(state, ROCI_OPCODE_DROP_ENVIRONMENT);
-    depth--;
-  }
   roci_emit_opcode(state, ROCI_OPCODE_RETURN);
+}
+
+void roci_emit_get_var(roci_bb_builder_t* bb, char* fn_name) {
+  buffer_append_byte(bb->opcodes, ROCI_OPCODE_GET_VAR);
+  value_array_add(bb->data, ptr_to_value(fn_name));
 }
 
 void roci_emit_comment(roci_bb_builder_t* bb, char* str) {

@@ -237,6 +237,7 @@ start_bblock:
       // DATUM: return-bblock
       roci_value_t proc = roci_pop_value(state);
       if (proc.tag == ROCI_TAG_C_PRIMITIVE) {
+	// FIXME
       } else if (proc.tag == ROCI_TAG_CLOSURE) {
         roci_closure_t* function = cast(roci_closure_t*, proc.datum);
         roci_set_env(state, function->env);
@@ -277,6 +278,9 @@ start_bblock:
     case ROCI_OPCODE_GET_VAR: {
       char* str = cast(char*, state->data_ptr++);
       roci_env_binding_t* binding = roci_get_var(roci_current_env(state), str);
+      if (binding == nullptr) {
+	roci_debug_error(state, "variable not found");
+      }
       *(state->stack++) = binding->value.u64;
       *(state->stack_tags++) = binding->tag;
       break;
