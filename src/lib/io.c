@@ -90,6 +90,18 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
 }
 
 /**
+ * @function buffer_write_all
+ *
+ * Writes the contents of the buffer to the FILE* output stream.
+ */
+void buffer_write_all(FILE* output, buffer_t* buffer) {
+  size_t bytes_written = fwrite(buffer->elements, 1, buffer->length, output);
+  if (bytes_written != buffer->length) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+/**
  * @function make_file_read_only
  *
  * Changes permissions on a file to be "read-only".
