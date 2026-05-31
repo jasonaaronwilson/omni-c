@@ -36,7 +36,6 @@ static inline void roci_push_value(roci_vm_state_t* state, uint64_t data,
                                    roci_tag_t tag) {
   *(state->stack++) = data;
   *(state->stack_tags++) = tag;
-  ;
 }
 
 static inline boolean_t roci_pop_boolean(roci_vm_state_t* state) {
@@ -93,22 +92,27 @@ static inline roci_value_t roci_pop_value(roci_vm_state_t* state) {
 }
 
 static inline roci_env_t* roci_current_env(roci_vm_state_t* state) {
-  return *(state->env_stack - 1);
+  return state->env;
 }
 
-static inline void roci_push_env(roci_vm_state_t* state, roci_env_t* env) {
-  *(state->env_stack++) = env;
+static inline void roci_set_env(roci_vm_state_t* state, roci_env_t* env) {
+  state->env = env;
 }
 
-static inline roci_env_t* roci_pop_env(roci_vm_state_t* state) {
-  return *(--state->env_stack);
+static inline void roci_drop_env(roci_vm_state_t* state) {
+  state->env = state->env->parent;
 }
 
-static inline void roci_push_return_bb(roci_vm_state_t* state,
-                                       roci_bb_t* bblock) {
-  *(state->return_stack++) = bblock;
+static inline void roci_push_continuation(roci_vm_state_t* state, roci_bb_t* bb,
+                                          uint32_t stack_arg_numbers) {
+  roci_cont_t* continuation = malloc_struct(roci_cont_t);
+  continuation->bb = bb;
+  continuation->env = state->env;
+  continuation->stack = state->stack - stack_arg_numbers;
+  continuation->stack_tags = state->stack_tags - stack_arg_numbers;
+  *(state->continuations++) = continuation;
 }
 
-static inline roci_bb_t* roci_pop_return_bb(roci_vm_state_t* state) {
-  return *(--state->return_stack);
+static inline roci_cont_t* roci_pop_continuation(roci_vm_state_t* state) {
+  return *(--state->continuations);
 }

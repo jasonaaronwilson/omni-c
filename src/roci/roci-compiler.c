@@ -115,6 +115,7 @@ void roci_compile_tokens(roci_compiler_state_t* state) {
     }
   }
   log_warn("roci_compile_tokens end");
+  roci_emit_opcode(state, ROCI_OPCODE_TRAP);
 }
 
 /**
@@ -374,6 +375,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
 }
 
 void roci_compile_function_call(roci_compiler_state_t* state) {
+  int num_args = 0;
   token_t* fn_name = roci_next_token(state);
   roci_expect_token(state, "(");
   while (true) {
@@ -383,6 +385,7 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
       break;
     }
     roci_compile_expression(state);
+    num_args++;
     token = roci_peek_token(state);
     if (token_matches(token, ",")) {
       roci_skip_token(state);
@@ -395,7 +398,7 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
   value_array_add(state->current_bb->data,
                   str_to_value(token_to_string(fn_name)));
   roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
-  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL);
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL_0 + num_args);
   value_array_add(state->current_bb->data,
                   str_to_value(return_bb->bblock_label));
   state->current_bb = return_bb;

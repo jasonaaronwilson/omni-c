@@ -1,1 +1,4 @@
-debug__print_env();
+debug_print_env();
+debug_print_env(0);
+debug_print_env(0, 1);
+debug_print_env(0, 1, 2);

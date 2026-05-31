@@ -42,8 +42,24 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_BR,
 
   ROCI_OPCODE_MAKE_CLOSURE,
-  ROCI_OPCODE_CALL,
   ROCI_OPCODE_RETURN,
+  ROCI_OPCODE_CALL_0,
+  ROCI_OPCODE_CALL_1,
+  ROCI_OPCODE_CALL_2,
+  ROCI_OPCODE_CALL_3,
+  ROCI_OPCODE_CALL_4,
+  ROCI_OPCODE_CALL_5,
+  ROCI_OPCODE_CALL_6,
+  ROCI_OPCODE_CALL_7,
+  ROCI_OPCODE_CALL_8,
+  ROCI_OPCODE_CALL_9,
+  ROCI_OPCODE_CALL_10,
+  ROCI_OPCODE_CALL_11,
+  ROCI_OPCODE_CALL_12,
+  ROCI_OPCODE_CALL_13,
+  ROCI_OPCODE_CALL_14,
+  ROCI_OPCODE_CALL_15,
+  ROCI_OPCODE_CALL_16,
 
   ROCI_OPCODE_COMMENT,
 };
@@ -60,14 +76,30 @@ typedef roci_closure_t = struct {
   roci_env_t* env;
 };
 
+typedef roci_cont_t = struct {
+  roci_bb_t* bb;
+  roci_env_t* env;
+  uint64_t* stack;
+  uint8_t* stack_tags;
+};
+
+typedef roci_debug_state_t = struct {
+  int64_t n_instructions; // Handles single stepping, etc.
+  boolean_t break_on_call_target;
+  boolean_t break_on_return;
+  boolean_t break_on_next_statement;
+  boolean_t trace;
+};
+
 typedef roci_vm_state_t = struct {
   roci_runtime_error_t runtime_error;
   uint8_t* opcode_ptr;
   uint64_t* data_ptr;
   uint64_t* stack;
   uint8_t* stack_tags;
-  roci_bb_t** return_stack;
-  roci_env_t** env_stack;
+  roci_env_t* env;
+  roci_cont_t** continuations;
+  roci_debug_state_t* debug;
 };
 
 /**
@@ -88,9 +120,12 @@ roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point) {
   roci_vm_state_t* state = malloc_struct(roci_vm_state_t);
   state->stack = cast(uint64_t*, malloc(256 * 8));
   state->stack_tags = cast(uint8_t*, malloc(256));
-  state->return_stack = cast(roci_bb_t**, malloc(16 * 8));
-  state->env_stack = cast(roci_env_t**, malloc(256 * 8));
-  roci_push_env(state, env);
+  state->continuations = cast(roci_cont_t**, malloc(256 * 8));
+  roci_set_env(state, env);
+  if (true) {
+    state->debug = malloc_struct(roci_debug_state_t);
+    state->debug->trace = true;
+  }
   return roci_execute_bblock(entry_point, state);
 }
 
@@ -113,14 +148,13 @@ void roci_runtime_error(roci_runtime_error_t runtime_error) {
  */
 roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
                                          roci_vm_state_t* state) {
-  boolean_t trace = 1;
   buffer_t* buffer = make_buffer(80);
 
 start_bblock:
   state->opcode_ptr = bblock_opcode_pointer(bb);
   state->data_ptr = bblock_data_pointer(bb);
   while (true) {
-    if (trace) {
+    if (state->debug != nullptr && state->debug->trace) {
       buffer_clear(buffer);
       buffer_printf(buffer, "%s:     ",
                     uint64_to_string(cast(uint64_t, state->opcode_ptr)));
@@ -182,15 +216,32 @@ start_bblock:
       roci_push_value(state, cast(uint64_t, closure), ROCI_TAG_CLOSURE);
       break;
 
-    case ROCI_OPCODE_CALL:
+    case ROCI_OPCODE_CALL_0:
+    case ROCI_OPCODE_CALL_1:
+    case ROCI_OPCODE_CALL_2:
+    case ROCI_OPCODE_CALL_3:
+    case ROCI_OPCODE_CALL_4:
+    case ROCI_OPCODE_CALL_5:
+    case ROCI_OPCODE_CALL_6:
+    case ROCI_OPCODE_CALL_7:
+    case ROCI_OPCODE_CALL_8:
+    case ROCI_OPCODE_CALL_9:
+    case ROCI_OPCODE_CALL_10:
+    case ROCI_OPCODE_CALL_11:
+    case ROCI_OPCODE_CALL_12:
+    case ROCI_OPCODE_CALL_13:
+    case ROCI_OPCODE_CALL_14:
+    case ROCI_OPCODE_CALL_15:
+    case ROCI_OPCODE_CALL_16:
       // STACK: arg0, ..., argn, closure/primitive
       // DATUM: return-bblock
       roci_value_t proc = roci_pop_value(state);
       if (proc.tag == ROCI_TAG_C_PRIMITIVE) {
       } else if (proc.tag == ROCI_TAG_CLOSURE) {
         roci_closure_t* function = cast(roci_closure_t*, proc.datum);
-        roci_push_env(state, function->env);
-        roci_push_return_bb(state, cast(roci_bb_t*, *(state->data_ptr++)));
+        roci_set_env(state, function->env);
+        roci_push_continuation(state, cast(roci_bb_t*, *(state->data_ptr++)),
+                               opcode - ROCI_OPCODE_CALL_0);
         bb = cast(roci_bb_t*, proc.datum);
         goto start_bblock;
       } else {
@@ -198,15 +249,21 @@ start_bblock:
       }
       break;
 
-    case ROCI_OPCODE_RETURN:
-      bb = *(state->return_stack--);
+    case ROCI_OPCODE_RETURN: {
+      roci_value_t tos = roci_pop_value(state);
+      roci_cont_t* continuation = roci_pop_continuation(state);
+      bb = continuation->bb;
+      state->stack = continuation->stack;
+      state->stack_tags = continuation->stack_tags;
+      roci_push_value(state, tos.datum, tos.tag);
       if (bb == NULL) {
         return ROCI_RUNTIME_ERROR_NONE;
       }
       goto start_bblock;
+    }
 
     case ROCI_OPCODE_NEW_ENVIRONMENT:
-      roci_push_env(state, roci_new_env(roci_current_env(state)));
+      roci_set_env(state, roci_new_env(roci_current_env(state)));
       break;
 
     case ROCI_OPCODE_DEFINE_VAR: {
@@ -238,7 +295,7 @@ start_bblock:
       break;
 
     case ROCI_OPCODE_DROP_ENVIRONMENT:
-      roci_pop_env(state);
+      roci_drop_env(state);
       break;
 
     default:
