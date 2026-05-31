@@ -8,7 +8,8 @@ void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
   }
 }
 
-uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint64_t* data_ptr) {
+uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr,
+                                    uint64_t* data_ptr) {
   switch (*opcode_ptr) {
   case ROCI_OPCODE_TRAP:
     buffer_printf(buffer, "    trap\n");
@@ -29,8 +30,7 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint6
     buffer_printf(buffer, "    push false\n");
     return 0;
   case ROCI_OPCODE_PUSH_DOUBLE:
-    buffer_printf(buffer, "    push %lf\n",
-		  raw_double_to_double(*(data_ptr)));
+    buffer_printf(buffer, "    push %lf\n", raw_double_to_double(*(data_ptr)));
     return 1;
   case ROCI_OPCODE_PUSH_STRING:
     buffer_printf(buffer, "    push \"%s\"\n", cast(char*, *(data_ptr)));
@@ -39,8 +39,7 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint6
     buffer_printf(buffer, "    br %s\n", uint64_to_string(*(data_ptr)));
     return 1;
   case ROCI_OPCODE_BR_TRUE:
-    buffer_printf(buffer, "    br_true %s\n",
-		  uint64_to_string(*(data_ptr)));
+    buffer_printf(buffer, "    br_true %s\n", uint64_to_string(*(data_ptr)));
     return 1;
   case ROCI_OPCODE_NEW_ENVIRONMENT:
     buffer_printf(buffer, "    new_env\n");
@@ -64,7 +63,8 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint6
     buffer_printf(buffer, "    call %s\n", uint64_to_string(*(data_ptr)));
     return 1;
   case ROCI_OPCODE_MAKE_CLOSURE:
-    buffer_printf(buffer, "    make_closure %s\n", uint64_to_string(*(data_ptr)));
+    buffer_printf(buffer, "    make_closure %s\n",
+                  uint64_to_string(*(data_ptr)));
     return 1;
   default:
     buffer_printf(buffer, "    <unknown-opcode>\n");

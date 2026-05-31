@@ -122,10 +122,10 @@ start_bblock:
   while (true) {
     if (trace) {
       buffer_clear(buffer);
-      buffer_printf(buffer, "%s:     ", uint64_to_string(cast(uint64_t, state->opcode_ptr)));
-      roci_instruction_to_buffer(buffer, state->opcode_ptr, 
-				 state->data_ptr);
-      fprintf(stderr, "%s", buffer_to_c_string(buffer));
+      buffer_printf(buffer, "%s:     ",
+                    uint64_to_string(cast(uint64_t, state->opcode_ptr)));
+      roci_instruction_to_buffer(buffer, state->opcode_ptr, state->data_ptr);
+      buffer_write_all(stderr, buffer);
     }
     roci_opcode_t opcode = *(state->opcode_ptr++);
     switch (opcode) {
@@ -180,13 +180,13 @@ start_bblock:
       roci_value_t proc = roci_pop_value(state);
       if (proc.tag == ROCI_TAG_C_PRIMITIVE) {
       } else if (proc.tag == ROCI_TAG_CLOSURE) {
-	roci_closure_t* function = cast(roci_closure_t*, proc.datum);
-	roci_push_env(state, function->env);
-	roci_push_return_bb(state, cast(roci_bb_t*, *(state->data_ptr++)));
-	bb = cast(roci_bb_t*, proc.datum);
-	goto start_bblock;
+        roci_closure_t* function = cast(roci_closure_t*, proc.datum);
+        roci_push_env(state, function->env);
+        roci_push_return_bb(state, cast(roci_bb_t*, *(state->data_ptr++)));
+        bb = cast(roci_bb_t*, proc.datum);
+        goto start_bblock;
       } else {
-	fatal_error(ERROR_ILLEGAL_STATE);
+        fatal_error(ERROR_ILLEGAL_STATE);
       }
       break;
 

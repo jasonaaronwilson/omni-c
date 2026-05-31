@@ -97,7 +97,8 @@ static inline roci_env_t* roci_pop_env(roci_vm_state_t* state) {
   return *(--state->env_stack);
 }
 
-static inline void roci_push_return_bb(roci_vm_state_t* state, roci_bb_t* bblock) {
+static inline void roci_push_return_bb(roci_vm_state_t* state,
+                                       roci_bb_t* bblock) {
   *(state->return_stack++) = bblock;
 }
 
