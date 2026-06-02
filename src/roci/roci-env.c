@@ -5,30 +5,30 @@
  * by the roci VM.
  */
 
-typedef roci_env_binding_t = struct {
-  value_t value;
-  roci_tag_t tag;
-};
-
 typedef roci_env_t = struct {
   roci_env_t* parent;
   string_hashtable_t* bindings;
 };
 
-roci_env_binding_t* roci_get_var(roci_env_t* env, char* name) {
+roci_value_t* roci_get_var(roci_env_t* env, char* name) {
   while (env != NULL) {
     value_result_t find_result = string_ht_find(env->bindings, name);
     if (is_ok(find_result)) {
-      return cast(roci_env_binding_t*, find_result.ptr);
+      return cast(roci_value_t*, find_result.ptr);
     }
     env = env->parent;
   }
   return NULL;
 }
 
-void roci_set_var(roci_env_t* env, char* name, value_t value, roci_tag_t tag) {
-  roci_env_binding_t* binding = roci_get_var(env, name);
-  binding->value = value;
+void roci_set_var(roci_vm_state_t* state, char* name, value_t value,
+                  roci_tag_t tag) {
+  roci_value_t* binding = roci_get_var(state->env, name);
+  if (binding == nullptr) {
+    // FIXME
+    roci_debug_error(state, "Variable not found");
+  }
+  binding->raw = value.u64;
   binding->tag = tag;
 }
 
@@ -39,8 +39,8 @@ void roci_define_var(roci_env_t* env, char* name, value_t value,
     log_fatal("redefinition of a variable %s", name);
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  roci_env_binding_t* binding = malloc_struct(roci_env_binding_t);
-  binding->value = value;
+  roci_value_t* binding = malloc_struct(roci_value_t);
+  binding->raw = value.u64;
   binding->tag = tag;
   string_ht_insert(env->bindings, name, ptr_to_value(binding));
 }
@@ -70,29 +70,8 @@ void roci_dump_env(roci_env_t* env, buffer_t* buffer) {
   string_ht_foreach(env->bindings, key, value, block_expr({
 	buffer_append_repeated_byte(buffer, ' ', depth * 4);
 	buffer_printf(buffer, "%s = ", cast(char*, key));
-	roci_dump_binding(buffer, cast(roci_env_binding_t*, value.ptr));
+	roci_append_value(buffer, *(cast(roci_value_t*, value.ptr)));
 	buffer_printf(buffer, "\n");
   }));
   // clang-format on
-}
-
-// TODO(jawilson): Handle all cases!
-void roci_dump_binding(buffer_t* buffer, roci_env_binding_t* binding) {
-  switch (binding->tag) {
-  case ROCI_TAG_STRING:
-    buffer_printf(buffer, "\"%s\"", binding->value.str);
-    break;
-  case ROCI_TAG_INTEGER:
-    buffer_printf(buffer, "%s", uint64_to_string(binding->value.u64));
-    break;
-  case ROCI_TAG_C_PRIMITIVE:
-    buffer_printf(buffer, "primitive<%s>",
-                  uint64_to_string(binding->value.u64));
-    break;
-  case ROCI_TAG_CLOSURE:
-    buffer_printf(buffer, "closure<%s>", uint64_to_string(binding->value.u64));
-    break;
-  default:
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
 }

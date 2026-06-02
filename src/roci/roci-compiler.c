@@ -336,7 +336,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
       } else if (string_equal(varname, "false")) {
         roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
       } else {
-	roci_emit_get_var(state->current_bb, varname);
+        roci_emit_get_var(state->current_bb, varname);
       }
       break;
 
@@ -394,7 +394,7 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
   }
 
   roci_emit_get_var(state->current_bb, token_to_string(fn_name));
-  
+
   roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
   buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL_0 + num_args);
   value_array_add(state->current_bb->data,
