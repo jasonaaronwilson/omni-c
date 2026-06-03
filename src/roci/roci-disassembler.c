@@ -87,6 +87,13 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr,
   case ROCI_OPCODE_CHECK_ARGS:
     buffer_printf(buffer, "    check_args %s\n", uint64_to_string(*(data_ptr)));
     return 1;
+  case ROCI_OPCODE_DEBUG_INFO: {
+    roci_src_info_t info = *(data_ptr);
+    buffer_printf(buffer, "    debug_info %s, %s\n",
+                  uint64_to_string(roci_src_file_number(info)),
+                  uint64_to_string(roci_src_line_number(info)));
+    return 1;
+  }
   default:
     buffer_printf(buffer, "    <unknown-opcode>\n");
     return 0;

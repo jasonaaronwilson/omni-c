@@ -159,6 +159,7 @@ void roci_compile_statement(roci_compiler_state_t* state) {
  * function though this will bloat code (just a little) somewhere.)
  */
 void roci_compile_return(roci_compiler_state_t* state) {
+  roci_emit_debug_info(state, "", roci_peek_token(state));
   roci_expect_token(state, "return");
   token_t* token = roci_peek_token(state);
   if (token_matches(token, ";")) {
@@ -185,6 +186,7 @@ void roci_compile_return(roci_compiler_state_t* state) {
  * fluid_let.
  */
 void roci_compile_let(roci_compiler_state_t* state) {
+  roci_emit_debug_info(state, "", roci_peek_token(state));
   roci_expect_token(state, "let");
   token_t* varname = roci_next_token(state);
   roci_verify_identifier(varname);
@@ -203,6 +205,7 @@ void roci_compile_let(roci_compiler_state_t* state) {
  * Assignments look like "var = expr;".
  */
 void roci_compile_assignment(roci_compiler_state_t* state) {
+  roci_emit_debug_info(state, "", roci_peek_token(state));
   token_t* varname = roci_next_token(state);
   // verify identifier
   roci_expect_token(state, "=");
@@ -218,6 +221,7 @@ void roci_compile_assignment(roci_compiler_state_t* state) {
  * Compile a roci if statement.
  */
 void roci_compile_if(roci_compiler_state_t* state) {
+  roci_emit_debug_info(state, "", roci_peek_token(state));
   roci_expect_token(state, "if");
   roci_expect_token(state, "(");
   roci_compile_expression(state);
@@ -257,9 +261,10 @@ void roci_compile_if(roci_compiler_state_t* state) {
  * environments which will allow more abstraction.
  */
 roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
-
   roci_bb_builder_t* result_bb = roci_new_bblock(state, "block_bb_");
   state->current_bb = result_bb;
+
+  roci_emit_debug_info(state, "", roci_peek_token(state));
   roci_emit_new_environment(state);
   roci_expect_token(state, "{");
 
@@ -278,6 +283,7 @@ roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
 
 // This isn't quite right yet...
 void roci_compile_while(roci_compiler_state_t* state) {
+  roci_emit_debug_info(state, "", roci_peek_token(state));
   roci_expect_token(state, "while");
   roci_expect_token(state, "(");
 
@@ -373,6 +379,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
 }
 
 void roci_compile_function_call(roci_compiler_state_t* state) {
+  roci_emit_debug_info(state, "", roci_peek_token(state));
   int num_args = 0;
   token_t* fn_name = roci_next_token(state);
   roci_expect_token(state, "(");
@@ -403,6 +410,7 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
 }
 
 void roci_compile_closure(roci_compiler_state_t* state) {
+  token_t* first_token = roci_peek_token(state);
   roci_expect_token(state, "fn");
   roci_expect_token(state, "(");
 
@@ -416,6 +424,7 @@ void roci_compile_closure(roci_compiler_state_t* state) {
   state->env_depth = 1; // calling a closure puts an item on the env stack
   state->current_bb = fn_entry_bb;
 
+  roci_emit_debug_info(state, "", first_token);
   roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
   roci_emit_int_datum(state, arg_num);
 
@@ -495,6 +504,12 @@ void roci_emit_get_var(roci_bb_builder_t* bb, char* fn_name) {
 void roci_emit_comment(roci_bb_builder_t* bb, char* str) {
   buffer_append_byte(bb->opcodes, ROCI_OPCODE_COMMENT);
   value_array_add(bb->data, ptr_to_value(str));
+}
+
+void roci_emit_debug_info(roci_compiler_state_t* state, char* filename,
+                          token_t* token) {
+  roci_emit_opcode(state, ROCI_OPCODE_DEBUG_INFO);
+  roci_emit_int_datum(state, token_to_roci_src_info(0, token));
 }
 
 /**

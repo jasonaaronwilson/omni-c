@@ -7,6 +7,22 @@
  * or by statement.
  */
 
+typedef roci_src_info_t = uint64_t;
+
+static inline roci_src_info_t token_to_roci_src_info(uint64_t file_number,
+                                                     token_t* token) {
+  uint64_t line_number = token->line_number;
+  return cast(roci_src_info_t, file_number | line_number << 32);
+}
+
+static inline uint64_t roci_src_file_number(roci_src_info_t info) {
+  return info & 0xffffffff;
+}
+
+static inline uint64_t roci_src_line_number(roci_src_info_t info) {
+  return info >> 32;
+}
+
 void roci_debug_error(roci_vm_state_t* state, char* error_message) {
   log_fatal(error_message);
   fatal_error(ERROR_ILLEGAL_STATE);

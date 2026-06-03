@@ -65,6 +65,7 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_CALL_16,
   ROCI_OPCODE_CHECK_ARGS,
 
+  ROCI_OPCODE_DEBUG_INFO,
   ROCI_OPCODE_COMMENT,
 };
 
@@ -105,6 +106,7 @@ typedef roci_vm_state_t = struct {
   roci_cont_t** continuations;
   roci_debug_state_t* debug;
   uint64_t n_args;
+  roci_src_info_t debug_info;
 };
 
 /**
@@ -311,6 +313,10 @@ start_bblock:
 
     case ROCI_OPCODE_COMMENT:
       state->data_ptr++;
+      break;
+
+    case ROCI_OPCODE_DEBUG_INFO:
+      state->debug_info = *(state->data_ptr++);
       break;
 
     case ROCI_OPCODE_DROP_ENVIRONMENT:

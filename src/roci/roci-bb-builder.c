@@ -93,6 +93,7 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
     case ROCI_OPCODE_DEFINE_VAR:
     case ROCI_OPCODE_COMMENT:
     case ROCI_OPCODE_CHECK_ARGS:
+    case ROCI_OPCODE_DEBUG_INFO:
       *(data_ptr++) = value_array_get(builder->data, dindex++).u64;
       break;
 
