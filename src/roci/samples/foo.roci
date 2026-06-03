@@ -1,4 +1,4 @@
 let id = fn(n) {
     return id;
 };
-id(10);
+let boo = id(10);

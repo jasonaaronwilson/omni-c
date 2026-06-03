@@ -254,8 +254,7 @@ start_bblock:
         roci_set_env(state, function->env);
         roci_push_continuation(state, cast(roci_bb_t*, *(state->data_ptr++)),
                                opcode - ROCI_OPCODE_CALL_0);
-        bb = cast(roci_bb_t*, proc.raw);
-        roci_debug_breakpoint();
+        bb = function->entry_point;
         goto start_bblock;
       } else {
         fatal_error(ERROR_ILLEGAL_STATE);
