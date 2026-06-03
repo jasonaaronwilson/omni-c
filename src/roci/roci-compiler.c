@@ -415,6 +415,10 @@ void roci_compile_closure(roci_compiler_state_t* state) {
   roci_bb_builder_t* fn_entry_bb = roci_new_bblock(state, "fn_header");
   state->env_depth = 1; // calling a closure puts an item on the env stack
   state->current_bb = fn_entry_bb;
+
+  roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
+  roci_emit_int_datum(state, arg_num);
+
   roci_emit_new_environment(state);
   while (arg_num > 0) {
     token_t* varname = args[--arg_num];
@@ -463,6 +467,10 @@ void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode) {
 
 void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str) {
   value_array_add(state->current_bb->data, str_to_value(str));
+}
+
+void roci_emit_int_datum(roci_compiler_state_t* state, uint64_t val) {
+  value_array_add(state->current_bb->data, u64_to_value(val));
 }
 
 void roci_emit_new_environment(roci_compiler_state_t* state) {

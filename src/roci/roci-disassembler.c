@@ -84,6 +84,9 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr,
     buffer_printf(buffer, "    make_closure %s\n",
                   uint64_to_string(*(data_ptr)));
     return 1;
+  case ROCI_OPCODE_CHECK_ARGS:
+    buffer_printf(buffer, "    check_args %s\n", uint64_to_string(*(data_ptr)));
+    return 1;
   default:
     buffer_printf(buffer, "    <unknown-opcode>\n");
     return 0;

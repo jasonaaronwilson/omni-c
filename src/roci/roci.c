@@ -63,6 +63,7 @@ typedef roci_opcode_t = enum {
   ROCI_OPCODE_CALL_14,
   ROCI_OPCODE_CALL_15,
   ROCI_OPCODE_CALL_16,
+  ROCI_OPCODE_CHECK_ARGS,
 
   ROCI_OPCODE_COMMENT,
 };
@@ -103,6 +104,7 @@ typedef roci_vm_state_t = struct {
   roci_env_t* env;
   roci_cont_t** continuations;
   roci_debug_state_t* debug;
+  uint64_t n_args;
 };
 
 /**
@@ -246,6 +248,8 @@ start_bblock:
     case ROCI_OPCODE_CALL_16:
       // STACK: arg0, ..., argn, closure/primitive
       // DATUM: return-bblock
+      uint64_t n_args = opcode - ROCI_OPCODE_CALL_0;
+      state->n_args = n_args;
       roci_value_t proc = roci_pop_value(state);
       if (proc.tag == ROCI_TAG_C_PRIMITIVE) {
         // FIXME
@@ -253,7 +257,7 @@ start_bblock:
         roci_closure_t* function = cast(roci_closure_t*, proc.raw);
         roci_set_env(state, function->env);
         roci_push_continuation(state, cast(roci_bb_t*, *(state->data_ptr++)),
-                               opcode - ROCI_OPCODE_CALL_0);
+                               n_args);
         bb = function->entry_point;
         goto start_bblock;
       } else {
@@ -312,6 +316,14 @@ start_bblock:
     case ROCI_OPCODE_DROP_ENVIRONMENT:
       roci_drop_env(state);
       break;
+
+    case ROCI_OPCODE_CHECK_ARGS: {
+      uint64_t n_args = *(state->data_ptr++);
+      if (n_args != state->n_args) {
+        roci_debug_error(state, "argument call mismatch");
+      }
+      break;
+    }
 
     default:
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
