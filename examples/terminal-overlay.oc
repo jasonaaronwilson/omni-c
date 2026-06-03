@@ -1,0 +1,44 @@
+/**
+ * @file terminal-overlay.oc
+ *
+ * The first version is a little AI slop and though an interesting
+ * examples, isn't just what I wanted (which was to draw on top of the
+ * current display and then restore the screen).
+ */
+
+#include <stdio.h>
+#include <unistd.h> // For sleep()
+
+int main(int argc, char** argv) {
+
+  for (int i = 0; i < 15; i++) {
+    printf("Hello world %d\n", i);
+  }
+
+  // 1. Switch to the alternate screen buffer
+  printf("\033[?1049h");
+    
+  // 2. Clear the new screen and home the cursor
+  // printf("\033[2J\033[H");
+  // fflush(stdout);
+
+  // 3. Draw your custom UI
+  printf("=================================\n");
+  printf("   WELCOME TO MY CUSTOM SCREEN   \n");
+  printf("=================================\n");
+  printf("Press Ctrl+C or wait 3 seconds...\n");
+  fflush(stdout);
+
+  // Hold the screen for a moment
+  sleep(3);
+
+  // 4. Restore the original terminal screen buffer
+  printf("\033[?1049l");
+  fflush(stdout);
+
+  for (int i = 15; i < 30; i++) {
+    printf("Hello world %d\n", i);
+  }
+
+  return 0;
+}
