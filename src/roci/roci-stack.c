@@ -78,12 +78,12 @@ static inline roci_value_t roci_pop_value(roci_vm_state_t* state) {
   roci_value_t value;
   roci_tag_t tag = *(--state->stack_tags);
   uint64_t tos = *(--state->stack);
-  if (tag == ROCI_TAG_CLOSURE || tag == ROCI_TAG_C_PRIMITIVE) {
-    value.raw = tos;
-    value.tag = tag;
-    return value;
+  if (tag == ROCI_TAG_STACK_MARKER) {
+    fatal_error(ERROR_ILLEGAL_STATE);
   }
-  fatal_error(ERROR_ILLEGAL_STATE);
+  value.raw = tos;
+  value.tag = tag;
+  return value;
 }
 
 static inline roci_value_t roci_debug_peek_value(roci_vm_state_t* state,
