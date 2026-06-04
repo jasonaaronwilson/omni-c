@@ -171,16 +171,15 @@ typedef term_keypress_t = struct {
  * (Currently we don't automatically "downgrade" to 256 color or 16
  * color terminals).
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_set_foreground_color(buffer_t* buffer, uint32_t color) {
+void term_set_foreground_color(buffer_t* buffer, uint32_t color) {
   uint8_t blue = color & 0xff;
   uint8_t green = (color >> 8) & 0xff;
   uint8_t red = (color >> 16) & 0xff;
 
   // Escape sequence for setting foreground color (ESC [ 38; 2; r; g; b m)
-  return buffer_printf(buffer,
-                       TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red,
-                       green, blue);
+  buffer_printf(buffer,
+		TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red,
+		green, blue);
 }
 
 /**
@@ -192,16 +191,15 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * (Currently we don't automatically "downgrade" to 256 color or 16
  * color terminals).
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_set_background_color(buffer_t* buffer, uint32_t color) {
+void term_set_background_color(buffer_t* buffer, uint32_t color) {
   uint8_t blue = color & 0xff;
   uint8_t green = (color >> 8) & 0xff;
   uint8_t red = (color >> 16) & 0xff;
 
   // Escape sequence for setting background color (ESC [ 48; 2; r; g; b m)
-  return buffer_printf(buffer,
-                       TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red,
-                       green, blue);
+  buffer_printf(buffer,
+		TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red,
+		green, blue);
 }
 
 /**
@@ -215,10 +213,9 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * zero based indexes would perhaps be choosen now since most
  * programming languages are zero based).
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_move_cursor_absolute(buffer_t* buffer, int x, int y) {
+void term_move_cursor_absolute(buffer_t* buffer, int x, int y) {
   // Escape sequence for cursor movement (ESC [ y; x H)
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), y + 1, x + 1);
+  buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), y + 1, x + 1);
 }
 
 /**
@@ -321,16 +318,16 @@ __attribute__((warn_unused_result)) extern buffer_t*
     term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
                   uint16_t y1, box_drawing_t* box) {
   // top
-  buffer = term_move_cursor_absolute(buffer, x0, y0);
-  buffer = buffer_append_code_point(buffer, box->upper_left_corner);
+  term_move_cursor_absolute(buffer, x0, y0);
+  buffer_append_code_point(buffer, box->upper_left_corner);
   for (uint64_t x = x0 + 1; x < x1; x++) {
     buffer = buffer_append_code_point(buffer, box->top_edge);
   }
   buffer = buffer_append_code_point(buffer, box->upper_right_corner);
 
   // bottom
-  buffer = term_move_cursor_absolute(buffer, x0, y1);
-  buffer = buffer_append_code_point(buffer, box->lower_left_corner);
+  term_move_cursor_absolute(buffer, x0, y1);
+  buffer_append_code_point(buffer, box->lower_left_corner);
   for (uint64_t x = x0 + 1; x < x1; x++) {
     buffer = buffer_append_code_point(buffer, box->bottom_edge);
   }
@@ -338,7 +335,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
   // the sides (and the middle)
   for (int y = y0 + 1; y < y1; y++) {
-    buffer = term_move_cursor_absolute(buffer, x0, y);
+    term_move_cursor_absolute(buffer, x0, y);
     buffer = buffer_append_code_point(buffer, box->left_edge);
 
     for (int x = x0 + 1; x < x1; x++) {

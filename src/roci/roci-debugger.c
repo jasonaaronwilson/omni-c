@@ -34,9 +34,10 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
   buffer_clear(buffer);
 
   if (!is_tty) {
-    buffer_printf(buffer,
-		  "--------------------------------------------------------------"
-		  "--------\n");
+    buffer_printf(
+        buffer,
+        "--------------------------------------------------------------"
+        "--------\n");
   } else {
     term_alt_buffer(buffer);
     term_clear_screen(buffer);
