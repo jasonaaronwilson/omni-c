@@ -308,8 +308,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * Append a terminal escape sequence to a buffer that clears the
  * entire terminal.
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_clear_screen(buffer_t* buffer) {
+buffer_t* term_clear_screen(buffer_t* buffer) {
   return buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
 }
 
@@ -408,5 +407,9 @@ void term_alt_buffer(buffer_t* buffer) {
  * cursor to it's last position (or does it?).
  */
 void term_main_buffer(buffer_t* buffer) {
-  printf("\033[?1049l");
+  buffer_printf(buffer, "\033[?1049l");
+}
+
+void term_home(buffer_t* buffer) {
+  buffer_printf(buffer, "\033[H");
 }

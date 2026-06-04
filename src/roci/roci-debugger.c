@@ -29,17 +29,32 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message) {
 }
 
 void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
+  boolean_t is_tty = roci_is_tty();
+
   buffer_clear(buffer);
-  buffer_printf(buffer,
-                "--------------------------------------------------------------"
-                "--------\n");
+
+  if (!is_tty) {
+    buffer_printf(buffer,
+		  "--------------------------------------------------------------"
+		  "--------\n");
+  } else {
+    term_alt_buffer(buffer);
+    term_clear_screen(buffer);
+  }
+
   buffer_printf(
       buffer, "%s:     ", uint64_to_string(cast(uint64_t, state->opcode_ptr)));
   roci_instruction_to_buffer(buffer, state->opcode_ptr, state->data_ptr);
   roci_dump_env(state->env, buffer);
   roci_dump_stack(state, buffer);
+
   buffer_write_all(stderr, buffer);
   fflush(stderr);
+
+  if (is_tty) {
+    sleep(3);
+    term_main_buffer(buffer);
+  }
 }
 
 void roci_debug_breakpoint(void) {}
@@ -55,4 +70,8 @@ void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer) {
   }
   log_fatal("ROCI_TAG_STACK_MARKER not found.");
   fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+boolean_t roci_is_tty(void) {
+  return isatty(fileno(stdout)) && !string_equal("dumb", getenv("TERM"));
 }
