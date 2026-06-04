@@ -390,3 +390,23 @@ extern void term_echo_restore(struct termios oldt) {
 // ESC ]0;this is the window title BEL
 
 // ESC ]8;;link ST (hyperlink)
+
+/**
+ * @function term_alt_buffer
+ *
+ * Switch to the alternative buffer. This is a good place to hide a
+ * debugger UI...
+ */
+void term_alt_buffer(buffer_t* buffer) {
+  buffer_printf(buffer, "\033[?1049h");
+}
+
+/**
+ * @function term_main_buffer
+ *
+ * Switch back to the main buffer. This won't necessarily return the
+ * cursor to it's last position (or does it?).
+ */
+void term_main_buffer(buffer_t* buffer) {
+  printf("\033[?1049l");
+}
