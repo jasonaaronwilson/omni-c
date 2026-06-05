@@ -1,11 +1,15 @@
 /**
  * @file roci-debugger.c
  *
- * When an error occurs and we are running in a terminal, a simple
- * source level debugger is available. This allows the stack to be
- * examined, the current environment, single stepping by instruction,
- * or by statement.
+ * The Roci language has a debugger "interface" built in.
+ *
+ * This is the crude first version.
  */
+
+/** ================================================================ */
+
+// A quick little abstraction. I'm considering also adding a column
+// number for expression type stuff so I wanted a bit of freedom.
 
 typedef roci_src_info_t = uint64_t;
 
@@ -23,6 +27,8 @@ static inline uint64_t roci_src_line_number(roci_src_info_t info) {
   return info >> 32;
 }
 
+/** ================================================================ */
+
 void roci_debug_error(roci_vm_state_t* state, char* error_message) {
   log_fatal(error_message);
   fatal_error(ERROR_ILLEGAL_STATE);
@@ -39,6 +45,7 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
         "--------------------------------------------------------------"
         "--------\n");
   } else {
+    term_home(buffer);
     term_alt_buffer(buffer);
     term_clear_screen(buffer);
   }
