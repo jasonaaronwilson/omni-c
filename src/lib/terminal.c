@@ -227,20 +227,18 @@ void term_move_cursor_absolute(buffer_t* buffer, int x, int y) {
  * left or to the "top" of the terminal, while positive numbers move
  * right or downwards towards the bottom of the terminal.
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_move_cursor_relative(buffer_t* buffer, int x, int y) {
+void term_move_cursor_relative(buffer_t* buffer, int x, int y) {
   // First handle the x position
   if (x > 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
   } else if (x < 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), -x);
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), -x);
   }
   if (y > 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
   } else {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), -y);
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), -y);
   }
-  return buffer;
 }
 
 /**
@@ -249,9 +247,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * Append a terminal escape sequence to a buffer that turns on "bold"
  * text.
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_bold(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
+void term_bold(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
 }
 
 /**
@@ -260,9 +257,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * Append a terminal escape sequence to a buffer that turns on "dim"
  * text.
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_dim(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
+void term_dim(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
 }
 
 /**
@@ -271,9 +267,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * Append a terminal escape sequence to a buffer that turns on "italic"
  * text.
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_italic(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
+void term_italic(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
 }
 
 /**
@@ -282,9 +277,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * Append a terminal escape sequence to a buffer that turns on
  * "underline" text.
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_underline(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
+void term_underline(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
 }
 
 /**
@@ -294,9 +288,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * formatting (and appears to cancel the foreground and background
  * color as well).
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_reset_formatting(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
+void term_reset_formatting(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
 }
 
 /**
@@ -305,8 +298,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * Append a terminal escape sequence to a buffer that clears the
  * entire terminal.
  */
-buffer_t* term_clear_screen(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
+void term_clear_screen(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
 }
 
 /**
@@ -314,39 +307,36 @@ buffer_t* term_clear_screen(buffer_t* buffer) {
  *
  * Append the terminal escape sequences to a buffer that draws a box.
  */
-__attribute__((warn_unused_result)) extern buffer_t*
-    term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
-                  uint16_t y1, box_drawing_t* box) {
+void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
+		   uint16_t y1, box_drawing_t* box) {
   // top
   term_move_cursor_absolute(buffer, x0, y0);
   buffer_append_code_point(buffer, box->upper_left_corner);
   for (uint64_t x = x0 + 1; x < x1; x++) {
-    buffer = buffer_append_code_point(buffer, box->top_edge);
+    buffer_append_code_point(buffer, box->top_edge);
   }
-  buffer = buffer_append_code_point(buffer, box->upper_right_corner);
+  buffer_append_code_point(buffer, box->upper_right_corner);
 
   // bottom
   term_move_cursor_absolute(buffer, x0, y1);
   buffer_append_code_point(buffer, box->lower_left_corner);
   for (uint64_t x = x0 + 1; x < x1; x++) {
-    buffer = buffer_append_code_point(buffer, box->bottom_edge);
+    buffer_append_code_point(buffer, box->bottom_edge);
   }
-  buffer = buffer_append_code_point(buffer, box->lower_right_corner);
+  buffer_append_code_point(buffer, box->lower_right_corner);
 
   // the sides (and the middle)
   for (int y = y0 + 1; y < y1; y++) {
     term_move_cursor_absolute(buffer, x0, y);
-    buffer = buffer_append_code_point(buffer, box->left_edge);
+    buffer_append_code_point(buffer, box->left_edge);
 
     for (int x = x0 + 1; x < x1; x++) {
-      buffer = buffer_append_code_point(buffer, ' ');
+      buffer_append_code_point(buffer, ' ');
     }
     // buffer = term_move_cursor_absolute(buffer, x1, y);
 
-    buffer = buffer_append_code_point(buffer, box->right_edge);
+    buffer_append_code_point(buffer, box->right_edge);
   }
-
-  return buffer;
 }
 
 /**

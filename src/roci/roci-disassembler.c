@@ -1,9 +1,15 @@
-void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb) {
+void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb, uint8_t* address) {
   buffer_printf(buffer, "%s:\n", uint64_to_string(cast(uint64_t, bb)));
   uint8_t* opcode_ptr = bblock_opcode_pointer(bb);
   uint64_t* data_ptr = bblock_data_pointer(bb);
   for (int i = 0; i < bb->num_opcodes; i++) {
+    if (opcode_ptr == address) {
+      term_bold(buffer);
+    }
     data_ptr += roci_instruction_to_buffer(buffer, opcode_ptr, data_ptr);
+    if (opcode_ptr == address) {
+      term_reset_formatting(buffer);
+    }
     opcode_ptr++;
   }
 }
@@ -110,7 +116,7 @@ double raw_double_to_double(uint64_t raw_bits) {
 
 void disassemble_bblocks(value_array_t* bblocks, buffer_t* buffer) {
   for (int i = 0; i < bblocks->length; i++) {
-    bblock_to_buffer(buffer,
-                     value_array_get_ptr(bblocks, i, typeof(roci_bb_t*)));
+    bblock_to_buffer(
+        buffer, value_array_get_ptr(bblocks, i, typeof(roci_bb_t*)), nullptr);
   }
 }

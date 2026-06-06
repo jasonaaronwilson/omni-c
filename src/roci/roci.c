@@ -98,6 +98,7 @@ typedef roci_debug_state_t = struct {
 
 typedef roci_vm_state_t = struct {
   roci_runtime_error_t runtime_error;
+  roci_bb_t* current_bb;
   uint8_t* opcode_ptr;
   uint64_t* data_ptr;
   uint64_t* stack;
@@ -167,6 +168,7 @@ roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb,
 
 start_bblock:
 
+  state->current_bb = bb;
   state->opcode_ptr = bblock_opcode_pointer(bb);
   state->data_ptr = bblock_data_pointer(bb);
 

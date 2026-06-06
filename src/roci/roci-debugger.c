@@ -50,9 +50,12 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
     term_clear_screen(buffer);
   }
 
+  /*
   buffer_printf(
       buffer, "%s:     ", uint64_to_string(cast(uint64_t, state->opcode_ptr)));
-  roci_instruction_to_buffer(buffer, state->opcode_ptr, state->data_ptr);
+  */
+
+  bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
   roci_dump_env(state->env, buffer);
   roci_dump_stack(state, buffer);
 
