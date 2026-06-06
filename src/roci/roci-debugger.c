@@ -51,24 +51,56 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
   }
 
   if (is_tty) {
-    roci_debugger_banner(buffer, "Disassembly");
+    roci_debugger_banner(buffer, "*** Disassembly ***");
   }
   bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
 
   if (is_tty) {
-    roci_debugger_banner(buffer, "Environment");
+    roci_debugger_banner(buffer, "*** Environment ***");
   }
   roci_dump_env(state->env, buffer);
   if (is_tty) {
-    roci_debugger_banner(buffer, "Stack");
+    roci_debugger_banner(buffer, "*** Stack ***");
   }
   roci_dump_stack(state, buffer);
+
+  if (is_tty) {
+    roci_debugger_instructions(buffer);
+  }
 
   buffer_write_all(stderr, buffer);
   fflush(stderr);
 
   if (is_tty) {
-    sleep(3);
+    buffer_t* input_buffer = make_buffer(10);
+
+    struct termios oldt = term_echo_off();
+
+    while (true) {
+      buffer_clear(buffer);
+      buffer = buffer_read_ready_bytes(buffer, stdin, 10);
+      if (buffer_length(buffer) > 0) {
+        uint8_t byte = buffer_get(buffer, 0);
+        if (byte == ' ') {
+          term_echo_restore(oldt);
+          break;
+        } else if (byte == 'q') {
+          term_echo_restore(oldt);
+          term_main_buffer(buffer);
+          fprintf(stderr, "\nExiting program from roci debugger.\n");
+          exit(1);
+        } else if (byte == 'c') {
+          term_echo_restore(oldt);
+          state->debug->n_instructions = 0xffffffffffffffff;
+          state->debug->break_on_call_target = false;
+          state->debug->break_on_return = false;
+          state->debug->break_on_next_statement = false;
+          state->debug->trace = false;
+          break;
+        }
+      }
+      usleep(1000);
+    }
     term_main_buffer(buffer);
   }
 }
@@ -103,4 +135,10 @@ void roci_debugger_banner(buffer_t* buffer, char* text) {
   term_set_background_color(buffer, 0x000000);
   term_set_foreground_color(buffer, 0xffffff);
   term_reset_formatting(buffer);
+}
+
+void roci_debugger_instructions(buffer_t* buffer) {
+  buffer_printf(
+      buffer,
+      "\n[Space] step instruction [n] step statement [c] continue [q] quit\n");
 }

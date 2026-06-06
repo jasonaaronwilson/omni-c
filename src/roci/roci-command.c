@@ -30,7 +30,6 @@ void roci_command(void) {
       roci_execute(env, entry_point);
       if (true) {
         buffer_t* buffer = make_buffer(10);
-        buffer_append_repeated_byte(buffer, '=', 80);
         buffer_printf(buffer, "\n");
         roci_dump_env(env, buffer);
         fprintf(stdout, "%s", buffer_to_c_string(buffer));
