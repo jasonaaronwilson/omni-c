@@ -1,3 +1,10 @@
+/**
+ * @file roci-disassembler.c
+ *
+ * The roci disassembler obviously turns a roci_bb_t* into a textual
+ * representation. The address is used to highlight a "current"
+ * instruction.
+ **/
 void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb, uint8_t* address) {
   buffer_printf(buffer, "%s:\n", uint64_to_string(cast(uint64_t, bb)));
   uint8_t* opcode_ptr = bblock_opcode_pointer(bb);

@@ -50,13 +50,18 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
     term_clear_screen(buffer);
   }
 
-  /*
-  buffer_printf(
-      buffer, "%s:     ", uint64_to_string(cast(uint64_t, state->opcode_ptr)));
-  */
-
+  if (is_tty) {
+    roci_debugger_banner(buffer, "Disassembly");
+  }
   bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
+
+  if (is_tty) {
+    roci_debugger_banner(buffer, "Environment");
+  }
   roci_dump_env(state->env, buffer);
+  if (is_tty) {
+    roci_debugger_banner(buffer, "Stack");
+  }
   roci_dump_stack(state, buffer);
 
   buffer_write_all(stderr, buffer);
@@ -85,4 +90,17 @@ void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer) {
 
 boolean_t roci_is_tty(void) {
   return isatty(fileno(stdout)) && !string_equal("dumb", getenv("TERM"));
+}
+
+void roci_debugger_banner(buffer_t* buffer, char* text) {
+  int width = term_width();
+  term_set_background_color(buffer, 0xbfbfbf);
+  term_set_foreground_color(buffer, 0xff0000);
+  term_bold(buffer);
+  buffer_printf(buffer, "               %s", text);
+  buffer_append_repeated_byte(buffer, ' ', width - strlen(text) - 15);
+  buffer_printf(buffer, "\n", text);
+  term_set_background_color(buffer, 0x000000);
+  term_set_foreground_color(buffer, 0xffffff);
+  term_reset_formatting(buffer);
 }

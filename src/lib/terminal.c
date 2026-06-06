@@ -400,3 +400,15 @@ void term_main_buffer(buffer_t* buffer) {
 void term_home(buffer_t* buffer) {
   buffer_printf(buffer, "\033[H");
 }
+
+uint32_t term_width(void) {
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  return w.ws_col;
+}
+
+uint32_t term_height(void) {
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  return w.ws_row;
+}
