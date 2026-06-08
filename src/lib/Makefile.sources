@@ -37,4 +37,5 @@ SRC_C := \
 	sub-process.c \
 	splitjoin.c \
 	oarchive.c \
+	quote-util.c \
 	test.c
