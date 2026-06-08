@@ -37,6 +37,24 @@ typedef struct tokenizer_result_S {
   tokenizer_error_t tokenizer_error_code;
 } tokenizer_result_t;
 
+static inline token_or_error_t make_token_result(buffer_t* buffer,
+                                                 token_type_t token_type,
+                                                 uint64_t start, uint64_t end) {
+  return compound_literal(
+      token_or_error_t, {.token = compound_literal(token_t, {.buffer = buffer,
+                                                             .type = token_type,
+                                                             .start = start,
+                                                             .end = end})});
+}
+
+static inline token_or_error_t
+    make_token_error_result(tokenizer_error_t tokenizer_error_code,
+                            uint64_t position) {
+  return compound_literal(
+      token_or_error_t,
+      {.error_position = position, .error_code = tokenizer_error_code});
+}
+
 static inline token_t* token_at(value_array_t* tokens, uint64_t position) {
   if (position >= tokens->length) {
     return nullptr;
@@ -506,68 +524,126 @@ boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position) {
   return buffer_match_string_at(buffer, position, "\"");
 }
 
-token_or_error_t tokenize_quoted_literal_common(
-    buffer_t* buffer, uint64_t start_position, char* opening_sequence,
-    char* quoted_closing_sequence, char* closing_sequence,
-    token_type_t token_type, tokenizer_error_t unterminated_error_code) {
-  // We don't try to fully understand or verify the string or
-  // character literal (even to see if it is written in valid UTF-8),
-  // only find the closing sequence. Of course we have to skip over
-  // any instance of the closing sequence when it is escaped with
-  // backslash.
-
-  if (!buffer_match_string_at(buffer, start_position, opening_sequence)) {
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-  for (uint64_t position = start_position + strlen(opening_sequence);
-       position < buffer->length;) {
-    if (buffer_match_string_at(buffer, position, quoted_closing_sequence)) {
-      position += strlen(quoted_closing_sequence);
-    } else if (buffer_match_string_at(buffer, position, closing_sequence)) {
-      return compound_literal(
-          token_or_error_t,
-          {.token = compound_literal(
-               token_t, {.buffer = buffer,
-                         .type = token_type,
-                         .start = start_position,
-                         .end = position + strlen(closing_sequence)})});
-    } else {
-      // TODO(jawilson): add an option to iterate "properly" over
-      // utf-8 code-points one by one. This is not necessary since no
-      // bytes of a single or multi-byte code-point will match either
-      // double quote or backslash so matching in the middle of a
-      // code-point like is then potentially
-      position += 1;
-    }
-  }
-  return compound_literal(token_or_error_t,
-                          {.error_code = unterminated_error_code,
-                           .error_position = start_position});
-}
-
-token_or_error_t tokenize_string_literal(buffer_t* buffer,
-                                         uint64_t start_position) {
-  return tokenize_quoted_literal_common(
-      buffer, start_position, "\"", "\\\"", "\"", TOKEN_TYPE_STRING_LITERAL,
-      TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
-}
-
 boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position) {
   return buffer_match_string_at(buffer, position, "'");
 }
 
-token_or_error_t tokenize_character_literal(buffer_t* buffer,
-                                            uint64_t start_position) {
-  // Treat character literals exactly like string literals. If the
-  // character literal ends up containing more than one character
-  // (which apparently is legal in some C compilers BTW), the backend
-  // C or C++ compiler will determine if this is legal or not.
-  return tokenize_quoted_literal_common(
-      buffer, start_position, "'", "\\'", "'", TOKEN_TYPE_CHARACTER_LITERAL,
-      TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL);
+/**
+ * @function tokenize_string_literal
+ *
+ * Parse a C style string literal.
+ */
+token_or_error_t tokenize_string_literal(buffer_t* buffer,
+                                         uint64_t start_position) {
+  uint64_t position = start_position;
+  if (is_string_literal_start(buffer, position)) {
+    position++;
+    while (true) {
+      if (position > buffer_length(buffer)) {
+        make_token_error_result(position,
+                                TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
+      }
+      if (is_string_literal_start(buffer, position)) {
+        return make_token_result(buffer, TOKEN_TYPE_STRING_LITERAL,
+                                 start_position, position + 1);
+      }
+      position = advance_char_literal_position(buffer, position);
+    }
+  }
+  return make_token_error_result(position,
+                                 TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
 }
 
+/**
+ * @function tokenize_character_literal
+ *
+ * Parse a C style string character literal.
+ */
+token_or_error_t tokenize_character_literal(buffer_t* buffer,
+                                            uint64_t start_position) {
+  uint64_t position = start_position;
+  if (is_character_literal_start(buffer, position)) {
+    position++;
+    position = advance_char_literal_position(buffer, position);
+    if (is_character_literal_start(buffer, position)) {
+      return make_token_result(buffer, TOKEN_TYPE_CHARACTER_LITERAL,
+                               start_position, position + 1);
+    }
+  }
+  return make_token_error_result(
+      position, TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL);
+}
+
+#define UNICODE_BACKSLASH_CODE_POINT 92
+#define UNICODE_QUOTE_CODE_POINT 39
+#define UNICODE_DOUBLE_QUOTE_CODE_POINT 34
+#define UNICODE_LOWER_N_CODE_POINT 110
+
+uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position) {
+  // log_fatal("advance_char_literal_position = %d", position & 0xffffffff);
+  utf8_decode_result_t result = buffer_utf8_decode(buffer, position);
+  if (result.num_bytes == 0) {
+    log_fatal("We seem to have non-utf-8 input...");
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  if (result.code_point == UNICODE_BACKSLASH_CODE_POINT) {
+    position += result.num_bytes;
+    result = buffer_utf8_decode(buffer, position);
+    // log_fatal("cp = %d %d", result.code_point, result.num_bytes);
+    if (result.num_bytes == 0) {
+      log_fatal("We seem to have non-utf-8 input issue #2...");
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    // case '?'
+    switch (result.code_point) {
+    case UNICODE_LOWER_N_CODE_POINT:
+    case 't':
+    case 'r':
+    case UNICODE_BACKSLASH_CODE_POINT:
+    case UNICODE_QUOTE_CODE_POINT:
+    case UNICODE_DOUBLE_QUOTE_CODE_POINT:
+      position += result.num_bytes;
+      return position;
+    case 'x':
+      position += result.num_bytes + 2;
+      return position;
+    case 'u':
+      position += result.num_bytes + 4;
+      return position;
+
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7': {
+      // Advance past the first octal digit we already decoded
+      position += result.num_bytes;
+
+      // Check for a second optional octal digit
+      utf8_decode_result_t next = buffer_utf8_decode(buffer, position);
+      if (next.code_point >= '0' && next.code_point <= '7') {
+        position += next.num_bytes;
+
+        // Check for a third optional octal digit
+        next = buffer_utf8_decode(buffer, position);
+        if (next.code_point >= '0' && next.code_point <= '7') {
+          position += next.num_bytes;
+        }
+      }
+      return position;
+    }
+
+    default:
+      // log_fatal("%s", buffer_to_c_string(buffer));
+      fatal_error(ERROR_ILLEGAL_INPUT);
+      break;
+    }
+  }
+  return position + result.num_bytes;
+}
 
 static inline token_t* heap_allocate_token(token_t token) {
   token_t* result = malloc_struct(token_t);
