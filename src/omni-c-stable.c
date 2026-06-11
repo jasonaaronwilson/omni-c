@@ -569,14 +569,6 @@ typedef struct {
     }                                                                           \
   } while (0)
 
-#define UNICODE_BACKSLASH_CODE_POINT 92
-
-#define UNICODE_QUOTE_CODE_POINT 39
-
-#define UNICODE_DOUBLE_QUOTE_CODE_POINT 34
-
-#define UNICODE_LOWER_N_CODE_POINT 110
-
 #define read_token(token_reader_function_name)                                 \
   do {                                                                         \
     token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
@@ -2268,6 +2260,8 @@ buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator
 void oarchive_append_header_and_file_contents(FILE* out, char* filename);
 string_tree_t* oarchive_read_header(FILE* in);
 void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data);
+char* quote_c_string(char* input);
+char* string_unquote_c_string(char* input);
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 void initialize_keyword_maps(void);
 boolean_t is_reserved_word(input_mode_t mode, char* str);
@@ -2611,9 +2605,10 @@ void roci_set_var(roci_vm_state_t* state, char* name, value_t value, roci_tag_t 
 void roci_define_var(roci_env_t* env, char* name, value_t value, roci_tag_t tag);
 roci_env_t* roci_new_env(roci_env_t* parent);
 void roci_dump_env(roci_env_t* env, buffer_t* buffer);
-void roci_primitive_print_env(roci_vm_state_t* state);
 void roci_add_primitives_to_env(roci_env_t* env);
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name);
+void roci_primitive_print_env(roci_vm_state_t* state);
+void roci_primitive_print_string(roci_vm_state_t* state);
 void roci_append_value(buffer_t* buffer, roci_value_t value);
 char* roci_value_to_c_string(roci_value_t value);
 roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point);
@@ -3048,18 +3043,18 @@ static inline boolean_t token_contains(token_t* token, char* str)
 }
 
 
-# 648 "lexer.c"
+# 645 "lexer.c"
 static inline token_t* heap_allocate_token(token_t token)
-# 648 "lexer.c"
+# 645 "lexer.c"
 {
 
-# 649 "lexer.c"
+# 646 "lexer.c"
   token_t* result = malloc_struct(token_t);
 
-# 650 "lexer.c"
+# 647 "lexer.c"
   ((*result)=token);
 
-# 651 "lexer.c"
+# 648 "lexer.c"
   return result;
 }
 
@@ -11714,6 +11709,305 @@ void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callba
 }
 
 
+# 7 "lib/quote-util.c"
+char* quote_c_string(char* input)
+# 7 "lib/quote-util.c"
+{
+
+# 8 "lib/quote-util.c"
+  if ((input==((void *)0)))
+
+# 8 "lib/quote-util.c"
+  return ((void *)0);
+
+# 10 "lib/quote-util.c"
+  buffer_t* buf = make_buffer((strlen(input)+10));
+
+# 11 "lib/quote-util.c"
+  buffer_append_byte(buf, '"');
+
+# 13 "lib/quote-util.c"
+  for (
+
+# 13 "lib/quote-util.c"
+
+# 13 "lib/quote-util.c"
+    size_t i = 0;
+
+# 13 "lib/quote-util.c"
+    ((input[i])!=0);
+
+# 13 "lib/quote-util.c"
+    (i++))
+
+# 13 "lib/quote-util.c"
+  {
+
+# 14 "lib/quote-util.c"
+    uint8_t c = (/*CAST*/(uint8_t) (input[i]));
+
+# 16 "lib/quote-util.c"
+    switch (c)
+
+# 16 "lib/quote-util.c"
+    {
+
+# 17 "lib/quote-util.c"
+      case '"':
+
+# 17 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 17 "lib/quote-util.c"
+      buffer_append_byte(buf, '"');
+
+# 17 "lib/quote-util.c"
+      break;
+
+# 18 "lib/quote-util.c"
+      case '\\':
+
+# 18 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 18 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 18 "lib/quote-util.c"
+      break;
+
+# 19 "lib/quote-util.c"
+      case '\n':
+
+# 19 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 19 "lib/quote-util.c"
+      buffer_append_byte(buf, 'n');
+
+# 19 "lib/quote-util.c"
+      break;
+
+# 20 "lib/quote-util.c"
+      case '\t':
+
+# 20 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 20 "lib/quote-util.c"
+      buffer_append_byte(buf, 't');
+
+# 20 "lib/quote-util.c"
+      break;
+
+# 21 "lib/quote-util.c"
+      case '\r':
+
+# 21 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 21 "lib/quote-util.c"
+      buffer_append_byte(buf, 'r');
+
+# 21 "lib/quote-util.c"
+      break;
+
+# 24 "lib/quote-util.c"
+      default:
+
+# 25 "lib/quote-util.c"
+      if (((c>=32)&&(c<126)))
+
+# 25 "lib/quote-util.c"
+      {
+
+# 27 "lib/quote-util.c"
+        buffer_append_byte(buf, c);
+      }
+      else
+
+# 28 "lib/quote-util.c"
+      {
+
+# 29 "lib/quote-util.c"
+        buffer_printf(buf, "\\x%02x", c);
+      }
+
+# 31 "lib/quote-util.c"
+      break;
+    }
+  }
+
+# 35 "lib/quote-util.c"
+  buffer_append_byte(buf, '"');
+
+# 36 "lib/quote-util.c"
+  return buffer_to_c_string(buf);
+}
+
+
+# 39 "lib/quote-util.c"
+char* string_unquote_c_string(char* input)
+# 39 "lib/quote-util.c"
+{
+
+# 40 "lib/quote-util.c"
+  if ((input==((void *)0)))
+
+# 40 "lib/quote-util.c"
+  return ((void *)0);
+
+# 42 "lib/quote-util.c"
+  int limit = (strlen(input)-1);
+
+# 43 "lib/quote-util.c"
+  buffer_t* buf = make_buffer((limit+10));
+
+# 44 "lib/quote-util.c"
+  for (
+
+# 44 "lib/quote-util.c"
+
+# 44 "lib/quote-util.c"
+    size_t i = 1;
+
+# 44 "lib/quote-util.c"
+    (i<limit);
+
+# 44 "lib/quote-util.c"
+    )
+
+# 44 "lib/quote-util.c"
+  {
+
+# 45 "lib/quote-util.c"
+    uint8_t c = (/*CAST*/(uint8_t) (input[(i++)]));
+
+# 46 "lib/quote-util.c"
+    log_fatal("c = %d\n", c);
+
+# 47 "lib/quote-util.c"
+    if ((c=='\\'))
+
+# 47 "lib/quote-util.c"
+    {
+
+# 48 "lib/quote-util.c"
+      uint8_t c2 = (/*CAST*/(uint8_t) (input[(i++)]));
+
+# 49 "lib/quote-util.c"
+      log_fatal("c2 = %d\n", c2);
+
+# 50 "lib/quote-util.c"
+      switch (c2)
+
+# 50 "lib/quote-util.c"
+      {
+
+# 51 "lib/quote-util.c"
+        case '"':
+
+# 51 "lib/quote-util.c"
+        buffer_append_byte(buf, '\"');
+
+# 51 "lib/quote-util.c"
+        break;
+
+# 52 "lib/quote-util.c"
+        case '\\':
+
+# 52 "lib/quote-util.c"
+        ;
+
+# 52 "lib/quote-util.c"
+        buffer_append_byte(buf, '\\');
+
+# 52 "lib/quote-util.c"
+        break;
+
+# 53 "lib/quote-util.c"
+        case 'n':
+
+# 53 "lib/quote-util.c"
+        buffer_append_byte(buf, '\n');
+
+# 53 "lib/quote-util.c"
+        break;
+
+# 54 "lib/quote-util.c"
+        case 't':
+
+# 54 "lib/quote-util.c"
+        buffer_append_byte(buf, '\t');
+
+# 54 "lib/quote-util.c"
+        break;
+
+# 55 "lib/quote-util.c"
+        case 'r':
+
+# 55 "lib/quote-util.c"
+        buffer_append_byte(buf, '\r');
+
+# 55 "lib/quote-util.c"
+        break;
+
+# 58 "lib/quote-util.c"
+        case 'x':
+
+# 59 "lib/quote-util.c"
+        buffer_t* hex = make_buffer(3);
+
+# 60 "lib/quote-util.c"
+        buffer_append_byte(hex, (input[(i++)]));
+
+# 61 "lib/quote-util.c"
+        buffer_append_byte(hex, (input[(i++)]));
+
+# 62 "lib/quote-util.c"
+        value_result_t result = string_parse_uint64_hex(buffer_to_c_string(hex));
+
+# 63 "lib/quote-util.c"
+        if ((!is_ok(result)))
+
+# 63 "lib/quote-util.c"
+        {
+
+# 64 "lib/quote-util.c"
+          fatal_error(ERROR_ILLEGAL_INPUT);
+        }
+
+# 66 "lib/quote-util.c"
+        buffer_append_byte(buf, (result.u64));
+
+# 67 "lib/quote-util.c"
+        break;
+
+# 68 "lib/quote-util.c"
+        default:
+
+# 69 "lib/quote-util.c"
+        fatal_error(ERROR_ILLEGAL_INPUT);
+
+# 70 "lib/quote-util.c"
+        break;
+      }
+    }
+    else
+
+# 72 "lib/quote-util.c"
+    {
+
+# 73 "lib/quote-util.c"
+      buffer_append_byte(buf, c);
+    }
+  }
+
+# 77 "lib/quote-util.c"
+  return buffer_to_c_string(buf);
+}
+
+
 # 92 "lib/test.c"
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...)
 # 92 "lib/test.c"
@@ -13096,354 +13390,360 @@ token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_pos
 }
 
 
-# 582 "lexer.c"
+# 577 "lexer.c"
 uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position)
-# 582 "lexer.c"
+# 577 "lexer.c"
 {
 
-# 584 "lexer.c"
+# 579 "lexer.c"
   utf8_decode_result_t result = buffer_utf8_decode(buffer, position);
 
-# 585 "lexer.c"
+# 580 "lexer.c"
   if (((result.num_bytes)==0))
 
-# 585 "lexer.c"
+# 580 "lexer.c"
   {
 
-# 586 "lexer.c"
+# 581 "lexer.c"
     log_fatal("We seem to have non-utf-8 input...");
 
-# 587 "lexer.c"
+# 582 "lexer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 589 "lexer.c"
-  if (((result.code_point)==UNICODE_BACKSLASH_CODE_POINT))
+# 584 "lexer.c"
+  if (((result.code_point)=='\\'))
 
-# 589 "lexer.c"
+# 584 "lexer.c"
   {
 
-# 590 "lexer.c"
+# 585 "lexer.c"
     (position+=(result.num_bytes));
 
-# 591 "lexer.c"
+# 586 "lexer.c"
     (result=buffer_utf8_decode(buffer, position));
 
-# 593 "lexer.c"
+# 588 "lexer.c"
     if (((result.num_bytes)==0))
+
+# 588 "lexer.c"
+    {
+
+# 589 "lexer.c"
+      log_fatal("We seem to have non-utf-8 input issue #2...");
+
+# 590 "lexer.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 593 "lexer.c"
+    switch ((result.code_point))
 
 # 593 "lexer.c"
     {
 
 # 594 "lexer.c"
-      log_fatal("We seem to have non-utf-8 input issue #2...");
+      case 'n':
 
 # 595 "lexer.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-
-# 598 "lexer.c"
-    switch ((result.code_point))
-
-# 598 "lexer.c"
-    {
-
-# 599 "lexer.c"
-      case UNICODE_LOWER_N_CODE_POINT:
-
-# 600 "lexer.c"
       case 't':
 
-# 601 "lexer.c"
+# 596 "lexer.c"
       case 'r':
 
+# 597 "lexer.c"
+      case '\\':
+
+# 598 "lexer.c"
+      case '\'':
+
+# 599 "lexer.c"
+      case '"':
+
+# 600 "lexer.c"
+      case 'b':
+
+# 601 "lexer.c"
+      case 'f':
+
 # 602 "lexer.c"
-      case UNICODE_BACKSLASH_CODE_POINT:
+      (position+=(result.num_bytes));
 
 # 603 "lexer.c"
-      case UNICODE_QUOTE_CODE_POINT:
+      return position;
 
 # 604 "lexer.c"
-      case UNICODE_DOUBLE_QUOTE_CODE_POINT:
+      case 'x':
 
 # 605 "lexer.c"
-      (position+=(result.num_bytes));
+      (position+=((result.num_bytes)+2));
 
 # 606 "lexer.c"
       return position;
 
 # 607 "lexer.c"
-      case 'x':
+      case 'u':
 
 # 608 "lexer.c"
-      (position+=((result.num_bytes)+2));
+      (position+=((result.num_bytes)+4));
 
 # 609 "lexer.c"
       return position;
 
-# 610 "lexer.c"
-      case 'u':
-
 # 611 "lexer.c"
-      (position+=((result.num_bytes)+4));
-
-# 612 "lexer.c"
-      return position;
-
-# 614 "lexer.c"
       case '0':
 
-# 615 "lexer.c"
+# 612 "lexer.c"
       case '1':
 
-# 616 "lexer.c"
+# 613 "lexer.c"
       case '2':
 
-# 617 "lexer.c"
+# 614 "lexer.c"
       case '3':
 
-# 618 "lexer.c"
+# 615 "lexer.c"
       case '4':
 
-# 619 "lexer.c"
+# 616 "lexer.c"
       case '5':
 
-# 620 "lexer.c"
+# 617 "lexer.c"
       case '6':
 
-# 621 "lexer.c"
+# 618 "lexer.c"
       case '7':
 
-# 621 "lexer.c"
+# 618 "lexer.c"
       {
 
-# 623 "lexer.c"
+# 620 "lexer.c"
         (position+=(result.num_bytes));
 
-# 626 "lexer.c"
+# 623 "lexer.c"
         utf8_decode_result_t next = buffer_utf8_decode(buffer, position);
 
-# 627 "lexer.c"
+# 624 "lexer.c"
         if ((((next.code_point)>='0')&&((next.code_point)<='7')))
 
-# 627 "lexer.c"
+# 624 "lexer.c"
         {
 
-# 628 "lexer.c"
+# 625 "lexer.c"
           (position+=(next.num_bytes));
 
-# 631 "lexer.c"
+# 628 "lexer.c"
           (next=buffer_utf8_decode(buffer, position));
 
-# 632 "lexer.c"
+# 629 "lexer.c"
           if ((((next.code_point)>='0')&&((next.code_point)<='7')))
 
-# 632 "lexer.c"
+# 629 "lexer.c"
           {
 
-# 633 "lexer.c"
+# 630 "lexer.c"
             (position+=(next.num_bytes));
           }
         }
 
-# 636 "lexer.c"
+# 633 "lexer.c"
         return position;
       }
 
-# 639 "lexer.c"
+# 636 "lexer.c"
       default:
 
-# 641 "lexer.c"
+# 638 "lexer.c"
       fatal_error(ERROR_ILLEGAL_INPUT);
 
-# 642 "lexer.c"
+# 639 "lexer.c"
       break;
     }
   }
 
-# 645 "lexer.c"
+# 642 "lexer.c"
   return (position+(result.num_bytes));
 }
 
 
-# 674 "lexer.c"
+# 671 "lexer.c"
 tokenizer_result_t tokenize(buffer_t* buffer)
-# 674 "lexer.c"
+# 671 "lexer.c"
 {
 
-# 675 "lexer.c"
+# 672 "lexer.c"
   tokenizer_result_t result = {0};
 
-# 679 "lexer.c"
+# 676 "lexer.c"
   value_array_t* result_tokens = make_value_array(1024);
 
-# 681 "lexer.c"
+# 678 "lexer.c"
   uint64_t line_number = 1;
 
-# 682 "lexer.c"
+# 679 "lexer.c"
   uint64_t column_number = 1;
 
-# 684 "lexer.c"
+# 681 "lexer.c"
   uint32_t pos = 0;
 
-# 685 "lexer.c"
+# 682 "lexer.c"
   while ((pos<buffer_length(buffer)))
 
-# 685 "lexer.c"
+# 682 "lexer.c"
   {
 
-# 686 "lexer.c"
+# 683 "lexer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
-# 687 "lexer.c"
+# 684 "lexer.c"
     if ((decode_result.error))
 
-# 687 "lexer.c"
+# 684 "lexer.c"
     {
 
-# 688 "lexer.c"
+# 685 "lexer.c"
       return ((tokenizer_result_t) {.tokenizer_error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR});
     }
 
-# 693 "lexer.c"
+# 690 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
 
-# 694 "lexer.c"
+# 691 "lexer.c"
     token_t* token = ((void *)0);
 
-# 696 "lexer.c"
+# 693 "lexer.c"
     if (isspace(code_point))
 
-# 696 "lexer.c"
+# 693 "lexer.c"
     {
 
-# 697 "lexer.c"
+# 694 "lexer.c"
       read_token(tokenize_whitespace);
     }
     else
 
-# 698 "lexer.c"
+# 695 "lexer.c"
     if (is_identifier_start(code_point))
 
-# 698 "lexer.c"
+# 695 "lexer.c"
     {
 
-# 699 "lexer.c"
+# 696 "lexer.c"
       read_token(tokenize_identifier);
     }
     else
 
-# 700 "lexer.c"
+# 697 "lexer.c"
     if (isdigit(code_point))
 
-# 700 "lexer.c"
+# 697 "lexer.c"
     {
 
-# 701 "lexer.c"
+# 698 "lexer.c"
       read_token(tokenize_numeric);
     }
     else
 
-# 702 "lexer.c"
+# 699 "lexer.c"
     if (is_comment_start(buffer, pos))
 
-# 702 "lexer.c"
+# 699 "lexer.c"
     {
 
-# 703 "lexer.c"
+# 700 "lexer.c"
       read_token(tokenize_comment);
     }
     else
 
-# 704 "lexer.c"
+# 701 "lexer.c"
     if (is_string_literal_start(buffer, pos))
 
-# 704 "lexer.c"
+# 701 "lexer.c"
     {
 
-# 705 "lexer.c"
+# 702 "lexer.c"
       read_token(tokenize_string_literal);
     }
     else
 
-# 706 "lexer.c"
+# 703 "lexer.c"
     if (is_character_literal_start(buffer, pos))
 
-# 706 "lexer.c"
+# 703 "lexer.c"
     {
 
-# 707 "lexer.c"
+# 704 "lexer.c"
       read_token(tokenize_character_literal);
     }
     else
 
-# 708 "lexer.c"
+# 705 "lexer.c"
     {
 
-# 709 "lexer.c"
+# 706 "lexer.c"
       read_token(tokenize_punctuation);
     }
 
-# 714 "lexer.c"
+# 711 "lexer.c"
     if ((token!=((void *)0)))
 
-# 714 "lexer.c"
+# 711 "lexer.c"
     {
 
-# 715 "lexer.c"
+# 712 "lexer.c"
       ((token->line_number)=line_number);
 
-# 716 "lexer.c"
+# 713 "lexer.c"
       ((token->column_number)=column_number);
 
-# 717 "lexer.c"
+# 714 "lexer.c"
       for (
 
-# 717 "lexer.c"
+# 714 "lexer.c"
 
-# 717 "lexer.c"
+# 714 "lexer.c"
         int i = (token->start);
 
-# 717 "lexer.c"
+# 714 "lexer.c"
         (i<(token->end));
 
-# 717 "lexer.c"
+# 714 "lexer.c"
         (i++))
 
-# 717 "lexer.c"
+# 714 "lexer.c"
       {
 
-# 718 "lexer.c"
+# 715 "lexer.c"
         uint8_t ch = buffer_get((token->buffer), i);
 
-# 719 "lexer.c"
+# 716 "lexer.c"
         if ((ch=='\n'))
+
+# 716 "lexer.c"
+        {
+
+# 717 "lexer.c"
+          (line_number++);
+
+# 718 "lexer.c"
+          (column_number=1);
+        }
+        else
 
 # 719 "lexer.c"
         {
 
 # 720 "lexer.c"
-          (line_number++);
-
-# 721 "lexer.c"
-          (column_number=1);
-        }
-        else
-
-# 722 "lexer.c"
-        {
-
-# 723 "lexer.c"
           (column_number++);
         }
       }
     }
   }
 
-# 729 "lexer.c"
+# 726 "lexer.c"
   ((result.tokens)=result_tokens);
 
-# 730 "lexer.c"
+# 727 "lexer.c"
   return result;
 }
 
@@ -29186,7 +29486,7 @@ void roci_compile_expression(roci_compiler_state_t* state)
       case TOKEN_TYPE_STRING_LITERAL:
 
 # 366 "roci/roci-compiler.c"
-      char* str = token_to_string(token);
+      char* str = string_unquote_c_string(token_to_string(token));
 
 # 367 "roci/roci-compiler.c"
       buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_STRING);
@@ -30156,228 +30456,228 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint6
     case ROCI_OPCODE_PUSH_STRING:
 
 # 49 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    push \"%s\"\n", (/*CAST*/(char*) (*data_ptr)));
-
-# 50 "roci/roci-disassembler.c"
-    return 1;
+    buffer_printf(buffer, "    push %s\n", quote_c_string((/*CAST*/(char*) (*data_ptr))));
 
 # 51 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_BR:
+    return 1;
 
 # 52 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    br %s\n", uint64_to_string((*data_ptr)));
+    case ROCI_OPCODE_BR:
 
 # 53 "roci/roci-disassembler.c"
-    return 1;
+    buffer_printf(buffer, "    br %s\n", uint64_to_string((*data_ptr)));
 
 # 54 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_BR_TRUE:
+    return 1;
 
 # 55 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    br_true %s\n", uint64_to_string((*data_ptr)));
+    case ROCI_OPCODE_BR_TRUE:
 
 # 56 "roci/roci-disassembler.c"
-    return 1;
+    buffer_printf(buffer, "    br_true %s\n", uint64_to_string((*data_ptr)));
 
 # 57 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_NEW_ENVIRONMENT:
+    return 1;
 
 # 58 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    new_env\n");
+    case ROCI_OPCODE_NEW_ENVIRONMENT:
 
 # 59 "roci/roci-disassembler.c"
-    return 0;
+    buffer_printf(buffer, "    new_env\n");
 
 # 60 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_DROP_ENVIRONMENT:
-
-# 61 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    drop_env\n");
-
-# 62 "roci/roci-disassembler.c"
     return 0;
 
+# 61 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DROP_ENVIRONMENT:
+
+# 62 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    drop_env\n");
+
 # 63 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_GET_VAR:
+    return 0;
 
 # 64 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    get_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+    case ROCI_OPCODE_GET_VAR:
 
 # 65 "roci/roci-disassembler.c"
-    return 1;
+    buffer_printf(buffer, "    get_var %s\n", (/*CAST*/(char*) (*data_ptr)));
 
 # 66 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_SET_VAR:
+    return 1;
 
 # 67 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    set_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+    case ROCI_OPCODE_SET_VAR:
 
 # 68 "roci/roci-disassembler.c"
-    return 1;
+    buffer_printf(buffer, "    set_var %s\n", (/*CAST*/(char*) (*data_ptr)));
 
 # 69 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_DEFINE_VAR:
+    return 1;
 
 # 70 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    define_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+    case ROCI_OPCODE_DEFINE_VAR:
 
 # 71 "roci/roci-disassembler.c"
-    return 1;
+    buffer_printf(buffer, "    define_var %s\n", (/*CAST*/(char*) (*data_ptr)));
 
 # 72 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_COMMENT:
+    return 1;
 
 # 73 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    ; %s\n", (/*CAST*/(char*) (*data_ptr)));
+    case ROCI_OPCODE_COMMENT:
 
 # 74 "roci/roci-disassembler.c"
-    return 1;
+    buffer_printf(buffer, "    ; %s\n", (/*CAST*/(char*) (*data_ptr)));
 
-# 76 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_0:
+# 75 "roci/roci-disassembler.c"
+    return 1;
 
 # 77 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_1:
+    case ROCI_OPCODE_CALL_0:
 
 # 78 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_2:
+    case ROCI_OPCODE_CALL_1:
 
 # 79 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_3:
+    case ROCI_OPCODE_CALL_2:
 
 # 80 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_4:
+    case ROCI_OPCODE_CALL_3:
 
 # 81 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_5:
+    case ROCI_OPCODE_CALL_4:
 
 # 82 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_6:
+    case ROCI_OPCODE_CALL_5:
 
 # 83 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_7:
+    case ROCI_OPCODE_CALL_6:
 
 # 84 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_8:
+    case ROCI_OPCODE_CALL_7:
 
 # 85 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_9:
+    case ROCI_OPCODE_CALL_8:
 
 # 86 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_10:
+    case ROCI_OPCODE_CALL_9:
 
 # 87 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_11:
+    case ROCI_OPCODE_CALL_10:
 
 # 88 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_12:
+    case ROCI_OPCODE_CALL_11:
 
 # 89 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_13:
+    case ROCI_OPCODE_CALL_12:
 
 # 90 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_14:
+    case ROCI_OPCODE_CALL_13:
 
 # 91 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_15:
+    case ROCI_OPCODE_CALL_14:
 
 # 92 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_16:
+    case ROCI_OPCODE_CALL_15:
 
 # 93 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_16:
+
+# 94 "roci/roci-disassembler.c"
     buffer_printf(buffer, "    call_%d %s\n", ((*opcode_ptr)-ROCI_OPCODE_CALL_0), uint64_to_string((*data_ptr)));
 
-# 95 "roci/roci-disassembler.c"
-    return 1;
-
 # 96 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_MAKE_CLOSURE:
+    return 1;
 
 # 97 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_MAKE_CLOSURE:
+
+# 98 "roci/roci-disassembler.c"
     buffer_printf(buffer, "    make_closure %s\n", uint64_to_string((*data_ptr)));
 
-# 99 "roci/roci-disassembler.c"
-    return 1;
-
 # 100 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CHECK_ARGS:
+    return 1;
 
 # 101 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    check_args %s\n", uint64_to_string((*data_ptr)));
+    case ROCI_OPCODE_CHECK_ARGS:
 
 # 102 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    check_args %s\n", uint64_to_string((*data_ptr)));
+
+# 103 "roci/roci-disassembler.c"
     return 1;
 
-# 103 "roci/roci-disassembler.c"
+# 104 "roci/roci-disassembler.c"
     case ROCI_OPCODE_DEBUG_INFO:
 
-# 103 "roci/roci-disassembler.c"
+# 104 "roci/roci-disassembler.c"
     {
 
-# 104 "roci/roci-disassembler.c"
+# 105 "roci/roci-disassembler.c"
       roci_src_info_t info = (*data_ptr);
 
-# 105 "roci/roci-disassembler.c"
+# 106 "roci/roci-disassembler.c"
       buffer_printf(buffer, "    debug_info %s, %s\n", uint64_to_string(roci_src_file_number(info)), uint64_to_string(roci_src_line_number(info)));
 
-# 108 "roci/roci-disassembler.c"
+# 109 "roci/roci-disassembler.c"
       return 1;
     }
 
-# 110 "roci/roci-disassembler.c"
+# 111 "roci/roci-disassembler.c"
     default:
 
-# 111 "roci/roci-disassembler.c"
+# 112 "roci/roci-disassembler.c"
     buffer_printf(buffer, "    <unknown-opcode>\n");
 
-# 112 "roci/roci-disassembler.c"
+# 113 "roci/roci-disassembler.c"
     return 0;
   }
 
-# 115 "roci/roci-disassembler.c"
+# 116 "roci/roci-disassembler.c"
   return 0;
 }
 
 
-# 118 "roci/roci-disassembler.c"
+# 119 "roci/roci-disassembler.c"
 double raw_double_to_double(uint64_t raw_bits)
-# 118 "roci/roci-disassembler.c"
+# 119 "roci/roci-disassembler.c"
 {
 
-# 119 "roci/roci-disassembler.c"
+# 120 "roci/roci-disassembler.c"
   double val = 0.0;
 
-# 120 "roci/roci-disassembler.c"
+# 121 "roci/roci-disassembler.c"
   memcpy((&val), (&raw_bits), (sizeof(val)));
 
-# 121 "roci/roci-disassembler.c"
+# 122 "roci/roci-disassembler.c"
   return val;
 }
 
 
-# 124 "roci/roci-disassembler.c"
+# 125 "roci/roci-disassembler.c"
 void disassemble_bblocks(value_array_t* bblocks, buffer_t* buffer)
-# 124 "roci/roci-disassembler.c"
+# 125 "roci/roci-disassembler.c"
 {
 
-# 125 "roci/roci-disassembler.c"
+# 126 "roci/roci-disassembler.c"
   for (
 
-# 125 "roci/roci-disassembler.c"
-
-# 125 "roci/roci-disassembler.c"
-    int i = 0;
-
-# 125 "roci/roci-disassembler.c"
-    (i<(bblocks->length));
-
-# 125 "roci/roci-disassembler.c"
-    (i++))
-
-# 125 "roci/roci-disassembler.c"
-  {
+# 126 "roci/roci-disassembler.c"
 
 # 126 "roci/roci-disassembler.c"
+    int i = 0;
+
+# 126 "roci/roci-disassembler.c"
+    (i<(bblocks->length));
+
+# 126 "roci/roci-disassembler.c"
+    (i++))
+
+# 126 "roci/roci-disassembler.c"
+  {
+
+# 127 "roci/roci-disassembler.c"
     bblock_to_buffer(buffer, value_array_get_ptr(bblocks, i, typeof(roci_bb_t*)), ((void *)0));
   }
 }
@@ -30555,38 +30855,57 @@ void roci_dump_env(roci_env_t* env, buffer_t* buffer)
 
 
 # 10 "roci/roci-primitives.c"
-void roci_primitive_print_env(roci_vm_state_t* state)
+void roci_add_primitives_to_env(roci_env_t* env)
 # 10 "roci/roci-primitives.c"
 {
 
 # 11 "roci/roci-primitives.c"
-  buffer_t* buffer = make_buffer(10);
+  roci_add_primitive(env, (&roci_primitive_print_env), "debug_print_env");
 
 # 12 "roci/roci-primitives.c"
-  roci_dump_env((state->env), buffer);
-
-# 13 "roci/roci-primitives.c"
-  fprintf(stdout, "%s", buffer_to_c_string(buffer));
+  roci_add_primitive(env, (&roci_primitive_print_string), "print_string");
 }
 
 
-# 16 "roci/roci-primitives.c"
-void roci_add_primitives_to_env(roci_env_t* env)
+# 15 "roci/roci-primitives.c"
+void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name)
 # 16 "roci/roci-primitives.c"
 {
 
 # 17 "roci/roci-primitives.c"
-  roci_add_primitive(env, (&roci_primitive_print_env), "debug_print_env");
+  roci_define_var(env, name, u64_to_value((/*CAST*/(uint64_t) primitive)), ROCI_TAG_C_PRIMITIVE);
 }
 
 
-# 20 "roci/roci-primitives.c"
-void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name)
+# 21 "roci/roci-primitives.c"
+void roci_primitive_print_env(roci_vm_state_t* state)
 # 21 "roci/roci-primitives.c"
 {
 
 # 22 "roci/roci-primitives.c"
-  roci_define_var(env, name, u64_to_value((/*CAST*/(uint64_t) primitive)), ROCI_TAG_C_PRIMITIVE);
+  buffer_t* buffer = make_buffer(10);
+
+# 23 "roci/roci-primitives.c"
+  roci_dump_env((state->env), buffer);
+
+# 24 "roci/roci-primitives.c"
+  fprintf(stdout, "%s", buffer_to_c_string(buffer));
+}
+
+
+# 27 "roci/roci-primitives.c"
+void roci_primitive_print_string(roci_vm_state_t* state)
+# 27 "roci/roci-primitives.c"
+{
+
+# 28 "roci/roci-primitives.c"
+  char* arg = roci_pop_string(state);
+
+# 29 "roci/roci-primitives.c"
+  fprintf(stdout, "%s", arg);
+
+# 30 "roci/roci-primitives.c"
+  roci_push_false(state);
 }
 
 
@@ -30605,7 +30924,7 @@ void roci_append_value(buffer_t* buffer, roci_value_t value)
     case ROCI_TAG_STRING:
 
 # 31 "roci/roci-value.c"
-    buffer_printf(buffer, "\"%s\"", (/*CAST*/(char*) (value.raw)));
+    buffer_printf(buffer, "%s", quote_c_string((/*CAST*/(char*) (value.raw))));
 
 # 32 "roci/roci-value.c"
     break;
@@ -30641,29 +30960,53 @@ void roci_append_value(buffer_t* buffer, roci_value_t value)
     break;
 
 # 46 "roci/roci-value.c"
-    default:
+    case ROCI_TAG_BOOLEAN:
 
 # 47 "roci/roci-value.c"
-    log_fatal("unhandled tag %s", roci_tag_to_string((value.tag)));
+    if ((value.raw))
+
+# 47 "roci/roci-value.c"
+    {
 
 # 48 "roci/roci-value.c"
+      buffer_printf(buffer, "%s", "true");
+    }
+    else
+
+# 49 "roci/roci-value.c"
+    {
+
+# 50 "roci/roci-value.c"
+      buffer_printf(buffer, "%s", "false");
+    }
+
+# 52 "roci/roci-value.c"
+    break;
+
+# 54 "roci/roci-value.c"
+    default:
+
+# 55 "roci/roci-value.c"
+    log_fatal("unhandled tag %s", roci_tag_to_string((value.tag)));
+
+# 56 "roci/roci-value.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 52 "roci/roci-value.c"
+# 60 "roci/roci-value.c"
 char* roci_value_to_c_string(roci_value_t value)
-# 52 "roci/roci-value.c"
+# 60 "roci/roci-value.c"
 {
 
-# 53 "roci/roci-value.c"
+# 61 "roci/roci-value.c"
   buffer_t* buf = make_buffer(10);
 
-# 54 "roci/roci-value.c"
+# 62 "roci/roci-value.c"
   roci_append_value(buf, value);
 
-# 55 "roci/roci-value.c"
+# 63 "roci/roci-value.c"
   return buffer_to_c_string(buf);
 }
 
@@ -30982,224 +31325,251 @@ roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state)
 
 # 258 "roci/roci.c"
       {
-      }
-      else
+
+# 259 "roci/roci.c"
+        roci_bb_t* cont_bb = (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++)));
 
 # 260 "roci/roci.c"
-      if (((proc.tag)==ROCI_TAG_CLOSURE))
-
-# 260 "roci/roci.c"
-      {
+        roci_env_t* cont_env = (state->env);
 
 # 261 "roci/roci.c"
-        roci_closure_t* function = (/*CAST*/(roci_closure_t*) (proc.raw));
+        (/*CAST*/(roci_c_primitive_t) (proc.raw))(state);
 
 # 262 "roci/roci.c"
-        roci_set_env(state, (function->env));
+        (bb=cont_bb);
 
 # 263 "roci/roci.c"
-        roci_push_continuation(state, (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))), n_args);
+        ((state->env)=cont_env);
 
-# 265 "roci/roci.c"
-        (bb=(function->entry_point));
-
-# 266 "roci/roci.c"
+# 264 "roci/roci.c"
         goto start_bblock;
       }
       else
 
-# 267 "roci/roci.c"
+# 265 "roci/roci.c"
+      if (((proc.tag)==ROCI_TAG_CLOSURE))
+
+# 265 "roci/roci.c"
       {
 
+# 266 "roci/roci.c"
+        roci_closure_t* function = (/*CAST*/(roci_closure_t*) (proc.raw));
+
+# 267 "roci/roci.c"
+        roci_set_env(state, (function->env));
+
 # 268 "roci/roci.c"
-        fatal_error(ERROR_ILLEGAL_STATE);
-      }
+        roci_push_continuation(state, (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))), n_args);
 
 # 270 "roci/roci.c"
-      break;
+        (bb=(function->entry_point));
 
-# 272 "roci/roci.c"
-      case ROCI_OPCODE_RETURN:
+# 271 "roci/roci.c"
+        goto start_bblock;
+      }
+      else
 
 # 272 "roci/roci.c"
       {
 
 # 273 "roci/roci.c"
-        roci_value_t tos = roci_pop_value(state);
-
-# 274 "roci/roci.c"
-        roci_cont_t* continuation = roci_pop_continuation(state);
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
 
 # 275 "roci/roci.c"
-        (bb=(continuation->bb));
-
-# 276 "roci/roci.c"
-        ((state->stack)=(continuation->stack));
+      break;
 
 # 277 "roci/roci.c"
-        ((state->stack_tags)=(continuation->stack_tags));
+      case ROCI_OPCODE_RETURN:
+
+# 277 "roci/roci.c"
+      {
 
 # 278 "roci/roci.c"
-        roci_push_value(state, (tos.raw), (tos.tag));
+        roci_value_t tos = roci_pop_value(state);
 
 # 279 "roci/roci.c"
-        if ((bb==NULL))
-
-# 279 "roci/roci.c"
-        {
+        roci_cont_t* continuation = roci_pop_continuation(state);
 
 # 280 "roci/roci.c"
+        (bb=(continuation->bb));
+
+# 281 "roci/roci.c"
+        ((state->stack)=(continuation->stack));
+
+# 282 "roci/roci.c"
+        ((state->stack_tags)=(continuation->stack_tags));
+
+# 283 "roci/roci.c"
+        roci_push_value(state, (tos.raw), (tos.tag));
+
+# 284 "roci/roci.c"
+        if ((bb==NULL))
+
+# 284 "roci/roci.c"
+        {
+
+# 285 "roci/roci.c"
           return ROCI_RUNTIME_ERROR_NONE;
         }
 
-# 282 "roci/roci.c"
+# 287 "roci/roci.c"
         goto start_bblock;
       }
 
-# 285 "roci/roci.c"
+# 290 "roci/roci.c"
       case ROCI_OPCODE_NEW_ENVIRONMENT:
 
-# 286 "roci/roci.c"
+# 291 "roci/roci.c"
       roci_set_env(state, roci_new_env(roci_current_env(state)));
 
-# 287 "roci/roci.c"
+# 292 "roci/roci.c"
       break;
 
-# 289 "roci/roci.c"
+# 294 "roci/roci.c"
       case ROCI_OPCODE_DEFINE_VAR:
 
-# 289 "roci/roci.c"
+# 294 "roci/roci.c"
       {
 
-# 290 "roci/roci.c"
+# 295 "roci/roci.c"
         char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
 
-# 291 "roci/roci.c"
+# 296 "roci/roci.c"
         roci_tag_t tag = (*(--(state->stack_tags)));
 
-# 292 "roci/roci.c"
+# 297 "roci/roci.c"
         uint64_t tos = (*(--(state->stack)));
 
-# 293 "roci/roci.c"
+# 298 "roci/roci.c"
         roci_define_var(roci_current_env(state), str, u64_to_value(tos), tag);
 
-# 294 "roci/roci.c"
+# 299 "roci/roci.c"
         break;
       }
 
-# 297 "roci/roci.c"
+# 302 "roci/roci.c"
       case ROCI_OPCODE_GET_VAR:
 
-# 297 "roci/roci.c"
+# 302 "roci/roci.c"
       {
 
-# 298 "roci/roci.c"
+# 303 "roci/roci.c"
         char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
 
-# 299 "roci/roci.c"
+# 304 "roci/roci.c"
         roci_value_t* binding = roci_get_var(roci_current_env(state), str);
 
-# 300 "roci/roci.c"
+# 305 "roci/roci.c"
         if ((binding==((void *)0)))
 
-# 300 "roci/roci.c"
+# 305 "roci/roci.c"
         {
 
-# 301 "roci/roci.c"
+# 306 "roci/roci.c"
           roci_debug_error(state, "variable not found");
         }
 
-# 303 "roci/roci.c"
+# 308 "roci/roci.c"
         ((*((state->stack)++))=(binding->raw));
 
-# 304 "roci/roci.c"
+# 309 "roci/roci.c"
         ((*((state->stack_tags)++))=(binding->tag));
 
-# 305 "roci/roci.c"
+# 310 "roci/roci.c"
         break;
       }
-
-# 308 "roci/roci.c"
-      case ROCI_OPCODE_SET_VAR:
-
-# 308 "roci/roci.c"
-      {
-
-# 309 "roci/roci.c"
-        char* str = (/*CAST*/(char*) ((state->data_ptr)++));
-
-# 310 "roci/roci.c"
-        roci_tag_t tag = (*(--(state->stack_tags)));
-
-# 311 "roci/roci.c"
-        uint64_t tos = (*(--(state->stack)));
-
-# 312 "roci/roci.c"
-        roci_set_var(state, str, u64_to_value(tos), tag);
 
 # 313 "roci/roci.c"
+      case ROCI_OPCODE_SET_VAR:
+
+# 313 "roci/roci.c"
+      {
+
+# 314 "roci/roci.c"
+        char* str = (/*CAST*/(char*) ((state->data_ptr)++));
+
+# 315 "roci/roci.c"
+        roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 316 "roci/roci.c"
+        uint64_t tos = (*(--(state->stack)));
+
+# 317 "roci/roci.c"
+        roci_set_var(state, str, u64_to_value(tos), tag);
+
+# 318 "roci/roci.c"
         break;
       }
 
-# 316 "roci/roci.c"
+# 321 "roci/roci.c"
       case ROCI_OPCODE_COMMENT:
 
-# 317 "roci/roci.c"
+# 322 "roci/roci.c"
       ((state->data_ptr)++);
 
-# 318 "roci/roci.c"
+# 323 "roci/roci.c"
       break;
-
-# 320 "roci/roci.c"
-      case ROCI_OPCODE_DEBUG_INFO:
-
-# 321 "roci/roci.c"
-      ((state->debug_info)=(*((state->data_ptr)++)));
-
-# 322 "roci/roci.c"
-      break;
-
-# 324 "roci/roci.c"
-      case ROCI_OPCODE_DROP_ENVIRONMENT:
 
 # 325 "roci/roci.c"
-      roci_drop_env(state);
+      case ROCI_OPCODE_DEBUG_INFO:
 
 # 326 "roci/roci.c"
+      ((state->debug_info)=(*((state->data_ptr)++)));
+
+# 327 "roci/roci.c"
       break;
 
-# 328 "roci/roci.c"
-      case ROCI_OPCODE_CHECK_ARGS:
-
-# 328 "roci/roci.c"
-      {
-
 # 329 "roci/roci.c"
-        uint64_t n_args = (*((state->data_ptr)++));
+      case ROCI_OPCODE_DROP_ENVIRONMENT:
 
 # 330 "roci/roci.c"
-        if ((n_args!=(state->n_args)))
-
-# 330 "roci/roci.c"
-        {
+      roci_drop_env(state);
 
 # 331 "roci/roci.c"
+      break;
+
+# 333 "roci/roci.c"
+      case ROCI_OPCODE_CHECK_ARGS:
+
+# 333 "roci/roci.c"
+      {
+
+# 334 "roci/roci.c"
+        uint64_t n_args = (*((state->data_ptr)++));
+
+# 335 "roci/roci.c"
+        if ((n_args!=(state->n_args)))
+
+# 335 "roci/roci.c"
+        {
+
+# 336 "roci/roci.c"
           roci_debug_error(state, "argument call mismatch");
         }
 
-# 333 "roci/roci.c"
+# 338 "roci/roci.c"
         break;
       }
 
-# 336 "roci/roci.c"
+# 341 "roci/roci.c"
+      case ROCI_OPCODE_DROP:
+
+# 342 "roci/roci.c"
+      roci_pop_value(state);
+
+# 343 "roci/roci.c"
+      break;
+
+# 345 "roci/roci.c"
       default:
 
-# 337 "roci/roci.c"
+# 346 "roci/roci.c"
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
     }
   }
 
-# 340 "roci/roci.c"
+# 349 "roci/roci.c"
   return ROCI_RUNTIME_ERROR_NONE;
 }
 
@@ -34206,13 +34576,13 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // These checksums are currently easy to fake for example by using a
 // hacked git in the PATH at the time this compile was run.
 //
-// git cat-file -p 817c7d58286241a8bbe649789f2f5052c463faba > /home/jawilson/src/omni-c/build-dir/bin/lib.oar
+// git cat-file -p 7ee1c33e40fb493096f60c072d65c0acf3f52321 > /home/jawilson/src/omni-c/build-dir/bin/lib.oar
 // git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
 // git cat-file -p 6c0a741ef33f143d100f562fbb6624a0e4b0bb39 > keywords.c
 // git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
 // git cat-file -p 519bac76f7060874edf686e186bbd0127c492875 > file-reader.c
 // git cat-file -p b826e66adf47cc1bb8edf4e995bfe5eee16c0a48 > compiler-errors.c
-// git cat-file -p 8988f6015a2dd156f8d33939819ccf3126e96dfe > lexer.c
+// git cat-file -p 917e001d2658287c2633b80671d3f618b326ca5d > lexer.c
 // git cat-file -p 0b1ed82677427f66828e3ccbad7c004541d0a0ca > token-list.c
 // git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
 // git cat-file -p bc27a1fa5e0e46e5be7efb58913bf35141b3d84d > parser.c
@@ -34254,12 +34624,12 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p e6ba936f5ec08183f3dfca37c7efb585d9d0cfe9 > roci/roci-bb-builder.c
 // git cat-file -p d1989e6150fdf6d2af29af5f8dd473fb56c82c79 > roci/roci-bb.c
 // git cat-file -p 821f4e8b67df834b69ac2f94bf5c80540a927de6 > roci/roci-command.c
-// git cat-file -p 5ef13601264fe8f2c41e11a6800841686fda8fed > roci/roci-compiler.c
+// git cat-file -p efc3d0b71db36f6982b331966d66a777456321aa > roci/roci-compiler.c
 // git cat-file -p 22ac179e92fd51982073c7b3e9e81cbfe8d0b678 > roci/roci-debugger.c
-// git cat-file -p 8611b35047413e612fc87d0d753601c8964ec6a5 > roci/roci-disassembler.c
+// git cat-file -p b5a129d6ca618bd9d307ecbaa9da557bf9a70e56 > roci/roci-disassembler.c
 // git cat-file -p 127382341510377c95324604ac3c3514a34289a6 > roci/roci-env.c
-// git cat-file -p 5c5abffe2e891de7104feb87d73c0ae21b89ffea > roci/roci-primitives.c
+// git cat-file -p 084a40e96570419dc5541f083739cc4db34ef8c8 > roci/roci-primitives.c
 // git cat-file -p 34423759a5790b0c600e0042b6cc2c687e8a7dbd > roci/roci-stack.c
-// git cat-file -p eeaebecaa3279ba28325e38841b68abc4e9c1bc4 > roci/roci-value.c
-// git cat-file -p 2a17ef73ef17fae9e883aa83e9104bdc45d33474 > roci/roci.c
+// git cat-file -p dd5a4feeb245a57c2cc6a347e07645cb1baf9110 > roci/roci-value.c
+// git cat-file -p 3ed9d9a93a3136034bb0bd5697794bc70276a1a5 > roci/roci.c
 // git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
