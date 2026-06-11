@@ -46,7 +46,8 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr,
     buffer_printf(buffer, "    push %lf\n", raw_double_to_double(*(data_ptr)));
     return 1;
   case ROCI_OPCODE_PUSH_STRING:
-    buffer_printf(buffer, "    push \"%s\"\n", cast(char*, *(data_ptr)));
+    buffer_printf(buffer, "    push %s\n",
+                  quote_c_string(cast(char*, *(data_ptr))));
     return 1;
   case ROCI_OPCODE_BR:
     buffer_printf(buffer, "    br %s\n", uint64_to_string(*(data_ptr)));

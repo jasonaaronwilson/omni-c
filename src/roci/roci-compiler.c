@@ -363,7 +363,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
       break;
 
     case TOKEN_TYPE_STRING_LITERAL:
-      char* str = token_to_string(token);
+      char* str = string_unquote_c_string(token_to_string(token));
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_STRING);
       value_array_add(state->current_bb->data, str_to_value(str));
       break;

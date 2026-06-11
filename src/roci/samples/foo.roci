@@ -2,3 +2,4 @@ let id = fn(n) {
     return n;
 };
 let boo = id(10);
+let a_str = "Hello World!\n";

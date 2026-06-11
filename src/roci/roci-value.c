@@ -28,7 +28,7 @@ typedef roci_value_t = struct {
 void roci_append_value(buffer_t* buffer, roci_value_t value) {
   switch (value.tag) {
   case ROCI_TAG_STRING:
-    buffer_printf(buffer, "\"%s\"", cast(char*, value.raw));
+    buffer_printf(buffer, "%s", quote_c_string(cast(char*, value.raw)));
     break;
   case ROCI_TAG_INTEGER:
     // FIXME: it's an integer (not unsigned) stupid!
