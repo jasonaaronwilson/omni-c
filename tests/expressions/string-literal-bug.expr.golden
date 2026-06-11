@@ -1,0 +1,9 @@
+{
+    tag = PARSE_NODE_LITERAL
+    tokens = [
+        ""\\x%02x""
+    ]
+}
+
+// C Output
+"\\x%02x"
