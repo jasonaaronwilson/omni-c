@@ -40,6 +40,7 @@ LIB_TESTS := \
 	${OMNI_C_ROOT}/tests/lib/buffer-test.c \
 	${OMNI_C_ROOT}/tests/lib/cdl-printer-test.c \
 	${OMNI_C_ROOT}/tests/lib/random-test.c \
+	${OMNI_C_ROOT}/tests/lib/quote-util-test.c \
 	${OMNI_C_ROOT}/tests/lib/splitjoin-test.c \
 	${OMNI_C_ROOT}/tests/lib/string-alist-test.c \
 	${OMNI_C_ROOT}/tests/lib/string-hashtable-test.c \

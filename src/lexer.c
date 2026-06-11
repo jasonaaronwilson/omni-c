@@ -597,6 +597,8 @@ uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position) {
     case '\\':
     case '\'':
     case '"':
+    case 'b':
+    case 'f':
       position += result.num_bytes;
       return position;
     case 'x':
