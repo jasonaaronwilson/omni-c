@@ -574,11 +574,6 @@ token_or_error_t tokenize_character_literal(buffer_t* buffer,
       position, TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL);
 }
 
-#define UNICODE_BACKSLASH_CODE_POINT 92
-#define UNICODE_QUOTE_CODE_POINT 39
-#define UNICODE_DOUBLE_QUOTE_CODE_POINT 34
-#define UNICODE_LOWER_N_CODE_POINT 110
-
 uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position) {
   // log_fatal("advance_char_literal_position = %d", position & 0xffffffff);
   utf8_decode_result_t result = buffer_utf8_decode(buffer, position);
@@ -586,7 +581,7 @@ uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position) {
     log_fatal("We seem to have non-utf-8 input...");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  if (result.code_point == UNICODE_BACKSLASH_CODE_POINT) {
+  if (result.code_point == '\\') {
     position += result.num_bytes;
     result = buffer_utf8_decode(buffer, position);
     // log_fatal("cp = %d %d", result.code_point, result.num_bytes);
@@ -596,12 +591,12 @@ uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position) {
     }
     // case '?'
     switch (result.code_point) {
-    case UNICODE_LOWER_N_CODE_POINT:
+    case 'n':
     case 't':
     case 'r':
-    case UNICODE_BACKSLASH_CODE_POINT:
-    case UNICODE_QUOTE_CODE_POINT:
-    case UNICODE_DOUBLE_QUOTE_CODE_POINT:
+    case '\\':
+    case '\'':
+    case '"':
       position += result.num_bytes;
       return position;
     case 'x':
