@@ -256,7 +256,12 @@ start_bblock:
       state->n_args = n_args;
       roci_value_t proc = roci_pop_value(state);
       if (proc.tag == ROCI_TAG_C_PRIMITIVE) {
-        // FIXME
+        roci_bb_t* cont_bb = cast(roci_bb_t*, *(state->data_ptr++));
+        roci_env_t* cont_env = state->env;
+        cast(roci_c_primitive_t, proc.raw)(state);
+        bb = cont_bb;
+        state->env = cont_env;
+        goto start_bblock;
       } else if (proc.tag == ROCI_TAG_CLOSURE) {
         roci_closure_t* function = cast(roci_closure_t*, proc.raw);
         roci_set_env(state, function->env);
@@ -332,6 +337,10 @@ start_bblock:
       }
       break;
     }
+
+    case ROCI_OPCODE_DROP:
+      roci_pop_value(state);
+      break;
 
     default:
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;

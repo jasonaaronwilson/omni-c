@@ -43,6 +43,14 @@ void roci_append_value(buffer_t* buffer, roci_value_t value) {
                   uint64_to_string(cast(uint64_t, closure->entry_point)),
                   uint64_to_string(cast(uint64_t, closure->env)));
     break;
+  case ROCI_TAG_BOOLEAN:
+    if (value.raw) {
+      buffer_printf(buffer, "%s", "true");
+    } else {
+      buffer_printf(buffer, "%s", "false");
+    }
+    break;
+
   default:
     log_fatal("unhandled tag %s", roci_tag_to_string(value.tag));
     fatal_error(ERROR_ILLEGAL_STATE);

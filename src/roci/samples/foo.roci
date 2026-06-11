@@ -3,3 +3,6 @@ let id = fn(n) {
 };
 let boo = id(10);
 let a_str = "Hello World!\n";
+print_string(a_str);
+print_string("Foo Bar Baz\n\n");
+let fubar = 100;
