@@ -95,37 +95,34 @@ typedef struct {
 #endif /* _REFLECTION_H_ */
 // ========== system includes ==========
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <execinfo.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <gc.h>
-#include <stdarg.h>
 #include <ctype.h>
 #include <errno.h>
+#include <execinfo.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include <sys/select.h>
-#include <sys/time.h>
 #include <sys/stat.h>
-#include <termios.h>
-#include <time.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
+#include <gc.h>
 
 // ========== defines ==========
-
-#define _OMNI_C_H_
 
 #define cast(type, expr) ((type) (expr))
 
 #define block_expr(block) block
-
-#define _MIN_MAX_H_
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
@@ -133,17 +130,11 @@ typedef struct {
 
 #define compound_literal(type, ...) ((type) __VA_ARGS__)
 
-#define _FN_H_
-
 #define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
-
-#define _LEB128_H_
 
 #define ERROR_INSUFFICIENT_INPUT -1
 
 #define ERROR_TOO_BIG -2
-
-#define _FATAL_ERROR_H_
 
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 
@@ -171,13 +162,7 @@ typedef struct {
 
 #define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
 
-#define _UINT64_H_
-
-#define _STRING_UTIL_H_
-
 #define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
-
-#define _LOGGER_H_
 
 #define LOGGER_OFF 0
 
@@ -253,16 +238,10 @@ typedef struct {
                 ##__VA_ARGS__);                                                \
   } while (0)
 
-#define _UTF8_DECODER_H_
-
 #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
-
-#define _VALUE_ARRAY_H_
 
 #define value_array_get_ptr(array, index_expression, cast_type)                \
   (cast(cast_type, value_array_get(array, index_expression).ptr))
-
-#define _VALUE_ALIST_H_
 
 #define value_alist_foreach(alist, key_var, value_var, statements)             \
   do {                                                                         \
@@ -275,8 +254,6 @@ typedef struct {
     }                                                                          \
   } while (0)
 
-#define _STRING_ALIST_H_
-
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
     value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
@@ -285,8 +262,6 @@ typedef struct {
                           statements;                                          \
                         });                                                    \
   } while (0)
-
-#define _VALUE_HASHTABLE_H_
 
 #define ARMYKNIFE_HT_LOAD_FACTOR 0.75
 
@@ -302,8 +277,6 @@ typedef struct {
     }                                                                          \
   } while (0)
 
-#define _STRING_HASHTABLE_H_
-
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
     value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
@@ -311,8 +284,6 @@ typedef struct {
       statements;                                                              \
     });                                                                        \
   } while (0)
-
-#define _VALUE_TREE_H_
 
 #define value_tree_foreach(tree, key_var, value_var, statements)               \
   do {                                                                         \
@@ -332,8 +303,6 @@ typedef struct {
     }                                                                          \
   } while (0)
 
-#define _STRING_TREE_H_
-
 #define string_tree_foreach(tree, key_var, value_var, statements)              \
   do {                                                                         \
     value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
@@ -343,13 +312,7 @@ typedef struct {
                        });                                                     \
   } while (0)
 
-#define _FLAG_H_
-
-#define _IO_H_
-
 #define FILE_COPY_STREAM_BUFFER_SIZE 1024
-
-#define _TERMINAL_H_
 
 #define KEY_DOWN 1      /* down-arrow key */
 
@@ -566,14 +529,6 @@ typedef struct {
 
 #define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
 
-#define _TOKENIZER_H_
-
-#define _RANDOM_H_
-
-#define _SUB_PROCESS_H_
-
-#define _SPLITJOIN_H_
-
 #define test_fail(format, ...)                                                 \
   do {                                                                         \
     test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
@@ -614,6 +569,14 @@ typedef struct {
     }                                                                           \
   } while (0)
 
+#define UNICODE_BACKSLASH_CODE_POINT 92
+
+#define UNICODE_QUOTE_CODE_POINT 39
+
+#define UNICODE_DOUBLE_QUOTE_CODE_POINT 34
+
+#define UNICODE_LOWER_N_CODE_POINT 110
+
 #define read_token(token_reader_function_name)                                 \
   do {                                                                         \
     token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
@@ -638,7 +601,7 @@ typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
 
 typedef struct signed_decode_result__generated_S signed_decode_result;
 
-typedef struct fatal_error_config_S fatal_error_config_t;
+typedef struct fatal_error_config_t__generated_S fatal_error_config_t;
 
 typedef enum {
   ERROR_UKNOWN,
@@ -675,7 +638,7 @@ typedef union  {
   uint64_t i64;
   char* str;
   void* ptr;
-  void* dbl;
+  double dbl;
 } value_t;
 
 typedef enum {
@@ -691,9 +654,9 @@ typedef fn_t(int, value_t, value_t) value_comparison_fn;
 
 typedef fn_t(uint64_t, value_t) value_hash_fn;
 
-typedef struct logger_state_S logger_state_t;
+typedef struct logger_state_t__generated_S logger_state_t;
 
-typedef struct utf8_decode_result_S utf8_decode_result_t;
+typedef struct utf8_decode_result_t__generated_S utf8_decode_result_t;
 
 typedef struct buffer_t__generated_S buffer_t;
 
@@ -707,17 +670,17 @@ typedef struct buffer_byte_stream_source_data_t__generated_S buffer_byte_stream_
 
 typedef struct cstring_byte_stream_source_data_t__generated_S cstring_byte_stream_source_data_t;
 
-typedef struct value_array_S value_array_t;
+typedef struct value_array_t__generated_S value_array_t;
 
-typedef struct value_alist_S value_alist_t;
+typedef struct value_alist_t__generated_S value_alist_t;
 
 typedef struct string_alist_S string_alist_t;
 
-typedef struct value_hashtable_S value_hashtable_t;
+typedef struct value_hashtable_t__generated_S value_hashtable_t;
 
 typedef struct string_hashtable_S string_hashtable_t;
 
-typedef struct value_tree_S value_tree_t;
+typedef struct value_tree_t__generated_S value_tree_t;
 
 typedef struct string_tree_S string_tree_t;
 
@@ -732,19 +695,19 @@ typedef enum {
   flag_type_custom,
 } flag_type_t;
 
-typedef struct program_descriptor_S program_descriptor_t;
+typedef struct program_descriptor_t__generated_S program_descriptor_t;
 
-typedef struct command_descriptor_S command_descriptor_t;
+typedef struct command_descriptor_t__generated_S command_descriptor_t;
 
-typedef struct flag_descriptor_S flag_descriptor_t;
+typedef struct flag_descriptor_t__generated_S flag_descriptor_t;
 
 typedef struct flag_key_value_S flag_key_value_t;
 
-typedef struct box_drawing_S box_drawing_t;
+typedef struct box_drawing_t__generated_S box_drawing_t;
 
-typedef struct term_keypress_S term_keypress_t;
+typedef struct term_keypress_t__generated_S term_keypress_t;
 
-typedef struct random_state_S random_state_t;
+typedef struct random_state_t__generated_S random_state_t;
 
 typedef struct cdl_printer_t__generated_S cdl_printer_t;
 
@@ -784,7 +747,7 @@ typedef enum {
   TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
   TOKENIZER_ERROR_UNTERMINATED_COMMENT,
   TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
-  TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL,
+  TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL,
 } tokenizer_error_t;
 
 typedef enum {
@@ -1063,16 +1026,36 @@ typedef enum {
   OUTPUT_TYPE_C_UNIT_TEST_FILE,
 } output_file_type_t;
 
+typedef struct roci_bb_builder_t__generated_S roci_bb_builder_t;
+
+typedef value_array_t roci_bb_builder_array_t;
+
+typedef struct roci_bb_t__generated_S roci_bb_t;
+
+typedef enum {
+  ROCI_COMPILE_TIME_ERROR_NONE,
+  ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
+  ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
+} roci_compile_time_error_t;
+
+typedef struct roci_compiler_state_t__generated_S roci_compiler_state_t;
+
+typedef uint64_t roci_src_info_t;
+
+typedef struct roci_env_t__generated_S roci_env_t;
+
+typedef struct roci_value_t__generated_S roci_value_t;
+
 typedef enum {
   ROCI_TAG_UNKNOWN,
   ROCI_TAG_BOOLEAN,
   ROCI_TAG_INTEGER,
   ROCI_TAG_DOUBLE,
   ROCI_TAG_STRING,
-  ROCI_TAG_SYMBOL,
   ROCI_TAG_CLOSURE,
   ROCI_TAG_C_PRIMITIVE,
   ROCI_TAG_ARRAY,
+  ROCI_TAG_STACK_MARKER,
 } roci_tag_t;
 
 typedef enum {
@@ -1082,13 +1065,16 @@ typedef enum {
   ROCI_OPCODE_PUSH_INTEGER,
   ROCI_OPCODE_PUSH_DOUBLE,
   ROCI_OPCODE_PUSH_STRING,
-  ROCI_OPCODE_PUSH_SYMBOL,
+  ROCI_OPCODE_DROP,
   ROCI_OPCODE_NEW_ENVIRONMENT,
+  ROCI_OPCODE_DROP_ENVIRONMENT,
   ROCI_OPCODE_DEFINE_VAR,
   ROCI_OPCODE_GET_VAR,
   ROCI_OPCODE_SET_VAR,
-  ROCI_OPCODE_BR_FALSE,
+  ROCI_OPCODE_BR_TRUE,
   ROCI_OPCODE_BR,
+  ROCI_OPCODE_MAKE_CLOSURE,
+  ROCI_OPCODE_RETURN,
   ROCI_OPCODE_CALL_0,
   ROCI_OPCODE_CALL_1,
   ROCI_OPCODE_CALL_2,
@@ -1105,14 +1091,11 @@ typedef enum {
   ROCI_OPCODE_CALL_13,
   ROCI_OPCODE_CALL_14,
   ROCI_OPCODE_CALL_15,
-  ROCI_OPCODE_RETURN,
+  ROCI_OPCODE_CALL_16,
+  ROCI_OPCODE_CHECK_ARGS,
+  ROCI_OPCODE_DEBUG_INFO,
+  ROCI_OPCODE_COMMENT,
 } roci_opcode_t;
-
-typedef struct roci_bb_t__generated_S roci_bb_t;
-
-typedef struct roci_bb_builder_t__generated_S roci_bb_builder_t;
-
-typedef value_array_t roci_bb_builder_array_t;
 
 typedef enum {
   ROCI_RUNTIME_ERROR_NONE,
@@ -1121,119 +1104,25 @@ typedef enum {
   ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED,
 } roci_runtime_error_t;
 
+typedef struct roci_closure_t__generated_S roci_closure_t;
+
+typedef struct roci_cont_t__generated_S roci_cont_t;
+
+typedef struct roci_debug_state_t__generated_S roci_debug_state_t;
+
 typedef struct roci_vm_state_t__generated_S roci_vm_state_t;
+
+typedef fn_t(void, roci_vm_state_t*) roci_c_primitive_t;
 
 // ========== stuctures/unions ==========
 
-struct fatal_error_config_S {
-  boolean_t catch_sigsegv;
-};
-
-struct logger_state_S {
-  boolean_t initialized;
-  int level;
-  char* logger_output_filename;
-  FILE* output;
-};
-
-struct utf8_decode_result_S {
-  uint32_t code_point;
-  uint8_t num_bytes;
-  boolean_t error;
-};
-
-struct value_array_S {
-  uint32_t length;
-  uint32_t capacity;
-  value_t* elements;
-};
-
-struct value_alist_S {
-  struct value_alist_S* next;
-  value_t key;
-  value_t value;
-};
-
 struct string_alist_S {
-};
-
-struct value_hashtable_S {
-  uint64_t n_buckets;
-  uint64_t n_entries;
-  value_alist_t** buckets;
 };
 
 struct string_hashtable_S {
 };
 
-struct value_tree_S {
-  value_t key;
-  value_t value;
-  uint32_t level;
-  struct value_tree_S* left;
-  struct value_tree_S* right;
-};
-
 struct string_tree_S {
-};
-
-struct program_descriptor_S {
-  char* name;
-  char* description;
-  string_tree_t* flags;
-  string_tree_t* commands;
-  value_array_t** write_back_file_args_ptr;
-};
-
-struct command_descriptor_S {
-  program_descriptor_t* program;
-  char* name;
-  char* description;
-  char** write_back_ptr;
-  value_array_t** write_back_file_args_ptr;
-  string_tree_t* flags;
-};
-
-struct flag_descriptor_S {
-  char* name;
-  char* description;
-  flag_type_t flag_type;
-  char* help_string;
-  void* write_back_ptr;
-  int enum_size;
-  string_tree_t* enum_values;
-};
-
-struct flag_key_value_S {
-  char* key;
-  char* value;
-};
-
-struct box_drawing_S {
-  uint32_t upper_left_corner;
-  uint32_t upper_right_corner;
-  uint32_t lower_left_corner;
-  uint32_t lower_right_corner;
-  uint32_t top_edge;
-  uint32_t left_edge;
-  uint32_t right_edge;
-  uint32_t bottom_edge;
-};
-
-struct term_keypress_S {
-  uint32_t code_point;
-  uint8_t key_code;
-  uint8_t n_bytes_consumed;
-  uint8_t shift;
-  uint8_t ctrl;
-  uint8_t meta;
-  uint8_t super;
-  uint8_t hyper;
-};
-
-struct random_state_S {
-  uint64_t a;
-  uint64_t b;
 };
 
 struct token_S {
@@ -1262,6 +1151,10 @@ struct signed_decode_result__generated_S {
   int size;
 };
 
+struct fatal_error_config_t__generated_S {
+  boolean_t catch_sigsegv;
+};
+
 struct value_result_t__generated_S {
   union  {
     uint64_t u64;
@@ -1272,6 +1165,19 @@ struct value_result_t__generated_S {
     value_t val;
 } ;
   non_fatal_error_code_t nf_error;
+};
+
+struct logger_state_t__generated_S {
+  boolean_t initialized;
+  int level;
+  char* logger_output_filename;
+  FILE* output;
+};
+
+struct utf8_decode_result_t__generated_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
 };
 
 struct buffer_t__generated_S {
@@ -1304,6 +1210,91 @@ struct cstring_byte_stream_source_data_t__generated_S {
   char* string;
   uint64_t length;
   uint64_t position;
+};
+
+struct value_array_t__generated_S {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
+
+struct value_alist_t__generated_S {
+  value_alist_t* next;
+  value_t key;
+  value_t value;
+};
+
+struct value_hashtable_t__generated_S {
+  uint64_t n_buckets;
+  uint64_t n_entries;
+  value_alist_t** buckets;
+};
+
+struct value_tree_t__generated_S {
+  value_t key;
+  value_t value;
+  uint32_t level;
+  value_tree_t* left;
+  value_tree_t* right;
+};
+
+struct program_descriptor_t__generated_S {
+  char* name;
+  char* description;
+  string_tree_t* flags;
+  string_tree_t* commands;
+  value_array_t** write_back_file_args_ptr;
+};
+
+struct command_descriptor_t__generated_S {
+  program_descriptor_t* program;
+  char* name;
+  char* description;
+  char** write_back_ptr;
+  value_array_t** write_back_file_args_ptr;
+  string_tree_t* flags;
+};
+
+struct flag_descriptor_t__generated_S {
+  char* name;
+  char* description;
+  flag_type_t flag_type;
+  char* help_string;
+  void* write_back_ptr;
+  int enum_size;
+  string_tree_t* enum_values;
+};
+
+struct flag_key_value_S {
+  char* key;
+  char* value;
+};
+
+struct box_drawing_t__generated_S {
+  uint32_t upper_left_corner;
+  uint32_t upper_right_corner;
+  uint32_t lower_left_corner;
+  uint32_t lower_right_corner;
+  uint32_t top_edge;
+  uint32_t left_edge;
+  uint32_t right_edge;
+  uint32_t bottom_edge;
+};
+
+struct term_keypress_t__generated_S {
+  uint32_t code_point;
+  uint8_t key_code;
+  uint8_t n_bytes_consumed;
+  uint8_t shift;
+  uint8_t ctrl;
+  uint8_t meta;
+  uint8_t super;
+  uint8_t hyper;
+};
+
+struct random_state_t__generated_S {
+  uint64_t a;
+  uint64_t b;
 };
 
 struct cdl_printer_t__generated_S {
@@ -1689,51 +1680,96 @@ struct tmp_provider_t__generated_S {
   uint32_t count;
 };
 
-struct roci_bb_t__generated_S {
-  uint32_t num_data;
-  uint32_t num_opcodes;
-};
-
 struct roci_bb_builder_t__generated_S {
-  uint64_t bblock_number;
+  char* bblock_label;
   roci_bb_t* bblock;
   value_array_t* data;
   buffer_t* opcodes;
 };
 
+struct roci_bb_t__generated_S {
+  uint32_t num_data;
+  uint32_t num_opcodes;
+};
+
+struct roci_compiler_state_t__generated_S {
+  roci_compile_time_error_t compiler_error;
+  long bb_label_count;
+  roci_bb_builder_array_t* bblocks;
+  roci_bb_builder_t* current_bb;
+  value_array_t* tokens;
+  long position;
+  long env_depth;
+};
+
+struct roci_env_t__generated_S {
+  roci_env_t* parent;
+  string_hashtable_t* bindings;
+};
+
+struct roci_value_t__generated_S {
+  uint64_t raw;
+  roci_tag_t tag;
+};
+
+struct roci_closure_t__generated_S {
+  roci_bb_t* entry_point;
+  roci_env_t* env;
+};
+
+struct roci_cont_t__generated_S {
+  roci_bb_t* bb;
+  roci_env_t* env;
+  uint64_t* stack;
+  uint8_t* stack_tags;
+};
+
+struct roci_debug_state_t__generated_S {
+  int64_t n_instructions;
+  boolean_t break_on_call_target;
+  boolean_t break_on_return;
+  boolean_t break_on_next_statement;
+  boolean_t trace;
+};
+
 struct roci_vm_state_t__generated_S {
   roci_runtime_error_t runtime_error;
+  roci_bb_t* current_bb;
   uint8_t* opcode_ptr;
   uint64_t* data_ptr;
   uint64_t* stack;
   uint8_t* stack_tags;
-  roci_bb_t* return_stack;
+  roci_env_t* env;
+  roci_cont_t** continuations;
+  roci_debug_state_t* debug;
+  uint64_t n_args;
+  roci_src_info_t debug_info;
 };
 
 // ========== global variables ==========
 
 
-# 85 "lib/fatal-error.c"
+# 66 "lib/fatal-error.c"
 fatal_error_config_t fatal_error_config = {0};
 
 
-# 93 "lib/logger.c"
-logger_state_t global_logger_state;
+# 205 "lib/logger.c"
+logger_state_t global_logger_state = ((logger_state_t) {.level = LOGGER_DEFAULT_LEVEL});
 
 
-# 196 "lib/flag.c"
+# 145 "lib/flag.c"
 program_descriptor_t* current_program;
 
 
-# 197 "lib/flag.c"
+# 146 "lib/flag.c"
 command_descriptor_t* current_command;
 
 
-# 198 "lib/flag.c"
+# 147 "lib/flag.c"
 flag_descriptor_t* current_flag;
 
 
-# 45 "lib/random.c"
+# 29 "lib/random.c"
 random_state_t shared_random_state = {0};
 
 
@@ -1883,7 +1919,7 @@ char* error_expected_open_paren_for_underscore_attribute = "This doesn't look li
 char* error_expected_matching_close_paren_after_underscore_attribute = "This doesn't look like a valid attribute specification.\n" "{formatted_snippet}" "\nAttributes roughly look like __attribute__((...))\n" "\nYou might have unbalanced parens...";
 
 
-# 383 "lexer.c"
+# 401 "lexer.c"
 char* c_punctuation[] = {
     "!=",
     "%=",
@@ -2032,51 +2068,53 @@ char* FLAG_c_compiler = "clang";
 
 // ========== function prototypes ==========
 
-extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
-extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
-extern unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end);
-extern signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end);
-extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
-extern const char* fatal_error_code_to_string(int error_code);
-extern void configure_fatal_errors(fatal_error_config_t config);
+unsigned encode_sleb_128(int64_t Value, uint8_t* p);
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end);
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end);
 void segmentation_fault_handler(int signal_number);
+void configure_fatal_errors(fatal_error_config_t config);
 void print_fatal_error_banner();
 void print_backtrace();
 void print_error_code_name(int error_code);
 char* get_command_line();
 char* get_program_path();
+_Noreturn void fatal_error_impl(char* file, int line, int error_code);
 int cmp_string_values(value_t value1, value_t value2);
 uint64_t hash_string_value(value_t value1);
-extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
-extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
-extern void checked_free(char* file, int line, void* pointer);
-extern void check_memory_hashtable_padding();
-extern int uint64_highest_bit_set(uint64_t n);
-extern int string_is_null_or_empty(const char* str1);
-extern int string_equal(const char* str1, const char* str2);
-extern int string_starts_with(const char* str1, const char* str2);
-extern int string_ends_with(const char* str1, const char* str2);
-extern boolean_t string_contains_char(const char* str, char ch);
-extern int string_index_of_char(const char* a, char ch);
-extern char* uint64_to_string(uint64_t number);
-extern uint64_t string_hash(const char* str);
-extern char* string_substring(const char* str, int start, int end);
-extern value_result_t string_parse_uint64(const char* string);
-extern value_result_t string_parse_uint64_dec(const char* string);
-extern value_result_t string_parse_uint64_hex(const char* string);
-extern value_result_t string_parse_uint64_bin(const char* string);
-extern char* string_duplicate(const char* src);
-extern char* string_append(const char* a, const char* b);
-extern char* string_left_pad(const char* a, int count, char ch);
-extern char* string_right_pad(const char* a, int count, char ch);
-__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format, ...);
-char* string_truncate(char* str, int limit, char* at_limit_suffix);
+uint8_t* checked_malloc(char* file, int line, uint64_t amount);
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
+void checked_free(char* file, int line, void* pointer);
+int uint64_highest_bit_set(uint64_t n);
+uint64_t double_as_uint64(double d);
+uint64_t uint64_as_double(uint64_t u);
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
-extern void logger_init(void);
-__attribute__((format(printf, 5, 6))) extern void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
+int string_is_null_or_empty(const char* str);
+int string_equal(const char* str1, const char* str2);
+int string_starts_with(const char* str1, const char* str2);
+int string_ends_with(const char* str1, const char* str2);
+boolean_t string_contains_char(const char* str, char ch);
+int string_index_of_char(const char* str, char ch);
+uint64_t string_hash(const char* str);
+char* string_substring(const char* str, int start, int end);
+value_result_t string_parse_uint64_dec(const char* string);
+value_result_t string_parse_uint64_bin(const char* string);
+value_result_t string_parse_uint64_hex(const char* string);
+value_result_t string_parse_uint64(const char* string);
+char* string_duplicate(const char* src);
+char* string_append(const char* a, const char* b);
+char* uint64_to_string(uint64_t number);
+char* int64_to_string(int64_t number);
+char* string_left_pad(const char* str, int n, char ch);
+char* string_right_pad(const char* str, int n, char ch);
+char* string_truncate(char* str, int limit, char* at_limit_suffix);
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...);
+double string_parse_double(char* str);
 value_result_t parse_log_level_enum(char* str);
+void logger_init(void);
 char* logger_level_to_string(int level);
-extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
+utf8_decode_result_t utf8_decode(const uint8_t* array);
 buffer_t* make_buffer(uint64_t initial_capacity);
 uint64_t buffer_length(buffer_t* array);
 void buffer_clear(buffer_t* buffer);
@@ -2104,54 +2142,56 @@ extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer);
 buffer_t* buffer_to_uppercase(buffer_t* buffer);
 buffer_t* buffer_to_lowercase(buffer_t* buffer);
+boolean_t buffer_ends_with(buffer_t* buffer, char* str);
+boolean_t buffer_equal(buffer_t* buffer, char* str);
 byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer);
 uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
 byte_stream_source_t* cstring_to_byte_source(char* string);
 uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
 byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer);
 byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte);
-extern value_array_t* make_value_array(uint64_t initial_capacity);
-extern value_t value_array_get(value_array_t* array, uint32_t index);
-extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
-extern void value_array_add(value_array_t* array, value_t element);
-extern void value_array_push(value_array_t* array, value_t element);
-extern value_t value_array_pop(value_array_t* array);
-extern void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
-extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
+value_array_t* make_value_array(uint64_t initial_capacity);
 void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
-extern value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
-__attribute__((warn_unused_result)) extern value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+value_t value_array_get(value_array_t* array, uint32_t index);
+void value_array_replace(value_array_t* array, uint32_t index, value_t element);
+void value_array_add(value_array_t* array, value_t element);
+void value_array_push(value_array_t* array, value_t element);
+value_t value_array_pop(value_array_t* array);
+void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
+value_t value_array_delete_at(value_array_t* array, uint32_t position);
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
 __attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
-extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
-extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
-extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-extern value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-extern void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
-extern value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
-__attribute__((warn_unused_result)) extern value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
 value_tree_t* value_tree_skew(value_tree_t* t);
 value_tree_t* value_tree_split(value_tree_t* t);
 value_tree_t* make_value_tree_leaf(value_t key, value_t value);
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
 value_tree_t* value_tree_decrease_level(value_tree_t* t);
 value_tree_t* value_tree_predecessor(value_tree_t* t);
 value_tree_t* value_tree_successor(value_tree_t* t);
-extern void flag_program_name(char* name);
-extern void flag_description(char* description);
-extern void flag_file_args(value_array_t** write_back_ptr);
-extern void flag_command(char* name, char** write_back_ptr);
-extern void flag_boolean(char* name, boolean_t* write_back_ptr);
-extern void flag_string(char* name, char** write_back_ptr);
-extern void flag_uint64(char* name, uint64_t* write_back_ptr);
-extern void flag_int64(char* name, int64_t* write_back_ptr);
-extern void flag_double(char* name, double* write_back_ptr);
-extern void flag_enum(char* name, int* write_back_ptr);
-extern void flag_enum_64(char* name, uint64_t* write_back_ptr);
-extern void flag_enum_value(char* name, uint64_t value);
-extern void flag_alias(char* alias);
-extern char* flag_parse_command_line(int argc, char** argv);
-extern void flag_print_help(FILE* out, char* error);
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+void flag_program_name(char* name);
+void flag_command(char* name, char** write_back_ptr);
+void flag_description(char* description);
+void flag_file_args(value_array_t** write_back_file_args_ptr);
+void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type);
+void flag_boolean(char* name, boolean_t* write_back_ptr);
+void flag_string(char* name, char** write_back_ptr);
+void flag_uint64(char* name, uint64_t* write_back_ptr);
+void flag_int64(char* name, int64_t* write_back_ptr);
+void flag_double(char* name, double* write_back_ptr);
+void flag_enum(char* name, int* write_back_ptr);
+void flag_enum_64(char* name, uint64_t* write_back_ptr);
+void flag_enum_value(char* name, uint64_t value);
+void flag_alias(char* alias);
+char* flag_parse_command_line(int argc, char** argv);
 command_descriptor_t* flag_find_command_descriptor(char* name);
 flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name);
 flag_key_value_t flag_split_argument(char* arg);
@@ -2159,43 +2199,48 @@ char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value)
 char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value);
 char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value);
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
-void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type);
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags);
-__attribute__((warn_unused_result)) extern buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
-__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* buffer, FILE* input);
-extern void buffer_write_file(buffer_t* bytes, char* file_name);
-__attribute__((warn_unused_result)) extern buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
+void flag_print_help(FILE* out, char* message);
+buffer_t* buffer_read_file(char* file_name);
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
+__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input);
+void buffer_write_file(buffer_t* bytes, char* file_name);
+void buffer_write_all(FILE* output, buffer_t* buffer);
+void make_file_read_only(char* file_name);
+void make_writable_if_exists(const char* file_name);
+buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
 extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
 extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
 int file_peek_byte(FILE* input);
 boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
 void file_skip_bytes(FILE* input, uint64_t n_bytes);
-buffer_t* buffer_read_file(char* file_name);
-void make_file_read_only(char* file_name);
-void make_writable_if_exists(const char* file_name);
-__attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer);
-__attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color);
-__attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color);
-__attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_absolute(buffer_t* buffer, int x, int y);
-__attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(buffer_t* buffer, int x, int y);
-__attribute__((warn_unused_result)) extern buffer_t* term_bold(buffer_t* buffer);
-__attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer);
-__attribute__((warn_unused_result)) extern buffer_t* term_italic(buffer_t* buffer);
-__attribute__((warn_unused_result)) extern buffer_t* term_underline(buffer_t* buffer);
-__attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffer_t* buffer);
-__attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
+void term_set_foreground_color(buffer_t* buffer, uint32_t color);
+void term_set_background_color(buffer_t* buffer, uint32_t color);
+void term_move_cursor_absolute(buffer_t* buffer, int x, int y);
+void term_move_cursor_relative(buffer_t* buffer, int x, int y);
+void term_bold(buffer_t* buffer);
+void term_dim(buffer_t* buffer);
+void term_italic(buffer_t* buffer);
+void term_underline(buffer_t* buffer);
+void term_reset_formatting(buffer_t* buffer);
+void term_clear_screen(buffer_t* buffer);
+void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
 extern struct termios term_echo_off();
 extern void term_echo_restore(struct termios oldt);
-extern value_array_t* string_tokenize(const char* str, const char* delimiters);
-extern value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
-extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length, const char* delimiters);
+void term_alt_buffer(buffer_t* buffer);
+void term_main_buffer(buffer_t* buffer);
+void term_home(buffer_t* buffer);
+uint32_t term_width(void);
+uint32_t term_height(void);
 void add_duplicate(value_array_t* token_array, const char* data);
-extern random_state_t random_state_for_test(void);
-extern uint64_t random_next_uint64(random_state_t* state);
-extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
+value_array_t* string_tokenize(const char* str, const char* delimiters);
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters);
+random_state_t random_state_for_test(void);
 random_state_t* random_state(void);
 uint64_t random_next(random_state_t* state);
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
 cdl_printer_t* make_cdl_printer(buffer_t* buffer);
 void cdl_indent(cdl_printer_t* printer);
 boolean_t is_safe_string(char* string);
@@ -2215,10 +2260,10 @@ boolean_t sub_process_launch(sub_process_t* sub_process);
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
 void sub_process_close_stdin(sub_process_t* sub_process);
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
-void sub_process_wait(sub_process_t* sub_process);
-void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
 boolean_t is_sub_process_running(sub_process_t* sub_process);
+void sub_process_wait(sub_process_t* sub_process);
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
 buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
 void oarchive_append_header_and_file_contents(FILE* out, char* filename);
 string_tree_t* oarchive_read_header(FILE* in);
@@ -2249,10 +2294,10 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position)
 boolean_t is_comment_start(buffer_t* buffer, uint64_t position);
 token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position);
 boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position);
-token_or_error_t tokenize_quoted_literal_common(buffer_t* buffer, uint64_t start_position, char* opening_sequence, char* quoted_closing_sequence, char* closing_sequence, token_type_t token_type, tokenizer_error_t unterminated_error_code);
-token_or_error_t tokenize_string_literal(buffer_t* buffer, uint64_t start_position);
 boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position);
+token_or_error_t tokenize_string_literal(buffer_t* buffer, uint64_t start_position);
 token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position);
+uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position);
 tokenizer_result_t tokenize(buffer_t* buffer);
 value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options_t xform_options);
 boolean_t pstate_is_eof(pstate_t* pstate);
@@ -2502,14 +2547,77 @@ void run_test_binary(char* binary_file_name);
 void handle_if_internal_test(void);
 void handle_statement_test(char* file_name);
 void handle_expression_test(char* file_name);
+void test_assembler_command();
 void configure_flags(void);
 void configure_parse_expression(void);
 void configure_parse_statement(void);
+void configure_test_assembler_command(void);
 void configure_print_tokens_command(void);
 void configure_regular_commands(void);
+uint64_t skip_whitespace_and_comments(buffer_t* buffer, uint64_t position);
+uint64_t read_roci_token(buffer_t* buffer, uint64_t position, buffer_t* token);
+boolean_t token_is_double(buffer_t* token);
+roci_bb_builder_array_t* roci_assemble(buffer_t* buffer);
 roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks);
-roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks);
-roci_runtime_error_t roci_execute(roci_bb_t* entry_point);
+value_array_t* build_bblocks(roci_bb_builder_array_t* bblocks);
+void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks, roci_bb_builder_t* builder);
+uint64_t bb_label_to_address(roci_bb_builder_array_t* bblocks, char* label);
+void roci_command(void);
+void roci_compile_buffer(roci_compiler_state_t* state, char* file_name, buffer_t* buffer);
+value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer);
+void roci_compile_tokens(roci_compiler_state_t* state);
+void roci_compile_statement(roci_compiler_state_t* state);
+void roci_compile_return(roci_compiler_state_t* state);
+void roci_compile_let(roci_compiler_state_t* state);
+void roci_compile_assignment(roci_compiler_state_t* state);
+void roci_compile_if(roci_compiler_state_t* state);
+roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state);
+void roci_compile_while(roci_compiler_state_t* state);
+void roci_compile_expression(roci_compiler_state_t* state);
+void roci_compile_function_call(roci_compiler_state_t* state);
+void roci_compile_closure(roci_compiler_state_t* state);
+int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args);
+void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode);
+void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str);
+void roci_emit_int_datum(roci_compiler_state_t* state, uint64_t val);
+void roci_emit_new_environment(roci_compiler_state_t* state);
+void roci_emit_drop_environment(roci_compiler_state_t* state);
+void roci_emit_return(roci_compiler_state_t* state);
+void roci_emit_get_var(roci_bb_builder_t* bb, char* fn_name);
+void roci_emit_comment(roci_bb_builder_t* bb, char* str);
+void roci_emit_debug_info(roci_compiler_state_t* state, char* filename, token_t* token);
+roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state, char* label_prefix);
+void roci_emit_branch(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock);
+void roci_emit_br_true(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock);
+boolean_t roci_eof(roci_compiler_state_t* state);
+void roci_skip_token(roci_compiler_state_t* state);
+token_t* roci_peek_token(roci_compiler_state_t* state);
+token_t* roci_next_token(roci_compiler_state_t* state);
+void roci_expect_token(roci_compiler_state_t* state, char* token_string);
+void roci_verify_identifier(token_t* token);
+void roci_debug_error(roci_vm_state_t* state, char* error_message);
+void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer);
+void roci_debug_breakpoint(void);
+void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer);
+boolean_t roci_is_tty(void);
+void roci_debugger_banner(buffer_t* buffer, char* text);
+void roci_debugger_instructions(buffer_t* buffer);
+void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb, uint8_t* address);
+uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint64_t* data_ptr);
+double raw_double_to_double(uint64_t raw_bits);
+void disassemble_bblocks(value_array_t* bblocks, buffer_t* buffer);
+roci_value_t* roci_get_var(roci_env_t* env, char* name);
+void roci_set_var(roci_vm_state_t* state, char* name, value_t value, roci_tag_t tag);
+void roci_define_var(roci_env_t* env, char* name, value_t value, roci_tag_t tag);
+roci_env_t* roci_new_env(roci_env_t* parent);
+void roci_dump_env(roci_env_t* env, buffer_t* buffer);
+void roci_primitive_print_env(roci_vm_state_t* state);
+void roci_add_primitives_to_env(roci_env_t* env);
+void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name);
+void roci_append_value(buffer_t* buffer, roci_value_t value);
+char* roci_value_to_c_string(roci_value_t value);
+roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point);
+roci_vm_state_t* roci_make_vm_state(roci_env_t* env);
 void roci_runtime_error(roci_runtime_error_t runtime_error);
 roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state);
 buffer_t* get_reflection_header_buffer(void);
@@ -2567,6 +2675,9 @@ enum_metadata_t* type_node_kind_metadata();
 char* output_file_type_to_string(output_file_type_t value);
 output_file_type_t string_to_output_file_type(char* value);
 enum_metadata_t* output_file_type_metadata();
+char* roci_compile_time_error_to_string(roci_compile_time_error_t value);
+roci_compile_time_error_t string_to_roci_compile_time_error(char* value);
+enum_metadata_t* roci_compile_time_error_metadata();
 char* roci_tag_to_string(roci_tag_t value);
 roci_tag_t string_to_roci_tag(char* value);
 enum_metadata_t* roci_tag_metadata();
@@ -2580,256 +2691,256 @@ enum_metadata_t* roci_runtime_error_metadata();
 // ========== inlined functions ==========
 
 
-# 141 "lib/value.c"
+# 139 "lib/value.c"
 static inline boolean_t is_ok(value_result_t value)
-# 141 "lib/value.c"
+# 139 "lib/value.c"
 {
 
-# 142 "lib/value.c"
+# 140 "lib/value.c"
   return ((value.nf_error)==NF_OK);
 }
 
 
-# 151 "lib/value.c"
+# 149 "lib/value.c"
 static inline boolean_t is_not_ok(value_result_t value)
-# 151 "lib/value.c"
+# 149 "lib/value.c"
 {
 
-# 152 "lib/value.c"
+# 150 "lib/value.c"
   return ((value.nf_error)!=NF_OK);
 }
 
 
-# 205 "lib/string-util.c"
+# 168 "lib/string-util.c"
 static inline boolean_t is_hex_digit(char ch)
-# 205 "lib/string-util.c"
+# 168 "lib/string-util.c"
 {
 
-# 206 "lib/string-util.c"
+# 169 "lib/string-util.c"
   return (((ch>='0')&&(ch<='9'))||((ch>='a')&&(ch<='f')));
 }
 
 
-# 209 "lib/string-util.c"
+# 172 "lib/string-util.c"
 static inline uint64_t hex_digit_to_value(char ch)
-# 209 "lib/string-util.c"
+# 172 "lib/string-util.c"
 {
 
-# 210 "lib/string-util.c"
+# 173 "lib/string-util.c"
   if (((ch>='0')&&(ch<='9')))
 
-# 210 "lib/string-util.c"
+# 173 "lib/string-util.c"
   {
 
-# 211 "lib/string-util.c"
+# 174 "lib/string-util.c"
     return (ch-'0');
   }
   else
 
-# 212 "lib/string-util.c"
+# 175 "lib/string-util.c"
   {
 
-# 213 "lib/string-util.c"
+# 176 "lib/string-util.c"
     return ((ch-'a')+10);
   }
 }
 
 
-# 487 "lib/string-util.c"
+# 461 "lib/string-util.c"
 static inline uint64_t mix(uint64_t h)
-# 487 "lib/string-util.c"
+# 461 "lib/string-util.c"
 {
 
-# 488 "lib/string-util.c"
+# 462 "lib/string-util.c"
   (h^=(h>>23));
 
-# 489 "lib/string-util.c"
+# 463 "lib/string-util.c"
   (h*=0x2127599bf4325c37ULL);
 
-# 490 "lib/string-util.c"
+# 464 "lib/string-util.c"
   (h^=(h>>47));
 
-# 491 "lib/string-util.c"
+# 465 "lib/string-util.c"
   return h;
 }
 
 
-# 176 "lib/logger.c"
+# 158 "lib/logger.c"
 static inline boolean_t should_log_info()
-# 176 "lib/logger.c"
+# 158 "lib/logger.c"
 {
 
-# 177 "lib/logger.c"
+# 159 "lib/logger.c"
   return ((global_logger_state.level)<=LOGGER_INFO);
 }
 
 
-# 24 "lib/string-alist.c"
+# 20 "lib/string-alist.c"
 static inline value_result_t alist_find(string_alist_t* list, char* key)
-# 24 "lib/string-alist.c"
+# 20 "lib/string-alist.c"
 {
 
-# 25 "lib/string-alist.c"
+# 21 "lib/string-alist.c"
   return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
 }
 
 
-# 35 "lib/string-alist.c"
+# 31 "lib/string-alist.c"
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value)
-# 35 "lib/string-alist.c"
+# 31 "lib/string-alist.c"
 {
 
-# 36 "lib/string-alist.c"
+# 32 "lib/string-alist.c"
   return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
 }
 
 
-# 49 "lib/string-alist.c"
+# 45 "lib/string-alist.c"
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key)
-# 49 "lib/string-alist.c"
+# 45 "lib/string-alist.c"
 {
 
-# 50 "lib/string-alist.c"
+# 46 "lib/string-alist.c"
   return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
 }
 
 
-# 63 "lib/string-alist.c"
+# 59 "lib/string-alist.c"
 __attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list)
-# 63 "lib/string-alist.c"
+# 59 "lib/string-alist.c"
 {
 
-# 64 "lib/string-alist.c"
+# 60 "lib/string-alist.c"
   return value_alist_length((/*CAST*/(value_alist_t*) list));
 }
 
 
-# 70 "lib/value-hashtable.c"
+# 45 "lib/value-hashtable.c"
 static inline uint64_t value_ht_num_entries(value_hashtable_t* ht)
-# 70 "lib/value-hashtable.c"
+# 45 "lib/value-hashtable.c"
 {
 
-# 71 "lib/value-hashtable.c"
+# 46 "lib/value-hashtable.c"
   return (ht->n_entries);
 }
 
 
-# 17 "lib/string-hashtable.c"
+# 13 "lib/string-hashtable.c"
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht)
-# 17 "lib/string-hashtable.c"
+# 13 "lib/string-hashtable.c"
 {
 
-# 18 "lib/string-hashtable.c"
+# 14 "lib/string-hashtable.c"
   return (/*CAST*/(value_hashtable_t*) ht);
 }
 
 
-# 30 "lib/string-hashtable.c"
+# 26 "lib/string-hashtable.c"
 static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets)
-# 30 "lib/string-hashtable.c"
+# 26 "lib/string-hashtable.c"
 {
 
-# 31 "lib/string-hashtable.c"
+# 27 "lib/string-hashtable.c"
   return (/*CAST*/(string_hashtable_t*) make_value_hashtable(n_buckets));
 }
 
 
-# 40 "lib/string-hashtable.c"
-__attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value)
-# 40 "lib/string-hashtable.c"
+# 36 "lib/string-hashtable.c"
+static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value)
+# 36 "lib/string-hashtable.c"
 {
 
-# 41 "lib/string-hashtable.c"
+# 37 "lib/string-hashtable.c"
   return (/*CAST*/(string_hashtable_t*) value_ht_insert(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key), value));
 }
 
 
-# 53 "lib/string-hashtable.c"
-__attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key)
-# 53 "lib/string-hashtable.c"
+# 49 "lib/string-hashtable.c"
+static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key)
+# 49 "lib/string-hashtable.c"
 {
 
-# 54 "lib/string-hashtable.c"
+# 50 "lib/string-hashtable.c"
   return (/*CAST*/(string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key)));
 }
 
 
-# 64 "lib/string-hashtable.c"
+# 60 "lib/string-hashtable.c"
 static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key)
-# 64 "lib/string-hashtable.c"
+# 60 "lib/string-hashtable.c"
 {
 
-# 65 "lib/string-hashtable.c"
+# 61 "lib/string-hashtable.c"
   return value_ht_find(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key));
 }
 
 
-# 74 "lib/string-hashtable.c"
+# 70 "lib/string-hashtable.c"
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht)
-# 74 "lib/string-hashtable.c"
+# 70 "lib/string-hashtable.c"
 {
 
-# 75 "lib/string-hashtable.c"
+# 71 "lib/string-hashtable.c"
   return value_ht_num_entries(to_value_hashtable(ht));
 }
 
 
-# 183 "lib/value-tree.c"
+# 164 "lib/value-tree.c"
 static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b)
-# 183 "lib/value-tree.c"
+# 164 "lib/value-tree.c"
 {
 
-# 184 "lib/value-tree.c"
+# 165 "lib/value-tree.c"
   return ((a<b) ? a : b);
 }
 
 
-# 217 "lib/value-tree.c"
+# 198 "lib/value-tree.c"
 static inline boolean_t value_tree_is_leaf(value_tree_t* t)
-# 217 "lib/value-tree.c"
+# 198 "lib/value-tree.c"
 {
 
-# 218 "lib/value-tree.c"
+# 199 "lib/value-tree.c"
   return (((t->left)==NULL)&&((t->right)==NULL));
 }
 
 
-# 22 "lib/string-tree.c"
+# 17 "lib/string-tree.c"
 static inline value_result_t string_tree_find(string_tree_t* t, char* key)
-# 22 "lib/string-tree.c"
+# 17 "lib/string-tree.c"
 {
 
-# 23 "lib/string-tree.c"
+# 18 "lib/string-tree.c"
   return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
 }
 
 
-# 34 "lib/string-tree.c"
+# 29 "lib/string-tree.c"
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value)
-# 34 "lib/string-tree.c"
+# 29 "lib/string-tree.c"
 {
 
-# 35 "lib/string-tree.c"
+# 30 "lib/string-tree.c"
   return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
 }
 
 
-# 47 "lib/string-tree.c"
+# 42 "lib/string-tree.c"
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_delete(string_tree_t* t, char* key)
-# 47 "lib/string-tree.c"
+# 42 "lib/string-tree.c"
 {
 
-# 48 "lib/string-tree.c"
+# 43 "lib/string-tree.c"
   return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
 }
 
 
-# 63 "lib/random.c"
+# 47 "lib/random.c"
 static inline uint64_t rotl(uint64_t x, int k)
-# 63 "lib/random.c"
+# 47 "lib/random.c"
 {
 
-# 64 "lib/random.c"
+# 48 "lib/random.c"
   return ((x<<k)|(x>>(64-k)));
 }
 
@@ -2852,80 +2963,103 @@ static inline void maybe_initialize_keyword_maps(void)
 
 
 # 40 "lexer.c"
-static inline token_t* token_at(value_array_t* tokens, uint64_t position)
-# 40 "lexer.c"
+static inline token_or_error_t make_token_result(buffer_t* buffer, token_type_t token_type, uint64_t start, uint64_t end)
+# 42 "lexer.c"
 {
 
-# 41 "lexer.c"
+# 43 "lexer.c"
+  return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
+                                                             .type = token_type,
+                                                             .start = start,
+                                                             .end = end})});
+}
+
+
+# 51 "lexer.c"
+static inline token_or_error_t make_token_error_result(tokenizer_error_t tokenizer_error_code, uint64_t position)
+# 52 "lexer.c"
+{
+
+# 53 "lexer.c"
+  return ((token_or_error_t) {.error_position = position, .error_code = tokenizer_error_code});
+}
+
+
+# 58 "lexer.c"
+static inline token_t* token_at(value_array_t* tokens, uint64_t position)
+# 58 "lexer.c"
+{
+
+# 59 "lexer.c"
   if ((position>=(tokens->length)))
 
-# 41 "lexer.c"
+# 59 "lexer.c"
   {
 
-# 42 "lexer.c"
+# 60 "lexer.c"
     return ((void *)0);
   }
 
-# 44 "lexer.c"
+# 62 "lexer.c"
   return value_array_get_ptr(tokens, position, typeof(token_t*));
 }
 
 
-# 47 "lexer.c"
+# 65 "lexer.c"
 static inline boolean_t token_matches(token_t* token, char* str)
-# 47 "lexer.c"
+# 65 "lexer.c"
 {
 
-# 48 "lexer.c"
+# 66 "lexer.c"
   if ((token==((void *)0)))
 
-# 48 "lexer.c"
+# 66 "lexer.c"
   {
 
-# 49 "lexer.c"
+# 67 "lexer.c"
     return false;
   }
 
-# 51 "lexer.c"
+# 69 "lexer.c"
   int str_len = strlen(str);
 
-# 52 "lexer.c"
+# 70 "lexer.c"
   return ((str_len==((token->end)-(token->start)))&&buffer_match_string_at((token->buffer), (token->start), str));
 }
 
 
-# 56 "lexer.c"
+# 74 "lexer.c"
 static inline boolean_t token_starts_with(token_t* token, char* str)
-# 56 "lexer.c"
+# 74 "lexer.c"
 {
 
-# 57 "lexer.c"
+# 75 "lexer.c"
   return buffer_match_string_at((token->buffer), (token->start), str);
 }
 
 
-# 60 "lexer.c"
+# 78 "lexer.c"
 static inline boolean_t token_contains(token_t* token, char* str)
-# 60 "lexer.c"
+# 78 "lexer.c"
 {
 
-# 61 "lexer.c"
+# 79 "lexer.c"
   return buffer_region_contains((token->buffer), (token->start), (token->end), str);
 }
 
 
-# 572 "lexer.c"
+# 648 "lexer.c"
 static inline token_t* heap_allocate_token(token_t token)
-# 572 "lexer.c"
+# 648 "lexer.c"
 {
 
-# 573 "lexer.c"
+# 649 "lexer.c"
   token_t* result = malloc_struct(token_t);
 
-# 574 "lexer.c"
+# 650 "lexer.c"
   ((*result)=token);
 
-# 575 "lexer.c"
+# 651 "lexer.c"
   return result;
 }
 
@@ -4030,474 +4164,665 @@ static inline balanced_construct_node_t* make_balanced_construct_node()
 }
 
 
+# 28 "roci/roci-bb.c"
+static inline uint8_t* bblock_opcode_pointer(roci_bb_t* bb)
+# 28 "roci/roci-bb.c"
+{
+
+# 29 "roci/roci-bb.c"
+  return (((/*CAST*/(uint8_t*) bb)+8)+((bb->num_data)*8));
+}
+
+
+# 37 "roci/roci-bb.c"
+static inline uint64_t* bblock_data_pointer(roci_bb_t* bb)
+# 37 "roci/roci-bb.c"
+{
+
+# 38 "roci/roci-bb.c"
+  return ((/*CAST*/(uint64_t*) bb)+1);
+}
+
+
+# 16 "roci/roci-debugger.c"
+static inline roci_src_info_t token_to_roci_src_info(uint64_t file_number, token_t* token)
+# 17 "roci/roci-debugger.c"
+{
+
+# 18 "roci/roci-debugger.c"
+  uint64_t line_number = (token->line_number);
+
+# 19 "roci/roci-debugger.c"
+  return (/*CAST*/(roci_src_info_t) (file_number|(line_number<<32)));
+}
+
+
+# 22 "roci/roci-debugger.c"
+static inline uint64_t roci_src_file_number(roci_src_info_t info)
+# 22 "roci/roci-debugger.c"
+{
+
+# 23 "roci/roci-debugger.c"
+  return (info&0xffffffff);
+}
+
+
+# 26 "roci/roci-debugger.c"
+static inline uint64_t roci_src_line_number(roci_src_info_t info)
+# 26 "roci/roci-debugger.c"
+{
+
+# 27 "roci/roci-debugger.c"
+  return (info>>32);
+}
+
+
+# 10 "roci/roci-stack.c"
+static inline void roci_push_false(roci_vm_state_t* state)
+# 10 "roci/roci-stack.c"
+{
+
+# 11 "roci/roci-stack.c"
+  ((*((state->stack)++))=0);
+
+# 12 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
+}
+
+
+# 15 "roci/roci-stack.c"
+static inline void roci_push_true(roci_vm_state_t* state)
+# 15 "roci/roci-stack.c"
+{
+
+# 16 "roci/roci-stack.c"
+  ((*((state->stack)++))=1);
+
+# 17 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
+}
+
+
+# 20 "roci/roci-stack.c"
+static inline void roci_push_integer(roci_vm_state_t* state, int64_t number)
+# 20 "roci/roci-stack.c"
+{
+
+# 21 "roci/roci-stack.c"
+  ((*((state->stack)++))=number);
+
+# 22 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_INTEGER);
+}
+
+
+# 25 "roci/roci-stack.c"
+static inline void roci_push_double(roci_vm_state_t* state, double number)
+# 25 "roci/roci-stack.c"
+{
+
+# 26 "roci/roci-stack.c"
+  ((*((state->stack)++))=double_as_uint64(number));
+
+# 27 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_DOUBLE);
+}
+
+
+# 30 "roci/roci-stack.c"
+static inline void roci_push_string(roci_vm_state_t* state, char* str)
+# 30 "roci/roci-stack.c"
+{
+
+# 31 "roci/roci-stack.c"
+  ((*((state->stack)++))=(/*CAST*/(uint64_t) str));
+
+# 32 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_STRING);
+}
+
+
+# 35 "roci/roci-stack.c"
+static inline void roci_push_value(roci_vm_state_t* state, uint64_t data, roci_tag_t tag)
+# 36 "roci/roci-stack.c"
+{
+
+# 37 "roci/roci-stack.c"
+  ((*((state->stack)++))=data);
+
+# 38 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=tag);
+}
+
+
+# 41 "roci/roci-stack.c"
+static inline boolean_t roci_pop_boolean(roci_vm_state_t* state)
+# 41 "roci/roci-stack.c"
+{
+
+# 42 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 43 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 44 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_BOOLEAN))
+
+# 44 "roci/roci-stack.c"
+  {
+
+# 45 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 47 "roci/roci-stack.c"
+  return tos;
+}
+
+
+# 50 "roci/roci-stack.c"
+static inline int64_t roci_pop_integer(roci_vm_state_t* state)
+# 50 "roci/roci-stack.c"
+{
+
+# 51 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 52 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 53 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_INTEGER))
+
+# 53 "roci/roci-stack.c"
+  {
+
+# 54 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 56 "roci/roci-stack.c"
+  return tos;
+}
+
+
+# 59 "roci/roci-stack.c"
+static inline double roci_pop_double(roci_vm_state_t* state)
+# 59 "roci/roci-stack.c"
+{
+
+# 60 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 61 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 62 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_DOUBLE))
+
+# 62 "roci/roci-stack.c"
+  {
+
+# 63 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 65 "roci/roci-stack.c"
+  return uint64_as_double(tos);
+}
+
+
+# 68 "roci/roci-stack.c"
+static inline char* roci_pop_string(roci_vm_state_t* state)
+# 68 "roci/roci-stack.c"
+{
+
+# 69 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 70 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 71 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_STRING))
+
+# 71 "roci/roci-stack.c"
+  {
+
+# 72 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 74 "roci/roci-stack.c"
+  return (/*CAST*/(char*) tos);
+}
+
+
+# 77 "roci/roci-stack.c"
+static inline roci_value_t roci_pop_value(roci_vm_state_t* state)
+# 77 "roci/roci-stack.c"
+{
+
+# 78 "roci/roci-stack.c"
+  roci_value_t value;
+
+# 79 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 80 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 81 "roci/roci-stack.c"
+  if ((tag==ROCI_TAG_STACK_MARKER))
+
+# 81 "roci/roci-stack.c"
+  {
+
+# 82 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 84 "roci/roci-stack.c"
+  ((value.raw)=tos);
+
+# 85 "roci/roci-stack.c"
+  ((value.tag)=tag);
+
+# 86 "roci/roci-stack.c"
+  return value;
+}
+
+
+# 89 "roci/roci-stack.c"
+static inline roci_value_t roci_debug_peek_value(roci_vm_state_t* state, int offset)
+# 90 "roci/roci-stack.c"
+{
+
+# 91 "roci/roci-stack.c"
+  roci_value_t value;
+
+# 92 "roci/roci-stack.c"
+  roci_tag_t tag = (*((state->stack_tags)-offset));
+
+# 93 "roci/roci-stack.c"
+  uint64_t datum = (*((state->stack)-offset));
+
+# 94 "roci/roci-stack.c"
+  ((value.raw)=datum);
+
+# 95 "roci/roci-stack.c"
+  ((value.tag)=tag);
+
+# 96 "roci/roci-stack.c"
+  return value;
+}
+
+
+# 99 "roci/roci-stack.c"
+static inline roci_env_t* roci_current_env(roci_vm_state_t* state)
+# 99 "roci/roci-stack.c"
+{
+
+# 100 "roci/roci-stack.c"
+  return (state->env);
+}
+
+
+# 103 "roci/roci-stack.c"
+static inline void roci_set_env(roci_vm_state_t* state, roci_env_t* env)
+# 103 "roci/roci-stack.c"
+{
+
+# 104 "roci/roci-stack.c"
+  ((state->env)=env);
+}
+
+
+# 107 "roci/roci-stack.c"
+static inline void roci_drop_env(roci_vm_state_t* state)
+# 107 "roci/roci-stack.c"
+{
+
+# 108 "roci/roci-stack.c"
+  ((state->env)=((state->env)->parent));
+}
+
+
+# 111 "roci/roci-stack.c"
+static inline void roci_push_continuation(roci_vm_state_t* state, roci_bb_t* bb, uint32_t stack_arg_numbers)
+# 112 "roci/roci-stack.c"
+{
+
+# 113 "roci/roci-stack.c"
+  roci_cont_t* continuation = malloc_struct(roci_cont_t);
+
+# 114 "roci/roci-stack.c"
+  ((continuation->bb)=bb);
+
+# 115 "roci/roci-stack.c"
+  ((continuation->env)=(state->env));
+
+# 116 "roci/roci-stack.c"
+  ((continuation->stack)=((state->stack)-stack_arg_numbers));
+
+# 117 "roci/roci-stack.c"
+  ((continuation->stack_tags)=((state->stack_tags)-stack_arg_numbers));
+
+# 118 "roci/roci-stack.c"
+  ((*((state->continuations)++))=continuation);
+}
+
+
+# 121 "roci/roci-stack.c"
+static inline roci_cont_t* roci_pop_continuation(roci_vm_state_t* state)
+# 121 "roci/roci-stack.c"
+{
+
+# 122 "roci/roci-stack.c"
+  return (*(--(state->continuations)));
+}
+
+
 // ========== functions ==========
 
 
-# 80 "lib/leb128.c"
+# 64 "lib/leb128.c"
 unsigned encode_sleb_128(int64_t Value, uint8_t* p)
-# 80 "lib/leb128.c"
+# 64 "lib/leb128.c"
 {
 
-# 81 "lib/leb128.c"
+# 65 "lib/leb128.c"
   uint8_t* orig_p = p;
 
-# 82 "lib/leb128.c"
+# 66 "lib/leb128.c"
   int More;
 
-# 83 "lib/leb128.c"
+# 67 "lib/leb128.c"
   do
-# 83 "lib/leb128.c"
+# 67 "lib/leb128.c"
   {
 
-# 84 "lib/leb128.c"
+# 68 "lib/leb128.c"
     uint8_t Byte = (Value&0x7f);
 
-# 86 "lib/leb128.c"
+# 70 "lib/leb128.c"
     (Value>>=7);
 
-# 87 "lib/leb128.c"
+# 71 "lib/leb128.c"
     (More=(!(((Value==0)&&((Byte&0x40)==0))||((Value==(-1))&&((Byte&0x40)!=0)))));
 
-# 89 "lib/leb128.c"
+# 73 "lib/leb128.c"
     if (More)
 
-# 90 "lib/leb128.c"
+# 74 "lib/leb128.c"
     (Byte|=0x80);
 
-# 91 "lib/leb128.c"
+# 75 "lib/leb128.c"
     ((*(p++))=Byte);
   }
   while (More);
 
-# 94 "lib/leb128.c"
+# 78 "lib/leb128.c"
   return (/*CAST*/(unsigned) (p-orig_p));
 }
 
 
-# 104 "lib/leb128.c"
+# 88 "lib/leb128.c"
 unsigned encode_uleb_128(uint64_t Value, uint8_t* p)
-# 104 "lib/leb128.c"
+# 88 "lib/leb128.c"
 {
 
-# 105 "lib/leb128.c"
+# 89 "lib/leb128.c"
   uint8_t* orig_p = p;
 
-# 106 "lib/leb128.c"
+# 90 "lib/leb128.c"
   do
-# 106 "lib/leb128.c"
+# 90 "lib/leb128.c"
   {
 
-# 107 "lib/leb128.c"
+# 91 "lib/leb128.c"
     uint8_t Byte = (Value&0x7f);
 
-# 108 "lib/leb128.c"
+# 92 "lib/leb128.c"
     (Value>>=7);
 
-# 109 "lib/leb128.c"
+# 93 "lib/leb128.c"
     if ((Value!=0))
 
-# 110 "lib/leb128.c"
+# 94 "lib/leb128.c"
     (Byte|=0x80);
 
-# 111 "lib/leb128.c"
+# 95 "lib/leb128.c"
     ((*(p++))=Byte);
   }
   while ((Value!=0));
 
-# 114 "lib/leb128.c"
+# 98 "lib/leb128.c"
   return (/*CAST*/(unsigned) (p-orig_p));
 }
 
 
-# 122 "lib/leb128.c"
+# 106 "lib/leb128.c"
 unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
-# 122 "lib/leb128.c"
+# 106 "lib/leb128.c"
 {
 
-# 123 "lib/leb128.c"
+# 107 "lib/leb128.c"
   const uint8_t* orig_p = p;
 
-# 124 "lib/leb128.c"
+# 108 "lib/leb128.c"
   uint64_t Value = 0;
 
-# 125 "lib/leb128.c"
+# 109 "lib/leb128.c"
   unsigned Shift = 0;
 
-# 126 "lib/leb128.c"
+# 110 "lib/leb128.c"
   do
-# 126 "lib/leb128.c"
+# 110 "lib/leb128.c"
   {
 
-# 127 "lib/leb128.c"
+# 111 "lib/leb128.c"
     if ((p==end))
 
-# 127 "lib/leb128.c"
+# 111 "lib/leb128.c"
     {
 
-# 128 "lib/leb128.c"
+# 112 "lib/leb128.c"
       unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
 
-# 130 "lib/leb128.c"
+# 114 "lib/leb128.c"
       return result;
     }
 
-# 132 "lib/leb128.c"
+# 116 "lib/leb128.c"
     uint64_t Slice = ((*p)&0x7f);
 
-# 133 "lib/leb128.c"
+# 117 "lib/leb128.c"
     if ((((Shift>=64)&&(Slice!=0))||(((Slice<<Shift)>>Shift)!=Slice)))
 
-# 133 "lib/leb128.c"
+# 117 "lib/leb128.c"
     {
 
-# 134 "lib/leb128.c"
+# 118 "lib/leb128.c"
       unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_TOO_BIG});
 
-# 136 "lib/leb128.c"
+# 120 "lib/leb128.c"
       return result;
     }
 
-# 138 "lib/leb128.c"
+# 122 "lib/leb128.c"
     (Value+=(Slice<<Shift));
 
-# 139 "lib/leb128.c"
+# 123 "lib/leb128.c"
     (Shift+=7);
   }
   while (((*(p++))>=128));
 
-# 141 "lib/leb128.c"
+# 125 "lib/leb128.c"
   unsigned_decode_result result = ((unsigned_decode_result) {Value, cast(unsigned, p - orig_p)});
 
-# 143 "lib/leb128.c"
+# 127 "lib/leb128.c"
   return result;
 }
 
 
-# 151 "lib/leb128.c"
+# 135 "lib/leb128.c"
 signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
-# 151 "lib/leb128.c"
+# 135 "lib/leb128.c"
 {
 
-# 152 "lib/leb128.c"
+# 136 "lib/leb128.c"
   const uint8_t* orig_p = p;
 
-# 153 "lib/leb128.c"
+# 137 "lib/leb128.c"
   int64_t Value = 0;
 
-# 154 "lib/leb128.c"
+# 138 "lib/leb128.c"
   unsigned Shift = 0;
 
-# 155 "lib/leb128.c"
+# 139 "lib/leb128.c"
   uint8_t Byte;
 
-# 156 "lib/leb128.c"
+# 140 "lib/leb128.c"
   do
-# 156 "lib/leb128.c"
+# 140 "lib/leb128.c"
   {
 
-# 157 "lib/leb128.c"
+# 141 "lib/leb128.c"
     if ((p==end))
 
-# 157 "lib/leb128.c"
+# 141 "lib/leb128.c"
     {
 
-# 158 "lib/leb128.c"
+# 142 "lib/leb128.c"
       signed_decode_result result = ((signed_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
 
-# 160 "lib/leb128.c"
+# 144 "lib/leb128.c"
       return result;
     }
 
-# 162 "lib/leb128.c"
+# 146 "lib/leb128.c"
     (Byte=(*p));
 
-# 163 "lib/leb128.c"
+# 147 "lib/leb128.c"
     uint64_t Slice = (Byte&0x7f);
 
-# 166 "lib/leb128.c"
+# 150 "lib/leb128.c"
     if ((((Shift>=64)&&(Slice!=((Value<0) ? 0x7f : 0x00)))||(((Shift==63)&&(Slice!=0))&&(Slice!=0x7f))))
 
-# 167 "lib/leb128.c"
+# 151 "lib/leb128.c"
     {
 
-# 168 "lib/leb128.c"
+# 152 "lib/leb128.c"
       signed_decode_result result = ((signed_decode_result) {0, ERROR_TOO_BIG});
 
-# 170 "lib/leb128.c"
+# 154 "lib/leb128.c"
       return result;
     }
 
-# 172 "lib/leb128.c"
+# 156 "lib/leb128.c"
     (Value|=(Slice<<Shift));
 
-# 173 "lib/leb128.c"
+# 157 "lib/leb128.c"
     (Shift+=7);
 
-# 174 "lib/leb128.c"
+# 158 "lib/leb128.c"
     (++p);
   }
   while ((Byte>=128));
 
-# 177 "lib/leb128.c"
+# 161 "lib/leb128.c"
   if (((Shift<64)&&(Byte&0x40)))
 
-# 178 "lib/leb128.c"
+# 162 "lib/leb128.c"
   (Value|=((-1ULL)<<Shift));
 
-# 179 "lib/leb128.c"
+# 163 "lib/leb128.c"
   signed_decode_result result = ((signed_decode_result) {Value, (p - orig_p)});
 
-# 181 "lib/leb128.c"
+# 165 "lib/leb128.c"
   return result;
 }
 
 
-# 119 "lib/fatal-error.c"
-_Noreturn void fatal_error_impl(char* file, int line, int error_code)
-# 119 "lib/fatal-error.c"
+# 68 "lib/fatal-error.c"
+void segmentation_fault_handler(int signal_number)
+# 68 "lib/fatal-error.c"
 {
 
-# 120 "lib/fatal-error.c"
-  print_fatal_error_banner();
-
-# 121 "lib/fatal-error.c"
-  print_backtrace();
-
-# 122 "lib/fatal-error.c"
-  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
-
-# 123 "lib/fatal-error.c"
-  print_error_code_name(error_code);
-
-# 124 "lib/fatal-error.c"
-  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
-
-# 125 "lib/fatal-error.c"
-  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
-
-# 126 "lib/fatal-error.c"
-  if ((sleep_str!=NULL))
-
-# 126 "lib/fatal-error.c"
-  {
-
-# 127 "lib/fatal-error.c"
-    value_result_t sleep_time = string_parse_uint64(sleep_str);
-
-# 128 "lib/fatal-error.c"
-    if (is_ok(sleep_time))
-
-# 128 "lib/fatal-error.c"
-    {
-
-# 129 "lib/fatal-error.c"
-      fprintf(stderr, "Sleeping for %lu seconds so you can attach a debugger.\n", (sleep_time.u64));
-
-# 132 "lib/fatal-error.c"
-      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
-
-# 133 "lib/fatal-error.c"
-      sleep((sleep_time.u64));
-    }
-  }
-  else
-
-# 135 "lib/fatal-error.c"
-  {
-
-# 136 "lib/fatal-error.c"
-    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
-  }
-
-# 138 "lib/fatal-error.c"
-  fprintf(stderr, "Necessaria Morte Mori...\n");
-
-# 139 "lib/fatal-error.c"
-  exit((-(error_code+100)));
+# 69 "lib/fatal-error.c"
+  fatal_error(ERROR_SIGSEGV);
 }
 
 
-# 163 "lib/fatal-error.c"
-const char* fatal_error_code_to_string(int error_code)
-# 163 "lib/fatal-error.c"
-{
-
-# 164 "lib/fatal-error.c"
-  switch (error_code)
-
-# 164 "lib/fatal-error.c"
-  {
-
-# 165 "lib/fatal-error.c"
-    case ERROR_UKNOWN:
-
-# 166 "lib/fatal-error.c"
-    return "ERROR_UKNOWN";
-
-# 167 "lib/fatal-error.c"
-    case ERROR_MEMORY_ALLOCATION:
-
-# 168 "lib/fatal-error.c"
-    return "ERROR_MEMORY_ALLOCATION";
-
-# 169 "lib/fatal-error.c"
-    case ERROR_MEMORY_FREE_NULL:
-
-# 170 "lib/fatal-error.c"
-    return "ERROR_MEMORY_FREE_NULL";
-
-# 171 "lib/fatal-error.c"
-    case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
-
-# 172 "lib/fatal-error.c"
-    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
-
-# 173 "lib/fatal-error.c"
-    case ERROR_ILLEGAL_INITIAL_CAPACITY:
-
-# 174 "lib/fatal-error.c"
-    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
-
-# 175 "lib/fatal-error.c"
-    case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
-
-# 176 "lib/fatal-error.c"
-    return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
-
-# 177 "lib/fatal-error.c"
-    case ERROR_ACCESS_OUT_OF_BOUNDS:
-
-# 178 "lib/fatal-error.c"
-    return "ERROR_ACCESS_OUT_OF_BOUNDS";
-
-# 179 "lib/fatal-error.c"
-    case ERROR_NOT_REACHED:
-
-# 180 "lib/fatal-error.c"
-    return "ERROR_NOT_REACHED";
-
-# 181 "lib/fatal-error.c"
-    case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
-
-# 182 "lib/fatal-error.c"
-    return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
-
-# 183 "lib/fatal-error.c"
-    case ERROR_UNIMPLEMENTED:
-
-# 184 "lib/fatal-error.c"
-    return "ERROR_UNIMPLEMENTED";
-
-# 185 "lib/fatal-error.c"
-    case ERROR_ILLEGAL_NULL_ARGUMENT:
-
-# 186 "lib/fatal-error.c"
-    return "ERROR_ILLEGAL_NULL_ARGUMENT";
-
-# 187 "lib/fatal-error.c"
-    case ERROR_ILLEGAL_ARGUMENT:
-
-# 188 "lib/fatal-error.c"
-    return "ERROR_ILLEGAL_ARGUMENT";
-
-# 189 "lib/fatal-error.c"
-    case ERROR_MEMORY_START_PADDING_ERROR:
-
-# 190 "lib/fatal-error.c"
-    return "ERROR_MEMORY_START_PADDING_ERROR";
-
-# 191 "lib/fatal-error.c"
-    case ERROR_MEMORY_END_PADDING_ERROR:
-
-# 192 "lib/fatal-error.c"
-    return "ERROR_MEMORY_END_PADDING_ERROR";
-
-# 194 "lib/fatal-error.c"
-    default:
-
-# 195 "lib/fatal-error.c"
-    return "error";
-  }
-}
-
-
-# 91 "lib/fatal-error.c"
+# 72 "lib/fatal-error.c"
 void configure_fatal_errors(fatal_error_config_t config)
-# 91 "lib/fatal-error.c"
+# 72 "lib/fatal-error.c"
 {
 
-# 92 "lib/fatal-error.c"
+# 73 "lib/fatal-error.c"
   (fatal_error_config=config);
 
-# 93 "lib/fatal-error.c"
+# 74 "lib/fatal-error.c"
   if ((config.catch_sigsegv))
 
-# 93 "lib/fatal-error.c"
+# 74 "lib/fatal-error.c"
   {
 
-# 94 "lib/fatal-error.c"
+# 75 "lib/fatal-error.c"
     signal(SIGSEGV, segmentation_fault_handler);
   }
 }
 
 
-# 87 "lib/fatal-error.c"
-void segmentation_fault_handler(int signal_number)
-# 87 "lib/fatal-error.c"
-{
-
-# 88 "lib/fatal-error.c"
-  fatal_error(ERROR_SIGSEGV);
-}
-
-
-# 142 "lib/fatal-error.c"
+# 123 "lib/fatal-error.c"
 void print_fatal_error_banner()
-# 142 "lib/fatal-error.c"
+# 123 "lib/fatal-error.c"
 {
 
-# 145 "lib/fatal-error.c"
+# 126 "lib/fatal-error.c"
   fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
 }
 
 
-# 148 "lib/fatal-error.c"
+# 129 "lib/fatal-error.c"
 void print_backtrace()
-# 148 "lib/fatal-error.c"
+# 129 "lib/fatal-error.c"
 {
 
-# 150 "lib/fatal-error.c"
+# 131 "lib/fatal-error.c"
   do
-# 150 "lib/fatal-error.c"
+# 131 "lib/fatal-error.c"
   {
 
-# 151 "lib/fatal-error.c"
+# 132 "lib/fatal-error.c"
     void* array[10];
 
-# 152 "lib/fatal-error.c"
+# 133 "lib/fatal-error.c"
     int size = backtrace(array, 10);
 
-# 153 "lib/fatal-error.c"
+# 134 "lib/fatal-error.c"
     char** strings = backtrace_symbols(array, size);
 
-# 156 "lib/fatal-error.c"
+# 137 "lib/fatal-error.c"
     for (
 
-# 156 "lib/fatal-error.c"
+# 137 "lib/fatal-error.c"
 
-# 156 "lib/fatal-error.c"
+# 137 "lib/fatal-error.c"
       int i = 0;
 
-# 156 "lib/fatal-error.c"
+# 137 "lib/fatal-error.c"
       (i<size);
 
-# 156 "lib/fatal-error.c"
+# 137 "lib/fatal-error.c"
       (i++))
 
-# 156 "lib/fatal-error.c"
+# 137 "lib/fatal-error.c"
     {
 
-# 157 "lib/fatal-error.c"
+# 138 "lib/fatal-error.c"
       printf("#%d %s\n", i, (strings[i]));
     }
   }
@@ -4505,1420 +4830,1565 @@ void print_backtrace()
 }
 
 
-# 199 "lib/fatal-error.c"
+# 144 "lib/fatal-error.c"
 void print_error_code_name(int error_code)
-# 199 "lib/fatal-error.c"
+# 144 "lib/fatal-error.c"
 {
 
-# 200 "lib/fatal-error.c"
+# 145 "lib/fatal-error.c"
   fprintf(stderr, " ");
 
-# 201 "lib/fatal-error.c"
+# 146 "lib/fatal-error.c"
   fprintf(stderr, "*** ");
 
-# 202 "lib/fatal-error.c"
-  fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
+# 147 "lib/fatal-error.c"
+  fprintf(stderr, "%s", error_code_to_string(error_code));
 
-# 203 "lib/fatal-error.c"
+# 148 "lib/fatal-error.c"
   fprintf(stderr, " ***\n");
 }
 
 
-# 102 "lib/fatal-error.c"
+# 83 "lib/fatal-error.c"
 char* get_command_line()
-# 102 "lib/fatal-error.c"
+# 83 "lib/fatal-error.c"
 {
 
-# 103 "lib/fatal-error.c"
+# 84 "lib/fatal-error.c"
   buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
 
-# 105 "lib/fatal-error.c"
+# 86 "lib/fatal-error.c"
   buffer_replace_matching_byte(buffer, 0, ' ');
 
-# 106 "lib/fatal-error.c"
+# 87 "lib/fatal-error.c"
   return buffer_to_c_string(buffer);
 }
 
 
-# 109 "lib/fatal-error.c"
+# 90 "lib/fatal-error.c"
 char* get_program_path()
-# 109 "lib/fatal-error.c"
+# 90 "lib/fatal-error.c"
 {
 
-# 110 "lib/fatal-error.c"
+# 91 "lib/fatal-error.c"
   char buf[4096];
 
-# 111 "lib/fatal-error.c"
+# 92 "lib/fatal-error.c"
   int n = readlink("/proc/self/exe", buf, (sizeof(buf)));
 
-# 112 "lib/fatal-error.c"
+# 93 "lib/fatal-error.c"
   if ((n>0))
 
-# 112 "lib/fatal-error.c"
+# 93 "lib/fatal-error.c"
   {
 
-# 113 "lib/fatal-error.c"
+# 94 "lib/fatal-error.c"
     return string_duplicate(buf);
   }
   else
 
-# 114 "lib/fatal-error.c"
+# 95 "lib/fatal-error.c"
   {
 
-# 115 "lib/fatal-error.c"
+# 96 "lib/fatal-error.c"
     return "<program-path-unknown>";
   }
 }
 
 
-# 184 "lib/value.c"
-int cmp_string_values(value_t value1, value_t value2)
-# 184 "lib/value.c"
+# 100 "lib/fatal-error.c"
+_Noreturn void fatal_error_impl(char* file, int line, int error_code)
+# 100 "lib/fatal-error.c"
 {
 
-# 185 "lib/value.c"
+# 101 "lib/fatal-error.c"
+  print_fatal_error_banner();
+
+# 102 "lib/fatal-error.c"
+  print_backtrace();
+
+# 103 "lib/fatal-error.c"
+  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
+
+# 104 "lib/fatal-error.c"
+  print_error_code_name(error_code);
+
+# 105 "lib/fatal-error.c"
+  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
+
+# 106 "lib/fatal-error.c"
+  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
+
+# 107 "lib/fatal-error.c"
+  if ((sleep_str!=NULL))
+
+# 107 "lib/fatal-error.c"
+  {
+
+# 108 "lib/fatal-error.c"
+    value_result_t sleep_time = string_parse_uint64(sleep_str);
+
+# 109 "lib/fatal-error.c"
+    if (is_ok(sleep_time))
+
+# 109 "lib/fatal-error.c"
+    {
+
+# 110 "lib/fatal-error.c"
+      fprintf(stderr, "Sleeping for %lu seconds so you can attach a debugger.\n", (sleep_time.u64));
+
+# 113 "lib/fatal-error.c"
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
+
+# 114 "lib/fatal-error.c"
+      sleep((sleep_time.u64));
+    }
+  }
+  else
+
+# 116 "lib/fatal-error.c"
+  {
+
+# 117 "lib/fatal-error.c"
+    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
+  }
+
+# 119 "lib/fatal-error.c"
+  fprintf(stderr, "Necessaria Morte Mori...\n");
+
+# 120 "lib/fatal-error.c"
+  exit((-(error_code+100)));
+}
+
+
+# 182 "lib/value.c"
+int cmp_string_values(value_t value1, value_t value2)
+# 182 "lib/value.c"
+{
+
+# 183 "lib/value.c"
   return strcmp((value1.str), (value2.str));
 }
 
 
-# 193 "lib/value.c"
+# 191 "lib/value.c"
 uint64_t hash_string_value(value_t value1)
-# 193 "lib/value.c"
+# 191 "lib/value.c"
 {
 
-# 193 "lib/value.c"
+# 191 "lib/value.c"
   return string_hash((value1.str));
 }
 
 
-# 83 "lib/gc-allocate.c"
+# 76 "lib/gc-allocate.c"
 uint8_t* checked_malloc(char* file, int line, uint64_t amount)
-# 83 "lib/gc-allocate.c"
+# 76 "lib/gc-allocate.c"
 {
 
-# 85 "lib/gc-allocate.c"
+# 78 "lib/gc-allocate.c"
   if (((amount==0)||(amount>ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT)))
 
-# 85 "lib/gc-allocate.c"
+# 78 "lib/gc-allocate.c"
   {
 
-# 86 "lib/gc-allocate.c"
+# 79 "lib/gc-allocate.c"
     fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
 
-# 89 "lib/gc-allocate.c"
+# 82 "lib/gc-allocate.c"
   uint8_t* result = GC_malloc(amount);
 
-# 91 "lib/gc-allocate.c"
+# 84 "lib/gc-allocate.c"
   if ((result==((void *)0)))
 
-# 91 "lib/gc-allocate.c"
+# 84 "lib/gc-allocate.c"
   {
 
-# 92 "lib/gc-allocate.c"
+# 85 "lib/gc-allocate.c"
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
 
-# 95 "lib/gc-allocate.c"
+# 88 "lib/gc-allocate.c"
   return result;
 }
 
 
-# 104 "lib/gc-allocate.c"
+# 97 "lib/gc-allocate.c"
 uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount)
-# 105 "lib/gc-allocate.c"
+# 98 "lib/gc-allocate.c"
 {
 
-# 106 "lib/gc-allocate.c"
+# 99 "lib/gc-allocate.c"
   uint8_t* result = checked_malloc(file, line, amount);
 
-# 107 "lib/gc-allocate.c"
+# 100 "lib/gc-allocate.c"
   memcpy(result, source, amount);
 
-# 108 "lib/gc-allocate.c"
+# 101 "lib/gc-allocate.c"
   return result;
 }
 
 
-# 121 "lib/gc-allocate.c"
+# 114 "lib/gc-allocate.c"
 void checked_free(char* file, int line, void* pointer)
-# 121 "lib/gc-allocate.c"
+# 114 "lib/gc-allocate.c"
 {
 
-# 122 "lib/gc-allocate.c"
+# 115 "lib/gc-allocate.c"
   return;
 }
 
 
-# 22 "lib/uint64.c"
+# 12 "lib/uint64.c"
 int uint64_highest_bit_set(uint64_t n)
-# 22 "lib/uint64.c"
+# 12 "lib/uint64.c"
 {
 
-# 23 "lib/uint64.c"
+# 13 "lib/uint64.c"
   if ((n>=(1ULL<<32)))
+
+# 13 "lib/uint64.c"
+  {
+
+# 14 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>32))+32);
+  }
+  else
+
+# 15 "lib/uint64.c"
+  if ((n>=(1ULL<<16)))
+
+# 15 "lib/uint64.c"
+  {
+
+# 16 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>16))+16);
+  }
+  else
+
+# 17 "lib/uint64.c"
+  if ((n>=(1ULL<<8)))
+
+# 17 "lib/uint64.c"
+  {
+
+# 18 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>8))+8);
+  }
+  else
+
+# 19 "lib/uint64.c"
+  if ((n>=(1ULL<<4)))
+
+# 19 "lib/uint64.c"
+  {
+
+# 20 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>4))+4);
+  }
+  else
+
+# 21 "lib/uint64.c"
+  if ((n>=(1ULL<<2)))
+
+# 21 "lib/uint64.c"
+  {
+
+# 22 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>2))+2);
+  }
+  else
+
+# 23 "lib/uint64.c"
+  if ((n>=(1ULL<<1)))
 
 # 23 "lib/uint64.c"
   {
 
 # 24 "lib/uint64.c"
-    return (uint64_highest_bit_set((n>>32))+32);
+    return (uint64_highest_bit_set((n>>1))+1);
   }
   else
-
-# 25 "lib/uint64.c"
-  if ((n>=(1ULL<<16)))
 
 # 25 "lib/uint64.c"
   {
 
 # 26 "lib/uint64.c"
-    return (uint64_highest_bit_set((n>>16))+16);
-  }
-  else
-
-# 27 "lib/uint64.c"
-  if ((n>=(1ULL<<8)))
-
-# 27 "lib/uint64.c"
-  {
-
-# 28 "lib/uint64.c"
-    return (uint64_highest_bit_set((n>>8))+8);
-  }
-  else
-
-# 29 "lib/uint64.c"
-  if ((n>=(1ULL<<4)))
-
-# 29 "lib/uint64.c"
-  {
-
-# 30 "lib/uint64.c"
-    return (uint64_highest_bit_set((n>>4))+4);
-  }
-  else
-
-# 31 "lib/uint64.c"
-  if ((n>=(1ULL<<2)))
-
-# 31 "lib/uint64.c"
-  {
-
-# 32 "lib/uint64.c"
-    return (uint64_highest_bit_set((n>>2))+2);
-  }
-  else
-
-# 33 "lib/uint64.c"
-  if ((n>=(1ULL<<1)))
-
-# 33 "lib/uint64.c"
-  {
-
-# 34 "lib/uint64.c"
-    return (uint64_highest_bit_set((n>>1))+1);
-  }
-  else
-
-# 35 "lib/uint64.c"
-  {
-
-# 36 "lib/uint64.c"
     return 0;
   }
 }
 
 
-# 52 "lib/string-util.c"
-int string_is_null_or_empty(const char* str)
-# 52 "lib/string-util.c"
+# 4 "lib/double.c"
+uint64_t double_as_uint64(double d)
+# 4 "lib/double.c"
 {
 
-# 53 "lib/string-util.c"
+# 5 "lib/double.c"
+  uint64_t u;
+
+# 6 "lib/double.c"
+  memcpy((&u), (&d), (sizeof(d)));
+
+# 7 "lib/double.c"
+  return u;
+}
+
+
+# 13 "lib/double.c"
+uint64_t uint64_as_double(uint64_t u)
+# 13 "lib/double.c"
+{
+
+# 14 "lib/double.c"
+  double d;
+
+# 15 "lib/double.c"
+  memcpy((&d), (&u), (sizeof(u)));
+
+# 16 "lib/double.c"
+  return d;
+}
+
+
+# 470 "lib/string-util.c"
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed)
+# 470 "lib/string-util.c"
+{
+
+# 471 "lib/string-util.c"
+  const uint64_t m = 0x880355f21e6d1965ULL;
+
+# 472 "lib/string-util.c"
+  const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
+
+# 473 "lib/string-util.c"
+  const uint64_t* end = (pos+(len/8));
+
+# 474 "lib/string-util.c"
+  const unsigned char* pos2;
+
+# 475 "lib/string-util.c"
+  uint64_t h = (seed^(len*m));
+
+# 476 "lib/string-util.c"
+  uint64_t v;
+
+# 478 "lib/string-util.c"
+  while ((pos!=end))
+
+# 478 "lib/string-util.c"
+  {
+
+# 479 "lib/string-util.c"
+    (v=(*(pos++)));
+
+# 480 "lib/string-util.c"
+    (h^=mix(v));
+
+# 481 "lib/string-util.c"
+    (h*=m);
+  }
+
+# 484 "lib/string-util.c"
+  (pos2=(/*CAST*/(const unsigned char*) pos));
+
+# 485 "lib/string-util.c"
+  (v=0);
+
+# 487 "lib/string-util.c"
+  switch ((len&7))
+
+# 487 "lib/string-util.c"
+  {
+
+# 488 "lib/string-util.c"
+    case 7:
+
+# 489 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[6]))<<48));
+
+# 490 "lib/string-util.c"
+    case 6:
+
+# 491 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[5]))<<40));
+
+# 492 "lib/string-util.c"
+    case 5:
+
+# 493 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[4]))<<32));
+
+# 494 "lib/string-util.c"
+    case 4:
+
+# 495 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[3]))<<24));
+
+# 496 "lib/string-util.c"
+    case 3:
+
+# 497 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[2]))<<16));
+
+# 498 "lib/string-util.c"
+    case 2:
+
+# 499 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[1]))<<8));
+
+# 500 "lib/string-util.c"
+    case 1:
+
+# 501 "lib/string-util.c"
+    (v^=(/*CAST*/(uint64_t) (pos2[0])));
+
+# 502 "lib/string-util.c"
+    (h^=mix(v));
+
+# 503 "lib/string-util.c"
+    (h*=m);
+  }
+
+# 506 "lib/string-util.c"
+  return mix(h);
+}
+
+
+# 15 "lib/string-util.c"
+int string_is_null_or_empty(const char* str)
+# 15 "lib/string-util.c"
+{
+
+# 16 "lib/string-util.c"
   return ((str==((void *)0))||(strlen(str)==0));
 }
 
 
-# 61 "lib/string-util.c"
+# 24 "lib/string-util.c"
 int string_equal(const char* str1, const char* str2)
-# 61 "lib/string-util.c"
+# 24 "lib/string-util.c"
 {
 
-# 62 "lib/string-util.c"
+# 25 "lib/string-util.c"
   if (string_is_null_or_empty(str1))
 
-# 62 "lib/string-util.c"
+# 25 "lib/string-util.c"
   {
 
-# 63 "lib/string-util.c"
+# 26 "lib/string-util.c"
     return string_is_null_or_empty(str2);
   }
 
-# 65 "lib/string-util.c"
+# 28 "lib/string-util.c"
   return (strcmp(str1, str2)==0);
 }
 
 
-# 73 "lib/string-util.c"
+# 36 "lib/string-util.c"
 int string_starts_with(const char* str1, const char* str2)
-# 73 "lib/string-util.c"
+# 36 "lib/string-util.c"
 {
 
-# 74 "lib/string-util.c"
+# 37 "lib/string-util.c"
   return (strncmp(str1, str2, strlen(str2))==0);
 }
 
 
-# 82 "lib/string-util.c"
+# 45 "lib/string-util.c"
 int string_ends_with(const char* str1, const char* str2)
-# 82 "lib/string-util.c"
+# 45 "lib/string-util.c"
 {
 
-# 83 "lib/string-util.c"
+# 46 "lib/string-util.c"
   size_t len1 = strlen(str1);
 
-# 84 "lib/string-util.c"
+# 47 "lib/string-util.c"
   size_t len2 = strlen(str2);
 
-# 86 "lib/string-util.c"
+# 49 "lib/string-util.c"
   if ((len2>len1))
 
-# 86 "lib/string-util.c"
+# 49 "lib/string-util.c"
   {
 
-# 87 "lib/string-util.c"
+# 50 "lib/string-util.c"
     return 0;
   }
 
-# 90 "lib/string-util.c"
+# 53 "lib/string-util.c"
   return (strcmp((str1+(len1-len2)), str2)==0);
 }
 
 
-# 98 "lib/string-util.c"
+# 61 "lib/string-util.c"
 boolean_t string_contains_char(const char* str, char ch)
-# 98 "lib/string-util.c"
+# 61 "lib/string-util.c"
 {
 
-# 99 "lib/string-util.c"
+# 62 "lib/string-util.c"
   return (string_index_of_char(str, ch)>=0);
 }
 
 
-# 112 "lib/string-util.c"
+# 75 "lib/string-util.c"
 int string_index_of_char(const char* str, char ch)
-# 112 "lib/string-util.c"
+# 75 "lib/string-util.c"
 {
 
-# 113 "lib/string-util.c"
+# 76 "lib/string-util.c"
   if (string_is_null_or_empty(str))
 
-# 113 "lib/string-util.c"
+# 76 "lib/string-util.c"
   {
 
-# 114 "lib/string-util.c"
+# 77 "lib/string-util.c"
     return (-1);
   }
 
-# 116 "lib/string-util.c"
+# 79 "lib/string-util.c"
   int str_length = strlen(str);
 
-# 117 "lib/string-util.c"
+# 80 "lib/string-util.c"
   for (
 
-# 117 "lib/string-util.c"
+# 80 "lib/string-util.c"
 
-# 117 "lib/string-util.c"
+# 80 "lib/string-util.c"
     int i = 0;
 
-# 117 "lib/string-util.c"
+# 80 "lib/string-util.c"
     (i<str_length);
 
-# 117 "lib/string-util.c"
+# 80 "lib/string-util.c"
     (i++))
 
-# 117 "lib/string-util.c"
+# 80 "lib/string-util.c"
   {
 
-# 118 "lib/string-util.c"
+# 81 "lib/string-util.c"
     if (((str[i])==ch))
 
-# 118 "lib/string-util.c"
+# 81 "lib/string-util.c"
     {
 
-# 119 "lib/string-util.c"
+# 82 "lib/string-util.c"
       return i;
     }
   }
 
-# 122 "lib/string-util.c"
+# 85 "lib/string-util.c"
   return (-1);
 }
 
 
-# 310 "lib/string-util.c"
-char* uint64_to_string(uint64_t number)
-# 310 "lib/string-util.c"
-{
-
-# 311 "lib/string-util.c"
-  char buffer[32];
-
-# 312 "lib/string-util.c"
-  sprintf(buffer, "%lu", number);
-
-# 313 "lib/string-util.c"
-  return string_duplicate(buffer);
-}
-
-
-# 131 "lib/string-util.c"
+# 94 "lib/string-util.c"
 uint64_t string_hash(const char* str)
-# 131 "lib/string-util.c"
+# 94 "lib/string-util.c"
 {
 
-# 132 "lib/string-util.c"
+# 95 "lib/string-util.c"
   return fasthash64(str, strlen(str), 0);
 }
 
 
-# 140 "lib/string-util.c"
+# 103 "lib/string-util.c"
 char* string_substring(const char* str, int start, int end)
-# 140 "lib/string-util.c"
+# 103 "lib/string-util.c"
 {
 
-# 141 "lib/string-util.c"
+# 104 "lib/string-util.c"
   uint64_t len = strlen(str);
 
-# 142 "lib/string-util.c"
+# 105 "lib/string-util.c"
   if ((((start>=len)||(start>=end))||(end<start)))
 
-# 142 "lib/string-util.c"
+# 105 "lib/string-util.c"
   {
 
-# 143 "lib/string-util.c"
+# 106 "lib/string-util.c"
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
   }
 
-# 145 "lib/string-util.c"
+# 108 "lib/string-util.c"
   int result_size = ((end-start)+1);
 
-# 146 "lib/string-util.c"
+# 109 "lib/string-util.c"
   char* result = (/*CAST*/(char*) malloc_bytes(result_size));
 
-# 147 "lib/string-util.c"
+# 110 "lib/string-util.c"
   for (
 
-# 147 "lib/string-util.c"
+# 110 "lib/string-util.c"
 
-# 147 "lib/string-util.c"
+# 110 "lib/string-util.c"
     int i = start;
 
-# 147 "lib/string-util.c"
+# 110 "lib/string-util.c"
     (i<end);
 
-# 147 "lib/string-util.c"
+# 110 "lib/string-util.c"
     (i++))
 
-# 147 "lib/string-util.c"
+# 110 "lib/string-util.c"
   {
 
-# 148 "lib/string-util.c"
+# 111 "lib/string-util.c"
     ((result[(i-start)])=(str[i]));
   }
 
-# 150 "lib/string-util.c"
+# 113 "lib/string-util.c"
   ((result[(result_size-1)])='\0');
 
-# 151 "lib/string-util.c"
+# 114 "lib/string-util.c"
   return result;
 }
 
 
-# 261 "lib/string-util.c"
-value_result_t string_parse_uint64(const char* string)
-# 261 "lib/string-util.c"
+# 117 "lib/string-util.c"
+value_result_t string_parse_uint64_dec(const char* string)
+# 117 "lib/string-util.c"
 {
 
-# 262 "lib/string-util.c"
-  if (string_starts_with(string, "0x"))
+# 118 "lib/string-util.c"
+  uint64_t len = strlen(string);
 
-# 262 "lib/string-util.c"
+# 119 "lib/string-util.c"
+  uint64_t integer = 0;
+
+# 121 "lib/string-util.c"
+  if ((len==0))
+
+# 121 "lib/string-util.c"
   {
 
-# 263 "lib/string-util.c"
+# 122 "lib/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 126 "lib/string-util.c"
+  for (
+
+# 126 "lib/string-util.c"
+
+# 126 "lib/string-util.c"
+    int i = 0;
+
+# 126 "lib/string-util.c"
+    (i<len);
+
+# 126 "lib/string-util.c"
+    (i++))
+
+# 126 "lib/string-util.c"
+  {
+
+# 127 "lib/string-util.c"
+    char ch = (string[i]);
+
+# 128 "lib/string-util.c"
+    if (((ch<'0')||(ch>'9')))
+
+# 128 "lib/string-util.c"
+    {
+
+# 129 "lib/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 133 "lib/string-util.c"
+    uint64_t digit = ((string[i])-'0');
+
+# 134 "lib/string-util.c"
+    (integer=((integer*10)+digit));
+  }
+
+# 137 "lib/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 145 "lib/string-util.c"
+value_result_t string_parse_uint64_bin(const char* string)
+# 145 "lib/string-util.c"
+{
+
+# 146 "lib/string-util.c"
+  uint64_t len = strlen(string);
+
+# 147 "lib/string-util.c"
+  uint64_t integer = 0;
+
+# 149 "lib/string-util.c"
+  if ((len==0))
+
+# 149 "lib/string-util.c"
+  {
+
+# 150 "lib/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 154 "lib/string-util.c"
+  for (
+
+# 154 "lib/string-util.c"
+
+# 154 "lib/string-util.c"
+    int i = 0;
+
+# 154 "lib/string-util.c"
+    (i<len);
+
+# 154 "lib/string-util.c"
+    (i++))
+
+# 154 "lib/string-util.c"
+  {
+
+# 155 "lib/string-util.c"
+    char ch = (string[i]);
+
+# 156 "lib/string-util.c"
+    if (((ch<'0')||(ch>'1')))
+
+# 156 "lib/string-util.c"
+    {
+
+# 157 "lib/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 161 "lib/string-util.c"
+    uint64_t digit = ((string[i])-'0');
+
+# 162 "lib/string-util.c"
+    (integer=((integer<<1)|digit));
+  }
+
+# 165 "lib/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 185 "lib/string-util.c"
+value_result_t string_parse_uint64_hex(const char* string)
+# 185 "lib/string-util.c"
+{
+
+# 186 "lib/string-util.c"
+  uint64_t len = strlen(string);
+
+# 187 "lib/string-util.c"
+  uint64_t integer = 0;
+
+# 189 "lib/string-util.c"
+  if ((len==0))
+
+# 189 "lib/string-util.c"
+  {
+
+# 190 "lib/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 194 "lib/string-util.c"
+  for (
+
+# 194 "lib/string-util.c"
+
+# 194 "lib/string-util.c"
+    int i = 0;
+
+# 194 "lib/string-util.c"
+    (i<len);
+
+# 194 "lib/string-util.c"
+    (i++))
+
+# 194 "lib/string-util.c"
+  {
+
+# 195 "lib/string-util.c"
+    char ch = (string[i]);
+
+# 196 "lib/string-util.c"
+    if ((!is_hex_digit(ch)))
+
+# 196 "lib/string-util.c"
+    {
+
+# 197 "lib/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 201 "lib/string-util.c"
+    uint64_t digit = hex_digit_to_value(ch);
+
+# 202 "lib/string-util.c"
+    (integer=((integer<<4)|digit));
+  }
+
+# 205 "lib/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 224 "lib/string-util.c"
+value_result_t string_parse_uint64(const char* string)
+# 224 "lib/string-util.c"
+{
+
+# 225 "lib/string-util.c"
+  if (string_starts_with(string, "0x"))
+
+# 225 "lib/string-util.c"
+  {
+
+# 226 "lib/string-util.c"
     return string_parse_uint64_hex((&(string[2])));
   }
   else
 
-# 264 "lib/string-util.c"
+# 227 "lib/string-util.c"
   if (string_starts_with(string, "0b"))
 
-# 264 "lib/string-util.c"
+# 227 "lib/string-util.c"
   {
 
-# 265 "lib/string-util.c"
+# 228 "lib/string-util.c"
     return string_parse_uint64_bin((&(string[2])));
   }
   else
 
-# 266 "lib/string-util.c"
+# 229 "lib/string-util.c"
   {
 
-# 267 "lib/string-util.c"
+# 230 "lib/string-util.c"
     return string_parse_uint64_dec(string);
   }
 }
 
 
-# 154 "lib/string-util.c"
-value_result_t string_parse_uint64_dec(const char* string)
-# 154 "lib/string-util.c"
-{
-
-# 155 "lib/string-util.c"
-  uint64_t len = strlen(string);
-
-# 156 "lib/string-util.c"
-  uint64_t integer = 0;
-
-# 158 "lib/string-util.c"
-  if ((len==0))
-
-# 158 "lib/string-util.c"
-  {
-
-# 159 "lib/string-util.c"
-    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-# 163 "lib/string-util.c"
-  for (
-
-# 163 "lib/string-util.c"
-
-# 163 "lib/string-util.c"
-    int i = 0;
-
-# 163 "lib/string-util.c"
-    (i<len);
-
-# 163 "lib/string-util.c"
-    (i++))
-
-# 163 "lib/string-util.c"
-  {
-
-# 164 "lib/string-util.c"
-    char ch = (string[i]);
-
-# 165 "lib/string-util.c"
-    if (((ch<'0')||(ch>'9')))
-
-# 165 "lib/string-util.c"
-    {
-
-# 166 "lib/string-util.c"
-      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-
-# 170 "lib/string-util.c"
-    uint64_t digit = ((string[i])-'0');
-
-# 171 "lib/string-util.c"
-    (integer=((integer*10)+digit));
-  }
-
-# 174 "lib/string-util.c"
-  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
-}
-
-
-# 222 "lib/string-util.c"
-value_result_t string_parse_uint64_hex(const char* string)
-# 222 "lib/string-util.c"
-{
-
-# 223 "lib/string-util.c"
-  uint64_t len = strlen(string);
-
-# 224 "lib/string-util.c"
-  uint64_t integer = 0;
-
-# 226 "lib/string-util.c"
-  if ((len==0))
-
-# 226 "lib/string-util.c"
-  {
-
-# 227 "lib/string-util.c"
-    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-# 231 "lib/string-util.c"
-  for (
-
-# 231 "lib/string-util.c"
-
-# 231 "lib/string-util.c"
-    int i = 0;
-
-# 231 "lib/string-util.c"
-    (i<len);
-
-# 231 "lib/string-util.c"
-    (i++))
-
-# 231 "lib/string-util.c"
-  {
-
-# 232 "lib/string-util.c"
-    char ch = (string[i]);
-
-# 233 "lib/string-util.c"
-    if ((!is_hex_digit(ch)))
-
-# 233 "lib/string-util.c"
-    {
-
-# 234 "lib/string-util.c"
-      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-
-# 238 "lib/string-util.c"
-    uint64_t digit = hex_digit_to_value(ch);
-
-# 239 "lib/string-util.c"
-    (integer=((integer<<4)|digit));
-  }
-
-# 242 "lib/string-util.c"
-  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
-}
-
-
-# 182 "lib/string-util.c"
-value_result_t string_parse_uint64_bin(const char* string)
-# 182 "lib/string-util.c"
-{
-
-# 183 "lib/string-util.c"
-  uint64_t len = strlen(string);
-
-# 184 "lib/string-util.c"
-  uint64_t integer = 0;
-
-# 186 "lib/string-util.c"
-  if ((len==0))
-
-# 186 "lib/string-util.c"
-  {
-
-# 187 "lib/string-util.c"
-    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-# 191 "lib/string-util.c"
-  for (
-
-# 191 "lib/string-util.c"
-
-# 191 "lib/string-util.c"
-    int i = 0;
-
-# 191 "lib/string-util.c"
-    (i<len);
-
-# 191 "lib/string-util.c"
-    (i++))
-
-# 191 "lib/string-util.c"
-  {
-
-# 192 "lib/string-util.c"
-    char ch = (string[i]);
-
-# 193 "lib/string-util.c"
-    if (((ch<'0')||(ch>'1')))
-
-# 193 "lib/string-util.c"
-    {
-
-# 194 "lib/string-util.c"
-      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-
-# 198 "lib/string-util.c"
-    uint64_t digit = ((string[i])-'0');
-
-# 199 "lib/string-util.c"
-    (integer=((integer<<1)|digit));
-  }
-
-# 202 "lib/string-util.c"
-  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
-}
-
-
-# 277 "lib/string-util.c"
+# 240 "lib/string-util.c"
 char* string_duplicate(const char* src)
-# 277 "lib/string-util.c"
+# 240 "lib/string-util.c"
 {
 
-# 278 "lib/string-util.c"
+# 241 "lib/string-util.c"
   if ((src==NULL))
 
-# 278 "lib/string-util.c"
+# 241 "lib/string-util.c"
   {
 
-# 279 "lib/string-util.c"
+# 242 "lib/string-util.c"
     return NULL;
   }
 
-# 281 "lib/string-util.c"
+# 244 "lib/string-util.c"
   int len = (strlen(src)+1);
 
-# 282 "lib/string-util.c"
+# 245 "lib/string-util.c"
   char* result = (/*CAST*/(char*) malloc_bytes(len));
 
-# 283 "lib/string-util.c"
+# 246 "lib/string-util.c"
   memcpy(result, src, len);
 
-# 285 "lib/string-util.c"
+# 248 "lib/string-util.c"
   return result;
 }
 
 
-# 294 "lib/string-util.c"
+# 257 "lib/string-util.c"
 char* string_append(const char* a, const char* b)
-# 294 "lib/string-util.c"
+# 257 "lib/string-util.c"
 {
 
-# 295 "lib/string-util.c"
+# 258 "lib/string-util.c"
   if (((a==NULL)||(b==NULL)))
 
-# 295 "lib/string-util.c"
+# 258 "lib/string-util.c"
   {
 
-# 296 "lib/string-util.c"
+# 259 "lib/string-util.c"
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
 
-# 298 "lib/string-util.c"
+# 261 "lib/string-util.c"
   int total_length = ((strlen(a)+strlen(b))+1);
 
-# 299 "lib/string-util.c"
+# 262 "lib/string-util.c"
   char* result = (/*CAST*/(char*) malloc_bytes(total_length));
 
-# 300 "lib/string-util.c"
+# 263 "lib/string-util.c"
   strcat(result, a);
 
-# 301 "lib/string-util.c"
+# 264 "lib/string-util.c"
   strcat(result, b);
 
-# 302 "lib/string-util.c"
+# 265 "lib/string-util.c"
   return result;
 }
 
 
-# 322 "lib/string-util.c"
-char* string_left_pad(const char* str, int n, char ch)
-# 322 "lib/string-util.c"
+# 273 "lib/string-util.c"
+char* uint64_to_string(uint64_t number)
+# 273 "lib/string-util.c"
 {
 
-# 323 "lib/string-util.c"
+# 274 "lib/string-util.c"
+  char buffer[32];
+
+# 275 "lib/string-util.c"
+  sprintf(buffer, "%lu", number);
+
+# 276 "lib/string-util.c"
+  return string_duplicate(buffer);
+}
+
+
+# 284 "lib/string-util.c"
+char* int64_to_string(int64_t number)
+# 284 "lib/string-util.c"
+{
+
+# 285 "lib/string-util.c"
+  char buffer[32];
+
+# 286 "lib/string-util.c"
+  sprintf(buffer, "%ld", number);
+
+# 287 "lib/string-util.c"
+  return string_duplicate(buffer);
+}
+
+
+# 296 "lib/string-util.c"
+char* string_left_pad(const char* str, int n, char ch)
+# 296 "lib/string-util.c"
+{
+
+# 297 "lib/string-util.c"
   if ((n<0))
 
-# 323 "lib/string-util.c"
+# 297 "lib/string-util.c"
   {
 
-# 324 "lib/string-util.c"
+# 298 "lib/string-util.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
 
-# 327 "lib/string-util.c"
+# 301 "lib/string-util.c"
   int input_length = strlen(str);
+
+# 304 "lib/string-util.c"
+  int padding_needed = (n-input_length);
+
+# 312 "lib/string-util.c"
+  int len = 1;
+
+# 314 "lib/string-util.c"
+  buffer_t* buffer = make_buffer(len);
+
+# 315 "lib/string-util.c"
+  for (
+
+# 315 "lib/string-util.c"
+
+# 315 "lib/string-util.c"
+    int i = 0;
+
+# 315 "lib/string-util.c"
+    (i<padding_needed);
+
+# 315 "lib/string-util.c"
+    (i++))
+
+# 315 "lib/string-util.c"
+  {
+
+# 316 "lib/string-util.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 318 "lib/string-util.c"
+  (buffer=buffer_append_string(buffer, str));
+
+# 319 "lib/string-util.c"
+  char* result = buffer_to_c_string(buffer);
+
+# 320 "lib/string-util.c"
+  free_bytes(buffer);
+
+# 321 "lib/string-util.c"
+  return result;
+}
+
 
 # 330 "lib/string-util.c"
-  int padding_needed = (n-input_length);
-
-# 338 "lib/string-util.c"
-  int len = 1;
-
-# 340 "lib/string-util.c"
-  buffer_t* buffer = make_buffer(len);
-
-# 341 "lib/string-util.c"
-  for (
-
-# 341 "lib/string-util.c"
-
-# 341 "lib/string-util.c"
-    int i = 0;
-
-# 341 "lib/string-util.c"
-    (i<padding_needed);
-
-# 341 "lib/string-util.c"
-    (i++))
-
-# 341 "lib/string-util.c"
-  {
-
-# 342 "lib/string-util.c"
-    (buffer=buffer_append_byte(buffer, ch));
-  }
-
-# 344 "lib/string-util.c"
-  (buffer=buffer_append_string(buffer, str));
-
-# 345 "lib/string-util.c"
-  char* result = buffer_to_c_string(buffer);
-
-# 346 "lib/string-util.c"
-  free_bytes(buffer);
-
-# 347 "lib/string-util.c"
-  return result;
-}
-
-
-# 356 "lib/string-util.c"
 char* string_right_pad(const char* str, int n, char ch)
-# 356 "lib/string-util.c"
+# 330 "lib/string-util.c"
 {
 
-# 357 "lib/string-util.c"
+# 331 "lib/string-util.c"
   if ((n<0))
 
-# 357 "lib/string-util.c"
+# 331 "lib/string-util.c"
   {
 
-# 358 "lib/string-util.c"
+# 332 "lib/string-util.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
 
-# 361 "lib/string-util.c"
+# 335 "lib/string-util.c"
   int input_length = strlen(str);
 
-# 364 "lib/string-util.c"
+# 338 "lib/string-util.c"
   int padding_needed = (n-input_length);
 
-# 372 "lib/string-util.c"
+# 346 "lib/string-util.c"
   int len = 1;
 
-# 374 "lib/string-util.c"
+# 348 "lib/string-util.c"
   buffer_t* buffer = make_buffer(len);
 
-# 375 "lib/string-util.c"
+# 349 "lib/string-util.c"
   (buffer=buffer_append_string(buffer, str));
 
-# 376 "lib/string-util.c"
+# 350 "lib/string-util.c"
   for (
 
-# 376 "lib/string-util.c"
+# 350 "lib/string-util.c"
 
-# 376 "lib/string-util.c"
+# 350 "lib/string-util.c"
     int i = 0;
 
-# 376 "lib/string-util.c"
+# 350 "lib/string-util.c"
     (i<padding_needed);
 
-# 376 "lib/string-util.c"
+# 350 "lib/string-util.c"
     (i++))
 
-# 376 "lib/string-util.c"
+# 350 "lib/string-util.c"
   {
 
-# 377 "lib/string-util.c"
+# 351 "lib/string-util.c"
     (buffer=buffer_append_byte(buffer, ch));
   }
 
-# 379 "lib/string-util.c"
+# 353 "lib/string-util.c"
   char* result = buffer_to_c_string(buffer);
 
-# 380 "lib/string-util.c"
+# 354 "lib/string-util.c"
   free_bytes(buffer);
 
-# 381 "lib/string-util.c"
+# 355 "lib/string-util.c"
   return result;
 }
 
 
-# 428 "lib/string-util.c"
-__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
-# 428 "lib/string-util.c"
+# 368 "lib/string-util.c"
+char* string_truncate(char* str, int limit, char* at_limit_suffix)
+# 368 "lib/string-util.c"
 {
 
-# 429 "lib/string-util.c"
-  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+# 370 "lib/string-util.c"
+  buffer_t* buffer = make_buffer(limit);
 
-# 430 "lib/string-util.c"
-  int n_bytes = 0;
+# 371 "lib/string-util.c"
+  for (
 
-# 431 "lib/string-util.c"
-  do
-# 431 "lib/string-util.c"
+# 371 "lib/string-util.c"
+
+# 371 "lib/string-util.c"
+    int i = 0;
+
+# 371 "lib/string-util.c"
+    ;
+
+# 371 "lib/string-util.c"
+    (i++))
+
+# 371 "lib/string-util.c"
   {
 
-# 432 "lib/string-util.c"
+# 372 "lib/string-util.c"
+    char ch = (str[i]);
+
+# 373 "lib/string-util.c"
+    if ((ch=='\0'))
+
+# 373 "lib/string-util.c"
+    {
+
+# 374 "lib/string-util.c"
+      char* result = buffer_to_c_string(buffer);
+
+# 375 "lib/string-util.c"
+      free_bytes(buffer);
+
+# 376 "lib/string-util.c"
+      return result;
+    }
+
+# 378 "lib/string-util.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 380 "lib/string-util.c"
+  if (at_limit_suffix)
+
+# 380 "lib/string-util.c"
+  {
+
+# 381 "lib/string-util.c"
+    (buffer=buffer_append_string(buffer, at_limit_suffix));
+  }
+
+# 383 "lib/string-util.c"
+  char* result = buffer_to_c_string(buffer);
+
+# 384 "lib/string-util.c"
+  free_bytes(buffer);
+
+# 385 "lib/string-util.c"
+  return result;
+}
+
+
+# 402 "lib/string-util.c"
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
+# 402 "lib/string-util.c"
+{
+
+# 403 "lib/string-util.c"
+  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+
+# 404 "lib/string-util.c"
+  int n_bytes = 0;
+
+# 405 "lib/string-util.c"
+  do
+# 405 "lib/string-util.c"
+  {
+
+# 406 "lib/string-util.c"
     va_list args;
 
-# 433 "lib/string-util.c"
+# 407 "lib/string-util.c"
     va_start(args, format);
 
-# 434 "lib/string-util.c"
+# 408 "lib/string-util.c"
     (n_bytes=vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args));
 
-# 436 "lib/string-util.c"
+# 410 "lib/string-util.c"
     va_end(args);
   }
   while (0);
 
-# 439 "lib/string-util.c"
+# 413 "lib/string-util.c"
   if ((n_bytes<STRING_PRINTF_INITIAL_BUFFER_SIZE))
 
-# 439 "lib/string-util.c"
+# 413 "lib/string-util.c"
   {
 
-# 440 "lib/string-util.c"
+# 414 "lib/string-util.c"
     char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
 
-# 441 "lib/string-util.c"
+# 415 "lib/string-util.c"
     strcat(result, buffer);
 
-# 442 "lib/string-util.c"
+# 416 "lib/string-util.c"
     return result;
   }
   else
 
-# 443 "lib/string-util.c"
+# 417 "lib/string-util.c"
   {
 
-# 444 "lib/string-util.c"
+# 418 "lib/string-util.c"
     char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
 
-# 445 "lib/string-util.c"
+# 419 "lib/string-util.c"
     va_list args;
 
-# 446 "lib/string-util.c"
+# 420 "lib/string-util.c"
     va_start(args, format);
 
-# 447 "lib/string-util.c"
+# 421 "lib/string-util.c"
     int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
 
-# 448 "lib/string-util.c"
+# 422 "lib/string-util.c"
     va_end(args);
 
-# 449 "lib/string-util.c"
+# 423 "lib/string-util.c"
     if ((n_bytes_second!=n_bytes))
 
-# 449 "lib/string-util.c"
+# 423 "lib/string-util.c"
     {
 
-# 450 "lib/string-util.c"
+# 424 "lib/string-util.c"
       fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
     }
 
-# 452 "lib/string-util.c"
+# 426 "lib/string-util.c"
     return result;
   }
 }
 
 
-# 394 "lib/string-util.c"
-char* string_truncate(char* str, int limit, char* at_limit_suffix)
-# 394 "lib/string-util.c"
+# 509 "lib/string-util.c"
+double string_parse_double(char* str)
+# 509 "lib/string-util.c"
 {
-
-# 396 "lib/string-util.c"
-  buffer_t* buffer = make_buffer(limit);
-
-# 397 "lib/string-util.c"
-  for (
-
-# 397 "lib/string-util.c"
-
-# 397 "lib/string-util.c"
-    int i = 0;
-
-# 397 "lib/string-util.c"
-    ;
-
-# 397 "lib/string-util.c"
-    (i++))
-
-# 397 "lib/string-util.c"
-  {
-
-# 398 "lib/string-util.c"
-    char ch = (str[i]);
-
-# 399 "lib/string-util.c"
-    if ((ch=='\0'))
-
-# 399 "lib/string-util.c"
-    {
-
-# 400 "lib/string-util.c"
-      char* result = buffer_to_c_string(buffer);
-
-# 401 "lib/string-util.c"
-      free_bytes(buffer);
-
-# 402 "lib/string-util.c"
-      return result;
-    }
-
-# 404 "lib/string-util.c"
-    (buffer=buffer_append_byte(buffer, ch));
-  }
-
-# 406 "lib/string-util.c"
-  if (at_limit_suffix)
-
-# 406 "lib/string-util.c"
-  {
-
-# 407 "lib/string-util.c"
-    (buffer=buffer_append_string(buffer, at_limit_suffix));
-  }
-
-# 409 "lib/string-util.c"
-  char* result = buffer_to_c_string(buffer);
-
-# 410 "lib/string-util.c"
-  free_bytes(buffer);
-
-# 411 "lib/string-util.c"
-  return result;
-}
-
-
-# 496 "lib/string-util.c"
-uint64_t fasthash64(const void* buf, size_t len, uint64_t seed)
-# 496 "lib/string-util.c"
-{
-
-# 497 "lib/string-util.c"
-  const uint64_t m = 0x880355f21e6d1965ULL;
-
-# 498 "lib/string-util.c"
-  const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
-
-# 499 "lib/string-util.c"
-  const uint64_t* end = (pos+(len/8));
-
-# 500 "lib/string-util.c"
-  const unsigned char* pos2;
-
-# 501 "lib/string-util.c"
-  uint64_t h = (seed^(len*m));
-
-# 502 "lib/string-util.c"
-  uint64_t v;
-
-# 504 "lib/string-util.c"
-  while ((pos!=end))
-
-# 504 "lib/string-util.c"
-  {
-
-# 505 "lib/string-util.c"
-    (v=(*(pos++)));
-
-# 506 "lib/string-util.c"
-    (h^=mix(v));
-
-# 507 "lib/string-util.c"
-    (h*=m);
-  }
 
 # 510 "lib/string-util.c"
-  (pos2=(/*CAST*/(const unsigned char*) pos));
+  char* endptr = NULL;
 
 # 511 "lib/string-util.c"
-  (v=0);
+  (errno=0);
+
+# 512 "lib/string-util.c"
+  double value = strtod(str, (&endptr));
 
 # 513 "lib/string-util.c"
-  switch ((len&7))
+  if (((str==endptr)||(errno==ERANGE)))
 
 # 513 "lib/string-util.c"
   {
 
 # 514 "lib/string-util.c"
-    case 7:
-
-# 515 "lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[6]))<<48));
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
 
 # 516 "lib/string-util.c"
-    case 6:
+  log_info("string_parse_double = %f", value);
 
 # 517 "lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[5]))<<40));
-
-# 518 "lib/string-util.c"
-    case 5:
-
-# 519 "lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[4]))<<32));
-
-# 520 "lib/string-util.c"
-    case 4:
-
-# 521 "lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[3]))<<24));
-
-# 522 "lib/string-util.c"
-    case 3:
-
-# 523 "lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[2]))<<16));
-
-# 524 "lib/string-util.c"
-    case 2:
-
-# 525 "lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[1]))<<8));
-
-# 526 "lib/string-util.c"
-    case 1:
-
-# 527 "lib/string-util.c"
-    (v^=(/*CAST*/(uint64_t) (pos2[0])));
-
-# 528 "lib/string-util.c"
-    (h^=mix(v));
-
-# 529 "lib/string-util.c"
-    (h*=m);
-  }
-
-# 532 "lib/string-util.c"
-  return mix(h);
+  return value;
 }
 
 
-# 262 "lib/logger.c"
-void logger_init(void)
-# 262 "lib/logger.c"
-{
-
-# 263 "lib/logger.c"
-  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
-
-# 264 "lib/logger.c"
-  if ((level_string!=NULL))
-
-# 264 "lib/logger.c"
-  {
-
-# 265 "lib/logger.c"
-    value_result_t parsed = string_parse_uint64(level_string);
-
-# 266 "lib/logger.c"
-    if (is_ok(parsed))
-
-# 266 "lib/logger.c"
-    {
-
-# 267 "lib/logger.c"
-      ((global_logger_state.level)=(parsed.u64));
-    }
-    else
-
-# 268 "lib/logger.c"
-    {
-
-# 269 "lib/logger.c"
-      value_result_t parsed = parse_log_level_enum(level_string);
-
-# 270 "lib/logger.c"
-      if (is_ok(parsed))
-
-# 270 "lib/logger.c"
-      {
-
-# 271 "lib/logger.c"
-        ((global_logger_state.level)=(parsed.u64));
-      }
-      else
-
-# 272 "lib/logger.c"
-      {
-
-# 273 "lib/logger.c"
-        log_warn("%s could not be converted to a log level.", level_string);
-      }
-    }
-  }
-
-# 278 "lib/logger.c"
-  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
-
-# 282 "lib/logger.c"
-  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
-
-# 289 "lib/logger.c"
-  if ((output_file_name!=NULL))
-
-# 289 "lib/logger.c"
-  {
-
-# 290 "lib/logger.c"
-    ((global_logger_state.output)=fopen(output_file_name, "w"));
-
-# 291 "lib/logger.c"
-    if ((!(global_logger_state.output)))
-
-# 291 "lib/logger.c"
-    {
-
-# 292 "lib/logger.c"
-      fatal_error(ERROR_OPEN_LOG_FILE);
-    }
-
-# 299 "lib/logger.c"
-    ((global_logger_state.logger_output_filename)=output_file_name);
-  }
-  else
-
-# 300 "lib/logger.c"
-  {
-
-# 301 "lib/logger.c"
-    ((global_logger_state.output)=stderr);
-
-# 302 "lib/logger.c"
-    ((global_logger_state.initialized)=true);
-  }
-}
-
-
-# 335 "lib/logger.c"
-__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...)
-# 336 "lib/logger.c"
-{
-
-# 338 "lib/logger.c"
-  FILE* output = (global_logger_state.output);
-
-# 342 "lib/logger.c"
-  if ((output==NULL))
-
-# 342 "lib/logger.c"
-  {
-
-# 343 "lib/logger.c"
-    (output=stderr);
-  }
-
-# 346 "lib/logger.c"
-  if ((level>=(global_logger_state.level)))
-
-# 346 "lib/logger.c"
-  {
-
-# 347 "lib/logger.c"
-    fprintf(output, "%s ", logger_level_to_string(level));
-
-# 348 "lib/logger.c"
-    va_list args;
-
-# 349 "lib/logger.c"
-    fprintf(output, "%s:%d %s | ", file, line_number, function);
-
-# 351 "lib/logger.c"
-    va_start(args, format);
-
-# 352 "lib/logger.c"
-    vfprintf(output, format, args);
-
-# 353 "lib/logger.c"
-    va_end(args);
-
-# 355 "lib/logger.c"
-    fprintf(output, "\n");
-  }
-}
-
-
-# 228 "lib/logger.c"
+# 208 "lib/logger.c"
 value_result_t parse_log_level_enum(char* str)
-# 228 "lib/logger.c"
+# 208 "lib/logger.c"
 {
 
-# 229 "lib/logger.c"
+# 209 "lib/logger.c"
   if (((strcmp("FATAL", str)==0)||(strcmp("fatal", str)==0)))
 
-# 229 "lib/logger.c"
+# 209 "lib/logger.c"
   {
 
-# 230 "lib/logger.c"
+# 210 "lib/logger.c"
     return ((value_result_t) {.u64 = LOGGER_FATAL});
   }
   else
 
-# 231 "lib/logger.c"
+# 211 "lib/logger.c"
   if (((strcmp("WARN", str)==0)||(strcmp("warn", str)==0)))
 
-# 231 "lib/logger.c"
+# 211 "lib/logger.c"
   {
 
-# 232 "lib/logger.c"
+# 212 "lib/logger.c"
     return ((value_result_t) {.u64 = LOGGER_WARN});
   }
   else
 
-# 233 "lib/logger.c"
+# 213 "lib/logger.c"
   if (((strcmp("INFO", str)==0)||(strcmp("info", str)==0)))
 
-# 233 "lib/logger.c"
+# 213 "lib/logger.c"
   {
 
-# 234 "lib/logger.c"
+# 214 "lib/logger.c"
     return ((value_result_t) {.u64 = LOGGER_INFO});
   }
   else
 
-# 235 "lib/logger.c"
+# 215 "lib/logger.c"
   if (((strcmp("DEBUG", str)==0)||(strcmp("debug", str)==0)))
 
-# 235 "lib/logger.c"
+# 215 "lib/logger.c"
   {
 
-# 236 "lib/logger.c"
+# 216 "lib/logger.c"
     return ((value_result_t) {.u64 = LOGGER_DEBUG});
   }
   else
 
-# 237 "lib/logger.c"
+# 217 "lib/logger.c"
   if (((strcmp("TRACE", str)==0)||(strcmp("trace", str)==0)))
 
-# 237 "lib/logger.c"
+# 217 "lib/logger.c"
   {
 
-# 238 "lib/logger.c"
+# 218 "lib/logger.c"
     return ((value_result_t) {.u64 = LOGGER_TRACE});
   }
   else
 
-# 239 "lib/logger.c"
+# 219 "lib/logger.c"
   if (((strcmp("OFF", str)==0)||(strcmp("off", str)==0)))
 
-# 239 "lib/logger.c"
+# 219 "lib/logger.c"
   {
 
-# 240 "lib/logger.c"
+# 220 "lib/logger.c"
     return ((value_result_t) {.u64 = LOGGER_OFF});
   }
   else
 
-# 241 "lib/logger.c"
+# 221 "lib/logger.c"
   {
 
-# 242 "lib/logger.c"
+# 222 "lib/logger.c"
     return ((value_result_t) {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
   }
 }
 
 
-# 308 "lib/logger.c"
-char* logger_level_to_string(int level)
-# 308 "lib/logger.c"
+# 239 "lib/logger.c"
+void logger_init(void)
+# 239 "lib/logger.c"
 {
 
-# 309 "lib/logger.c"
-  switch (level)
+# 240 "lib/logger.c"
+  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
 
-# 309 "lib/logger.c"
+# 241 "lib/logger.c"
+  if ((level_string!=NULL))
+
+# 241 "lib/logger.c"
   {
 
-# 310 "lib/logger.c"
+# 242 "lib/logger.c"
+    value_result_t parsed = string_parse_uint64(level_string);
+
+# 243 "lib/logger.c"
+    if (is_ok(parsed))
+
+# 243 "lib/logger.c"
+    {
+
+# 244 "lib/logger.c"
+      ((global_logger_state.level)=(parsed.u64));
+    }
+    else
+
+# 245 "lib/logger.c"
+    {
+
+# 246 "lib/logger.c"
+      value_result_t parsed = parse_log_level_enum(level_string);
+
+# 247 "lib/logger.c"
+      if (is_ok(parsed))
+
+# 247 "lib/logger.c"
+      {
+
+# 248 "lib/logger.c"
+        ((global_logger_state.level)=(parsed.u64));
+      }
+      else
+
+# 249 "lib/logger.c"
+      {
+
+# 250 "lib/logger.c"
+        log_warn("%s could not be converted to a log level.", level_string);
+      }
+    }
+  }
+
+# 255 "lib/logger.c"
+  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
+
+# 259 "lib/logger.c"
+  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
+
+# 266 "lib/logger.c"
+  if ((output_file_name!=NULL))
+
+# 266 "lib/logger.c"
+  {
+
+# 267 "lib/logger.c"
+    ((global_logger_state.output)=fopen(output_file_name, "w"));
+
+# 268 "lib/logger.c"
+    if ((!(global_logger_state.output)))
+
+# 268 "lib/logger.c"
+    {
+
+# 269 "lib/logger.c"
+      fatal_error(ERROR_OPEN_LOG_FILE);
+    }
+
+# 276 "lib/logger.c"
+    ((global_logger_state.logger_output_filename)=output_file_name);
+  }
+  else
+
+# 277 "lib/logger.c"
+  {
+
+# 278 "lib/logger.c"
+    ((global_logger_state.output)=stderr);
+
+# 279 "lib/logger.c"
+    ((global_logger_state.initialized)=true);
+  }
+}
+
+
+# 285 "lib/logger.c"
+char* logger_level_to_string(int level)
+# 285 "lib/logger.c"
+{
+
+# 286 "lib/logger.c"
+  switch (level)
+
+# 286 "lib/logger.c"
+  {
+
+# 287 "lib/logger.c"
     case LOGGER_OFF:
 
-# 311 "lib/logger.c"
+# 288 "lib/logger.c"
     return "LOGGER_OFF";
 
-# 312 "lib/logger.c"
+# 289 "lib/logger.c"
     case LOGGER_TRACE:
 
-# 313 "lib/logger.c"
+# 290 "lib/logger.c"
     return "TRACE";
 
-# 314 "lib/logger.c"
+# 291 "lib/logger.c"
     case LOGGER_DEBUG:
 
-# 315 "lib/logger.c"
+# 292 "lib/logger.c"
     return "DEBUG";
 
-# 316 "lib/logger.c"
+# 293 "lib/logger.c"
     case LOGGER_INFO:
 
-# 317 "lib/logger.c"
+# 294 "lib/logger.c"
     return "INFO";
 
-# 318 "lib/logger.c"
+# 295 "lib/logger.c"
     case LOGGER_WARN:
 
-# 319 "lib/logger.c"
+# 296 "lib/logger.c"
     return "WARN";
 
-# 320 "lib/logger.c"
+# 297 "lib/logger.c"
     case LOGGER_FATAL:
 
-# 321 "lib/logger.c"
+# 298 "lib/logger.c"
     return "FATAL";
 
-# 322 "lib/logger.c"
+# 299 "lib/logger.c"
     default:
 
-# 323 "lib/logger.c"
+# 300 "lib/logger.c"
     return "LEVEL_UNKNOWN";
   }
 }
 
 
-# 34 "lib/utf8-decoder.c"
-utf8_decode_result_t utf8_decode(const uint8_t* array)
-# 34 "lib/utf8-decoder.c"
+# 312 "lib/logger.c"
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...)
+# 313 "lib/logger.c"
 {
 
-# 35 "lib/utf8-decoder.c"
-  uint8_t firstByte = (array[0]);
+# 315 "lib/logger.c"
+  FILE* output = (global_logger_state.output);
 
-# 36 "lib/utf8-decoder.c"
-  if (((firstByte&0x80)==0))
+# 319 "lib/logger.c"
+  if ((output==NULL))
 
-# 36 "lib/utf8-decoder.c"
+# 319 "lib/logger.c"
   {
 
-# 37 "lib/utf8-decoder.c"
+# 320 "lib/logger.c"
+    (output=stderr);
+  }
+
+# 323 "lib/logger.c"
+  if ((level>=(global_logger_state.level)))
+
+# 323 "lib/logger.c"
+  {
+
+# 324 "lib/logger.c"
+    fprintf(output, "%s ", logger_level_to_string(level));
+
+# 325 "lib/logger.c"
+    va_list args;
+
+# 326 "lib/logger.c"
+    fprintf(output, "%s:%d %s | ", file, line_number, function);
+
+# 328 "lib/logger.c"
+    va_start(args, format);
+
+# 329 "lib/logger.c"
+    vfprintf(output, format, args);
+
+# 330 "lib/logger.c"
+    va_end(args);
+
+# 332 "lib/logger.c"
+    fprintf(output, "\n");
+  }
+}
+
+
+# 23 "lib/utf8-decoder.c"
+utf8_decode_result_t utf8_decode(const uint8_t* array)
+# 23 "lib/utf8-decoder.c"
+{
+
+# 24 "lib/utf8-decoder.c"
+  uint8_t firstByte = (array[0]);
+
+# 25 "lib/utf8-decoder.c"
+  if (((firstByte&0x80)==0))
+
+# 25 "lib/utf8-decoder.c"
+  {
+
+# 26 "lib/utf8-decoder.c"
     return ((utf8_decode_result_t) {.code_point = firstByte, .num_bytes = 1});
   }
   else
 
-# 39 "lib/utf8-decoder.c"
+# 28 "lib/utf8-decoder.c"
   if (((firstByte&0xE0)==0xC0))
 
-# 39 "lib/utf8-decoder.c"
+# 28 "lib/utf8-decoder.c"
   {
 
-# 40 "lib/utf8-decoder.c"
+# 29 "lib/utf8-decoder.c"
     return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
          .num_bytes = 2});
   }
   else
 
-# 44 "lib/utf8-decoder.c"
+# 33 "lib/utf8-decoder.c"
   if (((firstByte&0xF0)==0xE0))
 
-# 44 "lib/utf8-decoder.c"
+# 33 "lib/utf8-decoder.c"
   {
 
-# 45 "lib/utf8-decoder.c"
+# 34 "lib/utf8-decoder.c"
     return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x0F) << 12)
                                            | ((array[1] & 0x3F) << 6)
                                            | (array[2] & 0x3F),
@@ -5926,796 +6396,796 @@ utf8_decode_result_t utf8_decode(const uint8_t* array)
   }
   else
 
-# 50 "lib/utf8-decoder.c"
+# 39 "lib/utf8-decoder.c"
   if (((firstByte&0xF8)==0xF0))
 
-# 50 "lib/utf8-decoder.c"
+# 39 "lib/utf8-decoder.c"
   {
 
-# 51 "lib/utf8-decoder.c"
+# 40 "lib/utf8-decoder.c"
     return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
                        | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
          .num_bytes = 4});
   }
   else
 
-# 56 "lib/utf8-decoder.c"
+# 45 "lib/utf8-decoder.c"
   {
 
-# 57 "lib/utf8-decoder.c"
+# 46 "lib/utf8-decoder.c"
     return ((utf8_decode_result_t) {.error = true});
   }
 }
 
 
-# 48 "lib/buffer.c"
+# 40 "lib/buffer.c"
 buffer_t* make_buffer(uint64_t initial_capacity)
-# 48 "lib/buffer.c"
+# 40 "lib/buffer.c"
 {
 
-# 49 "lib/buffer.c"
+# 41 "lib/buffer.c"
   buffer_t* result = malloc_struct(buffer_t);
 
-# 50 "lib/buffer.c"
+# 42 "lib/buffer.c"
   if ((initial_capacity<16))
 
-# 50 "lib/buffer.c"
+# 42 "lib/buffer.c"
   {
 
-# 51 "lib/buffer.c"
+# 43 "lib/buffer.c"
     (initial_capacity=16);
   }
 
-# 53 "lib/buffer.c"
+# 45 "lib/buffer.c"
   if ((initial_capacity>0))
 
-# 53 "lib/buffer.c"
+# 45 "lib/buffer.c"
   {
 
-# 54 "lib/buffer.c"
+# 46 "lib/buffer.c"
     ((result->capacity)=initial_capacity);
 
-# 55 "lib/buffer.c"
+# 47 "lib/buffer.c"
     ((result->elements)=malloc_bytes(initial_capacity));
   }
 
-# 57 "lib/buffer.c"
+# 49 "lib/buffer.c"
   return result;
 }
 
 
-# 65 "lib/buffer.c"
+# 57 "lib/buffer.c"
 uint64_t buffer_length(buffer_t* array)
-# 65 "lib/buffer.c"
+# 57 "lib/buffer.c"
 {
 
-# 65 "lib/buffer.c"
+# 57 "lib/buffer.c"
   return (array->length);
 }
 
 
-# 72 "lib/buffer.c"
+# 64 "lib/buffer.c"
 void buffer_clear(buffer_t* buffer)
-# 72 "lib/buffer.c"
+# 64 "lib/buffer.c"
 {
 
-# 73 "lib/buffer.c"
+# 65 "lib/buffer.c"
   for (
 
-# 73 "lib/buffer.c"
+# 65 "lib/buffer.c"
 
-# 73 "lib/buffer.c"
+# 65 "lib/buffer.c"
     int i = 0;
 
-# 73 "lib/buffer.c"
+# 65 "lib/buffer.c"
     (i<(buffer->capacity));
 
-# 73 "lib/buffer.c"
+# 65 "lib/buffer.c"
     (i++))
 
-# 73 "lib/buffer.c"
+# 65 "lib/buffer.c"
   {
 
-# 74 "lib/buffer.c"
+# 66 "lib/buffer.c"
     (((buffer->elements)[i])=0);
   }
 
-# 76 "lib/buffer.c"
+# 68 "lib/buffer.c"
   ((buffer->length)=0);
 }
 
 
-# 84 "lib/buffer.c"
+# 76 "lib/buffer.c"
 uint8_t buffer_get(buffer_t* buffer, uint64_t position)
-# 84 "lib/buffer.c"
+# 76 "lib/buffer.c"
 {
 
-# 85 "lib/buffer.c"
+# 77 "lib/buffer.c"
   if ((position<(buffer->length)))
 
-# 85 "lib/buffer.c"
+# 77 "lib/buffer.c"
   {
 
-# 86 "lib/buffer.c"
+# 78 "lib/buffer.c"
     return ((buffer->elements)[position]);
   }
   else
 
-# 87 "lib/buffer.c"
+# 79 "lib/buffer.c"
   {
 
-# 88 "lib/buffer.c"
+# 80 "lib/buffer.c"
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 
-# 91 "lib/buffer.c"
+# 83 "lib/buffer.c"
     return 0;
   }
 }
 
 
-# 102 "lib/buffer.c"
+# 94 "lib/buffer.c"
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end)
-# 102 "lib/buffer.c"
+# 94 "lib/buffer.c"
 {
 
-# 103 "lib/buffer.c"
+# 95 "lib/buffer.c"
   if ((buffer==((void *)0)))
 
-# 103 "lib/buffer.c"
+# 95 "lib/buffer.c"
   {
 
-# 104 "lib/buffer.c"
+# 96 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
 
-# 107 "lib/buffer.c"
+# 99 "lib/buffer.c"
   if ((start>end))
 
-# 107 "lib/buffer.c"
+# 99 "lib/buffer.c"
   {
 
-# 108 "lib/buffer.c"
+# 100 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
 
-# 111 "lib/buffer.c"
+# 103 "lib/buffer.c"
   uint64_t copy_length = (end-start);
 
-# 112 "lib/buffer.c"
+# 104 "lib/buffer.c"
   char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
 
-# 113 "lib/buffer.c"
+# 105 "lib/buffer.c"
   if ((copy_length>0))
 
-# 113 "lib/buffer.c"
+# 105 "lib/buffer.c"
   {
 
-# 114 "lib/buffer.c"
+# 106 "lib/buffer.c"
     memcpy(result, (&((buffer->elements)[start])), copy_length);
   }
 
-# 116 "lib/buffer.c"
+# 108 "lib/buffer.c"
   ((result[copy_length])='\0');
 
-# 117 "lib/buffer.c"
+# 109 "lib/buffer.c"
   return result;
 }
 
 
-# 126 "lib/buffer.c"
+# 118 "lib/buffer.c"
 char* buffer_to_c_string(buffer_t* buffer)
-# 126 "lib/buffer.c"
+# 118 "lib/buffer.c"
 {
 
-# 127 "lib/buffer.c"
+# 119 "lib/buffer.c"
   return buffer_c_substring(buffer, 0, (buffer->length));
 }
 
 
-# 135 "lib/buffer.c"
+# 127 "lib/buffer.c"
 buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element)
-# 135 "lib/buffer.c"
+# 127 "lib/buffer.c"
 {
 
-# 136 "lib/buffer.c"
+# 128 "lib/buffer.c"
   if (((buffer->length)<(buffer->capacity)))
 
-# 136 "lib/buffer.c"
+# 128 "lib/buffer.c"
   {
 
-# 137 "lib/buffer.c"
+# 129 "lib/buffer.c"
     (((buffer->elements)[(buffer->length)])=element);
 
-# 138 "lib/buffer.c"
+# 130 "lib/buffer.c"
     ((buffer->length)++);
 
-# 139 "lib/buffer.c"
+# 131 "lib/buffer.c"
     return buffer;
   }
 
-# 141 "lib/buffer.c"
+# 133 "lib/buffer.c"
   (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
 
-# 142 "lib/buffer.c"
+# 134 "lib/buffer.c"
   return buffer_append_byte(buffer, element);
 }
 
 
-# 150 "lib/buffer.c"
+# 142 "lib/buffer.c"
 buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes)
-# 151 "lib/buffer.c"
+# 143 "lib/buffer.c"
 {
 
-# 153 "lib/buffer.c"
+# 145 "lib/buffer.c"
   for (
 
-# 153 "lib/buffer.c"
+# 145 "lib/buffer.c"
 
-# 153 "lib/buffer.c"
+# 145 "lib/buffer.c"
     int i = 0;
 
-# 153 "lib/buffer.c"
+# 145 "lib/buffer.c"
     (i<n_bytes);
 
-# 153 "lib/buffer.c"
+# 145 "lib/buffer.c"
     (i++))
 
-# 153 "lib/buffer.c"
+# 145 "lib/buffer.c"
   {
 
-# 154 "lib/buffer.c"
+# 146 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (bytes[i])));
   }
 
-# 156 "lib/buffer.c"
+# 148 "lib/buffer.c"
   return buffer;
 }
 
 
-# 165 "lib/buffer.c"
+# 157 "lib/buffer.c"
 buffer_t* buffer_append_string(buffer_t* buffer, const char* str)
-# 165 "lib/buffer.c"
+# 157 "lib/buffer.c"
 {
 
-# 166 "lib/buffer.c"
+# 158 "lib/buffer.c"
   return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
 }
 
 
-# 177 "lib/buffer.c"
+# 169 "lib/buffer.c"
 extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity)
-# 177 "lib/buffer.c"
+# 169 "lib/buffer.c"
 {
 
-# 178 "lib/buffer.c"
+# 170 "lib/buffer.c"
   if (((buffer->capacity)<capacity))
 
-# 178 "lib/buffer.c"
+# 170 "lib/buffer.c"
   {
 
-# 179 "lib/buffer.c"
+# 171 "lib/buffer.c"
     uint8_t* new_elements = malloc_bytes(capacity);
 
-# 180 "lib/buffer.c"
+# 172 "lib/buffer.c"
     memcpy(new_elements, (buffer->elements), (buffer->length));
 
-# 181 "lib/buffer.c"
+# 173 "lib/buffer.c"
     free_bytes((buffer->elements));
 
-# 182 "lib/buffer.c"
+# 174 "lib/buffer.c"
     ((buffer->elements)=new_elements);
 
-# 183 "lib/buffer.c"
+# 175 "lib/buffer.c"
     ((buffer->capacity)=capacity);
   }
 
-# 185 "lib/buffer.c"
+# 177 "lib/buffer.c"
   return buffer;
 }
 
 
-# 199 "lib/buffer.c"
+# 191 "lib/buffer.c"
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...)
-# 199 "lib/buffer.c"
+# 191 "lib/buffer.c"
 {
 
-# 200 "lib/buffer.c"
+# 192 "lib/buffer.c"
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
 
-# 201 "lib/buffer.c"
+# 193 "lib/buffer.c"
   int n_bytes = 0;
 
-# 202 "lib/buffer.c"
+# 194 "lib/buffer.c"
   do
-# 202 "lib/buffer.c"
+# 194 "lib/buffer.c"
   {
 
-# 203 "lib/buffer.c"
+# 195 "lib/buffer.c"
     va_list args;
 
-# 204 "lib/buffer.c"
+# 196 "lib/buffer.c"
     va_start(args, format);
 
-# 205 "lib/buffer.c"
+# 197 "lib/buffer.c"
     (n_bytes=vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args));
 
-# 207 "lib/buffer.c"
+# 199 "lib/buffer.c"
     va_end(args);
   }
   while (0);
 
-# 210 "lib/buffer.c"
+# 202 "lib/buffer.c"
   if ((n_bytes<BUFFER_PRINTF_INITIAL_BUFFER_SIZE))
 
-# 210 "lib/buffer.c"
+# 202 "lib/buffer.c"
   {
 
-# 211 "lib/buffer.c"
+# 203 "lib/buffer.c"
     return buffer_append_string(buffer, cbuffer);
   }
   else
 
-# 212 "lib/buffer.c"
+# 204 "lib/buffer.c"
   {
 
-# 216 "lib/buffer.c"
+# 208 "lib/buffer.c"
     char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
 
-# 217 "lib/buffer.c"
+# 209 "lib/buffer.c"
     va_list args;
 
-# 218 "lib/buffer.c"
+# 210 "lib/buffer.c"
     va_start(args, format);
 
-# 219 "lib/buffer.c"
+# 211 "lib/buffer.c"
     int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
 
-# 220 "lib/buffer.c"
+# 212 "lib/buffer.c"
     va_end(args);
 
-# 221 "lib/buffer.c"
+# 213 "lib/buffer.c"
     if ((n_bytes_second!=n_bytes))
 
-# 221 "lib/buffer.c"
+# 213 "lib/buffer.c"
     {
 
-# 222 "lib/buffer.c"
+# 214 "lib/buffer.c"
       fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
     }
 
-# 224 "lib/buffer.c"
+# 216 "lib/buffer.c"
     (buffer=buffer_append_string(buffer, result));
 
-# 225 "lib/buffer.c"
+# 217 "lib/buffer.c"
     free_bytes(result);
 
-# 226 "lib/buffer.c"
+# 218 "lib/buffer.c"
     return buffer;
   }
 }
 
 
-# 237 "lib/buffer.c"
+# 229 "lib/buffer.c"
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count)
-# 238 "lib/buffer.c"
+# 230 "lib/buffer.c"
 {
 
-# 239 "lib/buffer.c"
+# 231 "lib/buffer.c"
   for (
 
-# 239 "lib/buffer.c"
+# 231 "lib/buffer.c"
 
-# 239 "lib/buffer.c"
+# 231 "lib/buffer.c"
     int i = 0;
 
-# 239 "lib/buffer.c"
+# 231 "lib/buffer.c"
     (i<count);
 
-# 239 "lib/buffer.c"
+# 231 "lib/buffer.c"
     (i++))
 
-# 239 "lib/buffer.c"
+# 231 "lib/buffer.c"
   {
 
-# 240 "lib/buffer.c"
+# 232 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, byte));
   }
 
-# 242 "lib/buffer.c"
+# 234 "lib/buffer.c"
   return buffer;
 }
 
 
-# 251 "lib/buffer.c"
+# 243 "lib/buffer.c"
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position)
-# 251 "lib/buffer.c"
+# 243 "lib/buffer.c"
 {
 
-# 252 "lib/buffer.c"
+# 244 "lib/buffer.c"
   if ((position>=(buffer->length)))
 
-# 252 "lib/buffer.c"
+# 244 "lib/buffer.c"
   {
 
-# 253 "lib/buffer.c"
+# 245 "lib/buffer.c"
     return ((utf8_decode_result_t) {.error = true});
   }
 
-# 255 "lib/buffer.c"
+# 247 "lib/buffer.c"
   utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
 
-# 256 "lib/buffer.c"
+# 248 "lib/buffer.c"
   if ((result.error))
 
-# 256 "lib/buffer.c"
+# 248 "lib/buffer.c"
   {
 
-# 257 "lib/buffer.c"
+# 249 "lib/buffer.c"
     return result;
   }
 
-# 259 "lib/buffer.c"
+# 251 "lib/buffer.c"
   if (((position+(result.num_bytes))>(buffer->length)))
 
-# 259 "lib/buffer.c"
+# 251 "lib/buffer.c"
   {
 
-# 260 "lib/buffer.c"
+# 252 "lib/buffer.c"
     return ((utf8_decode_result_t) {.error = true});
   }
 
-# 262 "lib/buffer.c"
+# 254 "lib/buffer.c"
   return result;
 }
 
 
-# 277 "lib/buffer.c"
+# 269 "lib/buffer.c"
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
-# 278 "lib/buffer.c"
+# 270 "lib/buffer.c"
 {
 
-# 279 "lib/buffer.c"
+# 271 "lib/buffer.c"
   if ((code_point<0x80))
 
-# 279 "lib/buffer.c"
+# 271 "lib/buffer.c"
   {
 
-# 281 "lib/buffer.c"
+# 273 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, code_point));
 
-# 282 "lib/buffer.c"
+# 274 "lib/buffer.c"
     return buffer;
   }
   else
 
-# 283 "lib/buffer.c"
+# 275 "lib/buffer.c"
   if ((code_point<0x800))
 
-# 283 "lib/buffer.c"
+# 275 "lib/buffer.c"
   {
 
-# 285 "lib/buffer.c"
+# 277 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
 
-# 286 "lib/buffer.c"
+# 278 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
 
-# 287 "lib/buffer.c"
+# 279 "lib/buffer.c"
     return buffer;
   }
   else
 
-# 288 "lib/buffer.c"
+# 280 "lib/buffer.c"
   if ((code_point<0x10000))
 
-# 288 "lib/buffer.c"
+# 280 "lib/buffer.c"
   {
 
-# 290 "lib/buffer.c"
+# 282 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
 
-# 291 "lib/buffer.c"
+# 283 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
 
-# 292 "lib/buffer.c"
+# 284 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
 
-# 293 "lib/buffer.c"
+# 285 "lib/buffer.c"
     return buffer;
   }
   else
 
-# 294 "lib/buffer.c"
+# 286 "lib/buffer.c"
   if ((code_point<=0x10FFFF))
 
-# 294 "lib/buffer.c"
+# 286 "lib/buffer.c"
   {
 
-# 296 "lib/buffer.c"
+# 288 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
 
-# 297 "lib/buffer.c"
+# 289 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
 
-# 298 "lib/buffer.c"
+# 290 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
 
-# 299 "lib/buffer.c"
+# 291 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
 
-# 300 "lib/buffer.c"
+# 292 "lib/buffer.c"
     return buffer;
   }
   else
 
-# 301 "lib/buffer.c"
+# 293 "lib/buffer.c"
   {
 
-# 303 "lib/buffer.c"
+# 295 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
 
-# 304 "lib/buffer.c"
+# 296 "lib/buffer.c"
     return 0;
   }
 }
 
 
-# 312 "lib/buffer.c"
+# 304 "lib/buffer.c"
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str)
-# 313 "lib/buffer.c"
+# 305 "lib/buffer.c"
 {
 
-# 314 "lib/buffer.c"
+# 306 "lib/buffer.c"
   for (
 
-# 314 "lib/buffer.c"
+# 306 "lib/buffer.c"
 
-# 314 "lib/buffer.c"
+# 306 "lib/buffer.c"
     uint64_t pos = start_position;
 
-# 314 "lib/buffer.c"
+# 306 "lib/buffer.c"
     true;
 
-# 314 "lib/buffer.c"
+# 306 "lib/buffer.c"
     (pos++))
 
-# 314 "lib/buffer.c"
+# 306 "lib/buffer.c"
   {
 
-# 315 "lib/buffer.c"
+# 307 "lib/buffer.c"
     uint8_t byte_str = ((/*CAST*/(uint8_t*) str)[(pos-start_position)]);
 
-# 316 "lib/buffer.c"
+# 308 "lib/buffer.c"
     if ((byte_str==0))
 
-# 316 "lib/buffer.c"
+# 308 "lib/buffer.c"
     {
 
-# 317 "lib/buffer.c"
+# 309 "lib/buffer.c"
       return true;
     }
 
-# 319 "lib/buffer.c"
+# 311 "lib/buffer.c"
     if ((pos>=buffer_length(buffer)))
 
-# 319 "lib/buffer.c"
+# 311 "lib/buffer.c"
     {
 
-# 320 "lib/buffer.c"
+# 312 "lib/buffer.c"
       return false;
     }
 
-# 322 "lib/buffer.c"
+# 314 "lib/buffer.c"
     uint8_t byte_buf = buffer_get(buffer, pos);
 
-# 323 "lib/buffer.c"
+# 315 "lib/buffer.c"
     if ((byte_str!=byte_buf))
 
-# 323 "lib/buffer.c"
+# 315 "lib/buffer.c"
     {
 
-# 324 "lib/buffer.c"
+# 316 "lib/buffer.c"
       return false;
     }
   }
 
-# 328 "lib/buffer.c"
+# 320 "lib/buffer.c"
   return false;
 }
 
 
-# 338 "lib/buffer.c"
+# 330 "lib/buffer.c"
 buffer_t* buffer_from_string(char* string)
-# 338 "lib/buffer.c"
+# 330 "lib/buffer.c"
 {
 
-# 339 "lib/buffer.c"
+# 331 "lib/buffer.c"
   buffer_t* result = make_buffer(strlen(string));
 
-# 340 "lib/buffer.c"
+# 332 "lib/buffer.c"
   (result=buffer_append_string(result, string));
 
-# 341 "lib/buffer.c"
+# 333 "lib/buffer.c"
   return result;
 }
 
 
-# 351 "lib/buffer.c"
+# 343 "lib/buffer.c"
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width)
-# 352 "lib/buffer.c"
+# 344 "lib/buffer.c"
 {
 
-# 354 "lib/buffer.c"
+# 346 "lib/buffer.c"
   if ((start>end))
 
-# 354 "lib/buffer.c"
+# 346 "lib/buffer.c"
   {
 
-# 355 "lib/buffer.c"
+# 347 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
 
-# 357 "lib/buffer.c"
+# 349 "lib/buffer.c"
   uint64_t original_width = (end-start);
 
-# 358 "lib/buffer.c"
+# 350 "lib/buffer.c"
   if ((original_width>new_width))
+
+# 350 "lib/buffer.c"
+  {
+
+# 353 "lib/buffer.c"
+    uint64_t difference = (original_width-new_width);
+
+# 354 "lib/buffer.c"
+    uint64_t tail_length = ((buffer->length)-end);
+
+# 355 "lib/buffer.c"
+    memmove((&((buffer->elements)[(end-difference)])), (&((buffer->elements)[end])), tail_length);
+
+# 357 "lib/buffer.c"
+    ((buffer->length)-=difference);
+  }
+  else
+
+# 358 "lib/buffer.c"
+  if ((original_width<new_width))
 
 # 358 "lib/buffer.c"
   {
 
 # 361 "lib/buffer.c"
-    uint64_t difference = (original_width-new_width);
+    uint64_t difference = (new_width-original_width);
 
 # 362 "lib/buffer.c"
     uint64_t tail_length = ((buffer->length)-end);
 
 # 363 "lib/buffer.c"
-    memmove((&((buffer->elements)[(end-difference)])), (&((buffer->elements)[end])), tail_length);
-
-# 365 "lib/buffer.c"
-    ((buffer->length)-=difference);
-  }
-  else
-
-# 366 "lib/buffer.c"
-  if ((original_width<new_width))
-
-# 366 "lib/buffer.c"
-  {
-
-# 369 "lib/buffer.c"
-    uint64_t difference = (new_width-original_width);
-
-# 370 "lib/buffer.c"
-    uint64_t tail_length = ((buffer->length)-end);
-
-# 371 "lib/buffer.c"
     (buffer=buffer_increase_capacity(buffer, ((buffer->length)+difference)));
 
-# 372 "lib/buffer.c"
+# 364 "lib/buffer.c"
     memmove((&((buffer->elements)[(end+difference)])), (&((buffer->elements)[end])), tail_length);
 
-# 374 "lib/buffer.c"
+# 366 "lib/buffer.c"
     ((buffer->length)+=difference);
   }
 
-# 376 "lib/buffer.c"
+# 368 "lib/buffer.c"
   return buffer;
 }
 
 
-# 385 "lib/buffer.c"
+# 377 "lib/buffer.c"
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text)
-# 386 "lib/buffer.c"
+# 378 "lib/buffer.c"
 {
 
-# 387 "lib/buffer.c"
+# 379 "lib/buffer.c"
   int len_original = strlen(original_text);
 
-# 388 "lib/buffer.c"
+# 380 "lib/buffer.c"
   int len_replacement = strlen(replacement_text);
 
-# 389 "lib/buffer.c"
+# 381 "lib/buffer.c"
   if ((len_original<(buffer->length)))
 
-# 389 "lib/buffer.c"
+# 381 "lib/buffer.c"
   {
 
-# 390 "lib/buffer.c"
+# 382 "lib/buffer.c"
     uint64_t pos = 0;
 
-# 391 "lib/buffer.c"
+# 383 "lib/buffer.c"
     while ((pos<=((buffer->length)-len_original)))
 
-# 391 "lib/buffer.c"
+# 383 "lib/buffer.c"
     {
 
-# 392 "lib/buffer.c"
+# 384 "lib/buffer.c"
       if (buffer_match_string_at(buffer, pos, original_text))
 
-# 392 "lib/buffer.c"
+# 384 "lib/buffer.c"
       {
 
-# 393 "lib/buffer.c"
+# 385 "lib/buffer.c"
         (buffer=buffer_adjust_region(buffer, pos, (pos+len_original), len_replacement));
 
-# 395 "lib/buffer.c"
+# 387 "lib/buffer.c"
         memmove((&((buffer->elements)[pos])), replacement_text, len_replacement);
 
-# 396 "lib/buffer.c"
+# 388 "lib/buffer.c"
         (pos+=len_replacement);
       }
       else
 
-# 397 "lib/buffer.c"
+# 389 "lib/buffer.c"
       {
 
-# 398 "lib/buffer.c"
+# 390 "lib/buffer.c"
         (pos++);
       }
     }
   }
 
-# 402 "lib/buffer.c"
+# 394 "lib/buffer.c"
   return buffer;
 }
 
 
-# 405 "lib/buffer.c"
+# 397 "lib/buffer.c"
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position)
-# 406 "lib/buffer.c"
+# 398 "lib/buffer.c"
 {
 
-# 407 "lib/buffer.c"
+# 399 "lib/buffer.c"
   uint64_t line = 1;
 
-# 408 "lib/buffer.c"
+# 400 "lib/buffer.c"
   uint64_t column = 1;
 
-# 412 "lib/buffer.c"
+# 404 "lib/buffer.c"
   for (
 
-# 412 "lib/buffer.c"
+# 404 "lib/buffer.c"
 
-# 412 "lib/buffer.c"
+# 404 "lib/buffer.c"
     uint64_t pos = 0;
 
-# 412 "lib/buffer.c"
+# 404 "lib/buffer.c"
     (pos<position);
 
-# 412 "lib/buffer.c"
+# 404 "lib/buffer.c"
     (pos++))
 
-# 412 "lib/buffer.c"
+# 404 "lib/buffer.c"
   {
 
-# 413 "lib/buffer.c"
+# 405 "lib/buffer.c"
     uint8_t ch = buffer_get(buffer, pos);
 
-# 414 "lib/buffer.c"
+# 406 "lib/buffer.c"
     if ((ch=='\n'))
 
-# 414 "lib/buffer.c"
+# 406 "lib/buffer.c"
     {
 
-# 415 "lib/buffer.c"
+# 407 "lib/buffer.c"
       (line++);
 
-# 416 "lib/buffer.c"
+# 408 "lib/buffer.c"
       (column=1);
     }
     else
 
-# 417 "lib/buffer.c"
+# 409 "lib/buffer.c"
     {
 
-# 418 "lib/buffer.c"
+# 410 "lib/buffer.c"
       (column++);
     }
   }
 
-# 421 "lib/buffer.c"
+# 413 "lib/buffer.c"
   return ((line_and_column_t) {
                                                  .line = line,
                                                  .column = column,
@@ -6723,248 +7193,274 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t 
 }
 
 
-# 432 "lib/buffer.c"
+# 424 "lib/buffer.c"
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text)
-# 433 "lib/buffer.c"
+# 425 "lib/buffer.c"
 {
 
-# 434 "lib/buffer.c"
+# 426 "lib/buffer.c"
   for (
 
-# 434 "lib/buffer.c"
+# 426 "lib/buffer.c"
 
-# 434 "lib/buffer.c"
+# 426 "lib/buffer.c"
     int i = start;
 
-# 434 "lib/buffer.c"
+# 426 "lib/buffer.c"
     (i<end);
 
-# 434 "lib/buffer.c"
+# 426 "lib/buffer.c"
     (i++))
 
-# 434 "lib/buffer.c"
+# 426 "lib/buffer.c"
   {
 
-# 435 "lib/buffer.c"
+# 427 "lib/buffer.c"
     if (buffer_match_string_at(buffer, i, text))
 
-# 435 "lib/buffer.c"
+# 427 "lib/buffer.c"
     {
 
-# 436 "lib/buffer.c"
+# 428 "lib/buffer.c"
       return true;
     }
   }
 
-# 439 "lib/buffer.c"
+# 431 "lib/buffer.c"
   return false;
 }
 
 
-# 450 "lib/buffer.c"
+# 442 "lib/buffer.c"
 buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement)
-# 451 "lib/buffer.c"
+# 443 "lib/buffer.c"
 {
 
-# 452 "lib/buffer.c"
+# 444 "lib/buffer.c"
   for (
 
-# 452 "lib/buffer.c"
+# 444 "lib/buffer.c"
 
-# 452 "lib/buffer.c"
+# 444 "lib/buffer.c"
     int i = 0;
 
-# 452 "lib/buffer.c"
+# 444 "lib/buffer.c"
     (i<(buffer->length));
 
-# 452 "lib/buffer.c"
+# 444 "lib/buffer.c"
     (i++))
 
-# 452 "lib/buffer.c"
+# 444 "lib/buffer.c"
   {
 
-# 453 "lib/buffer.c"
+# 445 "lib/buffer.c"
     if ((((buffer->elements)[i])==original))
 
-# 453 "lib/buffer.c"
+# 445 "lib/buffer.c"
     {
 
-# 454 "lib/buffer.c"
+# 446 "lib/buffer.c"
       (((buffer->elements)[i])=replacement);
     }
   }
 
-# 457 "lib/buffer.c"
+# 449 "lib/buffer.c"
   return buffer;
 }
 
 
-# 467 "lib/buffer.c"
+# 459 "lib/buffer.c"
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
-# 467 "lib/buffer.c"
+# 459 "lib/buffer.c"
 {
 
-# 468 "lib/buffer.c"
+# 460 "lib/buffer.c"
   uint64_t position = start;
 
-# 469 "lib/buffer.c"
+# 461 "lib/buffer.c"
   while ((position>0))
 
-# 469 "lib/buffer.c"
+# 461 "lib/buffer.c"
   {
 
-# 470 "lib/buffer.c"
+# 462 "lib/buffer.c"
     (position--);
 
-# 471 "lib/buffer.c"
+# 463 "lib/buffer.c"
     if ((buffer_get(buffer, position)=='\n'))
 
-# 471 "lib/buffer.c"
+# 463 "lib/buffer.c"
     {
 
-# 472 "lib/buffer.c"
+# 464 "lib/buffer.c"
       return (position+1);
     }
   }
 
-# 475 "lib/buffer.c"
+# 467 "lib/buffer.c"
   return position;
 }
 
 
-# 486 "lib/buffer.c"
+# 478 "lib/buffer.c"
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start)
-# 486 "lib/buffer.c"
+# 478 "lib/buffer.c"
 {
 
-# 487 "lib/buffer.c"
+# 479 "lib/buffer.c"
   uint64_t position = start;
 
-# 488 "lib/buffer.c"
+# 480 "lib/buffer.c"
   while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
 
-# 488 "lib/buffer.c"
+# 480 "lib/buffer.c"
   {
 
-# 489 "lib/buffer.c"
+# 481 "lib/buffer.c"
     (position++);
   }
 
-# 491 "lib/buffer.c"
+# 483 "lib/buffer.c"
   return position;
 }
 
 
-# 501 "lib/buffer.c"
+# 493 "lib/buffer.c"
 extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer)
-# 501 "lib/buffer.c"
+# 493 "lib/buffer.c"
 {
 
-# 502 "lib/buffer.c"
+# 494 "lib/buffer.c"
   return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
 }
 
 
-# 513 "lib/buffer.c"
+# 505 "lib/buffer.c"
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer)
-# 516 "lib/buffer.c"
+# 508 "lib/buffer.c"
 {
 
-# 517 "lib/buffer.c"
+# 509 "lib/buffer.c"
   if ((buffer==src_buffer))
 
-# 517 "lib/buffer.c"
+# 509 "lib/buffer.c"
   {
 
-# 518 "lib/buffer.c"
+# 510 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 520 "lib/buffer.c"
+# 512 "lib/buffer.c"
   for (
 
-# 520 "lib/buffer.c"
+# 512 "lib/buffer.c"
 
-# 520 "lib/buffer.c"
+# 512 "lib/buffer.c"
     uint64_t position = start_position;
 
-# 520 "lib/buffer.c"
+# 512 "lib/buffer.c"
     (position<end_position);
 
-# 520 "lib/buffer.c"
+# 512 "lib/buffer.c"
     (position++))
 
-# 521 "lib/buffer.c"
+# 513 "lib/buffer.c"
   {
 
-# 522 "lib/buffer.c"
+# 514 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
   }
 
-# 524 "lib/buffer.c"
+# 516 "lib/buffer.c"
   return buffer;
 }
 
 
-# 536 "lib/buffer.c"
+# 528 "lib/buffer.c"
 buffer_t* buffer_to_uppercase(buffer_t* buffer)
-# 536 "lib/buffer.c"
+# 528 "lib/buffer.c"
 {
 
-# 537 "lib/buffer.c"
+# 529 "lib/buffer.c"
   for (
 
-# 537 "lib/buffer.c"
+# 529 "lib/buffer.c"
 
-# 537 "lib/buffer.c"
+# 529 "lib/buffer.c"
     uint64_t i = 0;
 
-# 537 "lib/buffer.c"
+# 529 "lib/buffer.c"
     (i<(buffer->length));
 
-# 537 "lib/buffer.c"
+# 529 "lib/buffer.c"
     (i++))
 
-# 537 "lib/buffer.c"
+# 529 "lib/buffer.c"
   {
 
-# 538 "lib/buffer.c"
+# 530 "lib/buffer.c"
     (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
   }
 
-# 540 "lib/buffer.c"
+# 532 "lib/buffer.c"
   return buffer;
 }
 
 
-# 552 "lib/buffer.c"
+# 544 "lib/buffer.c"
 buffer_t* buffer_to_lowercase(buffer_t* buffer)
-# 552 "lib/buffer.c"
+# 544 "lib/buffer.c"
 {
 
-# 553 "lib/buffer.c"
+# 545 "lib/buffer.c"
   for (
 
-# 553 "lib/buffer.c"
+# 545 "lib/buffer.c"
 
-# 553 "lib/buffer.c"
+# 545 "lib/buffer.c"
     uint64_t i = 0;
 
-# 553 "lib/buffer.c"
+# 545 "lib/buffer.c"
     (i<(buffer->length));
 
-# 553 "lib/buffer.c"
+# 545 "lib/buffer.c"
     (i++))
 
-# 553 "lib/buffer.c"
+# 545 "lib/buffer.c"
   {
 
-# 554 "lib/buffer.c"
+# 546 "lib/buffer.c"
     (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
   }
 
-# 556 "lib/buffer.c"
+# 548 "lib/buffer.c"
   return buffer;
+}
+
+
+# 551 "lib/buffer.c"
+boolean_t buffer_ends_with(buffer_t* buffer, char* str)
+# 551 "lib/buffer.c"
+{
+
+# 553 "lib/buffer.c"
+  char* cstring = buffer_to_c_string(buffer);
+
+# 554 "lib/buffer.c"
+  return string_ends_with(cstring, str);
+}
+
+
+# 557 "lib/buffer.c"
+boolean_t buffer_equal(buffer_t* buffer, char* str)
+# 557 "lib/buffer.c"
+{
+
+# 559 "lib/buffer.c"
+  char* cstring = buffer_to_c_string(buffer);
+
+# 560 "lib/buffer.c"
+  return string_equal(cstring, str);
 }
 
 
@@ -7136,651 +7632,651 @@ byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, u
 }
 
 
-# 66 "lib/value-array.c"
+# 46 "lib/value-array.c"
 value_array_t* make_value_array(uint64_t initial_capacity)
-# 66 "lib/value-array.c"
+# 46 "lib/value-array.c"
 {
 
-# 67 "lib/value-array.c"
+# 47 "lib/value-array.c"
   if ((initial_capacity==0))
 
-# 67 "lib/value-array.c"
+# 47 "lib/value-array.c"
   {
 
-# 68 "lib/value-array.c"
+# 48 "lib/value-array.c"
     (initial_capacity=1);
   }
 
-# 71 "lib/value-array.c"
+# 51 "lib/value-array.c"
   value_array_t* result = malloc_struct(value_array_t);
 
-# 72 "lib/value-array.c"
+# 52 "lib/value-array.c"
   ((result->capacity)=initial_capacity);
 
-# 73 "lib/value-array.c"
+# 53 "lib/value-array.c"
   ((result->elements)=(/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*initial_capacity))));
 
-# 76 "lib/value-array.c"
+# 56 "lib/value-array.c"
   return result;
 }
 
 
-# 104 "lib/value-array.c"
-value_t value_array_get(value_array_t* array, uint32_t index)
-# 104 "lib/value-array.c"
+# 59 "lib/value-array.c"
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity)
+# 60 "lib/value-array.c"
 {
 
-# 105 "lib/value-array.c"
-  if ((index<(array->length)))
+# 61 "lib/value-array.c"
+  if (((array->capacity)<required_capacity))
 
-# 105 "lib/value-array.c"
+# 61 "lib/value-array.c"
   {
 
-# 106 "lib/value-array.c"
+# 62 "lib/value-array.c"
+    uint32_t new_capacity = ((array->capacity)*2);
+
+# 63 "lib/value-array.c"
+    if ((new_capacity<required_capacity))
+
+# 63 "lib/value-array.c"
+    {
+
+# 64 "lib/value-array.c"
+      (new_capacity=required_capacity);
+    }
+
+# 66 "lib/value-array.c"
+    value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
+
+# 68 "lib/value-array.c"
+    for (
+
+# 68 "lib/value-array.c"
+
+# 68 "lib/value-array.c"
+      int i = 0;
+
+# 68 "lib/value-array.c"
+      (i<(array->length));
+
+# 68 "lib/value-array.c"
+      (i++))
+
+# 68 "lib/value-array.c"
+    {
+
+# 69 "lib/value-array.c"
+      ((new_elements[i])=((array->elements)[i]));
+    }
+
+# 71 "lib/value-array.c"
+    ((array->capacity)=new_capacity);
+
+# 72 "lib/value-array.c"
+    free_bytes((array->elements));
+
+# 73 "lib/value-array.c"
+    ((array->elements)=new_elements);
+
+# 74 "lib/value-array.c"
+    return;
+  }
+}
+
+
+# 84 "lib/value-array.c"
+value_t value_array_get(value_array_t* array, uint32_t index)
+# 84 "lib/value-array.c"
+{
+
+# 85 "lib/value-array.c"
+  if ((index<(array->length)))
+
+# 85 "lib/value-array.c"
+  {
+
+# 86 "lib/value-array.c"
     return ((array->elements)[index]);
   }
 
-# 108 "lib/value-array.c"
+# 88 "lib/value-array.c"
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 
-# 110 "lib/value-array.c"
+# 90 "lib/value-array.c"
   return ((value_t) {0});
 }
 
 
-# 119 "lib/value-array.c"
+# 99 "lib/value-array.c"
 void value_array_replace(value_array_t* array, uint32_t index, value_t element)
-# 120 "lib/value-array.c"
+# 100 "lib/value-array.c"
 {
 
-# 121 "lib/value-array.c"
+# 101 "lib/value-array.c"
   if ((index<(array->length)))
 
-# 121 "lib/value-array.c"
+# 101 "lib/value-array.c"
   {
 
-# 122 "lib/value-array.c"
+# 102 "lib/value-array.c"
     (((array->elements)[index])=element);
 
-# 123 "lib/value-array.c"
+# 103 "lib/value-array.c"
     return;
   }
 
-# 125 "lib/value-array.c"
+# 105 "lib/value-array.c"
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 }
 
 
-# 136 "lib/value-array.c"
+# 116 "lib/value-array.c"
 void value_array_add(value_array_t* array, value_t element)
-# 136 "lib/value-array.c"
+# 116 "lib/value-array.c"
 {
 
-# 137 "lib/value-array.c"
+# 117 "lib/value-array.c"
   value_array_ensure_capacity(array, ((array->length)+1));
 
-# 138 "lib/value-array.c"
+# 118 "lib/value-array.c"
   (((array->elements)[((array->length)++)])=element);
 }
 
 
-# 147 "lib/value-array.c"
+# 127 "lib/value-array.c"
 void value_array_push(value_array_t* array, value_t element)
-# 147 "lib/value-array.c"
+# 127 "lib/value-array.c"
 {
 
-# 148 "lib/value-array.c"
+# 128 "lib/value-array.c"
   value_array_add(array, element);
 }
 
 
-# 162 "lib/value-array.c"
+# 142 "lib/value-array.c"
 value_t value_array_pop(value_array_t* array)
-# 162 "lib/value-array.c"
+# 142 "lib/value-array.c"
 {
 
-# 163 "lib/value-array.c"
+# 143 "lib/value-array.c"
   if (((array->length)==0))
 
-# 163 "lib/value-array.c"
+# 143 "lib/value-array.c"
   {
 
-# 164 "lib/value-array.c"
+# 144 "lib/value-array.c"
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 
-# 166 "lib/value-array.c"
+# 146 "lib/value-array.c"
   uint32_t last_index = ((array->length)-1);
 
-# 167 "lib/value-array.c"
+# 147 "lib/value-array.c"
   value_t result = value_array_get(array, last_index);
 
-# 168 "lib/value-array.c"
+# 148 "lib/value-array.c"
   (((array->elements)[last_index])=u64_to_value(0));
 
-# 169 "lib/value-array.c"
+# 149 "lib/value-array.c"
   ((array->length)--);
 
-# 170 "lib/value-array.c"
+# 150 "lib/value-array.c"
   return result;
 }
 
 
-# 190 "lib/value-array.c"
+# 170 "lib/value-array.c"
 void value_array_insert_at(value_array_t* array, uint32_t position, value_t element)
-# 191 "lib/value-array.c"
+# 171 "lib/value-array.c"
 {
 
-# 192 "lib/value-array.c"
+# 172 "lib/value-array.c"
   if ((position==(array->length)))
 
-# 192 "lib/value-array.c"
+# 172 "lib/value-array.c"
   {
 
-# 193 "lib/value-array.c"
+# 173 "lib/value-array.c"
     value_array_add(array, element);
 
-# 194 "lib/value-array.c"
+# 174 "lib/value-array.c"
     return;
   }
 
-# 197 "lib/value-array.c"
+# 177 "lib/value-array.c"
   if ((position>(array->length)))
 
-# 197 "lib/value-array.c"
+# 177 "lib/value-array.c"
   {
 
-# 198 "lib/value-array.c"
+# 178 "lib/value-array.c"
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 
-# 199 "lib/value-array.c"
+# 179 "lib/value-array.c"
     return;
   }
 
-# 202 "lib/value-array.c"
+# 182 "lib/value-array.c"
   value_array_ensure_capacity(array, ((array->length)+1));
 
-# 207 "lib/value-array.c"
+# 187 "lib/value-array.c"
   for (
 
-# 207 "lib/value-array.c"
+# 187 "lib/value-array.c"
 
-# 207 "lib/value-array.c"
+# 187 "lib/value-array.c"
     int64_t i = ((array->length)-1);
 
-# 207 "lib/value-array.c"
+# 187 "lib/value-array.c"
     (i>=position);
 
-# 207 "lib/value-array.c"
+# 187 "lib/value-array.c"
     (i--))
 
-# 207 "lib/value-array.c"
+# 187 "lib/value-array.c"
   {
 
-# 208 "lib/value-array.c"
+# 188 "lib/value-array.c"
     (((array->elements)[(i+1)])=((array->elements)[i]));
   }
 
-# 210 "lib/value-array.c"
+# 190 "lib/value-array.c"
   ((array->length)++);
 
-# 211 "lib/value-array.c"
+# 191 "lib/value-array.c"
   (((array->elements)[position])=element);
 }
 
 
-# 223 "lib/value-array.c"
+# 203 "lib/value-array.c"
 value_t value_array_delete_at(value_array_t* array, uint32_t position)
-# 223 "lib/value-array.c"
+# 203 "lib/value-array.c"
 {
 
-# 224 "lib/value-array.c"
+# 204 "lib/value-array.c"
   value_t result = value_array_get(array, position);
 
-# 225 "lib/value-array.c"
+# 205 "lib/value-array.c"
   for (
 
-# 225 "lib/value-array.c"
+# 205 "lib/value-array.c"
 
-# 225 "lib/value-array.c"
+# 205 "lib/value-array.c"
     int i = position;
 
-# 225 "lib/value-array.c"
+# 205 "lib/value-array.c"
     (i<((array->length)-1));
 
-# 225 "lib/value-array.c"
+# 205 "lib/value-array.c"
     (i++))
 
-# 225 "lib/value-array.c"
+# 205 "lib/value-array.c"
   {
 
-# 226 "lib/value-array.c"
+# 206 "lib/value-array.c"
     (((array->elements)[i])=((array->elements)[(i+1)]));
   }
 
-# 228 "lib/value-array.c"
+# 208 "lib/value-array.c"
   ((array->length)--);
 
-# 229 "lib/value-array.c"
+# 209 "lib/value-array.c"
   return result;
 }
 
 
-# 79 "lib/value-array.c"
-void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity)
-# 80 "lib/value-array.c"
-{
-
-# 81 "lib/value-array.c"
-  if (((array->capacity)<required_capacity))
-
-# 81 "lib/value-array.c"
-  {
-
-# 82 "lib/value-array.c"
-    uint32_t new_capacity = ((array->capacity)*2);
-
-# 83 "lib/value-array.c"
-    if ((new_capacity<required_capacity))
-
-# 83 "lib/value-array.c"
-    {
-
-# 84 "lib/value-array.c"
-      (new_capacity=required_capacity);
-    }
-
-# 86 "lib/value-array.c"
-    value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
-
-# 88 "lib/value-array.c"
-    for (
-
-# 88 "lib/value-array.c"
-
-# 88 "lib/value-array.c"
-      int i = 0;
-
-# 88 "lib/value-array.c"
-      (i<(array->length));
-
-# 88 "lib/value-array.c"
-      (i++))
-
-# 88 "lib/value-array.c"
-    {
-
-# 89 "lib/value-array.c"
-      ((new_elements[i])=((array->elements)[i]));
-    }
-
-# 91 "lib/value-array.c"
-    ((array->capacity)=new_capacity);
-
-# 92 "lib/value-array.c"
-    free_bytes((array->elements));
-
-# 93 "lib/value-array.c"
-    ((array->elements)=new_elements);
-
-# 94 "lib/value-array.c"
-    return;
-  }
-}
-
-
-# 97 "lib/value-alist.c"
-value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
-# 98 "lib/value-alist.c"
-{
-
-# 99 "lib/value-alist.c"
-  while (list)
-
-# 99 "lib/value-alist.c"
-  {
-
-# 100 "lib/value-alist.c"
-    if ((cmp_fn(key, (list->key))==0))
-
-# 100 "lib/value-alist.c"
-    {
-
-# 101 "lib/value-alist.c"
-      return ((value_result_t) {.val = list->value});
-    }
-
-# 103 "lib/value-alist.c"
-    (list=(list->next));
-  }
-
-# 105 "lib/value-alist.c"
-  return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
-}
-
-
-# 57 "lib/value-alist.c"
+# 35 "lib/value-alist.c"
 value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value)
-# 59 "lib/value-alist.c"
+# 37 "lib/value-alist.c"
 {
 
-# 60 "lib/value-alist.c"
+# 38 "lib/value-alist.c"
   value_alist_t* result = malloc_struct(value_alist_t);
 
-# 61 "lib/value-alist.c"
+# 39 "lib/value-alist.c"
   ((result->next)=value_alist_delete(list, cmp_fn, key));
 
-# 62 "lib/value-alist.c"
+# 40 "lib/value-alist.c"
   ((result->key)=key);
 
-# 63 "lib/value-alist.c"
+# 41 "lib/value-alist.c"
   ((result->value)=value);
 
-# 64 "lib/value-alist.c"
+# 42 "lib/value-alist.c"
   return result;
 }
 
 
-# 74 "lib/value-alist.c"
+# 52 "lib/value-alist.c"
 value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
-# 75 "lib/value-alist.c"
+# 53 "lib/value-alist.c"
 {
 
-# 78 "lib/value-alist.c"
+# 56 "lib/value-alist.c"
   if ((list==NULL))
 
-# 78 "lib/value-alist.c"
+# 56 "lib/value-alist.c"
   {
 
-# 79 "lib/value-alist.c"
+# 57 "lib/value-alist.c"
     return list;
   }
 
-# 81 "lib/value-alist.c"
+# 59 "lib/value-alist.c"
   if (((*cmp_fn)(key, (list->key))==0))
 
-# 81 "lib/value-alist.c"
+# 59 "lib/value-alist.c"
   {
 
-# 82 "lib/value-alist.c"
+# 60 "lib/value-alist.c"
     value_alist_t* result = (list->next);
 
-# 83 "lib/value-alist.c"
+# 61 "lib/value-alist.c"
     free_bytes(list);
 
-# 84 "lib/value-alist.c"
+# 62 "lib/value-alist.c"
     return result;
   }
 
-# 86 "lib/value-alist.c"
+# 64 "lib/value-alist.c"
   ((list->next)=value_alist_delete((list->next), cmp_fn, key));
 
-# 87 "lib/value-alist.c"
+# 65 "lib/value-alist.c"
   return list;
 }
 
 
-# 116 "lib/value-alist.c"
-__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list)
-# 116 "lib/value-alist.c"
+# 75 "lib/value-alist.c"
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
+# 76 "lib/value-alist.c"
 {
 
-# 117 "lib/value-alist.c"
-  uint64_t result = 0;
-
-# 118 "lib/value-alist.c"
+# 77 "lib/value-alist.c"
   while (list)
 
-# 118 "lib/value-alist.c"
+# 77 "lib/value-alist.c"
   {
 
-# 119 "lib/value-alist.c"
-    (result++);
+# 78 "lib/value-alist.c"
+    if ((cmp_fn(key, (list->key))==0))
 
-# 120 "lib/value-alist.c"
+# 78 "lib/value-alist.c"
+    {
+
+# 79 "lib/value-alist.c"
+      return ((value_result_t) {.val = list->value});
+    }
+
+# 81 "lib/value-alist.c"
     (list=(list->next));
   }
 
-# 122 "lib/value-alist.c"
+# 83 "lib/value-alist.c"
+  return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
+}
+
+
+# 94 "lib/value-alist.c"
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list)
+# 94 "lib/value-alist.c"
+{
+
+# 95 "lib/value-alist.c"
+  uint64_t result = 0;
+
+# 96 "lib/value-alist.c"
+  while (list)
+
+# 96 "lib/value-alist.c"
+  {
+
+# 97 "lib/value-alist.c"
+    (result++);
+
+# 98 "lib/value-alist.c"
+    (list=(list->next));
+  }
+
+# 100 "lib/value-alist.c"
   return result;
 }
 
 
-# 102 "lib/value-hashtable.c"
+# 75 "lib/value-hashtable.c"
 value_hashtable_t* make_value_hashtable(uint64_t n_buckets)
-# 102 "lib/value-hashtable.c"
+# 75 "lib/value-hashtable.c"
 {
 
-# 103 "lib/value-hashtable.c"
+# 76 "lib/value-hashtable.c"
   if ((n_buckets<2))
 
-# 103 "lib/value-hashtable.c"
+# 76 "lib/value-hashtable.c"
   {
 
-# 104 "lib/value-hashtable.c"
+# 77 "lib/value-hashtable.c"
     (n_buckets=2);
   }
 
-# 106 "lib/value-hashtable.c"
+# 79 "lib/value-hashtable.c"
   value_hashtable_t* result = malloc_struct(value_hashtable_t);
 
-# 107 "lib/value-hashtable.c"
+# 80 "lib/value-hashtable.c"
   ((result->n_buckets)=n_buckets);
 
-# 108 "lib/value-hashtable.c"
+# 81 "lib/value-hashtable.c"
   ((result->buckets)=(/*CAST*/(value_alist_t**) malloc_bytes(((sizeof(typeof(value_alist_t*)))*n_buckets))));
 
-# 111 "lib/value-hashtable.c"
+# 84 "lib/value-hashtable.c"
   return result;
 }
 
 
-# 119 "lib/value-hashtable.c"
+# 92 "lib/value-hashtable.c"
 value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value)
-# 121 "lib/value-hashtable.c"
+# 94 "lib/value-hashtable.c"
 {
 
-# 122 "lib/value-hashtable.c"
+# 95 "lib/value-hashtable.c"
   uint64_t hashcode = hash_fn(key);
 
-# 123 "lib/value-hashtable.c"
+# 96 "lib/value-hashtable.c"
   int bucket = (hashcode%(ht->n_buckets));
 
-# 124 "lib/value-hashtable.c"
+# 97 "lib/value-hashtable.c"
   value_alist_t* list = ((ht->buckets)[bucket]);
 
-# 125 "lib/value-hashtable.c"
+# 98 "lib/value-hashtable.c"
   uint64_t len = value_alist_length(list);
 
-# 126 "lib/value-hashtable.c"
+# 99 "lib/value-hashtable.c"
   (list=value_alist_insert(list, cmp_fn, key, value));
 
-# 127 "lib/value-hashtable.c"
+# 100 "lib/value-hashtable.c"
   (((ht->buckets)[bucket])=list);
 
-# 128 "lib/value-hashtable.c"
+# 101 "lib/value-hashtable.c"
   uint64_t len_after = value_alist_length(list);
 
-# 129 "lib/value-hashtable.c"
+# 102 "lib/value-hashtable.c"
   if ((len_after>len))
 
-# 129 "lib/value-hashtable.c"
+# 102 "lib/value-hashtable.c"
   {
 
-# 130 "lib/value-hashtable.c"
+# 103 "lib/value-hashtable.c"
     ((ht->n_entries)++);
 
-# 135 "lib/value-hashtable.c"
+# 108 "lib/value-hashtable.c"
     if (((ht->n_entries)>=((ht->n_buckets)*ARMYKNIFE_HT_LOAD_FACTOR)))
 
-# 135 "lib/value-hashtable.c"
+# 108 "lib/value-hashtable.c"
     {
 
-# 136 "lib/value-hashtable.c"
+# 109 "lib/value-hashtable.c"
       value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
     }
   }
 
-# 139 "lib/value-hashtable.c"
+# 112 "lib/value-hashtable.c"
   return ht;
 }
 
 
-# 148 "lib/value-hashtable.c"
+# 121 "lib/value-hashtable.c"
 value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
-# 149 "lib/value-hashtable.c"
+# 122 "lib/value-hashtable.c"
 {
 
-# 150 "lib/value-hashtable.c"
+# 123 "lib/value-hashtable.c"
   uint64_t hashcode = hash_fn(key);
 
-# 151 "lib/value-hashtable.c"
+# 124 "lib/value-hashtable.c"
   int bucket = (hashcode%(ht->n_buckets));
 
-# 152 "lib/value-hashtable.c"
+# 125 "lib/value-hashtable.c"
   value_alist_t* list = ((ht->buckets)[bucket]);
 
-# 153 "lib/value-hashtable.c"
+# 126 "lib/value-hashtable.c"
   uint64_t len = value_alist_length(list);
 
-# 154 "lib/value-hashtable.c"
+# 127 "lib/value-hashtable.c"
   (list=value_alist_delete(list, cmp_fn, key));
 
-# 155 "lib/value-hashtable.c"
+# 128 "lib/value-hashtable.c"
   (((ht->buckets)[bucket])=list);
 
-# 156 "lib/value-hashtable.c"
+# 129 "lib/value-hashtable.c"
   uint64_t len_after = value_alist_length(list);
 
-# 157 "lib/value-hashtable.c"
+# 130 "lib/value-hashtable.c"
   if ((len_after<len))
 
-# 157 "lib/value-hashtable.c"
+# 130 "lib/value-hashtable.c"
   {
 
-# 158 "lib/value-hashtable.c"
+# 131 "lib/value-hashtable.c"
     ((ht->n_entries)--);
   }
 
-# 160 "lib/value-hashtable.c"
+# 133 "lib/value-hashtable.c"
   return ht;
 }
 
 
-# 168 "lib/value-hashtable.c"
+# 141 "lib/value-hashtable.c"
 value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
-# 169 "lib/value-hashtable.c"
+# 142 "lib/value-hashtable.c"
 {
 
-# 170 "lib/value-hashtable.c"
+# 143 "lib/value-hashtable.c"
   uint64_t hashcode = hash_fn(key);
 
-# 171 "lib/value-hashtable.c"
+# 144 "lib/value-hashtable.c"
   int bucket = (hashcode%(ht->n_buckets));
 
-# 172 "lib/value-hashtable.c"
+# 145 "lib/value-hashtable.c"
   value_alist_t* list = ((ht->buckets)[bucket]);
 
-# 173 "lib/value-hashtable.c"
+# 146 "lib/value-hashtable.c"
   return value_alist_find(list, cmp_fn, key);
 }
 
 
-# 190 "lib/value-hashtable.c"
+# 163 "lib/value-hashtable.c"
 void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn)
-# 192 "lib/value-hashtable.c"
+# 165 "lib/value-hashtable.c"
 {
 
-# 193 "lib/value-hashtable.c"
+# 166 "lib/value-hashtable.c"
   uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
 
-# 194 "lib/value-hashtable.c"
+# 167 "lib/value-hashtable.c"
   value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
 
-# 196 "lib/value-hashtable.c"
+# 169 "lib/value-hashtable.c"
   value_ht_foreach(ht, key, value, 
-# 196 "lib/value-hashtable.c"
+# 169 "lib/value-hashtable.c"
   {
 
-# 197 "lib/value-hashtable.c"
+# 170 "lib/value-hashtable.c"
     value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
 
-# 203 "lib/value-hashtable.c"
+# 176 "lib/value-hashtable.c"
     if ((new_ht!=should_be_result))
 
-# 203 "lib/value-hashtable.c"
+# 176 "lib/value-hashtable.c"
     {
 
-# 204 "lib/value-hashtable.c"
+# 177 "lib/value-hashtable.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
 );
 
-# 208 "lib/value-hashtable.c"
+# 181 "lib/value-hashtable.c"
   value_alist_t** old_buckets = (ht->buckets);
 
-# 209 "lib/value-hashtable.c"
+# 182 "lib/value-hashtable.c"
   ((ht->buckets)=(new_ht->buckets));
 
-# 210 "lib/value-hashtable.c"
+# 183 "lib/value-hashtable.c"
   ((ht->n_buckets)=(new_ht->n_buckets));
 
-# 211 "lib/value-hashtable.c"
+# 184 "lib/value-hashtable.c"
   ((ht->n_entries)=(new_ht->n_entries));
 
-# 212 "lib/value-hashtable.c"
+# 185 "lib/value-hashtable.c"
   free_bytes(old_buckets);
 
-# 213 "lib/value-hashtable.c"
+# 186 "lib/value-hashtable.c"
   free_bytes(new_ht);
 }
 
 
-# 91 "lib/value-tree.c"
+# 72 "lib/value-tree.c"
 value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
-# 92 "lib/value-tree.c"
+# 73 "lib/value-tree.c"
 {
 
-# 93 "lib/value-tree.c"
+# 74 "lib/value-tree.c"
   if ((t==NULL))
 
-# 93 "lib/value-tree.c"
+# 74 "lib/value-tree.c"
   {
 
-# 94 "lib/value-tree.c"
+# 75 "lib/value-tree.c"
     return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
   }
 
-# 97 "lib/value-tree.c"
+# 78 "lib/value-tree.c"
   int cmp_result = cmp_fn(key, (t->key));
 
-# 98 "lib/value-tree.c"
+# 79 "lib/value-tree.c"
   if ((cmp_result<0))
 
-# 98 "lib/value-tree.c"
+# 79 "lib/value-tree.c"
   {
 
-# 99 "lib/value-tree.c"
+# 80 "lib/value-tree.c"
     return value_tree_find((t->left), cmp_fn, key);
   }
   else
 
-# 100 "lib/value-tree.c"
+# 81 "lib/value-tree.c"
   if ((cmp_result>0))
 
-# 100 "lib/value-tree.c"
+# 81 "lib/value-tree.c"
   {
 
-# 101 "lib/value-tree.c"
+# 82 "lib/value-tree.c"
     return value_tree_find((t->right), cmp_fn, key);
   }
   else
 
-# 102 "lib/value-tree.c"
+# 83 "lib/value-tree.c"
   {
 
-# 103 "lib/value-tree.c"
+# 84 "lib/value-tree.c"
     return ((value_result_t) {
                                                 .val = t->value,
                                             });
@@ -7788,230 +8284,100 @@ value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, valu
 }
 
 
-# 158 "lib/value-tree.c"
-value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value)
-# 159 "lib/value-tree.c"
-{
-
-# 160 "lib/value-tree.c"
-  if ((t==NULL))
-
-# 160 "lib/value-tree.c"
-  {
-
-# 162 "lib/value-tree.c"
-    return make_value_tree_leaf(key, value);
-  }
-
-# 164 "lib/value-tree.c"
-  int cmp_result = cmp_fn(key, (t->key));
-
-# 165 "lib/value-tree.c"
-  if ((cmp_result<0))
-
-# 165 "lib/value-tree.c"
-  {
-
-# 166 "lib/value-tree.c"
-    ((t->left)=value_tree_insert((t->left), cmp_fn, key, value));
-  }
-  else
-
-# 167 "lib/value-tree.c"
-  if ((cmp_result>0))
-
-# 167 "lib/value-tree.c"
-  {
-
-# 168 "lib/value-tree.c"
-    ((t->right)=value_tree_insert((t->right), cmp_fn, key, value));
-  }
-  else
-
-# 169 "lib/value-tree.c"
-  {
-
-# 173 "lib/value-tree.c"
-    ((t->value)=value);
-
-# 174 "lib/value-tree.c"
-    return t;
-  }
-
-# 177 "lib/value-tree.c"
-  (t=value_tree_skew(t));
-
-# 178 "lib/value-tree.c"
-  (t=value_tree_split(t));
-
-# 180 "lib/value-tree.c"
-  return t;
-}
-
-
-# 227 "lib/value-tree.c"
-value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
-# 228 "lib/value-tree.c"
-{
-
-# 230 "lib/value-tree.c"
-  if ((t==NULL))
-
-# 230 "lib/value-tree.c"
-  {
-
-# 231 "lib/value-tree.c"
-    return t;
-  }
-
-# 234 "lib/value-tree.c"
-  int cmp_result = cmp_fn(key, (t->key));
-
-# 235 "lib/value-tree.c"
-  if ((cmp_result<0))
-
-# 235 "lib/value-tree.c"
-  {
-
-# 236 "lib/value-tree.c"
-    ((t->left)=value_tree_delete((t->left), cmp_fn, key));
-  }
-  else
-
-# 237 "lib/value-tree.c"
-  if ((cmp_result>0))
-
-# 237 "lib/value-tree.c"
-  {
-
-# 238 "lib/value-tree.c"
-    ((t->right)=value_tree_delete((t->right), cmp_fn, key));
-  }
-  else
-
-# 239 "lib/value-tree.c"
-  {
-
-# 240 "lib/value-tree.c"
-    if (value_tree_is_leaf(t))
-
-# 240 "lib/value-tree.c"
-    {
-
-# 245 "lib/value-tree.c"
-      return NULL;
-    }
-    else
-
-# 246 "lib/value-tree.c"
-    if (((t->left)==NULL))
-
-# 246 "lib/value-tree.c"
-    {
-
-# 247 "lib/value-tree.c"
-      value_tree_t* L = value_tree_successor(t);
-
-# 251 "lib/value-tree.c"
-      ((t->key)=(L->key));
-
-# 252 "lib/value-tree.c"
-      ((t->value)=(L->value));
-
-# 253 "lib/value-tree.c"
-      ((t->right)=value_tree_delete((t->right), cmp_fn, (L->key)));
-    }
-    else
-
-# 254 "lib/value-tree.c"
-    {
-
-# 255 "lib/value-tree.c"
-      value_tree_t* L = value_tree_predecessor(t);
-
-# 259 "lib/value-tree.c"
-      ((t->key)=(L->key));
-
-# 260 "lib/value-tree.c"
-      ((t->value)=(L->value));
-
-# 261 "lib/value-tree.c"
-      ((t->left)=value_tree_delete((t->left), cmp_fn, (L->key)));
-    }
-  }
-
-# 268 "lib/value-tree.c"
-  (t=value_tree_decrease_level(t));
-
-# 269 "lib/value-tree.c"
-  (t=value_tree_skew(t));
-
-# 270 "lib/value-tree.c"
-  ((t->right)=value_tree_skew((t->right)));
-
-# 271 "lib/value-tree.c"
-  if (((t->right)!=NULL))
-
-# 271 "lib/value-tree.c"
-  {
-
-# 272 "lib/value-tree.c"
-    (((t->right)->right)=value_tree_skew(((t->right)->right)));
-  }
-
-# 274 "lib/value-tree.c"
-  (t=value_tree_split(t));
-
-# 275 "lib/value-tree.c"
-  ((t->right)=value_tree_split((t->right)));
-
-# 276 "lib/value-tree.c"
-  return t;
-}
-
-
-# 109 "lib/value-tree.c"
+# 90 "lib/value-tree.c"
 value_tree_t* value_tree_skew(value_tree_t* t)
-# 109 "lib/value-tree.c"
+# 90 "lib/value-tree.c"
 {
+
+# 91 "lib/value-tree.c"
+  if ((t==NULL))
+
+# 91 "lib/value-tree.c"
+  {
+
+# 92 "lib/value-tree.c"
+    return NULL;
+  }
+
+# 94 "lib/value-tree.c"
+  if (((t->left)==NULL))
+
+# 94 "lib/value-tree.c"
+  {
+
+# 95 "lib/value-tree.c"
+    return t;
+  }
+
+# 97 "lib/value-tree.c"
+  if ((((t->left)->level)==(t->level)))
+
+# 97 "lib/value-tree.c"
+  {
+
+# 98 "lib/value-tree.c"
+    value_tree_t* L = (t->left);
+
+# 99 "lib/value-tree.c"
+    ((t->left)=(L->right));
+
+# 100 "lib/value-tree.c"
+    ((L->right)=t);
+
+# 101 "lib/value-tree.c"
+    return L;
+  }
+
+# 103 "lib/value-tree.c"
+  return t;
+}
+
+
+# 106 "lib/value-tree.c"
+value_tree_t* value_tree_split(value_tree_t* t)
+# 106 "lib/value-tree.c"
+{
+
+# 107 "lib/value-tree.c"
+  if ((t==NULL))
+
+# 107 "lib/value-tree.c"
+  {
+
+# 108 "lib/value-tree.c"
+    return NULL;
+  }
 
 # 110 "lib/value-tree.c"
-  if ((t==NULL))
+  if ((((t->right)==NULL)||(((t->right)->right)==NULL)))
 
 # 110 "lib/value-tree.c"
   {
 
 # 111 "lib/value-tree.c"
-    return NULL;
-  }
-
-# 113 "lib/value-tree.c"
-  if (((t->left)==NULL))
-
-# 113 "lib/value-tree.c"
-  {
-
-# 114 "lib/value-tree.c"
     return t;
   }
 
-# 116 "lib/value-tree.c"
-  if ((((t->left)->level)==(t->level)))
+# 113 "lib/value-tree.c"
+  if (((t->level)==(((t->right)->right)->level)))
 
-# 116 "lib/value-tree.c"
+# 113 "lib/value-tree.c"
   {
 
+# 116 "lib/value-tree.c"
+    value_tree_t* R = (t->right);
+
 # 117 "lib/value-tree.c"
-    value_tree_t* L = (t->left);
+    ((t->right)=(R->left));
 
 # 118 "lib/value-tree.c"
-    ((t->left)=(L->right));
+    ((R->left)=t);
 
 # 119 "lib/value-tree.c"
-    ((L->right)=t);
+    ((R->level)++);
 
 # 120 "lib/value-tree.c"
-    return L;
+    return R;
   }
 
 # 122 "lib/value-tree.c"
@@ -8020,2136 +8386,2342 @@ value_tree_t* value_tree_skew(value_tree_t* t)
 
 
 # 125 "lib/value-tree.c"
-value_tree_t* value_tree_split(value_tree_t* t)
+value_tree_t* make_value_tree_leaf(value_t key, value_t value)
 # 125 "lib/value-tree.c"
 {
 
 # 126 "lib/value-tree.c"
-  if ((t==NULL))
-
-# 126 "lib/value-tree.c"
-  {
-
-# 127 "lib/value-tree.c"
-    return NULL;
-  }
-
-# 129 "lib/value-tree.c"
-  if ((((t->right)==NULL)||(((t->right)->right)==NULL)))
-
-# 129 "lib/value-tree.c"
-  {
-
-# 130 "lib/value-tree.c"
-    return t;
-  }
-
-# 132 "lib/value-tree.c"
-  if (((t->level)==(((t->right)->right)->level)))
-
-# 132 "lib/value-tree.c"
-  {
-
-# 135 "lib/value-tree.c"
-    value_tree_t* R = (t->right);
-
-# 136 "lib/value-tree.c"
-    ((t->right)=(R->left));
-
-# 137 "lib/value-tree.c"
-    ((R->left)=t);
-
-# 138 "lib/value-tree.c"
-    ((R->level)++);
-
-# 139 "lib/value-tree.c"
-    return R;
-  }
-
-# 141 "lib/value-tree.c"
-  return t;
-}
-
-
-# 144 "lib/value-tree.c"
-value_tree_t* make_value_tree_leaf(value_t key, value_t value)
-# 144 "lib/value-tree.c"
-{
-
-# 145 "lib/value-tree.c"
   value_tree_t* result = malloc_struct(value_tree_t);
 
-# 146 "lib/value-tree.c"
+# 127 "lib/value-tree.c"
   ((result->level)=1);
 
-# 147 "lib/value-tree.c"
+# 128 "lib/value-tree.c"
   ((result->key)=key);
 
-# 148 "lib/value-tree.c"
+# 129 "lib/value-tree.c"
   ((result->value)=value);
 
-# 149 "lib/value-tree.c"
+# 130 "lib/value-tree.c"
   return result;
 }
 
 
-# 187 "lib/value-tree.c"
-value_tree_t* value_tree_decrease_level(value_tree_t* t)
-# 187 "lib/value-tree.c"
+# 139 "lib/value-tree.c"
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value)
+# 140 "lib/value-tree.c"
 {
 
-# 188 "lib/value-tree.c"
-  if (((t->left)&&(t->right)))
+# 141 "lib/value-tree.c"
+  if ((t==NULL))
 
-# 188 "lib/value-tree.c"
+# 141 "lib/value-tree.c"
   {
 
-# 189 "lib/value-tree.c"
+# 143 "lib/value-tree.c"
+    return make_value_tree_leaf(key, value);
+  }
+
+# 145 "lib/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+# 146 "lib/value-tree.c"
+  if ((cmp_result<0))
+
+# 146 "lib/value-tree.c"
+  {
+
+# 147 "lib/value-tree.c"
+    ((t->left)=value_tree_insert((t->left), cmp_fn, key, value));
+  }
+  else
+
+# 148 "lib/value-tree.c"
+  if ((cmp_result>0))
+
+# 148 "lib/value-tree.c"
+  {
+
+# 149 "lib/value-tree.c"
+    ((t->right)=value_tree_insert((t->right), cmp_fn, key, value));
+  }
+  else
+
+# 150 "lib/value-tree.c"
+  {
+
+# 154 "lib/value-tree.c"
+    ((t->value)=value);
+
+# 155 "lib/value-tree.c"
+    return t;
+  }
+
+# 158 "lib/value-tree.c"
+  (t=value_tree_skew(t));
+
+# 159 "lib/value-tree.c"
+  (t=value_tree_split(t));
+
+# 161 "lib/value-tree.c"
+  return t;
+}
+
+
+# 168 "lib/value-tree.c"
+value_tree_t* value_tree_decrease_level(value_tree_t* t)
+# 168 "lib/value-tree.c"
+{
+
+# 169 "lib/value-tree.c"
+  if (((t->left)&&(t->right)))
+
+# 169 "lib/value-tree.c"
+  {
+
+# 170 "lib/value-tree.c"
     uint32_t should_be = (value_tree_min_level(((t->left)->level), ((t->right)->level))+1);
 
-# 191 "lib/value-tree.c"
+# 172 "lib/value-tree.c"
     if ((should_be<(t->level)))
 
-# 191 "lib/value-tree.c"
+# 172 "lib/value-tree.c"
     {
 
-# 192 "lib/value-tree.c"
+# 173 "lib/value-tree.c"
       ((t->level)=should_be);
 
-# 193 "lib/value-tree.c"
+# 174 "lib/value-tree.c"
       if ((should_be<((t->right)->level)))
 
-# 193 "lib/value-tree.c"
+# 174 "lib/value-tree.c"
       {
 
-# 194 "lib/value-tree.c"
+# 175 "lib/value-tree.c"
         (((t->right)->level)=should_be);
       }
     }
   }
 
-# 198 "lib/value-tree.c"
+# 179 "lib/value-tree.c"
   return t;
 }
 
 
-# 201 "lib/value-tree.c"
+# 182 "lib/value-tree.c"
 value_tree_t* value_tree_predecessor(value_tree_t* t)
-# 201 "lib/value-tree.c"
+# 182 "lib/value-tree.c"
 {
 
-# 202 "lib/value-tree.c"
+# 183 "lib/value-tree.c"
   (t=(t->left));
 
-# 203 "lib/value-tree.c"
+# 184 "lib/value-tree.c"
   while (((t->right)!=NULL))
 
-# 203 "lib/value-tree.c"
+# 184 "lib/value-tree.c"
   {
 
-# 204 "lib/value-tree.c"
+# 185 "lib/value-tree.c"
     (t=(t->right));
   }
 
-# 206 "lib/value-tree.c"
+# 187 "lib/value-tree.c"
   return t;
 }
 
 
-# 209 "lib/value-tree.c"
+# 190 "lib/value-tree.c"
 value_tree_t* value_tree_successor(value_tree_t* t)
+# 190 "lib/value-tree.c"
+{
+
+# 191 "lib/value-tree.c"
+  (t=(t->right));
+
+# 192 "lib/value-tree.c"
+  while (((t->left)!=NULL))
+
+# 192 "lib/value-tree.c"
+  {
+
+# 193 "lib/value-tree.c"
+    (t=(t->left));
+  }
+
+# 195 "lib/value-tree.c"
+  return t;
+}
+
+
+# 208 "lib/value-tree.c"
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
 # 209 "lib/value-tree.c"
 {
 
-# 210 "lib/value-tree.c"
-  (t=(t->right));
-
 # 211 "lib/value-tree.c"
-  while (((t->left)!=NULL))
+  if ((t==NULL))
 
 # 211 "lib/value-tree.c"
   {
 
 # 212 "lib/value-tree.c"
-    (t=(t->left));
+    return t;
   }
 
-# 214 "lib/value-tree.c"
+# 215 "lib/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+# 216 "lib/value-tree.c"
+  if ((cmp_result<0))
+
+# 216 "lib/value-tree.c"
+  {
+
+# 217 "lib/value-tree.c"
+    ((t->left)=value_tree_delete((t->left), cmp_fn, key));
+  }
+  else
+
+# 218 "lib/value-tree.c"
+  if ((cmp_result>0))
+
+# 218 "lib/value-tree.c"
+  {
+
+# 219 "lib/value-tree.c"
+    ((t->right)=value_tree_delete((t->right), cmp_fn, key));
+  }
+  else
+
+# 220 "lib/value-tree.c"
+  {
+
+# 221 "lib/value-tree.c"
+    if (value_tree_is_leaf(t))
+
+# 221 "lib/value-tree.c"
+    {
+
+# 226 "lib/value-tree.c"
+      return NULL;
+    }
+    else
+
+# 227 "lib/value-tree.c"
+    if (((t->left)==NULL))
+
+# 227 "lib/value-tree.c"
+    {
+
+# 228 "lib/value-tree.c"
+      value_tree_t* L = value_tree_successor(t);
+
+# 232 "lib/value-tree.c"
+      ((t->key)=(L->key));
+
+# 233 "lib/value-tree.c"
+      ((t->value)=(L->value));
+
+# 234 "lib/value-tree.c"
+      ((t->right)=value_tree_delete((t->right), cmp_fn, (L->key)));
+    }
+    else
+
+# 235 "lib/value-tree.c"
+    {
+
+# 236 "lib/value-tree.c"
+      value_tree_t* L = value_tree_predecessor(t);
+
+# 240 "lib/value-tree.c"
+      ((t->key)=(L->key));
+
+# 241 "lib/value-tree.c"
+      ((t->value)=(L->value));
+
+# 242 "lib/value-tree.c"
+      ((t->left)=value_tree_delete((t->left), cmp_fn, (L->key)));
+    }
+  }
+
+# 249 "lib/value-tree.c"
+  (t=value_tree_decrease_level(t));
+
+# 250 "lib/value-tree.c"
+  (t=value_tree_skew(t));
+
+# 251 "lib/value-tree.c"
+  ((t->right)=value_tree_skew((t->right)));
+
+# 252 "lib/value-tree.c"
+  if (((t->right)!=NULL))
+
+# 252 "lib/value-tree.c"
+  {
+
+# 253 "lib/value-tree.c"
+    (((t->right)->right)=value_tree_skew(((t->right)->right)));
+  }
+
+# 255 "lib/value-tree.c"
+  (t=value_tree_split(t));
+
+# 256 "lib/value-tree.c"
+  ((t->right)=value_tree_split((t->right)));
+
+# 257 "lib/value-tree.c"
   return t;
 }
 
 
-# 206 "lib/flag.c"
+# 155 "lib/flag.c"
 void flag_program_name(char* name)
-# 206 "lib/flag.c"
+# 155 "lib/flag.c"
 {
 
-# 207 "lib/flag.c"
+# 156 "lib/flag.c"
   (current_program=malloc_struct(program_descriptor_t));
 
-# 208 "lib/flag.c"
+# 157 "lib/flag.c"
   ((current_program->name)=name);
 
-# 209 "lib/flag.c"
+# 158 "lib/flag.c"
   (current_command=NULL);
 
-# 210 "lib/flag.c"
+# 159 "lib/flag.c"
   (current_flag=NULL);
 }
 
 
-# 233 "lib/flag.c"
-void flag_description(char* description)
-# 233 "lib/flag.c"
+# 168 "lib/flag.c"
+void flag_command(char* name, char** write_back_ptr)
+# 168 "lib/flag.c"
 {
 
-# 234 "lib/flag.c"
+# 169 "lib/flag.c"
+  (current_command=malloc_struct(command_descriptor_t));
+
+# 170 "lib/flag.c"
+  ((current_command->name)=name);
+
+# 171 "lib/flag.c"
+  ((current_command->write_back_ptr)=write_back_ptr);
+
+# 172 "lib/flag.c"
+  (current_flag=NULL);
+
+# 173 "lib/flag.c"
+  ((current_program->commands)=string_tree_insert((current_program->commands), name, ptr_to_value(current_command)));
+}
+
+
+# 182 "lib/flag.c"
+void flag_description(char* description)
+# 182 "lib/flag.c"
+{
+
+# 183 "lib/flag.c"
   if ((current_flag!=NULL))
+
+# 183 "lib/flag.c"
+  {
+
+# 184 "lib/flag.c"
+    ((current_flag->description)=description);
+  }
+  else
+
+# 185 "lib/flag.c"
+  if ((current_command!=NULL))
+
+# 185 "lib/flag.c"
+  {
+
+# 186 "lib/flag.c"
+    ((current_command->description)=description);
+  }
+  else
+
+# 187 "lib/flag.c"
+  if ((current_program!=NULL))
+
+# 187 "lib/flag.c"
+  {
+
+# 188 "lib/flag.c"
+    ((current_program->description)=description);
+  }
+  else
+
+# 189 "lib/flag.c"
+  {
+
+# 190 "lib/flag.c"
+    log_fatal("A current flag, program or command must be executed first");
+
+# 191 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 208 "lib/flag.c"
+void flag_file_args(value_array_t** write_back_file_args_ptr)
+# 208 "lib/flag.c"
+{
+
+# 209 "lib/flag.c"
+  if ((current_command!=NULL))
+
+# 209 "lib/flag.c"
+  {
+
+# 210 "lib/flag.c"
+    ((current_command->write_back_file_args_ptr)=write_back_file_args_ptr);
+  }
+  else
+
+# 211 "lib/flag.c"
+  if ((current_program!=NULL))
+
+# 211 "lib/flag.c"
+  {
+
+# 212 "lib/flag.c"
+    ((current_program->write_back_file_args_ptr)=write_back_file_args_ptr);
+  }
+  else
+
+# 213 "lib/flag.c"
+  {
+
+# 214 "lib/flag.c"
+    log_fatal("A current program or command must be executed first");
+
+# 215 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 221 "lib/flag.c"
+void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type)
+# 221 "lib/flag.c"
+{
+
+# 222 "lib/flag.c"
+  (current_flag=malloc_struct(flag_descriptor_t));
+
+# 223 "lib/flag.c"
+  ((current_flag->flag_type)=flag_type);
+
+# 224 "lib/flag.c"
+  ((current_flag->name)=name);
+
+# 225 "lib/flag.c"
+  ((current_flag->write_back_ptr)=write_back_ptr);
+
+# 228 "lib/flag.c"
+  if ((current_command!=NULL))
+
+# 228 "lib/flag.c"
+  {
+
+# 229 "lib/flag.c"
+    ((current_command->flags)=string_tree_insert((current_command->flags), name, ptr_to_value(current_flag)));
+  }
+  else
+
+# 231 "lib/flag.c"
+  if ((current_program!=NULL))
+
+# 231 "lib/flag.c"
+  {
+
+# 232 "lib/flag.c"
+    ((current_program->flags)=string_tree_insert((current_program->flags), name, ptr_to_value(current_flag)));
+  }
+  else
 
 # 234 "lib/flag.c"
   {
 
 # 235 "lib/flag.c"
-    ((current_flag->description)=description);
-  }
-  else
-
-# 236 "lib/flag.c"
-  if ((current_command!=NULL))
-
-# 236 "lib/flag.c"
-  {
-
-# 237 "lib/flag.c"
-    ((current_command->description)=description);
-  }
-  else
-
-# 238 "lib/flag.c"
-  if ((current_program!=NULL))
-
-# 238 "lib/flag.c"
-  {
-
-# 239 "lib/flag.c"
-    ((current_program->description)=description);
-  }
-  else
-
-# 240 "lib/flag.c"
-  {
-
-# 241 "lib/flag.c"
-    log_fatal("A current flag, program or command must be executed first");
-
-# 242 "lib/flag.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-
-# 259 "lib/flag.c"
-void flag_file_args(value_array_t** write_back_file_args_ptr)
-# 259 "lib/flag.c"
-{
-
-# 260 "lib/flag.c"
-  if ((current_command!=NULL))
-
-# 260 "lib/flag.c"
-  {
-
-# 261 "lib/flag.c"
-    ((current_command->write_back_file_args_ptr)=write_back_file_args_ptr);
-  }
-  else
-
-# 262 "lib/flag.c"
-  if ((current_program!=NULL))
-
-# 262 "lib/flag.c"
-  {
-
-# 263 "lib/flag.c"
-    ((current_program->write_back_file_args_ptr)=write_back_file_args_ptr);
-  }
-  else
-
-# 264 "lib/flag.c"
-  {
-
-# 265 "lib/flag.c"
     log_fatal("A current program or command must be executed first");
 
-# 266 "lib/flag.c"
+# 236 "lib/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 219 "lib/flag.c"
-void flag_command(char* name, char** write_back_ptr)
-# 219 "lib/flag.c"
-{
-
-# 220 "lib/flag.c"
-  (current_command=malloc_struct(command_descriptor_t));
-
-# 221 "lib/flag.c"
-  ((current_command->name)=name);
-
-# 222 "lib/flag.c"
-  ((current_command->write_back_ptr)=write_back_ptr);
-
-# 223 "lib/flag.c"
-  (current_flag=NULL);
-
-# 224 "lib/flag.c"
-  ((current_program->commands)=string_tree_insert((current_program->commands), name, ptr_to_value(current_command)));
-}
-
-
-# 291 "lib/flag.c"
+# 240 "lib/flag.c"
 void flag_boolean(char* name, boolean_t* write_back_ptr)
-# 291 "lib/flag.c"
+# 240 "lib/flag.c"
 {
 
-# 292 "lib/flag.c"
+# 241 "lib/flag.c"
   add_flag(name, write_back_ptr, flag_type_boolean);
 }
 
 
-# 295 "lib/flag.c"
+# 244 "lib/flag.c"
 void flag_string(char* name, char** write_back_ptr)
-# 295 "lib/flag.c"
+# 244 "lib/flag.c"
 {
 
-# 296 "lib/flag.c"
+# 245 "lib/flag.c"
   add_flag(name, write_back_ptr, flag_type_string);
 }
 
 
-# 299 "lib/flag.c"
+# 248 "lib/flag.c"
 void flag_uint64(char* name, uint64_t* write_back_ptr)
-# 299 "lib/flag.c"
+# 248 "lib/flag.c"
 {
 
-# 300 "lib/flag.c"
+# 249 "lib/flag.c"
   add_flag(name, write_back_ptr, flag_type_uint64);
 }
 
 
-# 303 "lib/flag.c"
+# 252 "lib/flag.c"
 void flag_int64(char* name, int64_t* write_back_ptr)
-# 303 "lib/flag.c"
+# 252 "lib/flag.c"
 {
 
-# 304 "lib/flag.c"
+# 253 "lib/flag.c"
   add_flag(name, write_back_ptr, flag_type_int64);
 }
 
 
-# 307 "lib/flag.c"
+# 256 "lib/flag.c"
 void flag_double(char* name, double* write_back_ptr)
-# 307 "lib/flag.c"
+# 256 "lib/flag.c"
 {
 
-# 308 "lib/flag.c"
+# 257 "lib/flag.c"
   add_flag(name, write_back_ptr, flag_type_double);
 }
 
 
-# 328 "lib/flag.c"
+# 277 "lib/flag.c"
 void flag_enum(char* name, int* write_back_ptr)
-# 328 "lib/flag.c"
+# 277 "lib/flag.c"
 {
 
-# 329 "lib/flag.c"
+# 278 "lib/flag.c"
   add_flag(name, write_back_ptr, flag_type_enum);
 
-# 330 "lib/flag.c"
+# 279 "lib/flag.c"
   ((current_flag->enum_size)=((sizeof(int))*8));
 }
 
 
-# 333 "lib/flag.c"
+# 282 "lib/flag.c"
 void flag_enum_64(char* name, uint64_t* write_back_ptr)
-# 333 "lib/flag.c"
+# 282 "lib/flag.c"
 {
 
-# 334 "lib/flag.c"
+# 283 "lib/flag.c"
   add_flag(name, write_back_ptr, flag_type_enum);
 
-# 335 "lib/flag.c"
+# 284 "lib/flag.c"
   ((current_flag->enum_size)=64);
 }
 
 
-# 338 "lib/flag.c"
+# 287 "lib/flag.c"
 void flag_enum_value(char* name, uint64_t value)
-# 338 "lib/flag.c"
+# 287 "lib/flag.c"
 {
 
-# 339 "lib/flag.c"
+# 288 "lib/flag.c"
   if (((!current_flag)||((current_flag->flag_type)!=flag_type_enum)))
 
-# 339 "lib/flag.c"
+# 288 "lib/flag.c"
   {
 
-# 340 "lib/flag.c"
+# 289 "lib/flag.c"
     log_fatal("The current flag is not an enum type");
 
-# 341 "lib/flag.c"
+# 290 "lib/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 344 "lib/flag.c"
+# 293 "lib/flag.c"
   ((current_flag->enum_values)=string_tree_insert((current_flag->enum_values), name, u64_to_value(value)));
 }
 
 
-# 348 "lib/flag.c"
+# 297 "lib/flag.c"
 void flag_alias(char* alias)
-# 348 "lib/flag.c"
+# 297 "lib/flag.c"
 {
 
-# 349 "lib/flag.c"
+# 298 "lib/flag.c"
   if ((current_flag!=NULL))
 
-# 349 "lib/flag.c"
+# 298 "lib/flag.c"
   {
 
-# 351 "lib/flag.c"
+# 300 "lib/flag.c"
     if ((current_command!=NULL))
 
-# 351 "lib/flag.c"
+# 300 "lib/flag.c"
     {
 
-# 352 "lib/flag.c"
+# 301 "lib/flag.c"
       ((current_command->flags)=string_tree_insert((current_command->flags), alias, ptr_to_value(current_flag)));
     }
     else
 
-# 354 "lib/flag.c"
+# 303 "lib/flag.c"
     if ((current_program!=NULL))
 
-# 354 "lib/flag.c"
+# 303 "lib/flag.c"
     {
 
-# 355 "lib/flag.c"
+# 304 "lib/flag.c"
       ((current_program->flags)=string_tree_insert((current_program->flags), alias, ptr_to_value(current_flag)));
     }
     else
 
-# 357 "lib/flag.c"
+# 306 "lib/flag.c"
     {
 
-# 358 "lib/flag.c"
+# 307 "lib/flag.c"
       log_fatal("A current program or command must exist first");
 
-# 359 "lib/flag.c"
+# 308 "lib/flag.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
   else
 
-# 361 "lib/flag.c"
+# 310 "lib/flag.c"
   {
 
-# 362 "lib/flag.c"
+# 311 "lib/flag.c"
     log_fatal("A current flag must present to use flag_alias");
 
-# 363 "lib/flag.c"
+# 312 "lib/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 379 "lib/flag.c"
+# 328 "lib/flag.c"
 char* flag_parse_command_line(int argc, char** argv)
-# 379 "lib/flag.c"
+# 328 "lib/flag.c"
 {
 
-# 380 "lib/flag.c"
+# 329 "lib/flag.c"
   if ((current_program==NULL))
 
-# 380 "lib/flag.c"
+# 329 "lib/flag.c"
   {
 
-# 381 "lib/flag.c"
+# 330 "lib/flag.c"
     log_fatal("flag_parse_command_line can't be called unless flag_program_name() is " "first called.");
 
-# 384 "lib/flag.c"
+# 333 "lib/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 387 "lib/flag.c"
+# 336 "lib/flag.c"
   int start = 1;
 
-# 388 "lib/flag.c"
+# 337 "lib/flag.c"
   command_descriptor_t* command = NULL;
 
-# 389 "lib/flag.c"
+# 338 "lib/flag.c"
   if ((current_program->commands))
 
-# 389 "lib/flag.c"
+# 338 "lib/flag.c"
   {
 
-# 390 "lib/flag.c"
+# 339 "lib/flag.c"
     if ((argc<=1))
 
-# 390 "lib/flag.c"
+# 339 "lib/flag.c"
     {
 
-# 391 "lib/flag.c"
+# 340 "lib/flag.c"
       return "This program requires a command but not enough arguments were " "given";
     }
 
-# 394 "lib/flag.c"
+# 343 "lib/flag.c"
     char* name = (argv[1]);
 
-# 395 "lib/flag.c"
+# 344 "lib/flag.c"
     (command=flag_find_command_descriptor(name));
 
-# 396 "lib/flag.c"
+# 345 "lib/flag.c"
     if ((command==NULL))
 
-# 396 "lib/flag.c"
+# 345 "lib/flag.c"
     {
 
-# 397 "lib/flag.c"
+# 346 "lib/flag.c"
       return string_printf("The first command line argument is not a known command: %s", name);
     }
     else
 
-# 399 "lib/flag.c"
+# 348 "lib/flag.c"
     {
 
-# 400 "lib/flag.c"
+# 349 "lib/flag.c"
       ((*(command->write_back_ptr))=(command->name));
     }
 
-# 402 "lib/flag.c"
+# 351 "lib/flag.c"
     (start=2);
   }
 
-# 405 "lib/flag.c"
+# 354 "lib/flag.c"
   value_array_t* files = make_value_array(argc);
 
-# 406 "lib/flag.c"
+# 355 "lib/flag.c"
   boolean_t parse_flags = true;
 
-# 408 "lib/flag.c"
+# 357 "lib/flag.c"
   for (
 
-# 408 "lib/flag.c"
+# 357 "lib/flag.c"
 
-# 408 "lib/flag.c"
+# 357 "lib/flag.c"
     int i = start;
 
-# 408 "lib/flag.c"
+# 357 "lib/flag.c"
     (i<argc);
 
-# 408 "lib/flag.c"
+# 357 "lib/flag.c"
     (i++))
 
-# 408 "lib/flag.c"
+# 357 "lib/flag.c"
   {
 
-# 409 "lib/flag.c"
+# 358 "lib/flag.c"
     char* arg = (argv[i]);
 
-# 410 "lib/flag.c"
+# 359 "lib/flag.c"
     if (parse_flags)
 
-# 410 "lib/flag.c"
+# 359 "lib/flag.c"
     {
 
-# 411 "lib/flag.c"
+# 360 "lib/flag.c"
       if (string_equal(arg, "--"))
 
-# 411 "lib/flag.c"
+# 360 "lib/flag.c"
       {
 
-# 412 "lib/flag.c"
+# 361 "lib/flag.c"
         (parse_flags=false);
 
-# 413 "lib/flag.c"
+# 362 "lib/flag.c"
         continue;
       }
 
-# 416 "lib/flag.c"
+# 365 "lib/flag.c"
       if (string_starts_with(arg, "-"))
 
-# 416 "lib/flag.c"
+# 365 "lib/flag.c"
       {
 
-# 417 "lib/flag.c"
+# 366 "lib/flag.c"
         flag_key_value_t key_value = flag_split_argument(arg);
 
-# 418 "lib/flag.c"
+# 367 "lib/flag.c"
         if (((key_value.key)==NULL))
 
-# 418 "lib/flag.c"
+# 367 "lib/flag.c"
         {
 
-# 419 "lib/flag.c"
+# 368 "lib/flag.c"
           return string_printf("This argument is not a well formed flag: %s", arg);
         }
 
-# 422 "lib/flag.c"
+# 371 "lib/flag.c"
         flag_descriptor_t* flag = flag_find_flag_descriptor(command, (key_value.key));
 
-# 424 "lib/flag.c"
+# 373 "lib/flag.c"
         if ((flag==NULL))
 
-# 424 "lib/flag.c"
+# 373 "lib/flag.c"
         {
 
-# 425 "lib/flag.c"
+# 374 "lib/flag.c"
           return string_printf("The argument looks like a flag but was not found: '%s'\n\n" "(You may want to use ' -- ' to seperate flags from non flag " "arguments (aka file arguments).)", arg);
         }
 
-# 436 "lib/flag.c"
+# 385 "lib/flag.c"
         if (((key_value.value)==NULL))
 
-# 436 "lib/flag.c"
+# 385 "lib/flag.c"
         {
 
-# 438 "lib/flag.c"
+# 387 "lib/flag.c"
           (i++);
 
-# 439 "lib/flag.c"
+# 388 "lib/flag.c"
           ((key_value.value)=(argv[i]));
         }
 
-# 441 "lib/flag.c"
+# 390 "lib/flag.c"
         char* error = parse_and_write_value(flag, key_value);
 
-# 442 "lib/flag.c"
+# 391 "lib/flag.c"
         if (error)
 
-# 442 "lib/flag.c"
+# 391 "lib/flag.c"
         {
 
-# 443 "lib/flag.c"
+# 392 "lib/flag.c"
           return error;
         }
 
-# 445 "lib/flag.c"
+# 394 "lib/flag.c"
         continue;
       }
     }
 
-# 450 "lib/flag.c"
+# 399 "lib/flag.c"
     value_array_add(files, str_to_value(arg));
   }
 
-# 454 "lib/flag.c"
+# 403 "lib/flag.c"
   if (((command!=NULL)&&((command->write_back_file_args_ptr)!=NULL)))
 
-# 454 "lib/flag.c"
+# 403 "lib/flag.c"
   {
 
-# 455 "lib/flag.c"
+# 404 "lib/flag.c"
     ((*(command->write_back_file_args_ptr))=files);
   }
 
-# 457 "lib/flag.c"
+# 406 "lib/flag.c"
   if (((current_program->write_back_file_args_ptr)!=NULL))
 
-# 457 "lib/flag.c"
+# 406 "lib/flag.c"
   {
 
-# 458 "lib/flag.c"
+# 407 "lib/flag.c"
     ((*(current_program->write_back_file_args_ptr))=files);
   }
 
-# 460 "lib/flag.c"
+# 409 "lib/flag.c"
   return NULL;
 }
 
 
-# 638 "lib/flag.c"
-void flag_print_help(FILE* out, char* message)
-# 638 "lib/flag.c"
-{
-
-# 639 "lib/flag.c"
-  fprintf(out, "\nMessage: %s\n", message);
-
-# 641 "lib/flag.c"
-  if ((current_program==NULL))
-
-# 641 "lib/flag.c"
-  {
-
-# 642 "lib/flag.c"
-    fprintf(out, "Command line parsing was not configured so help can not be " "provided.");
-
-# 645 "lib/flag.c"
-    return;
-  }
-
-# 648 "lib/flag.c"
-  if (((current_program->commands)!=NULL))
-
-# 648 "lib/flag.c"
-  {
-
-# 649 "lib/flag.c"
-    fprintf(out, "\nUsage: %s <command> <flags> <files>\n", (current_program->name));
-
-# 651 "lib/flag.c"
-    fprintf(out, "\nDescription: %s\n\n", (current_program->description));
-
-# 653 "lib/flag.c"
-    flag_print_flags(out, "Global flags:", (current_program->flags));
-
-# 655 "lib/flag.c"
-    fprintf(out, "\nCommands:\n");
-
-# 657 "lib/flag.c"
-    string_tree_foreach((current_program->commands), key, value, 
-# 657 "lib/flag.c"
-    {
-
-# 658 "lib/flag.c"
-      fprintf(out, "\n    %s\t%s\n", key, ((/*CAST*/(command_descriptor_t*) (value.ptr))->description));
-
-# 659 "lib/flag.c"
-      flag_print_flags(out, "      Flags:", ((/*CAST*/(command_descriptor_t*) (value.ptr))->flags));
-    }
-);
-  }
-  else
-
-# 662 "lib/flag.c"
-  {
-
-# 663 "lib/flag.c"
-    fprintf(out, "\nUsage: %s <flags> <files>\n", (current_program->name));
-
-# 664 "lib/flag.c"
-    fprintf(out, "\nDescription: %s\n\n", (current_program->description));
-
-# 665 "lib/flag.c"
-    flag_print_flags(out, "Flags:", (current_program->flags));
-  }
-}
-
-
-# 465 "lib/flag.c"
+# 414 "lib/flag.c"
 command_descriptor_t* flag_find_command_descriptor(char* name)
-# 465 "lib/flag.c"
+# 414 "lib/flag.c"
 {
 
-# 466 "lib/flag.c"
+# 415 "lib/flag.c"
   if (((current_program->commands)==NULL))
 
-# 466 "lib/flag.c"
+# 415 "lib/flag.c"
   {
 
-# 467 "lib/flag.c"
+# 416 "lib/flag.c"
     log_fatal("flag_get_command() shouldn't not be called when we don't have any " "defined commands.");
 
-# 470 "lib/flag.c"
+# 419 "lib/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 472 "lib/flag.c"
+# 421 "lib/flag.c"
   value_result_t command_value = string_tree_find((current_program->commands), name);
 
-# 474 "lib/flag.c"
+# 423 "lib/flag.c"
   if (is_ok(command_value))
 
-# 474 "lib/flag.c"
+# 423 "lib/flag.c"
   {
 
-# 475 "lib/flag.c"
+# 424 "lib/flag.c"
     return (/*CAST*/(command_descriptor_t*) (command_value.ptr));
   }
   else
 
-# 476 "lib/flag.c"
+# 425 "lib/flag.c"
   {
 
-# 477 "lib/flag.c"
+# 426 "lib/flag.c"
     return NULL;
   }
 }
 
 
-# 485 "lib/flag.c"
+# 434 "lib/flag.c"
 flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name)
-# 487 "lib/flag.c"
+# 436 "lib/flag.c"
 {
 
-# 488 "lib/flag.c"
+# 437 "lib/flag.c"
   if ((command!=NULL))
 
-# 488 "lib/flag.c"
+# 437 "lib/flag.c"
   {
 
-# 489 "lib/flag.c"
+# 438 "lib/flag.c"
     value_result_t command_flag_value = string_tree_find((command->flags), name);
 
-# 490 "lib/flag.c"
+# 439 "lib/flag.c"
     if (is_ok(command_flag_value))
 
-# 490 "lib/flag.c"
+# 439 "lib/flag.c"
     {
 
-# 491 "lib/flag.c"
+# 440 "lib/flag.c"
       return (/*CAST*/(flag_descriptor_t*) (command_flag_value.ptr));
     }
   }
 
-# 495 "lib/flag.c"
+# 444 "lib/flag.c"
   value_result_t program_flag_value = string_tree_find((current_program->flags), name);
 
-# 497 "lib/flag.c"
+# 446 "lib/flag.c"
   if (is_ok(program_flag_value))
 
-# 497 "lib/flag.c"
+# 446 "lib/flag.c"
   {
 
-# 498 "lib/flag.c"
+# 447 "lib/flag.c"
     return (/*CAST*/(flag_descriptor_t*) (program_flag_value.ptr));
   }
 
-# 501 "lib/flag.c"
+# 450 "lib/flag.c"
   return NULL;
 }
 
 
-# 521 "lib/flag.c"
+# 470 "lib/flag.c"
 flag_key_value_t flag_split_argument(char* arg)
-# 521 "lib/flag.c"
+# 470 "lib/flag.c"
 {
 
-# 522 "lib/flag.c"
+# 471 "lib/flag.c"
   int equal_sign_index = string_index_of_char(arg, '=');
 
-# 523 "lib/flag.c"
+# 472 "lib/flag.c"
   if ((equal_sign_index>=0))
 
-# 523 "lib/flag.c"
+# 472 "lib/flag.c"
   {
 
-# 524 "lib/flag.c"
+# 473 "lib/flag.c"
     char* key = string_substring(arg, 0, equal_sign_index);
 
-# 529 "lib/flag.c"
+# 478 "lib/flag.c"
     char* value = string_substring(arg, (equal_sign_index+1), strlen(arg));
 
-# 530 "lib/flag.c"
+# 479 "lib/flag.c"
     return ((flag_key_value_t) {.key = key, .value = value});
   }
 
-# 532 "lib/flag.c"
+# 481 "lib/flag.c"
   return ((flag_key_value_t) {.key = arg, .value = NULL});
 }
 
 
-# 538 "lib/flag.c"
+# 487 "lib/flag.c"
 char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value)
-# 539 "lib/flag.c"
+# 488 "lib/flag.c"
 {
 
-# 540 "lib/flag.c"
+# 489 "lib/flag.c"
   switch ((flag->flag_type))
 
-# 540 "lib/flag.c"
+# 489 "lib/flag.c"
   {
 
-# 541 "lib/flag.c"
+# 490 "lib/flag.c"
     case flag_type_boolean:
 
-# 542 "lib/flag.c"
+# 491 "lib/flag.c"
     return parse_and_write_boolean(flag, key_value);
 
-# 544 "lib/flag.c"
+# 493 "lib/flag.c"
     case flag_type_string:
 
-# 545 "lib/flag.c"
+# 494 "lib/flag.c"
     ((*(/*CAST*/(char**) (flag->write_back_ptr)))=(key_value.value));
 
-# 546 "lib/flag.c"
+# 495 "lib/flag.c"
     return NULL;
 
-# 548 "lib/flag.c"
+# 497 "lib/flag.c"
     case flag_type_uint64:
 
-# 549 "lib/flag.c"
+# 498 "lib/flag.c"
     return parse_and_write_uint64(flag, key_value);
 
-# 551 "lib/flag.c"
+# 500 "lib/flag.c"
     case flag_type_enum:
 
-# 552 "lib/flag.c"
+# 501 "lib/flag.c"
     return parse_and_write_enum(flag, key_value);
 
-# 554 "lib/flag.c"
+# 503 "lib/flag.c"
     default:
 
-# 555 "lib/flag.c"
+# 504 "lib/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
 
-# 556 "lib/flag.c"
+# 505 "lib/flag.c"
     break;
   }
 
-# 558 "lib/flag.c"
+# 507 "lib/flag.c"
   return "<ILLEGAL-STATE-NOT-REACHED>";
 }
 
 
-# 561 "lib/flag.c"
+# 510 "lib/flag.c"
 char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value)
-# 562 "lib/flag.c"
+# 511 "lib/flag.c"
 {
 
-# 563 "lib/flag.c"
+# 512 "lib/flag.c"
   char* val = (key_value.value);
 
-# 564 "lib/flag.c"
+# 513 "lib/flag.c"
   if (((string_equal("true", val)||string_equal("t", val))||string_equal("1", val)))
 
-# 565 "lib/flag.c"
+# 514 "lib/flag.c"
   {
 
-# 566 "lib/flag.c"
+# 515 "lib/flag.c"
     ((*(/*CAST*/(boolean_t*) (flag->write_back_ptr)))=true);
   }
   else
 
-# 567 "lib/flag.c"
+# 516 "lib/flag.c"
   if (((string_equal("false", val)||string_equal("f", val))||string_equal("0", val)))
 
-# 568 "lib/flag.c"
+# 517 "lib/flag.c"
   {
 
-# 569 "lib/flag.c"
+# 518 "lib/flag.c"
     ((*(/*CAST*/(boolean_t*) (flag->write_back_ptr)))=false);
   }
   else
 
-# 570 "lib/flag.c"
+# 519 "lib/flag.c"
   {
 
-# 571 "lib/flag.c"
+# 520 "lib/flag.c"
     return string_printf("boolean flag %s does not accept value %s", (key_value.key), (key_value.value));
   }
 
-# 574 "lib/flag.c"
+# 523 "lib/flag.c"
   return NULL;
 }
 
 
-# 577 "lib/flag.c"
+# 526 "lib/flag.c"
 char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value)
-# 578 "lib/flag.c"
+# 527 "lib/flag.c"
 {
 
-# 579 "lib/flag.c"
+# 528 "lib/flag.c"
   value_result_t val_result = string_parse_uint64((key_value.value));
 
-# 580 "lib/flag.c"
+# 529 "lib/flag.c"
   if (is_ok(val_result))
 
-# 580 "lib/flag.c"
+# 529 "lib/flag.c"
   {
 
-# 581 "lib/flag.c"
+# 530 "lib/flag.c"
     ((*(/*CAST*/(uint64_t*) (flag->write_back_ptr)))=(val_result.u64));
   }
   else
 
-# 582 "lib/flag.c"
+# 531 "lib/flag.c"
   {
 
-# 583 "lib/flag.c"
+# 532 "lib/flag.c"
     return string_printf("uint64_t flag %s does not accept value %s", (key_value.key), (key_value.value));
   }
 
-# 586 "lib/flag.c"
+# 535 "lib/flag.c"
   return NULL;
 }
 
 
-# 589 "lib/flag.c"
+# 538 "lib/flag.c"
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value)
-# 590 "lib/flag.c"
+# 539 "lib/flag.c"
 {
 
-# 591 "lib/flag.c"
+# 540 "lib/flag.c"
   value_result_t val_result = string_tree_find((flag->enum_values), (key_value.value));
 
-# 593 "lib/flag.c"
+# 542 "lib/flag.c"
   if (is_ok(val_result))
 
-# 593 "lib/flag.c"
+# 542 "lib/flag.c"
   {
 
-# 594 "lib/flag.c"
+# 543 "lib/flag.c"
     switch ((flag->enum_size))
 
-# 594 "lib/flag.c"
+# 543 "lib/flag.c"
     {
 
-# 595 "lib/flag.c"
+# 544 "lib/flag.c"
       case 64:
 
-# 597 "lib/flag.c"
+# 546 "lib/flag.c"
       ((*(/*CAST*/(uint64_t*) (flag->write_back_ptr)))=(val_result.u64));
 
-# 598 "lib/flag.c"
+# 547 "lib/flag.c"
       return NULL;
 
-# 599 "lib/flag.c"
+# 548 "lib/flag.c"
       case 32:
 
-# 601 "lib/flag.c"
+# 550 "lib/flag.c"
       ((*(/*CAST*/(uint32_t*) (flag->write_back_ptr)))=(val_result.u64));
 
-# 602 "lib/flag.c"
+# 551 "lib/flag.c"
       return NULL;
 
-# 604 "lib/flag.c"
+# 553 "lib/flag.c"
       default:
 
-# 605 "lib/flag.c"
+# 554 "lib/flag.c"
       fatal_error(ERROR_ILLEGAL_STATE);
 
-# 606 "lib/flag.c"
+# 555 "lib/flag.c"
       break;
     }
   }
 
-# 609 "lib/flag.c"
+# 558 "lib/flag.c"
   return string_printf("Flag %s does not accept the argument value %s", (key_value.key), (key_value.value));
 }
 
 
-# 272 "lib/flag.c"
-void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type)
-# 272 "lib/flag.c"
-{
-
-# 273 "lib/flag.c"
-  (current_flag=malloc_struct(flag_descriptor_t));
-
-# 274 "lib/flag.c"
-  ((current_flag->flag_type)=flag_type);
-
-# 275 "lib/flag.c"
-  ((current_flag->name)=name);
-
-# 276 "lib/flag.c"
-  ((current_flag->write_back_ptr)=write_back_ptr);
-
-# 279 "lib/flag.c"
-  if ((current_command!=NULL))
-
-# 279 "lib/flag.c"
-  {
-
-# 280 "lib/flag.c"
-    ((current_command->flags)=string_tree_insert((current_command->flags), name, ptr_to_value(current_flag)));
-  }
-  else
-
-# 282 "lib/flag.c"
-  if ((current_program!=NULL))
-
-# 282 "lib/flag.c"
-  {
-
-# 283 "lib/flag.c"
-    ((current_program->flags)=string_tree_insert((current_program->flags), name, ptr_to_value(current_flag)));
-  }
-  else
-
-# 285 "lib/flag.c"
-  {
-
-# 286 "lib/flag.c"
-    log_fatal("A current program or command must be executed first");
-
-# 287 "lib/flag.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-
-# 623 "lib/flag.c"
+# 572 "lib/flag.c"
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags)
-# 623 "lib/flag.c"
+# 572 "lib/flag.c"
 {
 
-# 624 "lib/flag.c"
+# 573 "lib/flag.c"
   fprintf(out, "%s\n", header);
 
-# 626 "lib/flag.c"
+# 575 "lib/flag.c"
   string_tree_foreach(flags, key, value, 
-# 626 "lib/flag.c"
+# 575 "lib/flag.c"
   {
 
-# 627 "lib/flag.c"
+# 576 "lib/flag.c"
     fprintf(out, "      %s\t%s\n", key, ((/*CAST*/(flag_descriptor_t*) (value.ptr))->description));
   }
 );
 }
 
 
-# 79 "lib/io.c"
-buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
-# 79 "lib/io.c"
+# 587 "lib/flag.c"
+void flag_print_help(FILE* out, char* message)
+# 587 "lib/flag.c"
 {
 
-# 81 "lib/io.c"
-  uint64_t capacity = (bytes->capacity);
+# 588 "lib/flag.c"
+  fprintf(out, "\nMessage: %s\n", message);
 
-# 84 "lib/io.c"
+# 590 "lib/flag.c"
+  if ((current_program==NULL))
+
+# 590 "lib/flag.c"
   {
 
-# 85 "lib/io.c"
-    struct stat st;
+# 591 "lib/flag.c"
+    fprintf(out, "Command line parsing was not configured so help can not be " "provided.");
 
-# 86 "lib/io.c"
-    if ((stat(file_name, (&st))<0))
+# 594 "lib/flag.c"
+    return;
+  }
 
-# 86 "lib/io.c"
+# 597 "lib/flag.c"
+  if (((current_program->commands)!=NULL))
+
+# 597 "lib/flag.c"
+  {
+
+# 598 "lib/flag.c"
+    fprintf(out, "\nUsage: %s <command> <flags> <files>\n", (current_program->name));
+
+# 600 "lib/flag.c"
+    fprintf(out, "\nDescription: %s\n\n", (current_program->description));
+
+# 602 "lib/flag.c"
+    flag_print_flags(out, "Global flags:", (current_program->flags));
+
+# 604 "lib/flag.c"
+    fprintf(out, "\nCommands:\n");
+
+# 606 "lib/flag.c"
+    string_tree_foreach((current_program->commands), key, value, 
+# 606 "lib/flag.c"
     {
 
-# 87 "lib/io.c"
+# 607 "lib/flag.c"
+      fprintf(out, "\n    %s\t%s\n", key, ((/*CAST*/(command_descriptor_t*) (value.ptr))->description));
+
+# 608 "lib/flag.c"
+      flag_print_flags(out, "      Flags:", ((/*CAST*/(command_descriptor_t*) (value.ptr))->flags));
+    }
+);
+  }
+  else
+
+# 611 "lib/flag.c"
+  {
+
+# 612 "lib/flag.c"
+    fprintf(out, "\nUsage: %s <flags> <files>\n", (current_program->name));
+
+# 613 "lib/flag.c"
+    fprintf(out, "\nDescription: %s\n\n", (current_program->description));
+
+# 614 "lib/flag.c"
+    flag_print_flags(out, "Flags:", (current_program->flags));
+  }
+}
+
+
+# 14 "lib/io.c"
+buffer_t* buffer_read_file(char* file_name)
+# 14 "lib/io.c"
+{
+
+# 15 "lib/io.c"
+  buffer_t* result = make_buffer(1);
+
+# 16 "lib/io.c"
+  return buffer_append_file_contents(result, file_name);
+}
+
+
+# 25 "lib/io.c"
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
+# 25 "lib/io.c"
+{
+
+# 27 "lib/io.c"
+  uint64_t capacity = (bytes->capacity);
+
+# 30 "lib/io.c"
+  {
+
+# 31 "lib/io.c"
+    struct stat st;
+
+# 32 "lib/io.c"
+    if ((stat(file_name, (&st))<0))
+
+# 32 "lib/io.c"
+    {
+
+# 33 "lib/io.c"
       log_fatal("file does not exist: %s", file_name);
 
-# 88 "lib/io.c"
+# 34 "lib/io.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-# 90 "lib/io.c"
+# 36 "lib/io.c"
     (capacity=(st.st_size));
   }
 
-# 93 "lib/io.c"
+# 39 "lib/io.c"
   (bytes=buffer_increase_capacity(bytes, capacity));
 
-# 95 "lib/io.c"
+# 41 "lib/io.c"
   FILE* file = fopen(file_name, "r");
 
-# 96 "lib/io.c"
+# 42 "lib/io.c"
   (bytes=buffer_append_all(bytes, file));
 
-# 97 "lib/io.c"
+# 43 "lib/io.c"
   fclose(file);
 
-# 99 "lib/io.c"
+# 45 "lib/io.c"
   return bytes;
 }
 
 
-# 109 "lib/io.c"
+# 55 "lib/io.c"
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input)
+# 55 "lib/io.c"
+{
+
+# 56 "lib/io.c"
+  uint8_t buffer[1024];
+
+# 57 "lib/io.c"
+  while (1)
+
+# 57 "lib/io.c"
+  {
+
+# 58 "lib/io.c"
+    uint64_t n_read = fread(buffer, 1, (sizeof(buffer)), input);
+
+# 59 "lib/io.c"
+    if ((n_read==0))
+
+# 59 "lib/io.c"
+    {
+
+# 60 "lib/io.c"
+      break;
+    }
+
+# 62 "lib/io.c"
+    (bytes=buffer_append_bytes(bytes, buffer, n_read));
+  }
+
+# 64 "lib/io.c"
+  return bytes;
+}
+
+
+# 72 "lib/io.c"
+void buffer_write_file(buffer_t* bytes, char* file_name)
+# 72 "lib/io.c"
+{
+
+# 73 "lib/io.c"
+  FILE* file = fopen(file_name, "w");
+
+# 74 "lib/io.c"
+  if ((file==NULL))
+
+# 74 "lib/io.c"
+  {
+
+# 75 "lib/io.c"
+    log_fatal("Failed to open file for writing: %s", file_name);
+
+# 76 "lib/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+# 77 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 79 "lib/io.c"
+  size_t bytes_written = fwrite((bytes->elements), 1, (bytes->length), file);
+
+# 80 "lib/io.c"
+  if ((bytes_written!=(bytes->length)))
+
+# 80 "lib/io.c"
+  {
+
+# 81 "lib/io.c"
+    log_fatal("Failed to write %d bytes to %s", (bytes->length), file_name);
+
+# 82 "lib/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+# 83 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 85 "lib/io.c"
+  if ((fclose(file)!=0))
+
+# 85 "lib/io.c"
+  {
+
+# 86 "lib/io.c"
+    log_fatal("Failed to close file: %s", file_name);
+
+# 87 "lib/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+# 88 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 97 "lib/io.c"
+void buffer_write_all(FILE* output, buffer_t* buffer)
+# 97 "lib/io.c"
+{
+
+# 98 "lib/io.c"
+  size_t bytes_written = fwrite((buffer->elements), 1, (buffer->length), output);
+
+# 99 "lib/io.c"
+  if ((bytes_written!=(buffer->length)))
+
+# 99 "lib/io.c"
+  {
+
+# 100 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 109 "lib/io.c"
+void make_file_read_only(char* file_name)
 # 109 "lib/io.c"
 {
 
-# 110 "lib/io.c"
-  uint8_t buffer[1024];
-
 # 111 "lib/io.c"
-  while (1)
+  if ((chmod(file_name, ((S_IRUSR|S_IRGRP)|S_IROTH))!=0))
 
 # 111 "lib/io.c"
   {
 
 # 112 "lib/io.c"
-    uint64_t n_read = fread(buffer, 1, (sizeof(buffer)), input);
+    log_fatal("Failed to set file permissions: %s", file_name);
 
 # 113 "lib/io.c"
-    if ((n_read==0))
-
-# 113 "lib/io.c"
-    {
+    log_fatal("strerror(errno) = %s", strerror(errno));
 
 # 114 "lib/io.c"
-      break;
-    }
-
-# 116 "lib/io.c"
-    (bytes=buffer_append_bytes(bytes, buffer, n_read));
+    fatal_error(ERROR_ILLEGAL_STATE);
   }
-
-# 118 "lib/io.c"
-  return bytes;
 }
 
 
-# 126 "lib/io.c"
-void buffer_write_file(buffer_t* bytes, char* file_name)
-# 126 "lib/io.c"
+# 124 "lib/io.c"
+void make_writable_if_exists(const char* file_name)
+# 124 "lib/io.c"
 {
 
-# 127 "lib/io.c"
-  FILE* file = fopen(file_name, "w");
+# 126 "lib/io.c"
+  if ((access(file_name, F_OK)!=0))
 
-# 128 "lib/io.c"
-  if ((file==NULL))
-
-# 128 "lib/io.c"
+# 126 "lib/io.c"
   {
 
-# 129 "lib/io.c"
-    log_fatal("Failed to open file for writing: %s", file_name);
-
-# 130 "lib/io.c"
-    log_fatal("strerror(errno) = %s", strerror(errno));
-
-# 131 "lib/io.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
+# 128 "lib/io.c"
+    return;
   }
+
+# 132 "lib/io.c"
+  struct stat file_stat;
 
 # 133 "lib/io.c"
-  size_t bytes_written = fwrite((bytes->elements), 1, (bytes->length), file);
+  if ((stat(file_name, (&file_stat))!=0))
 
-# 134 "lib/io.c"
-  if ((bytes_written!=(bytes->length)))
-
-# 134 "lib/io.c"
+# 133 "lib/io.c"
   {
 
+# 134 "lib/io.c"
+    log_fatal("Error getting file status for %s: %s\n", file_name, strerror(errno));
+
 # 135 "lib/io.c"
-    log_fatal("Failed to write %d bytes to %s", (bytes->length), file_name);
-
-# 136 "lib/io.c"
-    log_fatal("strerror(errno) = %s", strerror(errno));
-
-# 137 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
 # 139 "lib/io.c"
-  if ((fclose(file)!=0))
-
-# 139 "lib/io.c"
-  {
-
-# 140 "lib/io.c"
-    log_fatal("Failed to close file: %s", file_name);
+  mode_t new_mode = ((file_stat.st_mode)|S_IWUSR);
 
 # 141 "lib/io.c"
-    log_fatal("strerror(errno) = %s", strerror(errno));
+  if ((chmod(file_name, new_mode)!=0))
+
+# 141 "lib/io.c"
+  {
 
 # 142 "lib/io.c"
+    log_fatal("Error setting permissions for %s: %s\n", file_name, strerror(errno));
+
+# 143 "lib/io.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 206 "lib/io.c"
+# 164 "lib/io.c"
 buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line)
-# 206 "lib/io.c"
+# 164 "lib/io.c"
 {
 
-# 207 "lib/io.c"
+# 165 "lib/io.c"
   while ((!feof(input)))
+
+# 165 "lib/io.c"
+  {
+
+# 166 "lib/io.c"
+    int ch = fgetc(input);
+
+# 167 "lib/io.c"
+    if ((ch<0))
+
+# 167 "lib/io.c"
+    {
+
+# 168 "lib/io.c"
+      return buffer;
+    }
+
+# 170 "lib/io.c"
+    if ((ch==end_of_line))
+
+# 170 "lib/io.c"
+    {
+
+# 171 "lib/io.c"
+      return buffer;
+    }
+
+# 173 "lib/io.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 175 "lib/io.c"
+  return buffer;
+}
+
+
+# 185 "lib/io.c"
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes)
+# 186 "lib/io.c"
+{
+
+# 187 "lib/io.c"
+  int file_number = fileno(input);
+
+# 188 "lib/io.c"
+  return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
+}
+
+
+# 198 "lib/io.c"
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes)
+# 200 "lib/io.c"
+{
+
+# 201 "lib/io.c"
+  fcntl(file_number, F_SETFL, (fcntl(file_number, F_GETFL)|O_NONBLOCK));
+
+# 203 "lib/io.c"
+  uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
+
+# 204 "lib/io.c"
+  char read_buffer[1024];
+
+# 207 "lib/io.c"
+  while ((bytes_remaining>0))
 
 # 207 "lib/io.c"
   {
 
 # 208 "lib/io.c"
-    int ch = fgetc(input);
+    int bytes_read = read(file_number, read_buffer, (sizeof(read_buffer)));
 
 # 209 "lib/io.c"
-    if ((ch<0))
+    if ((bytes_read>0))
 
 # 209 "lib/io.c"
     {
 
 # 210 "lib/io.c"
-      return buffer;
-    }
-
-# 212 "lib/io.c"
-    if ((ch==end_of_line))
-
-# 212 "lib/io.c"
-    {
-
-# 213 "lib/io.c"
-      return buffer;
-    }
-
-# 215 "lib/io.c"
-    (buffer=buffer_append_byte(buffer, ch));
-  }
-
-# 217 "lib/io.c"
-  return buffer;
-}
-
-
-# 227 "lib/io.c"
-extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes)
-# 228 "lib/io.c"
-{
-
-# 229 "lib/io.c"
-  int file_number = fileno(input);
-
-# 230 "lib/io.c"
-  return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
-}
-
-
-# 240 "lib/io.c"
-extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes)
-# 242 "lib/io.c"
-{
-
-# 243 "lib/io.c"
-  fcntl(file_number, F_SETFL, (fcntl(file_number, F_GETFL)|O_NONBLOCK));
-
-# 245 "lib/io.c"
-  uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
-
-# 246 "lib/io.c"
-  char read_buffer[1024];
-
-# 249 "lib/io.c"
-  while ((bytes_remaining>0))
-
-# 249 "lib/io.c"
-  {
-
-# 250 "lib/io.c"
-    int bytes_read = read(file_number, read_buffer, (sizeof(read_buffer)));
-
-# 251 "lib/io.c"
-    if ((bytes_read>0))
-
-# 251 "lib/io.c"
-    {
-
-# 252 "lib/io.c"
       for (
 
-# 252 "lib/io.c"
+# 210 "lib/io.c"
 
-# 252 "lib/io.c"
+# 210 "lib/io.c"
         int i = 0;
 
-# 252 "lib/io.c"
+# 210 "lib/io.c"
         (i<bytes_read);
 
-# 252 "lib/io.c"
+# 210 "lib/io.c"
         (i++))
 
-# 252 "lib/io.c"
+# 210 "lib/io.c"
       {
 
-# 253 "lib/io.c"
+# 211 "lib/io.c"
         (buffer=buffer_append_byte(buffer, (/*CAST*/(uint8_t) (read_buffer[i]))));
 
-# 254 "lib/io.c"
+# 212 "lib/io.c"
         (bytes_remaining--);
       }
     }
     else
 
-# 256 "lib/io.c"
+# 214 "lib/io.c"
     if ((bytes_read==0))
 
-# 256 "lib/io.c"
+# 214 "lib/io.c"
     {
 
-# 258 "lib/io.c"
+# 216 "lib/io.c"
       break;
     }
     else
 
-# 259 "lib/io.c"
+# 217 "lib/io.c"
     {
 
-# 261 "lib/io.c"
+# 219 "lib/io.c"
       if (((errno!=EAGAIN)&&(errno!=EWOULDBLOCK)))
 
-# 261 "lib/io.c"
+# 219 "lib/io.c"
       {
 
-# 263 "lib/io.c"
+# 221 "lib/io.c"
         log_fatal("Error reading from file descriptor %d: %s", file_number, strerror(errno));
 
-# 265 "lib/io.c"
+# 223 "lib/io.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-# 268 "lib/io.c"
+# 226 "lib/io.c"
       break;
     }
   }
 
-# 272 "lib/io.c"
+# 230 "lib/io.c"
   return buffer;
 }
 
 
-# 284 "lib/io.c"
+# 242 "lib/io.c"
 int file_peek_byte(FILE* input)
-# 284 "lib/io.c"
+# 242 "lib/io.c"
 {
 
-# 285 "lib/io.c"
+# 243 "lib/io.c"
   if (feof(input))
 
-# 285 "lib/io.c"
+# 243 "lib/io.c"
   {
 
-# 286 "lib/io.c"
+# 244 "lib/io.c"
     return (-1);
   }
 
-# 288 "lib/io.c"
+# 246 "lib/io.c"
   int result = fgetc(input);
 
-# 292 "lib/io.c"
+# 250 "lib/io.c"
   if ((result>=0))
 
-# 292 "lib/io.c"
+# 250 "lib/io.c"
   {
 
-# 293 "lib/io.c"
+# 251 "lib/io.c"
     ungetc(result, input);
   }
 
-# 295 "lib/io.c"
+# 253 "lib/io.c"
   return result;
 }
 
 
-# 304 "lib/io.c"
+# 262 "lib/io.c"
 boolean_t file_eof(FILE* input)
-# 304 "lib/io.c"
+# 262 "lib/io.c"
 {
 
-# 305 "lib/io.c"
+# 263 "lib/io.c"
   return (feof(input)||(file_peek_byte(input)<0));
 }
 
 
-# 315 "lib/io.c"
+# 273 "lib/io.c"
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size)
-# 316 "lib/io.c"
+# 274 "lib/io.c"
 {
 
-# 317 "lib/io.c"
+# 275 "lib/io.c"
   if (until_eof)
 
-# 317 "lib/io.c"
+# 275 "lib/io.c"
   {
 
-# 318 "lib/io.c"
+# 276 "lib/io.c"
     (size=ULLONG_MAX);
   }
 
-# 321 "lib/io.c"
+# 279 "lib/io.c"
   uint8_t buffer[FILE_COPY_STREAM_BUFFER_SIZE];
 
-# 322 "lib/io.c"
+# 280 "lib/io.c"
   while ((size>0))
 
-# 322 "lib/io.c"
+# 280 "lib/io.c"
   {
 
-# 323 "lib/io.c"
+# 281 "lib/io.c"
     int minimum = ((size<FILE_COPY_STREAM_BUFFER_SIZE) ? size : FILE_COPY_STREAM_BUFFER_SIZE);
 
-# 326 "lib/io.c"
+# 284 "lib/io.c"
     uint64_t n_read = fread(buffer, 1, minimum, input);
 
-# 327 "lib/io.c"
+# 285 "lib/io.c"
     if ((n_read==0))
 
-# 327 "lib/io.c"
+# 285 "lib/io.c"
     {
 
-# 328 "lib/io.c"
+# 286 "lib/io.c"
       break;
     }
 
-# 330 "lib/io.c"
+# 288 "lib/io.c"
     fwrite(buffer, 1, n_read, output);
 
-# 331 "lib/io.c"
+# 289 "lib/io.c"
     (size-=n_read);
   }
 }
 
 
-# 345 "lib/io.c"
+# 303 "lib/io.c"
 void file_skip_bytes(FILE* input, uint64_t n_bytes)
-# 345 "lib/io.c"
+# 303 "lib/io.c"
 {
 
-# 352 "lib/io.c"
+# 310 "lib/io.c"
   while (1)
 
-# 352 "lib/io.c"
+# 310 "lib/io.c"
   {
 
-# 353 "lib/io.c"
+# 311 "lib/io.c"
     if (((n_bytes==0)||feof(input)))
 
-# 353 "lib/io.c"
+# 311 "lib/io.c"
     {
 
-# 354 "lib/io.c"
+# 312 "lib/io.c"
       return;
     }
 
-# 356 "lib/io.c"
+# 314 "lib/io.c"
     int ch = fgetc(input);
 
-# 357 "lib/io.c"
+# 315 "lib/io.c"
     if ((ch<0))
 
-# 357 "lib/io.c"
+# 315 "lib/io.c"
     {
 
-# 359 "lib/io.c"
+# 317 "lib/io.c"
       return;
     }
 
-# 361 "lib/io.c"
+# 319 "lib/io.c"
     (n_bytes--);
   }
 }
 
 
-# 68 "lib/io.c"
-buffer_t* buffer_read_file(char* file_name)
-# 68 "lib/io.c"
+# 174 "lib/terminal.c"
+void term_set_foreground_color(buffer_t* buffer, uint32_t color)
+# 174 "lib/terminal.c"
 {
 
-# 69 "lib/io.c"
-  buffer_t* result = make_buffer(1);
-
-# 70 "lib/io.c"
-  return buffer_append_file_contents(result, file_name);
-}
-
-
-# 151 "lib/io.c"
-void make_file_read_only(char* file_name)
-# 151 "lib/io.c"
-{
-
-# 153 "lib/io.c"
-  if ((chmod(file_name, ((S_IRUSR|S_IRGRP)|S_IROTH))!=0))
-
-# 153 "lib/io.c"
-  {
-
-# 154 "lib/io.c"
-    log_fatal("Failed to set file permissions: %s", file_name);
-
-# 155 "lib/io.c"
-    log_fatal("strerror(errno) = %s", strerror(errno));
-
-# 156 "lib/io.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-
-# 166 "lib/io.c"
-void make_writable_if_exists(const char* file_name)
-# 166 "lib/io.c"
-{
-
-# 168 "lib/io.c"
-  if ((access(file_name, F_OK)!=0))
-
-# 168 "lib/io.c"
-  {
-
-# 170 "lib/io.c"
-    return;
-  }
-
-# 174 "lib/io.c"
-  struct stat file_stat;
-
-# 175 "lib/io.c"
-  if ((stat(file_name, (&file_stat))!=0))
-
-# 175 "lib/io.c"
-  {
-
-# 176 "lib/io.c"
-    log_fatal("Error getting file status for %s: %s\n", file_name, strerror(errno));
-
-# 177 "lib/io.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-# 181 "lib/io.c"
-  mode_t new_mode = ((file_stat.st_mode)|S_IWUSR);
-
-# 183 "lib/io.c"
-  if ((chmod(file_name, new_mode)!=0))
-
-# 183 "lib/io.c"
-  {
-
-# 184 "lib/io.c"
-    log_fatal("Error setting permissions for %s: %s\n", file_name, strerror(errno));
-
-# 185 "lib/io.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-
-# 362 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer)
-# 362 "lib/terminal.c"
-{
-
-# 363 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
-}
-
-
-# 225 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color)
-# 225 "lib/terminal.c"
-{
-
-# 226 "lib/terminal.c"
+# 175 "lib/terminal.c"
   uint8_t blue = (color&0xff);
 
-# 227 "lib/terminal.c"
+# 176 "lib/terminal.c"
   uint8_t green = ((color>>8)&0xff);
 
-# 228 "lib/terminal.c"
+# 177 "lib/terminal.c"
   uint8_t red = ((color>>16)&0xff);
 
-# 231 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
+# 180 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
 }
 
 
-# 246 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color)
-# 246 "lib/terminal.c"
+# 194 "lib/terminal.c"
+void term_set_background_color(buffer_t* buffer, uint32_t color)
+# 194 "lib/terminal.c"
 {
 
-# 247 "lib/terminal.c"
+# 195 "lib/terminal.c"
   uint8_t blue = (color&0xff);
 
-# 248 "lib/terminal.c"
+# 196 "lib/terminal.c"
   uint8_t green = ((color>>8)&0xff);
 
-# 249 "lib/terminal.c"
+# 197 "lib/terminal.c"
   uint8_t red = ((color>>16)&0xff);
 
-# 252 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
+# 200 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
 }
 
 
-# 269 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_absolute(buffer_t* buffer, int x, int y)
-# 269 "lib/terminal.c"
+# 216 "lib/terminal.c"
+void term_move_cursor_absolute(buffer_t* buffer, int x, int y)
+# 216 "lib/terminal.c"
+{
+
+# 218 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
+}
+
+
+# 230 "lib/terminal.c"
+void term_move_cursor_relative(buffer_t* buffer, int x, int y)
+# 230 "lib/terminal.c"
+{
+
+# 232 "lib/terminal.c"
+  if ((x>0))
+
+# 232 "lib/terminal.c"
+  {
+
+# 233 "lib/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
+  }
+  else
+
+# 234 "lib/terminal.c"
+  if ((x<0))
+
+# 234 "lib/terminal.c"
+  {
+
+# 235 "lib/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), (-x));
+  }
+
+# 237 "lib/terminal.c"
+  if ((y>0))
+
+# 237 "lib/terminal.c"
+  {
+
+# 238 "lib/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
+  }
+  else
+
+# 239 "lib/terminal.c"
+  {
+
+# 240 "lib/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), (-y));
+  }
+}
+
+
+# 250 "lib/terminal.c"
+void term_bold(buffer_t* buffer)
+# 250 "lib/terminal.c"
+{
+
+# 251 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
+}
+
+
+# 260 "lib/terminal.c"
+void term_dim(buffer_t* buffer)
+# 260 "lib/terminal.c"
+{
+
+# 261 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
+}
+
+
+# 270 "lib/terminal.c"
+void term_italic(buffer_t* buffer)
+# 270 "lib/terminal.c"
 {
 
 # 271 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
+  buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
 }
 
 
-# 284 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(buffer_t* buffer, int x, int y)
-# 284 "lib/terminal.c"
+# 280 "lib/terminal.c"
+void term_underline(buffer_t* buffer)
+# 280 "lib/terminal.c"
 {
 
-# 286 "lib/terminal.c"
-  if ((x>0))
+# 281 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
+}
 
-# 286 "lib/terminal.c"
-  {
-
-# 287 "lib/terminal.c"
-    (buffer=buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x));
-  }
-  else
-
-# 288 "lib/terminal.c"
-  if ((x<0))
-
-# 288 "lib/terminal.c"
-  {
-
-# 289 "lib/terminal.c"
-    (buffer=buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), (-x)));
-  }
 
 # 291 "lib/terminal.c"
-  if ((y>0))
-
+void term_reset_formatting(buffer_t* buffer)
 # 291 "lib/terminal.c"
-  {
+{
 
 # 292 "lib/terminal.c"
-    (buffer=buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y));
-  }
-  else
+  buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
+}
 
-# 293 "lib/terminal.c"
+
+# 301 "lib/terminal.c"
+void term_clear_screen(buffer_t* buffer)
+# 301 "lib/terminal.c"
+{
+
+# 302 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
+}
+
+
+# 310 "lib/terminal.c"
+void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box)
+# 311 "lib/terminal.c"
+{
+
+# 313 "lib/terminal.c"
+  term_move_cursor_absolute(buffer, x0, y0);
+
+# 314 "lib/terminal.c"
+  buffer_append_code_point(buffer, (box->upper_left_corner));
+
+# 315 "lib/terminal.c"
+  for (
+
+# 315 "lib/terminal.c"
+
+# 315 "lib/terminal.c"
+    uint64_t x = (x0+1);
+
+# 315 "lib/terminal.c"
+    (x<x1);
+
+# 315 "lib/terminal.c"
+    (x++))
+
+# 315 "lib/terminal.c"
   {
 
-# 294 "lib/terminal.c"
-    (buffer=buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), (-y)));
+# 316 "lib/terminal.c"
+    buffer_append_code_point(buffer, (box->top_edge));
   }
-
-# 296 "lib/terminal.c"
-  return buffer;
-}
-
-
-# 306 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_bold(buffer_t* buffer)
-# 306 "lib/terminal.c"
-{
-
-# 307 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
-}
-
-
-# 317 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer)
-# 317 "lib/terminal.c"
-{
 
 # 318 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
-}
+  buffer_append_code_point(buffer, (box->upper_right_corner));
 
+# 321 "lib/terminal.c"
+  term_move_cursor_absolute(buffer, x0, y1);
 
-# 328 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_italic(buffer_t* buffer)
-# 328 "lib/terminal.c"
-{
+# 322 "lib/terminal.c"
+  buffer_append_code_point(buffer, (box->lower_left_corner));
+
+# 323 "lib/terminal.c"
+  for (
+
+# 323 "lib/terminal.c"
+
+# 323 "lib/terminal.c"
+    uint64_t x = (x0+1);
+
+# 323 "lib/terminal.c"
+    (x<x1);
+
+# 323 "lib/terminal.c"
+    (x++))
+
+# 323 "lib/terminal.c"
+  {
+
+# 324 "lib/terminal.c"
+    buffer_append_code_point(buffer, (box->bottom_edge));
+  }
+
+# 326 "lib/terminal.c"
+  buffer_append_code_point(buffer, (box->lower_right_corner));
 
 # 329 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
-}
-
-
-# 339 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_underline(buffer_t* buffer)
-# 339 "lib/terminal.c"
-{
-
-# 340 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
-}
-
-
-# 351 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffer_t* buffer)
-# 351 "lib/terminal.c"
-{
-
-# 352 "lib/terminal.c"
-  return buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
-}
-
-
-# 372 "lib/terminal.c"
-__attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box)
-# 373 "lib/terminal.c"
-{
-
-# 375 "lib/terminal.c"
-  (buffer=term_move_cursor_absolute(buffer, x0, y0));
-
-# 376 "lib/terminal.c"
-  (buffer=buffer_append_code_point(buffer, (box->upper_left_corner)));
-
-# 377 "lib/terminal.c"
   for (
 
-# 377 "lib/terminal.c"
+# 329 "lib/terminal.c"
 
-# 377 "lib/terminal.c"
-    uint64_t x = (x0+1);
-
-# 377 "lib/terminal.c"
-    (x<x1);
-
-# 377 "lib/terminal.c"
-    (x++))
-
-# 377 "lib/terminal.c"
-  {
-
-# 378 "lib/terminal.c"
-    (buffer=buffer_append_code_point(buffer, (box->top_edge)));
-  }
-
-# 380 "lib/terminal.c"
-  (buffer=buffer_append_code_point(buffer, (box->upper_right_corner)));
-
-# 383 "lib/terminal.c"
-  (buffer=term_move_cursor_absolute(buffer, x0, y1));
-
-# 384 "lib/terminal.c"
-  (buffer=buffer_append_code_point(buffer, (box->lower_left_corner)));
-
-# 385 "lib/terminal.c"
-  for (
-
-# 385 "lib/terminal.c"
-
-# 385 "lib/terminal.c"
-    uint64_t x = (x0+1);
-
-# 385 "lib/terminal.c"
-    (x<x1);
-
-# 385 "lib/terminal.c"
-    (x++))
-
-# 385 "lib/terminal.c"
-  {
-
-# 386 "lib/terminal.c"
-    (buffer=buffer_append_code_point(buffer, (box->bottom_edge)));
-  }
-
-# 388 "lib/terminal.c"
-  (buffer=buffer_append_code_point(buffer, (box->lower_right_corner)));
-
-# 391 "lib/terminal.c"
-  for (
-
-# 391 "lib/terminal.c"
-
-# 391 "lib/terminal.c"
+# 329 "lib/terminal.c"
     int y = (y0+1);
 
-# 391 "lib/terminal.c"
+# 329 "lib/terminal.c"
     (y<y1);
 
-# 391 "lib/terminal.c"
+# 329 "lib/terminal.c"
     (y++))
 
-# 391 "lib/terminal.c"
+# 329 "lib/terminal.c"
   {
 
-# 392 "lib/terminal.c"
-    (buffer=term_move_cursor_absolute(buffer, x0, y));
+# 330 "lib/terminal.c"
+    term_move_cursor_absolute(buffer, x0, y);
 
-# 393 "lib/terminal.c"
-    (buffer=buffer_append_code_point(buffer, (box->left_edge)));
+# 331 "lib/terminal.c"
+    buffer_append_code_point(buffer, (box->left_edge));
 
-# 395 "lib/terminal.c"
+# 333 "lib/terminal.c"
     for (
 
-# 395 "lib/terminal.c"
+# 333 "lib/terminal.c"
 
-# 395 "lib/terminal.c"
+# 333 "lib/terminal.c"
       int x = (x0+1);
 
-# 395 "lib/terminal.c"
+# 333 "lib/terminal.c"
       (x<x1);
 
-# 395 "lib/terminal.c"
+# 333 "lib/terminal.c"
       (x++))
 
-# 395 "lib/terminal.c"
+# 333 "lib/terminal.c"
     {
 
-# 396 "lib/terminal.c"
-      (buffer=buffer_append_code_point(buffer, ' '));
+# 334 "lib/terminal.c"
+      buffer_append_code_point(buffer, ' ');
     }
 
-# 400 "lib/terminal.c"
-    (buffer=buffer_append_code_point(buffer, (box->right_edge)));
+# 338 "lib/terminal.c"
+    buffer_append_code_point(buffer, (box->right_edge));
   }
-
-# 403 "lib/terminal.c"
-  return buffer;
 }
 
 
-# 412 "lib/terminal.c"
+# 348 "lib/terminal.c"
 extern struct termios term_echo_off()
-# 412 "lib/terminal.c"
+# 348 "lib/terminal.c"
 {
 
-# 413 "lib/terminal.c"
+# 349 "lib/terminal.c"
   struct termios oldt;
 
-# 414 "lib/terminal.c"
+# 350 "lib/terminal.c"
   struct termios newt;
 
-# 415 "lib/terminal.c"
+# 351 "lib/terminal.c"
   tcgetattr(STDIN_FILENO, (&oldt));
 
-# 416 "lib/terminal.c"
+# 352 "lib/terminal.c"
   (newt=oldt);
 
-# 419 "lib/terminal.c"
+# 355 "lib/terminal.c"
   tcgetattr(STDIN_FILENO, (&oldt));
 
-# 420 "lib/terminal.c"
+# 356 "lib/terminal.c"
   (newt=oldt);
 
-# 423 "lib/terminal.c"
+# 359 "lib/terminal.c"
   ((newt.c_lflag)&=(~(ICANON|ECHO)));
 
-# 424 "lib/terminal.c"
+# 360 "lib/terminal.c"
   tcsetattr(STDIN_FILENO, TCSANOW, (&newt));
 
-# 426 "lib/terminal.c"
+# 362 "lib/terminal.c"
   return oldt;
 }
 
 
-# 434 "lib/terminal.c"
+# 370 "lib/terminal.c"
 extern void term_echo_restore(struct termios oldt)
-# 434 "lib/terminal.c"
+# 370 "lib/terminal.c"
 {
 
-# 436 "lib/terminal.c"
+# 372 "lib/terminal.c"
   tcsetattr(STDIN_FILENO, TCSANOW, (&oldt));
 }
 
 
-# 33 "lib/tokenizer.c"
-value_array_t* string_tokenize(const char* str, const char* delimiters)
-# 33 "lib/tokenizer.c"
+# 386 "lib/terminal.c"
+void term_alt_buffer(buffer_t* buffer)
+# 386 "lib/terminal.c"
 {
 
-# 34 "lib/tokenizer.c"
-  return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
+# 387 "lib/terminal.c"
+  buffer_printf(buffer, "\033[?1049h");
 }
 
 
-# 47 "lib/tokenizer.c"
-value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters)
-# 47 "lib/tokenizer.c"
+# 396 "lib/terminal.c"
+void term_main_buffer(buffer_t* buffer)
+# 396 "lib/terminal.c"
 {
 
-# 48 "lib/tokenizer.c"
-  return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
+# 397 "lib/terminal.c"
+  buffer_printf(buffer, "\033[?1049l");
 }
 
 
-# 60 "lib/tokenizer.c"
-value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters)
-# 61 "lib/tokenizer.c"
+# 400 "lib/terminal.c"
+void term_home(buffer_t* buffer)
+# 400 "lib/terminal.c"
 {
 
-# 62 "lib/tokenizer.c"
-  value_array_t* result = make_value_array(1);
+# 401 "lib/terminal.c"
+  buffer_printf(buffer, "\033[H");
+}
 
-# 63 "lib/tokenizer.c"
-  char token_data[1024];
 
-# 64 "lib/tokenizer.c"
-  int cpos = 0;
+# 404 "lib/terminal.c"
+uint32_t term_width(void)
+# 404 "lib/terminal.c"
+{
 
-# 65 "lib/tokenizer.c"
-  for (
+# 405 "lib/terminal.c"
+  struct winsize w;
 
-# 65 "lib/tokenizer.c"
+# 406 "lib/terminal.c"
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, (&w));
 
-# 65 "lib/tokenizer.c"
-    int i = 0;
+# 407 "lib/terminal.c"
+  return (w.ws_col);
+}
 
-# 65 "lib/tokenizer.c"
-    (i<length);
 
-# 65 "lib/tokenizer.c"
-    (i++))
+# 410 "lib/terminal.c"
+uint32_t term_height(void)
+# 410 "lib/terminal.c"
+{
 
-# 65 "lib/tokenizer.c"
-  {
+# 411 "lib/terminal.c"
+  struct winsize w;
 
-# 66 "lib/tokenizer.c"
-    uint8_t ch = (str[i]);
+# 412 "lib/terminal.c"
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, (&w));
 
-# 67 "lib/tokenizer.c"
-    if (((ch==0)||string_contains_char(delimiters, ch)))
+# 413 "lib/terminal.c"
+  return (w.ws_row);
+}
 
-# 67 "lib/tokenizer.c"
-    {
-
-# 68 "lib/tokenizer.c"
-      ((token_data[(cpos++)])='\0');
-
-# 69 "lib/tokenizer.c"
-      if ((strlen(token_data)>0))
-
-# 69 "lib/tokenizer.c"
-      {
-
-# 70 "lib/tokenizer.c"
-        add_duplicate(result, token_data);
-      }
 
 # 72 "lib/tokenizer.c"
-      (cpos=0);
-    }
-    else
-
-# 73 "lib/tokenizer.c"
-    {
-
-# 74 "lib/tokenizer.c"
-      ((token_data[(cpos++)])=ch);
-    }
-  }
-
-# 77 "lib/tokenizer.c"
-  ((token_data[(cpos++)])='\0');
-
-# 78 "lib/tokenizer.c"
-  if ((strlen(token_data)>0))
-
-# 78 "lib/tokenizer.c"
-  {
-
-# 79 "lib/tokenizer.c"
-    add_duplicate(result, token_data);
-  }
-
-# 82 "lib/tokenizer.c"
-  return result;
-}
-
-
-# 86 "lib/tokenizer.c"
 void add_duplicate(value_array_t* token_array, const char* data)
-# 86 "lib/tokenizer.c"
+# 72 "lib/tokenizer.c"
 {
 
-# 87 "lib/tokenizer.c"
+# 73 "lib/tokenizer.c"
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
 
 
-# 40 "lib/random.c"
-random_state_t random_state_for_test(void)
-# 40 "lib/random.c"
+# 19 "lib/tokenizer.c"
+value_array_t* string_tokenize(const char* str, const char* delimiters)
+# 19 "lib/tokenizer.c"
 {
 
-# 41 "lib/random.c"
+# 20 "lib/tokenizer.c"
+  return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
+}
+
+
+# 33 "lib/tokenizer.c"
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters)
+# 33 "lib/tokenizer.c"
+{
+
+# 34 "lib/tokenizer.c"
+  return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
+}
+
+
+# 46 "lib/tokenizer.c"
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters)
+# 47 "lib/tokenizer.c"
+{
+
+# 48 "lib/tokenizer.c"
+  value_array_t* result = make_value_array(1);
+
+# 49 "lib/tokenizer.c"
+  char token_data[1024];
+
+# 50 "lib/tokenizer.c"
+  int cpos = 0;
+
+# 51 "lib/tokenizer.c"
+  for (
+
+# 51 "lib/tokenizer.c"
+
+# 51 "lib/tokenizer.c"
+    int i = 0;
+
+# 51 "lib/tokenizer.c"
+    (i<length);
+
+# 51 "lib/tokenizer.c"
+    (i++))
+
+# 51 "lib/tokenizer.c"
+  {
+
+# 52 "lib/tokenizer.c"
+    uint8_t ch = (str[i]);
+
+# 53 "lib/tokenizer.c"
+    if (((ch==0)||string_contains_char(delimiters, ch)))
+
+# 53 "lib/tokenizer.c"
+    {
+
+# 54 "lib/tokenizer.c"
+      ((token_data[(cpos++)])='\0');
+
+# 55 "lib/tokenizer.c"
+      if ((strlen(token_data)>0))
+
+# 55 "lib/tokenizer.c"
+      {
+
+# 56 "lib/tokenizer.c"
+        add_duplicate(result, token_data);
+      }
+
+# 58 "lib/tokenizer.c"
+      (cpos=0);
+    }
+    else
+
+# 59 "lib/tokenizer.c"
+    {
+
+# 60 "lib/tokenizer.c"
+      ((token_data[(cpos++)])=ch);
+    }
+  }
+
+# 63 "lib/tokenizer.c"
+  ((token_data[(cpos++)])='\0');
+
+# 64 "lib/tokenizer.c"
+  if ((strlen(token_data)>0))
+
+# 64 "lib/tokenizer.c"
+  {
+
+# 65 "lib/tokenizer.c"
+    add_duplicate(result, token_data);
+  }
+
+# 68 "lib/tokenizer.c"
+  return result;
+}
+
+
+# 24 "lib/random.c"
+random_state_t random_state_for_test(void)
+# 24 "lib/random.c"
+{
+
+# 25 "lib/random.c"
   return ((random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
 }
 
 
-# 91 "lib/random.c"
-uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
-# 91 "lib/random.c"
-{
-
-# 92 "lib/random.c"
-  if ((maximum==0))
-
-# 92 "lib/random.c"
-  {
-
-# 93 "lib/random.c"
-    fatal_error(ERROR_ILLEGAL_ARGUMENT);
-  }
-
-# 97 "lib/random.c"
-  return (random_next(state)%maximum);
-
-# 101 "lib/random.c"
-  int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
-
-# 102 "lib/random.c"
-  while (1)
-
-# 102 "lib/random.c"
-  {
-
-# 103 "lib/random.c"
-    uint64_t n = random_next(state);
-
-# 104 "lib/random.c"
-    (n&=mask);
-
-# 105 "lib/random.c"
-    if ((n<maximum))
-
-# 105 "lib/random.c"
-    {
-
-# 106 "lib/random.c"
-      return n;
-    }
-  }
-}
-
-
-# 53 "lib/random.c"
+# 37 "lib/random.c"
 random_state_t* random_state(void)
-# 53 "lib/random.c"
+# 37 "lib/random.c"
 {
 
-# 54 "lib/random.c"
+# 38 "lib/random.c"
   if (((shared_random_state.a)==0))
 
-# 54 "lib/random.c"
+# 38 "lib/random.c"
   {
 
-# 55 "lib/random.c"
+# 39 "lib/random.c"
     ((shared_random_state.a)=(0x1E1D43C2CA44B1F5^(/*CAST*/(uint64_t) time(NULL))));
 
-# 56 "lib/random.c"
+# 40 "lib/random.c"
     ((shared_random_state.b)=(0x4FDD267452CEDBAC^(/*CAST*/(uint64_t) time(NULL))));
   }
 
-# 59 "lib/random.c"
+# 43 "lib/random.c"
   return (&shared_random_state);
 }
 
 
-# 73 "lib/random.c"
+# 57 "lib/random.c"
 uint64_t random_next(random_state_t* state)
-# 73 "lib/random.c"
+# 57 "lib/random.c"
 {
 
-# 74 "lib/random.c"
+# 58 "lib/random.c"
   uint64_t s0 = (state->a);
 
-# 75 "lib/random.c"
+# 59 "lib/random.c"
   uint64_t s1 = (state->b);
 
-# 76 "lib/random.c"
+# 60 "lib/random.c"
   uint64_t result = (rotl((s0*5), 7)*9);
 
-# 77 "lib/random.c"
+# 61 "lib/random.c"
   (s1^=s0);
 
-# 78 "lib/random.c"
+# 62 "lib/random.c"
   ((state->a)=((rotl(s0, 24)^s1)^(s1<<16)));
 
-# 79 "lib/random.c"
+# 63 "lib/random.c"
   ((state->b)=rotl(s1, 37));
 
-# 81 "lib/random.c"
+# 65 "lib/random.c"
   return result;
+}
+
+
+# 75 "lib/random.c"
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
+# 75 "lib/random.c"
+{
+
+# 76 "lib/random.c"
+  if ((maximum==0))
+
+# 76 "lib/random.c"
+  {
+
+# 77 "lib/random.c"
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+
+# 81 "lib/random.c"
+  return (random_next(state)%maximum);
+
+# 85 "lib/random.c"
+  int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
+
+# 86 "lib/random.c"
+  while (1)
+
+# 86 "lib/random.c"
+  {
+
+# 87 "lib/random.c"
+    uint64_t n = random_next(state);
+
+# 88 "lib/random.c"
+    (n&=mask);
+
+# 89 "lib/random.c"
+    if ((n<maximum))
+
+# 89 "lib/random.c"
+    {
+
+# 90 "lib/random.c"
+      return n;
+    }
+  }
 }
 
 
@@ -10446,513 +11018,513 @@ void cdl_end_table(cdl_printer_t* printer)
 }
 
 
-# 71 "lib/sub-process.c"
+# 43 "lib/sub-process.c"
 sub_process_t* make_sub_process(value_array_t* argv)
-# 71 "lib/sub-process.c"
+# 43 "lib/sub-process.c"
 {
 
-# 72 "lib/sub-process.c"
+# 44 "lib/sub-process.c"
   sub_process_t* result = malloc_struct(sub_process_t);
 
-# 73 "lib/sub-process.c"
+# 45 "lib/sub-process.c"
   ((result->argv)=argv);
 
-# 74 "lib/sub-process.c"
+# 46 "lib/sub-process.c"
   ((result->exit_code)=(-1));
 
-# 75 "lib/sub-process.c"
+# 47 "lib/sub-process.c"
   return result;
 }
 
 
-# 84 "lib/sub-process.c"
+# 56 "lib/sub-process.c"
 boolean_t sub_process_launch(sub_process_t* sub_process)
-# 84 "lib/sub-process.c"
+# 56 "lib/sub-process.c"
 {
 
-# 85 "lib/sub-process.c"
+# 57 "lib/sub-process.c"
   uint64_t length = ((sub_process->argv)->length);
 
-# 86 "lib/sub-process.c"
+# 58 "lib/sub-process.c"
   if ((length<1))
 
-# 86 "lib/sub-process.c"
+# 58 "lib/sub-process.c"
   {
 
-# 87 "lib/sub-process.c"
+# 59 "lib/sub-process.c"
     log_fatal("Expected at least the program path in argv");
 
-# 88 "lib/sub-process.c"
+# 60 "lib/sub-process.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 92 "lib/sub-process.c"
+# 64 "lib/sub-process.c"
   char** argv = (/*CAST*/(typeof(char**)) malloc_bytes(((length+1)*(sizeof(typeof(char*))))));
 
-# 94 "lib/sub-process.c"
+# 66 "lib/sub-process.c"
   for (
 
-# 94 "lib/sub-process.c"
+# 66 "lib/sub-process.c"
 
-# 94 "lib/sub-process.c"
+# 66 "lib/sub-process.c"
     int i = 0;
 
-# 94 "lib/sub-process.c"
+# 66 "lib/sub-process.c"
     (i<length);
 
-# 94 "lib/sub-process.c"
+# 66 "lib/sub-process.c"
     (i++))
 
-# 94 "lib/sub-process.c"
+# 66 "lib/sub-process.c"
   {
 
-# 95 "lib/sub-process.c"
+# 67 "lib/sub-process.c"
     ((argv[i])=value_array_get_ptr((sub_process->argv), i, typeof(char*)));
   }
 
-# 99 "lib/sub-process.c"
+# 71 "lib/sub-process.c"
   ((argv[length])=NULL);
 
-# 104 "lib/sub-process.c"
+# 76 "lib/sub-process.c"
   int stdin_pipe[2] = {0};
 
-# 105 "lib/sub-process.c"
+# 77 "lib/sub-process.c"
   int stdout_pipe[2] = {0};
 
-# 106 "lib/sub-process.c"
+# 78 "lib/sub-process.c"
   int stderr_pipe[2] = {0};
 
-# 107 "lib/sub-process.c"
+# 79 "lib/sub-process.c"
   if ((((pipe(stdin_pipe)==(-1))||(pipe(stdout_pipe)==(-1)))||(pipe(stderr_pipe)==(-1))))
 
-# 108 "lib/sub-process.c"
+# 80 "lib/sub-process.c"
   {
 
-# 109 "lib/sub-process.c"
+# 81 "lib/sub-process.c"
     log_fatal("Failed to create pipe for stdin, stdout or stderr");
 
-# 110 "lib/sub-process.c"
+# 82 "lib/sub-process.c"
     fatal_error(ERROR_ILLEGAL_STATE);
 
-# 111 "lib/sub-process.c"
+# 83 "lib/sub-process.c"
     return false;
   }
 
-# 115 "lib/sub-process.c"
+# 87 "lib/sub-process.c"
   pid_t pid = fork();
 
-# 116 "lib/sub-process.c"
+# 88 "lib/sub-process.c"
   if ((pid==(-1)))
 
-# 116 "lib/sub-process.c"
+# 88 "lib/sub-process.c"
   {
 
-# 117 "lib/sub-process.c"
+# 89 "lib/sub-process.c"
     log_fatal("fork() failed.");
 
-# 118 "lib/sub-process.c"
+# 90 "lib/sub-process.c"
     fatal_error(ERROR_ILLEGAL_STATE);
 
-# 119 "lib/sub-process.c"
+# 91 "lib/sub-process.c"
     return false;
   }
 
-# 122 "lib/sub-process.c"
+# 94 "lib/sub-process.c"
   if ((pid==0))
 
-# 122 "lib/sub-process.c"
+# 94 "lib/sub-process.c"
   {
 
-# 128 "lib/sub-process.c"
+# 100 "lib/sub-process.c"
     dup2((stdin_pipe[0]), STDIN_FILENO);
 
-# 129 "lib/sub-process.c"
+# 101 "lib/sub-process.c"
     dup2((stdout_pipe[1]), STDOUT_FILENO);
 
-# 130 "lib/sub-process.c"
+# 102 "lib/sub-process.c"
     dup2((stderr_pipe[1]), STDERR_FILENO);
 
-# 131 "lib/sub-process.c"
+# 103 "lib/sub-process.c"
     close((stdin_pipe[0]));
 
-# 132 "lib/sub-process.c"
+# 104 "lib/sub-process.c"
     close((stdin_pipe[1]));
 
-# 133 "lib/sub-process.c"
+# 105 "lib/sub-process.c"
     close((stdout_pipe[0]));
 
-# 134 "lib/sub-process.c"
+# 106 "lib/sub-process.c"
     close((stdout_pipe[1]));
 
-# 135 "lib/sub-process.c"
+# 107 "lib/sub-process.c"
     close((stderr_pipe[0]));
 
-# 136 "lib/sub-process.c"
+# 108 "lib/sub-process.c"
     close((stderr_pipe[1]));
 
-# 139 "lib/sub-process.c"
+# 111 "lib/sub-process.c"
     int exec_exit_status = execvp((argv[0]), argv);
 
-# 141 "lib/sub-process.c"
+# 113 "lib/sub-process.c"
     log_fatal("execvp returned non zero exit status %d", exec_exit_status);
 
-# 142 "lib/sub-process.c"
+# 114 "lib/sub-process.c"
     fatal_error(ERROR_ILLEGAL_STATE);
 
-# 143 "lib/sub-process.c"
+# 115 "lib/sub-process.c"
     return false;
   }
   else
 
-# 144 "lib/sub-process.c"
+# 116 "lib/sub-process.c"
   {
 
-# 151 "lib/sub-process.c"
+# 123 "lib/sub-process.c"
     close((stdin_pipe[0]));
 
-# 152 "lib/sub-process.c"
+# 124 "lib/sub-process.c"
     close((stdout_pipe[1]));
 
-# 153 "lib/sub-process.c"
+# 125 "lib/sub-process.c"
     close((stderr_pipe[1]));
 
-# 156 "lib/sub-process.c"
+# 128 "lib/sub-process.c"
     ((sub_process->pid)=pid);
 
-# 157 "lib/sub-process.c"
+# 129 "lib/sub-process.c"
     ((sub_process->stdin)=(stdin_pipe[1]));
 
-# 158 "lib/sub-process.c"
+# 130 "lib/sub-process.c"
     ((sub_process->stdout)=(stdout_pipe[0]));
 
-# 159 "lib/sub-process.c"
+# 131 "lib/sub-process.c"
     ((sub_process->stderr)=(stderr_pipe[0]));
 
-# 161 "lib/sub-process.c"
+# 133 "lib/sub-process.c"
     free_bytes(argv);
 
-# 163 "lib/sub-process.c"
+# 135 "lib/sub-process.c"
     return true;
   }
 }
 
 
-# 167 "lib/sub-process.c"
+# 139 "lib/sub-process.c"
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position)
-# 168 "lib/sub-process.c"
+# 140 "lib/sub-process.c"
 {
 
-# 169 "lib/sub-process.c"
+# 141 "lib/sub-process.c"
   int stdin_fd = (sub_process->stdin);
 
-# 172 "lib/sub-process.c"
+# 144 "lib/sub-process.c"
   int flags = fcntl(stdin_fd, F_GETFL, 0);
 
-# 173 "lib/sub-process.c"
+# 145 "lib/sub-process.c"
   fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
 
-# 175 "lib/sub-process.c"
+# 147 "lib/sub-process.c"
   ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
 
-# 178 "lib/sub-process.c"
+# 150 "lib/sub-process.c"
   if ((bytes_written==(-1)))
 
-# 178 "lib/sub-process.c"
+# 150 "lib/sub-process.c"
   {
 
-# 179 "lib/sub-process.c"
+# 151 "lib/sub-process.c"
     if (((errno==EAGAIN)||(errno==EWOULDBLOCK)))
 
-# 179 "lib/sub-process.c"
+# 151 "lib/sub-process.c"
     {
 
-# 180 "lib/sub-process.c"
+# 152 "lib/sub-process.c"
       return 0;
     }
     else
 
-# 181 "lib/sub-process.c"
+# 153 "lib/sub-process.c"
     {
 
-# 183 "lib/sub-process.c"
+# 155 "lib/sub-process.c"
       log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
 
-# 184 "lib/sub-process.c"
+# 156 "lib/sub-process.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
 
-# 188 "lib/sub-process.c"
+# 160 "lib/sub-process.c"
   return bytes_written;
 }
 
 
-# 191 "lib/sub-process.c"
+# 163 "lib/sub-process.c"
 void sub_process_close_stdin(sub_process_t* sub_process)
-# 191 "lib/sub-process.c"
+# 163 "lib/sub-process.c"
 {
 
-# 192 "lib/sub-process.c"
+# 164 "lib/sub-process.c"
   if (((sub_process->stdin)!=(-1)))
 
-# 192 "lib/sub-process.c"
+# 164 "lib/sub-process.c"
   {
 
-# 193 "lib/sub-process.c"
+# 165 "lib/sub-process.c"
     if ((close((sub_process->stdin))==(-1)))
 
-# 193 "lib/sub-process.c"
+# 165 "lib/sub-process.c"
     {
 
-# 194 "lib/sub-process.c"
+# 166 "lib/sub-process.c"
       log_fatal("Error closing subprocess stdin: %s", strerror(errno));
 
-# 195 "lib/sub-process.c"
+# 167 "lib/sub-process.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-# 197 "lib/sub-process.c"
+# 169 "lib/sub-process.c"
     ((sub_process->stdin)=(-1));
   }
 }
 
 
-# 201 "lib/sub-process.c"
+# 173 "lib/sub-process.c"
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr)
-# 202 "lib/sub-process.c"
+# 174 "lib/sub-process.c"
 {
 
-# 203 "lib/sub-process.c"
+# 175 "lib/sub-process.c"
   if ((stdout!=NULL))
 
-# 203 "lib/sub-process.c"
+# 175 "lib/sub-process.c"
   {
 
-# 204 "lib/sub-process.c"
+# 176 "lib/sub-process.c"
     buffer_read_ready_bytes_file_number(stdout, (sub_process->stdout), 0xffffffff);
   }
 
-# 207 "lib/sub-process.c"
+# 179 "lib/sub-process.c"
   if ((stderr!=NULL))
 
-# 207 "lib/sub-process.c"
+# 179 "lib/sub-process.c"
   {
 
-# 208 "lib/sub-process.c"
+# 180 "lib/sub-process.c"
     buffer_read_ready_bytes_file_number(stderr, (sub_process->stderr), 0xffffffff);
   }
 }
 
 
-# 262 "lib/sub-process.c"
-void sub_process_wait(sub_process_t* sub_process)
-# 262 "lib/sub-process.c"
+# 187 "lib/sub-process.c"
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status)
+# 188 "lib/sub-process.c"
 {
 
-# 263 "lib/sub-process.c"
-  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+# 189 "lib/sub-process.c"
+  if ((pid==(-1)))
 
-# 263 "lib/sub-process.c"
+# 189 "lib/sub-process.c"
   {
 
-# 264 "lib/sub-process.c"
+# 190 "lib/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
+
+# 191 "lib/sub-process.c"
+    return;
+  }
+
+# 195 "lib/sub-process.c"
+  if (WIFEXITED(status))
+
+# 195 "lib/sub-process.c"
+  {
+
+# 196 "lib/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
+
+# 197 "lib/sub-process.c"
+    ((sub_process->exit_code)=WEXITSTATUS(status));
+  }
+  else
+
+# 198 "lib/sub-process.c"
+  if (WIFSIGNALED(status))
+
+# 198 "lib/sub-process.c"
+  {
+
+# 199 "lib/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
+
+# 200 "lib/sub-process.c"
+    ((sub_process->exit_signal)=WTERMSIG(status));
+  }
+  else
+
+# 201 "lib/sub-process.c"
+  {
+
+# 202 "lib/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
+  }
+}
+
+
+# 213 "lib/sub-process.c"
+boolean_t is_sub_process_running(sub_process_t* sub_process)
+# 213 "lib/sub-process.c"
+{
+
+# 214 "lib/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 214 "lib/sub-process.c"
+  {
+
+# 215 "lib/sub-process.c"
+    return false;
+  }
+
+# 218 "lib/sub-process.c"
+  int status = 0;
+
+# 219 "lib/sub-process.c"
+  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
+
+# 220 "lib/sub-process.c"
+  if ((result==0))
+
+# 220 "lib/sub-process.c"
+  {
+
+# 221 "lib/sub-process.c"
+    return true;
+  }
+
+# 223 "lib/sub-process.c"
+  sub_process_record_exit_status(sub_process, result, status);
+
+# 224 "lib/sub-process.c"
+  return false;
+}
+
+
+# 234 "lib/sub-process.c"
+void sub_process_wait(sub_process_t* sub_process)
+# 234 "lib/sub-process.c"
+{
+
+# 235 "lib/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 235 "lib/sub-process.c"
+  {
+
+# 236 "lib/sub-process.c"
     int status = 0;
 
-# 265 "lib/sub-process.c"
+# 237 "lib/sub-process.c"
     pid_t result = waitpid((sub_process->pid), (&status), 0);
 
-# 266 "lib/sub-process.c"
+# 238 "lib/sub-process.c"
     sub_process_record_exit_status(sub_process, result, status);
   }
 }
 
 
-# 280 "lib/sub-process.c"
+# 252 "lib/sub-process.c"
 void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr)
-# 282 "lib/sub-process.c"
+# 254 "lib/sub-process.c"
 {
 
-# 283 "lib/sub-process.c"
+# 255 "lib/sub-process.c"
   sub_process_launch(sub_process);
 
-# 284 "lib/sub-process.c"
+# 256 "lib/sub-process.c"
   uint64_t written = 0;
 
-# 285 "lib/sub-process.c"
+# 257 "lib/sub-process.c"
   do
-# 285 "lib/sub-process.c"
+# 257 "lib/sub-process.c"
   {
 
-# 286 "lib/sub-process.c"
+# 258 "lib/sub-process.c"
     if (((child_stdin!=NULL)&&(written<(child_stdin->length))))
 
-# 286 "lib/sub-process.c"
+# 258 "lib/sub-process.c"
     {
 
-# 287 "lib/sub-process.c"
+# 259 "lib/sub-process.c"
       (written+=sub_process_write(sub_process, child_stdin, written));
 
-# 288 "lib/sub-process.c"
+# 260 "lib/sub-process.c"
       if ((written>=(child_stdin->length)))
 
-# 288 "lib/sub-process.c"
+# 260 "lib/sub-process.c"
       {
 
-# 289 "lib/sub-process.c"
+# 261 "lib/sub-process.c"
         sub_process_close_stdin(sub_process);
       }
     }
 
-# 292 "lib/sub-process.c"
+# 264 "lib/sub-process.c"
     sub_process_read(sub_process, child_stdout, child_stderr);
 
-# 293 "lib/sub-process.c"
+# 265 "lib/sub-process.c"
     usleep(5);
   }
   while (is_sub_process_running(sub_process));
 
-# 295 "lib/sub-process.c"
+# 267 "lib/sub-process.c"
   sub_process_read(sub_process, child_stdout, child_stderr);
 
-# 296 "lib/sub-process.c"
+# 268 "lib/sub-process.c"
   sub_process_wait(sub_process);
 }
 
 
-# 215 "lib/sub-process.c"
-void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status)
-# 216 "lib/sub-process.c"
-{
-
-# 217 "lib/sub-process.c"
-  if ((pid==(-1)))
-
-# 217 "lib/sub-process.c"
-  {
-
-# 218 "lib/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
-
-# 219 "lib/sub-process.c"
-    return;
-  }
-
-# 223 "lib/sub-process.c"
-  if (WIFEXITED(status))
-
-# 223 "lib/sub-process.c"
-  {
-
-# 224 "lib/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
-
-# 225 "lib/sub-process.c"
-    ((sub_process->exit_code)=WEXITSTATUS(status));
-  }
-  else
-
-# 226 "lib/sub-process.c"
-  if (WIFSIGNALED(status))
-
-# 226 "lib/sub-process.c"
-  {
-
-# 227 "lib/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
-
-# 228 "lib/sub-process.c"
-    ((sub_process->exit_signal)=WTERMSIG(status));
-  }
-  else
-
-# 229 "lib/sub-process.c"
-  {
-
-# 230 "lib/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
-  }
-}
-
-
-# 241 "lib/sub-process.c"
-boolean_t is_sub_process_running(sub_process_t* sub_process)
-# 241 "lib/sub-process.c"
-{
-
-# 242 "lib/sub-process.c"
-  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
-
-# 242 "lib/sub-process.c"
-  {
-
-# 243 "lib/sub-process.c"
-    return false;
-  }
-
-# 246 "lib/sub-process.c"
-  int status = 0;
-
-# 247 "lib/sub-process.c"
-  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
-
-# 248 "lib/sub-process.c"
-  if ((result==0))
-
-# 248 "lib/sub-process.c"
-  {
-
-# 249 "lib/sub-process.c"
-    return true;
-  }
-
-# 251 "lib/sub-process.c"
-  sub_process_record_exit_status(sub_process, result, status);
-
-# 252 "lib/sub-process.c"
-  return false;
-}
-
-
-# 28 "lib/splitjoin.c"
+# 18 "lib/splitjoin.c"
 buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator)
-# 29 "lib/splitjoin.c"
+# 19 "lib/splitjoin.c"
 {
 
-# 30 "lib/splitjoin.c"
+# 20 "lib/splitjoin.c"
   buffer_t* result = make_buffer(1);
 
-# 31 "lib/splitjoin.c"
+# 21 "lib/splitjoin.c"
   for (
 
-# 31 "lib/splitjoin.c"
+# 21 "lib/splitjoin.c"
 
-# 31 "lib/splitjoin.c"
+# 21 "lib/splitjoin.c"
     int i = 0;
 
-# 31 "lib/splitjoin.c"
+# 21 "lib/splitjoin.c"
     (i<(array_of_strings->length));
 
-# 31 "lib/splitjoin.c"
+# 21 "lib/splitjoin.c"
     (i++))
 
-# 31 "lib/splitjoin.c"
+# 21 "lib/splitjoin.c"
   {
 
-# 32 "lib/splitjoin.c"
+# 22 "lib/splitjoin.c"
     if ((i>0))
 
-# 32 "lib/splitjoin.c"
+# 22 "lib/splitjoin.c"
     {
 
-# 33 "lib/splitjoin.c"
+# 23 "lib/splitjoin.c"
       buffer_append_string(result, separator);
     }
 
-# 35 "lib/splitjoin.c"
+# 25 "lib/splitjoin.c"
     buffer_append_string(result, (value_array_get(array_of_strings, i).str));
   }
 
-# 37 "lib/splitjoin.c"
+# 27 "lib/splitjoin.c"
   return result;
 }
 
@@ -11806,138 +12378,138 @@ buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_e
 }
 
 
-# 101 "lexer.c"
+# 119 "lexer.c"
 char* token_to_string(token_t* token)
-# 101 "lexer.c"
+# 119 "lexer.c"
 {
 
-# 102 "lexer.c"
+# 120 "lexer.c"
   return buffer_c_substring((token->buffer), (token->start), (token->end));
 }
 
 
-# 111 "lexer.c"
+# 129 "lexer.c"
 token_t* make_derived_token(token_t* source_token)
-# 111 "lexer.c"
+# 129 "lexer.c"
 {
 
-# 112 "lexer.c"
+# 130 "lexer.c"
   token_t* result = (/*CAST*/(token_t*) malloc_copy_of((/*CAST*/(uint8_t*) source_token), (sizeof(token_t))));
 
-# 114 "lexer.c"
+# 132 "lexer.c"
   buffer_t* buffer = make_buffer(((source_token->end)-(source_token->start)));
 
-# 115 "lexer.c"
+# 133 "lexer.c"
   (buffer=buffer_append_sub_buffer(buffer, (source_token->start), (source_token->end), (result->buffer)));
 
-# 117 "lexer.c"
+# 135 "lexer.c"
   ((result->buffer)=buffer);
 
-# 118 "lexer.c"
+# 136 "lexer.c"
   ((result->start)=0);
 
-# 119 "lexer.c"
+# 137 "lexer.c"
   ((result->end)=(buffer->length));
 
-# 120 "lexer.c"
+# 138 "lexer.c"
   return result;
 }
 
 
-# 132 "lexer.c"
+# 150 "lexer.c"
 __attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, token_t token)
-# 132 "lexer.c"
+# 150 "lexer.c"
 {
 
-# 133 "lexer.c"
+# 151 "lexer.c"
   char* str = token_to_string((&token));
 
-# 134 "lexer.c"
+# 152 "lexer.c"
   (buffer=buffer_printf(buffer, "type: %s start: %d end: %d line=%d column=%d str: %s", token_type_to_string((token.type)), (token.start), (token.end), (token.line_number), (token.column_number), str));
 
-# 138 "lexer.c"
+# 156 "lexer.c"
   free_bytes(str);
 
-# 139 "lexer.c"
+# 157 "lexer.c"
   return buffer;
 }
 
 
-# 149 "lexer.c"
+# 167 "lexer.c"
 buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token)
-# 149 "lexer.c"
+# 167 "lexer.c"
 {
 
-# 152 "lexer.c"
+# 170 "lexer.c"
   char* str = token_to_string(token);
 
-# 153 "lexer.c"
+# 171 "lexer.c"
   (buffer=buffer_printf(buffer, "%s", str));
 
-# 154 "lexer.c"
+# 172 "lexer.c"
   free_bytes(str);
 
-# 155 "lexer.c"
+# 173 "lexer.c"
   return buffer;
 }
 
 
-# 181 "lexer.c"
+# 199 "lexer.c"
 token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position)
-# 182 "lexer.c"
+# 200 "lexer.c"
 {
 
-# 183 "lexer.c"
+# 201 "lexer.c"
   uint64_t pos = start_position;
 
-# 184 "lexer.c"
+# 202 "lexer.c"
   while ((pos<buffer_length(buffer)))
 
-# 184 "lexer.c"
+# 202 "lexer.c"
   {
 
-# 185 "lexer.c"
+# 203 "lexer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
-# 186 "lexer.c"
+# 204 "lexer.c"
     if ((decode_result.error))
 
-# 186 "lexer.c"
+# 204 "lexer.c"
     {
 
-# 187 "lexer.c"
+# 205 "lexer.c"
       return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
                                .error_position = pos});
     }
 
-# 191 "lexer.c"
+# 209 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
 
-# 192 "lexer.c"
+# 210 "lexer.c"
     if ((!isspace(code_point)))
 
-# 192 "lexer.c"
+# 210 "lexer.c"
     {
 
-# 193 "lexer.c"
+# 211 "lexer.c"
       break;
     }
 
-# 195 "lexer.c"
+# 213 "lexer.c"
     (pos+=(decode_result.num_bytes));
 
-# 201 "lexer.c"
+# 219 "lexer.c"
     if ((code_point=='\n'))
 
-# 201 "lexer.c"
+# 219 "lexer.c"
     {
 
-# 202 "lexer.c"
+# 220 "lexer.c"
       break;
     }
   }
 
-# 206 "lexer.c"
+# 224 "lexer.c"
   return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
                                            .type = TOKEN_TYPE_WHITESPACE,
                                            .start = start_position,
@@ -11945,84 +12517,84 @@ token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position)
 }
 
 
-# 218 "lexer.c"
+# 236 "lexer.c"
 boolean_t is_identifier_start(uint32_t code_point)
-# 218 "lexer.c"
+# 236 "lexer.c"
 {
-
-# 223 "lexer.c"
-  switch (code_point)
-
-# 223 "lexer.c"
-  {
-
-# 224 "lexer.c"
-    case '$':
-
-# 225 "lexer.c"
-    return true;
-
-# 226 "lexer.c"
-    case '_':
-
-# 227 "lexer.c"
-    return true;
-
-# 228 "lexer.c"
-    default:
-
-# 229 "lexer.c"
-    return isalpha(code_point);
-  }
-}
-
-
-# 238 "lexer.c"
-token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position)
-# 239 "lexer.c"
-{
-
-# 240 "lexer.c"
-  uint64_t pos = start_position;
 
 # 241 "lexer.c"
-  while ((pos<buffer_length(buffer)))
+  switch (code_point)
 
 # 241 "lexer.c"
   {
 
 # 242 "lexer.c"
-    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+    case '$':
 
 # 243 "lexer.c"
-    if ((decode_result.error))
-
-# 243 "lexer.c"
-    {
+    return true;
 
 # 244 "lexer.c"
+    case '_':
+
+# 245 "lexer.c"
+    return true;
+
+# 246 "lexer.c"
+    default:
+
+# 247 "lexer.c"
+    return isalpha(code_point);
+  }
+}
+
+
+# 256 "lexer.c"
+token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position)
+# 257 "lexer.c"
+{
+
+# 258 "lexer.c"
+  uint64_t pos = start_position;
+
+# 259 "lexer.c"
+  while ((pos<buffer_length(buffer)))
+
+# 259 "lexer.c"
+  {
+
+# 260 "lexer.c"
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+
+# 261 "lexer.c"
+    if ((decode_result.error))
+
+# 261 "lexer.c"
+    {
+
+# 262 "lexer.c"
       return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
                                .error_position = pos});
     }
 
-# 248 "lexer.c"
+# 266 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
 
-# 249 "lexer.c"
+# 267 "lexer.c"
     if ((!(is_identifier_start(code_point)||isdigit(code_point))))
 
-# 249 "lexer.c"
+# 267 "lexer.c"
     {
 
-# 250 "lexer.c"
+# 268 "lexer.c"
       break;
     }
 
-# 252 "lexer.c"
+# 270 "lexer.c"
     (pos+=(decode_result.num_bytes));
   }
 
-# 255 "lexer.c"
+# 273 "lexer.c"
   return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
                                            .type = TOKEN_TYPE_IDENTIFIER,
                                            .start = start_position,
@@ -12030,175 +12602,175 @@ token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position)
 }
 
 
-# 280 "lexer.c"
+# 298 "lexer.c"
 token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position)
-# 280 "lexer.c"
+# 298 "lexer.c"
 {
 
-# 281 "lexer.c"
+# 299 "lexer.c"
   numeric_literal_encoding_t encoding = NUMERIC_LITERAL_ENCODING_UNDECIDED;
 
-# 282 "lexer.c"
+# 300 "lexer.c"
   uint32_t previous_code_point = 0;
 
-# 284 "lexer.c"
+# 302 "lexer.c"
   token_type_t token_type = TOKEN_TYPE_INTEGER_LITERAL;
 
-# 286 "lexer.c"
+# 304 "lexer.c"
   uint64_t offset = 0;
 
-# 287 "lexer.c"
+# 305 "lexer.c"
   uint64_t pos = start_position;
 
-# 288 "lexer.c"
+# 306 "lexer.c"
   while ((pos<buffer_length(buffer)))
 
-# 288 "lexer.c"
+# 306 "lexer.c"
   {
 
-# 289 "lexer.c"
+# 307 "lexer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
-# 290 "lexer.c"
+# 308 "lexer.c"
     if ((decode_result.error))
 
-# 290 "lexer.c"
+# 308 "lexer.c"
     {
 
-# 291 "lexer.c"
+# 309 "lexer.c"
       return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
                                .error_position = pos});
     }
 
-# 295 "lexer.c"
+# 313 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
 
-# 297 "lexer.c"
+# 315 "lexer.c"
     if (((offset==0)&&(code_point!='0')))
 
-# 297 "lexer.c"
+# 315 "lexer.c"
     {
 
-# 298 "lexer.c"
+# 316 "lexer.c"
       (encoding=NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL);
     }
 
-# 301 "lexer.c"
+# 319 "lexer.c"
     if (((offset==1)&&(encoding==NUMERIC_LITERAL_ENCODING_UNDECIDED)))
 
-# 301 "lexer.c"
+# 319 "lexer.c"
     {
 
-# 302 "lexer.c"
+# 320 "lexer.c"
       boolean_t changed = false;
 
-# 303 "lexer.c"
+# 321 "lexer.c"
       if ((code_point=='x'))
 
-# 303 "lexer.c"
+# 321 "lexer.c"
       {
 
-# 304 "lexer.c"
+# 322 "lexer.c"
         (encoding=NUMERIC_LITERAL_ENCODING_HEX);
 
-# 305 "lexer.c"
+# 323 "lexer.c"
         (changed=true);
       }
       else
 
-# 306 "lexer.c"
+# 324 "lexer.c"
       if ((code_point=='o'))
 
-# 306 "lexer.c"
+# 324 "lexer.c"
       {
 
-# 307 "lexer.c"
+# 325 "lexer.c"
         (encoding=NUMERIC_LITERAL_ENCODING_OCTAL);
 
-# 308 "lexer.c"
+# 326 "lexer.c"
         (changed=true);
       }
       else
 
-# 309 "lexer.c"
+# 327 "lexer.c"
       if ((code_point=='b'))
 
-# 309 "lexer.c"
+# 327 "lexer.c"
       {
 
-# 310 "lexer.c"
+# 328 "lexer.c"
         (encoding=NUMERIC_LITERAL_ENCODING_HEX);
 
-# 311 "lexer.c"
+# 329 "lexer.c"
         (changed=true);
       }
 
-# 313 "lexer.c"
+# 331 "lexer.c"
       if (changed)
 
-# 313 "lexer.c"
+# 331 "lexer.c"
       {
 
-# 314 "lexer.c"
+# 332 "lexer.c"
         (pos+=(decode_result.num_bytes));
 
-# 315 "lexer.c"
+# 333 "lexer.c"
         (previous_code_point=code_point);
 
-# 316 "lexer.c"
+# 334 "lexer.c"
         (offset+=1);
 
-# 317 "lexer.c"
+# 335 "lexer.c"
         continue;
       }
     }
 
-# 321 "lexer.c"
+# 339 "lexer.c"
     if (((code_point=='.')&&((encoding==NUMERIC_LITERAL_ENCODING_UNDECIDED)||(encoding==NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL))))
 
-# 323 "lexer.c"
+# 341 "lexer.c"
     {
 
-# 324 "lexer.c"
+# 342 "lexer.c"
       (token_type=TOKEN_TYPE_FLOAT_LITERAL);
 
-# 325 "lexer.c"
+# 343 "lexer.c"
       (encoding=NUMERIC_LITERAL_ENCODING_FLOAT);
 
-# 326 "lexer.c"
+# 344 "lexer.c"
       (pos+=(decode_result.num_bytes));
 
-# 327 "lexer.c"
+# 345 "lexer.c"
       (previous_code_point=code_point);
 
-# 328 "lexer.c"
+# 346 "lexer.c"
       (offset+=1);
 
-# 329 "lexer.c"
+# 347 "lexer.c"
       continue;
     }
 
-# 332 "lexer.c"
+# 350 "lexer.c"
     if ((!can_extend_number(encoding, code_point, previous_code_point)))
 
-# 332 "lexer.c"
+# 350 "lexer.c"
     {
 
-# 333 "lexer.c"
+# 351 "lexer.c"
       break;
     }
 
-# 336 "lexer.c"
+# 354 "lexer.c"
     (pos+=(decode_result.num_bytes));
 
-# 337 "lexer.c"
+# 355 "lexer.c"
     (previous_code_point=code_point);
 
-# 338 "lexer.c"
+# 356 "lexer.c"
     (offset+=1);
   }
 
-# 341 "lexer.c"
+# 359 "lexer.c"
   return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
                                            .type = token_type,
                                            .start = start_position,
@@ -12206,106 +12778,106 @@ token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position)
 }
 
 
-# 349 "lexer.c"
+# 367 "lexer.c"
 boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_point, uint32_t previous_code_point)
-# 350 "lexer.c"
+# 368 "lexer.c"
 {
 
-# 351 "lexer.c"
+# 369 "lexer.c"
   switch (encoding)
 
-# 351 "lexer.c"
+# 369 "lexer.c"
   {
 
-# 352 "lexer.c"
+# 370 "lexer.c"
     case NUMERIC_LITERAL_ENCODING_UNDECIDED:
 
-# 353 "lexer.c"
+# 371 "lexer.c"
     return string_contains_char("0123456789.eEobxLlUuFf", code_point);
 
-# 355 "lexer.c"
+# 373 "lexer.c"
     case NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL:
 
-# 356 "lexer.c"
+# 374 "lexer.c"
     return string_contains_char("0123456789.eELlUuFf", code_point);
 
-# 358 "lexer.c"
+# 376 "lexer.c"
     case NUMERIC_LITERAL_ENCODING_BINARY:
 
-# 359 "lexer.c"
+# 377 "lexer.c"
     return string_contains_char("01LlUu", code_point);
 
-# 361 "lexer.c"
+# 379 "lexer.c"
     case NUMERIC_LITERAL_ENCODING_OCTAL:
 
-# 362 "lexer.c"
+# 380 "lexer.c"
     return string_contains_char("01234567LlUu", code_point);
 
-# 364 "lexer.c"
+# 382 "lexer.c"
     case NUMERIC_LITERAL_ENCODING_HEX:
 
-# 365 "lexer.c"
+# 383 "lexer.c"
     return string_contains_char("0123456789abcdefABCDEFLlUu", code_point);
 
-# 367 "lexer.c"
+# 385 "lexer.c"
     case NUMERIC_LITERAL_ENCODING_DECIMAL:
 
-# 368 "lexer.c"
+# 386 "lexer.c"
     return string_contains_char("0123456789LlUu", code_point);
 
-# 370 "lexer.c"
+# 388 "lexer.c"
     case NUMERIC_LITERAL_ENCODING_FLOAT:
 
-# 371 "lexer.c"
+# 389 "lexer.c"
     return (string_contains_char("0123456789FfeE", code_point)||(((previous_code_point=='e')||(previous_code_point=='E'))&&string_contains_char("+-", code_point)));
 
-# 375 "lexer.c"
+# 393 "lexer.c"
     default:
 
-# 376 "lexer.c"
+# 394 "lexer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
 
-# 377 "lexer.c"
+# 395 "lexer.c"
     return false;
   }
 
-# 380 "lexer.c"
+# 398 "lexer.c"
   return false;
 }
 
 
-# 449 "lexer.c"
+# 467 "lexer.c"
 token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position)
-# 450 "lexer.c"
+# 468 "lexer.c"
 {
 
-# 451 "lexer.c"
+# 469 "lexer.c"
   int num_elements = ((sizeof(c_punctuation))/(sizeof((c_punctuation[0]))));
 
-# 452 "lexer.c"
+# 470 "lexer.c"
   for (
 
-# 452 "lexer.c"
+# 470 "lexer.c"
 
-# 452 "lexer.c"
+# 470 "lexer.c"
     int i = 0;
 
-# 452 "lexer.c"
+# 470 "lexer.c"
     (i<num_elements);
 
-# 452 "lexer.c"
+# 470 "lexer.c"
     (i++))
 
-# 452 "lexer.c"
+# 470 "lexer.c"
   {
 
-# 453 "lexer.c"
+# 471 "lexer.c"
     if (buffer_match_string_at(buffer, start_position, (c_punctuation[i])))
 
-# 453 "lexer.c"
+# 471 "lexer.c"
     {
 
-# 454 "lexer.c"
+# 472 "lexer.c"
       return ((token_or_error_t) {.token = compound_literal(
                token_t, {.buffer = buffer,
                          .type = TOKEN_TYPE_PUNCTUATION,
@@ -12314,57 +12886,57 @@ token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position)
     }
   }
 
-# 463 "lexer.c"
+# 481 "lexer.c"
   return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
                          .error_position = start_position});
 }
 
 
-# 468 "lexer.c"
+# 486 "lexer.c"
 boolean_t is_comment_start(buffer_t* buffer, uint64_t position)
-# 468 "lexer.c"
+# 486 "lexer.c"
 {
 
-# 469 "lexer.c"
+# 487 "lexer.c"
   return (buffer_match_string_at(buffer, position, "//")||buffer_match_string_at(buffer, position, "/*"));
 }
 
 
-# 473 "lexer.c"
+# 491 "lexer.c"
 token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position)
-# 473 "lexer.c"
+# 491 "lexer.c"
 {
 
-# 474 "lexer.c"
+# 492 "lexer.c"
   if (buffer_match_string_at(buffer, start_position, "//"))
 
-# 474 "lexer.c"
+# 492 "lexer.c"
   {
 
-# 475 "lexer.c"
+# 493 "lexer.c"
     for (
 
-# 475 "lexer.c"
+# 493 "lexer.c"
 
-# 475 "lexer.c"
+# 493 "lexer.c"
       uint64_t position = (start_position+2);
 
-# 475 "lexer.c"
+# 493 "lexer.c"
       (position<(buffer->length));
 
-# 475 "lexer.c"
+# 493 "lexer.c"
       (position++))
 
-# 476 "lexer.c"
+# 494 "lexer.c"
     {
 
-# 477 "lexer.c"
+# 495 "lexer.c"
       if (buffer_match_string_at(buffer, position, "\n"))
 
-# 477 "lexer.c"
+# 495 "lexer.c"
       {
 
-# 478 "lexer.c"
+# 496 "lexer.c"
         return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
                                                  .type = TOKEN_TYPE_COMMENT,
                                                  .start = start_position,
@@ -12374,33 +12946,33 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position)
   }
   else
 
-# 486 "lexer.c"
+# 504 "lexer.c"
   {
 
-# 487 "lexer.c"
+# 505 "lexer.c"
     for (
 
-# 487 "lexer.c"
+# 505 "lexer.c"
 
-# 487 "lexer.c"
+# 505 "lexer.c"
       uint64_t position = (start_position+2);
 
-# 487 "lexer.c"
+# 505 "lexer.c"
       (position<(buffer->length));
 
-# 487 "lexer.c"
+# 505 "lexer.c"
       (position++))
 
-# 488 "lexer.c"
+# 506 "lexer.c"
     {
 
-# 489 "lexer.c"
+# 507 "lexer.c"
       if (buffer_match_string_at(buffer, position, "*/"))
 
-# 489 "lexer.c"
+# 507 "lexer.c"
       {
 
-# 490 "lexer.c"
+# 508 "lexer.c"
         return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
                                                  .type = TOKEN_TYPE_COMMENT,
                                                  .start = start_position,
@@ -12409,302 +12981,469 @@ token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position)
     }
   }
 
-# 500 "lexer.c"
+# 518 "lexer.c"
   return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UNTERMINATED_COMMENT,
                            .error_position = start_position});
 }
 
 
-# 505 "lexer.c"
+# 523 "lexer.c"
 boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position)
-# 505 "lexer.c"
+# 523 "lexer.c"
 {
 
-# 506 "lexer.c"
+# 524 "lexer.c"
   return buffer_match_string_at(buffer, position, "\"");
 }
 
 
-# 509 "lexer.c"
-token_or_error_t tokenize_quoted_literal_common(buffer_t* buffer, uint64_t start_position, char* opening_sequence, char* quoted_closing_sequence, char* closing_sequence, token_type_t token_type, tokenizer_error_t unterminated_error_code)
-# 512 "lexer.c"
+# 527 "lexer.c"
+boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position)
+# 527 "lexer.c"
 {
-
-# 519 "lexer.c"
-  if ((!buffer_match_string_at(buffer, start_position, opening_sequence)))
-
-# 519 "lexer.c"
-  {
-
-# 520 "lexer.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-# 523 "lexer.c"
-  for (
-
-# 523 "lexer.c"
-
-# 523 "lexer.c"
-    uint64_t position = (start_position+strlen(opening_sequence));
-
-# 523 "lexer.c"
-    (position<(buffer->length));
-
-# 523 "lexer.c"
-    )
-
-# 524 "lexer.c"
-  {
-
-# 525 "lexer.c"
-    if (buffer_match_string_at(buffer, position, quoted_closing_sequence))
-
-# 525 "lexer.c"
-    {
-
-# 526 "lexer.c"
-      (position+=strlen(quoted_closing_sequence));
-    }
-    else
-
-# 527 "lexer.c"
-    if (buffer_match_string_at(buffer, position, closing_sequence))
-
-# 527 "lexer.c"
-    {
 
 # 528 "lexer.c"
-      return ((token_or_error_t) {.token = compound_literal(
-               token_t, {.buffer = buffer,
-                         .type = token_type,
-                         .start = start_position,
-                         .end = position + strlen(closing_sequence)})});
-    }
-    else
-
-# 535 "lexer.c"
-    {
-
-# 541 "lexer.c"
-      (position+=1);
-    }
-  }
-
-# 544 "lexer.c"
-  return ((token_or_error_t) {.error_code = unterminated_error_code,
-                           .error_position = start_position});
-}
-
-
-# 549 "lexer.c"
-token_or_error_t tokenize_string_literal(buffer_t* buffer, uint64_t start_position)
-# 550 "lexer.c"
-{
-
-# 551 "lexer.c"
-  return tokenize_quoted_literal_common(buffer, start_position, "\"", "\\\"", "\"", TOKEN_TYPE_STRING_LITERAL, TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
-}
-
-
-# 556 "lexer.c"
-boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position)
-# 556 "lexer.c"
-{
-
-# 557 "lexer.c"
   return buffer_match_string_at(buffer, position, "'");
 }
 
 
-# 560 "lexer.c"
-token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position)
-# 561 "lexer.c"
+# 536 "lexer.c"
+token_or_error_t tokenize_string_literal(buffer_t* buffer, uint64_t start_position)
+# 537 "lexer.c"
 {
 
-# 566 "lexer.c"
-  return tokenize_quoted_literal_common(buffer, start_position, "'", "\\'", "'", TOKEN_TYPE_CHARACTER_LITERAL, TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL);
+# 538 "lexer.c"
+  uint64_t position = start_position;
+
+# 539 "lexer.c"
+  if (is_string_literal_start(buffer, position))
+
+# 539 "lexer.c"
+  {
+
+# 540 "lexer.c"
+    (position++);
+
+# 541 "lexer.c"
+    while (true)
+
+# 541 "lexer.c"
+    {
+
+# 542 "lexer.c"
+      if ((position>buffer_length(buffer)))
+
+# 542 "lexer.c"
+      {
+
+# 543 "lexer.c"
+        make_token_error_result(position, TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
+      }
+
+# 546 "lexer.c"
+      if (is_string_literal_start(buffer, position))
+
+# 546 "lexer.c"
+      {
+
+# 547 "lexer.c"
+        return make_token_result(buffer, TOKEN_TYPE_STRING_LITERAL, start_position, (position+1));
+      }
+
+# 550 "lexer.c"
+      (position=advance_char_literal_position(buffer, position));
+    }
+  }
+
+# 553 "lexer.c"
+  return make_token_error_result(position, TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
 }
 
 
-# 598 "lexer.c"
-tokenizer_result_t tokenize(buffer_t* buffer)
-# 598 "lexer.c"
+# 562 "lexer.c"
+token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position)
+# 563 "lexer.c"
 {
 
-# 599 "lexer.c"
-  tokenizer_result_t result = {0};
+# 564 "lexer.c"
+  uint64_t position = start_position;
 
-# 603 "lexer.c"
-  value_array_t* result_tokens = make_value_array(1024);
+# 565 "lexer.c"
+  if (is_character_literal_start(buffer, position))
 
-# 605 "lexer.c"
-  uint64_t line_number = 1;
-
-# 606 "lexer.c"
-  uint64_t column_number = 1;
-
-# 608 "lexer.c"
-  uint32_t pos = 0;
-
-# 609 "lexer.c"
-  while ((pos<buffer_length(buffer)))
-
-# 609 "lexer.c"
+# 565 "lexer.c"
   {
 
-# 610 "lexer.c"
-    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+# 566 "lexer.c"
+    (position++);
 
-# 611 "lexer.c"
-    if ((decode_result.error))
+# 567 "lexer.c"
+    (position=advance_char_literal_position(buffer, position));
 
-# 611 "lexer.c"
+# 568 "lexer.c"
+    if (is_character_literal_start(buffer, position))
+
+# 568 "lexer.c"
     {
 
+# 569 "lexer.c"
+      return make_token_result(buffer, TOKEN_TYPE_CHARACTER_LITERAL, start_position, (position+1));
+    }
+  }
+
+# 573 "lexer.c"
+  return make_token_error_result(position, TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL);
+}
+
+
+# 582 "lexer.c"
+uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position)
+# 582 "lexer.c"
+{
+
+# 584 "lexer.c"
+  utf8_decode_result_t result = buffer_utf8_decode(buffer, position);
+
+# 585 "lexer.c"
+  if (((result.num_bytes)==0))
+
+# 585 "lexer.c"
+  {
+
+# 586 "lexer.c"
+    log_fatal("We seem to have non-utf-8 input...");
+
+# 587 "lexer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 589 "lexer.c"
+  if (((result.code_point)==UNICODE_BACKSLASH_CODE_POINT))
+
+# 589 "lexer.c"
+  {
+
+# 590 "lexer.c"
+    (position+=(result.num_bytes));
+
+# 591 "lexer.c"
+    (result=buffer_utf8_decode(buffer, position));
+
+# 593 "lexer.c"
+    if (((result.num_bytes)==0))
+
+# 593 "lexer.c"
+    {
+
+# 594 "lexer.c"
+      log_fatal("We seem to have non-utf-8 input issue #2...");
+
+# 595 "lexer.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 598 "lexer.c"
+    switch ((result.code_point))
+
+# 598 "lexer.c"
+    {
+
+# 599 "lexer.c"
+      case UNICODE_LOWER_N_CODE_POINT:
+
+# 600 "lexer.c"
+      case 't':
+
+# 601 "lexer.c"
+      case 'r':
+
+# 602 "lexer.c"
+      case UNICODE_BACKSLASH_CODE_POINT:
+
+# 603 "lexer.c"
+      case UNICODE_QUOTE_CODE_POINT:
+
+# 604 "lexer.c"
+      case UNICODE_DOUBLE_QUOTE_CODE_POINT:
+
+# 605 "lexer.c"
+      (position+=(result.num_bytes));
+
+# 606 "lexer.c"
+      return position;
+
+# 607 "lexer.c"
+      case 'x':
+
+# 608 "lexer.c"
+      (position+=((result.num_bytes)+2));
+
+# 609 "lexer.c"
+      return position;
+
+# 610 "lexer.c"
+      case 'u':
+
+# 611 "lexer.c"
+      (position+=((result.num_bytes)+4));
+
 # 612 "lexer.c"
+      return position;
+
+# 614 "lexer.c"
+      case '0':
+
+# 615 "lexer.c"
+      case '1':
+
+# 616 "lexer.c"
+      case '2':
+
+# 617 "lexer.c"
+      case '3':
+
+# 618 "lexer.c"
+      case '4':
+
+# 619 "lexer.c"
+      case '5':
+
+# 620 "lexer.c"
+      case '6':
+
+# 621 "lexer.c"
+      case '7':
+
+# 621 "lexer.c"
+      {
+
+# 623 "lexer.c"
+        (position+=(result.num_bytes));
+
+# 626 "lexer.c"
+        utf8_decode_result_t next = buffer_utf8_decode(buffer, position);
+
+# 627 "lexer.c"
+        if ((((next.code_point)>='0')&&((next.code_point)<='7')))
+
+# 627 "lexer.c"
+        {
+
+# 628 "lexer.c"
+          (position+=(next.num_bytes));
+
+# 631 "lexer.c"
+          (next=buffer_utf8_decode(buffer, position));
+
+# 632 "lexer.c"
+          if ((((next.code_point)>='0')&&((next.code_point)<='7')))
+
+# 632 "lexer.c"
+          {
+
+# 633 "lexer.c"
+            (position+=(next.num_bytes));
+          }
+        }
+
+# 636 "lexer.c"
+        return position;
+      }
+
+# 639 "lexer.c"
+      default:
+
+# 641 "lexer.c"
+      fatal_error(ERROR_ILLEGAL_INPUT);
+
+# 642 "lexer.c"
+      break;
+    }
+  }
+
+# 645 "lexer.c"
+  return (position+(result.num_bytes));
+}
+
+
+# 674 "lexer.c"
+tokenizer_result_t tokenize(buffer_t* buffer)
+# 674 "lexer.c"
+{
+
+# 675 "lexer.c"
+  tokenizer_result_t result = {0};
+
+# 679 "lexer.c"
+  value_array_t* result_tokens = make_value_array(1024);
+
+# 681 "lexer.c"
+  uint64_t line_number = 1;
+
+# 682 "lexer.c"
+  uint64_t column_number = 1;
+
+# 684 "lexer.c"
+  uint32_t pos = 0;
+
+# 685 "lexer.c"
+  while ((pos<buffer_length(buffer)))
+
+# 685 "lexer.c"
+  {
+
+# 686 "lexer.c"
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+
+# 687 "lexer.c"
+    if ((decode_result.error))
+
+# 687 "lexer.c"
+    {
+
+# 688 "lexer.c"
       return ((tokenizer_result_t) {.tokenizer_error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR});
     }
 
-# 617 "lexer.c"
+# 693 "lexer.c"
     uint32_t code_point = (decode_result.code_point);
 
-# 618 "lexer.c"
+# 694 "lexer.c"
     token_t* token = ((void *)0);
 
-# 620 "lexer.c"
+# 696 "lexer.c"
     if (isspace(code_point))
 
-# 620 "lexer.c"
+# 696 "lexer.c"
     {
 
-# 621 "lexer.c"
+# 697 "lexer.c"
       read_token(tokenize_whitespace);
     }
     else
 
-# 622 "lexer.c"
+# 698 "lexer.c"
     if (is_identifier_start(code_point))
 
-# 622 "lexer.c"
+# 698 "lexer.c"
     {
 
-# 623 "lexer.c"
+# 699 "lexer.c"
       read_token(tokenize_identifier);
     }
     else
 
-# 624 "lexer.c"
+# 700 "lexer.c"
     if (isdigit(code_point))
 
-# 624 "lexer.c"
+# 700 "lexer.c"
     {
 
-# 625 "lexer.c"
+# 701 "lexer.c"
       read_token(tokenize_numeric);
     }
     else
 
-# 626 "lexer.c"
+# 702 "lexer.c"
     if (is_comment_start(buffer, pos))
 
-# 626 "lexer.c"
+# 702 "lexer.c"
     {
 
-# 627 "lexer.c"
+# 703 "lexer.c"
       read_token(tokenize_comment);
     }
     else
 
-# 628 "lexer.c"
+# 704 "lexer.c"
     if (is_string_literal_start(buffer, pos))
 
-# 628 "lexer.c"
+# 704 "lexer.c"
     {
 
-# 629 "lexer.c"
+# 705 "lexer.c"
       read_token(tokenize_string_literal);
     }
     else
 
-# 630 "lexer.c"
+# 706 "lexer.c"
     if (is_character_literal_start(buffer, pos))
 
-# 630 "lexer.c"
+# 706 "lexer.c"
     {
 
-# 631 "lexer.c"
+# 707 "lexer.c"
       read_token(tokenize_character_literal);
     }
     else
 
-# 632 "lexer.c"
+# 708 "lexer.c"
     {
 
-# 633 "lexer.c"
+# 709 "lexer.c"
       read_token(tokenize_punctuation);
     }
 
-# 638 "lexer.c"
+# 714 "lexer.c"
     if ((token!=((void *)0)))
 
-# 638 "lexer.c"
+# 714 "lexer.c"
     {
 
-# 639 "lexer.c"
+# 715 "lexer.c"
       ((token->line_number)=line_number);
 
-# 640 "lexer.c"
+# 716 "lexer.c"
       ((token->column_number)=column_number);
 
-# 641 "lexer.c"
+# 717 "lexer.c"
       for (
 
-# 641 "lexer.c"
+# 717 "lexer.c"
 
-# 641 "lexer.c"
+# 717 "lexer.c"
         int i = (token->start);
 
-# 641 "lexer.c"
+# 717 "lexer.c"
         (i<(token->end));
 
-# 641 "lexer.c"
+# 717 "lexer.c"
         (i++))
 
-# 641 "lexer.c"
+# 717 "lexer.c"
       {
 
-# 642 "lexer.c"
+# 718 "lexer.c"
         uint8_t ch = buffer_get((token->buffer), i);
 
-# 643 "lexer.c"
+# 719 "lexer.c"
         if ((ch=='\n'))
 
-# 643 "lexer.c"
+# 719 "lexer.c"
         {
 
-# 644 "lexer.c"
+# 720 "lexer.c"
           (line_number++);
 
-# 645 "lexer.c"
+# 721 "lexer.c"
           (column_number=1);
         }
         else
 
-# 646 "lexer.c"
+# 722 "lexer.c"
         {
 
-# 647 "lexer.c"
+# 723 "lexer.c"
           (column_number++);
         }
       }
     }
   }
 
-# 653 "lexer.c"
+# 729 "lexer.c"
   ((result.tokens)=result_tokens);
 
-# 654 "lexer.c"
+# 730 "lexer.c"
   return result;
 }
 
@@ -24903,98 +25642,120 @@ int main(int argc, char** argv)
   else
 
 # 60 "main.c"
+  if (string_equal("test-assembler", FLAG_command))
+
+# 60 "main.c"
   {
 
 # 61 "main.c"
+    test_assembler_command();
+  }
+  else
+
+# 62 "main.c"
+  if (string_equal("roci", FLAG_command))
+
+# 62 "main.c"
+  {
+
+# 63 "main.c"
+    roci_command();
+  }
+  else
+
+# 64 "main.c"
+  {
+
+# 65 "main.c"
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }
 
-# 64 "main.c"
+# 68 "main.c"
   exit(0);
 }
 
 
-# 75 "main.c"
+# 79 "main.c"
 buffer_t* command_line_args_to_buffer(int argc, char** argv)
-# 75 "main.c"
+# 79 "main.c"
 {
 
-# 76 "main.c"
+# 80 "main.c"
   buffer_t* output = make_buffer((argc*5));
 
-# 78 "main.c"
+# 82 "main.c"
   buffer_printf(output, "// Full Compiler Command Line:\n//\n");
 
-# 79 "main.c"
+# 83 "main.c"
   for (
 
-# 79 "main.c"
+# 83 "main.c"
 
-# 79 "main.c"
+# 83 "main.c"
     int i = 0;
 
-# 79 "main.c"
+# 83 "main.c"
     (i<argc);
 
-# 79 "main.c"
+# 83 "main.c"
     (i++))
 
-# 79 "main.c"
+# 83 "main.c"
   {
 
-# 80 "main.c"
+# 84 "main.c"
     buffer_printf(output, "//%s%s\n", ((i>0) ? "    " : " "), (argv[i]));
   }
 
-# 83 "main.c"
+# 87 "main.c"
   buffer_append_string(output, "\n");
 
-# 84 "main.c"
+# 88 "main.c"
   buffer_append_string(output, "// These checksums are currently easy to fake for example by using a\n");
 
-# 87 "main.c"
+# 91 "main.c"
   buffer_append_string(output, "// hacked git in the PATH at the time this compile was run.\n");
 
-# 89 "main.c"
+# 93 "main.c"
   buffer_append_string(output, "//\n");
 
-# 91 "main.c"
+# 95 "main.c"
   for (
 
-# 91 "main.c"
-
-# 91 "main.c"
-    int i = 0;
-
-# 91 "main.c"
-    (i<(FLAG_files->length));
-
-# 91 "main.c"
-    (i++))
-
-# 91 "main.c"
-  {
-
-# 92 "main.c"
-    char* filename = (value_array_get(FLAG_files, i).str);
-
-# 94 "main.c"
-    buffer_t* git_hash = git_hash_object(filename);
+# 95 "main.c"
 
 # 95 "main.c"
-    buffer_replace_all(git_hash, "\n", "");
+    int i = 0;
+
+# 95 "main.c"
+    (i<(FLAG_files->length));
+
+# 95 "main.c"
+    (i++))
+
+# 95 "main.c"
+  {
 
 # 96 "main.c"
-    buffer_append_string(output, "// git cat-file -p ");
-
-# 97 "main.c"
-    buffer_append_buffer(output, git_hash);
+    char* filename = (value_array_get(FLAG_files, i).str);
 
 # 98 "main.c"
+    buffer_t* git_hash = git_hash_object(filename);
+
+# 99 "main.c"
+    buffer_replace_all(git_hash, "\n", "");
+
+# 100 "main.c"
+    buffer_append_string(output, "// git cat-file -p ");
+
+# 101 "main.c"
+    buffer_append_buffer(output, git_hash);
+
+# 102 "main.c"
     buffer_printf(output, " > %s\n", filename);
   }
 
-# 101 "main.c"
+# 105 "main.c"
   return output;
 }
 
@@ -26577,6 +27338,58 @@ void handle_expression_test(char* file_name)
 }
 
 
+# 9 "test-assembler.c"
+void test_assembler_command()
+# 9 "test-assembler.c"
+{
+
+# 10 "test-assembler.c"
+  log_info("test_assembler_command()\n");
+
+# 11 "test-assembler.c"
+  value_array_t* files = read_files(FLAG_files);
+
+# 12 "test-assembler.c"
+  for (
+
+# 12 "test-assembler.c"
+
+# 12 "test-assembler.c"
+    int i = 0;
+
+# 12 "test-assembler.c"
+    (i<(FLAG_files->length));
+
+# 12 "test-assembler.c"
+    (i++))
+
+# 12 "test-assembler.c"
+  {
+
+# 13 "test-assembler.c"
+    log_info("test_assembler_command(%d)\n", i);
+
+# 14 "test-assembler.c"
+    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
+
+# 15 "test-assembler.c"
+    roci_bb_builder_array_t* builders = roci_assemble((file->data));
+
+# 16 "test-assembler.c"
+    value_array_t* bblocks = build_bblocks(builders);
+
+# 17 "test-assembler.c"
+    buffer_t* buffer = make_buffer(1);
+
+# 18 "test-assembler.c"
+    disassemble_bblocks(bblocks, buffer);
+
+# 19 "test-assembler.c"
+    fprintf(stderr, buffer_to_c_string(buffer));
+  }
+}
+
+
 # 31 "flags.c"
 void configure_flags(void)
 # 31 "flags.c"
@@ -26605,396 +27418,3788 @@ void configure_flags(void)
 
 # 45 "flags.c"
   configure_parse_statement();
+
+# 46 "flags.c"
+  configure_test_assembler_command();
 }
 
 
-# 48 "flags.c"
+# 49 "flags.c"
 void configure_parse_expression(void)
-# 48 "flags.c"
+# 49 "flags.c"
 {
 
-# 49 "flags.c"
+# 50 "flags.c"
   flag_command("parse-expression", (&FLAG_command));
 
-# 50 "flags.c"
+# 51 "flags.c"
   flag_description("** UNIT TESTING **");
 
-# 51 "flags.c"
+# 52 "flags.c"
   flag_string("--expression", (&FLAG_expression));
 
-# 52 "flags.c"
+# 53 "flags.c"
   flag_boolean("--to-c", (&FLAG_to_c));
 }
 
 
-# 55 "flags.c"
+# 56 "flags.c"
 void configure_parse_statement(void)
-# 55 "flags.c"
+# 56 "flags.c"
 {
 
-# 56 "flags.c"
+# 57 "flags.c"
   flag_command("parse-statement", (&FLAG_command));
 
-# 57 "flags.c"
+# 58 "flags.c"
   flag_description("** UNIT TESTING **");
 
-# 58 "flags.c"
+# 59 "flags.c"
   flag_string("--statement", (&FLAG_statement));
 }
 
 
-# 61 "flags.c"
-void configure_print_tokens_command(void)
-# 61 "flags.c"
-{
-
 # 62 "flags.c"
-  flag_command("print-tokens", (&FLAG_command));
+void configure_test_assembler_command(void)
+# 62 "flags.c"
+{
 
 # 63 "flags.c"
-  flag_description("** UNIT TESTING **");
+  flag_command("test-assembler", (&FLAG_command));
 
 # 64 "flags.c"
-  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
+  flag_description("Tests the assembler");
 
 # 65 "flags.c"
-  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
+  flag_file_args((&FLAG_files));
+}
 
-# 66 "flags.c"
-  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
 
-# 67 "flags.c"
-  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
-
-# 68 "flags.c"
-  flag_boolean("--show-appended-tokens", (&FLAG_print_tokens_show_appended_tokens));
+# 69 "flags.c"
+void configure_print_tokens_command(void)
+# 69 "flags.c"
+{
 
 # 70 "flags.c"
-  flag_file_args((&FLAG_files));
-}
+  flag_command("print-tokens", (&FLAG_command));
 
+# 71 "flags.c"
+  flag_description("** UNIT TESTING **");
+
+# 72 "flags.c"
+  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
 
 # 73 "flags.c"
-void configure_regular_commands(void)
-# 73 "flags.c"
-{
+  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
 
 # 74 "flags.c"
-  flag_command("generate-header-file", (&FLAG_command));
+  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
 
 # 75 "flags.c"
-  flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
+  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
+
+# 76 "flags.c"
+  flag_boolean("--show-appended-tokens", (&FLAG_print_tokens_show_appended_tokens));
 
 # 78 "flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 79 "flags.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
-
-# 80 "flags.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
-
-# 81 "flags.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 82 "flags.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
-
-# 84 "flags.c"
-  flag_file_args((&FLAG_files));
-
-# 86 "flags.c"
-  flag_command("generate-library", (&FLAG_command));
-
-# 87 "flags.c"
-  flag_description("create a single C file 'library' of C99 code; most users will prefer " "'build'");
-
-# 90 "flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 91 "flags.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
-
-# 92 "flags.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
-
-# 93 "flags.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 94 "flags.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
-
-# 95 "flags.c"
-  flag_file_args((&FLAG_files));
-
-# 97 "flags.c"
-  flag_command("build", (&FLAG_command));
-
-# 98 "flags.c"
-  flag_description("build an executable by generating the C code and invoking the C " "compiler");
-
-# 101 "flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 102 "flags.c"
-  flag_string("--binary-output-file", (&FLAG_binary_output_file));
-
-# 103 "flags.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
-
-# 104 "flags.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
-
-# 105 "flags.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 106 "flags.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
-
-# 107 "flags.c"
-  flag_string("--c-compiler", (&FLAG_c_compiler));
-
-# 108 "flags.c"
-  flag_file_args((&FLAG_files));
-
-# 110 "flags.c"
-  flag_command("archive", (&FLAG_command));
-
-# 111 "flags.c"
-  flag_description("create an archive of unprocessed source files");
-
-# 112 "flags.c"
-  flag_string("--archive-output-file", (&FLAG_archive_output_file));
-
-# 113 "flags.c"
-  flag_description("the target path of the output archive");
-
-# 114 "flags.c"
-  flag_file_args((&FLAG_files));
-
-# 116 "flags.c"
-  flag_command("test", (&FLAG_command));
-
-# 117 "flags.c"
-  flag_description("compile and run all unit tests in the input files");
-
-# 120 "flags.c"
   flag_file_args((&FLAG_files));
 }
 
 
-# 163 "roci/roci.c"
-roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks)
-# 163 "roci/roci.c"
+# 81 "flags.c"
+void configure_regular_commands(void)
+# 81 "flags.c"
 {
 
-# 164 "roci/roci.c"
+# 82 "flags.c"
+  flag_command("generate-header-file", (&FLAG_command));
+
+# 83 "flags.c"
+  flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
+
+# 86 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 87 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 88 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 89 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 90 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 92 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 94 "flags.c"
+  flag_command("generate-library", (&FLAG_command));
+
+# 95 "flags.c"
+  flag_description("create a single C file 'library' of C99 code; most users will prefer " "'build'");
+
+# 98 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 99 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 100 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 101 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 102 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 103 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 105 "flags.c"
+  flag_command("build", (&FLAG_command));
+
+# 106 "flags.c"
+  flag_description("build an executable by generating the C code and invoking the C " "compiler");
+
+# 109 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 110 "flags.c"
+  flag_string("--binary-output-file", (&FLAG_binary_output_file));
+
+# 111 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 112 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 113 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 114 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 115 "flags.c"
+  flag_string("--c-compiler", (&FLAG_c_compiler));
+
+# 116 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 118 "flags.c"
+  flag_command("archive", (&FLAG_command));
+
+# 119 "flags.c"
+  flag_description("create an archive of unprocessed source files");
+
+# 120 "flags.c"
+  flag_string("--archive-output-file", (&FLAG_archive_output_file));
+
+# 121 "flags.c"
+  flag_description("the target path of the output archive");
+
+# 122 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 124 "flags.c"
+  flag_command("test", (&FLAG_command));
+
+# 125 "flags.c"
+  flag_description("compile and run all unit tests in the input files");
+
+# 128 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 130 "flags.c"
+  flag_command("roci", (&FLAG_command));
+
+# 131 "flags.c"
+  flag_description("run the roci interpreter on the files in order");
+
+# 132 "flags.c"
+  flag_file_args((&FLAG_files));
+}
+
+
+# 26 "roci/roci-assembler.c"
+uint64_t skip_whitespace_and_comments(buffer_t* buffer, uint64_t position)
+# 26 "roci/roci-assembler.c"
+{
+
+# 27 "roci/roci-assembler.c"
+  log_info("skip_whitespace_and_comments");
+
+# 28 "roci/roci-assembler.c"
+  uint64_t length = buffer_length(buffer);
+
+# 29 "roci/roci-assembler.c"
+  while ((position<length))
+
+# 29 "roci/roci-assembler.c"
+  {
+
+# 30 "roci/roci-assembler.c"
+    char ch = buffer_get(buffer, position);
+
+# 31 "roci/roci-assembler.c"
+    if (isspace(ch))
+
+# 31 "roci/roci-assembler.c"
+    {
+
+# 32 "roci/roci-assembler.c"
+      (position++);
+    }
+    else
+
+# 33 "roci/roci-assembler.c"
+    if ((ch==';'))
+
+# 33 "roci/roci-assembler.c"
+    {
+
+# 34 "roci/roci-assembler.c"
+      (ch=buffer_get(buffer, (++position)));
+
+# 35 "roci/roci-assembler.c"
+      while ((ch!='\n'))
+
+# 35 "roci/roci-assembler.c"
+      {
+
+# 36 "roci/roci-assembler.c"
+        (ch=buffer_get(buffer, (++position)));
+      }
+
+# 38 "roci/roci-assembler.c"
+      (position++);
+    }
+    else
+
+# 39 "roci/roci-assembler.c"
+    {
+
+# 40 "roci/roci-assembler.c"
+      return position;
+    }
+  }
+
+# 43 "roci/roci-assembler.c"
+  return position;
+}
+
+
+# 46 "roci/roci-assembler.c"
+uint64_t read_roci_token(buffer_t* buffer, uint64_t position, buffer_t* token)
+# 46 "roci/roci-assembler.c"
+{
+
+# 47 "roci/roci-assembler.c"
+  log_info("read_roci_token");
+
+# 48 "roci/roci-assembler.c"
+  buffer_clear(token);
+
+# 49 "roci/roci-assembler.c"
+  (position=skip_whitespace_and_comments(buffer, position));
+
+# 50 "roci/roci-assembler.c"
+  while ((position<buffer_length(buffer)))
+
+# 50 "roci/roci-assembler.c"
+  {
+
+# 51 "roci/roci-assembler.c"
+    int ch = buffer_get(buffer, position);
+
+# 52 "roci/roci-assembler.c"
+    (position++);
+
+# 53 "roci/roci-assembler.c"
+    if (isspace(ch))
+
+# 53 "roci/roci-assembler.c"
+    {
+
+# 54 "roci/roci-assembler.c"
+      return position;
+    }
+
+# 56 "roci/roci-assembler.c"
+    buffer_append_byte(token, ch);
+  }
+
+# 59 "roci/roci-assembler.c"
+  return position;
+}
+
+
+# 62 "roci/roci-assembler.c"
+boolean_t token_is_double(buffer_t* token)
+# 62 "roci/roci-assembler.c"
+{
+
+# 63 "roci/roci-assembler.c"
+  for (
+
+# 63 "roci/roci-assembler.c"
+
+# 63 "roci/roci-assembler.c"
+    int i = 0;
+
+# 63 "roci/roci-assembler.c"
+    (i<(token->length));
+
+# 63 "roci/roci-assembler.c"
+    (i++))
+
+# 63 "roci/roci-assembler.c"
+  {
+
+# 64 "roci/roci-assembler.c"
+    if ((buffer_get(token, i)=='.'))
+
+# 64 "roci/roci-assembler.c"
+    {
+
+# 65 "roci/roci-assembler.c"
+      return true;
+    }
+  }
+
+# 68 "roci/roci-assembler.c"
+  return false;
+}
+
+
+# 77 "roci/roci-assembler.c"
+roci_bb_builder_array_t* roci_assemble(buffer_t* buffer)
+# 77 "roci/roci-assembler.c"
+{
+
+# 78 "roci/roci-assembler.c"
+  log_info("roci_assemble");
+
+# 80 "roci/roci-assembler.c"
+  roci_bb_builder_array_t* bblocks = make_value_array(16);
+
+# 81 "roci/roci-assembler.c"
+  roci_bb_builder_t* current_bb = NULL;
+
+# 82 "roci/roci-assembler.c"
+  buffer_t* token = make_buffer(16);
+
+# 84 "roci/roci-assembler.c"
+  uint64_t position = 0;
+
+# 85 "roci/roci-assembler.c"
+  while ((position<buffer_length(buffer)))
+
+# 85 "roci/roci-assembler.c"
+  {
+
+# 86 "roci/roci-assembler.c"
+    (position=read_roci_token(buffer, position, token));
+
+# 87 "roci/roci-assembler.c"
+    if ((buffer_length(buffer)==0))
+
+# 87 "roci/roci-assembler.c"
+    {
+
+# 88 "roci/roci-assembler.c"
+      break;
+    }
+
+# 91 "roci/roci-assembler.c"
+    if (buffer_ends_with(token, ":"))
+
+# 91 "roci/roci-assembler.c"
+    {
+
+# 93 "roci/roci-assembler.c"
+      (current_bb=add_bblock(bblocks));
+
+# 94 "roci/roci-assembler.c"
+      ((current_bb->bblock_label)=buffer_c_substring(token, 0, (buffer_length(token)-1)));
+
+# 96 "roci/roci-assembler.c"
+      continue;
+    }
+
+# 99 "roci/roci-assembler.c"
+    if ((!current_bb))
+
+# 99 "roci/roci-assembler.c"
+    {
+
+# 100 "roci/roci-assembler.c"
+      log_fatal("Assembler error: Instruction found outside of a basic block label.");
+
+# 102 "roci/roci-assembler.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 105 "roci/roci-assembler.c"
+    if (buffer_equal(token, "push"))
+
+# 105 "roci/roci-assembler.c"
+    {
+
+# 106 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 107 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 107 "roci/roci-assembler.c"
+      {
+
+# 108 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 111 "roci/roci-assembler.c"
+      int first_char = buffer_get(token, 0);
+
+# 113 "roci/roci-assembler.c"
+      if ((first_char=='"'))
+
+# 113 "roci/roci-assembler.c"
+      {
+
+# 114 "roci/roci-assembler.c"
+        buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_STRING);
+
+# 115 "roci/roci-assembler.c"
+        value_array_add((current_bb->data), u64_to_value((/*CAST*/(uint64_t) buffer_c_substring(token, 1, (buffer_length(token)-1)))));
+      }
+      else
+
+# 120 "roci/roci-assembler.c"
+      if (buffer_equal(token, "true"))
+
+# 120 "roci/roci-assembler.c"
+      {
+
+# 121 "roci/roci-assembler.c"
+        buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_TRUE);
+      }
+      else
+
+# 122 "roci/roci-assembler.c"
+      if (buffer_equal(token, "false"))
+
+# 122 "roci/roci-assembler.c"
+      {
+
+# 123 "roci/roci-assembler.c"
+        buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_FALSE);
+      }
+      else
+
+# 124 "roci/roci-assembler.c"
+      {
+
+# 125 "roci/roci-assembler.c"
+        if (isdigit(first_char))
+
+# 125 "roci/roci-assembler.c"
+        {
+
+# 126 "roci/roci-assembler.c"
+          if (token_is_double(token))
+
+# 126 "roci/roci-assembler.c"
+          {
+
+# 127 "roci/roci-assembler.c"
+            double dbl = string_parse_double(buffer_to_c_string(token));
+
+# 128 "roci/roci-assembler.c"
+            buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_DOUBLE);
+
+# 129 "roci/roci-assembler.c"
+            value_array_add((current_bb->data), dbl_to_value(dbl));
+          }
+          else
+
+# 130 "roci/roci-assembler.c"
+          {
+
+# 131 "roci/roci-assembler.c"
+            buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_INTEGER);
+
+# 132 "roci/roci-assembler.c"
+            value_array_add((current_bb->data), u64_to_value((string_parse_uint64(buffer_to_c_string(token)).u64)));
+          }
+        }
+        else
+
+# 137 "roci/roci-assembler.c"
+        {
+
+# 138 "roci/roci-assembler.c"
+          fatal_error(ERROR_ILLEGAL_STATE);
+        }
+      }
+    }
+    else
+
+# 142 "roci/roci-assembler.c"
+    if (buffer_equal(token, "drop"))
+
+# 142 "roci/roci-assembler.c"
+    {
+
+# 143 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_DROP);
+    }
+    else
+
+# 144 "roci/roci-assembler.c"
+    if (buffer_equal(token, "br"))
+
+# 144 "roci/roci-assembler.c"
+    {
+
+# 145 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 146 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 146 "roci/roci-assembler.c"
+      {
+
+# 147 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 149 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_BR);
+
+# 150 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), ptr_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 152 "roci/roci-assembler.c"
+    if (buffer_equal(token, "br_true"))
+
+# 152 "roci/roci-assembler.c"
+    {
+
+# 153 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 154 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 154 "roci/roci-assembler.c"
+      {
+
+# 155 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 157 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_BR_TRUE);
+
+# 158 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), ptr_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 160 "roci/roci-assembler.c"
+    if (buffer_equal(token, "call"))
+
+# 160 "roci/roci-assembler.c"
+    {
+    }
+    else
+
+# 161 "roci/roci-assembler.c"
+    if (buffer_equal(token, "return"))
+
+# 161 "roci/roci-assembler.c"
+    {
+
+# 162 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_RETURN);
+    }
+    else
+
+# 163 "roci/roci-assembler.c"
+    if (buffer_equal(token, "trap"))
+
+# 163 "roci/roci-assembler.c"
+    {
+
+# 164 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_TRAP);
+    }
+    else
+
+# 165 "roci/roci-assembler.c"
+    if (buffer_equal(token, "get_var"))
+
+# 165 "roci/roci-assembler.c"
+    {
+
+# 166 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 167 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 167 "roci/roci-assembler.c"
+      {
+
+# 168 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 170 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_GET_VAR);
+
+# 171 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), str_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 173 "roci/roci-assembler.c"
+    if (buffer_equal(token, "set_var"))
+
+# 173 "roci/roci-assembler.c"
+    {
+
+# 174 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 175 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 175 "roci/roci-assembler.c"
+      {
+
+# 176 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 178 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_SET_VAR);
+
+# 179 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), str_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 181 "roci/roci-assembler.c"
+    if (buffer_equal(token, "define_var"))
+
+# 181 "roci/roci-assembler.c"
+    {
+
+# 182 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 183 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 183 "roci/roci-assembler.c"
+      {
+
+# 184 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 186 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_DEFINE_VAR);
+
+# 187 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), str_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 189 "roci/roci-assembler.c"
+    {
+
+# 190 "roci/roci-assembler.c"
+      log_fatal("unrecognized opcode '%s' at position %d", buffer_to_c_string(token), buffer_length(token), position);
+
+# 192 "roci/roci-assembler.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 196 "roci/roci-assembler.c"
+  return bblocks;
+}
+
+
+# 22 "roci/roci-bb-builder.c"
+roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks)
+# 22 "roci/roci-bb-builder.c"
+{
+
+# 23 "roci/roci-bb-builder.c"
   roci_bb_builder_t* result = malloc_struct(roci_bb_builder_t);
 
-# 165 "roci/roci.c"
+# 24 "roci/roci-bb-builder.c"
   ((result->opcodes)=make_buffer(10));
 
-# 166 "roci/roci.c"
+# 25 "roci/roci-bb-builder.c"
   ((result->data)=make_value_array(1));
 
-# 167 "roci/roci.c"
+# 26 "roci/roci-bb-builder.c"
   value_array_add(bblocks, ptr_to_value(result));
 
-# 168 "roci/roci.c"
+# 27 "roci/roci-bb-builder.c"
   return result;
 }
 
 
-# 182 "roci/roci.c"
-roci_bb_t* build_bblocks(roci_bb_builder_array_t* bblocks)
-# 182 "roci/roci.c"
+# 40 "roci/roci-bb-builder.c"
+value_array_t* build_bblocks(roci_bb_builder_array_t* bblocks)
+# 40 "roci/roci-bb-builder.c"
 {
 
-# 182 "roci/roci.c"
-  return NULL;
+# 41 "roci/roci-bb-builder.c"
+  log_info("roci -- build_bblocks\n");
+
+# 44 "roci/roci-bb-builder.c"
+  value_array_t* result = make_value_array(1);
+
+# 48 "roci/roci-bb-builder.c"
+  for (
+
+# 48 "roci/roci-bb-builder.c"
+
+# 48 "roci/roci-bb-builder.c"
+    int i = 0;
+
+# 48 "roci/roci-bb-builder.c"
+    (i<(bblocks->length));
+
+# 48 "roci/roci-bb-builder.c"
+    (i++))
+
+# 48 "roci/roci-bb-builder.c"
+  {
+
+# 49 "roci/roci-bb-builder.c"
+    log_info("roci -- allocating %d\n", i);
+
+# 50 "roci/roci-bb-builder.c"
+    roci_bb_builder_t* builder = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
+
+# 53 "roci/roci-bb-builder.c"
+    log_info("roci -- builder %d, %d\n", ((builder->data)->length), ((builder->opcodes)->length));
+
+# 56 "roci/roci-bb-builder.c"
+    roci_bb_t* bblock = malloc((((1+((builder->data)->length))*8)+((builder->opcodes)->length)));
+
+# 58 "roci/roci-bb-builder.c"
+    ((bblock->num_data)=((builder->data)->length));
+
+# 59 "roci/roci-bb-builder.c"
+    ((bblock->num_opcodes)=((builder->opcodes)->length));
+
+# 60 "roci/roci-bb-builder.c"
+    ((builder->bblock)=bblock);
+
+# 61 "roci/roci-bb-builder.c"
+    value_array_add(result, ptr_to_value(bblock));
+
+# 62 "roci/roci-bb-builder.c"
+    log_info("roci -- allocated %d\n", i);
+  }
+
+# 67 "roci/roci-bb-builder.c"
+  for (
+
+# 67 "roci/roci-bb-builder.c"
+
+# 67 "roci/roci-bb-builder.c"
+    int i = 0;
+
+# 67 "roci/roci-bb-builder.c"
+    (i<(bblocks->length));
+
+# 67 "roci/roci-bb-builder.c"
+    (i++))
+
+# 67 "roci/roci-bb-builder.c"
+  {
+
+# 68 "roci/roci-bb-builder.c"
+    log_info("roci -- copying opcodes %d\n", i);
+
+# 69 "roci/roci-bb-builder.c"
+    copy_opcodes_and_link(bblocks, value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*)));
+
+# 71 "roci/roci-bb-builder.c"
+    log_info("roci -- done copying opcodes %d\n", i);
+  }
+
+# 74 "roci/roci-bb-builder.c"
+  return result;
 }
 
 
-# 190 "roci/roci.c"
-roci_runtime_error_t roci_execute(roci_bb_t* entry_point)
-# 190 "roci/roci.c"
+# 77 "roci/roci-bb-builder.c"
+void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks, roci_bb_builder_t* builder)
+# 78 "roci/roci-bb-builder.c"
 {
 
-# 193 "roci/roci.c"
-  return ROCI_RUNTIME_ERROR_NONE;
+# 79 "roci/roci-bb-builder.c"
+  roci_bb_t* bb = (builder->bblock);
+
+# 80 "roci/roci-bb-builder.c"
+  uint8_t* opcode_ptr = bblock_opcode_pointer(bb);
+
+# 81 "roci/roci-bb-builder.c"
+  uint64_t* data_ptr = bblock_data_pointer(bb);
+
+# 82 "roci/roci-bb-builder.c"
+  int dindex = 0;
+
+# 84 "roci/roci-bb-builder.c"
+  for (
+
+# 84 "roci/roci-bb-builder.c"
+
+# 84 "roci/roci-bb-builder.c"
+    int i = 0;
+
+# 84 "roci/roci-bb-builder.c"
+    (i<((builder->opcodes)->length));
+
+# 84 "roci/roci-bb-builder.c"
+    (i++))
+
+# 84 "roci/roci-bb-builder.c"
+  {
+
+# 85 "roci/roci-bb-builder.c"
+    roci_opcode_t opcode = buffer_get((builder->opcodes), i);
+
+# 86 "roci/roci-bb-builder.c"
+    ((*(opcode_ptr++))=opcode);
+
+# 87 "roci/roci-bb-builder.c"
+    switch (opcode)
+
+# 87 "roci/roci-bb-builder.c"
+    {
+
+# 88 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_PUSH_INTEGER:
+
+# 89 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_PUSH_DOUBLE:
+
+# 90 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_PUSH_STRING:
+
+# 91 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_GET_VAR:
+
+# 92 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_SET_VAR:
+
+# 93 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_DEFINE_VAR:
+
+# 94 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_COMMENT:
+
+# 95 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CHECK_ARGS:
+
+# 96 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_DEBUG_INFO:
+
+# 97 "roci/roci-bb-builder.c"
+      ((*(data_ptr++))=(value_array_get((builder->data), (dindex++)).u64));
+
+# 98 "roci/roci-bb-builder.c"
+      break;
+
+# 100 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_BR_TRUE:
+
+# 101 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_BR:
+
+# 102 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_MAKE_CLOSURE:
+
+# 103 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_0:
+
+# 104 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_1:
+
+# 105 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_2:
+
+# 106 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_3:
+
+# 107 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_4:
+
+# 108 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_5:
+
+# 109 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_6:
+
+# 110 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_7:
+
+# 111 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_8:
+
+# 112 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_9:
+
+# 113 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_10:
+
+# 114 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_11:
+
+# 115 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_12:
+
+# 116 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_13:
+
+# 117 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_14:
+
+# 118 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_15:
+
+# 119 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL_16:
+
+# 120 "roci/roci-bb-builder.c"
+      char* label = value_array_get_ptr((builder->data), (dindex++), typeof(char*));
+
+# 121 "roci/roci-bb-builder.c"
+      ((*(data_ptr++))=bb_label_to_address(bblocks, label));
+
+# 122 "roci/roci-bb-builder.c"
+      break;
+
+# 124 "roci/roci-bb-builder.c"
+      default:
+
+# 125 "roci/roci-bb-builder.c"
+      break;
+    }
+  }
 }
 
 
-# 200 "roci/roci.c"
-void roci_runtime_error(roci_runtime_error_t runtime_error)
-# 200 "roci/roci.c"
+# 130 "roci/roci-bb-builder.c"
+uint64_t bb_label_to_address(roci_bb_builder_array_t* bblocks, char* label)
+# 130 "roci/roci-bb-builder.c"
 {
 
-# 201 "roci/roci.c"
-  log_fatal("A runtime error has occurred evaluating a roci script");
+# 131 "roci/roci-bb-builder.c"
+  for (
 
-# 202 "roci/roci.c"
+# 131 "roci/roci-bb-builder.c"
+
+# 131 "roci/roci-bb-builder.c"
+    int i = 0;
+
+# 131 "roci/roci-bb-builder.c"
+    (i<(bblocks->length));
+
+# 131 "roci/roci-bb-builder.c"
+    (i++))
+
+# 131 "roci/roci-bb-builder.c"
+  {
+
+# 132 "roci/roci-bb-builder.c"
+    roci_bb_builder_t* builder = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
+
+# 134 "roci/roci-bb-builder.c"
+    if (string_equal((builder->bblock_label), label))
+
+# 134 "roci/roci-bb-builder.c"
+    {
+
+# 135 "roci/roci-bb-builder.c"
+      return (/*CAST*/(uint64_t) (builder->bblock));
+    }
+  }
+
+# 138 "roci/roci-bb-builder.c"
+  log_fatal("bblock with label %s not found", label);
+
+# 139 "roci/roci-bb-builder.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+
+# 140 "roci/roci-bb-builder.c"
+  return 0;
+}
+
+
+# 6 "roci/roci-command.c"
+void roci_command(void)
+# 6 "roci/roci-command.c"
+{
+
+# 7 "roci/roci-command.c"
+  log_warn("roci_command()");
+
+# 9 "roci/roci-command.c"
+  roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
+
+# 10 "roci/roci-command.c"
+  ((state->bblocks)=make_value_array(16));
+
+# 12 "roci/roci-command.c"
+  value_array_t* files = read_files(FLAG_files);
+
+# 13 "roci/roci-command.c"
+  for (
+
+# 13 "roci/roci-command.c"
+
+# 13 "roci/roci-command.c"
+    int i = 0;
+
+# 13 "roci/roci-command.c"
+    (i<(files->length));
+
+# 13 "roci/roci-command.c"
+    (i++))
+
+# 13 "roci/roci-command.c"
+  {
+
+# 14 "roci/roci-command.c"
+    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
+
+# 15 "roci/roci-command.c"
+    fprintf(stdout, "====================================================\n");
+
+# 16 "roci/roci-command.c"
+    fprintf(stdout, "====> roci compiling %s\n", (file->file_name));
+
+# 17 "roci/roci-command.c"
+    fprintf(stdout, "====================================================\n");
+
+# 18 "roci/roci-command.c"
+    roci_compile_buffer(state, (file->file_name), (file->data));
+
+# 20 "roci/roci-command.c"
+    log_warn("roci_command() --- 1");
+
+# 21 "roci/roci-command.c"
+    buffer_t* buffer = make_buffer(1);
+
+# 22 "roci/roci-command.c"
+    value_array_t* bblocks = build_bblocks((state->bblocks));
+
+# 23 "roci/roci-command.c"
+    disassemble_bblocks(bblocks, buffer);
+
+# 24 "roci/roci-command.c"
+    fprintf(stderr, buffer_to_c_string(buffer));
+
+# 25 "roci/roci-command.c"
+    if (true)
+
+# 25 "roci/roci-command.c"
+    {
+
+# 26 "roci/roci-command.c"
+      roci_env_t* env = roci_new_env(((void *)0));
+
+# 27 "roci/roci-command.c"
+      roci_add_primitives_to_env(env);
+
+# 28 "roci/roci-command.c"
+      roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
+
+# 30 "roci/roci-command.c"
+      roci_execute(env, entry_point);
+
+# 31 "roci/roci-command.c"
+      if (true)
+
+# 31 "roci/roci-command.c"
+      {
+
+# 32 "roci/roci-command.c"
+        buffer_t* buffer = make_buffer(10);
+
+# 33 "roci/roci-command.c"
+        buffer_printf(buffer, "\n");
+
+# 34 "roci/roci-command.c"
+        roci_dump_env(env, buffer);
+
+# 35 "roci/roci-command.c"
+        fprintf(stdout, "%s", buffer_to_c_string(buffer));
+      }
+    }
+
+# 38 "roci/roci-command.c"
+    ((state->bblocks)=make_value_array(16));
+  }
+
+# 41 "roci/roci-command.c"
+  log_info("Exiting normally.");
+
+# 42 "roci/roci-command.c"
+  exit(0);
+}
+
+
+# 66 "roci/roci-compiler.c"
+void roci_compile_buffer(roci_compiler_state_t* state, char* file_name, buffer_t* buffer)
+# 67 "roci/roci-compiler.c"
+{
+
+# 68 "roci/roci-compiler.c"
+  ((state->tokens)=roci_tokenize_file(file_name, buffer));
+
+# 69 "roci/roci-compiler.c"
+  ((state->position)=0);
+
+# 70 "roci/roci-compiler.c"
+  ((state->current_bb)=roci_new_bblock(state, "bb_file_start"));
+
+# 71 "roci/roci-compiler.c"
+  roci_compile_tokens(state);
+}
+
+
+# 80 "roci/roci-compiler.c"
+value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer)
+# 80 "roci/roci-compiler.c"
+{
+
+# 81 "roci/roci-compiler.c"
+  tokenizer_result_t tokenizer_result = tokenize(buffer);
+
+# 82 "roci/roci-compiler.c"
+  if ((tokenizer_result.tokenizer_error_code))
+
+# 82 "roci/roci-compiler.c"
+  {
+
+# 83 "roci/roci-compiler.c"
+    log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name, (tokenizer_result.tokenizer_error_position), (tokenizer_result.tokenizer_error_code));
+
+# 86 "roci/roci-compiler.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 88 "roci/roci-compiler.c"
+  return transform_tokens((tokenizer_result.tokens), ((token_transformer_options_t) {
+                           .keep_whitespace = false,
+                           .keep_comments = false,
+                           .keep_javadoc_comments = false,
+                           .keep_c_preprocessor_lines = false,
+                       }));
+}
+
+
+# 105 "roci/roci-compiler.c"
+void roci_compile_tokens(roci_compiler_state_t* state)
+# 105 "roci/roci-compiler.c"
+{
+
+# 108 "roci/roci-compiler.c"
+  log_warn("roci_compile_tokens begin");
+
+# 109 "roci/roci-compiler.c"
+  while (((state->position)<((state->tokens)->length)))
+
+# 109 "roci/roci-compiler.c"
+  {
+
+# 110 "roci/roci-compiler.c"
+    roci_compile_statement(state);
+
+# 111 "roci/roci-compiler.c"
+    if (((state->compiler_error)!=ROCI_COMPILE_TIME_ERROR_NONE))
+
+# 111 "roci/roci-compiler.c"
+    {
+
+# 112 "roci/roci-compiler.c"
+      log_fatal("compiler error %s", roci_compile_time_error_to_string((state->compiler_error)));
+
+# 114 "roci/roci-compiler.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 117 "roci/roci-compiler.c"
+  log_warn("roci_compile_tokens end");
+
+# 118 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_TRAP);
+}
+
+
+# 126 "roci/roci-compiler.c"
+void roci_compile_statement(roci_compiler_state_t* state)
+# 126 "roci/roci-compiler.c"
+{
+
+# 127 "roci/roci-compiler.c"
+  token_t* token = roci_peek_token(state);
+
+# 128 "roci/roci-compiler.c"
+  log_warn("CURRENT TOKEN IS %s", token_to_string(token));
+
+# 129 "roci/roci-compiler.c"
+  if (token_matches(token, "return"))
+
+# 129 "roci/roci-compiler.c"
+  {
+
+# 130 "roci/roci-compiler.c"
+    roci_compile_return(state);
+  }
+  else
+
+# 131 "roci/roci-compiler.c"
+  if (token_matches(token, "if"))
+
+# 131 "roci/roci-compiler.c"
+  {
+
+# 132 "roci/roci-compiler.c"
+    roci_compile_if(state);
+  }
+  else
+
+# 133 "roci/roci-compiler.c"
+  if (token_matches(token, "let"))
+
+# 133 "roci/roci-compiler.c"
+  {
+
+# 134 "roci/roci-compiler.c"
+    roci_compile_let(state);
+  }
+  else
+
+# 135 "roci/roci-compiler.c"
+  if (token_matches(token, "while"))
+
+# 135 "roci/roci-compiler.c"
+  {
+
+# 136 "roci/roci-compiler.c"
+    roci_compile_while(state);
+  }
+  else
+
+# 137 "roci/roci-compiler.c"
+  {
+
+# 138 "roci/roci-compiler.c"
+    (token=token_at((state->tokens), ((state->position)+1)));
+
+# 139 "roci/roci-compiler.c"
+    if (token_matches(token, "="))
+
+# 139 "roci/roci-compiler.c"
+    {
+
+# 140 "roci/roci-compiler.c"
+      roci_compile_assignment(state);
+    }
+    else
+
+# 141 "roci/roci-compiler.c"
+    if (token_matches(token, "("))
+
+# 141 "roci/roci-compiler.c"
+    {
+
+# 142 "roci/roci-compiler.c"
+      roci_compile_function_call(state);
+
+# 143 "roci/roci-compiler.c"
+      roci_expect_token(state, ";");
+
+# 144 "roci/roci-compiler.c"
+      roci_emit_opcode(state, ROCI_OPCODE_DROP);
+    }
+  }
+}
+
+
+# 161 "roci/roci-compiler.c"
+void roci_compile_return(roci_compiler_state_t* state)
+# 161 "roci/roci-compiler.c"
+{
+
+# 162 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 163 "roci/roci-compiler.c"
+  roci_expect_token(state, "return");
+
+# 164 "roci/roci-compiler.c"
+  token_t* token = roci_peek_token(state);
+
+# 165 "roci/roci-compiler.c"
+  if (token_matches(token, ";"))
+
+# 165 "roci/roci-compiler.c"
+  {
+
+# 166 "roci/roci-compiler.c"
+    roci_skip_token(state);
+
+# 167 "roci/roci-compiler.c"
+    roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+  }
+  else
+
+# 168 "roci/roci-compiler.c"
+  {
+
+# 169 "roci/roci-compiler.c"
+    roci_compile_expression(state);
+
+# 170 "roci/roci-compiler.c"
+    roci_expect_token(state, ";");
+  }
+
+# 172 "roci/roci-compiler.c"
+  roci_emit_return(state);
+}
+
+
+# 188 "roci/roci-compiler.c"
+void roci_compile_let(roci_compiler_state_t* state)
+# 188 "roci/roci-compiler.c"
+{
+
+# 189 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 190 "roci/roci-compiler.c"
+  roci_expect_token(state, "let");
+
+# 191 "roci/roci-compiler.c"
+  token_t* varname = roci_next_token(state);
+
+# 192 "roci/roci-compiler.c"
+  roci_verify_identifier(varname);
+
+# 193 "roci/roci-compiler.c"
+  roci_expect_token(state, "=");
+
+# 194 "roci/roci-compiler.c"
+  roci_compile_expression(state);
+
+# 195 "roci/roci-compiler.c"
+  roci_expect_token(state, ";");
+
+# 196 "roci/roci-compiler.c"
+  roci_emit_token_string_datum(state, token_to_string(varname));
+
+# 197 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+}
+
+
+# 207 "roci/roci-compiler.c"
+void roci_compile_assignment(roci_compiler_state_t* state)
+# 207 "roci/roci-compiler.c"
+{
+
+# 208 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 209 "roci/roci-compiler.c"
+  token_t* varname = roci_next_token(state);
+
+# 211 "roci/roci-compiler.c"
+  roci_expect_token(state, "=");
+
+# 212 "roci/roci-compiler.c"
+  roci_compile_expression(state);
+
+# 213 "roci/roci-compiler.c"
+  roci_expect_token(state, ";");
+
+# 214 "roci/roci-compiler.c"
+  roci_emit_token_string_datum(state, token_to_string(varname));
+
+# 215 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+}
+
+
+# 223 "roci/roci-compiler.c"
+void roci_compile_if(roci_compiler_state_t* state)
+# 223 "roci/roci-compiler.c"
+{
+
+# 224 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 225 "roci/roci-compiler.c"
+  roci_expect_token(state, "if");
+
+# 226 "roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 227 "roci/roci-compiler.c"
+  roci_compile_expression(state);
+
+# 228 "roci/roci-compiler.c"
+  roci_expect_token(state, ")");
+
+# 230 "roci/roci-compiler.c"
+  roci_bb_builder_t* if_bb = (state->current_bb);
+
+# 232 "roci/roci-compiler.c"
+  roci_bb_builder_t* true_bb = roci_compile_block(state);
+
+# 233 "roci/roci-compiler.c"
+  roci_bb_builder_t* end_of_true_bb = (state->current_bb);
+
+# 235 "roci/roci-compiler.c"
+  roci_emit_br_true(if_bb, true_bb);
+
+# 237 "roci/roci-compiler.c"
+  token_t* peek_token = roci_peek_token(state);
+
+# 238 "roci/roci-compiler.c"
+  if (token_matches(peek_token, "else"))
+
+# 238 "roci/roci-compiler.c"
+  {
+
+# 239 "roci/roci-compiler.c"
+    roci_skip_token(state);
+
+# 240 "roci/roci-compiler.c"
+    roci_bb_builder_t* false_bb = roci_compile_block(state);
+
+# 241 "roci/roci-compiler.c"
+    roci_bb_builder_t* after_bb = roci_new_bblock(state, "if_after_bb");
+
+# 242 "roci/roci-compiler.c"
+    roci_emit_branch(if_bb, false_bb);
+
+# 243 "roci/roci-compiler.c"
+    roci_emit_branch((state->current_bb), after_bb);
+
+# 244 "roci/roci-compiler.c"
+    roci_emit_branch(end_of_true_bb, after_bb);
+
+# 245 "roci/roci-compiler.c"
+    ((state->current_bb)=after_bb);
+  }
+  else
+
+# 246 "roci/roci-compiler.c"
+  {
+
+# 247 "roci/roci-compiler.c"
+    roci_bb_builder_t* after_bb = roci_new_bblock(state, "if_after_bb");
+
+# 248 "roci/roci-compiler.c"
+    roci_emit_branch(end_of_true_bb, after_bb);
+
+# 249 "roci/roci-compiler.c"
+    roci_emit_branch(if_bb, after_bb);
+
+# 250 "roci/roci-compiler.c"
+    ((state->current_bb)=after_bb);
+  }
+}
+
+
+# 263 "roci/roci-compiler.c"
+roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state)
+# 263 "roci/roci-compiler.c"
+{
+
+# 264 "roci/roci-compiler.c"
+  roci_bb_builder_t* result_bb = roci_new_bblock(state, "block_bb_");
+
+# 265 "roci/roci-compiler.c"
+  ((state->current_bb)=result_bb);
+
+# 267 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 268 "roci/roci-compiler.c"
+  roci_emit_new_environment(state);
+
+# 269 "roci/roci-compiler.c"
+  roci_expect_token(state, "{");
+
+# 271 "roci/roci-compiler.c"
+  while (((state->position)<((state->tokens)->length)))
+
+# 271 "roci/roci-compiler.c"
+  {
+
+# 272 "roci/roci-compiler.c"
+    roci_compile_statement(state);
+
+# 273 "roci/roci-compiler.c"
+    token_t* close_b = roci_peek_token(state);
+
+# 274 "roci/roci-compiler.c"
+    if (token_matches(close_b, "}"))
+
+# 274 "roci/roci-compiler.c"
+    {
+
+# 275 "roci/roci-compiler.c"
+      roci_skip_token(state);
+
+# 276 "roci/roci-compiler.c"
+      roci_emit_drop_environment(state);
+
+# 277 "roci/roci-compiler.c"
+      return result_bb;
+    }
+  }
+
+# 280 "roci/roci-compiler.c"
+  log_fatal("closing brace not found!");
+
+# 281 "roci/roci-compiler.c"
+  fatal_error(ERROR_ILLEGAL_INPUT);
+}
+
+
+# 285 "roci/roci-compiler.c"
+void roci_compile_while(roci_compiler_state_t* state)
+# 285 "roci/roci-compiler.c"
+{
+
+# 286 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 287 "roci/roci-compiler.c"
+  roci_expect_token(state, "while");
+
+# 288 "roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 291 "roci/roci-compiler.c"
+  roci_bb_builder_t* cond_bb = roci_new_bblock(state, "while_cond_bb");
+
+# 292 "roci/roci-compiler.c"
+  roci_emit_branch((state->current_bb), cond_bb);
+
+# 293 "roci/roci-compiler.c"
+  ((state->current_bb)=cond_bb);
+
+# 296 "roci/roci-compiler.c"
+  roci_compile_expression(state);
+
+# 297 "roci/roci-compiler.c"
+  roci_expect_token(state, ")");
+
+# 300 "roci/roci-compiler.c"
+  roci_bb_builder_t* body_bb = roci_compile_block(state);
+
+# 301 "roci/roci-compiler.c"
+  roci_bb_builder_t* end_of_body_bb = (state->current_bb);
+
+# 304 "roci/roci-compiler.c"
+  roci_bb_builder_t* after_bb = roci_new_bblock(state, "while_after_bb");
+
+# 307 "roci/roci-compiler.c"
+  roci_emit_branch(end_of_body_bb, cond_bb);
+
+# 310 "roci/roci-compiler.c"
+  roci_emit_br_true(cond_bb, body_bb);
+
+# 311 "roci/roci-compiler.c"
+  roci_emit_branch(cond_bb, after_bb);
+
+# 313 "roci/roci-compiler.c"
+  ((state->current_bb)=after_bb);
+}
+
+
+# 323 "roci/roci-compiler.c"
+void roci_compile_expression(roci_compiler_state_t* state)
+# 323 "roci/roci-compiler.c"
+{
+
+# 324 "roci/roci-compiler.c"
+  token_t* token = roci_peek_token(state);
+
+# 325 "roci/roci-compiler.c"
+  if (token_matches(token, "fn"))
+
+# 325 "roci/roci-compiler.c"
+  {
+
+# 326 "roci/roci-compiler.c"
+    roci_compile_closure(state);
+
+# 327 "roci/roci-compiler.c"
+    return;
+  }
+  else
+
+# 328 "roci/roci-compiler.c"
+  if (token_matches(token, "("))
+
+# 328 "roci/roci-compiler.c"
+  {
+  }
+
+# 332 "roci/roci-compiler.c"
+  token_t* token_next = token_at((state->tokens), ((state->position)+1));
+
+# 333 "roci/roci-compiler.c"
+  if (token_matches(token_next, "("))
+
+# 333 "roci/roci-compiler.c"
+  {
+
+# 334 "roci/roci-compiler.c"
+    roci_compile_function_call(state);
+  }
+  else
+
+# 335 "roci/roci-compiler.c"
+  if (((token_matches(token_next, ";")||token_matches(token_next, ","))||token_matches(token_next, ")")))
+
+# 336 "roci/roci-compiler.c"
+  {
+
+# 337 "roci/roci-compiler.c"
+    switch ((token->type))
+
+# 337 "roci/roci-compiler.c"
+    {
+
+# 338 "roci/roci-compiler.c"
+      case TOKEN_TYPE_IDENTIFIER:
+
+# 339 "roci/roci-compiler.c"
+      char* varname = token_to_string(token);
+
+# 340 "roci/roci-compiler.c"
+      if (string_equal(varname, "true"))
+
+# 340 "roci/roci-compiler.c"
+      {
+
+# 341 "roci/roci-compiler.c"
+        roci_emit_opcode(state, ROCI_OPCODE_PUSH_TRUE);
+      }
+      else
+
+# 342 "roci/roci-compiler.c"
+      if (string_equal(varname, "false"))
+
+# 342 "roci/roci-compiler.c"
+      {
+
+# 343 "roci/roci-compiler.c"
+        roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+      }
+      else
+
+# 344 "roci/roci-compiler.c"
+      {
+
+# 345 "roci/roci-compiler.c"
+        roci_emit_get_var((state->current_bb), varname);
+      }
+
+# 347 "roci/roci-compiler.c"
+      break;
+
+# 349 "roci/roci-compiler.c"
+      case TOKEN_TYPE_INTEGER_LITERAL:
+
+# 350 "roci/roci-compiler.c"
+      value_result_t parsed = string_parse_uint64(token_to_string(token));
+
+# 351 "roci/roci-compiler.c"
+      if (((parsed.nf_error)!=NF_OK))
+
+# 351 "roci/roci-compiler.c"
+      {
+
+# 352 "roci/roci-compiler.c"
+        log_fatal("failed to parse integer");
+
+# 353 "roci/roci-compiler.c"
+        fatal_error(ERROR_ILLEGAL_INPUT);
+      }
+
+# 355 "roci/roci-compiler.c"
+      buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_INTEGER);
+
+# 356 "roci/roci-compiler.c"
+      value_array_add(((state->current_bb)->data), (parsed.val));
+
+# 357 "roci/roci-compiler.c"
+      break;
+
+# 359 "roci/roci-compiler.c"
+      case TOKEN_TYPE_FLOAT_LITERAL:
+
+# 360 "roci/roci-compiler.c"
+      double dbl = string_parse_double(token_to_string(token));
+
+# 361 "roci/roci-compiler.c"
+      buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_DOUBLE);
+
+# 362 "roci/roci-compiler.c"
+      value_array_add(((state->current_bb)->data), dbl_to_value(dbl));
+
+# 363 "roci/roci-compiler.c"
+      break;
+
+# 365 "roci/roci-compiler.c"
+      case TOKEN_TYPE_STRING_LITERAL:
+
+# 366 "roci/roci-compiler.c"
+      char* str = token_to_string(token);
+
+# 367 "roci/roci-compiler.c"
+      buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_STRING);
+
+# 368 "roci/roci-compiler.c"
+      value_array_add(((state->current_bb)->data), str_to_value(str));
+
+# 369 "roci/roci-compiler.c"
+      break;
+
+# 371 "roci/roci-compiler.c"
+      default:
+
+# 372 "roci/roci-compiler.c"
+      log_fatal("unexpected token");
+
+# 373 "roci/roci-compiler.c"
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+
+# 375 "roci/roci-compiler.c"
+    roci_skip_token(state);
+  }
+  else
+
+# 376 "roci/roci-compiler.c"
+  {
+
+# 377 "roci/roci-compiler.c"
+    ((state->compiler_error)=ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION);
+  }
+}
+
+
+# 381 "roci/roci-compiler.c"
+void roci_compile_function_call(roci_compiler_state_t* state)
+# 381 "roci/roci-compiler.c"
+{
+
+# 382 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 383 "roci/roci-compiler.c"
+  int num_args = 0;
+
+# 384 "roci/roci-compiler.c"
+  token_t* fn_name = roci_next_token(state);
+
+# 385 "roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 386 "roci/roci-compiler.c"
+  while (true)
+
+# 386 "roci/roci-compiler.c"
+  {
+
+# 387 "roci/roci-compiler.c"
+    token_t* token = roci_peek_token(state);
+
+# 388 "roci/roci-compiler.c"
+    if (token_matches(token, ")"))
+
+# 388 "roci/roci-compiler.c"
+    {
+
+# 389 "roci/roci-compiler.c"
+      roci_skip_token(state);
+
+# 390 "roci/roci-compiler.c"
+      break;
+    }
+
+# 392 "roci/roci-compiler.c"
+    roci_compile_expression(state);
+
+# 393 "roci/roci-compiler.c"
+    (num_args++);
+
+# 394 "roci/roci-compiler.c"
+    (token=roci_peek_token(state));
+
+# 395 "roci/roci-compiler.c"
+    if (token_matches(token, ","))
+
+# 395 "roci/roci-compiler.c"
+    {
+
+# 396 "roci/roci-compiler.c"
+      roci_skip_token(state);
+    }
+    else
+
+# 397 "roci/roci-compiler.c"
+    if ((!token_matches(token, ")")))
+
+# 397 "roci/roci-compiler.c"
+    {
+
+# 398 "roci/roci-compiler.c"
+      log_fatal("Expected comma or close paren.");
+
+# 399 "roci/roci-compiler.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 403 "roci/roci-compiler.c"
+  roci_emit_get_var((state->current_bb), token_to_string(fn_name));
+
+# 405 "roci/roci-compiler.c"
+  roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
+
+# 406 "roci/roci-compiler.c"
+  buffer_append_byte(((state->current_bb)->opcodes), (ROCI_OPCODE_CALL_0+num_args));
+
+# 407 "roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), str_to_value((return_bb->bblock_label)));
+
+# 409 "roci/roci-compiler.c"
+  ((state->current_bb)=return_bb);
+}
+
+
+# 412 "roci/roci-compiler.c"
+void roci_compile_closure(roci_compiler_state_t* state)
+# 412 "roci/roci-compiler.c"
+{
+
+# 413 "roci/roci-compiler.c"
+  token_t* first_token = roci_peek_token(state);
+
+# 414 "roci/roci-compiler.c"
+  roci_expect_token(state, "fn");
+
+# 415 "roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 417 "roci/roci-compiler.c"
+  token_t* args[32];
+
+# 418 "roci/roci-compiler.c"
+  int64_t arg_num = roci_collect_fn_args(state, args);
+
+# 420 "roci/roci-compiler.c"
+  roci_bb_builder_t* current_bb = (state->current_bb);
+
+# 421 "roci/roci-compiler.c"
+  int current_env_depth = (state->env_depth);
+
+# 423 "roci/roci-compiler.c"
+  roci_bb_builder_t* fn_entry_bb = roci_new_bblock(state, "fn_header");
+
+# 424 "roci/roci-compiler.c"
+  ((state->env_depth)=1);
+
+# 425 "roci/roci-compiler.c"
+  ((state->current_bb)=fn_entry_bb);
+
+# 427 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", first_token);
+
+# 428 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
+
+# 429 "roci/roci-compiler.c"
+  roci_emit_int_datum(state, arg_num);
+
+# 431 "roci/roci-compiler.c"
+  roci_emit_new_environment(state);
+
+# 432 "roci/roci-compiler.c"
+  while ((arg_num>0))
+
+# 432 "roci/roci-compiler.c"
+  {
+
+# 433 "roci/roci-compiler.c"
+    token_t* varname = (args[(--arg_num)]);
+
+# 434 "roci/roci-compiler.c"
+    roci_emit_token_string_datum(state, token_to_string(varname));
+
+# 435 "roci/roci-compiler.c"
+    roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+  }
+
+# 438 "roci/roci-compiler.c"
+  roci_bb_builder_t* body_bb = roci_compile_block(state);
+
+# 439 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+
+# 440 "roci/roci-compiler.c"
+  roci_emit_return(state);
+
+# 442 "roci/roci-compiler.c"
+  roci_emit_branch(fn_entry_bb, body_bb);
+
+# 444 "roci/roci-compiler.c"
+  ((state->env_depth)=current_env_depth);
+
+# 445 "roci/roci-compiler.c"
+  ((state->current_bb)=current_bb);
+
+# 446 "roci/roci-compiler.c"
+  roci_emit_token_string_datum(state, (fn_entry_bb->bblock_label));
+
+# 447 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_MAKE_CLOSURE);
+}
+
+
+# 450 "roci/roci-compiler.c"
+int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args)
+# 450 "roci/roci-compiler.c"
+{
+
+# 451 "roci/roci-compiler.c"
+  int64_t arg_num = 0;
+
+# 452 "roci/roci-compiler.c"
+  while (true)
+
+# 452 "roci/roci-compiler.c"
+  {
+
+# 453 "roci/roci-compiler.c"
+    token_t* token = roci_peek_token(state);
+
+# 454 "roci/roci-compiler.c"
+    if (token_matches(token, ")"))
+
+# 454 "roci/roci-compiler.c"
+    {
+
+# 455 "roci/roci-compiler.c"
+      roci_skip_token(state);
+
+# 456 "roci/roci-compiler.c"
+      break;
+    }
+
+# 458 "roci/roci-compiler.c"
+    roci_verify_identifier(token);
+
+# 459 "roci/roci-compiler.c"
+    roci_skip_token(state);
+
+# 461 "roci/roci-compiler.c"
+    ((args[(arg_num++)])=token);
+
+# 462 "roci/roci-compiler.c"
+    (token=roci_peek_token(state));
+
+# 463 "roci/roci-compiler.c"
+    if (token_matches(token, ","))
+
+# 463 "roci/roci-compiler.c"
+    {
+
+# 464 "roci/roci-compiler.c"
+      roci_skip_token(state);
+    }
+  }
+
+# 467 "roci/roci-compiler.c"
+  return arg_num;
+}
+
+
+# 473 "roci/roci-compiler.c"
+void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode)
+# 473 "roci/roci-compiler.c"
+{
+
+# 474 "roci/roci-compiler.c"
+  buffer_append_byte(((state->current_bb)->opcodes), opcode);
+}
+
+
+# 477 "roci/roci-compiler.c"
+void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str)
+# 477 "roci/roci-compiler.c"
+{
+
+# 478 "roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), str_to_value(str));
+}
+
+
+# 481 "roci/roci-compiler.c"
+void roci_emit_int_datum(roci_compiler_state_t* state, uint64_t val)
+# 481 "roci/roci-compiler.c"
+{
+
+# 482 "roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), u64_to_value(val));
+}
+
+
+# 485 "roci/roci-compiler.c"
+void roci_emit_new_environment(roci_compiler_state_t* state)
+# 485 "roci/roci-compiler.c"
+{
+
+# 486 "roci/roci-compiler.c"
+  ((state->env_depth)++);
+
+# 487 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_NEW_ENVIRONMENT);
+}
+
+
+# 490 "roci/roci-compiler.c"
+void roci_emit_drop_environment(roci_compiler_state_t* state)
+# 490 "roci/roci-compiler.c"
+{
+
+# 491 "roci/roci-compiler.c"
+  ((state->env_depth)--);
+
+# 492 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_DROP_ENVIRONMENT);
+}
+
+
+# 495 "roci/roci-compiler.c"
+void roci_emit_return(roci_compiler_state_t* state)
+# 495 "roci/roci-compiler.c"
+{
+
+# 496 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_RETURN);
+}
+
+
+# 499 "roci/roci-compiler.c"
+void roci_emit_get_var(roci_bb_builder_t* bb, char* fn_name)
+# 499 "roci/roci-compiler.c"
+{
+
+# 500 "roci/roci-compiler.c"
+  buffer_append_byte((bb->opcodes), ROCI_OPCODE_GET_VAR);
+
+# 501 "roci/roci-compiler.c"
+  value_array_add((bb->data), ptr_to_value(fn_name));
+}
+
+
+# 504 "roci/roci-compiler.c"
+void roci_emit_comment(roci_bb_builder_t* bb, char* str)
+# 504 "roci/roci-compiler.c"
+{
+
+# 505 "roci/roci-compiler.c"
+  buffer_append_byte((bb->opcodes), ROCI_OPCODE_COMMENT);
+
+# 506 "roci/roci-compiler.c"
+  value_array_add((bb->data), ptr_to_value(str));
+}
+
+
+# 509 "roci/roci-compiler.c"
+void roci_emit_debug_info(roci_compiler_state_t* state, char* filename, token_t* token)
+# 510 "roci/roci-compiler.c"
+{
+
+# 511 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_DEBUG_INFO);
+
+# 512 "roci/roci-compiler.c"
+  roci_emit_int_datum(state, token_to_roci_src_info(0, token));
+}
+
+
+# 525 "roci/roci-compiler.c"
+roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state, char* label_prefix)
+# 526 "roci/roci-compiler.c"
+{
+
+# 527 "roci/roci-compiler.c"
+  if ((label_prefix==((void *)0)))
+
+# 527 "roci/roci-compiler.c"
+  {
+
+# 528 "roci/roci-compiler.c"
+    (label_prefix="bb_");
+  }
+
+# 530 "roci/roci-compiler.c"
+  roci_bb_builder_t* result = add_bblock((state->bblocks));
+
+# 531 "roci/roci-compiler.c"
+  ((result->bblock_label)=string_printf("%s%d", label_prefix, ((state->bb_label_count)++)));
+
+# 533 "roci/roci-compiler.c"
+  roci_emit_comment(result, (result->bblock_label));
+
+# 534 "roci/roci-compiler.c"
+  return result;
+}
+
+
+# 537 "roci/roci-compiler.c"
+void roci_emit_branch(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
+# 538 "roci/roci-compiler.c"
+{
+
+# 539 "roci/roci-compiler.c"
+  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR);
+
+# 540 "roci/roci-compiler.c"
+  value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
+}
+
+
+# 543 "roci/roci-compiler.c"
+void roci_emit_br_true(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
+# 544 "roci/roci-compiler.c"
+{
+
+# 545 "roci/roci-compiler.c"
+  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR_TRUE);
+
+# 546 "roci/roci-compiler.c"
+  value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
+}
+
+
+# 558 "roci/roci-compiler.c"
+boolean_t roci_eof(roci_compiler_state_t* state)
+# 558 "roci/roci-compiler.c"
+{
+
+# 559 "roci/roci-compiler.c"
+  return ((state->position)>=((state->tokens)->length));
+}
+
+
+# 562 "roci/roci-compiler.c"
+void roci_skip_token(roci_compiler_state_t* state)
+# 562 "roci/roci-compiler.c"
+{
+
+# 562 "roci/roci-compiler.c"
+  roci_next_token(state);
+}
+
+
+# 564 "roci/roci-compiler.c"
+token_t* roci_peek_token(roci_compiler_state_t* state)
+# 564 "roci/roci-compiler.c"
+{
+
+# 565 "roci/roci-compiler.c"
+  return token_at((state->tokens), (state->position));
+}
+
+
+# 568 "roci/roci-compiler.c"
+token_t* roci_next_token(roci_compiler_state_t* state)
+# 568 "roci/roci-compiler.c"
+{
+
+# 569 "roci/roci-compiler.c"
+  return token_at((state->tokens), ((state->position)++));
+}
+
+
+# 572 "roci/roci-compiler.c"
+void roci_expect_token(roci_compiler_state_t* state, char* token_string)
+# 572 "roci/roci-compiler.c"
+{
+
+# 573 "roci/roci-compiler.c"
+  token_t* token = roci_next_token(state);
+
+# 574 "roci/roci-compiler.c"
+  if ((!token_matches(token, token_string)))
+
+# 574 "roci/roci-compiler.c"
+  {
+
+# 575 "roci/roci-compiler.c"
+    log_fatal("roci expected %s as the next token but got %s", token_string, token_to_string(token));
+
+# 577 "roci/roci-compiler.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+}
+
+
+# 581 "roci/roci-compiler.c"
+void roci_verify_identifier(token_t* token)
+# 581 "roci/roci-compiler.c"
+{
+
+# 582 "roci/roci-compiler.c"
+  if (((token->type)!=TOKEN_TYPE_IDENTIFIER))
+
+# 582 "roci/roci-compiler.c"
+  {
+
+# 583 "roci/roci-compiler.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+}
+
+
+# 32 "roci/roci-debugger.c"
+void roci_debug_error(roci_vm_state_t* state, char* error_message)
+# 32 "roci/roci-debugger.c"
+{
+
+# 33 "roci/roci-debugger.c"
+  log_fatal(error_message);
+
+# 34 "roci/roci-debugger.c"
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 
-# 205 "roci/roci.c"
-roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state)
-# 206 "roci/roci.c"
+# 37 "roci/roci-debugger.c"
+void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer)
+# 37 "roci/roci-debugger.c"
 {
 
-# 208 "roci/roci.c"
-  ((state->opcode_ptr)=(((/*CAST*/(uint8_t*) bb)+8)+((bb->num_data)*8)));
+# 38 "roci/roci-debugger.c"
+  boolean_t is_tty = roci_is_tty();
 
-# 209 "roci/roci.c"
-  ((state->data_ptr)=((/*CAST*/(uint64_t*) bb)+1));
+# 40 "roci/roci-debugger.c"
+  buffer_clear(buffer);
 
-# 210 "roci/roci.c"
-  while (true)
+# 42 "roci/roci-debugger.c"
+  if ((!is_tty))
 
-# 210 "roci/roci.c"
+# 42 "roci/roci-debugger.c"
   {
 
-# 211 "roci/roci.c"
-    roci_opcode_t opcode = (*((state->opcode_ptr)++));
+# 43 "roci/roci-debugger.c"
+    buffer_printf(buffer, "--------------------------------------------------------------" "--------\n");
+  }
+  else
 
-# 212 "roci/roci.c"
-    switch (opcode)
+# 47 "roci/roci-debugger.c"
+  {
 
-# 212 "roci/roci.c"
+# 48 "roci/roci-debugger.c"
+    term_home(buffer);
+
+# 49 "roci/roci-debugger.c"
+    term_alt_buffer(buffer);
+
+# 50 "roci/roci-debugger.c"
+    term_clear_screen(buffer);
+  }
+
+# 53 "roci/roci-debugger.c"
+  if (is_tty)
+
+# 53 "roci/roci-debugger.c"
+  {
+
+# 54 "roci/roci-debugger.c"
+    roci_debugger_banner(buffer, "*** Disassembly ***");
+  }
+
+# 56 "roci/roci-debugger.c"
+  bblock_to_buffer(buffer, (state->current_bb), (state->opcode_ptr));
+
+# 58 "roci/roci-debugger.c"
+  if (is_tty)
+
+# 58 "roci/roci-debugger.c"
+  {
+
+# 59 "roci/roci-debugger.c"
+    roci_debugger_banner(buffer, "*** Environment ***");
+  }
+
+# 61 "roci/roci-debugger.c"
+  roci_dump_env((state->env), buffer);
+
+# 62 "roci/roci-debugger.c"
+  if (is_tty)
+
+# 62 "roci/roci-debugger.c"
+  {
+
+# 63 "roci/roci-debugger.c"
+    roci_debugger_banner(buffer, "*** Stack ***");
+  }
+
+# 65 "roci/roci-debugger.c"
+  roci_dump_stack(state, buffer);
+
+# 67 "roci/roci-debugger.c"
+  if (is_tty)
+
+# 67 "roci/roci-debugger.c"
+  {
+
+# 68 "roci/roci-debugger.c"
+    roci_debugger_instructions(buffer);
+  }
+
+# 71 "roci/roci-debugger.c"
+  buffer_write_all(stderr, buffer);
+
+# 72 "roci/roci-debugger.c"
+  fflush(stderr);
+
+# 74 "roci/roci-debugger.c"
+  if (is_tty)
+
+# 74 "roci/roci-debugger.c"
+  {
+
+# 75 "roci/roci-debugger.c"
+    buffer_t* input_buffer = make_buffer(10);
+
+# 77 "roci/roci-debugger.c"
+    struct termios oldt = term_echo_off();
+
+# 79 "roci/roci-debugger.c"
+    while (true)
+
+# 79 "roci/roci-debugger.c"
     {
 
-# 213 "roci/roci.c"
+# 80 "roci/roci-debugger.c"
+      buffer_clear(buffer);
+
+# 81 "roci/roci-debugger.c"
+      (buffer=buffer_read_ready_bytes(buffer, stdin, 10));
+
+# 82 "roci/roci-debugger.c"
+      if ((buffer_length(buffer)>0))
+
+# 82 "roci/roci-debugger.c"
+      {
+
+# 83 "roci/roci-debugger.c"
+        uint8_t byte = buffer_get(buffer, 0);
+
+# 84 "roci/roci-debugger.c"
+        if ((byte==' '))
+
+# 84 "roci/roci-debugger.c"
+        {
+
+# 85 "roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 86 "roci/roci-debugger.c"
+          break;
+        }
+        else
+
+# 87 "roci/roci-debugger.c"
+        if ((byte=='q'))
+
+# 87 "roci/roci-debugger.c"
+        {
+
+# 88 "roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 89 "roci/roci-debugger.c"
+          term_main_buffer(buffer);
+
+# 90 "roci/roci-debugger.c"
+          fprintf(stderr, "\nExiting program from roci debugger.\n");
+
+# 91 "roci/roci-debugger.c"
+          exit(1);
+        }
+        else
+
+# 92 "roci/roci-debugger.c"
+        if ((byte=='c'))
+
+# 92 "roci/roci-debugger.c"
+        {
+
+# 93 "roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 94 "roci/roci-debugger.c"
+          (((state->debug)->n_instructions)=0xffffffffffffffff);
+
+# 95 "roci/roci-debugger.c"
+          (((state->debug)->break_on_call_target)=false);
+
+# 96 "roci/roci-debugger.c"
+          (((state->debug)->break_on_return)=false);
+
+# 97 "roci/roci-debugger.c"
+          (((state->debug)->break_on_next_statement)=false);
+
+# 98 "roci/roci-debugger.c"
+          (((state->debug)->trace)=false);
+
+# 99 "roci/roci-debugger.c"
+          break;
+        }
+      }
+
+# 102 "roci/roci-debugger.c"
+      usleep(1000);
+    }
+
+# 104 "roci/roci-debugger.c"
+    term_main_buffer(buffer);
+  }
+}
+
+
+# 108 "roci/roci-debugger.c"
+void roci_debug_breakpoint(void)
+# 108 "roci/roci-debugger.c"
+{
+}
+
+
+# 110 "roci/roci-debugger.c"
+void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer)
+# 110 "roci/roci-debugger.c"
+{
+
+# 112 "roci/roci-debugger.c"
+  for (
+
+# 112 "roci/roci-debugger.c"
+
+# 112 "roci/roci-debugger.c"
+    int i = 1;
+
+# 112 "roci/roci-debugger.c"
+    (i<1024);
+
+# 112 "roci/roci-debugger.c"
+    (i++))
+
+# 112 "roci/roci-debugger.c"
+  {
+
+# 113 "roci/roci-debugger.c"
+    roci_value_t value = roci_debug_peek_value(state, i);
+
+# 114 "roci/roci-debugger.c"
+    if ((((value.tag)==ROCI_TAG_STACK_MARKER)||((value.tag)==ROCI_TAG_UNKNOWN)))
+
+# 114 "roci/roci-debugger.c"
+    {
+
+# 115 "roci/roci-debugger.c"
+      return;
+    }
+
+# 117 "roci/roci-debugger.c"
+    buffer_printf(buffer, "stack[%d] = %s\n", i, roci_value_to_c_string(value));
+  }
+
+# 119 "roci/roci-debugger.c"
+  log_fatal("ROCI_TAG_STACK_MARKER not found.");
+
+# 120 "roci/roci-debugger.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+
+# 123 "roci/roci-debugger.c"
+boolean_t roci_is_tty(void)
+# 123 "roci/roci-debugger.c"
+{
+
+# 124 "roci/roci-debugger.c"
+  return (isatty(fileno(stdout))&&(!string_equal("dumb", getenv("TERM"))));
+}
+
+
+# 127 "roci/roci-debugger.c"
+void roci_debugger_banner(buffer_t* buffer, char* text)
+# 127 "roci/roci-debugger.c"
+{
+
+# 128 "roci/roci-debugger.c"
+  int width = term_width();
+
+# 129 "roci/roci-debugger.c"
+  term_set_background_color(buffer, 0xbfbfbf);
+
+# 130 "roci/roci-debugger.c"
+  term_set_foreground_color(buffer, 0xff0000);
+
+# 131 "roci/roci-debugger.c"
+  term_bold(buffer);
+
+# 132 "roci/roci-debugger.c"
+  buffer_printf(buffer, "               %s", text);
+
+# 133 "roci/roci-debugger.c"
+  buffer_append_repeated_byte(buffer, ' ', ((width-strlen(text))-15));
+
+# 134 "roci/roci-debugger.c"
+  buffer_printf(buffer, "\n", text);
+
+# 135 "roci/roci-debugger.c"
+  term_set_background_color(buffer, 0x000000);
+
+# 136 "roci/roci-debugger.c"
+  term_set_foreground_color(buffer, 0xffffff);
+
+# 137 "roci/roci-debugger.c"
+  term_reset_formatting(buffer);
+}
+
+
+# 140 "roci/roci-debugger.c"
+void roci_debugger_instructions(buffer_t* buffer)
+# 140 "roci/roci-debugger.c"
+{
+
+# 141 "roci/roci-debugger.c"
+  buffer_printf(buffer, "\n[Space] step instruction [n] step statement [c] continue [q] quit\n");
+}
+
+
+# 8 "roci/roci-disassembler.c"
+void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb, uint8_t* address)
+# 8 "roci/roci-disassembler.c"
+{
+
+# 9 "roci/roci-disassembler.c"
+  buffer_printf(buffer, "%s:\n", uint64_to_string((/*CAST*/(uint64_t) bb)));
+
+# 10 "roci/roci-disassembler.c"
+  uint8_t* opcode_ptr = bblock_opcode_pointer(bb);
+
+# 11 "roci/roci-disassembler.c"
+  uint64_t* data_ptr = bblock_data_pointer(bb);
+
+# 12 "roci/roci-disassembler.c"
+  for (
+
+# 12 "roci/roci-disassembler.c"
+
+# 12 "roci/roci-disassembler.c"
+    int i = 0;
+
+# 12 "roci/roci-disassembler.c"
+    (i<(bb->num_opcodes));
+
+# 12 "roci/roci-disassembler.c"
+    (i++))
+
+# 12 "roci/roci-disassembler.c"
+  {
+
+# 13 "roci/roci-disassembler.c"
+    if ((opcode_ptr==address))
+
+# 13 "roci/roci-disassembler.c"
+    {
+
+# 14 "roci/roci-disassembler.c"
+      term_bold(buffer);
+    }
+
+# 16 "roci/roci-disassembler.c"
+    (data_ptr+=roci_instruction_to_buffer(buffer, opcode_ptr, data_ptr));
+
+# 17 "roci/roci-disassembler.c"
+    if ((opcode_ptr==address))
+
+# 17 "roci/roci-disassembler.c"
+    {
+
+# 18 "roci/roci-disassembler.c"
+      term_reset_formatting(buffer);
+    }
+
+# 20 "roci/roci-disassembler.c"
+    (opcode_ptr++);
+  }
+}
+
+
+# 24 "roci/roci-disassembler.c"
+uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint64_t* data_ptr)
+# 25 "roci/roci-disassembler.c"
+{
+
+# 26 "roci/roci-disassembler.c"
+  switch ((*opcode_ptr))
+
+# 26 "roci/roci-disassembler.c"
+  {
+
+# 27 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_TRAP:
+
+# 28 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    trap\n");
+
+# 29 "roci/roci-disassembler.c"
+    return 0;
+
+# 30 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DROP:
+
+# 31 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    drop\n");
+
+# 32 "roci/roci-disassembler.c"
+    return 0;
+
+# 33 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_RETURN:
+
+# 34 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    return\n");
+
+# 35 "roci/roci-disassembler.c"
+    return 0;
+
+# 36 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_INTEGER:
+
+# 37 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push %s\n", uint64_to_string((*data_ptr)));
+
+# 38 "roci/roci-disassembler.c"
+    return 1;
+
+# 39 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_TRUE:
+
+# 40 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push true\n");
+
+# 41 "roci/roci-disassembler.c"
+    return 0;
+
+# 42 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_FALSE:
+
+# 43 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push false\n");
+
+# 44 "roci/roci-disassembler.c"
+    return 0;
+
+# 45 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_DOUBLE:
+
+# 46 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push %lf\n", raw_double_to_double((*data_ptr)));
+
+# 47 "roci/roci-disassembler.c"
+    return 1;
+
+# 48 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_STRING:
+
+# 49 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push \"%s\"\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 50 "roci/roci-disassembler.c"
+    return 1;
+
+# 51 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_BR:
+
+# 52 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    br %s\n", uint64_to_string((*data_ptr)));
+
+# 53 "roci/roci-disassembler.c"
+    return 1;
+
+# 54 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_BR_TRUE:
+
+# 55 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    br_true %s\n", uint64_to_string((*data_ptr)));
+
+# 56 "roci/roci-disassembler.c"
+    return 1;
+
+# 57 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_NEW_ENVIRONMENT:
+
+# 58 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    new_env\n");
+
+# 59 "roci/roci-disassembler.c"
+    return 0;
+
+# 60 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DROP_ENVIRONMENT:
+
+# 61 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    drop_env\n");
+
+# 62 "roci/roci-disassembler.c"
+    return 0;
+
+# 63 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_GET_VAR:
+
+# 64 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    get_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 65 "roci/roci-disassembler.c"
+    return 1;
+
+# 66 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_SET_VAR:
+
+# 67 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    set_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 68 "roci/roci-disassembler.c"
+    return 1;
+
+# 69 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DEFINE_VAR:
+
+# 70 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    define_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 71 "roci/roci-disassembler.c"
+    return 1;
+
+# 72 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_COMMENT:
+
+# 73 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    ; %s\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 74 "roci/roci-disassembler.c"
+    return 1;
+
+# 76 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_0:
+
+# 77 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_1:
+
+# 78 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_2:
+
+# 79 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_3:
+
+# 80 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_4:
+
+# 81 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_5:
+
+# 82 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_6:
+
+# 83 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_7:
+
+# 84 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_8:
+
+# 85 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_9:
+
+# 86 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_10:
+
+# 87 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_11:
+
+# 88 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_12:
+
+# 89 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_13:
+
+# 90 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_14:
+
+# 91 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_15:
+
+# 92 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL_16:
+
+# 93 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    call_%d %s\n", ((*opcode_ptr)-ROCI_OPCODE_CALL_0), uint64_to_string((*data_ptr)));
+
+# 95 "roci/roci-disassembler.c"
+    return 1;
+
+# 96 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_MAKE_CLOSURE:
+
+# 97 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    make_closure %s\n", uint64_to_string((*data_ptr)));
+
+# 99 "roci/roci-disassembler.c"
+    return 1;
+
+# 100 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CHECK_ARGS:
+
+# 101 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    check_args %s\n", uint64_to_string((*data_ptr)));
+
+# 102 "roci/roci-disassembler.c"
+    return 1;
+
+# 103 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DEBUG_INFO:
+
+# 103 "roci/roci-disassembler.c"
+    {
+
+# 104 "roci/roci-disassembler.c"
+      roci_src_info_t info = (*data_ptr);
+
+# 105 "roci/roci-disassembler.c"
+      buffer_printf(buffer, "    debug_info %s, %s\n", uint64_to_string(roci_src_file_number(info)), uint64_to_string(roci_src_line_number(info)));
+
+# 108 "roci/roci-disassembler.c"
+      return 1;
+    }
+
+# 110 "roci/roci-disassembler.c"
+    default:
+
+# 111 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    <unknown-opcode>\n");
+
+# 112 "roci/roci-disassembler.c"
+    return 0;
+  }
+
+# 115 "roci/roci-disassembler.c"
+  return 0;
+}
+
+
+# 118 "roci/roci-disassembler.c"
+double raw_double_to_double(uint64_t raw_bits)
+# 118 "roci/roci-disassembler.c"
+{
+
+# 119 "roci/roci-disassembler.c"
+  double val = 0.0;
+
+# 120 "roci/roci-disassembler.c"
+  memcpy((&val), (&raw_bits), (sizeof(val)));
+
+# 121 "roci/roci-disassembler.c"
+  return val;
+}
+
+
+# 124 "roci/roci-disassembler.c"
+void disassemble_bblocks(value_array_t* bblocks, buffer_t* buffer)
+# 124 "roci/roci-disassembler.c"
+{
+
+# 125 "roci/roci-disassembler.c"
+  for (
+
+# 125 "roci/roci-disassembler.c"
+
+# 125 "roci/roci-disassembler.c"
+    int i = 0;
+
+# 125 "roci/roci-disassembler.c"
+    (i<(bblocks->length));
+
+# 125 "roci/roci-disassembler.c"
+    (i++))
+
+# 125 "roci/roci-disassembler.c"
+  {
+
+# 126 "roci/roci-disassembler.c"
+    bblock_to_buffer(buffer, value_array_get_ptr(bblocks, i, typeof(roci_bb_t*)), ((void *)0));
+  }
+}
+
+
+# 13 "roci/roci-env.c"
+roci_value_t* roci_get_var(roci_env_t* env, char* name)
+# 13 "roci/roci-env.c"
+{
+
+# 14 "roci/roci-env.c"
+  while ((env!=NULL))
+
+# 14 "roci/roci-env.c"
+  {
+
+# 15 "roci/roci-env.c"
+    value_result_t find_result = string_ht_find((env->bindings), name);
+
+# 16 "roci/roci-env.c"
+    if (is_ok(find_result))
+
+# 16 "roci/roci-env.c"
+    {
+
+# 17 "roci/roci-env.c"
+      return (/*CAST*/(roci_value_t*) (find_result.ptr));
+    }
+
+# 19 "roci/roci-env.c"
+    (env=(env->parent));
+  }
+
+# 21 "roci/roci-env.c"
+  return NULL;
+}
+
+
+# 24 "roci/roci-env.c"
+void roci_set_var(roci_vm_state_t* state, char* name, value_t value, roci_tag_t tag)
+# 25 "roci/roci-env.c"
+{
+
+# 26 "roci/roci-env.c"
+  roci_value_t* binding = roci_get_var((state->env), name);
+
+# 27 "roci/roci-env.c"
+  if ((binding==((void *)0)))
+
+# 27 "roci/roci-env.c"
+  {
+
+# 29 "roci/roci-env.c"
+    roci_debug_error(state, "Variable not found");
+  }
+
+# 31 "roci/roci-env.c"
+  ((binding->raw)=(value.u64));
+
+# 32 "roci/roci-env.c"
+  ((binding->tag)=tag);
+}
+
+
+# 35 "roci/roci-env.c"
+void roci_define_var(roci_env_t* env, char* name, value_t value, roci_tag_t tag)
+# 36 "roci/roci-env.c"
+{
+
+# 37 "roci/roci-env.c"
+  value_result_t find_result = string_ht_find((env->bindings), name);
+
+# 38 "roci/roci-env.c"
+  if (is_ok(find_result))
+
+# 38 "roci/roci-env.c"
+  {
+
+# 39 "roci/roci-env.c"
+    log_fatal("redefinition of a variable %s", name);
+
+# 40 "roci/roci-env.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 42 "roci/roci-env.c"
+  roci_value_t* binding = malloc_struct(roci_value_t);
+
+# 43 "roci/roci-env.c"
+  ((binding->raw)=(value.u64));
+
+# 44 "roci/roci-env.c"
+  ((binding->tag)=tag);
+
+# 45 "roci/roci-env.c"
+  string_ht_insert((env->bindings), name, ptr_to_value(binding));
+}
+
+
+# 48 "roci/roci-env.c"
+roci_env_t* roci_new_env(roci_env_t* parent)
+# 48 "roci/roci-env.c"
+{
+
+# 49 "roci/roci-env.c"
+  roci_env_t* result = malloc_struct(roci_env_t);
+
+# 50 "roci/roci-env.c"
+  ((result->parent)=parent);
+
+# 51 "roci/roci-env.c"
+  ((result->bindings)=make_string_hashtable(7));
+
+# 52 "roci/roci-env.c"
+  return result;
+}
+
+
+# 55 "roci/roci-env.c"
+void roci_dump_env(roci_env_t* env, buffer_t* buffer)
+# 55 "roci/roci-env.c"
+{
+
+# 56 "roci/roci-env.c"
+  if ((env==((void *)0)))
+
+# 56 "roci/roci-env.c"
+  {
+
+# 57 "roci/roci-env.c"
+    return;
+  }
+
+# 60 "roci/roci-env.c"
+  roci_dump_env((env->parent), buffer);
+
+# 62 "roci/roci-env.c"
+  int depth = 0;
+
+# 63 "roci/roci-env.c"
+  roci_env_t* env2 = env;
+
+# 64 "roci/roci-env.c"
+  while ((env2!=((void *)0)))
+
+# 64 "roci/roci-env.c"
+  {
+
+# 65 "roci/roci-env.c"
+    (depth++);
+
+# 66 "roci/roci-env.c"
+    (env2=(env2->parent));
+  }
+
+# 70 "roci/roci-env.c"
+  string_ht_foreach((env->bindings), key, value, 
+# 70 "roci/roci-env.c"
+  {
+
+# 71 "roci/roci-env.c"
+    buffer_append_repeated_byte(buffer, ' ', (depth*4));
+
+# 72 "roci/roci-env.c"
+    buffer_printf(buffer, "%s = ", (/*CAST*/(char*) key));
+
+# 73 "roci/roci-env.c"
+    roci_append_value(buffer, (*(/*CAST*/(roci_value_t*) (value.ptr))));
+
+# 74 "roci/roci-env.c"
+    buffer_printf(buffer, "\n");
+  }
+);
+}
+
+
+# 10 "roci/roci-primitives.c"
+void roci_primitive_print_env(roci_vm_state_t* state)
+# 10 "roci/roci-primitives.c"
+{
+
+# 11 "roci/roci-primitives.c"
+  buffer_t* buffer = make_buffer(10);
+
+# 12 "roci/roci-primitives.c"
+  roci_dump_env((state->env), buffer);
+
+# 13 "roci/roci-primitives.c"
+  fprintf(stdout, "%s", buffer_to_c_string(buffer));
+}
+
+
+# 16 "roci/roci-primitives.c"
+void roci_add_primitives_to_env(roci_env_t* env)
+# 16 "roci/roci-primitives.c"
+{
+
+# 17 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_print_env), "debug_print_env");
+}
+
+
+# 20 "roci/roci-primitives.c"
+void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name)
+# 21 "roci/roci-primitives.c"
+{
+
+# 22 "roci/roci-primitives.c"
+  roci_define_var(env, name, u64_to_value((/*CAST*/(uint64_t) primitive)), ROCI_TAG_C_PRIMITIVE);
+}
+
+
+# 28 "roci/roci-value.c"
+void roci_append_value(buffer_t* buffer, roci_value_t value)
+# 28 "roci/roci-value.c"
+{
+
+# 29 "roci/roci-value.c"
+  switch ((value.tag))
+
+# 29 "roci/roci-value.c"
+  {
+
+# 30 "roci/roci-value.c"
+    case ROCI_TAG_STRING:
+
+# 31 "roci/roci-value.c"
+    buffer_printf(buffer, "\"%s\"", (/*CAST*/(char*) (value.raw)));
+
+# 32 "roci/roci-value.c"
+    break;
+
+# 33 "roci/roci-value.c"
+    case ROCI_TAG_INTEGER:
+
+# 35 "roci/roci-value.c"
+    buffer_printf(buffer, "%s", uint64_to_string((value.raw)));
+
+# 36 "roci/roci-value.c"
+    break;
+
+# 37 "roci/roci-value.c"
+    case ROCI_TAG_C_PRIMITIVE:
+
+# 38 "roci/roci-value.c"
+    buffer_printf(buffer, "primitive<%s>", uint64_to_string((value.raw)));
+
+# 39 "roci/roci-value.c"
+    break;
+
+# 40 "roci/roci-value.c"
+    case ROCI_TAG_CLOSURE:
+
+# 41 "roci/roci-value.c"
+    roci_closure_t* closure = (/*CAST*/(roci_closure_t*) (value.raw));
+
+# 42 "roci/roci-value.c"
+    buffer_printf(buffer, "closure<%s,%s>", uint64_to_string((/*CAST*/(uint64_t) (closure->entry_point))), uint64_to_string((/*CAST*/(uint64_t) (closure->env))));
+
+# 45 "roci/roci-value.c"
+    break;
+
+# 46 "roci/roci-value.c"
+    default:
+
+# 47 "roci/roci-value.c"
+    log_fatal("unhandled tag %s", roci_tag_to_string((value.tag)));
+
+# 48 "roci/roci-value.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 52 "roci/roci-value.c"
+char* roci_value_to_c_string(roci_value_t value)
+# 52 "roci/roci-value.c"
+{
+
+# 53 "roci/roci-value.c"
+  buffer_t* buf = make_buffer(10);
+
+# 54 "roci/roci-value.c"
+  roci_append_value(buf, value);
+
+# 55 "roci/roci-value.c"
+  return buffer_to_c_string(buf);
+}
+
+
+# 127 "roci/roci.c"
+roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point)
+# 127 "roci/roci.c"
+{
+
+# 128 "roci/roci.c"
+  roci_vm_state_t* state = roci_make_vm_state(env);
+
+# 129 "roci/roci.c"
+  return roci_execute_bblock(entry_point, state);
+}
+
+
+# 132 "roci/roci.c"
+roci_vm_state_t* roci_make_vm_state(roci_env_t* env)
+# 132 "roci/roci.c"
+{
+
+# 133 "roci/roci.c"
+  roci_vm_state_t* state = malloc_struct(roci_vm_state_t);
+
+# 134 "roci/roci.c"
+  ((state->stack)=(/*CAST*/(uint64_t*) malloc((256*8))));
+
+# 135 "roci/roci.c"
+  ((state->stack_tags)=(/*CAST*/(uint8_t*) malloc(256)));
+
+# 136 "roci/roci.c"
+  ((state->continuations)=(/*CAST*/(roci_cont_t**) malloc((256*8))));
+
+# 137 "roci/roci.c"
+  roci_set_env(state, env);
+
+# 138 "roci/roci.c"
+  if (true)
+
+# 138 "roci/roci.c"
+  {
+
+# 139 "roci/roci.c"
+    ((state->debug)=malloc_struct(roci_debug_state_t));
+
+# 140 "roci/roci.c"
+    (((state->debug)->trace)=true);
+  }
+
+# 144 "roci/roci.c"
+  roci_push_value(state, 0xCAFEBABE, ROCI_TAG_STACK_MARKER);
+
+# 145 "roci/roci.c"
+  return state;
+}
+
+
+# 152 "roci/roci.c"
+void roci_runtime_error(roci_runtime_error_t runtime_error)
+# 152 "roci/roci.c"
+{
+
+# 153 "roci/roci.c"
+  log_fatal("A runtime error has occurred evaluating a roci script");
+
+# 154 "roci/roci.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+
+# 165 "roci/roci.c"
+roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state)
+# 166 "roci/roci.c"
+{
+
+# 167 "roci/roci.c"
+  buffer_t* buffer = make_buffer(80);
+
+# 169 "roci/roci.c"
+  start_bblock:
+
+# 171 "roci/roci.c"
+  ((state->current_bb)=bb);
+
+# 172 "roci/roci.c"
+  ((state->opcode_ptr)=bblock_opcode_pointer(bb));
+
+# 173 "roci/roci.c"
+  ((state->data_ptr)=bblock_data_pointer(bb));
+
+# 175 "roci/roci.c"
+  while (true)
+
+# 175 "roci/roci.c"
+  {
+
+# 176 "roci/roci.c"
+    if ((((state->debug)!=((void *)0))&&((state->debug)->trace)))
+
+# 176 "roci/roci.c"
+    {
+
+# 177 "roci/roci.c"
+      roci_debug_trace(state, buffer);
+    }
+
+# 179 "roci/roci.c"
+    roci_opcode_t opcode = (*((state->opcode_ptr)++));
+
+# 180 "roci/roci.c"
+    switch (opcode)
+
+# 180 "roci/roci.c"
+    {
+
+# 181 "roci/roci.c"
       case ROCI_OPCODE_TRAP:
 
-# 214 "roci/roci.c"
+# 182 "roci/roci.c"
       return ROCI_RUNTIME_ERROR_TRAP;
 
-# 216 "roci/roci.c"
+# 184 "roci/roci.c"
       case ROCI_OPCODE_PUSH_FALSE:
 
-# 217 "roci/roci.c"
+# 185 "roci/roci.c"
       ((*((state->stack)++))=0);
 
-# 218 "roci/roci.c"
+# 186 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
 
-# 219 "roci/roci.c"
+# 187 "roci/roci.c"
       break;
 
-# 221 "roci/roci.c"
+# 189 "roci/roci.c"
       case ROCI_OPCODE_PUSH_TRUE:
 
-# 222 "roci/roci.c"
+# 190 "roci/roci.c"
       ((*((state->stack)++))=1);
 
-# 223 "roci/roci.c"
+# 191 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
 
-# 224 "roci/roci.c"
+# 192 "roci/roci.c"
       break;
 
-# 226 "roci/roci.c"
+# 194 "roci/roci.c"
       case ROCI_OPCODE_PUSH_INTEGER:
 
-# 227 "roci/roci.c"
+# 195 "roci/roci.c"
       ((*((state->stack)++))=(*((state->data_ptr)++)));
 
-# 228 "roci/roci.c"
+# 196 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_INTEGER);
 
-# 229 "roci/roci.c"
+# 197 "roci/roci.c"
       break;
 
-# 231 "roci/roci.c"
+# 199 "roci/roci.c"
       case ROCI_OPCODE_PUSH_DOUBLE:
 
-# 232 "roci/roci.c"
+# 200 "roci/roci.c"
       ((*((state->stack)++))=(*((state->data_ptr)++)));
 
-# 233 "roci/roci.c"
+# 201 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_DOUBLE);
+
+# 202 "roci/roci.c"
+      break;
+
+# 204 "roci/roci.c"
+      case ROCI_OPCODE_PUSH_STRING:
+
+# 205 "roci/roci.c"
+      ((*((state->stack)++))=(*((state->data_ptr)++)));
+
+# 206 "roci/roci.c"
+      ((*((state->stack_tags)++))=ROCI_TAG_STRING);
+
+# 207 "roci/roci.c"
+      break;
+
+# 209 "roci/roci.c"
+      case ROCI_OPCODE_BR_TRUE:
+
+# 210 "roci/roci.c"
+      roci_bb_t* taken_bb = (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++)));
+
+# 211 "roci/roci.c"
+      roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 212 "roci/roci.c"
+      uint64_t tos = (*(--(state->stack)));
+
+# 213 "roci/roci.c"
+      if ((tag!=ROCI_TAG_BOOLEAN))
+
+# 213 "roci/roci.c"
+      {
+
+# 214 "roci/roci.c"
+        return ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED;
+      }
+
+# 216 "roci/roci.c"
+      if ((tos!=0))
+
+# 216 "roci/roci.c"
+      {
+
+# 217 "roci/roci.c"
+        (bb=taken_bb);
+
+# 218 "roci/roci.c"
+        goto start_bblock;
+      }
+
+# 220 "roci/roci.c"
+      break;
+
+# 222 "roci/roci.c"
+      case ROCI_OPCODE_BR:
+
+# 223 "roci/roci.c"
+      (bb=(/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))));
+
+# 224 "roci/roci.c"
+      goto start_bblock;
+
+# 226 "roci/roci.c"
+      case ROCI_OPCODE_MAKE_CLOSURE:
+
+# 227 "roci/roci.c"
+      roci_debug_breakpoint();
+
+# 229 "roci/roci.c"
+      roci_closure_t* closure = malloc_struct(roci_closure_t);
+
+# 230 "roci/roci.c"
+      ((closure->entry_point)=(/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))));
+
+# 231 "roci/roci.c"
+      ((closure->env)=roci_current_env(state));
+
+# 232 "roci/roci.c"
+      roci_push_value(state, (/*CAST*/(uint64_t) closure), ROCI_TAG_CLOSURE);
+
+# 233 "roci/roci.c"
+      roci_debug_breakpoint();
 
 # 234 "roci/roci.c"
       break;
 
 # 236 "roci/roci.c"
-      case ROCI_OPCODE_PUSH_STRING:
+      case ROCI_OPCODE_CALL_0:
 
 # 237 "roci/roci.c"
-      ((*((state->stack)++))=(*((state->data_ptr)++)));
+      case ROCI_OPCODE_CALL_1:
 
 # 238 "roci/roci.c"
-      ((*((state->stack_tags)++))=ROCI_TAG_STRING);
+      case ROCI_OPCODE_CALL_2:
 
 # 239 "roci/roci.c"
-      break;
+      case ROCI_OPCODE_CALL_3:
+
+# 240 "roci/roci.c"
+      case ROCI_OPCODE_CALL_4:
 
 # 241 "roci/roci.c"
-      case ROCI_OPCODE_PUSH_SYMBOL:
+      case ROCI_OPCODE_CALL_5:
 
 # 242 "roci/roci.c"
-      ((*((state->stack)++))=(*((state->data_ptr)++)));
+      case ROCI_OPCODE_CALL_6:
 
 # 243 "roci/roci.c"
-      ((*((state->stack_tags)++))=ROCI_TAG_SYMBOL);
+      case ROCI_OPCODE_CALL_7:
 
 # 244 "roci/roci.c"
-      break;
+      case ROCI_OPCODE_CALL_8:
+
+# 245 "roci/roci.c"
+      case ROCI_OPCODE_CALL_9:
 
 # 246 "roci/roci.c"
-      case ROCI_OPCODE_BR_FALSE:
+      case ROCI_OPCODE_CALL_10:
 
 # 247 "roci/roci.c"
-      roci_bb_t* taken_bb = (/*CAST*/(roci_bb_t*) ((state->data_ptr)++));
+      case ROCI_OPCODE_CALL_11:
 
 # 248 "roci/roci.c"
-      roci_tag_t tag = (*(--(state->stack_tags)));
+      case ROCI_OPCODE_CALL_12:
 
 # 249 "roci/roci.c"
-      uint64_t tos = (*(--(state->stack)));
+      case ROCI_OPCODE_CALL_13:
 
 # 250 "roci/roci.c"
-      if ((tag!=ROCI_TAG_BOOLEAN))
-
-# 250 "roci/roci.c"
-      {
+      case ROCI_OPCODE_CALL_14:
 
 # 251 "roci/roci.c"
-        return ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED;
-      }
+      case ROCI_OPCODE_CALL_15:
 
-# 253 "roci/roci.c"
-      if ((tos==0))
+# 252 "roci/roci.c"
+      case ROCI_OPCODE_CALL_16:
 
-# 253 "roci/roci.c"
-      {
+# 255 "roci/roci.c"
+      uint64_t n_args = (opcode-ROCI_OPCODE_CALL_0);
 
-# 254 "roci/roci.c"
-        (bb=taken_bb);
-      }
+# 256 "roci/roci.c"
+      ((state->n_args)=n_args);
 
 # 257 "roci/roci.c"
-      break;
+      roci_value_t proc = roci_pop_value(state);
 
-# 259 "roci/roci.c"
-      case ROCI_OPCODE_BR:
+# 258 "roci/roci.c"
+      if (((proc.tag)==ROCI_TAG_C_PRIMITIVE))
+
+# 258 "roci/roci.c"
+      {
+      }
+      else
 
 # 260 "roci/roci.c"
-      (bb=(/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))));
+      if (((proc.tag)==ROCI_TAG_CLOSURE))
+
+# 260 "roci/roci.c"
+      {
+
+# 261 "roci/roci.c"
+        roci_closure_t* function = (/*CAST*/(roci_closure_t*) (proc.raw));
 
 # 262 "roci/roci.c"
-      break;
+        roci_set_env(state, (function->env));
 
-# 264 "roci/roci.c"
-      default:
+# 263 "roci/roci.c"
+        roci_push_continuation(state, (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))), n_args);
 
 # 265 "roci/roci.c"
+        (bb=(function->entry_point));
+
+# 266 "roci/roci.c"
+        goto start_bblock;
+      }
+      else
+
+# 267 "roci/roci.c"
+      {
+
+# 268 "roci/roci.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 270 "roci/roci.c"
+      break;
+
+# 272 "roci/roci.c"
+      case ROCI_OPCODE_RETURN:
+
+# 272 "roci/roci.c"
+      {
+
+# 273 "roci/roci.c"
+        roci_value_t tos = roci_pop_value(state);
+
+# 274 "roci/roci.c"
+        roci_cont_t* continuation = roci_pop_continuation(state);
+
+# 275 "roci/roci.c"
+        (bb=(continuation->bb));
+
+# 276 "roci/roci.c"
+        ((state->stack)=(continuation->stack));
+
+# 277 "roci/roci.c"
+        ((state->stack_tags)=(continuation->stack_tags));
+
+# 278 "roci/roci.c"
+        roci_push_value(state, (tos.raw), (tos.tag));
+
+# 279 "roci/roci.c"
+        if ((bb==NULL))
+
+# 279 "roci/roci.c"
+        {
+
+# 280 "roci/roci.c"
+          return ROCI_RUNTIME_ERROR_NONE;
+        }
+
+# 282 "roci/roci.c"
+        goto start_bblock;
+      }
+
+# 285 "roci/roci.c"
+      case ROCI_OPCODE_NEW_ENVIRONMENT:
+
+# 286 "roci/roci.c"
+      roci_set_env(state, roci_new_env(roci_current_env(state)));
+
+# 287 "roci/roci.c"
+      break;
+
+# 289 "roci/roci.c"
+      case ROCI_OPCODE_DEFINE_VAR:
+
+# 289 "roci/roci.c"
+      {
+
+# 290 "roci/roci.c"
+        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+
+# 291 "roci/roci.c"
+        roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 292 "roci/roci.c"
+        uint64_t tos = (*(--(state->stack)));
+
+# 293 "roci/roci.c"
+        roci_define_var(roci_current_env(state), str, u64_to_value(tos), tag);
+
+# 294 "roci/roci.c"
+        break;
+      }
+
+# 297 "roci/roci.c"
+      case ROCI_OPCODE_GET_VAR:
+
+# 297 "roci/roci.c"
+      {
+
+# 298 "roci/roci.c"
+        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+
+# 299 "roci/roci.c"
+        roci_value_t* binding = roci_get_var(roci_current_env(state), str);
+
+# 300 "roci/roci.c"
+        if ((binding==((void *)0)))
+
+# 300 "roci/roci.c"
+        {
+
+# 301 "roci/roci.c"
+          roci_debug_error(state, "variable not found");
+        }
+
+# 303 "roci/roci.c"
+        ((*((state->stack)++))=(binding->raw));
+
+# 304 "roci/roci.c"
+        ((*((state->stack_tags)++))=(binding->tag));
+
+# 305 "roci/roci.c"
+        break;
+      }
+
+# 308 "roci/roci.c"
+      case ROCI_OPCODE_SET_VAR:
+
+# 308 "roci/roci.c"
+      {
+
+# 309 "roci/roci.c"
+        char* str = (/*CAST*/(char*) ((state->data_ptr)++));
+
+# 310 "roci/roci.c"
+        roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 311 "roci/roci.c"
+        uint64_t tos = (*(--(state->stack)));
+
+# 312 "roci/roci.c"
+        roci_set_var(state, str, u64_to_value(tos), tag);
+
+# 313 "roci/roci.c"
+        break;
+      }
+
+# 316 "roci/roci.c"
+      case ROCI_OPCODE_COMMENT:
+
+# 317 "roci/roci.c"
+      ((state->data_ptr)++);
+
+# 318 "roci/roci.c"
+      break;
+
+# 320 "roci/roci.c"
+      case ROCI_OPCODE_DEBUG_INFO:
+
+# 321 "roci/roci.c"
+      ((state->debug_info)=(*((state->data_ptr)++)));
+
+# 322 "roci/roci.c"
+      break;
+
+# 324 "roci/roci.c"
+      case ROCI_OPCODE_DROP_ENVIRONMENT:
+
+# 325 "roci/roci.c"
+      roci_drop_env(state);
+
+# 326 "roci/roci.c"
+      break;
+
+# 328 "roci/roci.c"
+      case ROCI_OPCODE_CHECK_ARGS:
+
+# 328 "roci/roci.c"
+      {
+
+# 329 "roci/roci.c"
+        uint64_t n_args = (*((state->data_ptr)++));
+
+# 330 "roci/roci.c"
+        if ((n_args!=(state->n_args)))
+
+# 330 "roci/roci.c"
+        {
+
+# 331 "roci/roci.c"
+          roci_debug_error(state, "argument call mismatch");
+        }
+
+# 333 "roci/roci.c"
+        break;
+      }
+
+# 336 "roci/roci.c"
+      default:
+
+# 337 "roci/roci.c"
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
     }
   }
 
-# 268 "roci/roci.c"
+# 340 "roci/roci.c"
   return ROCI_RUNTIME_ERROR_NONE;
 }
 
@@ -27824,8 +32029,8 @@ char* tokenizer_error_to_string(tokenizer_error_t value){
     return "TOKENIZER_ERROR_UNTERMINATED_COMMENT";
   case TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL:
     return "TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL";
-  case TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL:
-    return "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL";
+  case TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL:
+    return "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL";
   default:
     return "<<unknown-tokenizer_error>>";
   }
@@ -27846,8 +32051,8 @@ tokenizer_error_t string_to_tokenizer_error(char* value){
   if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL") == 0) {
     return TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL;
   }
-  if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL") == 0) {
-    return TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL;
+  if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL") == 0) {
+    return TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL;
   }
   return 0;
 }
@@ -27879,8 +32084,8 @@ enum_metadata_t* tokenizer_error_metadata(){
     };
     static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
         .next = &var_4,
-        .name = "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL",
-        .value = TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERL
+        .name = "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL",
+        .value = TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL
     };
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "tokenizer_error_t",
@@ -29348,6 +33553,52 @@ enum_metadata_t* output_file_type_metadata(){
     };
     return &enum_metadata_result;
 }
+char* roci_compile_time_error_to_string(roci_compile_time_error_t value){
+  switch (value) {
+    case ROCI_COMPILE_TIME_ERROR_NONE:
+    return "ROCI_COMPILE_TIME_ERROR_NONE";
+  case ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT:
+    return "ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT";
+  case ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION:
+    return "ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION";
+  default:
+    return "<<unknown-roci_compile_time_error>>";
+  }
+}
+roci_compile_time_error_t string_to_roci_compile_time_error(char* value){
+  if (strcmp(value, "ROCI_COMPILE_TIME_ERROR_NONE") == 0) {
+    return ROCI_COMPILE_TIME_ERROR_NONE;
+  }
+  if (strcmp(value, "ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT") == 0) {
+    return ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT;
+  }
+  if (strcmp(value, "ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION") == 0) {
+    return ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION;
+  }
+  return 0;
+}
+enum_metadata_t* roci_compile_time_error_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "ROCI_COMPILE_TIME_ERROR_NONE",
+        .value = ROCI_COMPILE_TIME_ERROR_NONE
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT",
+        .value = ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION",
+        .value = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "roci_compile_time_error_t",
+        .elements = &var_2
+    };
+    return &enum_metadata_result;
+}
 char* roci_tag_to_string(roci_tag_t value){
   switch (value) {
     case ROCI_TAG_UNKNOWN:
@@ -29360,14 +33611,14 @@ char* roci_tag_to_string(roci_tag_t value){
     return "ROCI_TAG_DOUBLE";
   case ROCI_TAG_STRING:
     return "ROCI_TAG_STRING";
-  case ROCI_TAG_SYMBOL:
-    return "ROCI_TAG_SYMBOL";
   case ROCI_TAG_CLOSURE:
     return "ROCI_TAG_CLOSURE";
   case ROCI_TAG_C_PRIMITIVE:
     return "ROCI_TAG_C_PRIMITIVE";
   case ROCI_TAG_ARRAY:
     return "ROCI_TAG_ARRAY";
+  case ROCI_TAG_STACK_MARKER:
+    return "ROCI_TAG_STACK_MARKER";
   default:
     return "<<unknown-roci_tag>>";
   }
@@ -29388,9 +33639,6 @@ roci_tag_t string_to_roci_tag(char* value){
   if (strcmp(value, "ROCI_TAG_STRING") == 0) {
     return ROCI_TAG_STRING;
   }
-  if (strcmp(value, "ROCI_TAG_SYMBOL") == 0) {
-    return ROCI_TAG_SYMBOL;
-  }
   if (strcmp(value, "ROCI_TAG_CLOSURE") == 0) {
     return ROCI_TAG_CLOSURE;
   }
@@ -29399,6 +33647,9 @@ roci_tag_t string_to_roci_tag(char* value){
   }
   if (strcmp(value, "ROCI_TAG_ARRAY") == 0) {
     return ROCI_TAG_ARRAY;
+  }
+  if (strcmp(value, "ROCI_TAG_STACK_MARKER") == 0) {
+    return ROCI_TAG_STACK_MARKER;
   }
   return 0;
 }
@@ -29430,23 +33681,23 @@ enum_metadata_t* roci_tag_metadata(){
     };
     static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
         .next = &var_4,
-        .name = "ROCI_TAG_SYMBOL",
-        .value = ROCI_TAG_SYMBOL
-    };
-    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
-        .next = &var_5,
         .name = "ROCI_TAG_CLOSURE",
         .value = ROCI_TAG_CLOSURE
     };
-    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
-        .next = &var_6,
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
         .name = "ROCI_TAG_C_PRIMITIVE",
         .value = ROCI_TAG_C_PRIMITIVE
     };
-    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
-        .next = &var_7,
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
         .name = "ROCI_TAG_ARRAY",
         .value = ROCI_TAG_ARRAY
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "ROCI_TAG_STACK_MARKER",
+        .value = ROCI_TAG_STACK_MARKER
     };
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "roci_tag_t",
@@ -29468,20 +33719,26 @@ char* roci_opcode_to_string(roci_opcode_t value){
     return "ROCI_OPCODE_PUSH_DOUBLE";
   case ROCI_OPCODE_PUSH_STRING:
     return "ROCI_OPCODE_PUSH_STRING";
-  case ROCI_OPCODE_PUSH_SYMBOL:
-    return "ROCI_OPCODE_PUSH_SYMBOL";
+  case ROCI_OPCODE_DROP:
+    return "ROCI_OPCODE_DROP";
   case ROCI_OPCODE_NEW_ENVIRONMENT:
     return "ROCI_OPCODE_NEW_ENVIRONMENT";
+  case ROCI_OPCODE_DROP_ENVIRONMENT:
+    return "ROCI_OPCODE_DROP_ENVIRONMENT";
   case ROCI_OPCODE_DEFINE_VAR:
     return "ROCI_OPCODE_DEFINE_VAR";
   case ROCI_OPCODE_GET_VAR:
     return "ROCI_OPCODE_GET_VAR";
   case ROCI_OPCODE_SET_VAR:
     return "ROCI_OPCODE_SET_VAR";
-  case ROCI_OPCODE_BR_FALSE:
-    return "ROCI_OPCODE_BR_FALSE";
+  case ROCI_OPCODE_BR_TRUE:
+    return "ROCI_OPCODE_BR_TRUE";
   case ROCI_OPCODE_BR:
     return "ROCI_OPCODE_BR";
+  case ROCI_OPCODE_MAKE_CLOSURE:
+    return "ROCI_OPCODE_MAKE_CLOSURE";
+  case ROCI_OPCODE_RETURN:
+    return "ROCI_OPCODE_RETURN";
   case ROCI_OPCODE_CALL_0:
     return "ROCI_OPCODE_CALL_0";
   case ROCI_OPCODE_CALL_1:
@@ -29514,8 +33771,14 @@ char* roci_opcode_to_string(roci_opcode_t value){
     return "ROCI_OPCODE_CALL_14";
   case ROCI_OPCODE_CALL_15:
     return "ROCI_OPCODE_CALL_15";
-  case ROCI_OPCODE_RETURN:
-    return "ROCI_OPCODE_RETURN";
+  case ROCI_OPCODE_CALL_16:
+    return "ROCI_OPCODE_CALL_16";
+  case ROCI_OPCODE_CHECK_ARGS:
+    return "ROCI_OPCODE_CHECK_ARGS";
+  case ROCI_OPCODE_DEBUG_INFO:
+    return "ROCI_OPCODE_DEBUG_INFO";
+  case ROCI_OPCODE_COMMENT:
+    return "ROCI_OPCODE_COMMENT";
   default:
     return "<<unknown-roci_opcode>>";
   }
@@ -29539,11 +33802,14 @@ roci_opcode_t string_to_roci_opcode(char* value){
   if (strcmp(value, "ROCI_OPCODE_PUSH_STRING") == 0) {
     return ROCI_OPCODE_PUSH_STRING;
   }
-  if (strcmp(value, "ROCI_OPCODE_PUSH_SYMBOL") == 0) {
-    return ROCI_OPCODE_PUSH_SYMBOL;
+  if (strcmp(value, "ROCI_OPCODE_DROP") == 0) {
+    return ROCI_OPCODE_DROP;
   }
   if (strcmp(value, "ROCI_OPCODE_NEW_ENVIRONMENT") == 0) {
     return ROCI_OPCODE_NEW_ENVIRONMENT;
+  }
+  if (strcmp(value, "ROCI_OPCODE_DROP_ENVIRONMENT") == 0) {
+    return ROCI_OPCODE_DROP_ENVIRONMENT;
   }
   if (strcmp(value, "ROCI_OPCODE_DEFINE_VAR") == 0) {
     return ROCI_OPCODE_DEFINE_VAR;
@@ -29554,11 +33820,17 @@ roci_opcode_t string_to_roci_opcode(char* value){
   if (strcmp(value, "ROCI_OPCODE_SET_VAR") == 0) {
     return ROCI_OPCODE_SET_VAR;
   }
-  if (strcmp(value, "ROCI_OPCODE_BR_FALSE") == 0) {
-    return ROCI_OPCODE_BR_FALSE;
+  if (strcmp(value, "ROCI_OPCODE_BR_TRUE") == 0) {
+    return ROCI_OPCODE_BR_TRUE;
   }
   if (strcmp(value, "ROCI_OPCODE_BR") == 0) {
     return ROCI_OPCODE_BR;
+  }
+  if (strcmp(value, "ROCI_OPCODE_MAKE_CLOSURE") == 0) {
+    return ROCI_OPCODE_MAKE_CLOSURE;
+  }
+  if (strcmp(value, "ROCI_OPCODE_RETURN") == 0) {
+    return ROCI_OPCODE_RETURN;
   }
   if (strcmp(value, "ROCI_OPCODE_CALL_0") == 0) {
     return ROCI_OPCODE_CALL_0;
@@ -29608,8 +33880,17 @@ roci_opcode_t string_to_roci_opcode(char* value){
   if (strcmp(value, "ROCI_OPCODE_CALL_15") == 0) {
     return ROCI_OPCODE_CALL_15;
   }
-  if (strcmp(value, "ROCI_OPCODE_RETURN") == 0) {
-    return ROCI_OPCODE_RETURN;
+  if (strcmp(value, "ROCI_OPCODE_CALL_16") == 0) {
+    return ROCI_OPCODE_CALL_16;
+  }
+  if (strcmp(value, "ROCI_OPCODE_CHECK_ARGS") == 0) {
+    return ROCI_OPCODE_CHECK_ARGS;
+  }
+  if (strcmp(value, "ROCI_OPCODE_DEBUG_INFO") == 0) {
+    return ROCI_OPCODE_DEBUG_INFO;
+  }
+  if (strcmp(value, "ROCI_OPCODE_COMMENT") == 0) {
+    return ROCI_OPCODE_COMMENT;
   }
   return 0;
 }
@@ -29646,8 +33927,8 @@ enum_metadata_t* roci_opcode_metadata(){
     };
     static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
         .next = &var_5,
-        .name = "ROCI_OPCODE_PUSH_SYMBOL",
-        .value = ROCI_OPCODE_PUSH_SYMBOL
+        .name = "ROCI_OPCODE_DROP",
+        .value = ROCI_OPCODE_DROP
     };
     static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
         .next = &var_6,
@@ -29656,117 +33937,147 @@ enum_metadata_t* roci_opcode_metadata(){
     };
     static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
         .next = &var_7,
-        .name = "ROCI_OPCODE_DEFINE_VAR",
-        .value = ROCI_OPCODE_DEFINE_VAR
+        .name = "ROCI_OPCODE_DROP_ENVIRONMENT",
+        .value = ROCI_OPCODE_DROP_ENVIRONMENT
     };
     static enum_element_metadata_t var_9 = (enum_element_metadata_t) {
         .next = &var_8,
-        .name = "ROCI_OPCODE_GET_VAR",
-        .value = ROCI_OPCODE_GET_VAR
+        .name = "ROCI_OPCODE_DEFINE_VAR",
+        .value = ROCI_OPCODE_DEFINE_VAR
     };
     static enum_element_metadata_t var_10 = (enum_element_metadata_t) {
         .next = &var_9,
-        .name = "ROCI_OPCODE_SET_VAR",
-        .value = ROCI_OPCODE_SET_VAR
+        .name = "ROCI_OPCODE_GET_VAR",
+        .value = ROCI_OPCODE_GET_VAR
     };
     static enum_element_metadata_t var_11 = (enum_element_metadata_t) {
         .next = &var_10,
-        .name = "ROCI_OPCODE_BR_FALSE",
-        .value = ROCI_OPCODE_BR_FALSE
+        .name = "ROCI_OPCODE_SET_VAR",
+        .value = ROCI_OPCODE_SET_VAR
     };
     static enum_element_metadata_t var_12 = (enum_element_metadata_t) {
         .next = &var_11,
-        .name = "ROCI_OPCODE_BR",
-        .value = ROCI_OPCODE_BR
+        .name = "ROCI_OPCODE_BR_TRUE",
+        .value = ROCI_OPCODE_BR_TRUE
     };
     static enum_element_metadata_t var_13 = (enum_element_metadata_t) {
         .next = &var_12,
-        .name = "ROCI_OPCODE_CALL_0",
-        .value = ROCI_OPCODE_CALL_0
+        .name = "ROCI_OPCODE_BR",
+        .value = ROCI_OPCODE_BR
     };
     static enum_element_metadata_t var_14 = (enum_element_metadata_t) {
         .next = &var_13,
-        .name = "ROCI_OPCODE_CALL_1",
-        .value = ROCI_OPCODE_CALL_1
+        .name = "ROCI_OPCODE_MAKE_CLOSURE",
+        .value = ROCI_OPCODE_MAKE_CLOSURE
     };
     static enum_element_metadata_t var_15 = (enum_element_metadata_t) {
         .next = &var_14,
-        .name = "ROCI_OPCODE_CALL_2",
-        .value = ROCI_OPCODE_CALL_2
-    };
-    static enum_element_metadata_t var_16 = (enum_element_metadata_t) {
-        .next = &var_15,
-        .name = "ROCI_OPCODE_CALL_3",
-        .value = ROCI_OPCODE_CALL_3
-    };
-    static enum_element_metadata_t var_17 = (enum_element_metadata_t) {
-        .next = &var_16,
-        .name = "ROCI_OPCODE_CALL_4",
-        .value = ROCI_OPCODE_CALL_4
-    };
-    static enum_element_metadata_t var_18 = (enum_element_metadata_t) {
-        .next = &var_17,
-        .name = "ROCI_OPCODE_CALL_5",
-        .value = ROCI_OPCODE_CALL_5
-    };
-    static enum_element_metadata_t var_19 = (enum_element_metadata_t) {
-        .next = &var_18,
-        .name = "ROCI_OPCODE_CALL_6",
-        .value = ROCI_OPCODE_CALL_6
-    };
-    static enum_element_metadata_t var_20 = (enum_element_metadata_t) {
-        .next = &var_19,
-        .name = "ROCI_OPCODE_CALL_7",
-        .value = ROCI_OPCODE_CALL_7
-    };
-    static enum_element_metadata_t var_21 = (enum_element_metadata_t) {
-        .next = &var_20,
-        .name = "ROCI_OPCODE_CALL_8",
-        .value = ROCI_OPCODE_CALL_8
-    };
-    static enum_element_metadata_t var_22 = (enum_element_metadata_t) {
-        .next = &var_21,
-        .name = "ROCI_OPCODE_CALL_9",
-        .value = ROCI_OPCODE_CALL_9
-    };
-    static enum_element_metadata_t var_23 = (enum_element_metadata_t) {
-        .next = &var_22,
-        .name = "ROCI_OPCODE_CALL_10",
-        .value = ROCI_OPCODE_CALL_10
-    };
-    static enum_element_metadata_t var_24 = (enum_element_metadata_t) {
-        .next = &var_23,
-        .name = "ROCI_OPCODE_CALL_11",
-        .value = ROCI_OPCODE_CALL_11
-    };
-    static enum_element_metadata_t var_25 = (enum_element_metadata_t) {
-        .next = &var_24,
-        .name = "ROCI_OPCODE_CALL_12",
-        .value = ROCI_OPCODE_CALL_12
-    };
-    static enum_element_metadata_t var_26 = (enum_element_metadata_t) {
-        .next = &var_25,
-        .name = "ROCI_OPCODE_CALL_13",
-        .value = ROCI_OPCODE_CALL_13
-    };
-    static enum_element_metadata_t var_27 = (enum_element_metadata_t) {
-        .next = &var_26,
-        .name = "ROCI_OPCODE_CALL_14",
-        .value = ROCI_OPCODE_CALL_14
-    };
-    static enum_element_metadata_t var_28 = (enum_element_metadata_t) {
-        .next = &var_27,
-        .name = "ROCI_OPCODE_CALL_15",
-        .value = ROCI_OPCODE_CALL_15
-    };
-    static enum_element_metadata_t var_29 = (enum_element_metadata_t) {
-        .next = &var_28,
         .name = "ROCI_OPCODE_RETURN",
         .value = ROCI_OPCODE_RETURN
     };
+    static enum_element_metadata_t var_16 = (enum_element_metadata_t) {
+        .next = &var_15,
+        .name = "ROCI_OPCODE_CALL_0",
+        .value = ROCI_OPCODE_CALL_0
+    };
+    static enum_element_metadata_t var_17 = (enum_element_metadata_t) {
+        .next = &var_16,
+        .name = "ROCI_OPCODE_CALL_1",
+        .value = ROCI_OPCODE_CALL_1
+    };
+    static enum_element_metadata_t var_18 = (enum_element_metadata_t) {
+        .next = &var_17,
+        .name = "ROCI_OPCODE_CALL_2",
+        .value = ROCI_OPCODE_CALL_2
+    };
+    static enum_element_metadata_t var_19 = (enum_element_metadata_t) {
+        .next = &var_18,
+        .name = "ROCI_OPCODE_CALL_3",
+        .value = ROCI_OPCODE_CALL_3
+    };
+    static enum_element_metadata_t var_20 = (enum_element_metadata_t) {
+        .next = &var_19,
+        .name = "ROCI_OPCODE_CALL_4",
+        .value = ROCI_OPCODE_CALL_4
+    };
+    static enum_element_metadata_t var_21 = (enum_element_metadata_t) {
+        .next = &var_20,
+        .name = "ROCI_OPCODE_CALL_5",
+        .value = ROCI_OPCODE_CALL_5
+    };
+    static enum_element_metadata_t var_22 = (enum_element_metadata_t) {
+        .next = &var_21,
+        .name = "ROCI_OPCODE_CALL_6",
+        .value = ROCI_OPCODE_CALL_6
+    };
+    static enum_element_metadata_t var_23 = (enum_element_metadata_t) {
+        .next = &var_22,
+        .name = "ROCI_OPCODE_CALL_7",
+        .value = ROCI_OPCODE_CALL_7
+    };
+    static enum_element_metadata_t var_24 = (enum_element_metadata_t) {
+        .next = &var_23,
+        .name = "ROCI_OPCODE_CALL_8",
+        .value = ROCI_OPCODE_CALL_8
+    };
+    static enum_element_metadata_t var_25 = (enum_element_metadata_t) {
+        .next = &var_24,
+        .name = "ROCI_OPCODE_CALL_9",
+        .value = ROCI_OPCODE_CALL_9
+    };
+    static enum_element_metadata_t var_26 = (enum_element_metadata_t) {
+        .next = &var_25,
+        .name = "ROCI_OPCODE_CALL_10",
+        .value = ROCI_OPCODE_CALL_10
+    };
+    static enum_element_metadata_t var_27 = (enum_element_metadata_t) {
+        .next = &var_26,
+        .name = "ROCI_OPCODE_CALL_11",
+        .value = ROCI_OPCODE_CALL_11
+    };
+    static enum_element_metadata_t var_28 = (enum_element_metadata_t) {
+        .next = &var_27,
+        .name = "ROCI_OPCODE_CALL_12",
+        .value = ROCI_OPCODE_CALL_12
+    };
+    static enum_element_metadata_t var_29 = (enum_element_metadata_t) {
+        .next = &var_28,
+        .name = "ROCI_OPCODE_CALL_13",
+        .value = ROCI_OPCODE_CALL_13
+    };
+    static enum_element_metadata_t var_30 = (enum_element_metadata_t) {
+        .next = &var_29,
+        .name = "ROCI_OPCODE_CALL_14",
+        .value = ROCI_OPCODE_CALL_14
+    };
+    static enum_element_metadata_t var_31 = (enum_element_metadata_t) {
+        .next = &var_30,
+        .name = "ROCI_OPCODE_CALL_15",
+        .value = ROCI_OPCODE_CALL_15
+    };
+    static enum_element_metadata_t var_32 = (enum_element_metadata_t) {
+        .next = &var_31,
+        .name = "ROCI_OPCODE_CALL_16",
+        .value = ROCI_OPCODE_CALL_16
+    };
+    static enum_element_metadata_t var_33 = (enum_element_metadata_t) {
+        .next = &var_32,
+        .name = "ROCI_OPCODE_CHECK_ARGS",
+        .value = ROCI_OPCODE_CHECK_ARGS
+    };
+    static enum_element_metadata_t var_34 = (enum_element_metadata_t) {
+        .next = &var_33,
+        .name = "ROCI_OPCODE_DEBUG_INFO",
+        .value = ROCI_OPCODE_DEBUG_INFO
+    };
+    static enum_element_metadata_t var_35 = (enum_element_metadata_t) {
+        .next = &var_34,
+        .name = "ROCI_OPCODE_COMMENT",
+        .value = ROCI_OPCODE_COMMENT
+    };
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "roci_opcode_t",
-        .elements = &var_29
+        .elements = &var_35
     };
     return &enum_metadata_result;
 }
@@ -29829,11 +34140,11 @@ enum_metadata_t* roci_runtime_error_metadata(){
 
 // Full Compiler Command Line:
 //
-// /home/jawilson/src/omni-c/build-dir/bin/omni-c
+// /home/jawilson/src/omni-c/build-dir/bin/omni-c-stable
 //    generate-library
 //    --use-statement-parser=true
 //    --omit-c-armyknife-include=true
-//    --c-output-file=/home/jawilson/src/omni-c/build-dir/self.c
+//    --c-output-file=/home/jawilson/src/omni-c/build-dir/omni-c.c
 //    /home/jawilson/src/omni-c/build-dir/bin/lib.oar
 //    mode.c
 //    keywords.c
@@ -29876,20 +34187,32 @@ enum_metadata_t* roci_runtime_error_metadata(){
 //    print-tokens.c
 //    parse-test.c
 //    test-command.c
+//    test-assembler.c
 //    flags.c
+//    roci/roci-assembler.c
+//    roci/roci-bb-builder.c
+//    roci/roci-bb.c
+//    roci/roci-command.c
+//    roci/roci-compiler.c
+//    roci/roci-debugger.c
+//    roci/roci-disassembler.c
+//    roci/roci-env.c
+//    roci/roci-primitives.c
+//    roci/roci-stack.c
+//    roci/roci-value.c
 //    roci/roci.c
 //    /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
 
 // These checksums are currently easy to fake for example by using a
 // hacked git in the PATH at the time this compile was run.
 //
-// git cat-file -p 989e2d5f76e107f3cb1dd3fc0c29a10689452593 > /home/jawilson/src/omni-c/build-dir/bin/lib.oar
+// git cat-file -p 817c7d58286241a8bbe649789f2f5052c463faba > /home/jawilson/src/omni-c/build-dir/bin/lib.oar
 // git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
 // git cat-file -p 6c0a741ef33f143d100f562fbb6624a0e4b0bb39 > keywords.c
 // git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
 // git cat-file -p 519bac76f7060874edf686e186bbd0127c492875 > file-reader.c
-// git cat-file -p a94a2ff9f9b9076fedcb6cbdf3856c6375ed5858 > compiler-errors.c
-// git cat-file -p 7188ecb3f4f5b2ddbb91624982c6d81868672f02 > lexer.c
+// git cat-file -p b826e66adf47cc1bb8edf4e995bfe5eee16c0a48 > compiler-errors.c
+// git cat-file -p 8988f6015a2dd156f8d33939819ccf3126e96dfe > lexer.c
 // git cat-file -p 0b1ed82677427f66828e3ccbad7c004541d0a0ca > token-list.c
 // git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
 // git cat-file -p bc27a1fa5e0e46e5be7efb58913bf35141b3d84d > parser.c
@@ -29912,9 +34235,9 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p ab21ab7d3d9844da0379a8b65fff8f8254143e5e > literal-parser.c
 // git cat-file -p e4f518156c8f554c965a6e1312572f755c17bf47 > balanced-construct-parser.c
 // git cat-file -p a1246b1440b1757d6547a3b3f595d5bb0646849a > printer.c
-// git cat-file -p ea1a646a86f833872d5be645ae3403283baf459f > global-includes.c
+// git cat-file -p 9ca05c9db93267094539835e4e48896a4a8805c8 > global-includes.c
 // git cat-file -p fce28a522e79bdfb5067438da1932144fa3435c0 > linearizer.c
-// git cat-file -p 860f4de4bf509722c1cf90fa4b5e1f62f09364d9 > main.c
+// git cat-file -p 2fe48aa5a691ec8c52a25aa6129d08a7b628097f > main.c
 // git cat-file -p 0454a5add5006737a0f3fca664fb707837742680 > archive-command.c
 // git cat-file -p 9894b0b701f73ede7de57c59052ef1a01d5d7f4f > build-command.c
 // git cat-file -p 97164d99bde2d7b0a6b5afffd0386ad209c6547c > generate-c-output-file.c
@@ -29925,6 +34248,18 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p cfaccebe12df4a35e44380c7809ae428a7a72f2f > print-tokens.c
 // git cat-file -p da2c76b993b03e6a545a4402da4bedeffbc72f90 > parse-test.c
 // git cat-file -p 73de727b90c7c551e39b54ec604d7c25da6aa5ea > test-command.c
-// git cat-file -p 6302d0b40a0562b3b566de289df2bafcda663438 > flags.c
-// git cat-file -p 0e5812e1e90a587395a254c4d6cfcb57d9f1c3a8 > roci/roci.c
+// git cat-file -p 924ee3779e046e6eaf0b380c17b57a0d8348573f > test-assembler.c
+// git cat-file -p 69f6cd83a7bfbaab50b6bee0b6234266c5e45f8c > flags.c
+// git cat-file -p ce583389be4e293f41e3f1c61cf7e1ec7ef6e3c0 > roci/roci-assembler.c
+// git cat-file -p e6ba936f5ec08183f3dfca37c7efb585d9d0cfe9 > roci/roci-bb-builder.c
+// git cat-file -p d1989e6150fdf6d2af29af5f8dd473fb56c82c79 > roci/roci-bb.c
+// git cat-file -p 821f4e8b67df834b69ac2f94bf5c80540a927de6 > roci/roci-command.c
+// git cat-file -p 5ef13601264fe8f2c41e11a6800841686fda8fed > roci/roci-compiler.c
+// git cat-file -p 22ac179e92fd51982073c7b3e9e81cbfe8d0b678 > roci/roci-debugger.c
+// git cat-file -p 8611b35047413e612fc87d0d753601c8964ec6a5 > roci/roci-disassembler.c
+// git cat-file -p 127382341510377c95324604ac3c3514a34289a6 > roci/roci-env.c
+// git cat-file -p 5c5abffe2e891de7104feb87d73c0ae21b89ffea > roci/roci-primitives.c
+// git cat-file -p 34423759a5790b0c600e0042b6cc2c687e8a7dbd > roci/roci-stack.c
+// git cat-file -p eeaebecaa3279ba28325e38841b68abc4e9c1bc4 > roci/roci-value.c
+// git cat-file -p 2a17ef73ef17fae9e883aa83e9104bdc45d33474 > roci/roci.c
 // git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
