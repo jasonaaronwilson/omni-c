@@ -1,0 +1,9 @@
+{
+    tag = PARSE_NODE_LITERAL
+    tokens = [
+        "'\0'"
+    ]
+}
+
+// C Output
+'\0'
