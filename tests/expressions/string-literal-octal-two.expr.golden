@@ -1,0 +1,9 @@
+{
+    tag = PARSE_NODE_LITERAL
+    tokens = [
+        ""\12""
+    ]
+}
+
+// C Output
+"\12"
