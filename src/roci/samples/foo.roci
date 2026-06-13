@@ -6,3 +6,13 @@ let a_str = "Hello World!\n";
 print_string(a_str);
 print_string("Foo Bar Baz\n\n");
 let fubar = 100;
+print_string(string_append("aaa", "bbb", "ccc"));
+if (string_equal("hello", "hello")) {
+   print_string("STRINGS EQUAL");
+}
+if (string_starts_with("hello world", "hello")) {
+   print_string("STRING STARTS WITH");
+}
+if (string_ends_with("hello world", "world")) {
+   print_string("STRING ENDS WITH");
+}
