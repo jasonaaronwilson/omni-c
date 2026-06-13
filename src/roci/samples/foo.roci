@@ -16,3 +16,5 @@ if (string_starts_with("hello world", "hello")) {
 if (string_ends_with("hello world", "world")) {
    print_string("STRING ENDS WITH");
 }
+print_string(string_substring("0123456789", 2, 4));
+let list = make_list("a", "b", "c", 0, 1, 2);

@@ -51,6 +51,20 @@ void roci_append_value(buffer_t* buffer, roci_value_t value) {
     }
     break;
 
+  case ROCI_TAG_LIST: {
+    buffer_printf(buffer, "[");
+    value_array_t* list = cast(value_array_t*, value.raw);
+    for (int i = 0; i < list->length; i++) {
+      if (i > 0) {
+        buffer_printf(buffer, ", ");
+      }
+      roci_value_t* val = value_array_get_ptr(list, i, typeof(roci_value_t*));
+      roci_append_value(buffer, *val);
+    }
+    buffer_printf(buffer, "]");
+    break;
+  }
+
   default:
     log_fatal("unhandled tag %s", roci_tag_to_string(value.tag));
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -61,4 +75,11 @@ char* roci_value_to_c_string(roci_value_t value) {
   buffer_t* buf = make_buffer(10);
   roci_append_value(buf, value);
   return buffer_to_c_string(buf);
+}
+
+roci_value_t* roci_value_to_heap(roci_value_t value) {
+  roci_value_t* result = malloc_struct(roci_value_t);
+  result->raw = value.raw;
+  result->tag = value.tag;
+  return result;
 }

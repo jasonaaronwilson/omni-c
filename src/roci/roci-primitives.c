@@ -15,6 +15,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_string_starts_with,
                      "string_starts_with");
   roci_add_primitive(env, &roci_primitive_string_ends_with, "string_ends_with");
+  roci_add_primitive(env, &roci_primitive_string_substring, "string_substring");
+  roci_add_primitive(env, &roci_primitive_make_list, "make_list");
 }
 
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
@@ -77,6 +79,17 @@ void roci_primitive_string_ends_with(roci_vm_state_t* state) {
   }
 }
 
+void roci_primitive_string_substring(roci_vm_state_t* state) {
+  if (state->n_args != 3) {
+    roci_debug_error(state, "string_substring expectds 3 arguments");
+  }
+  int64_t end = roci_pop_integer(state);
+  int64_t start = roci_pop_integer(state);
+  char* str = roci_pop_string(state);
+  char* result = string_substring(str, start, end);
+  roci_push_string(state, result);
+}
+
 void roci_primitive_string_append(roci_vm_state_t* state) {
   buffer_t* buffer = make_buffer(10);
   for (int64_t arg_num = 0; arg_num < state->n_args; arg_num++) {
@@ -87,4 +100,14 @@ void roci_primitive_string_append(roci_vm_state_t* state) {
     buffer_append_string(buffer, cast(char*, value.raw));
   }
   roci_push_string(state, buffer_to_c_string(buffer));
+}
+
+void roci_primitive_make_list(roci_vm_state_t* state) {
+  value_array_t* list = make_value_array(state->n_args);
+  for (int64_t arg_num = 0; arg_num < state->n_args; arg_num++) {
+    roci_value_t* value = roci_value_to_heap(
+        roci_debug_peek_value(state, state->n_args - arg_num));
+    value_array_add(list, ptr_to_value(value));
+  }
+  roci_push_list(state, list);
 }

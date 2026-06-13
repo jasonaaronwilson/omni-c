@@ -32,6 +32,11 @@ static inline void roci_push_string(roci_vm_state_t* state, char* str) {
   *(state->stack_tags++) = ROCI_TAG_STRING;
 }
 
+static inline void roci_push_list(roci_vm_state_t* state, value_array_t* str) {
+  *(state->stack++) = cast(uint64_t, str);
+  *(state->stack_tags++) = ROCI_TAG_LIST;
+}
+
 static inline void roci_push_value(roci_vm_state_t* state, uint64_t data,
                                    roci_tag_t tag) {
   *(state->stack++) = data;
