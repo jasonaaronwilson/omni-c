@@ -18,3 +18,6 @@ if (string_ends_with("hello world", "world")) {
 }
 print_string(string_substring("0123456789", 2, 4));
 let list = make_list("a", "b", "c", 0, 1, 2);
+print_string(string_append(">>>", list_get(list, 1)));
+list_push(list, "ASDF ASDF ASDF ASDF");
+list_push(list, "B B B B");

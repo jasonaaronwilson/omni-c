@@ -79,6 +79,15 @@ static inline char* roci_pop_string(roci_vm_state_t* state) {
   return cast(char*, tos);
 }
 
+static inline value_array_t* roci_pop_list(roci_vm_state_t* state) {
+  roci_tag_t tag = *(--state->stack_tags);
+  uint64_t tos = *(--state->stack);
+  if (tag != ROCI_TAG_LIST) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(value_array_t*, tos);
+}
+
 static inline roci_value_t roci_pop_value(roci_vm_state_t* state) {
   roci_value_t value;
   roci_tag_t tag = *(--state->stack_tags);

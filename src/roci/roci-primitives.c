@@ -17,6 +17,9 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_string_ends_with, "string_ends_with");
   roci_add_primitive(env, &roci_primitive_string_substring, "string_substring");
   roci_add_primitive(env, &roci_primitive_make_list, "make_list");
+  roci_add_primitive(env, &roci_primitive_list_get, "list_get");
+  roci_add_primitive(env, &roci_primitive_list_set, "list_set");
+  roci_add_primitive(env, &roci_primitive_list_push, "list_push");
 }
 
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
@@ -110,4 +113,37 @@ void roci_primitive_make_list(roci_vm_state_t* state) {
     value_array_add(list, ptr_to_value(value));
   }
   roci_push_list(state, list);
+}
+
+void roci_primitive_list_get(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "list_get expects 2 arguments");
+  }
+  int64_t position = roci_pop_integer(state);
+  value_array_t* list = roci_pop_list(state);
+  roci_value_t* element
+      = cast(roci_value_t*, value_array_get(list, position).ptr);
+  roci_push_value(state, element->raw, element->tag);
+}
+
+void roci_primitive_list_set(roci_vm_state_t* state) {
+  if (state->n_args != 3) {
+    roci_debug_error(state, "list_set expects 3 arguments");
+  }
+  roci_value_t element = roci_pop_value(state);
+  int64_t position = roci_pop_integer(state);
+  value_array_t* list = roci_pop_list(state);
+  value_array_replace(list, position,
+                      ptr_to_value(roci_value_to_heap(element)));
+  roci_push_false(state);
+}
+
+void roci_primitive_list_push(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "list_push expects 2 arguments");
+  }
+  roci_value_t element = roci_pop_value(state);
+  value_array_t* list = roci_pop_list(state);
+  value_array_push(list, ptr_to_value(roci_value_to_heap(element)));
+  roci_push_false(state);
 }
