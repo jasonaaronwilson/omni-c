@@ -20,6 +20,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_get, "list_get");
   roci_add_primitive(env, &roci_primitive_list_set, "list_set");
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
+  roci_add_primitive(env, &roci_primitive_to_string, "to_string");
 }
 
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
@@ -146,4 +147,13 @@ void roci_primitive_list_push(roci_vm_state_t* state) {
   value_array_t* list = roci_pop_list(state);
   value_array_push(list, ptr_to_value(roci_value_to_heap(element)));
   roci_push_false(state);
+}
+
+void roci_primitive_to_string(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "to_string expects 1 argument");
+  }
+  roci_value_t element = roci_pop_value(state);
+  buffer_t* buffer = make_buffer(8);
+  roci_push_string(state, roci_value_to_c_string(element));
 }
