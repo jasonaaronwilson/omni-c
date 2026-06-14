@@ -22,3 +22,6 @@ print_string(string_append(">>>", list_get(list, 1)));
 list_push(list, "ASDF ASDF ASDF ASDF");
 list_push(list, "B B B B");
 print_string(string_append("\n***", to_string(list), "***\n"));
+print_string("\n-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n");
+list_for_each(list, print_string);
+// print_string("\n-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n);

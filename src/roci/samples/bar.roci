@@ -1,0 +1,2 @@
+let lst = make_list("HERE ROAD KILL", 1,2,3, "four");
+list_for_each(lst, print_string);

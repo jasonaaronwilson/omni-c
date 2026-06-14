@@ -9,6 +9,7 @@
 
 void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_print_env, "debug_print_env");
+  roci_add_primitive(env, &roci_primitive_to_string, "to_string");
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
   roci_add_primitive(env, &roci_primitive_string_append, "string_append");
   roci_add_primitive(env, &roci_primitive_string_equal, "string_equal");
@@ -20,7 +21,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_get, "list_get");
   roci_add_primitive(env, &roci_primitive_list_set, "list_set");
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
-  roci_add_primitive(env, &roci_primitive_to_string, "to_string");
+  roci_add_primitive(env, &roci_primitive_list_push, "list_for_each");
 }
 
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
@@ -124,7 +125,7 @@ void roci_primitive_list_get(roci_vm_state_t* state) {
   value_array_t* list = roci_pop_list(state);
   roci_value_t* element
       = cast(roci_value_t*, value_array_get(list, position).ptr);
-  roci_push_value(state, element->raw, element->tag);
+  roci_push_value(state, *element);
 }
 
 void roci_primitive_list_set(roci_vm_state_t* state) {
@@ -146,6 +147,21 @@ void roci_primitive_list_push(roci_vm_state_t* state) {
   roci_value_t element = roci_pop_value(state);
   value_array_t* list = roci_pop_list(state);
   value_array_push(list, ptr_to_value(roci_value_to_heap(element)));
+  roci_push_false(state);
+}
+
+
+void roci_primitive_list_for_each(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "list_for_each requires two arguments");
+  }
+  roci_value_t proc = roci_pop_value(state);
+  value_array_t* list = roci_pop_list(state);
+  for (int i = 0; i < list->length; i++) {
+    roci_value_t* element = cast(roci_value_t*, value_array_get(list, i).ptr);
+    roci_push_value(state, *element);
+    roci_call(state, proc, 1);
+  }
   roci_push_false(state);
 }
 

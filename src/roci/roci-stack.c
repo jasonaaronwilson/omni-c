@@ -37,10 +37,14 @@ static inline void roci_push_list(roci_vm_state_t* state, value_array_t* str) {
   *(state->stack_tags++) = ROCI_TAG_LIST;
 }
 
-static inline void roci_push_value(roci_vm_state_t* state, uint64_t data,
-                                   roci_tag_t tag) {
+static inline void roci_push_value_parts(roci_vm_state_t* state, uint64_t data,
+                                         roci_tag_t tag) {
   *(state->stack++) = data;
   *(state->stack_tags++) = tag;
+}
+
+static inline void roci_push_value(roci_vm_state_t* state, roci_value_t value) {
+  roci_push_value_parts(state, value.raw, value.tag);
 }
 
 static inline boolean_t roci_pop_boolean(roci_vm_state_t* state) {

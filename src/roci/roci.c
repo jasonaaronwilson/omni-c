@@ -141,7 +141,7 @@ roci_vm_state_t* roci_make_vm_state(roci_env_t* env) {
   }
   // This is a hack so that we can print all of the value of the stack
   // while debugging.
-  roci_push_value(state, 0xCAFEBABE, ROCI_TAG_STACK_MARKER);
+  roci_push_value_parts(state, 0xCAFEBABE, ROCI_TAG_STACK_MARKER);
   return state;
 }
 
@@ -229,7 +229,7 @@ start_bblock:
       roci_closure_t* closure = malloc_struct(roci_closure_t);
       closure->entry_point = cast(roci_bb_t*, *(state->data_ptr++));
       closure->env = roci_current_env(state);
-      roci_push_value(state, cast(uint64_t, closure), ROCI_TAG_CLOSURE);
+      roci_push_value_parts(state, cast(uint64_t, closure), ROCI_TAG_CLOSURE);
       roci_debug_breakpoint();
       break;
 
@@ -280,7 +280,7 @@ start_bblock:
       bb = continuation->bb;
       state->stack = continuation->stack;
       state->stack_tags = continuation->stack_tags;
-      roci_push_value(state, tos.raw, tos.tag);
+      roci_push_value_parts(state, tos.raw, tos.tag);
       if (bb == NULL) {
         return ROCI_RUNTIME_ERROR_NONE;
       }
@@ -303,7 +303,7 @@ start_bblock:
       char* str = cast(char*, *(state->data_ptr++));
       roci_value_t* binding = roci_get_var(roci_current_env(state), str);
       if (binding == nullptr) {
-        roci_debug_error(state, "variable not found");
+        roci_debug_error(state, string_printf("variable not found: %s", str));
       }
       *(state->stack++) = binding->raw;
       *(state->stack_tags++) = binding->tag;
@@ -347,4 +347,21 @@ start_bblock:
     }
   }
   return ROCI_RUNTIME_ERROR_NONE;
+}
+
+/**
+ * This function let's a prinitive invoke a primitive or a closre.
+ */
+void roci_call(roci_vm_state_t* state, roci_value_t proc, int64_t n_args) {
+  state->n_args = n_args;
+  if (proc.tag == ROCI_TAG_C_PRIMITIVE) {
+    cast(roci_c_primitive_t, proc.raw)(state);
+  } else if (proc.tag == ROCI_TAG_CLOSURE) {
+    roci_closure_t* function = cast(roci_closure_t*, proc.raw);
+    roci_set_env(state, function->env);
+    roci_execute_bblock(function->entry_point, state);
+    // I can tell somethig is off.
+  } else {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
 }
