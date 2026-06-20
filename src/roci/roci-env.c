@@ -25,8 +25,7 @@ void roci_set_var(roci_vm_state_t* state, char* name, value_t value,
                   roci_tag_t tag) {
   roci_value_t* binding = roci_get_var(state->env, name);
   if (binding == nullptr) {
-    // FIXME
-    roci_debug_error(state, "Variable not found");
+    roci_debug_error(state, string_printf("Variable not found '%s'", name));
   }
   binding->raw = value.u64;
   binding->tag = tag;

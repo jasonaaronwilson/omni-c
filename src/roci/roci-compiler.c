@@ -212,7 +212,7 @@ void roci_compile_assignment(roci_compiler_state_t* state) {
   roci_compile_expression(state);
   roci_expect_token(state, ";");
   roci_emit_token_string_datum(state, token_to_string(varname));
-  roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+  roci_emit_opcode(state, ROCI_OPCODE_SET_VAR);
 }
 
 /**
