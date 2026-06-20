@@ -23,15 +23,20 @@ void roci_repl(void) {
 
 buffer_t* roci_repl_read(void) {
   fprintf(stdout, "roci> ");
-  fflush(stdout);
+  uint64_t last_length = 0;
   buffer_t* buffer = make_buffer(10);
   while (true) {
+    fflush(stdout);
     buffer_read_ready_bytes(buffer, stdin, 0xffffffff);
     if (buffer_index_of(buffer, "#exit") >= 0) {
       exit(1);
     }
     if (buffer_index_of(buffer, "\n\n") >= 0) {
       return buffer;
+    }
+    if (last_length != buffer->length) {
+      last_length = buffer->length;
+      fprintf(stdout, "....> ");
     }
   }
 }
