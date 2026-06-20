@@ -1,9 +1,40 @@
-let _roci_tests_ = make_list();
+// A tiny abstraction for a named test
 
-let add_test = fn(thunk) {
-  list_push(_roci_tests_, thunk);
+let make_test = fn(name, thunk) {
+  return make_list(name, thunk);
 };
 
+let test_name = fn(test) {
+  return list_get(test, 0);
+};
+
+let test_thunk = fn(test) {
+  return list_get(test, 1);
+};
+
+// ----------------------------------------------------------------------
+// The test API.
+
+// Global State
+
+let _roci_tests_ = make_list();
+let _roci_last_test_passed_ = false;
+
+let add_test = fn(name, thunk) {
+  list_push(_roci_tests_, make_test(name, thunk));
+};
+
+let pass_test = fn() {
+  _roci_last_test_passed_ = true;
+};
+
+let fail_test = fn() {
+  _roci_last_test_passed_ = false;
+};
+
+// ----------------------------------------------------------------------
+
+// Move this somewhere else...
 let list_map = fn(lst, func) {
   let result = make_list();
   list_for_each(lst, fn(x) {
@@ -13,4 +44,27 @@ let list_map = fn(lst, func) {
 };
 
 let run_tests = fn() {
+  list_for_each(_roci_tests_, fn(test) {
+      _roci_last_test_passed_ = false;
+      let thunk = test_thunk(test);
+      thunk();
+      if (_roci_last_test_passed_) {
+	print_string(string_append("TEST PASSED: ", test_name(test), "\n"));
+      } else {
+	print_string(string_append("TEST FAILED: ",  test_name(test), "\n"));
+      }
+    });
 };
+
+/*
+add_test("empty test",
+	 fn() {
+	   pass_test();
+	 });
+*/
+
+print_string("HERE HERE HERE\n");
+print_string(to_string(_roci_tests_));
+print_string("\n");
+
+run_tests();

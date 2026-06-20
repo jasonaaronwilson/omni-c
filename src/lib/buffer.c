@@ -100,6 +100,10 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
 
+  if (end > buffer->length) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
   uint64_t copy_length = (end - start);
   char* result = cast(char*, malloc_bytes(copy_length + 1));
   if (copy_length > 0) {
