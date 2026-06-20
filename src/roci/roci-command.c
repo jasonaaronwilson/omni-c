@@ -4,7 +4,7 @@
  * Run the roci interpreter on a set of files
  */
 void roci_command(void) {
-  log_warn("roci_command()");
+  log_info("roci_command()");
 
   roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
   state->bblocks = make_value_array(16);

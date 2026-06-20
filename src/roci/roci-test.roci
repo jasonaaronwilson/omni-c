@@ -1,0 +1,16 @@
+let _roci_tests_ = make_list();
+
+let add_test = fn(thunk) {
+  list_push(_roci_tests_, thunk);
+};
+
+let list_map = fn(lst, func) {
+  let result = make_list();
+  list_for_each(lst, fn(x) {
+      list_push(result, func(x));
+    });
+  return result;
+};
+
+let run_tests = fn() {
+};

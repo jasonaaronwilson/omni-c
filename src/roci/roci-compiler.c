@@ -105,7 +105,7 @@ value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer) {
 void roci_compile_tokens(roci_compiler_state_t* state) {
   // TODO(jawilson): make "return" illegal at this level. We can
   // provide a function like exit though.
-  log_warn("roci_compile_tokens begin");
+  log_info("roci_compile_tokens begin");
   while (state->position < state->tokens->length) {
     roci_compile_statement(state);
     if (state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
@@ -114,7 +114,7 @@ void roci_compile_tokens(roci_compiler_state_t* state) {
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
-  log_warn("roci_compile_tokens end");
+  log_info("roci_compile_tokens end");
   roci_emit_opcode(state, ROCI_OPCODE_TRAP);
 }
 
@@ -125,7 +125,7 @@ void roci_compile_tokens(roci_compiler_state_t* state) {
  */
 void roci_compile_statement(roci_compiler_state_t* state) {
   token_t* token = roci_peek_token(state);
-  log_warn("CURRENT TOKEN IS %s", token_to_string(token));
+  log_info("CURRENT TOKEN IS %s", token_to_string(token));
   if (token_matches(token, "return")) {
     roci_compile_return(state);
   } else if (token_matches(token, "if")) {

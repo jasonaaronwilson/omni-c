@@ -9,6 +9,7 @@
 
 void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_load, "load");
+  roci_add_primitive(env, &roci_primitive_exit, "exit");
   roci_add_primitive(env, &roci_primitive_print_env, "debug_print_env");
   roci_add_primitive(env, &roci_primitive_to_string, "to_string");
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
@@ -25,12 +26,37 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_push, "list_for_each");
 }
 
+/**
+ * @function roci_add_primitive
+ *
+ * Utility function to add a primitive to a roci environment (usually
+ * the top-level environment).
+ */
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
                         char* name) {
   roci_define_var(env, name, u64_to_value(cast(uint64_t, primitive)),
                   ROCI_TAG_C_PRIMITIVE);
 }
 
+/**
+ * @function roci_primitive_exit
+ *
+ * Exit the current process.
+ */
+void roci_primitive_exit(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "roci_exit expects 1 argument");
+  }
+  int64_t code = roci_pop_integer(state);
+  exit(code);
+}
+
+/**
+ * @function roci_primitive_load
+ *
+ * Load a roci file and interpret it (in the same environment that
+ * load was defined in (i.e., the top-level environment).
+ */
 void roci_primitive_load(roci_vm_state_t* state) {
   if (state->n_args != 1) {
     roci_debug_error(state, "roci_load expects 1 argument");
@@ -50,6 +76,7 @@ void roci_primitive_print_env(roci_vm_state_t* state) {
   buffer_t* buffer = make_buffer(10);
   roci_dump_env(state->env, buffer);
   fprintf(stdout, "%s", buffer_to_c_string(buffer));
+  roci_push_false(state);
 }
 
 void roci_primitive_print_string(roci_vm_state_t* state) {
