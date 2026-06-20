@@ -130,4 +130,7 @@ void configure_regular_commands(void) {
   flag_command("roci", &FLAG_command);
   flag_description("run the roci interpreter on the files in order");
   flag_file_args(&FLAG_files);
+
+  flag_command("repl", &FLAG_command);
+  flag_description("enter the roci repl");
 }

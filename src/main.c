@@ -61,6 +61,8 @@ int main(int argc, char** argv) {
     test_assembler_command();
   } else if (string_equal("roci", FLAG_command)) {
     roci_command();
+  } else if (string_equal("repl", FLAG_command)) {
+    roci_repl();
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

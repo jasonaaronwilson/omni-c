@@ -321,6 +321,20 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
 }
 
 /**
+ * @function buffer_index_of
+ *
+ * Determine the index of the given C string.
+ */
+int64_t buffer_index_of(buffer_t* buffer, char* str) {
+  for (uint64_t i = 0; i < buffer->length; i++) {
+    if (buffer_match_string_at(buffer, i, str)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
  * @function buffer_from_string
  *
  * Return a buffer initialized with the contents of a particular
