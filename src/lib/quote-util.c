@@ -43,10 +43,10 @@ char* string_unquote_c_string(char* input) {
   buffer_t* buf = make_buffer(limit + 10);
   for (size_t i = 1; i < limit;) {
     uint8_t c = cast(uint8_t, input[i++]);
-    log_fatal("c = %d\n", c);
+    // log_fatal("c = %d\n", c);
     if (c == '\\') {
       uint8_t c2 = cast(uint8_t, input[i++]);
-      log_fatal("c2 = %d\n", c2);
+      // log_fatal("c2 = %d\n", c2);
       switch(c2) {
       case '"':  buffer_append_byte(buf, '\"'); break;
       case '\\': ; buffer_append_byte(buf, '\\'); break;

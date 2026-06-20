@@ -16,9 +16,9 @@ void roci_command(void) {
     fprintf(stdout, "====> roci compiling %s\n", file->file_name);
     fprintf(stdout, "====================================================\n");
     roci_compile_buffer(state, file->file_name, file->data);
+    value_array_t* bblocks = build_bblocks(state->bblocks);
 
     buffer_t* buffer = make_buffer(1);
-    value_array_t* bblocks = build_bblocks(state->bblocks);
     disassemble_bblocks(bblocks, buffer);
     fprintf(stderr, buffer_to_c_string(buffer));
     if (true) {

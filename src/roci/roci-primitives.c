@@ -8,6 +8,7 @@
  */
 
 void roci_add_primitives_to_env(roci_env_t* env) {
+  roci_add_primitive(env, &roci_primitive_load, "load");
   roci_add_primitive(env, &roci_primitive_print_env, "debug_print_env");
   roci_add_primitive(env, &roci_primitive_to_string, "to_string");
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
@@ -28,6 +29,21 @@ void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
                         char* name) {
   roci_define_var(env, name, u64_to_value(cast(uint64_t, primitive)),
                   ROCI_TAG_C_PRIMITIVE);
+}
+
+void roci_primitive_load(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "roci_load expects 1 argument");
+  }
+  char* filename = roci_pop_string(state);
+  file_t* file = read_file(filename);
+  roci_compiler_state_t* compiler_state = malloc_struct(roci_compiler_state_t);
+  compiler_state->bblocks = make_value_array(16);
+  roci_compile_buffer(compiler_state, file->file_name, file->data);
+  value_array_t* bblocks = build_bblocks(compiler_state->bblocks);
+  roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
+  roci_execute(state->env, entry_point);
+  roci_push_false(state);
 }
 
 void roci_primitive_print_env(roci_vm_state_t* state) {
