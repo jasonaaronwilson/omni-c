@@ -10,6 +10,9 @@
 void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_load, "load");
   roci_add_primitive(env, &roci_primitive_exit, "exit");
+  // TODO(jawilson): remove once roci is looking pretty good since the
+  // roci repl understands #env which does the same thing and I don't
+  // think we need regularly using this though I'm a bit undecided...
   roci_add_primitive(env, &roci_primitive_print_env, "debug_print_env");
   roci_add_primitive(env, &roci_primitive_to_string, "to_string");
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
@@ -23,7 +26,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_get, "list_get");
   roci_add_primitive(env, &roci_primitive_list_set, "list_set");
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
-  roci_add_primitive(env, &roci_primitive_list_push, "list_for_each");
+  roci_add_primitive(env, &roci_primitive_list_for_each, "list_for_each");
 }
 
 /**
