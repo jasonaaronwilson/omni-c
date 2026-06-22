@@ -28,6 +28,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
   roci_add_primitive(env, &roci_primitive_list_for_each, "list_for_each");
   roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
+  roci_add_primitive(env, &roci_primitive_shell, "shell");
 }
 
 /**
@@ -228,4 +229,33 @@ void roci_primitive_timestamp(roci_vm_state_t* state) {
   char* filename = roci_pop_string(state);
   uint64_t timestamp = get_file_modification_time(filename);
   roci_push_integer(state, timestamp);
+}
+
+void roci_primitive_shell(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "shell expects 1 argument");
+  }
+  value_array_t* lst = roci_pop_list(state);
+  uint64_t len = lst->length;
+  value_array_t* argv = make_value_array(lst->length);
+  for (int i = 0; i < len; i++) {
+    roci_value_t* element = cast(roci_value_t*, value_array_get(lst, i).ptr);
+    if (element->tag != ROCI_TAG_STRING) {
+      roci_debug_error(state, "shell expects all list elements to be strings");
+    }
+    value_array_push(argv, str_to_value(cast(char*, element->raw)));
+  }
+
+  sub_process_t* sub_process = make_sub_process(argv);
+  sub_process_launch(sub_process);
+
+  buffer_t* buffer = make_buffer(1);
+  do {
+    sub_process_read(sub_process, buffer, nullptr);
+    usleep(5);
+  } while (is_sub_process_running(sub_process));
+  sub_process_read(sub_process, buffer, nullptr);
+  sub_process_wait(sub_process);
+
+  roci_push_string(state, buffer_to_c_string(buffer));
 }
