@@ -1,0 +1,10 @@
+//// This roci script will eventually build roci
+
+let BUILD_DIR = "build-dir/";
+let STABLE_BINARY_PATH = string_append(BUILD_DIR, "bin/omni-c-stable");
+let OMNI_C = string_append(BUILD_DIR, "bin/omni-c");
+
+// load("src/lib/build-fragment.roci");
+
+load("src/build-fragment.roci");
+load("src/roci/build-fragment.roci");
