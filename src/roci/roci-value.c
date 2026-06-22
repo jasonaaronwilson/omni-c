@@ -83,3 +83,10 @@ roci_value_t* roci_value_to_heap(roci_value_t value) {
   result->tag = value.tag;
   return result;
 }
+
+roci_value_t* string_to_roci_string(char* str) {
+  roci_value_t* result = malloc_struct(roci_value_t);
+  result->raw = cast(uint64_t, str);
+  result->tag = ROCI_TAG_STRING;
+  return result;
+}

@@ -30,6 +30,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
   roci_add_primitive(env, &roci_primitive_shell, "shell");
   roci_add_primitive(env, &roci_primitive_platform, "platform");
+  roci_add_primitive(env, &roci_primitive_glob, "glob");
 }
 
 /**
@@ -279,4 +280,26 @@ roci_push_string(state, "linux");
   roci_push_string(state, "unknown");
 #endif
   */
+}
+
+void roci_primitive_glob(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "glob expects 1 argument");
+  }
+  char* pattern = roci_pop_string(state);
+
+  glob_t glob_result = compound_literal(glob_t, {0});
+
+  // Find all .txt files in the current directory
+  int return_value = glob(pattern, 0, NULL, &glob_result);
+  value_array_t* result = make_value_array(state->n_args);
+  if (return_value == 0) {
+    for (int i = 0; i < glob_result.gl_pathc; ++i) {
+      value_array_push(
+          result, ptr_to_value(string_to_roci_string(glob_result.gl_pathv[i])));
+    }
+  } else if (return_value != GLOB_NOMATCH) {
+    roci_debug_error(state, "An error occurred during globbing.");
+  }
+  roci_push_list(state, result);
 }

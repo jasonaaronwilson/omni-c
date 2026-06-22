@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <execinfo.h>
 #include <fcntl.h>
+#include <glob.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdarg.h>
