@@ -27,6 +27,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_set, "list_set");
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
   roci_add_primitive(env, &roci_primitive_list_for_each, "list_for_each");
+  roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
 }
 
 /**
@@ -218,4 +219,13 @@ void roci_primitive_to_string(roci_vm_state_t* state) {
   roci_value_t element = roci_pop_value(state);
   buffer_t* buffer = make_buffer(8);
   roci_push_string(state, roci_value_to_c_string(element));
+}
+
+void roci_primitive_timestamp(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "timestamp expects 1 argument");
+  }
+  char* filename = roci_pop_string(state);
+  uint64_t timestamp = get_file_modification_time(filename);
+  roci_push_integer(state, timestamp);
 }

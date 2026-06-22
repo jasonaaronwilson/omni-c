@@ -118,14 +118,14 @@ void make_file_read_only(char* file_name) {
 /**
  * @function make_writable_if_exists
  *
- * Checks if a file exists and, if it does, adds write permissions for 
+ * Checks if a file exists and, if it does, adds write permissions for
  * the owner.
  */
-void make_writable_if_exists(const char* file_name) { 
+void make_writable_if_exists(const char* file_name) {
   // Check if the file exists
   if (access(file_name, F_OK) != 0) {
     // File doesn't exist, so no need to change permissions
-    return; 
+    return;
   }
 
   // Get current permissions
@@ -135,8 +135,8 @@ void make_writable_if_exists(const char* file_name) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-  // Add write permission for the owner 
-  mode_t new_mode = file_stat.st_mode | S_IWUSR; 
+  // Add write permission for the owner
+  mode_t new_mode = file_stat.st_mode | S_IWUSR;
 
   if (chmod(file_name, new_mode) != 0) {
     log_fatal("Error setting permissions for %s: %s\n", file_name, strerror(errno));
@@ -318,4 +318,37 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes) {
     }
     n_bytes--;
   }
+}
+
+/**
+ * @function get_file_modification_time
+ *
+ * Gets the last modification time of a file in microseconds.
+ *
+ * @param filename The path to the file.
+ *
+ * @return The modification time in microseconds since the epoch,
+ * or -1 if the file does not exist or cannot be read.
+ */
+int64_t get_file_modification_time(const char *filename) {
+  struct stat result = compound_literal(struct stat, {0});
+
+  if (stat(filename, &result) != 0) {
+    // File doesn't exist or error occurred
+    return -1;
+  }
+
+  int64_t total_microseconds = 0;
+
+  /*
+    // Windows (Standard stat only guarantees 1-second resolution)
+    total_microseconds = (long long)result.st_mtime * 1000000LL;
+  */
+
+  // Modern POSIX / Linux
+  total_microseconds = (cast(int64_t, result.st_mtim.tv_sec) * 1000000LL) +
+    (result.st_mtim.tv_nsec / 1000);
+  // #endif
+
+  return total_microseconds;
 }
