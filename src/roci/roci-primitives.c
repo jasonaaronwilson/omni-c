@@ -29,6 +29,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_for_each, "list_for_each");
   roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
   roci_add_primitive(env, &roci_primitive_shell, "shell");
+  roci_add_primitive(env, &roci_primitive_platform, "platform");
 }
 
 /**
@@ -258,4 +259,24 @@ void roci_primitive_shell(roci_vm_state_t* state) {
   sub_process_wait(sub_process);
 
   roci_push_string(state, buffer_to_c_string(buffer));
+}
+
+void roci_primitive_platform(roci_vm_state_t* state) {
+  if (state->n_args != 0) {
+    roci_debug_error(state, "platform expects 0 argument");
+  }
+  roci_push_string(state, "linux");
+  // omni-c doesn't support this kind of proprocessor stuff.
+  /*
+#if defined(__linux__)
+roci_push_string(state, "linux");
+#elif defined(__APPLE__)
+  roci_push_string(state, "darwin");
+#elif defined(_WIN32) || defined(_WIN64)
+  roci_push_string(state, "windows");
+#else
+  #error "asdf"
+  roci_push_string(state, "unknown");
+#endif
+  */
 }
