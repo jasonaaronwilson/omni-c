@@ -350,17 +350,18 @@ start_bblock:
 }
 
 /**
- * This function let's a prinitive invoke a primitive or a closre.
+ * This function allows a primitive to invoke another primitive or a
+ * closure.
  */
 void roci_call(roci_vm_state_t* state, roci_value_t proc, int64_t n_args) {
   state->n_args = n_args;
   if (proc.tag == ROCI_TAG_C_PRIMITIVE) {
     cast(roci_c_primitive_t, proc.raw)(state);
   } else if (proc.tag == ROCI_TAG_CLOSURE) {
+    roci_push_continuation(state, nullptr, n_args);
     roci_closure_t* function = cast(roci_closure_t*, proc.raw);
     roci_set_env(state, function->env);
     roci_execute_bblock(function->entry_point, state);
-    // I can tell somethig is off.
   } else {
     fatal_error(ERROR_ILLEGAL_STATE);
   }

@@ -56,12 +56,10 @@ let run_tests = fn() {
     });
 };
 
-/*
 add_test("empty test",
 	 fn() {
 	   pass_test();
 	 });
-*/
 
 print_string("HERE HERE HERE\n");
 print_string(to_string(_roci_tests_));
