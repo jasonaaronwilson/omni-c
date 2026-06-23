@@ -27,6 +27,7 @@ boolean_t FLAG_use_statement_parser = true;
 boolean_t FLAG_to_c = true;
 boolean_t FLAG_omit_c_armyknife_include = false;
 char* FLAG_c_compiler = "clang";
+boolean_t FLAG_roci_debug = false;
 
 void configure_flags(void) {
   flag_program_name("omni-c");
@@ -129,8 +130,10 @@ void configure_regular_commands(void) {
 
   flag_command("roci", &FLAG_command);
   flag_description("run the roci interpreter on the files in order");
+  flag_boolean("--debug", &FLAG_roci_debug);
   flag_file_args(&FLAG_files);
 
   flag_command("repl", &FLAG_command);
   flag_description("enter the roci repl");
+  flag_boolean("--debug", &FLAG_roci_debug);
 }

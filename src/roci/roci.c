@@ -119,7 +119,7 @@ roci_vm_state_t* roci_make_vm_state(roci_env_t* env) {
   state->stack_tags = cast(uint8_t*, malloc(256));
   state->continuations = cast(roci_cont_t**, malloc(256 * 8));
   roci_set_env(state, env);
-  if (false) {
+  if (FLAG_roci_debug) {
     state->debug = malloc_struct(roci_debug_state_t);
     state->debug->trace = true;
   }

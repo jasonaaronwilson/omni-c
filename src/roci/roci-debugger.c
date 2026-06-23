@@ -57,15 +57,6 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
   bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
 
   if (is_tty) {
-    roci_debugger_banner(buffer, "*** Environment ***");
-  }
-  roci_dump_env(state->env, buffer);
-  if (is_tty) {
-    roci_debugger_banner(buffer, "*** Stack ***");
-  }
-  roci_dump_stack(state, buffer);
-
-  if (is_tty) {
     roci_debugger_instructions(buffer);
   }
 
@@ -98,6 +89,22 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
           state->debug->break_on_next_statement = false;
           state->debug->trace = false;
           break;
+        } else if (byte == 'e') {
+          buffer_t* buffer = make_buffer(10);
+          if (is_tty) {
+            roci_debugger_banner(buffer, "*** Environment ***");
+          }
+          roci_dump_env(state->env, buffer);
+          fprintf(stdout, buffer_to_c_string(buffer));
+          fflush(stdout);
+        } else if (byte == 'k') {
+          buffer_t* buffer = make_buffer(10);
+          if (is_tty) {
+            roci_debugger_banner(buffer, "*** Stack ***");
+          }
+          roci_dump_stack(state, buffer);
+          fprintf(stdout, buffer_to_c_string(buffer));
+          fflush(stdout);
         }
       }
       usleep(1000);
@@ -139,7 +146,7 @@ void roci_debugger_banner(buffer_t* buffer, char* text) {
 }
 
 void roci_debugger_instructions(buffer_t* buffer) {
-  buffer_printf(
-      buffer,
-      "\n[Space] step instruction [n] step statement [c] continue [q] quit\n");
+  buffer_printf(buffer,
+                "\n[Space] step instruction [n] next statement [c] continue "
+                "[q] quit [e] dump environment [k] dump stack\n");
 }
