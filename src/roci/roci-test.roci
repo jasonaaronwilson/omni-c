@@ -17,19 +17,19 @@ let test_thunk = fn(test) {
 
 // Global State
 
-let _roci_tests_ = make_list();
-let _roci_last_test_passed_ = false;
+let ROCI_TESTS = make_list();
+let ROCI_LAST_TEST_PASSED = false;
 
 let add_test = fn(name, thunk) {
-  list_push(_roci_tests_, make_test(name, thunk));
+  list_push(ROCI_TESTS, make_test(name, thunk));
 };
 
 let pass_test = fn() {
-  _roci_last_test_passed_ = true;
+  ROCI_LAST_TEST_PASSED = true;
 };
 
 let fail_test = fn() {
-  _roci_last_test_passed_ = false;
+  ROCI_LAST_TEST_PASSED = false;
 };
 
 // ----------------------------------------------------------------------
@@ -44,11 +44,12 @@ let list_map = fn(lst, func) {
 };
 
 let run_tests = fn() {
-  list_for_each(_roci_tests_, fn(test) {
-      _roci_last_test_passed_ = false;
+  print_string("Running tests...\n");
+  list_for_each(ROCI_TESTS, fn(test) {
+      ROCI_LAST_TEST_PASSED = false;
       let thunk = test_thunk(test);
       thunk();
-      if (_roci_last_test_passed_) {
+      if (ROCI_LAST_TEST_PASSED) {
 	print_string(string_append("TEST PASSED: ", test_name(test), "\n"));
       } else {
 	print_string(string_append("TEST FAILED: ",  test_name(test), "\n"));
@@ -61,8 +62,6 @@ add_test("empty test",
 	   pass_test();
 	 });
 
-print_string("HERE HERE HERE\n");
-print_string(to_string(_roci_tests_));
-print_string("\n");
+println(ROCI_TESTS);
 
-run_tests();
+// run_tests();

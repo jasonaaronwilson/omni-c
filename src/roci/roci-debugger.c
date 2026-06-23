@@ -31,7 +31,7 @@ static inline uint64_t roci_src_line_number(roci_src_info_t info) {
 
 void roci_debug_error(roci_vm_state_t* state, char* error_message) {
   log_fatal(error_message);
-  roci_repl();
+  roci_repl(state->env);
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 

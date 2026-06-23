@@ -4,13 +4,19 @@
  * This is the roci repl.
  */
 
-void roci_repl(void) {
+void roci_repl(roci_env_t* env) {
   fprintf(stdout, "/// Wecome to the roci read-eval-print-loop\n");
+  fprintf(stdout, "///\n");
+  fprintf(stdout, "/// Special commands:\n");
+  fprintf(stdout, "/// #exit to exit this repl\n");
+  fprintf(stdout, "/// #env to dump the environment\n");
+  fprintf(stdout, "///\n");
 
-  roci_env_t* env = roci_new_env(nullptr);
-  roci_add_primitives_to_env(env);
   while (true) {
     buffer_t* buffer = roci_repl_read(env);
+    if (buffer == nullptr) {
+      return;
+    }
     roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
     state->bblocks = make_value_array(16);
     roci_compile_buffer(state, "*repl*", buffer);
@@ -38,7 +44,7 @@ buffer_t* roci_repl_read(roci_env_t* env) {
 
     buffer_read_ready_bytes(buffer, stdin, 0xffffffff);
     if (buffer_equal(buffer, "#exit\n")) {
-      exit(1);
+      return nullptr;
     } else if (buffer_equal(buffer, "#env\n")) {
       buffer_t* env_buffer = make_buffer(10);
       roci_dump_env(env, env_buffer);

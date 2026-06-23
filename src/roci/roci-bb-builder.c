@@ -100,25 +100,16 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks,
     case ROCI_OPCODE_BR_TRUE:
     case ROCI_OPCODE_BR:
     case ROCI_OPCODE_MAKE_CLOSURE:
-    case ROCI_OPCODE_CALL_0:
-    case ROCI_OPCODE_CALL_1:
-    case ROCI_OPCODE_CALL_2:
-    case ROCI_OPCODE_CALL_3:
-    case ROCI_OPCODE_CALL_4:
-    case ROCI_OPCODE_CALL_5:
-    case ROCI_OPCODE_CALL_6:
-    case ROCI_OPCODE_CALL_7:
-    case ROCI_OPCODE_CALL_8:
-    case ROCI_OPCODE_CALL_9:
-    case ROCI_OPCODE_CALL_10:
-    case ROCI_OPCODE_CALL_11:
-    case ROCI_OPCODE_CALL_12:
-    case ROCI_OPCODE_CALL_13:
-    case ROCI_OPCODE_CALL_14:
-    case ROCI_OPCODE_CALL_15:
-    case ROCI_OPCODE_CALL_16:
-      char* label = value_array_get_ptr(builder->data, dindex++, typeof(char*));
-      *(data_ptr++) = bb_label_to_address(bblocks, label);
+      char* br_label
+          = value_array_get_ptr(builder->data, dindex++, typeof(char*));
+      *(data_ptr++) = bb_label_to_address(bblocks, br_label);
+      break;
+
+    case ROCI_OPCODE_CALL:
+      *(data_ptr++) = value_array_get(builder->data, dindex++).u64;
+      char* call_label
+          = value_array_get_ptr(builder->data, dindex++, typeof(char*));
+      *(data_ptr++) = bb_label_to_address(bblocks, call_label);
       break;
 
     default:

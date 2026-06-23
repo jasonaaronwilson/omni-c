@@ -46,23 +46,7 @@ typedef roci_opcode_t = enum {
 
   ROCI_OPCODE_MAKE_CLOSURE,
   ROCI_OPCODE_RETURN,
-  ROCI_OPCODE_CALL_0,
-  ROCI_OPCODE_CALL_1,
-  ROCI_OPCODE_CALL_2,
-  ROCI_OPCODE_CALL_3,
-  ROCI_OPCODE_CALL_4,
-  ROCI_OPCODE_CALL_5,
-  ROCI_OPCODE_CALL_6,
-  ROCI_OPCODE_CALL_7,
-  ROCI_OPCODE_CALL_8,
-  ROCI_OPCODE_CALL_9,
-  ROCI_OPCODE_CALL_10,
-  ROCI_OPCODE_CALL_11,
-  ROCI_OPCODE_CALL_12,
-  ROCI_OPCODE_CALL_13,
-  ROCI_OPCODE_CALL_14,
-  ROCI_OPCODE_CALL_15,
-  ROCI_OPCODE_CALL_16,
+  ROCI_OPCODE_CALL,
   ROCI_OPCODE_CHECK_ARGS,
 
   ROCI_OPCODE_DEBUG_INFO,
@@ -233,26 +217,10 @@ start_bblock:
       roci_debug_breakpoint();
       break;
 
-    case ROCI_OPCODE_CALL_0:
-    case ROCI_OPCODE_CALL_1:
-    case ROCI_OPCODE_CALL_2:
-    case ROCI_OPCODE_CALL_3:
-    case ROCI_OPCODE_CALL_4:
-    case ROCI_OPCODE_CALL_5:
-    case ROCI_OPCODE_CALL_6:
-    case ROCI_OPCODE_CALL_7:
-    case ROCI_OPCODE_CALL_8:
-    case ROCI_OPCODE_CALL_9:
-    case ROCI_OPCODE_CALL_10:
-    case ROCI_OPCODE_CALL_11:
-    case ROCI_OPCODE_CALL_12:
-    case ROCI_OPCODE_CALL_13:
-    case ROCI_OPCODE_CALL_14:
-    case ROCI_OPCODE_CALL_15:
-    case ROCI_OPCODE_CALL_16:
+    case ROCI_OPCODE_CALL:
       // STACK: arg0, ..., argn, closure/primitive
-      // DATUM: return-bblock
-      uint64_t n_args = opcode - ROCI_OPCODE_CALL_0;
+      // DATUM: n_args, return-bblock
+      uint64_t n_args = cast(uint64_t, *(state->data_ptr++));
       state->n_args = n_args;
       roci_value_t proc = roci_pop_value(state);
       if (proc.tag == ROCI_TAG_C_PRIMITIVE) {

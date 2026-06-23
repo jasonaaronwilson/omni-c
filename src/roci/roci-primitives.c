@@ -16,6 +16,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_print_env, "debug_print_env");
   roci_add_primitive(env, &roci_primitive_to_string, "to_string");
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
+  roci_add_primitive(env, &roci_primitive_println, "println");
   roci_add_primitive(env, &roci_primitive_string_append, "string_append");
   roci_add_primitive(env, &roci_primitive_string_equal, "string_equal");
   roci_add_primitive(env, &roci_primitive_string_starts_with,
@@ -94,6 +95,16 @@ void roci_primitive_print_string(roci_vm_state_t* state) {
   fprintf(stdout, "%s", arg);
   roci_push_false(state);
 }
+
+void roci_primitive_println(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "println_string expects 1 argument");
+  }
+  roci_value_t element = roci_pop_value(state);
+  fprintf(stdout, "%s\n", roci_value_to_c_string(element));
+  roci_push_false(state);
+}
+
 
 void roci_primitive_string_equal(roci_vm_state_t* state) {
   if (state->n_args != 2) {
@@ -220,7 +231,6 @@ void roci_primitive_to_string(roci_vm_state_t* state) {
     roci_debug_error(state, "to_string expects 1 argument");
   }
   roci_value_t element = roci_pop_value(state);
-  buffer_t* buffer = make_buffer(8);
   roci_push_string(state, roci_value_to_c_string(element));
 }
 

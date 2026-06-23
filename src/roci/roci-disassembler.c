@@ -74,26 +74,10 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr,
     buffer_printf(buffer, "    ; %s\n", cast(char*, *(data_ptr)));
     return 1;
 
-  case ROCI_OPCODE_CALL_0:
-  case ROCI_OPCODE_CALL_1:
-  case ROCI_OPCODE_CALL_2:
-  case ROCI_OPCODE_CALL_3:
-  case ROCI_OPCODE_CALL_4:
-  case ROCI_OPCODE_CALL_5:
-  case ROCI_OPCODE_CALL_6:
-  case ROCI_OPCODE_CALL_7:
-  case ROCI_OPCODE_CALL_8:
-  case ROCI_OPCODE_CALL_9:
-  case ROCI_OPCODE_CALL_10:
-  case ROCI_OPCODE_CALL_11:
-  case ROCI_OPCODE_CALL_12:
-  case ROCI_OPCODE_CALL_13:
-  case ROCI_OPCODE_CALL_14:
-  case ROCI_OPCODE_CALL_15:
-  case ROCI_OPCODE_CALL_16:
-    buffer_printf(buffer, "    call_%d %s\n", *opcode_ptr - ROCI_OPCODE_CALL_0,
-                  uint64_to_string(*(data_ptr)));
-    return 1;
+  case ROCI_OPCODE_CALL:
+    buffer_printf(buffer, "    call_%d %s\n", *(data_ptr + 0),
+                  uint64_to_string(*(data_ptr + 1)));
+    return 2;
   case ROCI_OPCODE_MAKE_CLOSURE:
     buffer_printf(buffer, "    make_closure %s\n",
                   uint64_to_string(*(data_ptr)));

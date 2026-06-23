@@ -403,7 +403,8 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
   roci_emit_get_var(state->current_bb, token_to_string(fn_name));
 
   roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
-  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL_0 + num_args);
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL);
+  value_array_add(state->current_bb->data, i64_to_value(num_args));
   value_array_add(state->current_bb->data,
                   str_to_value(return_bb->bblock_label));
   state->current_bb = return_bb;
