@@ -49,10 +49,12 @@ let run_tests = fn() {
       ROCI_LAST_TEST_PASSED = false;
       let thunk = test_thunk(test);
       thunk();
+      // The current bug is that we seem to have the wrong envrionment
+      // here since "test" is no longer defined.
       if (ROCI_LAST_TEST_PASSED) {
 	print_string(string_append("TEST PASSED: ", test_name(test), "\n"));
       } else {
-	print_string(string_append("TEST FAILED: ",  test_name(test), "\n"));
+	print_string(string_append("TEST FAILED: ", test_name(test), "\n"));
       }
     });
 };
@@ -64,4 +66,4 @@ add_test("empty test",
 
 println(ROCI_TESTS);
 
-// run_tests();
+run_tests();

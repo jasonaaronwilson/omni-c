@@ -232,9 +232,9 @@ start_bblock:
         goto start_bblock;
       } else if (proc.tag == ROCI_TAG_CLOSURE) {
         roci_closure_t* function = cast(roci_closure_t*, proc.raw);
-        roci_set_env(state, function->env);
         roci_push_continuation(state, cast(roci_bb_t*, *(state->data_ptr++)),
                                n_args);
+        roci_set_env(state, function->env);
         bb = function->entry_point;
         goto start_bblock;
       } else {
@@ -248,6 +248,7 @@ start_bblock:
       bb = continuation->bb;
       state->stack = continuation->stack;
       state->stack_tags = continuation->stack_tags;
+      state->env = continuation->env;
       roci_push_value_parts(state, tos.raw, tos.tag);
       if (bb == NULL) {
         return ROCI_RUNTIME_ERROR_NONE;
