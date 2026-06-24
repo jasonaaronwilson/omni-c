@@ -19,6 +19,8 @@ let test_thunk = fn(test) {
 
 let ROCI_TESTS = make_list();
 let ROCI_LAST_TEST_PASSED = false;
+let ROCI_NUM_PASS = 0;
+let ROCI_NUM_FAIL = 0;
 
 let add_test = fn(name, thunk) {
   list_push(ROCI_TESTS, make_test(name, thunk));
@@ -26,10 +28,12 @@ let add_test = fn(name, thunk) {
 
 let pass_test = fn() {
   ROCI_LAST_TEST_PASSED = true;
+  ROCI_NUM_PASS = iadd(ROCI_NUM_PASS, 1);
 };
 
 let fail_test = fn() {
   ROCI_LAST_TEST_PASSED = false;
+  ROCI_NUM_FAIL = iadd(ROCI_NUM_FAIL, 1);
 };
 
 // ----------------------------------------------------------------------
@@ -59,11 +63,36 @@ let run_tests = fn() {
     });
 };
 
-add_test("empty test",
+add_test("empty_test",
 	 fn() {
 	   pass_test();
 	 });
 
-println(ROCI_TESTS);
+add_test("string_append_test",
+	 fn() {
+	   let str = string_append("abc", "123");
+	   if (string_equal("abc123", str)) {
+	     pass_test();
+	   } else {
+	     fail_test();
+	   }
+	 });
+
+add_test("string_not_equal_test",
+	 fn() {
+	   if (string_equal("abc123", "")) {
+	     fail_test();
+	   } else {
+	     pass_test();
+	   }
+	 });
+
+// println(ROCI_TESTS);
 
 run_tests();
+
+if (iequal(ROCI_NUM_FAIL, 0)) {
+  exit(0);
+ } else {
+  exit(1);
+ }

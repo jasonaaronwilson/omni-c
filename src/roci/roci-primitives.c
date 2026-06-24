@@ -32,6 +32,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_shell, "shell");
   roci_add_primitive(env, &roci_primitive_platform, "platform");
   roci_add_primitive(env, &roci_primitive_glob, "glob");
+  roci_add_primitive(env, &roci_primitive_iadd, "iadd");
+  roci_add_primitive(env, &roci_primitive_iequal, "iequal");
 }
 
 /**
@@ -312,4 +314,26 @@ void roci_primitive_glob(roci_vm_state_t* state) {
     roci_debug_error(state, "An error occurred during globbing.");
   }
   roci_push_list(state, result);
+}
+
+void roci_primitive_iadd(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "iadd expects two integer arguments");
+  }
+  uint64_t arg1 = roci_pop_integer(state);
+  uint64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg1 + arg0);
+}
+
+void roci_primitive_iequal(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "iequal expects two integer arguments");
+  }
+  uint64_t arg1 = roci_pop_integer(state);
+  uint64_t arg0 = roci_pop_integer(state);
+  if (arg0 == arg1) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
 }

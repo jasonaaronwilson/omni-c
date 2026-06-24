@@ -66,6 +66,7 @@ SUITE_TESTS := $(shell grep -v '^#' test-suite.txt)
 # ----------------------------------------------------------------------
 
 test:
+	${BUILD_DIR}/bin/omni-c roci ${OMNI_C_ROOT}/src/roci/roci-test.roci
 	${OMNI_C_ROOT}/tools/run-tests.lua ${TESTS}
 
 self-test:
