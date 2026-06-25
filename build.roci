@@ -1,5 +1,9 @@
 //// This roci script will eventually build roci
 
+let CC = "gcc";
+let CC_FLAGS = make_list("-g", "-rdynamic");
+// TODO: WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr -Wno-unused-function -Wno-unused-variable
+
 // Move this somewhere else...
 let list_map = fn(lst, func) {
   let result = make_list();
@@ -9,34 +13,94 @@ let list_map = fn(lst, func) {
   return result;
 };
 
-let list_add_all = fn(lst0, lst1) {
+let list_push_all = fn(lst0, lst1) {
   list_for_each(lst1, fn(x) {
       list_push(lst0, x);
     });
 };
 
+let all_older_than = fn(target, deps) {
+  let NEGATIVE_ONE = neg(1);
+  let target_timestamp = timestamp(target);
+
+  // target doesn't exist
+  if (iequal(target_timestamp, NEGATIVE_ONE)) {
+    println(string_append(target, " does not exist"));
+    return false;
+  }
+
+  let result = true;
+  list_for_each(deps, fn(x) {
+      // No easy way to exit the loop but no reason to keep checking.
+      if (not(result)) {
+	return;
+      }
+      let dep_timestamp = timestamp(x);
+      if (iequal(dep_timestamp, NEGATIVE_ONE)) {
+	println(string_append("WARNING: ", x, " does not exist"));
+	result = false;
+      }
+      if (igte(dep_timestamp, target_timestamp)) {
+	println(string_append(x, " is newer than ", target));
+	result = false;
+      }
+    });
+  return result;
+};
 
 let TOP_DIR = string_append(pwd(), "/");
-let BUILD_DIR = "build-dir/";
+let BUILD_DIR = string_append(TOP_DIR, "build-dir/");
 let STABLE_BINARY_PATH = string_append(BUILD_DIR, "bin/omni-c-stable");
 let OMNI_C = string_append(BUILD_DIR, "bin/omni-c");
+let OMNI_C_STABLE = string_append(BUILD_DIR, "bin/omni-c-stable");
 
 load("src/build-fragment.roci");
 load("src/lib/build-fragment.roci");
 load("src/roci/build-fragment.roci");
 
 let ALL_OMNI_C_SRC = make_list();
-list_add_all(ALL_OMNI_C_SRC, SOURCE_OMNI_C);
-list_add_all(ALL_OMNI_C_SRC, SOURCE_LIB);
-list_add_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
+list_push_all(ALL_OMNI_C_SRC, SOURCE_OMNI_C);
+list_push_all(ALL_OMNI_C_SRC, SOURCE_LIB);
+list_push_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
+
+// TODO(jawilson): why can't we just "inline" the string append?
+let RHEADER = string_append(BUILD_DIR, "gen-files/reflection-header.c");
+list_push(ALL_OMNI_C_SRC, RHEADER);
 
 /* println(ALL_OMNI_C_SRC); */
 
 let build_omni_c = fn() {
-    let COMMAND_LINE = make_list("wc");
-    list_add_all(COMMAND_LINE, ALL_OMNI_C_SRC);
-    let result = shell(COMMAND_LINE);
-    println(result);
+
+  if (all_older_than("/tmp/omni-c-baby", ALL_OMNI_C_SRC)) {
+    println(string_append("/tmp/omni-c-baby", " is up to date"));
+    return;
+  }
+
+  // let COMMAND_LINE = make_list("echo");
+  let COMMAND_LINE = make_list("/home/jawilson/src/omni-c/build-dir/bin/omni-c-stable");
+
+  list_push(COMMAND_LINE, "generate-library");
+
+  // Flags to omni-c generate-library
+  list_push(COMMAND_LINE, "--c-output-file");
+  list_push(COMMAND_LINE, "/tmp/omni-c-baby.c");
+  // Do we still need this?
+  list_push(COMMAND_LINE, "--omit-c-armyknife-include=true");
+
+  list_push_all(COMMAND_LINE, ALL_OMNI_C_SRC);
+    
+  let result = shell(COMMAND_LINE);
+  println(result);
+
+  let CC_COMMAND_LINE = make_list(CC);
+  list_push_all(CC_COMMAND_LINE, CC_FLAGS);
+  list_push(CC_COMMAND_LINE, "-o");
+  list_push(CC_COMMAND_LINE, "/tmp/omni-c-baby");
+  list_push(CC_COMMAND_LINE, "/tmp/omni-c-baby.c");
+  list_push(CC_COMMAND_LINE, "-lgc");
+  
+  let cc_result = shell(CC_COMMAND_LINE);
+  println(cc_result);
 };
 
 build_omni_c();
