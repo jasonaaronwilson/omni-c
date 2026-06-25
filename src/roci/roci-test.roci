@@ -47,6 +47,14 @@ let list_map = fn(lst, func) {
   return result;
 };
 
+let list_add_all = fn(lst0, lst1) {
+  list_for_each(lst1, fn(x) {
+      list_push(lst0, x);
+    });
+};
+
+// ----------------------------------------------------------------------
+
 let run_tests = fn() {
   print_string("Running tests...\n");
   list_for_each(ROCI_TESTS, fn(test) {
@@ -128,15 +136,26 @@ add_test("list_map_test",
 add_test("getenv_test",
 	 fn() {
 	   let value = getenv("USER");
-	   // TO BAD WE DON't HAVE "else if"
-	   if (is_boolean(value)) {
-	     fail_test();
-	   } else {
-	     if (is_string(value)) {
-	       pass_test();
-	     }
+	   println(value);
+	   if (is_string(value)) {
+	     pass_test();
+	     return;
 	   }
 	   fail_test();
+	 });
+
+add_test("list_add_all_test",
+	 fn() {
+	   let lst1 = make_list("a", "b", "c");
+	   let lst2 = make_list("1", "2", "3");
+	   let lst3 = make_list("foo", "bar", "baz", "aa", "bb", "cc");
+	   list_add_all(lst1, lst2);
+	   list_add_all(lst1, lst3);
+	   list_add_all(lst1, lst3);
+	   list_add_all(lst1, lst3);
+	   list_add_all(lst1, lst3);
+	   list_add_all(lst1, lst3);
+	   pass_test();
 	 });
 
 // println(ROCI_TESTS);

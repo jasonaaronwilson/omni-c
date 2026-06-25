@@ -167,6 +167,11 @@ void roci_primitive_string_substring(roci_vm_state_t* state) {
   roci_push_string(state, result);
 }
 
+/**
+ * @function string_append
+ *
+ * Appends zero or more string arguments returning their concatenation.
+ */
 void roci_primitive_string_append(roci_vm_state_t* state) {
   buffer_t* buffer = make_buffer(10);
   for (int64_t arg_num = 0; arg_num < state->n_args; arg_num++) {
@@ -254,6 +259,15 @@ void roci_primitive_timestamp(roci_vm_state_t* state) {
   roci_push_integer(state, timestamp);
 }
 
+/**
+ * @function shell
+ *
+ * Excepts a list where the first element is the command and the reset
+ * of the elements are arguments to that command.
+ *
+ * (This function is under flux, for example, it only returns stdout,
+ * no error codes, etc.)
+ */
 void roci_primitive_shell(roci_vm_state_t* state) {
   if (state->n_args != 1) {
     roci_debug_error(state, "shell expects 1 argument");

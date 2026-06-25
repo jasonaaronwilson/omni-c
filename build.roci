@@ -32,4 +32,14 @@ list_add_all(ALL_OMNI_C_SRC, SOURCE_OMNI_C);
 list_add_all(ALL_OMNI_C_SRC, SOURCE_LIB);
 list_add_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
 
-println(ALL_OMNI_C_SRC);
+// println(ALL_OMNI_C_SRC);
+
+let build_omni_c = fn() {
+    let COMMAND_LINE = make_list("wc");
+    list_add_all(COMMAND_LINE, ALL_OMNI_C_SRC);
+    let result = shell(COMMAND_LINE);
+    println(result);
+};
+
+build_omni_c();
+
