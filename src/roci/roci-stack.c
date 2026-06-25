@@ -17,6 +17,11 @@ static inline void roci_push_true(roci_vm_state_t* state) {
   *(state->stack_tags++) = ROCI_TAG_BOOLEAN;
 }
 
+static inline void roci_push_boolean(roci_vm_state_t* state, boolean_t value) {
+  *(state->stack++) = value ? 1 : 0;
+  *(state->stack_tags++) = ROCI_TAG_BOOLEAN;
+}
+
 static inline void roci_push_integer(roci_vm_state_t* state, int64_t number) {
   *(state->stack++) = number;
   *(state->stack_tags++) = ROCI_TAG_INTEGER;

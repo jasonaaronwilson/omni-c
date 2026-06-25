@@ -33,7 +33,9 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_platform, "platform");
   roci_add_primitive(env, &roci_primitive_glob, "glob");
   roci_add_primitive(env, &roci_primitive_iadd, "iadd");
+  roci_add_primitive(env, &roci_primitive_igte, "igte");
   roci_add_primitive(env, &roci_primitive_iequal, "iequal");
+  roci_add_primitive(env, &roci_primitive_neg, "neg");
   roci_add_primitive(env, &roci_primitive_not, "not");
   roci_add_primitive(env, &roci_primitive_getenv, "getenv");
   roci_add_primitive(env, &roci_primitive_is_boolean, "is_boolean");
@@ -286,15 +288,16 @@ void roci_primitive_shell(roci_vm_state_t* state) {
   sub_process_t* sub_process = make_sub_process(argv);
   sub_process_launch(sub_process);
 
-  buffer_t* buffer = make_buffer(1);
+  buffer_t* stdout = make_buffer(1);
+  buffer_t* stderr = stdout;
   do {
-    sub_process_read(sub_process, buffer, nullptr);
+    sub_process_read(sub_process, stdout, stderr);
     usleep(5);
   } while (is_sub_process_running(sub_process));
-  sub_process_read(sub_process, buffer, nullptr);
+  sub_process_read(sub_process, stdout, stderr);
   sub_process_wait(sub_process);
 
-  roci_push_string(state, buffer_to_c_string(buffer));
+  roci_push_string(state, buffer_to_c_string(stdout));
 }
 
 void roci_primitive_platform(roci_vm_state_t* state) {
@@ -467,4 +470,20 @@ void roci_primitive_cd(roci_vm_state_t* state) {
   } else {
     roci_debug_error(state, "chdir returned false");
   }
+}
+
+void roci_primitive_igte(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "igte expects two integer arguments");
+  }
+  uint64_t arg1 = roci_pop_integer(state);
+  uint64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 >= arg1);
+}
+
+void roci_primitive_neg(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "neg expects 1 argument");
+  }
+  roci_push_integer(state, -roci_pop_integer(state));
 }
