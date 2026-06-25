@@ -54,7 +54,7 @@ value_array_t* build_bblocks(roci_bb_builder_array_t* bblocks) {
              builder->opcodes->length);
 
     roci_bb_t* bblock
-        = malloc((1 + builder->data->length) * 8 + builder->opcodes->length);
+      = cast(roci_bb_t*, malloc_bytes((1 + builder->data->length) * 8 + builder->opcodes->length));
     bblock->num_data = builder->data->length;
     bblock->num_opcodes = builder->opcodes->length;
     builder->bblock = bblock;

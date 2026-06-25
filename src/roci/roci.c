@@ -115,9 +115,9 @@ roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point) {
 
 roci_vm_state_t* roci_make_vm_state(roci_env_t* env) {
   roci_vm_state_t* state = malloc_struct(roci_vm_state_t);
-  state->stack = cast(uint64_t*, malloc(256 * 8));
-  state->stack_tags = cast(uint8_t*, malloc(256));
-  state->continuations = cast(roci_cont_t**, malloc(256 * 8));
+  state->stack = cast(uint64_t*, malloc_bytes(1024 * 8));
+  state->stack_tags = cast(uint8_t*, malloc_bytes(1024));
+  state->continuations = cast(roci_cont_t**, malloc_bytes(1024 * 8));
   roci_set_env(state, env);
   if (FLAG_roci_debug) {
     state->debug = malloc_struct(roci_debug_state_t);
