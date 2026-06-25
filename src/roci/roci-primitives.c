@@ -41,6 +41,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
   roci_add_primitive(env, &roci_primitive_is_list, "is_list");
   roci_add_primitive(env, &roci_primitive_is_double, "is_double");
+  roci_add_primitive(env, &roci_primitive_pwd, "pwd");
+  roci_add_primitive(env, &roci_primitive_cd, "cd");
 }
 
 /**
@@ -427,5 +429,28 @@ void roci_primitive_is_double(roci_vm_state_t* state) {
     roci_push_true(state);
   } else {
     roci_push_false(state);
+  }
+}
+
+void roci_primitive_pwd(roci_vm_state_t* state) {
+  if (state->n_args != 0) {
+    roci_debug_error(state, "pwd expects 0 argument");
+  }
+  char cwd[PATH_MAX];
+  if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    roci_push_string(state, string_duplicate(cwd));
+  } else {
+    roci_debug_error(state, "getcwd return NULL");
+  }
+}
+
+void roci_primitive_cd(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "cd expects 1 argument");
+  }
+  if (chdir(roci_pop_string(state))) {
+    roci_push_false(state);
+  } else {
+    roci_debug_error(state, "chdir returned false");
   }
 }
