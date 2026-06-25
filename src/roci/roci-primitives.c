@@ -34,6 +34,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_glob, "glob");
   roci_add_primitive(env, &roci_primitive_iadd, "iadd");
   roci_add_primitive(env, &roci_primitive_iequal, "iequal");
+  roci_add_primitive(env, &roci_primitive_not, "not");
 }
 
 /**
@@ -335,5 +336,17 @@ void roci_primitive_iequal(roci_vm_state_t* state) {
     roci_push_true(state);
   } else {
     roci_push_false(state);
+  }
+}
+
+void roci_primitive_not(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "roci_exit expects 1 argument");
+  }
+  boolean_t value = roci_pop_boolean(state);
+  if (value) {
+    roci_push_false(state);
+  } else {
+    roci_push_true(state);
   }
 }

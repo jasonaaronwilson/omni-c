@@ -87,6 +87,31 @@ add_test("string_not_equal_test",
 	   }
 	 });
 
+add_test("list_test",
+	 fn() {
+	   let lst = make_list("a", "b", "c", "d");
+	   let second = list_get(lst, 1);
+	   if (not(string_equal("b", second))) {
+	     fail_test();
+	   }
+	   list_push(lst, "e");
+	   let last = list_get(lst, 4);
+	   if (not(string_equal("e", last))) {
+	     fail_test();
+	   }
+	   pass_test();
+	 });
+
+add_test("string_substring_test",
+	 fn() {
+	   let substr = string_substring("0123456789", 1, 3);
+	   if (string_equal("12", substr)) {
+	     pass_test();
+	   } else {
+	     fail_test();
+	   }
+	 });
+
 // println(ROCI_TESTS);
 
 run_tests();
