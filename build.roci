@@ -1,5 +1,22 @@
 //// This roci script will eventually build roci
 
+// Move this somewhere else...
+let list_map = fn(lst, func) {
+  let result = make_list();
+  list_for_each(lst, fn(x) {
+      list_push(result, func(x));
+    });
+  return result;
+};
+
+let list_add_all = fn(lst0, lst1) {
+  list_for_each(lst1, fn(x) {
+      list_push(lst0, x);
+    });
+};
+
+
+let TOP_DIR = string_append(pwd(), "/");
 let BUILD_DIR = "build-dir/";
 let STABLE_BINARY_PATH = string_append(BUILD_DIR, "bin/omni-c-stable");
 let OMNI_C = string_append(BUILD_DIR, "bin/omni-c");
@@ -7,4 +24,12 @@ let OMNI_C = string_append(BUILD_DIR, "bin/omni-c");
 // load("src/lib/build-fragment.roci");
 
 load("src/build-fragment.roci");
+load("src/lib/build-fragment.roci");
 load("src/roci/build-fragment.roci");
+
+let ALL_OMNI_C_SRC = make_list();
+list_add_all(ALL_OMNI_C_SRC, SOURCE_OMNI_C);
+list_add_all(ALL_OMNI_C_SRC, SOURCE_LIB);
+list_add_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
+
+println(ALL_OMNI_C_SRC);

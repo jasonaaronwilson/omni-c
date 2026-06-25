@@ -1,6 +1,10 @@
 //// This roci script is loaded by the master roci build file.
 
-let SOURCE_OMNI_C = make_list(
+// Normally we would just use a glob but roci still has some things
+// don't don't topologically sort correctly (hopefully just inlined
+// functions).
+
+let _SOURCE_OMNI_C_ = make_list(
     "mode.c",
     "keywords.c",
     "file.c",
@@ -44,3 +48,8 @@ let SOURCE_OMNI_C = make_list(
     "test-command.c",
     "test-assembler.c",
     "flags.c");
+
+let SOURCE_OMNI_C = list_map(_SOURCE_OMNI_C_, fn(x) {
+    let prefix = string_append(TOP_DIR, "src/");
+    return string_append(prefix, x);
+  });

@@ -1,3 +1,7 @@
 //// This roci script is loaded by the master roci build file.
 
-let SOURCE_ROCI = glob("src/roci/*.c");
+let _SOURCE_ROCI_ = glob("src/roci/*.c");
+
+let SOURCE_ROCI = list_map(_SOURCE_ROCI_, fn(x) {
+    return string_append(TOP_DIR, x);
+  });
