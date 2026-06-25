@@ -158,6 +158,39 @@ add_test("list_add_all_test",
 	   pass_test();
 	 });
 
+add_test("call_closure_test",
+	 fn() {
+	   let shared = "ASDF";
+	   let closure = fn() {
+	     return shared;
+	   };
+	   let result = closure();
+	   if (string_equal("ASDF", result)) {
+	     pass_test();
+	   } else {
+	     fail_test();
+	   }
+	 });
+
+add_test("return_closure_test",
+	 fn() {
+	   let shared = "ASDF";
+	   let return_closure = fn() {
+	     return fn(y) {
+	       let x = string_append(y, shared);
+	       let z = string_append(x, "");
+	       return z;
+	     };
+	   };
+	   let closure = return_closure();
+	   let result = closure("FOO");
+	   if (string_equal("FOOASDF", result)) {
+	     pass_test();
+	   } else {
+	     fail_test();
+	   }
+	 });
+
 // println(ROCI_TESTS);
 
 run_tests();
