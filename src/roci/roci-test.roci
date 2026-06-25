@@ -112,6 +112,19 @@ add_test("string_substring_test",
 	   }
 	 });
 
+add_test("list_map_test",
+	 fn() {
+	   let lst = make_list("a", "b", "c", "d");
+	   let xformed = list_map(lst, fn(x) {
+	       return string_append("letter=", x);
+	     });
+	   if (string_equal("letter=b", list_get(xformed, 1))) {
+	     pass_test();
+	   } else {
+	     fail_test();
+	   }
+	 });
+
 // println(ROCI_TESTS);
 
 run_tests();
