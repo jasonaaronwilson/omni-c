@@ -35,6 +35,12 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_iadd, "iadd");
   roci_add_primitive(env, &roci_primitive_iequal, "iequal");
   roci_add_primitive(env, &roci_primitive_not, "not");
+  roci_add_primitive(env, &roci_primitive_getenv, "getenv");
+  roci_add_primitive(env, &roci_primitive_is_boolean, "is_boolean");
+  roci_add_primitive(env, &roci_primitive_is_string, "is_string");
+  roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
+  roci_add_primitive(env, &roci_primitive_is_list, "is_list");
+  roci_add_primitive(env, &roci_primitive_is_double, "is_double");
 }
 
 /**
@@ -348,5 +354,78 @@ void roci_primitive_not(roci_vm_state_t* state) {
     roci_push_false(state);
   } else {
     roci_push_true(state);
+  }
+}
+
+void roci_primitive_getenv(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "getenv expects 1 argument");
+  }
+  char* varname = roci_pop_string(state);
+  char* result = getenv(varname);
+  if (result == nullptr) {
+    roci_push_false(state);
+  } else {
+    roci_push_string(state, result);
+  }
+}
+
+void roci_primitive_is_boolean(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_boolean expects 1 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  if (value.tag == ROCI_TAG_BOOLEAN) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
+}
+
+void roci_primitive_is_string(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_string expects 1 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  if (value.tag == ROCI_TAG_STRING) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
+}
+
+void roci_primitive_is_integer(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_integer expects 1 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  if (value.tag == ROCI_TAG_INTEGER) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
+}
+
+void roci_primitive_is_list(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_list expects 1 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  if (value.tag == ROCI_TAG_LIST) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
+}
+
+void roci_primitive_is_double(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_double expects 1 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  if (value.tag == ROCI_TAG_DOUBLE) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
   }
 }

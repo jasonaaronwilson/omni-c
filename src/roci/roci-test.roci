@@ -125,6 +125,20 @@ add_test("list_map_test",
 	   }
 	 });
 
+add_test("getenv_test",
+	 fn() {
+	   let value = getenv("USER");
+	   // TO BAD WE DON't HAVE "else if"
+	   if (is_boolean(value)) {
+	     fail_test();
+	   } else {
+	     if (is_string(value)) {
+	       pass_test();
+	     }
+	   }
+	   fail_test();
+	 });
+
 // println(ROCI_TESTS);
 
 run_tests();
