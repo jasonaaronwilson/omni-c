@@ -1,10 +1,23 @@
 //// This roci script will eventually build roci
 
+/**
+ * @function exit_compilation
+ *
+ * A simple wrapper around exit(1) that can print additional
+ * information.
+ */
 let exit_compilation = fn() {
   println("The build was aborted!");
   exit(1);
 };
 
+/**
+ * @function check_shell_command
+ *
+ * If the previous shell command was successful, meaning it had exit
+ * code of zero, then stay quiet otherwise dump the output from that
+ * command and exit_compilation.
+ */
 let check_shell_command = fn(shell_result) {
   if (not(iequal(shell_exit_code(shell_result), 0))) {
     println(shell_stdout(shell_result));
@@ -13,6 +26,16 @@ let check_shell_command = fn(shell_result) {
   }
 };
 
+/**
+ * @function get_c_compiler
+ *
+ * Try to find a suitable C compiler. If the CC environment variable
+ * is set, we are happy to use it (as long as which can find
+ * it).
+ *
+ * When CC environment variable isn't set, we probe for gcc, clang,
+ * and tcc in that order.
+ */
 let get_c_compiler = fn() {
 
   let probe_c_compiler = fn(cc) {
@@ -26,6 +49,7 @@ let get_c_compiler = fn() {
   };
 
   let env_cc = getenv("CC");
+
   if (is_string(env_cc)) {
     if (probe_c_compiler(env_cc)) {
       println(string_append("Using user override for C compiler: ", env_cc));
@@ -50,6 +74,15 @@ let get_c_compiler = fn() {
   exit_compilation();
 };
 
+/**
+ * @function get_warn_flags
+ *
+ * Each C compiler has it's own warnings so if we are going to turn
+ * them on, we unfortunately need to customize this. It's probably
+ * worse than this because these warnings flags can be renamed,
+ * etc. Unlucky for us, it's not trivial to get at the version of the
+ * compiler to help compute this.
+ */
 let get_warn_flags = fn(cc) {
 
   if (string_equal(cc, "gcc")) {
@@ -77,6 +110,7 @@ let get_warn_flags = fn(cc) {
   return make_list();
 };
 
+// I don't think this much matters...
 let add_extra_flags = fn(cc) {
   if (string_equal(cc, "gcc")) {
     list_push(CC_FLAGS, "-std=gnu99");
@@ -87,6 +121,8 @@ let add_extra_flags = fn(cc) {
     return;
   }
 };
+
+/* ====================================================================== */
 
 let CC = get_c_compiler();
 let CC_FLAGS = make_list("-g", "-rdynamic");
@@ -107,6 +143,13 @@ let list_push_all = fn(lst0, lst1) {
     });
 };
 
+/**
+ * @function all_older_than
+ *
+ * This is the key insight of make - if any dependency is older than
+ * the target (or the target doesn't exist), we must rebuild that
+ * dependency.
+ */
 let all_older_than = fn(target, deps) {
   let NEGATIVE_ONE = neg(1);
   let target_timestamp = timestamp(target);
@@ -151,7 +194,6 @@ list_push_all(ALL_OMNI_C_SRC, SOURCE_OMNI_C);
 list_push_all(ALL_OMNI_C_SRC, SOURCE_LIB);
 list_push_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
 
-// TODO(jawilson): why can't we just "inline" the string append?
 let RHEADER = string_append(BUILD_DIR, "gen-files/reflection-header.c");
 list_push(ALL_OMNI_C_SRC, RHEADER);
 
@@ -177,6 +219,13 @@ ${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/to
 
 /* println(ALL_OMNI_C_SRC); */
 
+/**
+ * @function build_omni_c
+ *
+ * This is the goal, to build "an" omni-c. However, since we are a
+ * compiler which has a stable, current, and "self" version, this is
+ * parameterized.
+ */
 let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
 
   build_reflection_header();
