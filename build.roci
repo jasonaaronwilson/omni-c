@@ -12,6 +12,17 @@ let get_c_compiler = fn() {
     return false;
   };
 
+  let env_cc = getenv("CC");
+  if (is_string(env_cc)) {
+    if (probe_c_compiler(env_cc)) {
+      println(string_append("Using user override for C compiler: ", env_cc));
+      return env_cc;
+    } else {
+      println(string_append("User override for C compiler doesn't seem to exist: ", env_cc));
+      exit(1);
+    }
+  }
+
   if (probe_c_compiler("gcc")) {
     return "gcc";
   }
@@ -21,7 +32,9 @@ let get_c_compiler = fn() {
   if (probe_c_compiler("tcc")) {
     return "tcc";
   }
-  return "unknown-c-compiler";
+
+  println(string_append("No suitable C compiler was found."));
+  exit(1);
 };
 
 let CC = get_c_compiler();
