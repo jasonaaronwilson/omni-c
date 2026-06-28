@@ -30441,74 +30441,81 @@ void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer)
     {
 
 # 123 "roci/roci-debugger.c"
-      return;
+      break;
     }
 
 # 125 "roci/roci-debugger.c"
     buffer_printf(buffer, "stack[%d] = %s\n", i, roci_value_to_c_string(value));
-  }
+
+# 126 "roci/roci-debugger.c"
+    if ((i==1023))
+
+# 126 "roci/roci-debugger.c"
+    {
 
 # 127 "roci/roci-debugger.c"
-  log_fatal("ROCI_TAG_STACK_MARKER not found.");
+      log_fatal("ROCI_TAG_STACK_MARKER not found.");
 
 # 128 "roci/roci-debugger.c"
-  fatal_error(ERROR_ILLEGAL_STATE);
-}
-
-
-# 131 "roci/roci-debugger.c"
-boolean_t roci_is_tty(void)
-# 131 "roci/roci-debugger.c"
-{
-
-# 132 "roci/roci-debugger.c"
-  return (isatty(fileno(stdout))&&(!string_equal("dumb", getenv("TERM"))));
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
 }
 
 
 # 135 "roci/roci-debugger.c"
-void roci_debugger_banner(buffer_t* buffer, char* text)
+boolean_t roci_is_tty(void)
 # 135 "roci/roci-debugger.c"
 {
 
 # 136 "roci/roci-debugger.c"
-  int width = term_width();
+  return (isatty(fileno(stdout))&&(!string_equal("dumb", getenv("TERM"))));
+}
 
-# 137 "roci/roci-debugger.c"
-  term_set_background_color(buffer, 0xbfbfbf);
-
-# 138 "roci/roci-debugger.c"
-  term_set_foreground_color(buffer, 0xff0000);
 
 # 139 "roci/roci-debugger.c"
-  term_bold(buffer);
+void roci_debugger_banner(buffer_t* buffer, char* text)
+# 139 "roci/roci-debugger.c"
+{
 
 # 140 "roci/roci-debugger.c"
-  buffer_printf(buffer, "               %s", text);
+  int width = term_width();
 
 # 141 "roci/roci-debugger.c"
-  buffer_append_repeated_byte(buffer, ' ', ((width-strlen(text))-15));
+  term_set_background_color(buffer, 0xbfbfbf);
 
 # 142 "roci/roci-debugger.c"
-  buffer_printf(buffer, "\n", text);
+  term_set_foreground_color(buffer, 0xff0000);
 
 # 143 "roci/roci-debugger.c"
-  term_set_background_color(buffer, 0x000000);
+  term_bold(buffer);
 
 # 144 "roci/roci-debugger.c"
-  term_set_foreground_color(buffer, 0xffffff);
+  buffer_printf(buffer, "               %s", text);
 
 # 145 "roci/roci-debugger.c"
+  buffer_append_repeated_byte(buffer, ' ', ((width-strlen(text))-15));
+
+# 146 "roci/roci-debugger.c"
+  buffer_printf(buffer, "\n", text);
+
+# 147 "roci/roci-debugger.c"
+  term_set_background_color(buffer, 0x000000);
+
+# 148 "roci/roci-debugger.c"
+  term_set_foreground_color(buffer, 0xffffff);
+
+# 149 "roci/roci-debugger.c"
   term_reset_formatting(buffer);
 }
 
 
-# 148 "roci/roci-debugger.c"
+# 152 "roci/roci-debugger.c"
 void roci_debugger_instructions(buffer_t* buffer)
-# 148 "roci/roci-debugger.c"
+# 152 "roci/roci-debugger.c"
 {
 
-# 149 "roci/roci-debugger.c"
+# 153 "roci/roci-debugger.c"
   buffer_printf(buffer, "\n[Space] step instruction [n] next statement [c] continue " "[q] quit [e] dump environment [k] dump stack\n");
 }
 
@@ -31468,875 +31475,917 @@ void roci_primitive_string_append(roci_vm_state_t* state)
   }
 
 # 190 "roci/roci-primitives.c"
+  for (
+
+# 190 "roci/roci-primitives.c"
+
+# 190 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 190 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 190 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 190 "roci/roci-primitives.c"
+  {
+
+# 191 "roci/roci-primitives.c"
+    roci_pop_value(state);
+  }
+
+# 193 "roci/roci-primitives.c"
   roci_push_string(state, buffer_to_c_string(buffer));
 }
 
 
-# 193 "roci/roci-primitives.c"
+# 196 "roci/roci-primitives.c"
 void roci_primitive_make_list(roci_vm_state_t* state)
-# 193 "roci/roci-primitives.c"
+# 196 "roci/roci-primitives.c"
 {
 
-# 194 "roci/roci-primitives.c"
+# 197 "roci/roci-primitives.c"
   value_array_t* list = make_value_array((state->n_args));
 
-# 195 "roci/roci-primitives.c"
+# 198 "roci/roci-primitives.c"
   for (
 
-# 195 "roci/roci-primitives.c"
-
-# 195 "roci/roci-primitives.c"
-    int64_t arg_num = 0;
-
-# 195 "roci/roci-primitives.c"
-    (arg_num<(state->n_args));
-
-# 195 "roci/roci-primitives.c"
-    (arg_num++))
-
-# 195 "roci/roci-primitives.c"
-  {
-
-# 196 "roci/roci-primitives.c"
-    roci_value_t* value = roci_value_to_heap(roci_debug_peek_value(state, ((state->n_args)-arg_num)));
+# 198 "roci/roci-primitives.c"
 
 # 198 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 198 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 198 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 198 "roci/roci-primitives.c"
+  {
+
+# 199 "roci/roci-primitives.c"
+    roci_value_t* value = roci_value_to_heap(roci_debug_peek_value(state, ((state->n_args)-arg_num)));
+
+# 201 "roci/roci-primitives.c"
     value_array_add(list, ptr_to_value(value));
   }
 
-# 200 "roci/roci-primitives.c"
+# 203 "roci/roci-primitives.c"
+  for (
+
+# 203 "roci/roci-primitives.c"
+
+# 203 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 203 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 203 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 203 "roci/roci-primitives.c"
+  {
+
+# 204 "roci/roci-primitives.c"
+    roci_pop_value(state);
+  }
+
+# 206 "roci/roci-primitives.c"
   roci_push_list(state, list);
 }
 
 
-# 203 "roci/roci-primitives.c"
+# 209 "roci/roci-primitives.c"
 void roci_primitive_list_get(roci_vm_state_t* state)
-# 203 "roci/roci-primitives.c"
+# 209 "roci/roci-primitives.c"
 {
 
-# 204 "roci/roci-primitives.c"
+# 210 "roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 204 "roci/roci-primitives.c"
+# 210 "roci/roci-primitives.c"
   {
 
-# 205 "roci/roci-primitives.c"
+# 211 "roci/roci-primitives.c"
     roci_debug_error(state, "list_get expects 2 arguments");
   }
 
-# 207 "roci/roci-primitives.c"
+# 213 "roci/roci-primitives.c"
   int64_t position = roci_pop_integer(state);
 
-# 208 "roci/roci-primitives.c"
+# 214 "roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 209 "roci/roci-primitives.c"
+# 215 "roci/roci-primitives.c"
   roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, position).ptr));
 
-# 211 "roci/roci-primitives.c"
+# 217 "roci/roci-primitives.c"
   roci_push_value(state, (*element));
 }
 
 
-# 214 "roci/roci-primitives.c"
+# 220 "roci/roci-primitives.c"
 void roci_primitive_list_set(roci_vm_state_t* state)
-# 214 "roci/roci-primitives.c"
+# 220 "roci/roci-primitives.c"
 {
 
-# 215 "roci/roci-primitives.c"
+# 221 "roci/roci-primitives.c"
   if (((state->n_args)!=3))
 
-# 215 "roci/roci-primitives.c"
+# 221 "roci/roci-primitives.c"
   {
 
-# 216 "roci/roci-primitives.c"
+# 222 "roci/roci-primitives.c"
     roci_debug_error(state, "list_set expects 3 arguments");
   }
 
-# 218 "roci/roci-primitives.c"
+# 224 "roci/roci-primitives.c"
   roci_value_t element = roci_pop_value(state);
 
-# 219 "roci/roci-primitives.c"
+# 225 "roci/roci-primitives.c"
   int64_t position = roci_pop_integer(state);
 
-# 220 "roci/roci-primitives.c"
+# 226 "roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 221 "roci/roci-primitives.c"
+# 227 "roci/roci-primitives.c"
   value_array_replace(list, position, ptr_to_value(roci_value_to_heap(element)));
 
-# 223 "roci/roci-primitives.c"
+# 229 "roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 226 "roci/roci-primitives.c"
+# 232 "roci/roci-primitives.c"
 void roci_primitive_list_push(roci_vm_state_t* state)
-# 226 "roci/roci-primitives.c"
+# 232 "roci/roci-primitives.c"
 {
 
-# 227 "roci/roci-primitives.c"
+# 233 "roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 227 "roci/roci-primitives.c"
+# 233 "roci/roci-primitives.c"
   {
 
-# 228 "roci/roci-primitives.c"
+# 234 "roci/roci-primitives.c"
     roci_debug_error(state, "list_push expects 2 arguments");
   }
 
-# 230 "roci/roci-primitives.c"
+# 236 "roci/roci-primitives.c"
   roci_value_t element = roci_pop_value(state);
 
-# 231 "roci/roci-primitives.c"
+# 237 "roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 232 "roci/roci-primitives.c"
+# 238 "roci/roci-primitives.c"
   value_array_push(list, ptr_to_value(roci_value_to_heap(element)));
 
-# 233 "roci/roci-primitives.c"
+# 239 "roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 237 "roci/roci-primitives.c"
+# 243 "roci/roci-primitives.c"
 void roci_primitive_list_for_each(roci_vm_state_t* state)
-# 237 "roci/roci-primitives.c"
+# 243 "roci/roci-primitives.c"
 {
 
-# 238 "roci/roci-primitives.c"
+# 244 "roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 238 "roci/roci-primitives.c"
+# 244 "roci/roci-primitives.c"
   {
 
-# 239 "roci/roci-primitives.c"
+# 245 "roci/roci-primitives.c"
     roci_debug_error(state, "list_for_each requires two arguments");
   }
 
-# 241 "roci/roci-primitives.c"
+# 247 "roci/roci-primitives.c"
   roci_value_t proc = roci_pop_value(state);
 
-# 242 "roci/roci-primitives.c"
+# 248 "roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 243 "roci/roci-primitives.c"
+# 249 "roci/roci-primitives.c"
   for (
 
-# 243 "roci/roci-primitives.c"
+# 249 "roci/roci-primitives.c"
 
-# 243 "roci/roci-primitives.c"
+# 249 "roci/roci-primitives.c"
     int i = 0;
 
-# 243 "roci/roci-primitives.c"
+# 249 "roci/roci-primitives.c"
     (i<(list->length));
 
-# 243 "roci/roci-primitives.c"
+# 249 "roci/roci-primitives.c"
     (i++))
 
-# 243 "roci/roci-primitives.c"
+# 249 "roci/roci-primitives.c"
   {
 
-# 244 "roci/roci-primitives.c"
+# 250 "roci/roci-primitives.c"
     roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, i).ptr));
 
-# 245 "roci/roci-primitives.c"
+# 251 "roci/roci-primitives.c"
     roci_push_value(state, (*element));
 
-# 246 "roci/roci-primitives.c"
+# 252 "roci/roci-primitives.c"
     roci_call(state, proc, 1);
   }
 
-# 248 "roci/roci-primitives.c"
+# 254 "roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 251 "roci/roci-primitives.c"
+# 257 "roci/roci-primitives.c"
 void roci_primitive_to_string(roci_vm_state_t* state)
-# 251 "roci/roci-primitives.c"
+# 257 "roci/roci-primitives.c"
 {
 
-# 252 "roci/roci-primitives.c"
+# 258 "roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 252 "roci/roci-primitives.c"
+# 258 "roci/roci-primitives.c"
   {
 
-# 253 "roci/roci-primitives.c"
+# 259 "roci/roci-primitives.c"
     roci_debug_error(state, "to_string expects 1 argument");
   }
 
-# 255 "roci/roci-primitives.c"
+# 261 "roci/roci-primitives.c"
   roci_value_t element = roci_pop_value(state);
 
-# 256 "roci/roci-primitives.c"
+# 262 "roci/roci-primitives.c"
   roci_push_string(state, roci_value_to_c_string(element));
 }
 
 
-# 259 "roci/roci-primitives.c"
+# 265 "roci/roci-primitives.c"
 void roci_primitive_timestamp(roci_vm_state_t* state)
-# 259 "roci/roci-primitives.c"
+# 265 "roci/roci-primitives.c"
 {
 
-# 260 "roci/roci-primitives.c"
+# 266 "roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 260 "roci/roci-primitives.c"
+# 266 "roci/roci-primitives.c"
   {
 
-# 261 "roci/roci-primitives.c"
+# 267 "roci/roci-primitives.c"
     roci_debug_error(state, "timestamp expects 1 argument");
   }
 
-# 263 "roci/roci-primitives.c"
+# 269 "roci/roci-primitives.c"
   char* filename = roci_pop_string(state);
 
-# 264 "roci/roci-primitives.c"
+# 270 "roci/roci-primitives.c"
   uint64_t timestamp = get_file_modification_time(filename);
 
-# 265 "roci/roci-primitives.c"
+# 271 "roci/roci-primitives.c"
   roci_push_integer(state, timestamp);
 }
 
 
-# 277 "roci/roci-primitives.c"
+# 283 "roci/roci-primitives.c"
 void roci_primitive_shell(roci_vm_state_t* state)
-# 277 "roci/roci-primitives.c"
+# 283 "roci/roci-primitives.c"
 {
 
-# 278 "roci/roci-primitives.c"
+# 284 "roci/roci-primitives.c"
   if (((state->n_args)!=1))
-
-# 278 "roci/roci-primitives.c"
-  {
-
-# 279 "roci/roci-primitives.c"
-    roci_debug_error(state, "shell expects 1 argument");
-  }
-
-# 281 "roci/roci-primitives.c"
-  value_array_t* lst = roci_pop_list(state);
-
-# 282 "roci/roci-primitives.c"
-  uint64_t len = (lst->length);
-
-# 283 "roci/roci-primitives.c"
-  value_array_t* argv = make_value_array((lst->length));
-
-# 284 "roci/roci-primitives.c"
-  for (
-
-# 284 "roci/roci-primitives.c"
-
-# 284 "roci/roci-primitives.c"
-    int i = 0;
-
-# 284 "roci/roci-primitives.c"
-    (i<len);
-
-# 284 "roci/roci-primitives.c"
-    (i++))
 
 # 284 "roci/roci-primitives.c"
   {
 
 # 285 "roci/roci-primitives.c"
-    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(lst, i).ptr));
-
-# 286 "roci/roci-primitives.c"
-    if (((element->tag)!=ROCI_TAG_STRING))
-
-# 286 "roci/roci-primitives.c"
-    {
+    roci_debug_error(state, "shell expects 1 argument");
+  }
 
 # 287 "roci/roci-primitives.c"
+  value_array_t* lst = roci_pop_list(state);
+
+# 288 "roci/roci-primitives.c"
+  uint64_t len = (lst->length);
+
+# 289 "roci/roci-primitives.c"
+  value_array_t* argv = make_value_array((lst->length));
+
+# 290 "roci/roci-primitives.c"
+  for (
+
+# 290 "roci/roci-primitives.c"
+
+# 290 "roci/roci-primitives.c"
+    int i = 0;
+
+# 290 "roci/roci-primitives.c"
+    (i<len);
+
+# 290 "roci/roci-primitives.c"
+    (i++))
+
+# 290 "roci/roci-primitives.c"
+  {
+
+# 291 "roci/roci-primitives.c"
+    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(lst, i).ptr));
+
+# 292 "roci/roci-primitives.c"
+    if (((element->tag)!=ROCI_TAG_STRING))
+
+# 292 "roci/roci-primitives.c"
+    {
+
+# 293 "roci/roci-primitives.c"
       roci_debug_error(state, "shell expects all list elements to be strings");
     }
 
-# 289 "roci/roci-primitives.c"
+# 295 "roci/roci-primitives.c"
     value_array_push(argv, str_to_value((/*CAST*/(char*) (element->raw))));
   }
 
-# 292 "roci/roci-primitives.c"
+# 298 "roci/roci-primitives.c"
   sub_process_t* sub_process = make_sub_process(argv);
 
-# 293 "roci/roci-primitives.c"
+# 299 "roci/roci-primitives.c"
   sub_process_launch(sub_process);
 
-# 295 "roci/roci-primitives.c"
+# 301 "roci/roci-primitives.c"
   buffer_t* stdout = make_buffer(1);
 
-# 296 "roci/roci-primitives.c"
+# 302 "roci/roci-primitives.c"
   buffer_t* stderr = stdout;
 
-# 297 "roci/roci-primitives.c"
+# 303 "roci/roci-primitives.c"
   do
-# 297 "roci/roci-primitives.c"
+# 303 "roci/roci-primitives.c"
   {
 
-# 298 "roci/roci-primitives.c"
+# 304 "roci/roci-primitives.c"
     sub_process_read(sub_process, stdout, stderr);
 
-# 299 "roci/roci-primitives.c"
+# 305 "roci/roci-primitives.c"
     usleep(5);
   }
   while (is_sub_process_running(sub_process));
 
-# 301 "roci/roci-primitives.c"
+# 307 "roci/roci-primitives.c"
   sub_process_read(sub_process, stdout, stderr);
 
-# 302 "roci/roci-primitives.c"
+# 308 "roci/roci-primitives.c"
   sub_process_wait(sub_process);
 
-# 304 "roci/roci-primitives.c"
+# 310 "roci/roci-primitives.c"
   roci_push_string(state, buffer_to_c_string(stdout));
 }
 
 
-# 307 "roci/roci-primitives.c"
+# 313 "roci/roci-primitives.c"
 void roci_primitive_platform(roci_vm_state_t* state)
-# 307 "roci/roci-primitives.c"
+# 313 "roci/roci-primitives.c"
 {
 
-# 308 "roci/roci-primitives.c"
+# 314 "roci/roci-primitives.c"
   if (((state->n_args)!=0))
 
-# 308 "roci/roci-primitives.c"
+# 314 "roci/roci-primitives.c"
   {
 
-# 309 "roci/roci-primitives.c"
+# 315 "roci/roci-primitives.c"
     roci_debug_error(state, "platform expects 0 argument");
   }
 
-# 311 "roci/roci-primitives.c"
+# 317 "roci/roci-primitives.c"
   roci_push_string(state, "linux");
 }
 
 
-# 327 "roci/roci-primitives.c"
+# 333 "roci/roci-primitives.c"
 void roci_primitive_glob(roci_vm_state_t* state)
-# 327 "roci/roci-primitives.c"
+# 333 "roci/roci-primitives.c"
 {
 
-# 328 "roci/roci-primitives.c"
+# 334 "roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 328 "roci/roci-primitives.c"
+# 334 "roci/roci-primitives.c"
   {
 
-# 329 "roci/roci-primitives.c"
+# 335 "roci/roci-primitives.c"
     roci_debug_error(state, "glob expects 1 argument");
   }
 
-# 331 "roci/roci-primitives.c"
+# 337 "roci/roci-primitives.c"
   char* pattern = roci_pop_string(state);
 
-# 333 "roci/roci-primitives.c"
+# 339 "roci/roci-primitives.c"
   glob_t glob_result = ((glob_t) {0});
 
-# 336 "roci/roci-primitives.c"
+# 342 "roci/roci-primitives.c"
   int return_value = glob(pattern, 0, NULL, (&glob_result));
 
-# 337 "roci/roci-primitives.c"
+# 343 "roci/roci-primitives.c"
   value_array_t* result = make_value_array((state->n_args));
 
-# 338 "roci/roci-primitives.c"
+# 344 "roci/roci-primitives.c"
   if ((return_value==0))
 
-# 338 "roci/roci-primitives.c"
+# 344 "roci/roci-primitives.c"
   {
 
-# 339 "roci/roci-primitives.c"
+# 345 "roci/roci-primitives.c"
     for (
 
-# 339 "roci/roci-primitives.c"
+# 345 "roci/roci-primitives.c"
 
-# 339 "roci/roci-primitives.c"
+# 345 "roci/roci-primitives.c"
       int i = 0;
 
-# 339 "roci/roci-primitives.c"
+# 345 "roci/roci-primitives.c"
       (i<(glob_result.gl_pathc));
 
-# 339 "roci/roci-primitives.c"
+# 345 "roci/roci-primitives.c"
       (++i))
 
-# 339 "roci/roci-primitives.c"
+# 345 "roci/roci-primitives.c"
     {
 
-# 340 "roci/roci-primitives.c"
+# 346 "roci/roci-primitives.c"
       value_array_push(result, ptr_to_value(string_to_roci_string(((glob_result.gl_pathv)[i]))));
     }
   }
   else
 
-# 343 "roci/roci-primitives.c"
+# 349 "roci/roci-primitives.c"
   if ((return_value!=GLOB_NOMATCH))
 
-# 343 "roci/roci-primitives.c"
+# 349 "roci/roci-primitives.c"
   {
 
-# 344 "roci/roci-primitives.c"
+# 350 "roci/roci-primitives.c"
     roci_debug_error(state, "An error occurred during globbing.");
   }
 
-# 346 "roci/roci-primitives.c"
+# 352 "roci/roci-primitives.c"
   roci_push_list(state, result);
 }
 
 
-# 349 "roci/roci-primitives.c"
+# 355 "roci/roci-primitives.c"
 void roci_primitive_iadd(roci_vm_state_t* state)
-# 349 "roci/roci-primitives.c"
+# 355 "roci/roci-primitives.c"
 {
 
-# 350 "roci/roci-primitives.c"
+# 356 "roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 350 "roci/roci-primitives.c"
+# 356 "roci/roci-primitives.c"
   {
 
-# 351 "roci/roci-primitives.c"
+# 357 "roci/roci-primitives.c"
     roci_debug_error(state, "iadd expects two integer arguments");
   }
 
-# 353 "roci/roci-primitives.c"
+# 359 "roci/roci-primitives.c"
   uint64_t arg1 = roci_pop_integer(state);
 
-# 354 "roci/roci-primitives.c"
+# 360 "roci/roci-primitives.c"
   uint64_t arg0 = roci_pop_integer(state);
 
-# 355 "roci/roci-primitives.c"
+# 361 "roci/roci-primitives.c"
   roci_push_integer(state, (arg1+arg0));
 }
 
 
-# 358 "roci/roci-primitives.c"
+# 364 "roci/roci-primitives.c"
 void roci_primitive_iequal(roci_vm_state_t* state)
-# 358 "roci/roci-primitives.c"
+# 364 "roci/roci-primitives.c"
 {
 
-# 359 "roci/roci-primitives.c"
+# 365 "roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 359 "roci/roci-primitives.c"
+# 365 "roci/roci-primitives.c"
   {
 
-# 360 "roci/roci-primitives.c"
+# 366 "roci/roci-primitives.c"
     roci_debug_error(state, "iequal expects two integer arguments");
   }
 
-# 362 "roci/roci-primitives.c"
+# 368 "roci/roci-primitives.c"
   uint64_t arg1 = roci_pop_integer(state);
 
-# 363 "roci/roci-primitives.c"
+# 369 "roci/roci-primitives.c"
   uint64_t arg0 = roci_pop_integer(state);
 
-# 364 "roci/roci-primitives.c"
+# 370 "roci/roci-primitives.c"
   if ((arg0==arg1))
 
-# 364 "roci/roci-primitives.c"
+# 370 "roci/roci-primitives.c"
   {
 
-# 365 "roci/roci-primitives.c"
+# 371 "roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
-
-# 366 "roci/roci-primitives.c"
-  {
-
-# 367 "roci/roci-primitives.c"
-    roci_push_false(state);
-  }
-}
-
-
-# 371 "roci/roci-primitives.c"
-void roci_primitive_not(roci_vm_state_t* state)
-# 371 "roci/roci-primitives.c"
-{
-
-# 372 "roci/roci-primitives.c"
-  if (((state->n_args)!=1))
 
 # 372 "roci/roci-primitives.c"
   {
 
 # 373 "roci/roci-primitives.c"
-    roci_debug_error(state, "roci_exit expects 1 argument");
-  }
-
-# 375 "roci/roci-primitives.c"
-  boolean_t value = roci_pop_boolean(state);
-
-# 376 "roci/roci-primitives.c"
-  if (value)
-
-# 376 "roci/roci-primitives.c"
-  {
-
-# 377 "roci/roci-primitives.c"
     roci_push_false(state);
   }
-  else
+}
+
+
+# 377 "roci/roci-primitives.c"
+void roci_primitive_not(roci_vm_state_t* state)
+# 377 "roci/roci-primitives.c"
+{
+
+# 378 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
 
 # 378 "roci/roci-primitives.c"
   {
 
 # 379 "roci/roci-primitives.c"
-    roci_push_true(state);
+    roci_debug_error(state, "roci_exit expects 1 argument");
   }
-}
 
+# 381 "roci/roci-primitives.c"
+  boolean_t value = roci_pop_boolean(state);
+
+# 382 "roci/roci-primitives.c"
+  if (value)
+
+# 382 "roci/roci-primitives.c"
+  {
 
 # 383 "roci/roci-primitives.c"
-void roci_primitive_getenv(roci_vm_state_t* state)
-# 383 "roci/roci-primitives.c"
-{
-
-# 384 "roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+    roci_push_false(state);
+  }
+  else
 
 # 384 "roci/roci-primitives.c"
   {
 
 # 385 "roci/roci-primitives.c"
-    roci_debug_error(state, "getenv expects 1 argument");
-  }
-
-# 387 "roci/roci-primitives.c"
-  char* varname = roci_pop_string(state);
-
-# 388 "roci/roci-primitives.c"
-  char* result = getenv(varname);
-
-# 389 "roci/roci-primitives.c"
-  if ((result==((void *)0)))
-
-# 389 "roci/roci-primitives.c"
-  {
-
-# 390 "roci/roci-primitives.c"
-    roci_push_false(state);
-  }
-  else
-
-# 391 "roci/roci-primitives.c"
-  {
-
-# 392 "roci/roci-primitives.c"
-    roci_push_string(state, result);
+    roci_push_true(state);
   }
 }
 
 
-# 396 "roci/roci-primitives.c"
-void roci_primitive_is_boolean(roci_vm_state_t* state)
-# 396 "roci/roci-primitives.c"
+# 389 "roci/roci-primitives.c"
+void roci_primitive_getenv(roci_vm_state_t* state)
+# 389 "roci/roci-primitives.c"
 {
 
-# 397 "roci/roci-primitives.c"
+# 390 "roci/roci-primitives.c"
   if (((state->n_args)!=1))
+
+# 390 "roci/roci-primitives.c"
+  {
+
+# 391 "roci/roci-primitives.c"
+    roci_debug_error(state, "getenv expects 1 argument");
+  }
+
+# 393 "roci/roci-primitives.c"
+  char* varname = roci_pop_string(state);
+
+# 394 "roci/roci-primitives.c"
+  char* result = getenv(varname);
+
+# 395 "roci/roci-primitives.c"
+  if ((result==((void *)0)))
+
+# 395 "roci/roci-primitives.c"
+  {
+
+# 396 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
 
 # 397 "roci/roci-primitives.c"
   {
 
 # 398 "roci/roci-primitives.c"
-    roci_debug_error(state, "is_boolean expects 1 argument");
+    roci_push_string(state, result);
   }
+}
 
-# 400 "roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 401 "roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_BOOLEAN))
-
-# 401 "roci/roci-primitives.c"
-  {
 
 # 402 "roci/roci-primitives.c"
-    roci_push_true(state);
-  }
-  else
+void roci_primitive_is_boolean(roci_vm_state_t* state)
+# 402 "roci/roci-primitives.c"
+{
+
+# 403 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
 
 # 403 "roci/roci-primitives.c"
   {
 
 # 404 "roci/roci-primitives.c"
-    roci_push_false(state);
+    roci_debug_error(state, "is_boolean expects 1 argument");
   }
-}
 
+# 406 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 407 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_BOOLEAN))
+
+# 407 "roci/roci-primitives.c"
+  {
 
 # 408 "roci/roci-primitives.c"
-void roci_primitive_is_string(roci_vm_state_t* state)
-# 408 "roci/roci-primitives.c"
-{
-
-# 409 "roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+    roci_push_true(state);
+  }
+  else
 
 # 409 "roci/roci-primitives.c"
   {
 
 # 410 "roci/roci-primitives.c"
-    roci_debug_error(state, "is_string expects 1 argument");
+    roci_push_false(state);
   }
+}
 
-# 412 "roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 413 "roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_STRING))
-
-# 413 "roci/roci-primitives.c"
-  {
 
 # 414 "roci/roci-primitives.c"
-    roci_push_true(state);
-  }
-  else
+void roci_primitive_is_string(roci_vm_state_t* state)
+# 414 "roci/roci-primitives.c"
+{
+
+# 415 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
 
 # 415 "roci/roci-primitives.c"
   {
 
 # 416 "roci/roci-primitives.c"
-    roci_push_false(state);
+    roci_debug_error(state, "is_string expects 1 argument");
   }
-}
 
+# 418 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 419 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_STRING))
+
+# 419 "roci/roci-primitives.c"
+  {
 
 # 420 "roci/roci-primitives.c"
-void roci_primitive_is_integer(roci_vm_state_t* state)
-# 420 "roci/roci-primitives.c"
-{
-
-# 421 "roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+    roci_push_true(state);
+  }
+  else
 
 # 421 "roci/roci-primitives.c"
   {
 
 # 422 "roci/roci-primitives.c"
-    roci_debug_error(state, "is_integer expects 1 argument");
+    roci_push_false(state);
   }
+}
 
-# 424 "roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 425 "roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_INTEGER))
-
-# 425 "roci/roci-primitives.c"
-  {
 
 # 426 "roci/roci-primitives.c"
-    roci_push_true(state);
-  }
-  else
+void roci_primitive_is_integer(roci_vm_state_t* state)
+# 426 "roci/roci-primitives.c"
+{
+
+# 427 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
 
 # 427 "roci/roci-primitives.c"
   {
 
 # 428 "roci/roci-primitives.c"
-    roci_push_false(state);
+    roci_debug_error(state, "is_integer expects 1 argument");
   }
-}
 
+# 430 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 431 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_INTEGER))
+
+# 431 "roci/roci-primitives.c"
+  {
 
 # 432 "roci/roci-primitives.c"
-void roci_primitive_is_list(roci_vm_state_t* state)
-# 432 "roci/roci-primitives.c"
-{
-
-# 433 "roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+    roci_push_true(state);
+  }
+  else
 
 # 433 "roci/roci-primitives.c"
   {
 
 # 434 "roci/roci-primitives.c"
-    roci_debug_error(state, "is_list expects 1 argument");
+    roci_push_false(state);
   }
+}
 
-# 436 "roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 437 "roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_LIST))
-
-# 437 "roci/roci-primitives.c"
-  {
 
 # 438 "roci/roci-primitives.c"
-    roci_push_true(state);
-  }
-  else
+void roci_primitive_is_list(roci_vm_state_t* state)
+# 438 "roci/roci-primitives.c"
+{
+
+# 439 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
 
 # 439 "roci/roci-primitives.c"
   {
 
 # 440 "roci/roci-primitives.c"
-    roci_push_false(state);
+    roci_debug_error(state, "is_list expects 1 argument");
   }
-}
 
+# 442 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 443 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_LIST))
+
+# 443 "roci/roci-primitives.c"
+  {
 
 # 444 "roci/roci-primitives.c"
-void roci_primitive_is_double(roci_vm_state_t* state)
-# 444 "roci/roci-primitives.c"
-{
-
-# 445 "roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+    roci_push_true(state);
+  }
+  else
 
 # 445 "roci/roci-primitives.c"
   {
 
 # 446 "roci/roci-primitives.c"
-    roci_debug_error(state, "is_double expects 1 argument");
+    roci_push_false(state);
   }
+}
 
-# 448 "roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 449 "roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_DOUBLE))
-
-# 449 "roci/roci-primitives.c"
-  {
 
 # 450 "roci/roci-primitives.c"
-    roci_push_true(state);
-  }
-  else
+void roci_primitive_is_double(roci_vm_state_t* state)
+# 450 "roci/roci-primitives.c"
+{
+
+# 451 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
 
 # 451 "roci/roci-primitives.c"
   {
 
 # 452 "roci/roci-primitives.c"
-    roci_push_false(state);
+    roci_debug_error(state, "is_double expects 1 argument");
   }
-}
 
+# 454 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 455 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_DOUBLE))
+
+# 455 "roci/roci-primitives.c"
+  {
 
 # 456 "roci/roci-primitives.c"
-void roci_primitive_pwd(roci_vm_state_t* state)
-# 456 "roci/roci-primitives.c"
-{
-
-# 457 "roci/roci-primitives.c"
-  if (((state->n_args)!=0))
+    roci_push_true(state);
+  }
+  else
 
 # 457 "roci/roci-primitives.c"
   {
 
 # 458 "roci/roci-primitives.c"
-    roci_debug_error(state, "pwd expects 0 argument");
+    roci_push_false(state);
   }
+}
 
-# 460 "roci/roci-primitives.c"
-  char cwd[PATH_MAX];
-
-# 461 "roci/roci-primitives.c"
-  if ((getcwd(cwd, (sizeof(cwd)))!=NULL))
-
-# 461 "roci/roci-primitives.c"
-  {
 
 # 462 "roci/roci-primitives.c"
-    roci_push_string(state, string_duplicate(cwd));
-  }
-  else
+void roci_primitive_pwd(roci_vm_state_t* state)
+# 462 "roci/roci-primitives.c"
+{
+
+# 463 "roci/roci-primitives.c"
+  if (((state->n_args)!=0))
 
 # 463 "roci/roci-primitives.c"
   {
 
 # 464 "roci/roci-primitives.c"
-    roci_debug_error(state, "getcwd return NULL");
+    roci_debug_error(state, "pwd expects 0 argument");
   }
-}
 
+# 466 "roci/roci-primitives.c"
+  char cwd[PATH_MAX];
+
+# 467 "roci/roci-primitives.c"
+  if ((getcwd(cwd, (sizeof(cwd)))!=NULL))
+
+# 467 "roci/roci-primitives.c"
+  {
 
 # 468 "roci/roci-primitives.c"
-void roci_primitive_cd(roci_vm_state_t* state)
-# 468 "roci/roci-primitives.c"
-{
-
-# 469 "roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+    roci_push_string(state, string_duplicate(cwd));
+  }
+  else
 
 # 469 "roci/roci-primitives.c"
   {
 
 # 470 "roci/roci-primitives.c"
-    roci_debug_error(state, "cd expects 1 argument");
-  }
-
-# 472 "roci/roci-primitives.c"
-  if (chdir(roci_pop_string(state)))
-
-# 472 "roci/roci-primitives.c"
-  {
-
-# 473 "roci/roci-primitives.c"
-    roci_push_false(state);
-  }
-  else
-
-# 474 "roci/roci-primitives.c"
-  {
-
-# 475 "roci/roci-primitives.c"
-    roci_debug_error(state, "chdir returned false");
+    roci_debug_error(state, "getcwd return NULL");
   }
 }
 
 
-# 479 "roci/roci-primitives.c"
-void roci_primitive_igte(roci_vm_state_t* state)
-# 479 "roci/roci-primitives.c"
+# 474 "roci/roci-primitives.c"
+void roci_primitive_cd(roci_vm_state_t* state)
+# 474 "roci/roci-primitives.c"
 {
 
-# 480 "roci/roci-primitives.c"
-  if (((state->n_args)!=2))
+# 475 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 475 "roci/roci-primitives.c"
+  {
+
+# 476 "roci/roci-primitives.c"
+    roci_debug_error(state, "cd expects 1 argument");
+  }
+
+# 478 "roci/roci-primitives.c"
+  if (chdir(roci_pop_string(state)))
+
+# 478 "roci/roci-primitives.c"
+  {
+
+# 479 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
 
 # 480 "roci/roci-primitives.c"
   {
 
 # 481 "roci/roci-primitives.c"
+    roci_debug_error(state, "chdir returned false");
+  }
+}
+
+
+# 485 "roci/roci-primitives.c"
+void roci_primitive_igte(roci_vm_state_t* state)
+# 485 "roci/roci-primitives.c"
+{
+
+# 486 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 486 "roci/roci-primitives.c"
+  {
+
+# 487 "roci/roci-primitives.c"
     roci_debug_error(state, "igte expects two integer arguments");
   }
 
-# 483 "roci/roci-primitives.c"
+# 489 "roci/roci-primitives.c"
   uint64_t arg1 = roci_pop_integer(state);
 
-# 484 "roci/roci-primitives.c"
+# 490 "roci/roci-primitives.c"
   uint64_t arg0 = roci_pop_integer(state);
 
-# 485 "roci/roci-primitives.c"
+# 491 "roci/roci-primitives.c"
   roci_push_boolean(state, (arg0>=arg1));
 }
 
 
-# 488 "roci/roci-primitives.c"
+# 494 "roci/roci-primitives.c"
 void roci_primitive_neg(roci_vm_state_t* state)
-# 488 "roci/roci-primitives.c"
+# 494 "roci/roci-primitives.c"
 {
 
-# 489 "roci/roci-primitives.c"
+# 495 "roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 489 "roci/roci-primitives.c"
+# 495 "roci/roci-primitives.c"
   {
 
-# 490 "roci/roci-primitives.c"
+# 496 "roci/roci-primitives.c"
     roci_debug_error(state, "neg expects 1 argument");
   }
 
-# 492 "roci/roci-primitives.c"
+# 498 "roci/roci-primitives.c"
   roci_push_integer(state, (-roci_pop_integer(state)));
 }
 
@@ -36159,12 +36208,12 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p d1989e6150fdf6d2af29af5f8dd473fb56c82c79 > roci/roci-bb.c
 // git cat-file -p 4a79ad6d847971a3cc90321e063ff26038a88389 > roci/roci-command.c
 // git cat-file -p eaf9974bedcfcf22736957246d3f3c81f9170436 > roci/roci-compiler.c
-// git cat-file -p b64875d761400ce1f4eb8c3febc30adb9c0d6ba3 > roci/roci-debugger.c
+// git cat-file -p 8e8a1cc599cd8bf5129d59218fde0b8550fcdde2 > roci/roci-debugger.c
 // git cat-file -p db2362be1481cb03cdc26f5d4df25eb22aea46d9 > roci/roci-disassembler.c
 // git cat-file -p a00098cb28a56f33d6bd96b0e6849b0a5eb4c02f > roci/roci-env.c
-// git cat-file -p 4ddb2b8a3efd73bd5dc1ecc89a2ba971907a7b37 > roci/roci-primitives.c
+// git cat-file -p 7239be6c5a2fba70a08c2f7653de4ce3e2703766 > roci/roci-primitives.c
 // git cat-file -p 1ed7f3a023e0631ccd9beb490d0025e66e36d7e1 > roci/roci-repl.c
 // git cat-file -p 7299d06db0406931b671279692c1b089c13834b9 > roci/roci-stack.c
 // git cat-file -p 4b558e9c5c3302a52efcfff0069e494093141bd5 > roci/roci-value.c
 // git cat-file -p 043a62ceaed5a8fc45f7fcc69631ec941372ea82 > roci/roci.c
-// git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
+// git cat-file -p e314fb330c5d942edccfda1502a992afca1fb3b2 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
