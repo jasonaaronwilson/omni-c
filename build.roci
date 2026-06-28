@@ -90,40 +90,41 @@ ${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/to
 
 /* println(ALL_OMNI_C_SRC); */
 
-let build_omni_c = fn() {
+let build_omni_c = fn(target_name, omni_c_binary) {
 
   build_reflection_header();
 
-  if (all_older_than("/tmp/omni-c-baby", ALL_OMNI_C_SRC)) {
-    println(string_append("/tmp/omni-c-baby", " is up to date"));
+  if (all_older_than(target_name, ALL_OMNI_C_SRC)) {
+    println(string_append(target_name, " is up to date"));
     return;
   }
 
   // let COMMAND_LINE = make_list("echo");
-  let COMMAND_LINE = make_list("/home/jawilson/src/omni-c/build-dir/bin/omni-c-stable");
+  let COMMAND_LINE = make_list(omni_c_binary);
 
   list_push(COMMAND_LINE, "generate-library");
 
   // Flags to omni-c generate-library
   list_push(COMMAND_LINE, "--c-output-file");
-  list_push(COMMAND_LINE, "/tmp/omni-c-baby.c");
+  let tname = string_append(target_name, ".c");
+  list_push(COMMAND_LINE, tname);
   // Do we still need this?
   list_push(COMMAND_LINE, "--omit-c-armyknife-include=true");
 
   list_push_all(COMMAND_LINE, ALL_OMNI_C_SRC);
-    
+
   let result = shell(COMMAND_LINE);
   println(result);
 
   let CC_COMMAND_LINE = make_list(CC);
   list_push_all(CC_COMMAND_LINE, CC_FLAGS);
   list_push(CC_COMMAND_LINE, "-o");
-  list_push(CC_COMMAND_LINE, "/tmp/omni-c-baby");
-  list_push(CC_COMMAND_LINE, "/tmp/omni-c-baby.c");
+  list_push(CC_COMMAND_LINE, target_name);
+  list_push(CC_COMMAND_LINE, string_append(target_name, ".c"));
   list_push(CC_COMMAND_LINE, "-lgc");
-  
+
   let cc_result = shell(CC_COMMAND_LINE);
   println(cc_result);
 };
 
-build_omni_c();
+build_omni_c("/tmp/omni-c-baby", "/home/jawilson/src/omni-c/build-dir/bin/omni-c-stable");
