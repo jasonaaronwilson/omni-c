@@ -45,6 +45,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_is_double, "is_double");
   roci_add_primitive(env, &roci_primitive_pwd, "pwd");
   roci_add_primitive(env, &roci_primitive_cd, "cd");
+  roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
+  roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
 }
 
 /**
@@ -307,7 +309,28 @@ void roci_primitive_shell(roci_vm_state_t* state) {
   sub_process_read(sub_process, stdout, stderr);
   sub_process_wait(sub_process);
 
+  roci_push_integer(state, sub_process->exit_code);
   roci_push_string(state, buffer_to_c_string(stdout));
+  state->n_args = 2;
+  roci_primitive_make_list(state);
+}
+
+void roci_primitive_shell_exit_code(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "shell_exit_code expects 1 argument");
+  }
+  roci_push_integer(state, 0);
+  state->n_args = 2;
+  roci_primitive_list_get(state);
+}
+
+void roci_primitive_shell_stdout(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "shell_stdout expects 1 argument");
+  }
+  roci_push_integer(state, 1);
+  state->n_args = 2;
+  roci_primitive_list_get(state);
 }
 
 void roci_primitive_platform(roci_vm_state_t* state) {

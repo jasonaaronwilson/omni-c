@@ -1,6 +1,30 @@
 //// This roci script will eventually build roci
 
-let CC = "gcc";
+let get_c_compiler = fn() {
+
+  let probe_c_compiler = fn(cc) {
+    let command_line = make_list("which", cc);
+    let result = shell(command_line);
+    if (iequal(shell_exit_code(result), 0)) {
+      println(string_append(cc, " exists"));
+      return true;
+    }
+    return false;
+  };
+
+  if (probe_c_compiler("gcc")) {
+    return "gcc";
+  }
+  if (probe_c_compiler("clang")) {
+    return "clang";
+  }
+  if (probe_c_compiler("tcc")) {
+    return "tcc";
+  }
+  return "unknown-c-compiler";
+};
+
+let CC = get_c_compiler();
 let CC_FLAGS = make_list("-g", "-rdynamic");
 // TODO: WARN_FLAGS := -Wall -Werror -Wno-error=format -Wno-format -Wno-error=return-local-addr -Wno-unused-function -Wno-unused-variable
 
