@@ -120,12 +120,16 @@ void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer) {
   for (int i = 1; i < 1024; i++) {
     roci_value_t value = roci_debug_peek_value(state, i);
     if (value.tag == ROCI_TAG_STACK_MARKER || value.tag == ROCI_TAG_UNKNOWN) {
-      return;
+      break;
     }
     buffer_printf(buffer, "stack[%d] = %s\n", i, roci_value_to_c_string(value));
+    if (i == 1023) {
+      log_fatal("ROCI_TAG_STACK_MARKER not found.");
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
   }
-  log_fatal("ROCI_TAG_STACK_MARKER not found.");
-  fatal_error(ERROR_ILLEGAL_STATE);
+
+  // HERE figure out how to print out the continuation stack.
 }
 
 boolean_t roci_is_tty(void) {

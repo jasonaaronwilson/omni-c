@@ -187,6 +187,9 @@ void roci_primitive_string_append(roci_vm_state_t* state) {
     }
     buffer_append_string(buffer, cast(char*, value.raw));
   }
+  for (int64_t arg_num = 0; arg_num < state->n_args; arg_num++) {
+    roci_pop_value(state);
+  }
   roci_push_string(state, buffer_to_c_string(buffer));
 }
 
@@ -196,6 +199,9 @@ void roci_primitive_make_list(roci_vm_state_t* state) {
     roci_value_t* value = roci_value_to_heap(
         roci_debug_peek_value(state, state->n_args - arg_num));
     value_array_add(list, ptr_to_value(value));
+  }
+  for (int64_t arg_num = 0; arg_num < state->n_args; arg_num++) {
+    roci_pop_value(state);
   }
   roci_push_list(state, list);
 }

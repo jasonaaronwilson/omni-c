@@ -158,6 +158,15 @@ add_test("list_add_all_test",
 	   pass_test();
 	 });
 
+add_test("list_add_test",
+	 fn() {
+	   let str = "asdf";
+	   let lst1 = make_list("a");
+	   list_push(lst1, "b");
+	   list_push(lst1, string_append(str, "jkl"));
+	   pass_test();
+	 });
+
 add_test("call_closure_test",
 	 fn() {
 	   let shared = "ASDF";
