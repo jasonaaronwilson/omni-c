@@ -117,6 +117,7 @@ typedef struct {
 #include <time.h>
 #include <unistd.h>
 #include <gc.h>
+#include <glob.h>
 
 // ========== defines ==========
 
@@ -1046,7 +1047,7 @@ typedef enum {
   ROCI_TAG_STRING,
   ROCI_TAG_CLOSURE,
   ROCI_TAG_C_PRIMITIVE,
-  ROCI_TAG_ARRAY,
+  ROCI_TAG_LIST,
   ROCI_TAG_STACK_MARKER,
 } roci_tag_t;
 
@@ -1067,23 +1068,7 @@ typedef enum {
   ROCI_OPCODE_BR,
   ROCI_OPCODE_MAKE_CLOSURE,
   ROCI_OPCODE_RETURN,
-  ROCI_OPCODE_CALL_0,
-  ROCI_OPCODE_CALL_1,
-  ROCI_OPCODE_CALL_2,
-  ROCI_OPCODE_CALL_3,
-  ROCI_OPCODE_CALL_4,
-  ROCI_OPCODE_CALL_5,
-  ROCI_OPCODE_CALL_6,
-  ROCI_OPCODE_CALL_7,
-  ROCI_OPCODE_CALL_8,
-  ROCI_OPCODE_CALL_9,
-  ROCI_OPCODE_CALL_10,
-  ROCI_OPCODE_CALL_11,
-  ROCI_OPCODE_CALL_12,
-  ROCI_OPCODE_CALL_13,
-  ROCI_OPCODE_CALL_14,
-  ROCI_OPCODE_CALL_15,
-  ROCI_OPCODE_CALL_16,
+  ROCI_OPCODE_CALL,
   ROCI_OPCODE_CHECK_ARGS,
   ROCI_OPCODE_DEBUG_INFO,
   ROCI_OPCODE_COMMENT,
@@ -2058,6 +2043,14 @@ boolean_t FLAG_omit_c_armyknife_include = false;
 # 29 "flags.c"
 char* FLAG_c_compiler = "clang";
 
+
+# 30 "flags.c"
+boolean_t FLAG_roci_debug = false;
+
+
+# 31 "flags.c"
+boolean_t FLAG_roci_print_bbs = false;
+
 // ========== function prototypes ==========
 
 unsigned encode_sleb_128(int64_t Value, uint8_t* p);
@@ -2122,6 +2115,7 @@ extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str);
+int64_t buffer_index_of(buffer_t* buffer, char* str);
 buffer_t* buffer_from_string(char* string);
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width);
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text);
@@ -2207,6 +2201,7 @@ int file_peek_byte(FILE* input);
 boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
 void file_skip_bytes(FILE* input, uint64_t n_bytes);
+int64_t get_file_modification_time(const char* filename);
 void term_set_foreground_color(buffer_t* buffer, uint32_t color);
 void term_set_background_color(buffer_t* buffer, uint32_t color);
 void term_move_cursor_absolute(buffer_t* buffer, int x, int y);
@@ -2607,14 +2602,50 @@ roci_env_t* roci_new_env(roci_env_t* parent);
 void roci_dump_env(roci_env_t* env, buffer_t* buffer);
 void roci_add_primitives_to_env(roci_env_t* env);
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name);
+void roci_primitive_exit(roci_vm_state_t* state);
+void roci_primitive_load(roci_vm_state_t* state);
 void roci_primitive_print_env(roci_vm_state_t* state);
 void roci_primitive_print_string(roci_vm_state_t* state);
+void roci_primitive_println(roci_vm_state_t* state);
+void roci_primitive_string_equal(roci_vm_state_t* state);
+void roci_primitive_string_starts_with(roci_vm_state_t* state);
+void roci_primitive_string_ends_with(roci_vm_state_t* state);
+void roci_primitive_string_substring(roci_vm_state_t* state);
+void roci_primitive_string_append(roci_vm_state_t* state);
+void roci_primitive_make_list(roci_vm_state_t* state);
+void roci_primitive_list_get(roci_vm_state_t* state);
+void roci_primitive_list_set(roci_vm_state_t* state);
+void roci_primitive_list_push(roci_vm_state_t* state);
+void roci_primitive_list_for_each(roci_vm_state_t* state);
+void roci_primitive_to_string(roci_vm_state_t* state);
+void roci_primitive_timestamp(roci_vm_state_t* state);
+void roci_primitive_shell(roci_vm_state_t* state);
+void roci_primitive_platform(roci_vm_state_t* state);
+void roci_primitive_glob(roci_vm_state_t* state);
+void roci_primitive_iadd(roci_vm_state_t* state);
+void roci_primitive_iequal(roci_vm_state_t* state);
+void roci_primitive_not(roci_vm_state_t* state);
+void roci_primitive_getenv(roci_vm_state_t* state);
+void roci_primitive_is_boolean(roci_vm_state_t* state);
+void roci_primitive_is_string(roci_vm_state_t* state);
+void roci_primitive_is_integer(roci_vm_state_t* state);
+void roci_primitive_is_list(roci_vm_state_t* state);
+void roci_primitive_is_double(roci_vm_state_t* state);
+void roci_primitive_pwd(roci_vm_state_t* state);
+void roci_primitive_cd(roci_vm_state_t* state);
+void roci_primitive_igte(roci_vm_state_t* state);
+void roci_primitive_neg(roci_vm_state_t* state);
+void roci_repl(roci_env_t* env);
+buffer_t* roci_repl_read(roci_env_t* env);
 void roci_append_value(buffer_t* buffer, roci_value_t value);
 char* roci_value_to_c_string(roci_value_t value);
+roci_value_t* roci_value_to_heap(roci_value_t value);
+roci_value_t* string_to_roci_string(char* str);
 roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point);
 roci_vm_state_t* roci_make_vm_state(roci_env_t* env);
 void roci_runtime_error(roci_runtime_error_t runtime_error);
 roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state);
+void roci_call(roci_vm_state_t* state, roci_value_t proc, int64_t n_args);
 buffer_t* get_reflection_header_buffer(void);
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
@@ -4239,282 +4270,344 @@ static inline void roci_push_true(roci_vm_state_t* state)
 
 
 # 20 "roci/roci-stack.c"
-static inline void roci_push_integer(roci_vm_state_t* state, int64_t number)
+static inline void roci_push_boolean(roci_vm_state_t* state, boolean_t value)
 # 20 "roci/roci-stack.c"
 {
 
 # 21 "roci/roci-stack.c"
-  ((*((state->stack)++))=number);
+  ((*((state->stack)++))=(value ? 1 : 0));
 
 # 22 "roci/roci-stack.c"
-  ((*((state->stack_tags)++))=ROCI_TAG_INTEGER);
+  ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
 }
 
 
 # 25 "roci/roci-stack.c"
-static inline void roci_push_double(roci_vm_state_t* state, double number)
+static inline void roci_push_integer(roci_vm_state_t* state, int64_t number)
 # 25 "roci/roci-stack.c"
 {
 
 # 26 "roci/roci-stack.c"
-  ((*((state->stack)++))=double_as_uint64(number));
+  ((*((state->stack)++))=number);
 
 # 27 "roci/roci-stack.c"
-  ((*((state->stack_tags)++))=ROCI_TAG_DOUBLE);
+  ((*((state->stack_tags)++))=ROCI_TAG_INTEGER);
 }
 
 
 # 30 "roci/roci-stack.c"
-static inline void roci_push_string(roci_vm_state_t* state, char* str)
+static inline void roci_push_double(roci_vm_state_t* state, double number)
 # 30 "roci/roci-stack.c"
 {
 
 # 31 "roci/roci-stack.c"
-  ((*((state->stack)++))=(/*CAST*/(uint64_t) str));
+  ((*((state->stack)++))=double_as_uint64(number));
 
 # 32 "roci/roci-stack.c"
-  ((*((state->stack_tags)++))=ROCI_TAG_STRING);
+  ((*((state->stack_tags)++))=ROCI_TAG_DOUBLE);
 }
 
 
 # 35 "roci/roci-stack.c"
-static inline void roci_push_value(roci_vm_state_t* state, uint64_t data, roci_tag_t tag)
-# 36 "roci/roci-stack.c"
+static inline void roci_push_string(roci_vm_state_t* state, char* str)
+# 35 "roci/roci-stack.c"
 {
 
+# 36 "roci/roci-stack.c"
+  ((*((state->stack)++))=(/*CAST*/(uint64_t) str));
+
 # 37 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_STRING);
+}
+
+
+# 40 "roci/roci-stack.c"
+static inline void roci_push_list(roci_vm_state_t* state, value_array_t* str)
+# 40 "roci/roci-stack.c"
+{
+
+# 41 "roci/roci-stack.c"
+  ((*((state->stack)++))=(/*CAST*/(uint64_t) str));
+
+# 42 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_LIST);
+}
+
+
+# 45 "roci/roci-stack.c"
+static inline void roci_push_value_parts(roci_vm_state_t* state, uint64_t data, roci_tag_t tag)
+# 46 "roci/roci-stack.c"
+{
+
+# 47 "roci/roci-stack.c"
   ((*((state->stack)++))=data);
 
-# 38 "roci/roci-stack.c"
+# 48 "roci/roci-stack.c"
   ((*((state->stack_tags)++))=tag);
 }
 
 
-# 41 "roci/roci-stack.c"
-static inline boolean_t roci_pop_boolean(roci_vm_state_t* state)
-# 41 "roci/roci-stack.c"
-{
-
-# 42 "roci/roci-stack.c"
-  roci_tag_t tag = (*(--(state->stack_tags)));
-
-# 43 "roci/roci-stack.c"
-  uint64_t tos = (*(--(state->stack)));
-
-# 44 "roci/roci-stack.c"
-  if ((tag!=ROCI_TAG_BOOLEAN))
-
-# 44 "roci/roci-stack.c"
-  {
-
-# 45 "roci/roci-stack.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-# 47 "roci/roci-stack.c"
-  return tos;
-}
-
-
-# 50 "roci/roci-stack.c"
-static inline int64_t roci_pop_integer(roci_vm_state_t* state)
-# 50 "roci/roci-stack.c"
-{
-
 # 51 "roci/roci-stack.c"
-  roci_tag_t tag = (*(--(state->stack_tags)));
+static inline void roci_push_value(roci_vm_state_t* state, roci_value_t value)
+# 51 "roci/roci-stack.c"
+{
 
 # 52 "roci/roci-stack.c"
+  roci_push_value_parts(state, (value.raw), (value.tag));
+}
+
+
+# 55 "roci/roci-stack.c"
+static inline boolean_t roci_pop_boolean(roci_vm_state_t* state)
+# 55 "roci/roci-stack.c"
+{
+
+# 56 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 57 "roci/roci-stack.c"
   uint64_t tos = (*(--(state->stack)));
 
-# 53 "roci/roci-stack.c"
-  if ((tag!=ROCI_TAG_INTEGER))
+# 58 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_BOOLEAN))
 
-# 53 "roci/roci-stack.c"
+# 58 "roci/roci-stack.c"
   {
 
-# 54 "roci/roci-stack.c"
+# 59 "roci/roci-stack.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 56 "roci/roci-stack.c"
+# 61 "roci/roci-stack.c"
   return tos;
 }
 
 
-# 59 "roci/roci-stack.c"
-static inline double roci_pop_double(roci_vm_state_t* state)
-# 59 "roci/roci-stack.c"
+# 64 "roci/roci-stack.c"
+static inline int64_t roci_pop_integer(roci_vm_state_t* state)
+# 64 "roci/roci-stack.c"
 {
 
-# 60 "roci/roci-stack.c"
+# 65 "roci/roci-stack.c"
   roci_tag_t tag = (*(--(state->stack_tags)));
 
-# 61 "roci/roci-stack.c"
+# 66 "roci/roci-stack.c"
   uint64_t tos = (*(--(state->stack)));
 
-# 62 "roci/roci-stack.c"
-  if ((tag!=ROCI_TAG_DOUBLE))
+# 67 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_INTEGER))
 
-# 62 "roci/roci-stack.c"
+# 67 "roci/roci-stack.c"
   {
 
-# 63 "roci/roci-stack.c"
+# 68 "roci/roci-stack.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 65 "roci/roci-stack.c"
+# 70 "roci/roci-stack.c"
+  return tos;
+}
+
+
+# 73 "roci/roci-stack.c"
+static inline double roci_pop_double(roci_vm_state_t* state)
+# 73 "roci/roci-stack.c"
+{
+
+# 74 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 75 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 76 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_DOUBLE))
+
+# 76 "roci/roci-stack.c"
+  {
+
+# 77 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 79 "roci/roci-stack.c"
   return uint64_as_double(tos);
 }
 
 
-# 68 "roci/roci-stack.c"
+# 82 "roci/roci-stack.c"
 static inline char* roci_pop_string(roci_vm_state_t* state)
-# 68 "roci/roci-stack.c"
+# 82 "roci/roci-stack.c"
 {
 
-# 69 "roci/roci-stack.c"
+# 83 "roci/roci-stack.c"
   roci_tag_t tag = (*(--(state->stack_tags)));
 
-# 70 "roci/roci-stack.c"
+# 84 "roci/roci-stack.c"
   uint64_t tos = (*(--(state->stack)));
 
-# 71 "roci/roci-stack.c"
+# 85 "roci/roci-stack.c"
   if ((tag!=ROCI_TAG_STRING))
 
-# 71 "roci/roci-stack.c"
+# 85 "roci/roci-stack.c"
   {
 
-# 72 "roci/roci-stack.c"
+# 86 "roci/roci-stack.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 74 "roci/roci-stack.c"
+# 88 "roci/roci-stack.c"
   return (/*CAST*/(char*) tos);
 }
 
 
-# 77 "roci/roci-stack.c"
-static inline roci_value_t roci_pop_value(roci_vm_state_t* state)
-# 77 "roci/roci-stack.c"
+# 91 "roci/roci-stack.c"
+static inline value_array_t* roci_pop_list(roci_vm_state_t* state)
+# 91 "roci/roci-stack.c"
 {
 
-# 78 "roci/roci-stack.c"
-  roci_value_t value;
-
-# 79 "roci/roci-stack.c"
+# 92 "roci/roci-stack.c"
   roci_tag_t tag = (*(--(state->stack_tags)));
 
-# 80 "roci/roci-stack.c"
+# 93 "roci/roci-stack.c"
   uint64_t tos = (*(--(state->stack)));
 
-# 81 "roci/roci-stack.c"
-  if ((tag==ROCI_TAG_STACK_MARKER))
+# 94 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_LIST))
 
-# 81 "roci/roci-stack.c"
+# 94 "roci/roci-stack.c"
   {
 
-# 82 "roci/roci-stack.c"
+# 95 "roci/roci-stack.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 84 "roci/roci-stack.c"
-  ((value.raw)=tos);
-
-# 85 "roci/roci-stack.c"
-  ((value.tag)=tag);
-
-# 86 "roci/roci-stack.c"
-  return value;
+# 97 "roci/roci-stack.c"
+  return (/*CAST*/(value_array_t*) tos);
 }
 
-
-# 89 "roci/roci-stack.c"
-static inline roci_value_t roci_debug_peek_value(roci_vm_state_t* state, int offset)
-# 90 "roci/roci-stack.c"
-{
-
-# 91 "roci/roci-stack.c"
-  roci_value_t value;
-
-# 92 "roci/roci-stack.c"
-  roci_tag_t tag = (*((state->stack_tags)-offset));
-
-# 93 "roci/roci-stack.c"
-  uint64_t datum = (*((state->stack)-offset));
-
-# 94 "roci/roci-stack.c"
-  ((value.raw)=datum);
-
-# 95 "roci/roci-stack.c"
-  ((value.tag)=tag);
-
-# 96 "roci/roci-stack.c"
-  return value;
-}
-
-
-# 99 "roci/roci-stack.c"
-static inline roci_env_t* roci_current_env(roci_vm_state_t* state)
-# 99 "roci/roci-stack.c"
-{
 
 # 100 "roci/roci-stack.c"
+static inline roci_value_t roci_pop_value(roci_vm_state_t* state)
+# 100 "roci/roci-stack.c"
+{
+
+# 101 "roci/roci-stack.c"
+  roci_value_t value;
+
+# 102 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 103 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 104 "roci/roci-stack.c"
+  if ((tag==ROCI_TAG_STACK_MARKER))
+
+# 104 "roci/roci-stack.c"
+  {
+
+# 105 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 107 "roci/roci-stack.c"
+  ((value.raw)=tos);
+
+# 108 "roci/roci-stack.c"
+  ((value.tag)=tag);
+
+# 109 "roci/roci-stack.c"
+  return value;
+}
+
+
+# 112 "roci/roci-stack.c"
+static inline roci_value_t roci_debug_peek_value(roci_vm_state_t* state, int offset)
+# 113 "roci/roci-stack.c"
+{
+
+# 114 "roci/roci-stack.c"
+  roci_value_t value;
+
+# 115 "roci/roci-stack.c"
+  roci_tag_t tag = (*((state->stack_tags)-offset));
+
+# 116 "roci/roci-stack.c"
+  uint64_t datum = (*((state->stack)-offset));
+
+# 117 "roci/roci-stack.c"
+  ((value.raw)=datum);
+
+# 118 "roci/roci-stack.c"
+  ((value.tag)=tag);
+
+# 119 "roci/roci-stack.c"
+  return value;
+}
+
+
+# 122 "roci/roci-stack.c"
+static inline roci_env_t* roci_current_env(roci_vm_state_t* state)
+# 122 "roci/roci-stack.c"
+{
+
+# 123 "roci/roci-stack.c"
   return (state->env);
 }
 
 
-# 103 "roci/roci-stack.c"
+# 126 "roci/roci-stack.c"
 static inline void roci_set_env(roci_vm_state_t* state, roci_env_t* env)
-# 103 "roci/roci-stack.c"
+# 126 "roci/roci-stack.c"
 {
 
-# 104 "roci/roci-stack.c"
+# 127 "roci/roci-stack.c"
   ((state->env)=env);
 }
 
 
-# 107 "roci/roci-stack.c"
+# 130 "roci/roci-stack.c"
 static inline void roci_drop_env(roci_vm_state_t* state)
-# 107 "roci/roci-stack.c"
+# 130 "roci/roci-stack.c"
 {
 
-# 108 "roci/roci-stack.c"
+# 131 "roci/roci-stack.c"
   ((state->env)=((state->env)->parent));
 }
 
 
-# 111 "roci/roci-stack.c"
+# 134 "roci/roci-stack.c"
 static inline void roci_push_continuation(roci_vm_state_t* state, roci_bb_t* bb, uint32_t stack_arg_numbers)
-# 112 "roci/roci-stack.c"
+# 135 "roci/roci-stack.c"
 {
 
-# 113 "roci/roci-stack.c"
+# 136 "roci/roci-stack.c"
   roci_cont_t* continuation = malloc_struct(roci_cont_t);
 
-# 114 "roci/roci-stack.c"
+# 137 "roci/roci-stack.c"
   ((continuation->bb)=bb);
 
-# 115 "roci/roci-stack.c"
+# 138 "roci/roci-stack.c"
   ((continuation->env)=(state->env));
 
-# 116 "roci/roci-stack.c"
+# 139 "roci/roci-stack.c"
   ((continuation->stack)=((state->stack)-stack_arg_numbers));
 
-# 117 "roci/roci-stack.c"
+# 140 "roci/roci-stack.c"
   ((continuation->stack_tags)=((state->stack_tags)-stack_arg_numbers));
 
-# 118 "roci/roci-stack.c"
+# 141 "roci/roci-stack.c"
   ((*((state->continuations)++))=continuation);
 }
 
 
-# 121 "roci/roci-stack.c"
+# 144 "roci/roci-stack.c"
 static inline roci_cont_t* roci_pop_continuation(roci_vm_state_t* state)
-# 121 "roci/roci-stack.c"
+# 144 "roci/roci-stack.c"
 {
 
-# 122 "roci/roci-stack.c"
+# 145 "roci/roci-stack.c"
   return (*(--(state->continuations)));
 }
 
@@ -6544,437 +6637,434 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end)
   }
 
 # 103 "lib/buffer.c"
-  uint64_t copy_length = (end-start);
+  if ((end>(buffer->length)))
 
-# 104 "lib/buffer.c"
-  char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
-
-# 105 "lib/buffer.c"
-  if ((copy_length>0))
-
-# 105 "lib/buffer.c"
+# 103 "lib/buffer.c"
   {
 
-# 106 "lib/buffer.c"
+# 104 "lib/buffer.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 107 "lib/buffer.c"
+  uint64_t copy_length = (end-start);
+
+# 108 "lib/buffer.c"
+  char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
+
+# 109 "lib/buffer.c"
+  if ((copy_length>0))
+
+# 109 "lib/buffer.c"
+  {
+
+# 110 "lib/buffer.c"
     memcpy(result, (&((buffer->elements)[start])), copy_length);
   }
 
-# 108 "lib/buffer.c"
+# 112 "lib/buffer.c"
   ((result[copy_length])='\0');
 
-# 109 "lib/buffer.c"
+# 113 "lib/buffer.c"
   return result;
 }
 
 
-# 118 "lib/buffer.c"
+# 122 "lib/buffer.c"
 char* buffer_to_c_string(buffer_t* buffer)
-# 118 "lib/buffer.c"
+# 122 "lib/buffer.c"
 {
 
-# 119 "lib/buffer.c"
+# 123 "lib/buffer.c"
   return buffer_c_substring(buffer, 0, (buffer->length));
 }
 
 
-# 127 "lib/buffer.c"
+# 131 "lib/buffer.c"
 buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element)
-# 127 "lib/buffer.c"
+# 131 "lib/buffer.c"
 {
 
-# 128 "lib/buffer.c"
+# 132 "lib/buffer.c"
   if (((buffer->length)<(buffer->capacity)))
 
-# 128 "lib/buffer.c"
+# 132 "lib/buffer.c"
   {
 
-# 129 "lib/buffer.c"
+# 133 "lib/buffer.c"
     (((buffer->elements)[(buffer->length)])=element);
 
-# 130 "lib/buffer.c"
+# 134 "lib/buffer.c"
     ((buffer->length)++);
 
-# 131 "lib/buffer.c"
+# 135 "lib/buffer.c"
     return buffer;
   }
 
-# 133 "lib/buffer.c"
+# 137 "lib/buffer.c"
   (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
 
-# 134 "lib/buffer.c"
+# 138 "lib/buffer.c"
   return buffer_append_byte(buffer, element);
 }
 
 
-# 142 "lib/buffer.c"
+# 146 "lib/buffer.c"
 buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes)
-# 143 "lib/buffer.c"
+# 147 "lib/buffer.c"
 {
 
-# 145 "lib/buffer.c"
+# 149 "lib/buffer.c"
   for (
 
-# 145 "lib/buffer.c"
+# 149 "lib/buffer.c"
 
-# 145 "lib/buffer.c"
+# 149 "lib/buffer.c"
     int i = 0;
 
-# 145 "lib/buffer.c"
+# 149 "lib/buffer.c"
     (i<n_bytes);
 
-# 145 "lib/buffer.c"
+# 149 "lib/buffer.c"
     (i++))
 
-# 145 "lib/buffer.c"
+# 149 "lib/buffer.c"
   {
 
-# 146 "lib/buffer.c"
+# 150 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (bytes[i])));
   }
 
-# 148 "lib/buffer.c"
+# 152 "lib/buffer.c"
   return buffer;
 }
 
 
-# 157 "lib/buffer.c"
+# 161 "lib/buffer.c"
 buffer_t* buffer_append_string(buffer_t* buffer, const char* str)
-# 157 "lib/buffer.c"
+# 161 "lib/buffer.c"
 {
 
-# 158 "lib/buffer.c"
+# 162 "lib/buffer.c"
   return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
 }
 
 
-# 169 "lib/buffer.c"
+# 173 "lib/buffer.c"
 extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity)
-# 169 "lib/buffer.c"
+# 173 "lib/buffer.c"
 {
 
-# 170 "lib/buffer.c"
+# 174 "lib/buffer.c"
   if (((buffer->capacity)<capacity))
 
-# 170 "lib/buffer.c"
+# 174 "lib/buffer.c"
   {
 
-# 171 "lib/buffer.c"
+# 175 "lib/buffer.c"
     uint8_t* new_elements = malloc_bytes(capacity);
 
-# 172 "lib/buffer.c"
+# 176 "lib/buffer.c"
     memcpy(new_elements, (buffer->elements), (buffer->length));
 
-# 173 "lib/buffer.c"
+# 177 "lib/buffer.c"
     free_bytes((buffer->elements));
 
-# 174 "lib/buffer.c"
+# 178 "lib/buffer.c"
     ((buffer->elements)=new_elements);
 
-# 175 "lib/buffer.c"
+# 179 "lib/buffer.c"
     ((buffer->capacity)=capacity);
   }
 
-# 177 "lib/buffer.c"
+# 181 "lib/buffer.c"
   return buffer;
 }
 
 
-# 191 "lib/buffer.c"
+# 195 "lib/buffer.c"
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...)
-# 191 "lib/buffer.c"
+# 195 "lib/buffer.c"
 {
 
-# 192 "lib/buffer.c"
+# 196 "lib/buffer.c"
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
 
-# 193 "lib/buffer.c"
+# 197 "lib/buffer.c"
   int n_bytes = 0;
 
-# 194 "lib/buffer.c"
+# 198 "lib/buffer.c"
   do
-# 194 "lib/buffer.c"
+# 198 "lib/buffer.c"
   {
 
-# 195 "lib/buffer.c"
+# 199 "lib/buffer.c"
     va_list args;
 
-# 196 "lib/buffer.c"
+# 200 "lib/buffer.c"
     va_start(args, format);
 
-# 197 "lib/buffer.c"
+# 201 "lib/buffer.c"
     (n_bytes=vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args));
 
-# 199 "lib/buffer.c"
+# 203 "lib/buffer.c"
     va_end(args);
   }
   while (0);
 
-# 202 "lib/buffer.c"
+# 206 "lib/buffer.c"
   if ((n_bytes<BUFFER_PRINTF_INITIAL_BUFFER_SIZE))
 
-# 202 "lib/buffer.c"
+# 206 "lib/buffer.c"
   {
 
-# 203 "lib/buffer.c"
+# 207 "lib/buffer.c"
     return buffer_append_string(buffer, cbuffer);
   }
   else
 
-# 204 "lib/buffer.c"
+# 208 "lib/buffer.c"
   {
 
-# 208 "lib/buffer.c"
+# 212 "lib/buffer.c"
     char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
 
-# 209 "lib/buffer.c"
+# 213 "lib/buffer.c"
     va_list args;
 
-# 210 "lib/buffer.c"
+# 214 "lib/buffer.c"
     va_start(args, format);
 
-# 211 "lib/buffer.c"
+# 215 "lib/buffer.c"
     int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
 
-# 212 "lib/buffer.c"
+# 216 "lib/buffer.c"
     va_end(args);
 
-# 213 "lib/buffer.c"
+# 217 "lib/buffer.c"
     if ((n_bytes_second!=n_bytes))
 
-# 213 "lib/buffer.c"
+# 217 "lib/buffer.c"
     {
 
-# 214 "lib/buffer.c"
+# 218 "lib/buffer.c"
       fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
     }
 
-# 216 "lib/buffer.c"
+# 220 "lib/buffer.c"
     (buffer=buffer_append_string(buffer, result));
 
-# 217 "lib/buffer.c"
+# 221 "lib/buffer.c"
     free_bytes(result);
 
-# 218 "lib/buffer.c"
+# 222 "lib/buffer.c"
     return buffer;
   }
 }
 
 
-# 229 "lib/buffer.c"
+# 233 "lib/buffer.c"
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count)
-# 230 "lib/buffer.c"
+# 234 "lib/buffer.c"
 {
 
-# 231 "lib/buffer.c"
+# 235 "lib/buffer.c"
   for (
 
-# 231 "lib/buffer.c"
+# 235 "lib/buffer.c"
 
-# 231 "lib/buffer.c"
+# 235 "lib/buffer.c"
     int i = 0;
 
-# 231 "lib/buffer.c"
+# 235 "lib/buffer.c"
     (i<count);
 
-# 231 "lib/buffer.c"
+# 235 "lib/buffer.c"
     (i++))
 
-# 231 "lib/buffer.c"
+# 235 "lib/buffer.c"
   {
 
-# 232 "lib/buffer.c"
+# 236 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, byte));
   }
 
-# 234 "lib/buffer.c"
+# 238 "lib/buffer.c"
   return buffer;
 }
 
 
-# 243 "lib/buffer.c"
+# 247 "lib/buffer.c"
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position)
-# 243 "lib/buffer.c"
+# 247 "lib/buffer.c"
 {
 
-# 244 "lib/buffer.c"
-  if ((position>=(buffer->length)))
-
-# 244 "lib/buffer.c"
-  {
-
-# 245 "lib/buffer.c"
-    return ((utf8_decode_result_t) {.error = true});
-  }
-
-# 247 "lib/buffer.c"
-  utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
-
 # 248 "lib/buffer.c"
-  if ((result.error))
+  if ((position>=(buffer->length)))
 
 # 248 "lib/buffer.c"
   {
 
 # 249 "lib/buffer.c"
-    return result;
-  }
-
-# 251 "lib/buffer.c"
-  if (((position+(result.num_bytes))>(buffer->length)))
-
-# 251 "lib/buffer.c"
-  {
-
-# 252 "lib/buffer.c"
     return ((utf8_decode_result_t) {.error = true});
   }
 
-# 254 "lib/buffer.c"
+# 251 "lib/buffer.c"
+  utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
+
+# 252 "lib/buffer.c"
+  if ((result.error))
+
+# 252 "lib/buffer.c"
+  {
+
+# 253 "lib/buffer.c"
+    return result;
+  }
+
+# 255 "lib/buffer.c"
+  if (((position+(result.num_bytes))>(buffer->length)))
+
+# 255 "lib/buffer.c"
+  {
+
+# 256 "lib/buffer.c"
+    return ((utf8_decode_result_t) {.error = true});
+  }
+
+# 258 "lib/buffer.c"
   return result;
 }
 
 
-# 269 "lib/buffer.c"
+# 273 "lib/buffer.c"
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
-# 270 "lib/buffer.c"
+# 274 "lib/buffer.c"
 {
 
-# 271 "lib/buffer.c"
-  if ((code_point<0x80))
-
-# 271 "lib/buffer.c"
-  {
-
-# 273 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, code_point));
-
-# 274 "lib/buffer.c"
-    return buffer;
-  }
-  else
-
 # 275 "lib/buffer.c"
-  if ((code_point<0x800))
+  if ((code_point<0x80))
 
 # 275 "lib/buffer.c"
   {
 
 # 277 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
+    (buffer=buffer_append_byte(buffer, code_point));
 
 # 278 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+    return buffer;
+  }
+  else
 
 # 279 "lib/buffer.c"
-    return buffer;
-  }
-  else
+  if ((code_point<0x800))
 
-# 280 "lib/buffer.c"
-  if ((code_point<0x10000))
-
-# 280 "lib/buffer.c"
+# 279 "lib/buffer.c"
   {
+
+# 281 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
 
 # 282 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
 
 # 283 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+    return buffer;
+  }
+  else
 
 # 284 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+  if ((code_point<0x10000))
 
-# 285 "lib/buffer.c"
-    return buffer;
-  }
-  else
-
-# 286 "lib/buffer.c"
-  if ((code_point<=0x10FFFF))
-
-# 286 "lib/buffer.c"
+# 284 "lib/buffer.c"
   {
 
-# 288 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
+# 286 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
 
-# 289 "lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
-
-# 290 "lib/buffer.c"
+# 287 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
 
-# 291 "lib/buffer.c"
+# 288 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
 
-# 292 "lib/buffer.c"
+# 289 "lib/buffer.c"
     return buffer;
   }
   else
 
-# 293 "lib/buffer.c"
+# 290 "lib/buffer.c"
+  if ((code_point<=0x10FFFF))
+
+# 290 "lib/buffer.c"
   {
 
+# 292 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
+
+# 293 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
+
+# 294 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+
 # 295 "lib/buffer.c"
-    fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
 
 # 296 "lib/buffer.c"
+    return buffer;
+  }
+  else
+
+# 297 "lib/buffer.c"
+  {
+
+# 299 "lib/buffer.c"
+    fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
+
+# 300 "lib/buffer.c"
     return 0;
   }
 }
 
 
-# 304 "lib/buffer.c"
+# 308 "lib/buffer.c"
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str)
-# 305 "lib/buffer.c"
+# 309 "lib/buffer.c"
 {
 
-# 306 "lib/buffer.c"
+# 310 "lib/buffer.c"
   for (
 
-# 306 "lib/buffer.c"
+# 310 "lib/buffer.c"
 
-# 306 "lib/buffer.c"
+# 310 "lib/buffer.c"
     uint64_t pos = start_position;
 
-# 306 "lib/buffer.c"
+# 310 "lib/buffer.c"
     true;
 
-# 306 "lib/buffer.c"
+# 310 "lib/buffer.c"
     (pos++))
 
-# 306 "lib/buffer.c"
+# 310 "lib/buffer.c"
   {
 
-# 307 "lib/buffer.c"
+# 311 "lib/buffer.c"
     uint8_t byte_str = ((/*CAST*/(uint8_t*) str)[(pos-start_position)]);
 
-# 308 "lib/buffer.c"
+# 312 "lib/buffer.c"
     if ((byte_str==0))
 
-# 308 "lib/buffer.c"
+# 312 "lib/buffer.c"
     {
 
-# 309 "lib/buffer.c"
+# 313 "lib/buffer.c"
       return true;
     }
 
-# 311 "lib/buffer.c"
-    if ((pos>=buffer_length(buffer)))
-
-# 311 "lib/buffer.c"
-    {
-
-# 312 "lib/buffer.c"
-      return false;
-    }
-
-# 314 "lib/buffer.c"
-    uint8_t byte_buf = buffer_get(buffer, pos);
-
 # 315 "lib/buffer.c"
-    if ((byte_str!=byte_buf))
+    if ((pos>=buffer_length(buffer)))
 
 # 315 "lib/buffer.c"
     {
@@ -6982,205 +7072,256 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char
 # 316 "lib/buffer.c"
       return false;
     }
-  }
+
+# 318 "lib/buffer.c"
+    uint8_t byte_buf = buffer_get(buffer, pos);
+
+# 319 "lib/buffer.c"
+    if ((byte_str!=byte_buf))
+
+# 319 "lib/buffer.c"
+    {
 
 # 320 "lib/buffer.c"
+      return false;
+    }
+  }
+
+# 324 "lib/buffer.c"
   return false;
 }
 
 
-# 330 "lib/buffer.c"
-buffer_t* buffer_from_string(char* string)
-# 330 "lib/buffer.c"
+# 332 "lib/buffer.c"
+int64_t buffer_index_of(buffer_t* buffer, char* str)
+# 332 "lib/buffer.c"
 {
 
-# 331 "lib/buffer.c"
-  buffer_t* result = make_buffer(strlen(string));
-
-# 332 "lib/buffer.c"
-  (result=buffer_append_string(result, string));
+# 333 "lib/buffer.c"
+  for (
 
 # 333 "lib/buffer.c"
+
+# 333 "lib/buffer.c"
+    uint64_t i = 0;
+
+# 333 "lib/buffer.c"
+    (i<(buffer->length));
+
+# 333 "lib/buffer.c"
+    (i++))
+
+# 333 "lib/buffer.c"
+  {
+
+# 334 "lib/buffer.c"
+    if (buffer_match_string_at(buffer, i, str))
+
+# 334 "lib/buffer.c"
+    {
+
+# 335 "lib/buffer.c"
+      return i;
+    }
+  }
+
+# 338 "lib/buffer.c"
+  return (-1);
+}
+
+
+# 348 "lib/buffer.c"
+buffer_t* buffer_from_string(char* string)
+# 348 "lib/buffer.c"
+{
+
+# 349 "lib/buffer.c"
+  buffer_t* result = make_buffer(strlen(string));
+
+# 350 "lib/buffer.c"
+  (result=buffer_append_string(result, string));
+
+# 351 "lib/buffer.c"
   return result;
 }
 
 
-# 343 "lib/buffer.c"
+# 361 "lib/buffer.c"
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width)
-# 344 "lib/buffer.c"
+# 362 "lib/buffer.c"
 {
 
-# 346 "lib/buffer.c"
+# 364 "lib/buffer.c"
   if ((start>end))
 
-# 346 "lib/buffer.c"
+# 364 "lib/buffer.c"
   {
 
-# 347 "lib/buffer.c"
+# 365 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
 
-# 349 "lib/buffer.c"
+# 367 "lib/buffer.c"
   uint64_t original_width = (end-start);
 
-# 350 "lib/buffer.c"
+# 368 "lib/buffer.c"
   if ((original_width>new_width))
 
-# 350 "lib/buffer.c"
+# 368 "lib/buffer.c"
   {
 
-# 353 "lib/buffer.c"
+# 371 "lib/buffer.c"
     uint64_t difference = (original_width-new_width);
 
-# 354 "lib/buffer.c"
+# 372 "lib/buffer.c"
     uint64_t tail_length = ((buffer->length)-end);
 
-# 355 "lib/buffer.c"
+# 373 "lib/buffer.c"
     memmove((&((buffer->elements)[(end-difference)])), (&((buffer->elements)[end])), tail_length);
 
-# 357 "lib/buffer.c"
+# 375 "lib/buffer.c"
     ((buffer->length)-=difference);
   }
   else
 
-# 358 "lib/buffer.c"
+# 376 "lib/buffer.c"
   if ((original_width<new_width))
 
-# 358 "lib/buffer.c"
+# 376 "lib/buffer.c"
   {
 
-# 361 "lib/buffer.c"
+# 379 "lib/buffer.c"
     uint64_t difference = (new_width-original_width);
 
-# 362 "lib/buffer.c"
+# 380 "lib/buffer.c"
     uint64_t tail_length = ((buffer->length)-end);
 
-# 363 "lib/buffer.c"
+# 381 "lib/buffer.c"
     (buffer=buffer_increase_capacity(buffer, ((buffer->length)+difference)));
 
-# 364 "lib/buffer.c"
+# 382 "lib/buffer.c"
     memmove((&((buffer->elements)[(end+difference)])), (&((buffer->elements)[end])), tail_length);
 
-# 366 "lib/buffer.c"
+# 384 "lib/buffer.c"
     ((buffer->length)+=difference);
   }
 
-# 368 "lib/buffer.c"
+# 386 "lib/buffer.c"
   return buffer;
 }
 
 
-# 377 "lib/buffer.c"
+# 395 "lib/buffer.c"
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text)
-# 378 "lib/buffer.c"
+# 396 "lib/buffer.c"
 {
 
-# 379 "lib/buffer.c"
+# 397 "lib/buffer.c"
   int len_original = strlen(original_text);
 
-# 380 "lib/buffer.c"
+# 398 "lib/buffer.c"
   int len_replacement = strlen(replacement_text);
 
-# 381 "lib/buffer.c"
+# 399 "lib/buffer.c"
   if ((len_original<(buffer->length)))
 
-# 381 "lib/buffer.c"
+# 399 "lib/buffer.c"
   {
 
-# 382 "lib/buffer.c"
+# 400 "lib/buffer.c"
     uint64_t pos = 0;
 
-# 383 "lib/buffer.c"
+# 401 "lib/buffer.c"
     while ((pos<=((buffer->length)-len_original)))
 
-# 383 "lib/buffer.c"
+# 401 "lib/buffer.c"
     {
 
-# 384 "lib/buffer.c"
+# 402 "lib/buffer.c"
       if (buffer_match_string_at(buffer, pos, original_text))
 
-# 384 "lib/buffer.c"
+# 402 "lib/buffer.c"
       {
 
-# 385 "lib/buffer.c"
+# 403 "lib/buffer.c"
         (buffer=buffer_adjust_region(buffer, pos, (pos+len_original), len_replacement));
 
-# 387 "lib/buffer.c"
+# 405 "lib/buffer.c"
         memmove((&((buffer->elements)[pos])), replacement_text, len_replacement);
 
-# 388 "lib/buffer.c"
+# 406 "lib/buffer.c"
         (pos+=len_replacement);
       }
       else
 
-# 389 "lib/buffer.c"
+# 407 "lib/buffer.c"
       {
 
-# 390 "lib/buffer.c"
+# 408 "lib/buffer.c"
         (pos++);
       }
     }
   }
 
-# 394 "lib/buffer.c"
+# 412 "lib/buffer.c"
   return buffer;
 }
 
 
-# 397 "lib/buffer.c"
+# 415 "lib/buffer.c"
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position)
-# 398 "lib/buffer.c"
+# 416 "lib/buffer.c"
 {
 
-# 399 "lib/buffer.c"
+# 417 "lib/buffer.c"
   uint64_t line = 1;
 
-# 400 "lib/buffer.c"
+# 418 "lib/buffer.c"
   uint64_t column = 1;
 
-# 404 "lib/buffer.c"
+# 422 "lib/buffer.c"
   for (
 
-# 404 "lib/buffer.c"
+# 422 "lib/buffer.c"
 
-# 404 "lib/buffer.c"
+# 422 "lib/buffer.c"
     uint64_t pos = 0;
 
-# 404 "lib/buffer.c"
+# 422 "lib/buffer.c"
     (pos<position);
 
-# 404 "lib/buffer.c"
+# 422 "lib/buffer.c"
     (pos++))
 
-# 404 "lib/buffer.c"
+# 422 "lib/buffer.c"
   {
 
-# 405 "lib/buffer.c"
+# 423 "lib/buffer.c"
     uint8_t ch = buffer_get(buffer, pos);
 
-# 406 "lib/buffer.c"
+# 424 "lib/buffer.c"
     if ((ch=='\n'))
 
-# 406 "lib/buffer.c"
+# 424 "lib/buffer.c"
     {
 
-# 407 "lib/buffer.c"
+# 425 "lib/buffer.c"
       (line++);
 
-# 408 "lib/buffer.c"
+# 426 "lib/buffer.c"
       (column=1);
     }
     else
 
-# 409 "lib/buffer.c"
+# 427 "lib/buffer.c"
     {
 
-# 410 "lib/buffer.c"
+# 428 "lib/buffer.c"
       (column++);
     }
   }
 
-# 413 "lib/buffer.c"
+# 431 "lib/buffer.c"
   return ((line_and_column_t) {
                                                  .line = line,
                                                  .column = column,
@@ -7188,46 +7329,8 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t 
 }
 
 
-# 424 "lib/buffer.c"
-boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text)
-# 425 "lib/buffer.c"
-{
-
-# 426 "lib/buffer.c"
-  for (
-
-# 426 "lib/buffer.c"
-
-# 426 "lib/buffer.c"
-    int i = start;
-
-# 426 "lib/buffer.c"
-    (i<end);
-
-# 426 "lib/buffer.c"
-    (i++))
-
-# 426 "lib/buffer.c"
-  {
-
-# 427 "lib/buffer.c"
-    if (buffer_match_string_at(buffer, i, text))
-
-# 427 "lib/buffer.c"
-    {
-
-# 428 "lib/buffer.c"
-      return true;
-    }
-  }
-
-# 431 "lib/buffer.c"
-  return false;
-}
-
-
 # 442 "lib/buffer.c"
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement)
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text)
 # 443 "lib/buffer.c"
 {
 
@@ -7237,10 +7340,10 @@ buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8
 # 444 "lib/buffer.c"
 
 # 444 "lib/buffer.c"
-    int i = 0;
+    int i = start;
 
 # 444 "lib/buffer.c"
-    (i<(buffer->length));
+    (i<end);
 
 # 444 "lib/buffer.c"
     (i++))
@@ -7249,212 +7352,250 @@ buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8
   {
 
 # 445 "lib/buffer.c"
-    if ((((buffer->elements)[i])==original))
+    if (buffer_match_string_at(buffer, i, text))
 
 # 445 "lib/buffer.c"
     {
 
 # 446 "lib/buffer.c"
-      (((buffer->elements)[i])=replacement);
+      return true;
     }
   }
 
 # 449 "lib/buffer.c"
-  return buffer;
+  return false;
 }
 
 
-# 459 "lib/buffer.c"
-uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
-# 459 "lib/buffer.c"
+# 460 "lib/buffer.c"
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement)
+# 461 "lib/buffer.c"
 {
 
-# 460 "lib/buffer.c"
-  uint64_t position = start;
-
-# 461 "lib/buffer.c"
-  while ((position>0))
-
-# 461 "lib/buffer.c"
-  {
+# 462 "lib/buffer.c"
+  for (
 
 # 462 "lib/buffer.c"
-    (position--);
+
+# 462 "lib/buffer.c"
+    int i = 0;
+
+# 462 "lib/buffer.c"
+    (i<(buffer->length));
+
+# 462 "lib/buffer.c"
+    (i++))
+
+# 462 "lib/buffer.c"
+  {
 
 # 463 "lib/buffer.c"
-    if ((buffer_get(buffer, position)=='\n'))
+    if ((((buffer->elements)[i])==original))
 
 # 463 "lib/buffer.c"
     {
 
 # 464 "lib/buffer.c"
-      return (position+1);
+      (((buffer->elements)[i])=replacement);
     }
   }
 
 # 467 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 477 "lib/buffer.c"
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
+# 477 "lib/buffer.c"
+{
+
+# 478 "lib/buffer.c"
+  uint64_t position = start;
+
+# 479 "lib/buffer.c"
+  while ((position>0))
+
+# 479 "lib/buffer.c"
+  {
+
+# 480 "lib/buffer.c"
+    (position--);
+
+# 481 "lib/buffer.c"
+    if ((buffer_get(buffer, position)=='\n'))
+
+# 481 "lib/buffer.c"
+    {
+
+# 482 "lib/buffer.c"
+      return (position+1);
+    }
+  }
+
+# 485 "lib/buffer.c"
   return position;
 }
 
 
-# 478 "lib/buffer.c"
+# 496 "lib/buffer.c"
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start)
-# 478 "lib/buffer.c"
+# 496 "lib/buffer.c"
 {
 
-# 479 "lib/buffer.c"
+# 497 "lib/buffer.c"
   uint64_t position = start;
 
-# 480 "lib/buffer.c"
+# 498 "lib/buffer.c"
   while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
 
-# 480 "lib/buffer.c"
+# 498 "lib/buffer.c"
   {
 
-# 481 "lib/buffer.c"
+# 499 "lib/buffer.c"
     (position++);
   }
 
-# 483 "lib/buffer.c"
+# 501 "lib/buffer.c"
   return position;
 }
 
 
-# 493 "lib/buffer.c"
+# 511 "lib/buffer.c"
 extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer)
-# 493 "lib/buffer.c"
+# 511 "lib/buffer.c"
 {
 
-# 494 "lib/buffer.c"
+# 512 "lib/buffer.c"
   return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
 }
 
 
-# 505 "lib/buffer.c"
+# 523 "lib/buffer.c"
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer)
-# 508 "lib/buffer.c"
+# 526 "lib/buffer.c"
 {
 
-# 509 "lib/buffer.c"
+# 527 "lib/buffer.c"
   if ((buffer==src_buffer))
 
-# 509 "lib/buffer.c"
+# 527 "lib/buffer.c"
   {
 
-# 510 "lib/buffer.c"
+# 528 "lib/buffer.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 512 "lib/buffer.c"
+# 530 "lib/buffer.c"
   for (
 
-# 512 "lib/buffer.c"
+# 530 "lib/buffer.c"
 
-# 512 "lib/buffer.c"
+# 530 "lib/buffer.c"
     uint64_t position = start_position;
 
-# 512 "lib/buffer.c"
+# 530 "lib/buffer.c"
     (position<end_position);
 
-# 512 "lib/buffer.c"
+# 530 "lib/buffer.c"
     (position++))
 
-# 513 "lib/buffer.c"
+# 531 "lib/buffer.c"
   {
 
-# 514 "lib/buffer.c"
+# 532 "lib/buffer.c"
     (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
   }
 
-# 516 "lib/buffer.c"
+# 534 "lib/buffer.c"
   return buffer;
 }
 
 
-# 528 "lib/buffer.c"
+# 546 "lib/buffer.c"
 buffer_t* buffer_to_uppercase(buffer_t* buffer)
-# 528 "lib/buffer.c"
+# 546 "lib/buffer.c"
 {
 
-# 529 "lib/buffer.c"
+# 547 "lib/buffer.c"
   for (
 
-# 529 "lib/buffer.c"
+# 547 "lib/buffer.c"
 
-# 529 "lib/buffer.c"
+# 547 "lib/buffer.c"
     uint64_t i = 0;
 
-# 529 "lib/buffer.c"
+# 547 "lib/buffer.c"
     (i<(buffer->length));
 
-# 529 "lib/buffer.c"
+# 547 "lib/buffer.c"
     (i++))
 
-# 529 "lib/buffer.c"
+# 547 "lib/buffer.c"
   {
 
-# 530 "lib/buffer.c"
+# 548 "lib/buffer.c"
     (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
   }
 
-# 532 "lib/buffer.c"
+# 550 "lib/buffer.c"
   return buffer;
 }
 
 
-# 544 "lib/buffer.c"
+# 562 "lib/buffer.c"
 buffer_t* buffer_to_lowercase(buffer_t* buffer)
-# 544 "lib/buffer.c"
+# 562 "lib/buffer.c"
 {
 
-# 545 "lib/buffer.c"
+# 563 "lib/buffer.c"
   for (
 
-# 545 "lib/buffer.c"
+# 563 "lib/buffer.c"
 
-# 545 "lib/buffer.c"
+# 563 "lib/buffer.c"
     uint64_t i = 0;
 
-# 545 "lib/buffer.c"
+# 563 "lib/buffer.c"
     (i<(buffer->length));
 
-# 545 "lib/buffer.c"
+# 563 "lib/buffer.c"
     (i++))
 
-# 545 "lib/buffer.c"
+# 563 "lib/buffer.c"
   {
 
-# 546 "lib/buffer.c"
+# 564 "lib/buffer.c"
     (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
   }
 
-# 548 "lib/buffer.c"
+# 566 "lib/buffer.c"
   return buffer;
 }
 
 
-# 551 "lib/buffer.c"
+# 569 "lib/buffer.c"
 boolean_t buffer_ends_with(buffer_t* buffer, char* str)
-# 551 "lib/buffer.c"
+# 569 "lib/buffer.c"
 {
 
-# 553 "lib/buffer.c"
+# 571 "lib/buffer.c"
   char* cstring = buffer_to_c_string(buffer);
 
-# 554 "lib/buffer.c"
+# 572 "lib/buffer.c"
   return string_ends_with(cstring, str);
 }
 
 
-# 557 "lib/buffer.c"
+# 575 "lib/buffer.c"
 boolean_t buffer_equal(buffer_t* buffer, char* str)
-# 557 "lib/buffer.c"
+# 575 "lib/buffer.c"
 {
 
-# 559 "lib/buffer.c"
+# 577 "lib/buffer.c"
   char* cstring = buffer_to_c_string(buffer);
 
-# 560 "lib/buffer.c"
+# 578 "lib/buffer.c"
   return string_equal(cstring, str);
 }
 
@@ -10124,6 +10265,35 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes)
 }
 
 
+# 333 "lib/io.c"
+int64_t get_file_modification_time(const char* filename)
+# 333 "lib/io.c"
+{
+
+# 334 "lib/io.c"
+  struct stat result = ((struct stat) {0});
+
+# 336 "lib/io.c"
+  if ((stat(filename, (&result))!=0))
+
+# 336 "lib/io.c"
+  {
+
+# 338 "lib/io.c"
+    return (-1);
+  }
+
+# 341 "lib/io.c"
+  int64_t total_microseconds = 0;
+
+# 349 "lib/io.c"
+  (total_microseconds=(((/*CAST*/(int64_t) ((result.st_mtim).tv_sec))*1000000LL)+(((result.st_mtim).tv_nsec)/1000)));
+
+# 353 "lib/io.c"
+  return total_microseconds;
+}
+
+
 # 174 "lib/terminal.c"
 void term_set_foreground_color(buffer_t* buffer, uint32_t color)
 # 174 "lib/terminal.c"
@@ -11883,9 +12053,6 @@ char* string_unquote_c_string(char* input)
 # 45 "lib/quote-util.c"
     uint8_t c = (/*CAST*/(uint8_t) (input[(i++)]));
 
-# 46 "lib/quote-util.c"
-    log_fatal("c = %d\n", c);
-
 # 47 "lib/quote-util.c"
     if ((c=='\\'))
 
@@ -11894,9 +12061,6 @@ char* string_unquote_c_string(char* input)
 
 # 48 "lib/quote-util.c"
       uint8_t c2 = (/*CAST*/(uint8_t) (input[(i++)]));
-
-# 49 "lib/quote-util.c"
-      log_fatal("c2 = %d\n", c2);
 
 # 50 "lib/quote-util.c"
       switch (c2)
@@ -25964,98 +26128,115 @@ int main(int argc, char** argv)
   else
 
 # 64 "main.c"
+  if (string_equal("repl", FLAG_command))
+
+# 64 "main.c"
   {
 
 # 65 "main.c"
+    roci_env_t* env = roci_new_env(((void *)0));
+
+# 66 "main.c"
+    roci_add_primitives_to_env(env);
+
+# 67 "main.c"
+    roci_repl(env);
+  }
+  else
+
+# 68 "main.c"
+  {
+
+# 69 "main.c"
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }
 
-# 68 "main.c"
+# 72 "main.c"
   exit(0);
 }
 
 
-# 79 "main.c"
+# 83 "main.c"
 buffer_t* command_line_args_to_buffer(int argc, char** argv)
-# 79 "main.c"
+# 83 "main.c"
 {
 
-# 80 "main.c"
+# 84 "main.c"
   buffer_t* output = make_buffer((argc*5));
 
-# 82 "main.c"
+# 86 "main.c"
   buffer_printf(output, "// Full Compiler Command Line:\n//\n");
 
-# 83 "main.c"
+# 87 "main.c"
   for (
 
-# 83 "main.c"
+# 87 "main.c"
 
-# 83 "main.c"
+# 87 "main.c"
     int i = 0;
 
-# 83 "main.c"
+# 87 "main.c"
     (i<argc);
 
-# 83 "main.c"
+# 87 "main.c"
     (i++))
 
-# 83 "main.c"
+# 87 "main.c"
   {
 
-# 84 "main.c"
+# 88 "main.c"
     buffer_printf(output, "//%s%s\n", ((i>0) ? "    " : " "), (argv[i]));
   }
 
-# 87 "main.c"
+# 91 "main.c"
   buffer_append_string(output, "\n");
 
-# 88 "main.c"
+# 92 "main.c"
   buffer_append_string(output, "// These checksums are currently easy to fake for example by using a\n");
 
-# 91 "main.c"
+# 95 "main.c"
   buffer_append_string(output, "// hacked git in the PATH at the time this compile was run.\n");
 
-# 93 "main.c"
+# 97 "main.c"
   buffer_append_string(output, "//\n");
 
-# 95 "main.c"
+# 99 "main.c"
   for (
 
-# 95 "main.c"
-
-# 95 "main.c"
-    int i = 0;
-
-# 95 "main.c"
-    (i<(FLAG_files->length));
-
-# 95 "main.c"
-    (i++))
-
-# 95 "main.c"
-  {
-
-# 96 "main.c"
-    char* filename = (value_array_get(FLAG_files, i).str);
-
-# 98 "main.c"
-    buffer_t* git_hash = git_hash_object(filename);
+# 99 "main.c"
 
 # 99 "main.c"
-    buffer_replace_all(git_hash, "\n", "");
+    int i = 0;
+
+# 99 "main.c"
+    (i<(FLAG_files->length));
+
+# 99 "main.c"
+    (i++))
+
+# 99 "main.c"
+  {
 
 # 100 "main.c"
-    buffer_append_string(output, "// git cat-file -p ");
-
-# 101 "main.c"
-    buffer_append_buffer(output, git_hash);
+    char* filename = (value_array_get(FLAG_files, i).str);
 
 # 102 "main.c"
+    buffer_t* git_hash = git_hash_object(filename);
+
+# 103 "main.c"
+    buffer_replace_all(git_hash, "\n", "");
+
+# 104 "main.c"
+    buffer_append_string(output, "// git cat-file -p ");
+
+# 105 "main.c"
+    buffer_append_buffer(output, git_hash);
+
+# 106 "main.c"
     buffer_printf(output, " > %s\n", filename);
   }
 
-# 105 "main.c"
+# 109 "main.c"
   return output;
 }
 
@@ -27690,237 +27871,252 @@ void test_assembler_command()
 }
 
 
-# 31 "flags.c"
+# 33 "flags.c"
 void configure_flags(void)
-# 31 "flags.c"
+# 33 "flags.c"
 {
 
-# 32 "flags.c"
+# 34 "flags.c"
   flag_program_name("omni-c");
 
-# 33 "flags.c"
+# 35 "flags.c"
   flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
 
-# 38 "flags.c"
+# 40 "flags.c"
   flag_boolean("--print-command-line", (&FLAG_print_command_line));
 
-# 39 "flags.c"
+# 41 "flags.c"
   flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
 
-# 41 "flags.c"
+# 43 "flags.c"
   configure_regular_commands();
 
-# 43 "flags.c"
+# 45 "flags.c"
   configure_print_tokens_command();
 
-# 44 "flags.c"
+# 46 "flags.c"
   configure_parse_expression();
 
-# 45 "flags.c"
+# 47 "flags.c"
   configure_parse_statement();
 
-# 46 "flags.c"
+# 48 "flags.c"
   configure_test_assembler_command();
 }
 
 
-# 49 "flags.c"
+# 51 "flags.c"
 void configure_parse_expression(void)
-# 49 "flags.c"
+# 51 "flags.c"
 {
 
-# 50 "flags.c"
+# 52 "flags.c"
   flag_command("parse-expression", (&FLAG_command));
 
-# 51 "flags.c"
+# 53 "flags.c"
   flag_description("** UNIT TESTING **");
 
-# 52 "flags.c"
+# 54 "flags.c"
   flag_string("--expression", (&FLAG_expression));
 
-# 53 "flags.c"
+# 55 "flags.c"
   flag_boolean("--to-c", (&FLAG_to_c));
 }
 
 
-# 56 "flags.c"
+# 58 "flags.c"
 void configure_parse_statement(void)
-# 56 "flags.c"
+# 58 "flags.c"
 {
 
-# 57 "flags.c"
+# 59 "flags.c"
   flag_command("parse-statement", (&FLAG_command));
 
-# 58 "flags.c"
+# 60 "flags.c"
   flag_description("** UNIT TESTING **");
 
-# 59 "flags.c"
+# 61 "flags.c"
   flag_string("--statement", (&FLAG_statement));
 }
 
 
-# 62 "flags.c"
-void configure_test_assembler_command(void)
-# 62 "flags.c"
-{
-
-# 63 "flags.c"
-  flag_command("test-assembler", (&FLAG_command));
-
 # 64 "flags.c"
-  flag_description("Tests the assembler");
+void configure_test_assembler_command(void)
+# 64 "flags.c"
+{
 
 # 65 "flags.c"
+  flag_command("test-assembler", (&FLAG_command));
+
+# 66 "flags.c"
+  flag_description("Tests the assembler");
+
+# 67 "flags.c"
   flag_file_args((&FLAG_files));
 }
 
-
-# 69 "flags.c"
-void configure_print_tokens_command(void)
-# 69 "flags.c"
-{
-
-# 70 "flags.c"
-  flag_command("print-tokens", (&FLAG_command));
 
 # 71 "flags.c"
-  flag_description("** UNIT TESTING **");
+void configure_print_tokens_command(void)
+# 71 "flags.c"
+{
 
 # 72 "flags.c"
-  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
+  flag_command("print-tokens", (&FLAG_command));
 
 # 73 "flags.c"
-  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
+  flag_description("** UNIT TESTING **");
 
 # 74 "flags.c"
-  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
+  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
 
 # 75 "flags.c"
-  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
+  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
 
 # 76 "flags.c"
-  flag_boolean("--show-appended-tokens", (&FLAG_print_tokens_show_appended_tokens));
+  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
+
+# 77 "flags.c"
+  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
 
 # 78 "flags.c"
+  flag_boolean("--show-appended-tokens", (&FLAG_print_tokens_show_appended_tokens));
+
+# 80 "flags.c"
   flag_file_args((&FLAG_files));
 }
 
 
-# 81 "flags.c"
+# 83 "flags.c"
 void configure_regular_commands(void)
-# 81 "flags.c"
+# 83 "flags.c"
 {
 
-# 82 "flags.c"
+# 84 "flags.c"
   flag_command("generate-header-file", (&FLAG_command));
 
-# 83 "flags.c"
+# 85 "flags.c"
   flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
 
-# 86 "flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 87 "flags.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
-
 # 88 "flags.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+  flag_string("--c-output-file", (&FLAG_c_output_file));
 
 # 89 "flags.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
 
 # 90 "flags.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 91 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
 
 # 92 "flags.c"
-  flag_file_args((&FLAG_files));
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
 
 # 94 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 96 "flags.c"
   flag_command("generate-library", (&FLAG_command));
 
-# 95 "flags.c"
+# 97 "flags.c"
   flag_description("create a single C file 'library' of C99 code; most users will prefer " "'build'");
 
-# 98 "flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 99 "flags.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
-
 # 100 "flags.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+  flag_string("--c-output-file", (&FLAG_c_output_file));
 
 # 101 "flags.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 102 "flags.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
-
-# 103 "flags.c"
-  flag_file_args((&FLAG_files));
-
-# 105 "flags.c"
-  flag_command("build", (&FLAG_command));
-
-# 106 "flags.c"
-  flag_description("build an executable by generating the C code and invoking the C " "compiler");
-
-# 109 "flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 110 "flags.c"
-  flag_string("--binary-output-file", (&FLAG_binary_output_file));
-
-# 111 "flags.c"
   flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
 
-# 112 "flags.c"
+# 102 "flags.c"
   flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
 
-# 113 "flags.c"
+# 103 "flags.c"
   flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
 
-# 114 "flags.c"
+# 104 "flags.c"
   flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
 
+# 105 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 107 "flags.c"
+  flag_command("build", (&FLAG_command));
+
+# 108 "flags.c"
+  flag_description("build an executable by generating the C code and invoking the C " "compiler");
+
+# 111 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 112 "flags.c"
+  flag_string("--binary-output-file", (&FLAG_binary_output_file));
+
+# 113 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 114 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
 # 115 "flags.c"
-  flag_string("--c-compiler", (&FLAG_c_compiler));
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
 
 # 116 "flags.c"
-  flag_file_args((&FLAG_files));
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 117 "flags.c"
+  flag_string("--c-compiler", (&FLAG_c_compiler));
 
 # 118 "flags.c"
-  flag_command("archive", (&FLAG_command));
-
-# 119 "flags.c"
-  flag_description("create an archive of unprocessed source files");
+  flag_file_args((&FLAG_files));
 
 # 120 "flags.c"
-  flag_string("--archive-output-file", (&FLAG_archive_output_file));
+  flag_command("archive", (&FLAG_command));
 
 # 121 "flags.c"
-  flag_description("the target path of the output archive");
+  flag_description("create an archive of unprocessed source files");
 
 # 122 "flags.c"
-  flag_file_args((&FLAG_files));
+  flag_string("--archive-output-file", (&FLAG_archive_output_file));
+
+# 123 "flags.c"
+  flag_description("the target path of the output archive");
 
 # 124 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 126 "flags.c"
   flag_command("test", (&FLAG_command));
 
-# 125 "flags.c"
+# 127 "flags.c"
   flag_description("compile and run all unit tests in the input files");
 
-# 128 "flags.c"
-  flag_file_args((&FLAG_files));
-
 # 130 "flags.c"
-  flag_command("roci", (&FLAG_command));
-
-# 131 "flags.c"
-  flag_description("run the roci interpreter on the files in order");
+  flag_file_args((&FLAG_files));
 
 # 132 "flags.c"
+  flag_command("roci", (&FLAG_command));
+
+# 133 "flags.c"
+  flag_description("run the roci interpreter on the files in order");
+
+# 134 "flags.c"
+  flag_boolean("--debug", (&FLAG_roci_debug));
+
+# 135 "flags.c"
+  flag_boolean("--print-bbs", (&FLAG_roci_print_bbs));
+
+# 136 "flags.c"
   flag_file_args((&FLAG_files));
+
+# 138 "flags.c"
+  flag_command("repl", (&FLAG_command));
+
+# 139 "flags.c"
+  flag_description("enter the roci repl");
+
+# 140 "flags.c"
+  flag_boolean("--debug", (&FLAG_roci_debug));
 }
 
 
@@ -28501,7 +28697,7 @@ value_array_t* build_bblocks(roci_bb_builder_array_t* bblocks)
     log_info("roci -- builder %d, %d\n", ((builder->data)->length), ((builder->opcodes)->length));
 
 # 56 "roci/roci-bb-builder.c"
-    roci_bb_t* bblock = malloc((((1+((builder->data)->length))*8)+((builder->opcodes)->length)));
+    roci_bb_t* bblock = (/*CAST*/(roci_bb_t*) malloc_bytes((((1+((builder->data)->length))*8)+((builder->opcodes)->length))));
 
 # 58 "roci/roci-bb-builder.c"
     ((bblock->num_data)=((builder->data)->length));
@@ -28640,118 +28836,82 @@ void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks, roci_bb_builder_t* 
       case ROCI_OPCODE_MAKE_CLOSURE:
 
 # 103 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_0:
-
-# 104 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_1:
+      char* br_label = value_array_get_ptr((builder->data), (dindex++), typeof(char*));
 
 # 105 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_2:
+      ((*(data_ptr++))=bb_label_to_address(bblocks, br_label));
 
 # 106 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_3:
-
-# 107 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_4:
-
-# 108 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_5:
-
-# 109 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_6:
-
-# 110 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_7:
-
-# 111 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_8:
-
-# 112 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_9:
-
-# 113 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_10:
-
-# 114 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_11:
-
-# 115 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_12:
-
-# 116 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_13:
-
-# 117 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_14:
-
-# 118 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_15:
-
-# 119 "roci/roci-bb-builder.c"
-      case ROCI_OPCODE_CALL_16:
-
-# 120 "roci/roci-bb-builder.c"
-      char* label = value_array_get_ptr((builder->data), (dindex++), typeof(char*));
-
-# 121 "roci/roci-bb-builder.c"
-      ((*(data_ptr++))=bb_label_to_address(bblocks, label));
-
-# 122 "roci/roci-bb-builder.c"
       break;
 
-# 124 "roci/roci-bb-builder.c"
+# 108 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL:
+
+# 109 "roci/roci-bb-builder.c"
+      ((*(data_ptr++))=(value_array_get((builder->data), (dindex++)).u64));
+
+# 110 "roci/roci-bb-builder.c"
+      char* call_label = value_array_get_ptr((builder->data), (dindex++), typeof(char*));
+
+# 112 "roci/roci-bb-builder.c"
+      ((*(data_ptr++))=bb_label_to_address(bblocks, call_label));
+
+# 113 "roci/roci-bb-builder.c"
+      break;
+
+# 115 "roci/roci-bb-builder.c"
       default:
 
-# 125 "roci/roci-bb-builder.c"
+# 116 "roci/roci-bb-builder.c"
       break;
     }
   }
 }
 
 
-# 130 "roci/roci-bb-builder.c"
+# 121 "roci/roci-bb-builder.c"
 uint64_t bb_label_to_address(roci_bb_builder_array_t* bblocks, char* label)
-# 130 "roci/roci-bb-builder.c"
+# 121 "roci/roci-bb-builder.c"
 {
 
-# 131 "roci/roci-bb-builder.c"
+# 122 "roci/roci-bb-builder.c"
   for (
 
-# 131 "roci/roci-bb-builder.c"
+# 122 "roci/roci-bb-builder.c"
 
-# 131 "roci/roci-bb-builder.c"
+# 122 "roci/roci-bb-builder.c"
     int i = 0;
 
-# 131 "roci/roci-bb-builder.c"
+# 122 "roci/roci-bb-builder.c"
     (i<(bblocks->length));
 
-# 131 "roci/roci-bb-builder.c"
+# 122 "roci/roci-bb-builder.c"
     (i++))
 
-# 131 "roci/roci-bb-builder.c"
+# 122 "roci/roci-bb-builder.c"
   {
 
-# 132 "roci/roci-bb-builder.c"
+# 123 "roci/roci-bb-builder.c"
     roci_bb_builder_t* builder = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
 
-# 134 "roci/roci-bb-builder.c"
+# 125 "roci/roci-bb-builder.c"
     if (string_equal((builder->bblock_label), label))
 
-# 134 "roci/roci-bb-builder.c"
+# 125 "roci/roci-bb-builder.c"
     {
 
-# 135 "roci/roci-bb-builder.c"
+# 126 "roci/roci-bb-builder.c"
       return (/*CAST*/(uint64_t) (builder->bblock));
     }
   }
 
-# 138 "roci/roci-bb-builder.c"
+# 129 "roci/roci-bb-builder.c"
   log_fatal("bblock with label %s not found", label);
 
-# 139 "roci/roci-bb-builder.c"
+# 130 "roci/roci-bb-builder.c"
   fatal_error(ERROR_ILLEGAL_STATE);
 
-# 140 "roci/roci-bb-builder.c"
+# 131 "roci/roci-bb-builder.c"
   return 0;
 }
 
@@ -28762,7 +28922,7 @@ void roci_command(void)
 {
 
 # 7 "roci/roci-command.c"
-  log_warn("roci_command()");
+  log_info("roci_command()");
 
 # 9 "roci/roci-command.c"
   roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
@@ -28794,78 +28954,73 @@ void roci_command(void)
     file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
 
 # 15 "roci/roci-command.c"
-    fprintf(stdout, "====================================================\n");
-
-# 16 "roci/roci-command.c"
-    fprintf(stdout, "====> roci compiling %s\n", (file->file_name));
-
-# 17 "roci/roci-command.c"
-    fprintf(stdout, "====================================================\n");
-
-# 18 "roci/roci-command.c"
     roci_compile_buffer(state, (file->file_name), (file->data));
 
-# 20 "roci/roci-command.c"
-    log_warn("roci_command() --- 1");
-
-# 21 "roci/roci-command.c"
-    buffer_t* buffer = make_buffer(1);
-
-# 22 "roci/roci-command.c"
+# 16 "roci/roci-command.c"
     value_array_t* bblocks = build_bblocks((state->bblocks));
 
-# 23 "roci/roci-command.c"
-    disassemble_bblocks(bblocks, buffer);
+# 18 "roci/roci-command.c"
+    if (FLAG_roci_print_bbs)
 
-# 24 "roci/roci-command.c"
-    fprintf(stderr, buffer_to_c_string(buffer));
-
-# 25 "roci/roci-command.c"
-    if (true)
-
-# 25 "roci/roci-command.c"
+# 18 "roci/roci-command.c"
     {
 
-# 26 "roci/roci-command.c"
+# 19 "roci/roci-command.c"
+      buffer_t* buffer = make_buffer(1);
+
+# 20 "roci/roci-command.c"
+      disassemble_bblocks(bblocks, buffer);
+
+# 21 "roci/roci-command.c"
+      fprintf(stderr, buffer_to_c_string(buffer));
+    }
+
+# 24 "roci/roci-command.c"
+    if (true)
+
+# 24 "roci/roci-command.c"
+    {
+
+# 25 "roci/roci-command.c"
       roci_env_t* env = roci_new_env(((void *)0));
 
-# 27 "roci/roci-command.c"
+# 26 "roci/roci-command.c"
       roci_add_primitives_to_env(env);
 
-# 28 "roci/roci-command.c"
+# 27 "roci/roci-command.c"
       roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
 
-# 30 "roci/roci-command.c"
+# 29 "roci/roci-command.c"
       roci_execute(env, entry_point);
 
-# 31 "roci/roci-command.c"
-      if (true)
+# 30 "roci/roci-command.c"
+      if (false)
 
-# 31 "roci/roci-command.c"
+# 30 "roci/roci-command.c"
       {
 
-# 32 "roci/roci-command.c"
+# 31 "roci/roci-command.c"
         buffer_t* buffer = make_buffer(10);
 
-# 33 "roci/roci-command.c"
+# 32 "roci/roci-command.c"
         buffer_printf(buffer, "\n");
 
-# 34 "roci/roci-command.c"
+# 33 "roci/roci-command.c"
         roci_dump_env(env, buffer);
 
-# 35 "roci/roci-command.c"
+# 34 "roci/roci-command.c"
         fprintf(stdout, "%s", buffer_to_c_string(buffer));
       }
     }
 
-# 38 "roci/roci-command.c"
+# 37 "roci/roci-command.c"
     ((state->bblocks)=make_value_array(16));
   }
 
-# 41 "roci/roci-command.c"
+# 40 "roci/roci-command.c"
   log_info("Exiting normally.");
 
-# 42 "roci/roci-command.c"
+# 41 "roci/roci-command.c"
   exit(0);
 }
 
@@ -28926,7 +29081,7 @@ void roci_compile_tokens(roci_compiler_state_t* state)
 {
 
 # 108 "roci/roci-compiler.c"
-  log_warn("roci_compile_tokens begin");
+  log_info("roci_compile_tokens begin");
 
 # 109 "roci/roci-compiler.c"
   while (((state->position)<((state->tokens)->length)))
@@ -28952,7 +29107,7 @@ void roci_compile_tokens(roci_compiler_state_t* state)
   }
 
 # 117 "roci/roci-compiler.c"
-  log_warn("roci_compile_tokens end");
+  log_info("roci_compile_tokens end");
 
 # 118 "roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_TRAP);
@@ -28968,7 +29123,7 @@ void roci_compile_statement(roci_compiler_state_t* state)
   token_t* token = roci_peek_token(state);
 
 # 128 "roci/roci-compiler.c"
-  log_warn("CURRENT TOKEN IS %s", token_to_string(token));
+  log_info("CURRENT TOKEN IS %s", token_to_string(token));
 
 # 129 "roci/roci-compiler.c"
   if (token_matches(token, "return"))
@@ -29151,7 +29306,7 @@ void roci_compile_assignment(roci_compiler_state_t* state)
   roci_emit_token_string_datum(state, token_to_string(varname));
 
 # 215 "roci/roci-compiler.c"
-  roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+  roci_emit_opcode(state, ROCI_OPCODE_SET_VAR);
 }
 
 
@@ -29601,398 +29756,401 @@ void roci_compile_function_call(roci_compiler_state_t* state)
   roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
 
 # 406 "roci/roci-compiler.c"
-  buffer_append_byte(((state->current_bb)->opcodes), (ROCI_OPCODE_CALL_0+num_args));
+  buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_CALL);
 
 # 407 "roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), i64_to_value(num_args));
+
+# 408 "roci/roci-compiler.c"
   value_array_add(((state->current_bb)->data), str_to_value((return_bb->bblock_label)));
 
-# 409 "roci/roci-compiler.c"
+# 410 "roci/roci-compiler.c"
   ((state->current_bb)=return_bb);
 }
 
 
-# 412 "roci/roci-compiler.c"
+# 413 "roci/roci-compiler.c"
 void roci_compile_closure(roci_compiler_state_t* state)
-# 412 "roci/roci-compiler.c"
+# 413 "roci/roci-compiler.c"
 {
 
-# 413 "roci/roci-compiler.c"
+# 414 "roci/roci-compiler.c"
   token_t* first_token = roci_peek_token(state);
 
-# 414 "roci/roci-compiler.c"
+# 415 "roci/roci-compiler.c"
   roci_expect_token(state, "fn");
 
-# 415 "roci/roci-compiler.c"
+# 416 "roci/roci-compiler.c"
   roci_expect_token(state, "(");
 
-# 417 "roci/roci-compiler.c"
+# 418 "roci/roci-compiler.c"
   token_t* args[32];
 
-# 418 "roci/roci-compiler.c"
+# 419 "roci/roci-compiler.c"
   int64_t arg_num = roci_collect_fn_args(state, args);
 
-# 420 "roci/roci-compiler.c"
+# 421 "roci/roci-compiler.c"
   roci_bb_builder_t* current_bb = (state->current_bb);
 
-# 421 "roci/roci-compiler.c"
+# 422 "roci/roci-compiler.c"
   int current_env_depth = (state->env_depth);
 
-# 423 "roci/roci-compiler.c"
+# 424 "roci/roci-compiler.c"
   roci_bb_builder_t* fn_entry_bb = roci_new_bblock(state, "fn_header");
 
-# 424 "roci/roci-compiler.c"
+# 425 "roci/roci-compiler.c"
   ((state->env_depth)=1);
 
-# 425 "roci/roci-compiler.c"
+# 426 "roci/roci-compiler.c"
   ((state->current_bb)=fn_entry_bb);
 
-# 427 "roci/roci-compiler.c"
+# 428 "roci/roci-compiler.c"
   roci_emit_debug_info(state, "", first_token);
 
-# 428 "roci/roci-compiler.c"
+# 429 "roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
 
-# 429 "roci/roci-compiler.c"
+# 430 "roci/roci-compiler.c"
   roci_emit_int_datum(state, arg_num);
 
-# 431 "roci/roci-compiler.c"
+# 432 "roci/roci-compiler.c"
   roci_emit_new_environment(state);
 
-# 432 "roci/roci-compiler.c"
+# 433 "roci/roci-compiler.c"
   while ((arg_num>0))
 
-# 432 "roci/roci-compiler.c"
+# 433 "roci/roci-compiler.c"
   {
 
-# 433 "roci/roci-compiler.c"
+# 434 "roci/roci-compiler.c"
     token_t* varname = (args[(--arg_num)]);
 
-# 434 "roci/roci-compiler.c"
+# 435 "roci/roci-compiler.c"
     roci_emit_token_string_datum(state, token_to_string(varname));
 
-# 435 "roci/roci-compiler.c"
+# 436 "roci/roci-compiler.c"
     roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
   }
 
-# 438 "roci/roci-compiler.c"
+# 439 "roci/roci-compiler.c"
   roci_bb_builder_t* body_bb = roci_compile_block(state);
 
-# 439 "roci/roci-compiler.c"
+# 440 "roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
 
-# 440 "roci/roci-compiler.c"
+# 441 "roci/roci-compiler.c"
   roci_emit_return(state);
 
-# 442 "roci/roci-compiler.c"
+# 443 "roci/roci-compiler.c"
   roci_emit_branch(fn_entry_bb, body_bb);
 
-# 444 "roci/roci-compiler.c"
+# 445 "roci/roci-compiler.c"
   ((state->env_depth)=current_env_depth);
 
-# 445 "roci/roci-compiler.c"
+# 446 "roci/roci-compiler.c"
   ((state->current_bb)=current_bb);
 
-# 446 "roci/roci-compiler.c"
+# 447 "roci/roci-compiler.c"
   roci_emit_token_string_datum(state, (fn_entry_bb->bblock_label));
 
-# 447 "roci/roci-compiler.c"
+# 448 "roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_MAKE_CLOSURE);
 }
 
 
-# 450 "roci/roci-compiler.c"
+# 451 "roci/roci-compiler.c"
 int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args)
-# 450 "roci/roci-compiler.c"
+# 451 "roci/roci-compiler.c"
 {
 
-# 451 "roci/roci-compiler.c"
+# 452 "roci/roci-compiler.c"
   int64_t arg_num = 0;
 
-# 452 "roci/roci-compiler.c"
+# 453 "roci/roci-compiler.c"
   while (true)
 
-# 452 "roci/roci-compiler.c"
+# 453 "roci/roci-compiler.c"
   {
 
-# 453 "roci/roci-compiler.c"
+# 454 "roci/roci-compiler.c"
     token_t* token = roci_peek_token(state);
 
-# 454 "roci/roci-compiler.c"
+# 455 "roci/roci-compiler.c"
     if (token_matches(token, ")"))
 
-# 454 "roci/roci-compiler.c"
+# 455 "roci/roci-compiler.c"
     {
 
-# 455 "roci/roci-compiler.c"
+# 456 "roci/roci-compiler.c"
       roci_skip_token(state);
 
-# 456 "roci/roci-compiler.c"
+# 457 "roci/roci-compiler.c"
       break;
     }
 
-# 458 "roci/roci-compiler.c"
+# 459 "roci/roci-compiler.c"
     roci_verify_identifier(token);
 
-# 459 "roci/roci-compiler.c"
+# 460 "roci/roci-compiler.c"
     roci_skip_token(state);
 
-# 461 "roci/roci-compiler.c"
+# 462 "roci/roci-compiler.c"
     ((args[(arg_num++)])=token);
 
-# 462 "roci/roci-compiler.c"
+# 463 "roci/roci-compiler.c"
     (token=roci_peek_token(state));
 
-# 463 "roci/roci-compiler.c"
+# 464 "roci/roci-compiler.c"
     if (token_matches(token, ","))
 
-# 463 "roci/roci-compiler.c"
+# 464 "roci/roci-compiler.c"
     {
 
-# 464 "roci/roci-compiler.c"
+# 465 "roci/roci-compiler.c"
       roci_skip_token(state);
     }
   }
 
-# 467 "roci/roci-compiler.c"
+# 468 "roci/roci-compiler.c"
   return arg_num;
 }
 
 
-# 473 "roci/roci-compiler.c"
+# 474 "roci/roci-compiler.c"
 void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode)
-# 473 "roci/roci-compiler.c"
+# 474 "roci/roci-compiler.c"
 {
 
-# 474 "roci/roci-compiler.c"
+# 475 "roci/roci-compiler.c"
   buffer_append_byte(((state->current_bb)->opcodes), opcode);
 }
 
 
-# 477 "roci/roci-compiler.c"
+# 478 "roci/roci-compiler.c"
 void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str)
-# 477 "roci/roci-compiler.c"
+# 478 "roci/roci-compiler.c"
 {
 
-# 478 "roci/roci-compiler.c"
+# 479 "roci/roci-compiler.c"
   value_array_add(((state->current_bb)->data), str_to_value(str));
 }
 
 
-# 481 "roci/roci-compiler.c"
+# 482 "roci/roci-compiler.c"
 void roci_emit_int_datum(roci_compiler_state_t* state, uint64_t val)
-# 481 "roci/roci-compiler.c"
+# 482 "roci/roci-compiler.c"
 {
 
-# 482 "roci/roci-compiler.c"
+# 483 "roci/roci-compiler.c"
   value_array_add(((state->current_bb)->data), u64_to_value(val));
 }
 
 
-# 485 "roci/roci-compiler.c"
+# 486 "roci/roci-compiler.c"
 void roci_emit_new_environment(roci_compiler_state_t* state)
-# 485 "roci/roci-compiler.c"
+# 486 "roci/roci-compiler.c"
 {
 
-# 486 "roci/roci-compiler.c"
+# 487 "roci/roci-compiler.c"
   ((state->env_depth)++);
 
-# 487 "roci/roci-compiler.c"
+# 488 "roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_NEW_ENVIRONMENT);
 }
 
 
-# 490 "roci/roci-compiler.c"
+# 491 "roci/roci-compiler.c"
 void roci_emit_drop_environment(roci_compiler_state_t* state)
-# 490 "roci/roci-compiler.c"
+# 491 "roci/roci-compiler.c"
 {
 
-# 491 "roci/roci-compiler.c"
+# 492 "roci/roci-compiler.c"
   ((state->env_depth)--);
 
-# 492 "roci/roci-compiler.c"
+# 493 "roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_DROP_ENVIRONMENT);
 }
 
 
-# 495 "roci/roci-compiler.c"
+# 496 "roci/roci-compiler.c"
 void roci_emit_return(roci_compiler_state_t* state)
-# 495 "roci/roci-compiler.c"
+# 496 "roci/roci-compiler.c"
 {
 
-# 496 "roci/roci-compiler.c"
+# 497 "roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_RETURN);
 }
 
 
-# 499 "roci/roci-compiler.c"
+# 500 "roci/roci-compiler.c"
 void roci_emit_get_var(roci_bb_builder_t* bb, char* fn_name)
-# 499 "roci/roci-compiler.c"
+# 500 "roci/roci-compiler.c"
 {
 
-# 500 "roci/roci-compiler.c"
+# 501 "roci/roci-compiler.c"
   buffer_append_byte((bb->opcodes), ROCI_OPCODE_GET_VAR);
 
-# 501 "roci/roci-compiler.c"
+# 502 "roci/roci-compiler.c"
   value_array_add((bb->data), ptr_to_value(fn_name));
 }
 
 
-# 504 "roci/roci-compiler.c"
+# 505 "roci/roci-compiler.c"
 void roci_emit_comment(roci_bb_builder_t* bb, char* str)
-# 504 "roci/roci-compiler.c"
+# 505 "roci/roci-compiler.c"
 {
 
-# 505 "roci/roci-compiler.c"
+# 506 "roci/roci-compiler.c"
   buffer_append_byte((bb->opcodes), ROCI_OPCODE_COMMENT);
 
-# 506 "roci/roci-compiler.c"
+# 507 "roci/roci-compiler.c"
   value_array_add((bb->data), ptr_to_value(str));
 }
 
 
-# 509 "roci/roci-compiler.c"
-void roci_emit_debug_info(roci_compiler_state_t* state, char* filename, token_t* token)
 # 510 "roci/roci-compiler.c"
+void roci_emit_debug_info(roci_compiler_state_t* state, char* filename, token_t* token)
+# 511 "roci/roci-compiler.c"
 {
 
-# 511 "roci/roci-compiler.c"
+# 512 "roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_DEBUG_INFO);
 
-# 512 "roci/roci-compiler.c"
+# 513 "roci/roci-compiler.c"
   roci_emit_int_datum(state, token_to_roci_src_info(0, token));
 }
 
 
-# 525 "roci/roci-compiler.c"
-roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state, char* label_prefix)
 # 526 "roci/roci-compiler.c"
+roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state, char* label_prefix)
+# 527 "roci/roci-compiler.c"
 {
 
-# 527 "roci/roci-compiler.c"
+# 528 "roci/roci-compiler.c"
   if ((label_prefix==((void *)0)))
 
-# 527 "roci/roci-compiler.c"
+# 528 "roci/roci-compiler.c"
   {
 
-# 528 "roci/roci-compiler.c"
+# 529 "roci/roci-compiler.c"
     (label_prefix="bb_");
   }
 
-# 530 "roci/roci-compiler.c"
+# 531 "roci/roci-compiler.c"
   roci_bb_builder_t* result = add_bblock((state->bblocks));
 
-# 531 "roci/roci-compiler.c"
+# 532 "roci/roci-compiler.c"
   ((result->bblock_label)=string_printf("%s%d", label_prefix, ((state->bb_label_count)++)));
 
-# 533 "roci/roci-compiler.c"
+# 534 "roci/roci-compiler.c"
   roci_emit_comment(result, (result->bblock_label));
 
-# 534 "roci/roci-compiler.c"
+# 535 "roci/roci-compiler.c"
   return result;
 }
 
 
-# 537 "roci/roci-compiler.c"
-void roci_emit_branch(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
 # 538 "roci/roci-compiler.c"
-{
-
+void roci_emit_branch(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
 # 539 "roci/roci-compiler.c"
-  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR);
+{
 
 # 540 "roci/roci-compiler.c"
+  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR);
+
+# 541 "roci/roci-compiler.c"
   value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
 }
 
 
-# 543 "roci/roci-compiler.c"
-void roci_emit_br_true(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
 # 544 "roci/roci-compiler.c"
-{
-
+void roci_emit_br_true(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
 # 545 "roci/roci-compiler.c"
-  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR_TRUE);
+{
 
 # 546 "roci/roci-compiler.c"
+  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR_TRUE);
+
+# 547 "roci/roci-compiler.c"
   value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
 }
 
 
-# 558 "roci/roci-compiler.c"
+# 559 "roci/roci-compiler.c"
 boolean_t roci_eof(roci_compiler_state_t* state)
-# 558 "roci/roci-compiler.c"
+# 559 "roci/roci-compiler.c"
 {
 
-# 559 "roci/roci-compiler.c"
+# 560 "roci/roci-compiler.c"
   return ((state->position)>=((state->tokens)->length));
 }
 
 
-# 562 "roci/roci-compiler.c"
+# 563 "roci/roci-compiler.c"
 void roci_skip_token(roci_compiler_state_t* state)
-# 562 "roci/roci-compiler.c"
+# 563 "roci/roci-compiler.c"
 {
 
-# 562 "roci/roci-compiler.c"
+# 563 "roci/roci-compiler.c"
   roci_next_token(state);
 }
 
 
-# 564 "roci/roci-compiler.c"
+# 565 "roci/roci-compiler.c"
 token_t* roci_peek_token(roci_compiler_state_t* state)
-# 564 "roci/roci-compiler.c"
+# 565 "roci/roci-compiler.c"
 {
 
-# 565 "roci/roci-compiler.c"
+# 566 "roci/roci-compiler.c"
   return token_at((state->tokens), (state->position));
 }
 
 
-# 568 "roci/roci-compiler.c"
+# 569 "roci/roci-compiler.c"
 token_t* roci_next_token(roci_compiler_state_t* state)
-# 568 "roci/roci-compiler.c"
+# 569 "roci/roci-compiler.c"
 {
 
-# 569 "roci/roci-compiler.c"
+# 570 "roci/roci-compiler.c"
   return token_at((state->tokens), ((state->position)++));
 }
 
 
-# 572 "roci/roci-compiler.c"
+# 573 "roci/roci-compiler.c"
 void roci_expect_token(roci_compiler_state_t* state, char* token_string)
-# 572 "roci/roci-compiler.c"
+# 573 "roci/roci-compiler.c"
 {
 
-# 573 "roci/roci-compiler.c"
+# 574 "roci/roci-compiler.c"
   token_t* token = roci_next_token(state);
 
-# 574 "roci/roci-compiler.c"
+# 575 "roci/roci-compiler.c"
   if ((!token_matches(token, token_string)))
 
-# 574 "roci/roci-compiler.c"
+# 575 "roci/roci-compiler.c"
   {
 
-# 575 "roci/roci-compiler.c"
+# 576 "roci/roci-compiler.c"
     log_fatal("roci expected %s as the next token but got %s", token_string, token_to_string(token));
 
-# 577 "roci/roci-compiler.c"
+# 578 "roci/roci-compiler.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
 }
 
 
-# 581 "roci/roci-compiler.c"
+# 582 "roci/roci-compiler.c"
 void roci_verify_identifier(token_t* token)
-# 581 "roci/roci-compiler.c"
+# 582 "roci/roci-compiler.c"
 {
 
-# 582 "roci/roci-compiler.c"
+# 583 "roci/roci-compiler.c"
   if (((token->type)!=TOKEN_TYPE_IDENTIFIER))
 
-# 582 "roci/roci-compiler.c"
+# 583 "roci/roci-compiler.c"
   {
 
-# 583 "roci/roci-compiler.c"
+# 584 "roci/roci-compiler.c"
     fatal_error(ERROR_ILLEGAL_INPUT);
   }
 }
@@ -30007,135 +30165,146 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message)
   log_fatal(error_message);
 
 # 34 "roci/roci-debugger.c"
+  roci_repl((state->env));
+
+# 35 "roci/roci-debugger.c"
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 
-# 37 "roci/roci-debugger.c"
+# 38 "roci/roci-debugger.c"
 void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer)
-# 37 "roci/roci-debugger.c"
+# 38 "roci/roci-debugger.c"
 {
 
-# 38 "roci/roci-debugger.c"
+# 39 "roci/roci-debugger.c"
   boolean_t is_tty = roci_is_tty();
 
-# 40 "roci/roci-debugger.c"
+# 41 "roci/roci-debugger.c"
   buffer_clear(buffer);
 
-# 42 "roci/roci-debugger.c"
+# 43 "roci/roci-debugger.c"
   if ((!is_tty))
 
-# 42 "roci/roci-debugger.c"
+# 43 "roci/roci-debugger.c"
   {
 
-# 43 "roci/roci-debugger.c"
+# 44 "roci/roci-debugger.c"
     buffer_printf(buffer, "--------------------------------------------------------------" "--------\n");
   }
   else
 
-# 47 "roci/roci-debugger.c"
+# 48 "roci/roci-debugger.c"
   {
 
-# 48 "roci/roci-debugger.c"
+# 49 "roci/roci-debugger.c"
     term_home(buffer);
 
-# 49 "roci/roci-debugger.c"
+# 50 "roci/roci-debugger.c"
     term_alt_buffer(buffer);
 
-# 50 "roci/roci-debugger.c"
+# 51 "roci/roci-debugger.c"
     term_clear_screen(buffer);
   }
 
-# 53 "roci/roci-debugger.c"
+# 54 "roci/roci-debugger.c"
   if (is_tty)
 
-# 53 "roci/roci-debugger.c"
+# 54 "roci/roci-debugger.c"
   {
 
-# 54 "roci/roci-debugger.c"
+# 55 "roci/roci-debugger.c"
     roci_debugger_banner(buffer, "*** Disassembly ***");
   }
 
-# 56 "roci/roci-debugger.c"
+# 57 "roci/roci-debugger.c"
   bblock_to_buffer(buffer, (state->current_bb), (state->opcode_ptr));
 
-# 58 "roci/roci-debugger.c"
+# 59 "roci/roci-debugger.c"
   if (is_tty)
-
-# 58 "roci/roci-debugger.c"
-  {
 
 # 59 "roci/roci-debugger.c"
-    roci_debugger_banner(buffer, "*** Environment ***");
-  }
-
-# 61 "roci/roci-debugger.c"
-  roci_dump_env((state->env), buffer);
-
-# 62 "roci/roci-debugger.c"
-  if (is_tty)
-
-# 62 "roci/roci-debugger.c"
   {
 
-# 63 "roci/roci-debugger.c"
-    roci_debugger_banner(buffer, "*** Stack ***");
-  }
-
-# 65 "roci/roci-debugger.c"
-  roci_dump_stack(state, buffer);
-
-# 67 "roci/roci-debugger.c"
-  if (is_tty)
-
-# 67 "roci/roci-debugger.c"
-  {
-
-# 68 "roci/roci-debugger.c"
+# 60 "roci/roci-debugger.c"
     roci_debugger_instructions(buffer);
   }
 
-# 71 "roci/roci-debugger.c"
+# 63 "roci/roci-debugger.c"
   buffer_write_all(stderr, buffer);
 
-# 72 "roci/roci-debugger.c"
+# 64 "roci/roci-debugger.c"
   fflush(stderr);
 
-# 74 "roci/roci-debugger.c"
+# 66 "roci/roci-debugger.c"
   if (is_tty)
 
-# 74 "roci/roci-debugger.c"
+# 66 "roci/roci-debugger.c"
   {
 
-# 75 "roci/roci-debugger.c"
+# 67 "roci/roci-debugger.c"
     buffer_t* input_buffer = make_buffer(10);
 
-# 77 "roci/roci-debugger.c"
+# 69 "roci/roci-debugger.c"
     struct termios oldt = term_echo_off();
 
-# 79 "roci/roci-debugger.c"
+# 71 "roci/roci-debugger.c"
     while (true)
 
-# 79 "roci/roci-debugger.c"
+# 71 "roci/roci-debugger.c"
     {
 
-# 80 "roci/roci-debugger.c"
+# 72 "roci/roci-debugger.c"
       buffer_clear(buffer);
 
-# 81 "roci/roci-debugger.c"
+# 73 "roci/roci-debugger.c"
       (buffer=buffer_read_ready_bytes(buffer, stdin, 10));
 
-# 82 "roci/roci-debugger.c"
+# 74 "roci/roci-debugger.c"
       if ((buffer_length(buffer)>0))
 
-# 82 "roci/roci-debugger.c"
+# 74 "roci/roci-debugger.c"
       {
 
-# 83 "roci/roci-debugger.c"
+# 75 "roci/roci-debugger.c"
         uint8_t byte = buffer_get(buffer, 0);
 
-# 84 "roci/roci-debugger.c"
+# 76 "roci/roci-debugger.c"
         if ((byte==' '))
+
+# 76 "roci/roci-debugger.c"
+        {
+
+# 77 "roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 78 "roci/roci-debugger.c"
+          break;
+        }
+        else
+
+# 79 "roci/roci-debugger.c"
+        if ((byte=='q'))
+
+# 79 "roci/roci-debugger.c"
+        {
+
+# 80 "roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 81 "roci/roci-debugger.c"
+          term_main_buffer(buffer);
+
+# 82 "roci/roci-debugger.c"
+          fprintf(stderr, "\nExiting program from roci debugger.\n");
+
+# 83 "roci/roci-debugger.c"
+          exit(1);
+        }
+        else
+
+# 84 "roci/roci-debugger.c"
+        if ((byte=='c'))
 
 # 84 "roci/roci-debugger.c"
         {
@@ -30144,177 +30313,203 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer)
           term_echo_restore(oldt);
 
 # 86 "roci/roci-debugger.c"
+          (((state->debug)->n_instructions)=0xffffffffffffffff);
+
+# 87 "roci/roci-debugger.c"
+          (((state->debug)->break_on_call_target)=false);
+
+# 88 "roci/roci-debugger.c"
+          (((state->debug)->break_on_return)=false);
+
+# 89 "roci/roci-debugger.c"
+          (((state->debug)->break_on_next_statement)=false);
+
+# 90 "roci/roci-debugger.c"
+          (((state->debug)->trace)=false);
+
+# 91 "roci/roci-debugger.c"
           break;
         }
         else
 
-# 87 "roci/roci-debugger.c"
-        if ((byte=='q'))
-
-# 87 "roci/roci-debugger.c"
-        {
-
-# 88 "roci/roci-debugger.c"
-          term_echo_restore(oldt);
-
-# 89 "roci/roci-debugger.c"
-          term_main_buffer(buffer);
-
-# 90 "roci/roci-debugger.c"
-          fprintf(stderr, "\nExiting program from roci debugger.\n");
-
-# 91 "roci/roci-debugger.c"
-          exit(1);
-        }
-        else
-
 # 92 "roci/roci-debugger.c"
-        if ((byte=='c'))
+        if ((byte=='e'))
 
 # 92 "roci/roci-debugger.c"
         {
 
 # 93 "roci/roci-debugger.c"
-          term_echo_restore(oldt);
+          buffer_t* buffer = make_buffer(10);
 
 # 94 "roci/roci-debugger.c"
-          (((state->debug)->n_instructions)=0xffffffffffffffff);
+          if (is_tty)
+
+# 94 "roci/roci-debugger.c"
+          {
 
 # 95 "roci/roci-debugger.c"
-          (((state->debug)->break_on_call_target)=false);
-
-# 96 "roci/roci-debugger.c"
-          (((state->debug)->break_on_return)=false);
+            roci_debugger_banner(buffer, "*** Environment ***");
+          }
 
 # 97 "roci/roci-debugger.c"
-          (((state->debug)->break_on_next_statement)=false);
+          roci_dump_env((state->env), buffer);
 
 # 98 "roci/roci-debugger.c"
-          (((state->debug)->trace)=false);
+          fprintf(stdout, buffer_to_c_string(buffer));
 
 # 99 "roci/roci-debugger.c"
-          break;
+          fflush(stdout);
+        }
+        else
+
+# 100 "roci/roci-debugger.c"
+        if ((byte=='k'))
+
+# 100 "roci/roci-debugger.c"
+        {
+
+# 101 "roci/roci-debugger.c"
+          buffer_t* buffer = make_buffer(10);
+
+# 102 "roci/roci-debugger.c"
+          if (is_tty)
+
+# 102 "roci/roci-debugger.c"
+          {
+
+# 103 "roci/roci-debugger.c"
+            roci_debugger_banner(buffer, "*** Stack ***");
+          }
+
+# 105 "roci/roci-debugger.c"
+          roci_dump_stack(state, buffer);
+
+# 106 "roci/roci-debugger.c"
+          fprintf(stdout, buffer_to_c_string(buffer));
+
+# 107 "roci/roci-debugger.c"
+          fflush(stdout);
         }
       }
 
-# 102 "roci/roci-debugger.c"
+# 110 "roci/roci-debugger.c"
       usleep(1000);
     }
 
-# 104 "roci/roci-debugger.c"
+# 112 "roci/roci-debugger.c"
     term_main_buffer(buffer);
   }
 }
 
 
-# 108 "roci/roci-debugger.c"
+# 116 "roci/roci-debugger.c"
 void roci_debug_breakpoint(void)
-# 108 "roci/roci-debugger.c"
+# 116 "roci/roci-debugger.c"
 {
 }
 
 
-# 110 "roci/roci-debugger.c"
+# 118 "roci/roci-debugger.c"
 void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer)
-# 110 "roci/roci-debugger.c"
+# 118 "roci/roci-debugger.c"
 {
 
-# 112 "roci/roci-debugger.c"
+# 120 "roci/roci-debugger.c"
   for (
 
-# 112 "roci/roci-debugger.c"
+# 120 "roci/roci-debugger.c"
 
-# 112 "roci/roci-debugger.c"
+# 120 "roci/roci-debugger.c"
     int i = 1;
 
-# 112 "roci/roci-debugger.c"
+# 120 "roci/roci-debugger.c"
     (i<1024);
 
-# 112 "roci/roci-debugger.c"
+# 120 "roci/roci-debugger.c"
     (i++))
 
-# 112 "roci/roci-debugger.c"
+# 120 "roci/roci-debugger.c"
   {
 
-# 113 "roci/roci-debugger.c"
+# 121 "roci/roci-debugger.c"
     roci_value_t value = roci_debug_peek_value(state, i);
 
-# 114 "roci/roci-debugger.c"
+# 122 "roci/roci-debugger.c"
     if ((((value.tag)==ROCI_TAG_STACK_MARKER)||((value.tag)==ROCI_TAG_UNKNOWN)))
 
-# 114 "roci/roci-debugger.c"
+# 122 "roci/roci-debugger.c"
     {
 
-# 115 "roci/roci-debugger.c"
+# 123 "roci/roci-debugger.c"
       return;
     }
 
-# 117 "roci/roci-debugger.c"
+# 125 "roci/roci-debugger.c"
     buffer_printf(buffer, "stack[%d] = %s\n", i, roci_value_to_c_string(value));
   }
 
-# 119 "roci/roci-debugger.c"
+# 127 "roci/roci-debugger.c"
   log_fatal("ROCI_TAG_STACK_MARKER not found.");
 
-# 120 "roci/roci-debugger.c"
+# 128 "roci/roci-debugger.c"
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 
-# 123 "roci/roci-debugger.c"
+# 131 "roci/roci-debugger.c"
 boolean_t roci_is_tty(void)
-# 123 "roci/roci-debugger.c"
+# 131 "roci/roci-debugger.c"
 {
 
-# 124 "roci/roci-debugger.c"
+# 132 "roci/roci-debugger.c"
   return (isatty(fileno(stdout))&&(!string_equal("dumb", getenv("TERM"))));
 }
 
 
-# 127 "roci/roci-debugger.c"
+# 135 "roci/roci-debugger.c"
 void roci_debugger_banner(buffer_t* buffer, char* text)
-# 127 "roci/roci-debugger.c"
+# 135 "roci/roci-debugger.c"
 {
 
-# 128 "roci/roci-debugger.c"
+# 136 "roci/roci-debugger.c"
   int width = term_width();
 
-# 129 "roci/roci-debugger.c"
+# 137 "roci/roci-debugger.c"
   term_set_background_color(buffer, 0xbfbfbf);
 
-# 130 "roci/roci-debugger.c"
+# 138 "roci/roci-debugger.c"
   term_set_foreground_color(buffer, 0xff0000);
 
-# 131 "roci/roci-debugger.c"
+# 139 "roci/roci-debugger.c"
   term_bold(buffer);
 
-# 132 "roci/roci-debugger.c"
+# 140 "roci/roci-debugger.c"
   buffer_printf(buffer, "               %s", text);
 
-# 133 "roci/roci-debugger.c"
+# 141 "roci/roci-debugger.c"
   buffer_append_repeated_byte(buffer, ' ', ((width-strlen(text))-15));
 
-# 134 "roci/roci-debugger.c"
+# 142 "roci/roci-debugger.c"
   buffer_printf(buffer, "\n", text);
 
-# 135 "roci/roci-debugger.c"
+# 143 "roci/roci-debugger.c"
   term_set_background_color(buffer, 0x000000);
 
-# 136 "roci/roci-debugger.c"
+# 144 "roci/roci-debugger.c"
   term_set_foreground_color(buffer, 0xffffff);
 
-# 137 "roci/roci-debugger.c"
+# 145 "roci/roci-debugger.c"
   term_reset_formatting(buffer);
 }
 
 
-# 140 "roci/roci-debugger.c"
+# 148 "roci/roci-debugger.c"
 void roci_debugger_instructions(buffer_t* buffer)
-# 140 "roci/roci-debugger.c"
+# 148 "roci/roci-debugger.c"
 {
 
-# 141 "roci/roci-debugger.c"
-  buffer_printf(buffer, "\n[Space] step instruction [n] step statement [c] continue [q] quit\n");
+# 149 "roci/roci-debugger.c"
+  buffer_printf(buffer, "\n[Space] step instruction [n] next statement [c] continue " "[q] quit [e] dump environment [k] dump stack\n");
 }
 
 
@@ -30534,150 +30729,102 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint6
     return 1;
 
 # 77 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_0:
+    case ROCI_OPCODE_CALL:
 
 # 78 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_1:
-
-# 79 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_2:
+    buffer_printf(buffer, "    call_%d %s\n", (*(data_ptr+0)), uint64_to_string((*(data_ptr+1))));
 
 # 80 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_3:
+    return 2;
 
 # 81 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_4:
-
-# 82 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_5:
-
-# 83 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_6:
-
-# 84 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_7:
-
-# 85 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_8:
-
-# 86 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_9:
-
-# 87 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_10:
-
-# 88 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_11:
-
-# 89 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_12:
-
-# 90 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_13:
-
-# 91 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_14:
-
-# 92 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_15:
-
-# 93 "roci/roci-disassembler.c"
-    case ROCI_OPCODE_CALL_16:
-
-# 94 "roci/roci-disassembler.c"
-    buffer_printf(buffer, "    call_%d %s\n", ((*opcode_ptr)-ROCI_OPCODE_CALL_0), uint64_to_string((*data_ptr)));
-
-# 96 "roci/roci-disassembler.c"
-    return 1;
-
-# 97 "roci/roci-disassembler.c"
     case ROCI_OPCODE_MAKE_CLOSURE:
 
-# 98 "roci/roci-disassembler.c"
+# 82 "roci/roci-disassembler.c"
     buffer_printf(buffer, "    make_closure %s\n", uint64_to_string((*data_ptr)));
 
-# 100 "roci/roci-disassembler.c"
+# 84 "roci/roci-disassembler.c"
     return 1;
 
-# 101 "roci/roci-disassembler.c"
+# 85 "roci/roci-disassembler.c"
     case ROCI_OPCODE_CHECK_ARGS:
 
-# 102 "roci/roci-disassembler.c"
+# 86 "roci/roci-disassembler.c"
     buffer_printf(buffer, "    check_args %s\n", uint64_to_string((*data_ptr)));
 
-# 103 "roci/roci-disassembler.c"
+# 87 "roci/roci-disassembler.c"
     return 1;
 
-# 104 "roci/roci-disassembler.c"
+# 88 "roci/roci-disassembler.c"
     case ROCI_OPCODE_DEBUG_INFO:
 
-# 104 "roci/roci-disassembler.c"
+# 88 "roci/roci-disassembler.c"
     {
 
-# 105 "roci/roci-disassembler.c"
+# 89 "roci/roci-disassembler.c"
       roci_src_info_t info = (*data_ptr);
 
-# 106 "roci/roci-disassembler.c"
+# 90 "roci/roci-disassembler.c"
       buffer_printf(buffer, "    debug_info %s, %s\n", uint64_to_string(roci_src_file_number(info)), uint64_to_string(roci_src_line_number(info)));
 
-# 109 "roci/roci-disassembler.c"
+# 93 "roci/roci-disassembler.c"
       return 1;
     }
 
-# 111 "roci/roci-disassembler.c"
+# 95 "roci/roci-disassembler.c"
     default:
 
-# 112 "roci/roci-disassembler.c"
+# 96 "roci/roci-disassembler.c"
     buffer_printf(buffer, "    <unknown-opcode>\n");
 
-# 113 "roci/roci-disassembler.c"
+# 97 "roci/roci-disassembler.c"
     return 0;
   }
 
-# 116 "roci/roci-disassembler.c"
+# 100 "roci/roci-disassembler.c"
   return 0;
 }
 
 
-# 119 "roci/roci-disassembler.c"
+# 103 "roci/roci-disassembler.c"
 double raw_double_to_double(uint64_t raw_bits)
-# 119 "roci/roci-disassembler.c"
+# 103 "roci/roci-disassembler.c"
 {
 
-# 120 "roci/roci-disassembler.c"
+# 104 "roci/roci-disassembler.c"
   double val = 0.0;
 
-# 121 "roci/roci-disassembler.c"
+# 105 "roci/roci-disassembler.c"
   memcpy((&val), (&raw_bits), (sizeof(val)));
 
-# 122 "roci/roci-disassembler.c"
+# 106 "roci/roci-disassembler.c"
   return val;
 }
 
 
-# 125 "roci/roci-disassembler.c"
+# 109 "roci/roci-disassembler.c"
 void disassemble_bblocks(value_array_t* bblocks, buffer_t* buffer)
-# 125 "roci/roci-disassembler.c"
+# 109 "roci/roci-disassembler.c"
 {
 
-# 126 "roci/roci-disassembler.c"
+# 110 "roci/roci-disassembler.c"
   for (
 
-# 126 "roci/roci-disassembler.c"
+# 110 "roci/roci-disassembler.c"
 
-# 126 "roci/roci-disassembler.c"
+# 110 "roci/roci-disassembler.c"
     int i = 0;
 
-# 126 "roci/roci-disassembler.c"
+# 110 "roci/roci-disassembler.c"
     (i<(bblocks->length));
 
-# 126 "roci/roci-disassembler.c"
+# 110 "roci/roci-disassembler.c"
     (i++))
 
-# 126 "roci/roci-disassembler.c"
+# 110 "roci/roci-disassembler.c"
   {
 
-# 127 "roci/roci-disassembler.c"
+# 111 "roci/roci-disassembler.c"
     bblock_to_buffer(buffer, value_array_get_ptr(bblocks, i, typeof(roci_bb_t*)), ((void *)0));
   }
 }
@@ -30730,124 +30877,124 @@ void roci_set_var(roci_vm_state_t* state, char* name, value_t value, roci_tag_t 
 # 27 "roci/roci-env.c"
   {
 
-# 29 "roci/roci-env.c"
-    roci_debug_error(state, "Variable not found");
+# 28 "roci/roci-env.c"
+    roci_debug_error(state, string_printf("Variable not found '%s'", name));
   }
 
-# 31 "roci/roci-env.c"
+# 30 "roci/roci-env.c"
   ((binding->raw)=(value.u64));
 
-# 32 "roci/roci-env.c"
+# 31 "roci/roci-env.c"
   ((binding->tag)=tag);
 }
 
 
-# 35 "roci/roci-env.c"
+# 34 "roci/roci-env.c"
 void roci_define_var(roci_env_t* env, char* name, value_t value, roci_tag_t tag)
-# 36 "roci/roci-env.c"
+# 35 "roci/roci-env.c"
 {
 
-# 37 "roci/roci-env.c"
+# 36 "roci/roci-env.c"
   value_result_t find_result = string_ht_find((env->bindings), name);
 
-# 38 "roci/roci-env.c"
+# 37 "roci/roci-env.c"
   if (is_ok(find_result))
 
-# 38 "roci/roci-env.c"
+# 37 "roci/roci-env.c"
   {
 
-# 39 "roci/roci-env.c"
+# 38 "roci/roci-env.c"
     log_fatal("redefinition of a variable %s", name);
 
-# 40 "roci/roci-env.c"
+# 39 "roci/roci-env.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 42 "roci/roci-env.c"
+# 41 "roci/roci-env.c"
   roci_value_t* binding = malloc_struct(roci_value_t);
 
-# 43 "roci/roci-env.c"
+# 42 "roci/roci-env.c"
   ((binding->raw)=(value.u64));
 
-# 44 "roci/roci-env.c"
+# 43 "roci/roci-env.c"
   ((binding->tag)=tag);
 
-# 45 "roci/roci-env.c"
+# 44 "roci/roci-env.c"
   string_ht_insert((env->bindings), name, ptr_to_value(binding));
 }
 
 
-# 48 "roci/roci-env.c"
+# 47 "roci/roci-env.c"
 roci_env_t* roci_new_env(roci_env_t* parent)
-# 48 "roci/roci-env.c"
+# 47 "roci/roci-env.c"
 {
 
-# 49 "roci/roci-env.c"
+# 48 "roci/roci-env.c"
   roci_env_t* result = malloc_struct(roci_env_t);
 
-# 50 "roci/roci-env.c"
+# 49 "roci/roci-env.c"
   ((result->parent)=parent);
 
-# 51 "roci/roci-env.c"
+# 50 "roci/roci-env.c"
   ((result->bindings)=make_string_hashtable(7));
 
-# 52 "roci/roci-env.c"
+# 51 "roci/roci-env.c"
   return result;
 }
 
 
-# 55 "roci/roci-env.c"
+# 54 "roci/roci-env.c"
 void roci_dump_env(roci_env_t* env, buffer_t* buffer)
-# 55 "roci/roci-env.c"
+# 54 "roci/roci-env.c"
 {
 
-# 56 "roci/roci-env.c"
+# 55 "roci/roci-env.c"
   if ((env==((void *)0)))
 
-# 56 "roci/roci-env.c"
+# 55 "roci/roci-env.c"
   {
 
-# 57 "roci/roci-env.c"
+# 56 "roci/roci-env.c"
     return;
   }
 
-# 60 "roci/roci-env.c"
+# 59 "roci/roci-env.c"
   roci_dump_env((env->parent), buffer);
 
-# 62 "roci/roci-env.c"
+# 61 "roci/roci-env.c"
   int depth = 0;
 
-# 63 "roci/roci-env.c"
+# 62 "roci/roci-env.c"
   roci_env_t* env2 = env;
 
-# 64 "roci/roci-env.c"
+# 63 "roci/roci-env.c"
   while ((env2!=((void *)0)))
 
-# 64 "roci/roci-env.c"
+# 63 "roci/roci-env.c"
   {
 
-# 65 "roci/roci-env.c"
+# 64 "roci/roci-env.c"
     (depth++);
 
-# 66 "roci/roci-env.c"
+# 65 "roci/roci-env.c"
     (env2=(env2->parent));
   }
 
-# 70 "roci/roci-env.c"
+# 69 "roci/roci-env.c"
   string_ht_foreach((env->bindings), key, value, 
-# 70 "roci/roci-env.c"
+# 69 "roci/roci-env.c"
   {
 
-# 71 "roci/roci-env.c"
+# 70 "roci/roci-env.c"
     buffer_append_repeated_byte(buffer, ' ', (depth*4));
 
-# 72 "roci/roci-env.c"
+# 71 "roci/roci-env.c"
     buffer_printf(buffer, "%s = ", (/*CAST*/(char*) key));
 
-# 73 "roci/roci-env.c"
+# 72 "roci/roci-env.c"
     roci_append_value(buffer, (*(/*CAST*/(roci_value_t*) (value.ptr))));
 
-# 74 "roci/roci-env.c"
+# 73 "roci/roci-env.c"
     buffer_printf(buffer, "\n");
   }
 );
@@ -30860,52 +31007,1505 @@ void roci_add_primitives_to_env(roci_env_t* env)
 {
 
 # 11 "roci/roci-primitives.c"
-  roci_add_primitive(env, (&roci_primitive_print_env), "debug_print_env");
+  roci_add_primitive(env, (&roci_primitive_load), "load");
 
 # 12 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_exit), "exit");
+
+# 16 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_print_env), "debug_print_env");
+
+# 17 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_to_string), "to_string");
+
+# 18 "roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_print_string), "print_string");
+
+# 19 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_println), "println");
+
+# 20 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_append), "string_append");
+
+# 21 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_equal), "string_equal");
+
+# 22 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_starts_with), "string_starts_with");
+
+# 24 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_ends_with), "string_ends_with");
+
+# 25 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_substring), "string_substring");
+
+# 26 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_make_list), "make_list");
+
+# 27 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_list_get), "list_get");
+
+# 28 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_list_set), "list_set");
+
+# 29 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_list_push), "list_push");
+
+# 30 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_list_for_each), "list_for_each");
+
+# 31 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_timestamp), "timestamp");
+
+# 32 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_shell), "shell");
+
+# 33 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_platform), "platform");
+
+# 34 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_glob), "glob");
+
+# 35 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_iadd), "iadd");
+
+# 36 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_igte), "igte");
+
+# 37 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_iequal), "iequal");
+
+# 38 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_neg), "neg");
+
+# 39 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_not), "not");
+
+# 40 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_getenv), "getenv");
+
+# 41 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_boolean), "is_boolean");
+
+# 42 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_string), "is_string");
+
+# 43 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_integer), "is_integer");
+
+# 44 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_list), "is_list");
+
+# 45 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_double), "is_double");
+
+# 46 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_pwd), "pwd");
+
+# 47 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_cd), "cd");
 }
 
 
-# 15 "roci/roci-primitives.c"
+# 56 "roci/roci-primitives.c"
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name)
-# 16 "roci/roci-primitives.c"
+# 57 "roci/roci-primitives.c"
 {
 
-# 17 "roci/roci-primitives.c"
+# 58 "roci/roci-primitives.c"
   roci_define_var(env, name, u64_to_value((/*CAST*/(uint64_t) primitive)), ROCI_TAG_C_PRIMITIVE);
 }
 
 
-# 21 "roci/roci-primitives.c"
-void roci_primitive_print_env(roci_vm_state_t* state)
-# 21 "roci/roci-primitives.c"
+# 67 "roci/roci-primitives.c"
+void roci_primitive_exit(roci_vm_state_t* state)
+# 67 "roci/roci-primitives.c"
 {
 
-# 22 "roci/roci-primitives.c"
-  buffer_t* buffer = make_buffer(10);
+# 68 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
 
-# 23 "roci/roci-primitives.c"
-  roci_dump_env((state->env), buffer);
+# 68 "roci/roci-primitives.c"
+  {
 
-# 24 "roci/roci-primitives.c"
-  fprintf(stdout, "%s", buffer_to_c_string(buffer));
+# 69 "roci/roci-primitives.c"
+    roci_debug_error(state, "roci_exit expects 1 argument");
+  }
+
+# 71 "roci/roci-primitives.c"
+  int64_t code = roci_pop_integer(state);
+
+# 72 "roci/roci-primitives.c"
+  exit(code);
 }
 
 
-# 27 "roci/roci-primitives.c"
-void roci_primitive_print_string(roci_vm_state_t* state)
-# 27 "roci/roci-primitives.c"
+# 81 "roci/roci-primitives.c"
+void roci_primitive_load(roci_vm_state_t* state)
+# 81 "roci/roci-primitives.c"
 {
 
-# 28 "roci/roci-primitives.c"
+# 82 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 82 "roci/roci-primitives.c"
+  {
+
+# 83 "roci/roci-primitives.c"
+    roci_debug_error(state, "roci_load expects 1 argument");
+  }
+
+# 85 "roci/roci-primitives.c"
+  char* filename = roci_pop_string(state);
+
+# 86 "roci/roci-primitives.c"
+  file_t* file = read_file(filename);
+
+# 87 "roci/roci-primitives.c"
+  roci_compiler_state_t* compiler_state = malloc_struct(roci_compiler_state_t);
+
+# 88 "roci/roci-primitives.c"
+  ((compiler_state->bblocks)=make_value_array(16));
+
+# 89 "roci/roci-primitives.c"
+  roci_compile_buffer(compiler_state, (file->file_name), (file->data));
+
+# 90 "roci/roci-primitives.c"
+  value_array_t* bblocks = build_bblocks((compiler_state->bblocks));
+
+# 91 "roci/roci-primitives.c"
+  roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
+
+# 92 "roci/roci-primitives.c"
+  roci_execute((state->env), entry_point);
+
+# 93 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 96 "roci/roci-primitives.c"
+void roci_primitive_print_env(roci_vm_state_t* state)
+# 96 "roci/roci-primitives.c"
+{
+
+# 97 "roci/roci-primitives.c"
+  buffer_t* buffer = make_buffer(10);
+
+# 98 "roci/roci-primitives.c"
+  roci_dump_env((state->env), buffer);
+
+# 99 "roci/roci-primitives.c"
+  fprintf(stdout, "%s", buffer_to_c_string(buffer));
+
+# 100 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 103 "roci/roci-primitives.c"
+void roci_primitive_print_string(roci_vm_state_t* state)
+# 103 "roci/roci-primitives.c"
+{
+
+# 104 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 104 "roci/roci-primitives.c"
+  {
+
+# 105 "roci/roci-primitives.c"
+    roci_debug_error(state, "print_string expects a single string argument");
+  }
+
+# 107 "roci/roci-primitives.c"
   char* arg = roci_pop_string(state);
 
-# 29 "roci/roci-primitives.c"
+# 108 "roci/roci-primitives.c"
   fprintf(stdout, "%s", arg);
 
-# 30 "roci/roci-primitives.c"
+# 109 "roci/roci-primitives.c"
   roci_push_false(state);
+}
+
+
+# 112 "roci/roci-primitives.c"
+void roci_primitive_println(roci_vm_state_t* state)
+# 112 "roci/roci-primitives.c"
+{
+
+# 113 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 113 "roci/roci-primitives.c"
+  {
+
+# 114 "roci/roci-primitives.c"
+    roci_debug_error(state, "println_string expects 1 argument");
+  }
+
+# 116 "roci/roci-primitives.c"
+  roci_value_t element = roci_pop_value(state);
+
+# 117 "roci/roci-primitives.c"
+  if (((element.tag)==ROCI_TAG_STRING))
+
+# 117 "roci/roci-primitives.c"
+  {
+
+# 118 "roci/roci-primitives.c"
+    fprintf(stdout, "%s\n", (/*CAST*/(char*) (element.raw)));
+  }
+  else
+
+# 119 "roci/roci-primitives.c"
+  {
+
+# 120 "roci/roci-primitives.c"
+    fprintf(stdout, "%s\n", roci_value_to_c_string(element));
+  }
+
+# 122 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 126 "roci/roci-primitives.c"
+void roci_primitive_string_equal(roci_vm_state_t* state)
+# 126 "roci/roci-primitives.c"
+{
+
+# 127 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 127 "roci/roci-primitives.c"
+  {
+
+# 128 "roci/roci-primitives.c"
+    roci_debug_error(state, "string_equal expects two string arguments");
+  }
+
+# 130 "roci/roci-primitives.c"
+  char* arg1 = roci_pop_string(state);
+
+# 131 "roci/roci-primitives.c"
+  char* arg0 = roci_pop_string(state);
+
+# 132 "roci/roci-primitives.c"
+  if (string_equal(arg0, arg1))
+
+# 132 "roci/roci-primitives.c"
+  {
+
+# 133 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 134 "roci/roci-primitives.c"
+  {
+
+# 135 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 139 "roci/roci-primitives.c"
+void roci_primitive_string_starts_with(roci_vm_state_t* state)
+# 139 "roci/roci-primitives.c"
+{
+
+# 140 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 140 "roci/roci-primitives.c"
+  {
+
+# 141 "roci/roci-primitives.c"
+    roci_debug_error(state, "string_starts_with expects two string arguments");
+  }
+
+# 143 "roci/roci-primitives.c"
+  char* arg1 = roci_pop_string(state);
+
+# 144 "roci/roci-primitives.c"
+  char* arg0 = roci_pop_string(state);
+
+# 145 "roci/roci-primitives.c"
+  if (string_starts_with(arg0, arg1))
+
+# 145 "roci/roci-primitives.c"
+  {
+
+# 146 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 147 "roci/roci-primitives.c"
+  {
+
+# 148 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 152 "roci/roci-primitives.c"
+void roci_primitive_string_ends_with(roci_vm_state_t* state)
+# 152 "roci/roci-primitives.c"
+{
+
+# 153 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 153 "roci/roci-primitives.c"
+  {
+
+# 154 "roci/roci-primitives.c"
+    roci_debug_error(state, "string_ends_with expects two string arguments");
+  }
+
+# 156 "roci/roci-primitives.c"
+  char* arg1 = roci_pop_string(state);
+
+# 157 "roci/roci-primitives.c"
+  char* arg0 = roci_pop_string(state);
+
+# 158 "roci/roci-primitives.c"
+  if (string_ends_with(arg0, arg1))
+
+# 158 "roci/roci-primitives.c"
+  {
+
+# 159 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 160 "roci/roci-primitives.c"
+  {
+
+# 161 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 165 "roci/roci-primitives.c"
+void roci_primitive_string_substring(roci_vm_state_t* state)
+# 165 "roci/roci-primitives.c"
+{
+
+# 166 "roci/roci-primitives.c"
+  if (((state->n_args)!=3))
+
+# 166 "roci/roci-primitives.c"
+  {
+
+# 167 "roci/roci-primitives.c"
+    roci_debug_error(state, "string_substring expectds 3 arguments");
+  }
+
+# 169 "roci/roci-primitives.c"
+  int64_t end = roci_pop_integer(state);
+
+# 170 "roci/roci-primitives.c"
+  int64_t start = roci_pop_integer(state);
+
+# 171 "roci/roci-primitives.c"
+  char* str = roci_pop_string(state);
+
+# 172 "roci/roci-primitives.c"
+  char* result = string_substring(str, start, end);
+
+# 173 "roci/roci-primitives.c"
+  roci_push_string(state, result);
+}
+
+
+# 181 "roci/roci-primitives.c"
+void roci_primitive_string_append(roci_vm_state_t* state)
+# 181 "roci/roci-primitives.c"
+{
+
+# 182 "roci/roci-primitives.c"
+  buffer_t* buffer = make_buffer(10);
+
+# 183 "roci/roci-primitives.c"
+  for (
+
+# 183 "roci/roci-primitives.c"
+
+# 183 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 183 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 183 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 183 "roci/roci-primitives.c"
+  {
+
+# 184 "roci/roci-primitives.c"
+    roci_value_t value = roci_debug_peek_value(state, ((state->n_args)-arg_num));
+
+# 185 "roci/roci-primitives.c"
+    if (((value.tag)!=ROCI_TAG_STRING))
+
+# 185 "roci/roci-primitives.c"
+    {
+
+# 186 "roci/roci-primitives.c"
+      roci_debug_error(state, "string_append expects string arguments");
+    }
+
+# 188 "roci/roci-primitives.c"
+    buffer_append_string(buffer, (/*CAST*/(char*) (value.raw)));
+  }
+
+# 190 "roci/roci-primitives.c"
+  roci_push_string(state, buffer_to_c_string(buffer));
+}
+
+
+# 193 "roci/roci-primitives.c"
+void roci_primitive_make_list(roci_vm_state_t* state)
+# 193 "roci/roci-primitives.c"
+{
+
+# 194 "roci/roci-primitives.c"
+  value_array_t* list = make_value_array((state->n_args));
+
+# 195 "roci/roci-primitives.c"
+  for (
+
+# 195 "roci/roci-primitives.c"
+
+# 195 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 195 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 195 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 195 "roci/roci-primitives.c"
+  {
+
+# 196 "roci/roci-primitives.c"
+    roci_value_t* value = roci_value_to_heap(roci_debug_peek_value(state, ((state->n_args)-arg_num)));
+
+# 198 "roci/roci-primitives.c"
+    value_array_add(list, ptr_to_value(value));
+  }
+
+# 200 "roci/roci-primitives.c"
+  roci_push_list(state, list);
+}
+
+
+# 203 "roci/roci-primitives.c"
+void roci_primitive_list_get(roci_vm_state_t* state)
+# 203 "roci/roci-primitives.c"
+{
+
+# 204 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 204 "roci/roci-primitives.c"
+  {
+
+# 205 "roci/roci-primitives.c"
+    roci_debug_error(state, "list_get expects 2 arguments");
+  }
+
+# 207 "roci/roci-primitives.c"
+  int64_t position = roci_pop_integer(state);
+
+# 208 "roci/roci-primitives.c"
+  value_array_t* list = roci_pop_list(state);
+
+# 209 "roci/roci-primitives.c"
+  roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, position).ptr));
+
+# 211 "roci/roci-primitives.c"
+  roci_push_value(state, (*element));
+}
+
+
+# 214 "roci/roci-primitives.c"
+void roci_primitive_list_set(roci_vm_state_t* state)
+# 214 "roci/roci-primitives.c"
+{
+
+# 215 "roci/roci-primitives.c"
+  if (((state->n_args)!=3))
+
+# 215 "roci/roci-primitives.c"
+  {
+
+# 216 "roci/roci-primitives.c"
+    roci_debug_error(state, "list_set expects 3 arguments");
+  }
+
+# 218 "roci/roci-primitives.c"
+  roci_value_t element = roci_pop_value(state);
+
+# 219 "roci/roci-primitives.c"
+  int64_t position = roci_pop_integer(state);
+
+# 220 "roci/roci-primitives.c"
+  value_array_t* list = roci_pop_list(state);
+
+# 221 "roci/roci-primitives.c"
+  value_array_replace(list, position, ptr_to_value(roci_value_to_heap(element)));
+
+# 223 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 226 "roci/roci-primitives.c"
+void roci_primitive_list_push(roci_vm_state_t* state)
+# 226 "roci/roci-primitives.c"
+{
+
+# 227 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 227 "roci/roci-primitives.c"
+  {
+
+# 228 "roci/roci-primitives.c"
+    roci_debug_error(state, "list_push expects 2 arguments");
+  }
+
+# 230 "roci/roci-primitives.c"
+  roci_value_t element = roci_pop_value(state);
+
+# 231 "roci/roci-primitives.c"
+  value_array_t* list = roci_pop_list(state);
+
+# 232 "roci/roci-primitives.c"
+  value_array_push(list, ptr_to_value(roci_value_to_heap(element)));
+
+# 233 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 237 "roci/roci-primitives.c"
+void roci_primitive_list_for_each(roci_vm_state_t* state)
+# 237 "roci/roci-primitives.c"
+{
+
+# 238 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 238 "roci/roci-primitives.c"
+  {
+
+# 239 "roci/roci-primitives.c"
+    roci_debug_error(state, "list_for_each requires two arguments");
+  }
+
+# 241 "roci/roci-primitives.c"
+  roci_value_t proc = roci_pop_value(state);
+
+# 242 "roci/roci-primitives.c"
+  value_array_t* list = roci_pop_list(state);
+
+# 243 "roci/roci-primitives.c"
+  for (
+
+# 243 "roci/roci-primitives.c"
+
+# 243 "roci/roci-primitives.c"
+    int i = 0;
+
+# 243 "roci/roci-primitives.c"
+    (i<(list->length));
+
+# 243 "roci/roci-primitives.c"
+    (i++))
+
+# 243 "roci/roci-primitives.c"
+  {
+
+# 244 "roci/roci-primitives.c"
+    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, i).ptr));
+
+# 245 "roci/roci-primitives.c"
+    roci_push_value(state, (*element));
+
+# 246 "roci/roci-primitives.c"
+    roci_call(state, proc, 1);
+  }
+
+# 248 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 251 "roci/roci-primitives.c"
+void roci_primitive_to_string(roci_vm_state_t* state)
+# 251 "roci/roci-primitives.c"
+{
+
+# 252 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 252 "roci/roci-primitives.c"
+  {
+
+# 253 "roci/roci-primitives.c"
+    roci_debug_error(state, "to_string expects 1 argument");
+  }
+
+# 255 "roci/roci-primitives.c"
+  roci_value_t element = roci_pop_value(state);
+
+# 256 "roci/roci-primitives.c"
+  roci_push_string(state, roci_value_to_c_string(element));
+}
+
+
+# 259 "roci/roci-primitives.c"
+void roci_primitive_timestamp(roci_vm_state_t* state)
+# 259 "roci/roci-primitives.c"
+{
+
+# 260 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 260 "roci/roci-primitives.c"
+  {
+
+# 261 "roci/roci-primitives.c"
+    roci_debug_error(state, "timestamp expects 1 argument");
+  }
+
+# 263 "roci/roci-primitives.c"
+  char* filename = roci_pop_string(state);
+
+# 264 "roci/roci-primitives.c"
+  uint64_t timestamp = get_file_modification_time(filename);
+
+# 265 "roci/roci-primitives.c"
+  roci_push_integer(state, timestamp);
+}
+
+
+# 277 "roci/roci-primitives.c"
+void roci_primitive_shell(roci_vm_state_t* state)
+# 277 "roci/roci-primitives.c"
+{
+
+# 278 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 278 "roci/roci-primitives.c"
+  {
+
+# 279 "roci/roci-primitives.c"
+    roci_debug_error(state, "shell expects 1 argument");
+  }
+
+# 281 "roci/roci-primitives.c"
+  value_array_t* lst = roci_pop_list(state);
+
+# 282 "roci/roci-primitives.c"
+  uint64_t len = (lst->length);
+
+# 283 "roci/roci-primitives.c"
+  value_array_t* argv = make_value_array((lst->length));
+
+# 284 "roci/roci-primitives.c"
+  for (
+
+# 284 "roci/roci-primitives.c"
+
+# 284 "roci/roci-primitives.c"
+    int i = 0;
+
+# 284 "roci/roci-primitives.c"
+    (i<len);
+
+# 284 "roci/roci-primitives.c"
+    (i++))
+
+# 284 "roci/roci-primitives.c"
+  {
+
+# 285 "roci/roci-primitives.c"
+    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(lst, i).ptr));
+
+# 286 "roci/roci-primitives.c"
+    if (((element->tag)!=ROCI_TAG_STRING))
+
+# 286 "roci/roci-primitives.c"
+    {
+
+# 287 "roci/roci-primitives.c"
+      roci_debug_error(state, "shell expects all list elements to be strings");
+    }
+
+# 289 "roci/roci-primitives.c"
+    value_array_push(argv, str_to_value((/*CAST*/(char*) (element->raw))));
+  }
+
+# 292 "roci/roci-primitives.c"
+  sub_process_t* sub_process = make_sub_process(argv);
+
+# 293 "roci/roci-primitives.c"
+  sub_process_launch(sub_process);
+
+# 295 "roci/roci-primitives.c"
+  buffer_t* stdout = make_buffer(1);
+
+# 296 "roci/roci-primitives.c"
+  buffer_t* stderr = stdout;
+
+# 297 "roci/roci-primitives.c"
+  do
+# 297 "roci/roci-primitives.c"
+  {
+
+# 298 "roci/roci-primitives.c"
+    sub_process_read(sub_process, stdout, stderr);
+
+# 299 "roci/roci-primitives.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 301 "roci/roci-primitives.c"
+  sub_process_read(sub_process, stdout, stderr);
+
+# 302 "roci/roci-primitives.c"
+  sub_process_wait(sub_process);
+
+# 304 "roci/roci-primitives.c"
+  roci_push_string(state, buffer_to_c_string(stdout));
+}
+
+
+# 307 "roci/roci-primitives.c"
+void roci_primitive_platform(roci_vm_state_t* state)
+# 307 "roci/roci-primitives.c"
+{
+
+# 308 "roci/roci-primitives.c"
+  if (((state->n_args)!=0))
+
+# 308 "roci/roci-primitives.c"
+  {
+
+# 309 "roci/roci-primitives.c"
+    roci_debug_error(state, "platform expects 0 argument");
+  }
+
+# 311 "roci/roci-primitives.c"
+  roci_push_string(state, "linux");
+}
+
+
+# 327 "roci/roci-primitives.c"
+void roci_primitive_glob(roci_vm_state_t* state)
+# 327 "roci/roci-primitives.c"
+{
+
+# 328 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 328 "roci/roci-primitives.c"
+  {
+
+# 329 "roci/roci-primitives.c"
+    roci_debug_error(state, "glob expects 1 argument");
+  }
+
+# 331 "roci/roci-primitives.c"
+  char* pattern = roci_pop_string(state);
+
+# 333 "roci/roci-primitives.c"
+  glob_t glob_result = ((glob_t) {0});
+
+# 336 "roci/roci-primitives.c"
+  int return_value = glob(pattern, 0, NULL, (&glob_result));
+
+# 337 "roci/roci-primitives.c"
+  value_array_t* result = make_value_array((state->n_args));
+
+# 338 "roci/roci-primitives.c"
+  if ((return_value==0))
+
+# 338 "roci/roci-primitives.c"
+  {
+
+# 339 "roci/roci-primitives.c"
+    for (
+
+# 339 "roci/roci-primitives.c"
+
+# 339 "roci/roci-primitives.c"
+      int i = 0;
+
+# 339 "roci/roci-primitives.c"
+      (i<(glob_result.gl_pathc));
+
+# 339 "roci/roci-primitives.c"
+      (++i))
+
+# 339 "roci/roci-primitives.c"
+    {
+
+# 340 "roci/roci-primitives.c"
+      value_array_push(result, ptr_to_value(string_to_roci_string(((glob_result.gl_pathv)[i]))));
+    }
+  }
+  else
+
+# 343 "roci/roci-primitives.c"
+  if ((return_value!=GLOB_NOMATCH))
+
+# 343 "roci/roci-primitives.c"
+  {
+
+# 344 "roci/roci-primitives.c"
+    roci_debug_error(state, "An error occurred during globbing.");
+  }
+
+# 346 "roci/roci-primitives.c"
+  roci_push_list(state, result);
+}
+
+
+# 349 "roci/roci-primitives.c"
+void roci_primitive_iadd(roci_vm_state_t* state)
+# 349 "roci/roci-primitives.c"
+{
+
+# 350 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 350 "roci/roci-primitives.c"
+  {
+
+# 351 "roci/roci-primitives.c"
+    roci_debug_error(state, "iadd expects two integer arguments");
+  }
+
+# 353 "roci/roci-primitives.c"
+  uint64_t arg1 = roci_pop_integer(state);
+
+# 354 "roci/roci-primitives.c"
+  uint64_t arg0 = roci_pop_integer(state);
+
+# 355 "roci/roci-primitives.c"
+  roci_push_integer(state, (arg1+arg0));
+}
+
+
+# 358 "roci/roci-primitives.c"
+void roci_primitive_iequal(roci_vm_state_t* state)
+# 358 "roci/roci-primitives.c"
+{
+
+# 359 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 359 "roci/roci-primitives.c"
+  {
+
+# 360 "roci/roci-primitives.c"
+    roci_debug_error(state, "iequal expects two integer arguments");
+  }
+
+# 362 "roci/roci-primitives.c"
+  uint64_t arg1 = roci_pop_integer(state);
+
+# 363 "roci/roci-primitives.c"
+  uint64_t arg0 = roci_pop_integer(state);
+
+# 364 "roci/roci-primitives.c"
+  if ((arg0==arg1))
+
+# 364 "roci/roci-primitives.c"
+  {
+
+# 365 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 366 "roci/roci-primitives.c"
+  {
+
+# 367 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 371 "roci/roci-primitives.c"
+void roci_primitive_not(roci_vm_state_t* state)
+# 371 "roci/roci-primitives.c"
+{
+
+# 372 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 372 "roci/roci-primitives.c"
+  {
+
+# 373 "roci/roci-primitives.c"
+    roci_debug_error(state, "roci_exit expects 1 argument");
+  }
+
+# 375 "roci/roci-primitives.c"
+  boolean_t value = roci_pop_boolean(state);
+
+# 376 "roci/roci-primitives.c"
+  if (value)
+
+# 376 "roci/roci-primitives.c"
+  {
+
+# 377 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
+
+# 378 "roci/roci-primitives.c"
+  {
+
+# 379 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+}
+
+
+# 383 "roci/roci-primitives.c"
+void roci_primitive_getenv(roci_vm_state_t* state)
+# 383 "roci/roci-primitives.c"
+{
+
+# 384 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 384 "roci/roci-primitives.c"
+  {
+
+# 385 "roci/roci-primitives.c"
+    roci_debug_error(state, "getenv expects 1 argument");
+  }
+
+# 387 "roci/roci-primitives.c"
+  char* varname = roci_pop_string(state);
+
+# 388 "roci/roci-primitives.c"
+  char* result = getenv(varname);
+
+# 389 "roci/roci-primitives.c"
+  if ((result==((void *)0)))
+
+# 389 "roci/roci-primitives.c"
+  {
+
+# 390 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
+
+# 391 "roci/roci-primitives.c"
+  {
+
+# 392 "roci/roci-primitives.c"
+    roci_push_string(state, result);
+  }
+}
+
+
+# 396 "roci/roci-primitives.c"
+void roci_primitive_is_boolean(roci_vm_state_t* state)
+# 396 "roci/roci-primitives.c"
+{
+
+# 397 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 397 "roci/roci-primitives.c"
+  {
+
+# 398 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_boolean expects 1 argument");
+  }
+
+# 400 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 401 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_BOOLEAN))
+
+# 401 "roci/roci-primitives.c"
+  {
+
+# 402 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 403 "roci/roci-primitives.c"
+  {
+
+# 404 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 408 "roci/roci-primitives.c"
+void roci_primitive_is_string(roci_vm_state_t* state)
+# 408 "roci/roci-primitives.c"
+{
+
+# 409 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 409 "roci/roci-primitives.c"
+  {
+
+# 410 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_string expects 1 argument");
+  }
+
+# 412 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 413 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_STRING))
+
+# 413 "roci/roci-primitives.c"
+  {
+
+# 414 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 415 "roci/roci-primitives.c"
+  {
+
+# 416 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 420 "roci/roci-primitives.c"
+void roci_primitive_is_integer(roci_vm_state_t* state)
+# 420 "roci/roci-primitives.c"
+{
+
+# 421 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 421 "roci/roci-primitives.c"
+  {
+
+# 422 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_integer expects 1 argument");
+  }
+
+# 424 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 425 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_INTEGER))
+
+# 425 "roci/roci-primitives.c"
+  {
+
+# 426 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 427 "roci/roci-primitives.c"
+  {
+
+# 428 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 432 "roci/roci-primitives.c"
+void roci_primitive_is_list(roci_vm_state_t* state)
+# 432 "roci/roci-primitives.c"
+{
+
+# 433 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 433 "roci/roci-primitives.c"
+  {
+
+# 434 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_list expects 1 argument");
+  }
+
+# 436 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 437 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_LIST))
+
+# 437 "roci/roci-primitives.c"
+  {
+
+# 438 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 439 "roci/roci-primitives.c"
+  {
+
+# 440 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 444 "roci/roci-primitives.c"
+void roci_primitive_is_double(roci_vm_state_t* state)
+# 444 "roci/roci-primitives.c"
+{
+
+# 445 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 445 "roci/roci-primitives.c"
+  {
+
+# 446 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_double expects 1 argument");
+  }
+
+# 448 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 449 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_DOUBLE))
+
+# 449 "roci/roci-primitives.c"
+  {
+
+# 450 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 451 "roci/roci-primitives.c"
+  {
+
+# 452 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 456 "roci/roci-primitives.c"
+void roci_primitive_pwd(roci_vm_state_t* state)
+# 456 "roci/roci-primitives.c"
+{
+
+# 457 "roci/roci-primitives.c"
+  if (((state->n_args)!=0))
+
+# 457 "roci/roci-primitives.c"
+  {
+
+# 458 "roci/roci-primitives.c"
+    roci_debug_error(state, "pwd expects 0 argument");
+  }
+
+# 460 "roci/roci-primitives.c"
+  char cwd[PATH_MAX];
+
+# 461 "roci/roci-primitives.c"
+  if ((getcwd(cwd, (sizeof(cwd)))!=NULL))
+
+# 461 "roci/roci-primitives.c"
+  {
+
+# 462 "roci/roci-primitives.c"
+    roci_push_string(state, string_duplicate(cwd));
+  }
+  else
+
+# 463 "roci/roci-primitives.c"
+  {
+
+# 464 "roci/roci-primitives.c"
+    roci_debug_error(state, "getcwd return NULL");
+  }
+}
+
+
+# 468 "roci/roci-primitives.c"
+void roci_primitive_cd(roci_vm_state_t* state)
+# 468 "roci/roci-primitives.c"
+{
+
+# 469 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 469 "roci/roci-primitives.c"
+  {
+
+# 470 "roci/roci-primitives.c"
+    roci_debug_error(state, "cd expects 1 argument");
+  }
+
+# 472 "roci/roci-primitives.c"
+  if (chdir(roci_pop_string(state)))
+
+# 472 "roci/roci-primitives.c"
+  {
+
+# 473 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
+
+# 474 "roci/roci-primitives.c"
+  {
+
+# 475 "roci/roci-primitives.c"
+    roci_debug_error(state, "chdir returned false");
+  }
+}
+
+
+# 479 "roci/roci-primitives.c"
+void roci_primitive_igte(roci_vm_state_t* state)
+# 479 "roci/roci-primitives.c"
+{
+
+# 480 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 480 "roci/roci-primitives.c"
+  {
+
+# 481 "roci/roci-primitives.c"
+    roci_debug_error(state, "igte expects two integer arguments");
+  }
+
+# 483 "roci/roci-primitives.c"
+  uint64_t arg1 = roci_pop_integer(state);
+
+# 484 "roci/roci-primitives.c"
+  uint64_t arg0 = roci_pop_integer(state);
+
+# 485 "roci/roci-primitives.c"
+  roci_push_boolean(state, (arg0>=arg1));
+}
+
+
+# 488 "roci/roci-primitives.c"
+void roci_primitive_neg(roci_vm_state_t* state)
+# 488 "roci/roci-primitives.c"
+{
+
+# 489 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 489 "roci/roci-primitives.c"
+  {
+
+# 490 "roci/roci-primitives.c"
+    roci_debug_error(state, "neg expects 1 argument");
+  }
+
+# 492 "roci/roci-primitives.c"
+  roci_push_integer(state, (-roci_pop_integer(state)));
+}
+
+
+# 7 "roci/roci-repl.c"
+void roci_repl(roci_env_t* env)
+# 7 "roci/roci-repl.c"
+{
+
+# 8 "roci/roci-repl.c"
+  fprintf(stdout, "/// Wecome to the roci read-eval-print-loop\n");
+
+# 9 "roci/roci-repl.c"
+  fprintf(stdout, "///\n");
+
+# 10 "roci/roci-repl.c"
+  fprintf(stdout, "/// Special commands:\n");
+
+# 11 "roci/roci-repl.c"
+  fprintf(stdout, "/// #exit to exit this repl\n");
+
+# 12 "roci/roci-repl.c"
+  fprintf(stdout, "/// #env to dump the environment\n");
+
+# 13 "roci/roci-repl.c"
+  fprintf(stdout, "///\n");
+
+# 15 "roci/roci-repl.c"
+  while (true)
+
+# 15 "roci/roci-repl.c"
+  {
+
+# 16 "roci/roci-repl.c"
+    buffer_t* buffer = roci_repl_read(env);
+
+# 17 "roci/roci-repl.c"
+    if ((buffer==((void *)0)))
+
+# 17 "roci/roci-repl.c"
+    {
+
+# 18 "roci/roci-repl.c"
+      return;
+    }
+
+# 20 "roci/roci-repl.c"
+    roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
+
+# 21 "roci/roci-repl.c"
+    ((state->bblocks)=make_value_array(16));
+
+# 22 "roci/roci-repl.c"
+    roci_compile_buffer(state, "*repl*", buffer);
+
+# 23 "roci/roci-repl.c"
+    value_array_t* bblocks = build_bblocks((state->bblocks));
+
+# 24 "roci/roci-repl.c"
+    roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
+
+# 26 "roci/roci-repl.c"
+    roci_execute(env, entry_point);
+  }
+}
+
+
+# 30 "roci/roci-repl.c"
+buffer_t* roci_repl_read(roci_env_t* env)
+# 30 "roci/roci-repl.c"
+{
+
+# 31 "roci/roci-repl.c"
+  uint64_t last_length = 0xffffffff;
+
+# 32 "roci/roci-repl.c"
+  buffer_t* buffer = make_buffer(10);
+
+# 33 "roci/roci-repl.c"
+  while (true)
+
+# 33 "roci/roci-repl.c"
+  {
+
+# 35 "roci/roci-repl.c"
+    if ((last_length!=(buffer->length)))
+
+# 35 "roci/roci-repl.c"
+    {
+
+# 36 "roci/roci-repl.c"
+      if ((last_length==0xffffffff))
+
+# 36 "roci/roci-repl.c"
+      {
+
+# 37 "roci/roci-repl.c"
+        fprintf(stdout, "roci> ");
+      }
+      else
+
+# 38 "roci/roci-repl.c"
+      {
+
+# 39 "roci/roci-repl.c"
+        fprintf(stdout, "....> ");
+      }
+
+# 41 "roci/roci-repl.c"
+      fflush(stdout);
+
+# 42 "roci/roci-repl.c"
+      (last_length=(buffer->length));
+    }
+
+# 45 "roci/roci-repl.c"
+    buffer_read_ready_bytes(buffer, stdin, 0xffffffff);
+
+# 46 "roci/roci-repl.c"
+    if (buffer_equal(buffer, "#exit\n"))
+
+# 46 "roci/roci-repl.c"
+    {
+
+# 47 "roci/roci-repl.c"
+      return ((void *)0);
+    }
+    else
+
+# 48 "roci/roci-repl.c"
+    if (buffer_equal(buffer, "#env\n"))
+
+# 48 "roci/roci-repl.c"
+    {
+
+# 49 "roci/roci-repl.c"
+      buffer_t* env_buffer = make_buffer(10);
+
+# 50 "roci/roci-repl.c"
+      roci_dump_env(env, env_buffer);
+
+# 51 "roci/roci-repl.c"
+      fprintf(stdout, "----- Environment -----\n");
+
+# 52 "roci/roci-repl.c"
+      fprintf(stdout, "%s", buffer_to_c_string(env_buffer));
+
+# 53 "roci/roci-repl.c"
+      buffer_clear(buffer);
+
+# 54 "roci/roci-repl.c"
+      (last_length=0xffffffff);
+    }
+    else
+
+# 55 "roci/roci-repl.c"
+    {
+
+# 56 "roci/roci-repl.c"
+      if ((buffer_index_of(buffer, "\n\n")>=0))
+
+# 56 "roci/roci-repl.c"
+      {
+
+# 57 "roci/roci-repl.c"
+        return buffer;
+      }
+    }
+  }
 }
 
 
@@ -30984,593 +32584,687 @@ void roci_append_value(buffer_t* buffer, roci_value_t value)
     break;
 
 # 54 "roci/roci-value.c"
-    default:
+    case ROCI_TAG_LIST:
+
+# 54 "roci/roci-value.c"
+    {
 
 # 55 "roci/roci-value.c"
-    log_fatal("unhandled tag %s", roci_tag_to_string((value.tag)));
+      buffer_printf(buffer, "[");
 
 # 56 "roci/roci-value.c"
+      value_array_t* list = (/*CAST*/(value_array_t*) (value.raw));
+
+# 57 "roci/roci-value.c"
+      for (
+
+# 57 "roci/roci-value.c"
+
+# 57 "roci/roci-value.c"
+        int i = 0;
+
+# 57 "roci/roci-value.c"
+        (i<(list->length));
+
+# 57 "roci/roci-value.c"
+        (i++))
+
+# 57 "roci/roci-value.c"
+      {
+
+# 58 "roci/roci-value.c"
+        if ((i>0))
+
+# 58 "roci/roci-value.c"
+        {
+
+# 59 "roci/roci-value.c"
+          buffer_printf(buffer, ", ");
+        }
+
+# 61 "roci/roci-value.c"
+        roci_value_t* val = value_array_get_ptr(list, i, typeof(roci_value_t*));
+
+# 62 "roci/roci-value.c"
+        roci_append_value(buffer, (*val));
+      }
+
+# 64 "roci/roci-value.c"
+      buffer_printf(buffer, "]");
+
+# 65 "roci/roci-value.c"
+      break;
+    }
+
+# 68 "roci/roci-value.c"
+    default:
+
+# 69 "roci/roci-value.c"
+    log_fatal("unhandled tag %s", roci_tag_to_string((value.tag)));
+
+# 70 "roci/roci-value.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 60 "roci/roci-value.c"
+# 74 "roci/roci-value.c"
 char* roci_value_to_c_string(roci_value_t value)
-# 60 "roci/roci-value.c"
+# 74 "roci/roci-value.c"
 {
 
-# 61 "roci/roci-value.c"
+# 75 "roci/roci-value.c"
   buffer_t* buf = make_buffer(10);
 
-# 62 "roci/roci-value.c"
+# 76 "roci/roci-value.c"
   roci_append_value(buf, value);
 
-# 63 "roci/roci-value.c"
+# 77 "roci/roci-value.c"
   return buffer_to_c_string(buf);
 }
 
 
-# 127 "roci/roci.c"
-roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point)
-# 127 "roci/roci.c"
+# 80 "roci/roci-value.c"
+roci_value_t* roci_value_to_heap(roci_value_t value)
+# 80 "roci/roci-value.c"
 {
 
-# 128 "roci/roci.c"
+# 81 "roci/roci-value.c"
+  roci_value_t* result = malloc_struct(roci_value_t);
+
+# 82 "roci/roci-value.c"
+  ((result->raw)=(value.raw));
+
+# 83 "roci/roci-value.c"
+  ((result->tag)=(value.tag));
+
+# 84 "roci/roci-value.c"
+  return result;
+}
+
+
+# 87 "roci/roci-value.c"
+roci_value_t* string_to_roci_string(char* str)
+# 87 "roci/roci-value.c"
+{
+
+# 88 "roci/roci-value.c"
+  roci_value_t* result = malloc_struct(roci_value_t);
+
+# 89 "roci/roci-value.c"
+  ((result->raw)=(/*CAST*/(uint64_t) str));
+
+# 90 "roci/roci-value.c"
+  ((result->tag)=ROCI_TAG_STRING);
+
+# 91 "roci/roci-value.c"
+  return result;
+}
+
+
+# 111 "roci/roci.c"
+roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point)
+# 111 "roci/roci.c"
+{
+
+# 112 "roci/roci.c"
   roci_vm_state_t* state = roci_make_vm_state(env);
 
-# 129 "roci/roci.c"
+# 113 "roci/roci.c"
   return roci_execute_bblock(entry_point, state);
 }
 
 
-# 132 "roci/roci.c"
+# 116 "roci/roci.c"
 roci_vm_state_t* roci_make_vm_state(roci_env_t* env)
-# 132 "roci/roci.c"
+# 116 "roci/roci.c"
 {
 
-# 133 "roci/roci.c"
+# 117 "roci/roci.c"
   roci_vm_state_t* state = malloc_struct(roci_vm_state_t);
 
-# 134 "roci/roci.c"
-  ((state->stack)=(/*CAST*/(uint64_t*) malloc((256*8))));
+# 118 "roci/roci.c"
+  ((state->stack)=(/*CAST*/(uint64_t*) malloc_bytes((1024*8))));
 
-# 135 "roci/roci.c"
-  ((state->stack_tags)=(/*CAST*/(uint8_t*) malloc(256)));
+# 119 "roci/roci.c"
+  ((state->stack_tags)=(/*CAST*/(uint8_t*) malloc_bytes(1024)));
 
-# 136 "roci/roci.c"
-  ((state->continuations)=(/*CAST*/(roci_cont_t**) malloc((256*8))));
+# 120 "roci/roci.c"
+  ((state->continuations)=(/*CAST*/(roci_cont_t**) malloc_bytes((1024*8))));
 
-# 137 "roci/roci.c"
+# 121 "roci/roci.c"
   roci_set_env(state, env);
 
-# 138 "roci/roci.c"
-  if (true)
+# 122 "roci/roci.c"
+  if (FLAG_roci_debug)
 
-# 138 "roci/roci.c"
+# 122 "roci/roci.c"
   {
 
-# 139 "roci/roci.c"
+# 123 "roci/roci.c"
     ((state->debug)=malloc_struct(roci_debug_state_t));
 
-# 140 "roci/roci.c"
+# 124 "roci/roci.c"
     (((state->debug)->trace)=true);
   }
 
-# 144 "roci/roci.c"
-  roci_push_value(state, 0xCAFEBABE, ROCI_TAG_STACK_MARKER);
+# 128 "roci/roci.c"
+  roci_push_value_parts(state, 0xCAFEBABE, ROCI_TAG_STACK_MARKER);
 
-# 145 "roci/roci.c"
+# 129 "roci/roci.c"
   return state;
 }
 
 
-# 152 "roci/roci.c"
+# 136 "roci/roci.c"
 void roci_runtime_error(roci_runtime_error_t runtime_error)
-# 152 "roci/roci.c"
+# 136 "roci/roci.c"
 {
 
-# 153 "roci/roci.c"
+# 137 "roci/roci.c"
   log_fatal("A runtime error has occurred evaluating a roci script");
 
-# 154 "roci/roci.c"
+# 138 "roci/roci.c"
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 
-# 165 "roci/roci.c"
+# 149 "roci/roci.c"
 roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state)
-# 166 "roci/roci.c"
+# 150 "roci/roci.c"
 {
 
-# 167 "roci/roci.c"
+# 151 "roci/roci.c"
   buffer_t* buffer = make_buffer(80);
 
-# 169 "roci/roci.c"
+# 153 "roci/roci.c"
   start_bblock:
 
-# 171 "roci/roci.c"
+# 155 "roci/roci.c"
   ((state->current_bb)=bb);
 
-# 172 "roci/roci.c"
+# 156 "roci/roci.c"
   ((state->opcode_ptr)=bblock_opcode_pointer(bb));
 
-# 173 "roci/roci.c"
+# 157 "roci/roci.c"
   ((state->data_ptr)=bblock_data_pointer(bb));
 
-# 175 "roci/roci.c"
+# 159 "roci/roci.c"
   while (true)
 
-# 175 "roci/roci.c"
+# 159 "roci/roci.c"
   {
 
-# 176 "roci/roci.c"
+# 160 "roci/roci.c"
     if ((((state->debug)!=((void *)0))&&((state->debug)->trace)))
 
-# 176 "roci/roci.c"
+# 160 "roci/roci.c"
     {
 
-# 177 "roci/roci.c"
+# 161 "roci/roci.c"
       roci_debug_trace(state, buffer);
     }
 
-# 179 "roci/roci.c"
+# 163 "roci/roci.c"
     roci_opcode_t opcode = (*((state->opcode_ptr)++));
 
-# 180 "roci/roci.c"
+# 164 "roci/roci.c"
     switch (opcode)
 
-# 180 "roci/roci.c"
+# 164 "roci/roci.c"
     {
 
-# 181 "roci/roci.c"
+# 165 "roci/roci.c"
       case ROCI_OPCODE_TRAP:
 
-# 182 "roci/roci.c"
+# 166 "roci/roci.c"
       return ROCI_RUNTIME_ERROR_TRAP;
 
-# 184 "roci/roci.c"
+# 168 "roci/roci.c"
       case ROCI_OPCODE_PUSH_FALSE:
 
-# 185 "roci/roci.c"
+# 169 "roci/roci.c"
       ((*((state->stack)++))=0);
 
-# 186 "roci/roci.c"
+# 170 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
 
-# 187 "roci/roci.c"
+# 171 "roci/roci.c"
       break;
 
-# 189 "roci/roci.c"
+# 173 "roci/roci.c"
       case ROCI_OPCODE_PUSH_TRUE:
 
-# 190 "roci/roci.c"
+# 174 "roci/roci.c"
       ((*((state->stack)++))=1);
 
-# 191 "roci/roci.c"
+# 175 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
 
-# 192 "roci/roci.c"
+# 176 "roci/roci.c"
       break;
 
-# 194 "roci/roci.c"
+# 178 "roci/roci.c"
       case ROCI_OPCODE_PUSH_INTEGER:
 
-# 195 "roci/roci.c"
+# 179 "roci/roci.c"
       ((*((state->stack)++))=(*((state->data_ptr)++)));
 
-# 196 "roci/roci.c"
+# 180 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_INTEGER);
 
-# 197 "roci/roci.c"
+# 181 "roci/roci.c"
       break;
 
-# 199 "roci/roci.c"
+# 183 "roci/roci.c"
       case ROCI_OPCODE_PUSH_DOUBLE:
 
-# 200 "roci/roci.c"
+# 184 "roci/roci.c"
       ((*((state->stack)++))=(*((state->data_ptr)++)));
 
-# 201 "roci/roci.c"
+# 185 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_DOUBLE);
 
-# 202 "roci/roci.c"
+# 186 "roci/roci.c"
       break;
 
-# 204 "roci/roci.c"
+# 188 "roci/roci.c"
       case ROCI_OPCODE_PUSH_STRING:
 
-# 205 "roci/roci.c"
+# 189 "roci/roci.c"
       ((*((state->stack)++))=(*((state->data_ptr)++)));
 
-# 206 "roci/roci.c"
+# 190 "roci/roci.c"
       ((*((state->stack_tags)++))=ROCI_TAG_STRING);
 
-# 207 "roci/roci.c"
+# 191 "roci/roci.c"
       break;
 
-# 209 "roci/roci.c"
+# 193 "roci/roci.c"
       case ROCI_OPCODE_BR_TRUE:
 
-# 210 "roci/roci.c"
+# 194 "roci/roci.c"
       roci_bb_t* taken_bb = (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++)));
 
-# 211 "roci/roci.c"
+# 195 "roci/roci.c"
       roci_tag_t tag = (*(--(state->stack_tags)));
 
-# 212 "roci/roci.c"
+# 196 "roci/roci.c"
       uint64_t tos = (*(--(state->stack)));
 
-# 213 "roci/roci.c"
+# 197 "roci/roci.c"
       if ((tag!=ROCI_TAG_BOOLEAN))
 
-# 213 "roci/roci.c"
+# 197 "roci/roci.c"
       {
 
-# 214 "roci/roci.c"
+# 198 "roci/roci.c"
         return ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED;
       }
 
-# 216 "roci/roci.c"
+# 200 "roci/roci.c"
       if ((tos!=0))
 
-# 216 "roci/roci.c"
+# 200 "roci/roci.c"
       {
 
-# 217 "roci/roci.c"
+# 201 "roci/roci.c"
         (bb=taken_bb);
 
-# 218 "roci/roci.c"
+# 202 "roci/roci.c"
         goto start_bblock;
       }
 
-# 220 "roci/roci.c"
+# 204 "roci/roci.c"
       break;
 
-# 222 "roci/roci.c"
+# 206 "roci/roci.c"
       case ROCI_OPCODE_BR:
 
-# 223 "roci/roci.c"
+# 207 "roci/roci.c"
       (bb=(/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))));
 
-# 224 "roci/roci.c"
+# 208 "roci/roci.c"
       goto start_bblock;
 
-# 226 "roci/roci.c"
+# 210 "roci/roci.c"
       case ROCI_OPCODE_MAKE_CLOSURE:
 
-# 227 "roci/roci.c"
+# 211 "roci/roci.c"
       roci_debug_breakpoint();
 
-# 229 "roci/roci.c"
+# 213 "roci/roci.c"
       roci_closure_t* closure = malloc_struct(roci_closure_t);
 
-# 230 "roci/roci.c"
+# 214 "roci/roci.c"
       ((closure->entry_point)=(/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))));
 
-# 231 "roci/roci.c"
+# 215 "roci/roci.c"
       ((closure->env)=roci_current_env(state));
 
-# 232 "roci/roci.c"
-      roci_push_value(state, (/*CAST*/(uint64_t) closure), ROCI_TAG_CLOSURE);
+# 216 "roci/roci.c"
+      roci_push_value_parts(state, (/*CAST*/(uint64_t) closure), ROCI_TAG_CLOSURE);
 
-# 233 "roci/roci.c"
+# 217 "roci/roci.c"
       roci_debug_breakpoint();
 
-# 234 "roci/roci.c"
+# 218 "roci/roci.c"
       break;
 
-# 236 "roci/roci.c"
-      case ROCI_OPCODE_CALL_0:
+# 220 "roci/roci.c"
+      case ROCI_OPCODE_CALL:
 
-# 237 "roci/roci.c"
-      case ROCI_OPCODE_CALL_1:
+# 223 "roci/roci.c"
+      uint64_t n_args = (/*CAST*/(uint64_t) (*((state->data_ptr)++)));
 
-# 238 "roci/roci.c"
-      case ROCI_OPCODE_CALL_2:
-
-# 239 "roci/roci.c"
-      case ROCI_OPCODE_CALL_3:
-
-# 240 "roci/roci.c"
-      case ROCI_OPCODE_CALL_4:
-
-# 241 "roci/roci.c"
-      case ROCI_OPCODE_CALL_5:
-
-# 242 "roci/roci.c"
-      case ROCI_OPCODE_CALL_6:
-
-# 243 "roci/roci.c"
-      case ROCI_OPCODE_CALL_7:
-
-# 244 "roci/roci.c"
-      case ROCI_OPCODE_CALL_8:
-
-# 245 "roci/roci.c"
-      case ROCI_OPCODE_CALL_9:
-
-# 246 "roci/roci.c"
-      case ROCI_OPCODE_CALL_10:
-
-# 247 "roci/roci.c"
-      case ROCI_OPCODE_CALL_11:
-
-# 248 "roci/roci.c"
-      case ROCI_OPCODE_CALL_12:
-
-# 249 "roci/roci.c"
-      case ROCI_OPCODE_CALL_13:
-
-# 250 "roci/roci.c"
-      case ROCI_OPCODE_CALL_14:
-
-# 251 "roci/roci.c"
-      case ROCI_OPCODE_CALL_15:
-
-# 252 "roci/roci.c"
-      case ROCI_OPCODE_CALL_16:
-
-# 255 "roci/roci.c"
-      uint64_t n_args = (opcode-ROCI_OPCODE_CALL_0);
-
-# 256 "roci/roci.c"
+# 224 "roci/roci.c"
       ((state->n_args)=n_args);
 
-# 257 "roci/roci.c"
+# 225 "roci/roci.c"
       roci_value_t proc = roci_pop_value(state);
 
-# 258 "roci/roci.c"
+# 226 "roci/roci.c"
       if (((proc.tag)==ROCI_TAG_C_PRIMITIVE))
 
-# 258 "roci/roci.c"
+# 226 "roci/roci.c"
       {
 
-# 259 "roci/roci.c"
+# 227 "roci/roci.c"
         roci_bb_t* cont_bb = (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++)));
 
-# 260 "roci/roci.c"
+# 228 "roci/roci.c"
         roci_env_t* cont_env = (state->env);
 
-# 261 "roci/roci.c"
+# 229 "roci/roci.c"
         (/*CAST*/(roci_c_primitive_t) (proc.raw))(state);
 
-# 262 "roci/roci.c"
+# 230 "roci/roci.c"
         (bb=cont_bb);
 
-# 263 "roci/roci.c"
+# 231 "roci/roci.c"
         ((state->env)=cont_env);
 
-# 264 "roci/roci.c"
+# 232 "roci/roci.c"
         goto start_bblock;
       }
       else
 
-# 265 "roci/roci.c"
+# 233 "roci/roci.c"
       if (((proc.tag)==ROCI_TAG_CLOSURE))
 
-# 265 "roci/roci.c"
+# 233 "roci/roci.c"
       {
 
-# 266 "roci/roci.c"
+# 234 "roci/roci.c"
         roci_closure_t* function = (/*CAST*/(roci_closure_t*) (proc.raw));
 
-# 267 "roci/roci.c"
-        roci_set_env(state, (function->env));
-
-# 268 "roci/roci.c"
+# 235 "roci/roci.c"
         roci_push_continuation(state, (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))), n_args);
 
-# 270 "roci/roci.c"
+# 237 "roci/roci.c"
+        roci_set_env(state, (function->env));
+
+# 238 "roci/roci.c"
         (bb=(function->entry_point));
 
-# 271 "roci/roci.c"
+# 239 "roci/roci.c"
         goto start_bblock;
       }
       else
 
-# 272 "roci/roci.c"
+# 240 "roci/roci.c"
       {
 
-# 273 "roci/roci.c"
+# 241 "roci/roci.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-# 275 "roci/roci.c"
+# 243 "roci/roci.c"
       break;
 
-# 277 "roci/roci.c"
+# 245 "roci/roci.c"
       case ROCI_OPCODE_RETURN:
 
-# 277 "roci/roci.c"
+# 245 "roci/roci.c"
       {
 
-# 278 "roci/roci.c"
+# 246 "roci/roci.c"
         roci_value_t tos = roci_pop_value(state);
 
-# 279 "roci/roci.c"
+# 247 "roci/roci.c"
         roci_cont_t* continuation = roci_pop_continuation(state);
 
-# 280 "roci/roci.c"
+# 248 "roci/roci.c"
         (bb=(continuation->bb));
 
-# 281 "roci/roci.c"
+# 249 "roci/roci.c"
         ((state->stack)=(continuation->stack));
 
-# 282 "roci/roci.c"
+# 250 "roci/roci.c"
         ((state->stack_tags)=(continuation->stack_tags));
 
-# 283 "roci/roci.c"
-        roci_push_value(state, (tos.raw), (tos.tag));
+# 251 "roci/roci.c"
+        ((state->env)=(continuation->env));
 
-# 284 "roci/roci.c"
+# 252 "roci/roci.c"
+        roci_push_value_parts(state, (tos.raw), (tos.tag));
+
+# 253 "roci/roci.c"
         if ((bb==NULL))
 
-# 284 "roci/roci.c"
+# 253 "roci/roci.c"
         {
 
-# 285 "roci/roci.c"
+# 254 "roci/roci.c"
           return ROCI_RUNTIME_ERROR_NONE;
         }
 
-# 287 "roci/roci.c"
+# 256 "roci/roci.c"
         goto start_bblock;
       }
 
-# 290 "roci/roci.c"
+# 259 "roci/roci.c"
       case ROCI_OPCODE_NEW_ENVIRONMENT:
 
-# 291 "roci/roci.c"
+# 260 "roci/roci.c"
       roci_set_env(state, roci_new_env(roci_current_env(state)));
+
+# 261 "roci/roci.c"
+      break;
+
+# 263 "roci/roci.c"
+      case ROCI_OPCODE_DEFINE_VAR:
+
+# 263 "roci/roci.c"
+      {
+
+# 264 "roci/roci.c"
+        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+
+# 265 "roci/roci.c"
+        roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 266 "roci/roci.c"
+        uint64_t tos = (*(--(state->stack)));
+
+# 267 "roci/roci.c"
+        roci_define_var(roci_current_env(state), str, u64_to_value(tos), tag);
+
+# 268 "roci/roci.c"
+        break;
+      }
+
+# 271 "roci/roci.c"
+      case ROCI_OPCODE_GET_VAR:
+
+# 271 "roci/roci.c"
+      {
+
+# 272 "roci/roci.c"
+        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+
+# 273 "roci/roci.c"
+        roci_value_t* binding = roci_get_var(roci_current_env(state), str);
+
+# 274 "roci/roci.c"
+        if ((binding==((void *)0)))
+
+# 274 "roci/roci.c"
+        {
+
+# 275 "roci/roci.c"
+          roci_debug_error(state, string_printf("variable not found: %s", str));
+        }
+
+# 277 "roci/roci.c"
+        ((*((state->stack)++))=(binding->raw));
+
+# 278 "roci/roci.c"
+        ((*((state->stack_tags)++))=(binding->tag));
+
+# 279 "roci/roci.c"
+        break;
+      }
+
+# 282 "roci/roci.c"
+      case ROCI_OPCODE_SET_VAR:
+
+# 282 "roci/roci.c"
+      {
+
+# 283 "roci/roci.c"
+        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+
+# 284 "roci/roci.c"
+        roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 285 "roci/roci.c"
+        uint64_t tos = (*(--(state->stack)));
+
+# 286 "roci/roci.c"
+        roci_set_var(state, str, u64_to_value(tos), tag);
+
+# 287 "roci/roci.c"
+        break;
+      }
+
+# 290 "roci/roci.c"
+      case ROCI_OPCODE_COMMENT:
+
+# 291 "roci/roci.c"
+      ((state->data_ptr)++);
 
 # 292 "roci/roci.c"
       break;
 
 # 294 "roci/roci.c"
-      case ROCI_OPCODE_DEFINE_VAR:
-
-# 294 "roci/roci.c"
-      {
+      case ROCI_OPCODE_DEBUG_INFO:
 
 # 295 "roci/roci.c"
-        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+      ((state->debug_info)=(*((state->data_ptr)++)));
 
 # 296 "roci/roci.c"
-        roci_tag_t tag = (*(--(state->stack_tags)));
-
-# 297 "roci/roci.c"
-        uint64_t tos = (*(--(state->stack)));
+      break;
 
 # 298 "roci/roci.c"
-        roci_define_var(roci_current_env(state), str, u64_to_value(tos), tag);
+      case ROCI_OPCODE_DROP_ENVIRONMENT:
 
 # 299 "roci/roci.c"
-        break;
-      }
+      roci_drop_env(state);
+
+# 300 "roci/roci.c"
+      break;
 
 # 302 "roci/roci.c"
-      case ROCI_OPCODE_GET_VAR:
+      case ROCI_OPCODE_CHECK_ARGS:
 
 # 302 "roci/roci.c"
       {
 
 # 303 "roci/roci.c"
-        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
-
-# 304 "roci/roci.c"
-        roci_value_t* binding = roci_get_var(roci_current_env(state), str);
-
-# 305 "roci/roci.c"
-        if ((binding==((void *)0)))
-
-# 305 "roci/roci.c"
-        {
-
-# 306 "roci/roci.c"
-          roci_debug_error(state, "variable not found");
-        }
-
-# 308 "roci/roci.c"
-        ((*((state->stack)++))=(binding->raw));
-
-# 309 "roci/roci.c"
-        ((*((state->stack_tags)++))=(binding->tag));
-
-# 310 "roci/roci.c"
-        break;
-      }
-
-# 313 "roci/roci.c"
-      case ROCI_OPCODE_SET_VAR:
-
-# 313 "roci/roci.c"
-      {
-
-# 314 "roci/roci.c"
-        char* str = (/*CAST*/(char*) ((state->data_ptr)++));
-
-# 315 "roci/roci.c"
-        roci_tag_t tag = (*(--(state->stack_tags)));
-
-# 316 "roci/roci.c"
-        uint64_t tos = (*(--(state->stack)));
-
-# 317 "roci/roci.c"
-        roci_set_var(state, str, u64_to_value(tos), tag);
-
-# 318 "roci/roci.c"
-        break;
-      }
-
-# 321 "roci/roci.c"
-      case ROCI_OPCODE_COMMENT:
-
-# 322 "roci/roci.c"
-      ((state->data_ptr)++);
-
-# 323 "roci/roci.c"
-      break;
-
-# 325 "roci/roci.c"
-      case ROCI_OPCODE_DEBUG_INFO:
-
-# 326 "roci/roci.c"
-      ((state->debug_info)=(*((state->data_ptr)++)));
-
-# 327 "roci/roci.c"
-      break;
-
-# 329 "roci/roci.c"
-      case ROCI_OPCODE_DROP_ENVIRONMENT:
-
-# 330 "roci/roci.c"
-      roci_drop_env(state);
-
-# 331 "roci/roci.c"
-      break;
-
-# 333 "roci/roci.c"
-      case ROCI_OPCODE_CHECK_ARGS:
-
-# 333 "roci/roci.c"
-      {
-
-# 334 "roci/roci.c"
         uint64_t n_args = (*((state->data_ptr)++));
 
-# 335 "roci/roci.c"
+# 304 "roci/roci.c"
         if ((n_args!=(state->n_args)))
 
-# 335 "roci/roci.c"
+# 304 "roci/roci.c"
         {
 
-# 336 "roci/roci.c"
+# 305 "roci/roci.c"
           roci_debug_error(state, "argument call mismatch");
         }
 
-# 338 "roci/roci.c"
+# 307 "roci/roci.c"
         break;
       }
 
-# 341 "roci/roci.c"
+# 310 "roci/roci.c"
       case ROCI_OPCODE_DROP:
 
-# 342 "roci/roci.c"
+# 311 "roci/roci.c"
       roci_pop_value(state);
 
-# 343 "roci/roci.c"
+# 312 "roci/roci.c"
       break;
 
-# 345 "roci/roci.c"
+# 314 "roci/roci.c"
       default:
 
-# 346 "roci/roci.c"
+# 315 "roci/roci.c"
       return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
     }
   }
 
-# 349 "roci/roci.c"
+# 318 "roci/roci.c"
   return ROCI_RUNTIME_ERROR_NONE;
+}
+
+
+# 325 "roci/roci.c"
+void roci_call(roci_vm_state_t* state, roci_value_t proc, int64_t n_args)
+# 325 "roci/roci.c"
+{
+
+# 326 "roci/roci.c"
+  ((state->n_args)=n_args);
+
+# 327 "roci/roci.c"
+  if (((proc.tag)==ROCI_TAG_C_PRIMITIVE))
+
+# 327 "roci/roci.c"
+  {
+
+# 328 "roci/roci.c"
+    (/*CAST*/(roci_c_primitive_t) (proc.raw))(state);
+  }
+  else
+
+# 329 "roci/roci.c"
+  if (((proc.tag)==ROCI_TAG_CLOSURE))
+
+# 329 "roci/roci.c"
+  {
+
+# 330 "roci/roci.c"
+    roci_push_continuation(state, ((void *)0), n_args);
+
+# 331 "roci/roci.c"
+    roci_closure_t* function = (/*CAST*/(roci_closure_t*) (proc.raw));
+
+# 332 "roci/roci.c"
+    roci_set_env(state, (function->env));
+
+# 333 "roci/roci.c"
+    roci_execute_bblock((function->entry_point), state);
+  }
+  else
+
+# 334 "roci/roci.c"
+  {
+
+# 335 "roci/roci.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
 }
 
 
@@ -33985,8 +35679,8 @@ char* roci_tag_to_string(roci_tag_t value){
     return "ROCI_TAG_CLOSURE";
   case ROCI_TAG_C_PRIMITIVE:
     return "ROCI_TAG_C_PRIMITIVE";
-  case ROCI_TAG_ARRAY:
-    return "ROCI_TAG_ARRAY";
+  case ROCI_TAG_LIST:
+    return "ROCI_TAG_LIST";
   case ROCI_TAG_STACK_MARKER:
     return "ROCI_TAG_STACK_MARKER";
   default:
@@ -34015,8 +35709,8 @@ roci_tag_t string_to_roci_tag(char* value){
   if (strcmp(value, "ROCI_TAG_C_PRIMITIVE") == 0) {
     return ROCI_TAG_C_PRIMITIVE;
   }
-  if (strcmp(value, "ROCI_TAG_ARRAY") == 0) {
-    return ROCI_TAG_ARRAY;
+  if (strcmp(value, "ROCI_TAG_LIST") == 0) {
+    return ROCI_TAG_LIST;
   }
   if (strcmp(value, "ROCI_TAG_STACK_MARKER") == 0) {
     return ROCI_TAG_STACK_MARKER;
@@ -34061,8 +35755,8 @@ enum_metadata_t* roci_tag_metadata(){
     };
     static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
         .next = &var_6,
-        .name = "ROCI_TAG_ARRAY",
-        .value = ROCI_TAG_ARRAY
+        .name = "ROCI_TAG_LIST",
+        .value = ROCI_TAG_LIST
     };
     static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
         .next = &var_7,
@@ -34109,40 +35803,8 @@ char* roci_opcode_to_string(roci_opcode_t value){
     return "ROCI_OPCODE_MAKE_CLOSURE";
   case ROCI_OPCODE_RETURN:
     return "ROCI_OPCODE_RETURN";
-  case ROCI_OPCODE_CALL_0:
-    return "ROCI_OPCODE_CALL_0";
-  case ROCI_OPCODE_CALL_1:
-    return "ROCI_OPCODE_CALL_1";
-  case ROCI_OPCODE_CALL_2:
-    return "ROCI_OPCODE_CALL_2";
-  case ROCI_OPCODE_CALL_3:
-    return "ROCI_OPCODE_CALL_3";
-  case ROCI_OPCODE_CALL_4:
-    return "ROCI_OPCODE_CALL_4";
-  case ROCI_OPCODE_CALL_5:
-    return "ROCI_OPCODE_CALL_5";
-  case ROCI_OPCODE_CALL_6:
-    return "ROCI_OPCODE_CALL_6";
-  case ROCI_OPCODE_CALL_7:
-    return "ROCI_OPCODE_CALL_7";
-  case ROCI_OPCODE_CALL_8:
-    return "ROCI_OPCODE_CALL_8";
-  case ROCI_OPCODE_CALL_9:
-    return "ROCI_OPCODE_CALL_9";
-  case ROCI_OPCODE_CALL_10:
-    return "ROCI_OPCODE_CALL_10";
-  case ROCI_OPCODE_CALL_11:
-    return "ROCI_OPCODE_CALL_11";
-  case ROCI_OPCODE_CALL_12:
-    return "ROCI_OPCODE_CALL_12";
-  case ROCI_OPCODE_CALL_13:
-    return "ROCI_OPCODE_CALL_13";
-  case ROCI_OPCODE_CALL_14:
-    return "ROCI_OPCODE_CALL_14";
-  case ROCI_OPCODE_CALL_15:
-    return "ROCI_OPCODE_CALL_15";
-  case ROCI_OPCODE_CALL_16:
-    return "ROCI_OPCODE_CALL_16";
+  case ROCI_OPCODE_CALL:
+    return "ROCI_OPCODE_CALL";
   case ROCI_OPCODE_CHECK_ARGS:
     return "ROCI_OPCODE_CHECK_ARGS";
   case ROCI_OPCODE_DEBUG_INFO:
@@ -34202,56 +35864,8 @@ roci_opcode_t string_to_roci_opcode(char* value){
   if (strcmp(value, "ROCI_OPCODE_RETURN") == 0) {
     return ROCI_OPCODE_RETURN;
   }
-  if (strcmp(value, "ROCI_OPCODE_CALL_0") == 0) {
-    return ROCI_OPCODE_CALL_0;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_1") == 0) {
-    return ROCI_OPCODE_CALL_1;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_2") == 0) {
-    return ROCI_OPCODE_CALL_2;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_3") == 0) {
-    return ROCI_OPCODE_CALL_3;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_4") == 0) {
-    return ROCI_OPCODE_CALL_4;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_5") == 0) {
-    return ROCI_OPCODE_CALL_5;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_6") == 0) {
-    return ROCI_OPCODE_CALL_6;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_7") == 0) {
-    return ROCI_OPCODE_CALL_7;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_8") == 0) {
-    return ROCI_OPCODE_CALL_8;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_9") == 0) {
-    return ROCI_OPCODE_CALL_9;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_10") == 0) {
-    return ROCI_OPCODE_CALL_10;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_11") == 0) {
-    return ROCI_OPCODE_CALL_11;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_12") == 0) {
-    return ROCI_OPCODE_CALL_12;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_13") == 0) {
-    return ROCI_OPCODE_CALL_13;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_14") == 0) {
-    return ROCI_OPCODE_CALL_14;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_15") == 0) {
-    return ROCI_OPCODE_CALL_15;
-  }
-  if (strcmp(value, "ROCI_OPCODE_CALL_16") == 0) {
-    return ROCI_OPCODE_CALL_16;
+  if (strcmp(value, "ROCI_OPCODE_CALL") == 0) {
+    return ROCI_OPCODE_CALL;
   }
   if (strcmp(value, "ROCI_OPCODE_CHECK_ARGS") == 0) {
     return ROCI_OPCODE_CHECK_ARGS;
@@ -34347,107 +35961,27 @@ enum_metadata_t* roci_opcode_metadata(){
     };
     static enum_element_metadata_t var_16 = (enum_element_metadata_t) {
         .next = &var_15,
-        .name = "ROCI_OPCODE_CALL_0",
-        .value = ROCI_OPCODE_CALL_0
+        .name = "ROCI_OPCODE_CALL",
+        .value = ROCI_OPCODE_CALL
     };
     static enum_element_metadata_t var_17 = (enum_element_metadata_t) {
         .next = &var_16,
-        .name = "ROCI_OPCODE_CALL_1",
-        .value = ROCI_OPCODE_CALL_1
-    };
-    static enum_element_metadata_t var_18 = (enum_element_metadata_t) {
-        .next = &var_17,
-        .name = "ROCI_OPCODE_CALL_2",
-        .value = ROCI_OPCODE_CALL_2
-    };
-    static enum_element_metadata_t var_19 = (enum_element_metadata_t) {
-        .next = &var_18,
-        .name = "ROCI_OPCODE_CALL_3",
-        .value = ROCI_OPCODE_CALL_3
-    };
-    static enum_element_metadata_t var_20 = (enum_element_metadata_t) {
-        .next = &var_19,
-        .name = "ROCI_OPCODE_CALL_4",
-        .value = ROCI_OPCODE_CALL_4
-    };
-    static enum_element_metadata_t var_21 = (enum_element_metadata_t) {
-        .next = &var_20,
-        .name = "ROCI_OPCODE_CALL_5",
-        .value = ROCI_OPCODE_CALL_5
-    };
-    static enum_element_metadata_t var_22 = (enum_element_metadata_t) {
-        .next = &var_21,
-        .name = "ROCI_OPCODE_CALL_6",
-        .value = ROCI_OPCODE_CALL_6
-    };
-    static enum_element_metadata_t var_23 = (enum_element_metadata_t) {
-        .next = &var_22,
-        .name = "ROCI_OPCODE_CALL_7",
-        .value = ROCI_OPCODE_CALL_7
-    };
-    static enum_element_metadata_t var_24 = (enum_element_metadata_t) {
-        .next = &var_23,
-        .name = "ROCI_OPCODE_CALL_8",
-        .value = ROCI_OPCODE_CALL_8
-    };
-    static enum_element_metadata_t var_25 = (enum_element_metadata_t) {
-        .next = &var_24,
-        .name = "ROCI_OPCODE_CALL_9",
-        .value = ROCI_OPCODE_CALL_9
-    };
-    static enum_element_metadata_t var_26 = (enum_element_metadata_t) {
-        .next = &var_25,
-        .name = "ROCI_OPCODE_CALL_10",
-        .value = ROCI_OPCODE_CALL_10
-    };
-    static enum_element_metadata_t var_27 = (enum_element_metadata_t) {
-        .next = &var_26,
-        .name = "ROCI_OPCODE_CALL_11",
-        .value = ROCI_OPCODE_CALL_11
-    };
-    static enum_element_metadata_t var_28 = (enum_element_metadata_t) {
-        .next = &var_27,
-        .name = "ROCI_OPCODE_CALL_12",
-        .value = ROCI_OPCODE_CALL_12
-    };
-    static enum_element_metadata_t var_29 = (enum_element_metadata_t) {
-        .next = &var_28,
-        .name = "ROCI_OPCODE_CALL_13",
-        .value = ROCI_OPCODE_CALL_13
-    };
-    static enum_element_metadata_t var_30 = (enum_element_metadata_t) {
-        .next = &var_29,
-        .name = "ROCI_OPCODE_CALL_14",
-        .value = ROCI_OPCODE_CALL_14
-    };
-    static enum_element_metadata_t var_31 = (enum_element_metadata_t) {
-        .next = &var_30,
-        .name = "ROCI_OPCODE_CALL_15",
-        .value = ROCI_OPCODE_CALL_15
-    };
-    static enum_element_metadata_t var_32 = (enum_element_metadata_t) {
-        .next = &var_31,
-        .name = "ROCI_OPCODE_CALL_16",
-        .value = ROCI_OPCODE_CALL_16
-    };
-    static enum_element_metadata_t var_33 = (enum_element_metadata_t) {
-        .next = &var_32,
         .name = "ROCI_OPCODE_CHECK_ARGS",
         .value = ROCI_OPCODE_CHECK_ARGS
     };
-    static enum_element_metadata_t var_34 = (enum_element_metadata_t) {
-        .next = &var_33,
+    static enum_element_metadata_t var_18 = (enum_element_metadata_t) {
+        .next = &var_17,
         .name = "ROCI_OPCODE_DEBUG_INFO",
         .value = ROCI_OPCODE_DEBUG_INFO
     };
-    static enum_element_metadata_t var_35 = (enum_element_metadata_t) {
-        .next = &var_34,
+    static enum_element_metadata_t var_19 = (enum_element_metadata_t) {
+        .next = &var_18,
         .name = "ROCI_OPCODE_COMMENT",
         .value = ROCI_OPCODE_COMMENT
     };
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "roci_opcode_t",
-        .elements = &var_35
+        .elements = &var_19
     };
     return &enum_metadata_result;
 }
@@ -34512,7 +36046,6 @@ enum_metadata_t* roci_runtime_error_metadata(){
 //
 // /home/jawilson/src/omni-c/build-dir/bin/omni-c-stable
 //    generate-library
-//    --use-statement-parser=true
 //    --omit-c-armyknife-include=true
 //    --c-output-file=/home/jawilson/src/omni-c/build-dir/omni-c.c
 //    /home/jawilson/src/omni-c/build-dir/bin/lib.oar
@@ -34568,6 +36101,7 @@ enum_metadata_t* roci_runtime_error_metadata(){
 //    roci/roci-disassembler.c
 //    roci/roci-env.c
 //    roci/roci-primitives.c
+//    roci/roci-repl.c
 //    roci/roci-stack.c
 //    roci/roci-value.c
 //    roci/roci.c
@@ -34576,7 +36110,7 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // These checksums are currently easy to fake for example by using a
 // hacked git in the PATH at the time this compile was run.
 //
-// git cat-file -p 7ee1c33e40fb493096f60c072d65c0acf3f52321 > /home/jawilson/src/omni-c/build-dir/bin/lib.oar
+// git cat-file -p ebcc90197262fe60009f0b3f54bbda358391217b > /home/jawilson/src/omni-c/build-dir/bin/lib.oar
 // git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
 // git cat-file -p 6c0a741ef33f143d100f562fbb6624a0e4b0bb39 > keywords.c
 // git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
@@ -34605,9 +36139,9 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p ab21ab7d3d9844da0379a8b65fff8f8254143e5e > literal-parser.c
 // git cat-file -p e4f518156c8f554c965a6e1312572f755c17bf47 > balanced-construct-parser.c
 // git cat-file -p a1246b1440b1757d6547a3b3f595d5bb0646849a > printer.c
-// git cat-file -p 9ca05c9db93267094539835e4e48896a4a8805c8 > global-includes.c
+// git cat-file -p 1288af59af73f8a8551fafee2148ec2290e7347b > global-includes.c
 // git cat-file -p fce28a522e79bdfb5067438da1932144fa3435c0 > linearizer.c
-// git cat-file -p 2fe48aa5a691ec8c52a25aa6129d08a7b628097f > main.c
+// git cat-file -p e3f5a00518b59961d3d5632aeba842875de9a391 > main.c
 // git cat-file -p 0454a5add5006737a0f3fca664fb707837742680 > archive-command.c
 // git cat-file -p 9894b0b701f73ede7de57c59052ef1a01d5d7f4f > build-command.c
 // git cat-file -p 97164d99bde2d7b0a6b5afffd0386ad209c6547c > generate-c-output-file.c
@@ -34619,17 +36153,18 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p da2c76b993b03e6a545a4402da4bedeffbc72f90 > parse-test.c
 // git cat-file -p 73de727b90c7c551e39b54ec604d7c25da6aa5ea > test-command.c
 // git cat-file -p 924ee3779e046e6eaf0b380c17b57a0d8348573f > test-assembler.c
-// git cat-file -p 69f6cd83a7bfbaab50b6bee0b6234266c5e45f8c > flags.c
+// git cat-file -p 48edba07fa67f606cb15eba0ecffb6d31cde97ec > flags.c
 // git cat-file -p ce583389be4e293f41e3f1c61cf7e1ec7ef6e3c0 > roci/roci-assembler.c
-// git cat-file -p e6ba936f5ec08183f3dfca37c7efb585d9d0cfe9 > roci/roci-bb-builder.c
+// git cat-file -p 87ebbad558052c60043fae6a8b6206ecc5567843 > roci/roci-bb-builder.c
 // git cat-file -p d1989e6150fdf6d2af29af5f8dd473fb56c82c79 > roci/roci-bb.c
-// git cat-file -p 821f4e8b67df834b69ac2f94bf5c80540a927de6 > roci/roci-command.c
-// git cat-file -p efc3d0b71db36f6982b331966d66a777456321aa > roci/roci-compiler.c
-// git cat-file -p 22ac179e92fd51982073c7b3e9e81cbfe8d0b678 > roci/roci-debugger.c
-// git cat-file -p b5a129d6ca618bd9d307ecbaa9da557bf9a70e56 > roci/roci-disassembler.c
-// git cat-file -p 127382341510377c95324604ac3c3514a34289a6 > roci/roci-env.c
-// git cat-file -p 084a40e96570419dc5541f083739cc4db34ef8c8 > roci/roci-primitives.c
-// git cat-file -p 34423759a5790b0c600e0042b6cc2c687e8a7dbd > roci/roci-stack.c
-// git cat-file -p dd5a4feeb245a57c2cc6a347e07645cb1baf9110 > roci/roci-value.c
-// git cat-file -p 3ed9d9a93a3136034bb0bd5697794bc70276a1a5 > roci/roci.c
+// git cat-file -p 4a79ad6d847971a3cc90321e063ff26038a88389 > roci/roci-command.c
+// git cat-file -p eaf9974bedcfcf22736957246d3f3c81f9170436 > roci/roci-compiler.c
+// git cat-file -p b64875d761400ce1f4eb8c3febc30adb9c0d6ba3 > roci/roci-debugger.c
+// git cat-file -p db2362be1481cb03cdc26f5d4df25eb22aea46d9 > roci/roci-disassembler.c
+// git cat-file -p a00098cb28a56f33d6bd96b0e6849b0a5eb4c02f > roci/roci-env.c
+// git cat-file -p 4ddb2b8a3efd73bd5dc1ecc89a2ba971907a7b37 > roci/roci-primitives.c
+// git cat-file -p 1ed7f3a023e0631ccd9beb490d0025e66e36d7e1 > roci/roci-repl.c
+// git cat-file -p 7299d06db0406931b671279692c1b089c13834b9 > roci/roci-stack.c
+// git cat-file -p 4b558e9c5c3302a52efcfff0069e494093141bd5 > roci/roci-value.c
+// git cat-file -p 043a62ceaed5a8fc45f7fcc69631ec941372ea82 > roci/roci.c
 // git cat-file -p 5468645d54d6be77dddb3bd24c1b49a23dae2e45 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
