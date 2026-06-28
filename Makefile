@@ -49,6 +49,10 @@ all:
 	@$(MAKE) -C src OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR) IS_MAC_OS=$(IS_MAC_OS) BREW_GC_PREFIX=$(BREW_GC_PREFIX)
 	@$(MAKE) -C src self OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR) IS_MAC_OS=$(IS_MAC_OS) BREW_GC_PREFIX=$(BREW_GC_PREFIX)
 
+stable:
+	@echo "Building omni-c-stable..."
+	@$(MAKE) -C src ${BUILD_DIR}/bin/omni-c-stable OMNI_C_ROOT=$(OMNI_C_ROOT) BUILD_DIR=$(BUILD_DIR) IS_MAC_OS=$(IS_MAC_OS) BREW_GC_PREFIX=$(BREW_GC_PREFIX)
+
 # Clean target
 .PHONY: clean
 clean:

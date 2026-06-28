@@ -114,7 +114,11 @@ void roci_primitive_println(roci_vm_state_t* state) {
     roci_debug_error(state, "println_string expects 1 argument");
   }
   roci_value_t element = roci_pop_value(state);
-  fprintf(stdout, "%s\n", roci_value_to_c_string(element));
+  if (element.tag == ROCI_TAG_STRING) {
+    fprintf(stdout, "%s\n", cast(char*, element.raw));
+  } else {
+    fprintf(stdout, "%s\n", roci_value_to_c_string(element));
+  }
   roci_push_false(state);
 }
 

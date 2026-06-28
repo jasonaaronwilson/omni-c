@@ -67,9 +67,32 @@ list_push_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
 let RHEADER = string_append(BUILD_DIR, "gen-files/reflection-header.c");
 list_push(ALL_OMNI_C_SRC, RHEADER);
 
+let build_reflection_header = fn() {
+  let out = RHEADER;
+  let input = string_append(TOP_DIR, "src/embed/reflection.h");
+  let script = string_append(TOP_DIR, "tools/embed-file.lua");
+  let deps = make_list(input, script);
+
+  if (all_older_than(out, deps)) {
+    println(string_append(out, " is up to date"));
+    return;
+  }
+
+  let command_line = make_list(script, "reflection_header", input);
+  let result = shell(command_line);
+  println(result);
+};
+
+/*
+${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/tools/embed-file.lua
+	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header embed/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
+*/
+
 /* println(ALL_OMNI_C_SRC); */
 
 let build_omni_c = fn() {
+
+  build_reflection_header();
 
   if (all_older_than("/tmp/omni-c-baby", ALL_OMNI_C_SRC)) {
     println(string_append("/tmp/omni-c-baby", " is up to date"));
@@ -104,4 +127,3 @@ let build_omni_c = fn() {
 };
 
 build_omni_c();
-
