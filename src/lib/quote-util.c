@@ -55,7 +55,7 @@ char* string_unquote_c_string(char* input) {
       case 'r': buffer_append_byte(buf, '\r'); break;
       // case 'b': buffer_append_byte(buf, '\\'); buffer_append_byte(buf, 'b');  break;
       // case 'f': buffer_append_byte(buf, '\\'); buffer_append_byte(buf, 'f');  break;
-      case 'x':
+      case 'x': {
 	buffer_t* hex = make_buffer(3);
 	buffer_append_byte(hex, input[i++]);
 	buffer_append_byte(hex, input[i++]);
@@ -65,6 +65,7 @@ char* string_unquote_c_string(char* input) {
 	}
 	buffer_append_byte(buf, result.u64);
 	break;
+      }
     default:
       fatal_error(ERROR_ILLEGAL_INPUT);
       break;
