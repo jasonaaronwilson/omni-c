@@ -43,7 +43,10 @@ buffer_t* roci_repl_read(roci_env_t* env) {
     }
 
     buffer_read_ready_bytes(buffer, stdin, 0xffffffff);
-    if (buffer_equal(buffer, "#exit\n")) {
+    if ((buffer_ends_with(buffer, ";\n") || buffer_ends_with(buffer, "}\n"))
+        && roci_is_balanced(buffer)) {
+      return buffer;
+    } else if (buffer_equal(buffer, "#exit\n")) {
       return nullptr;
     } else if (buffer_equal(buffer, "#env\n")) {
       buffer_t* env_buffer = make_buffer(10);
@@ -58,4 +61,36 @@ buffer_t* roci_repl_read(roci_env_t* env) {
       }
     }
   }
+}
+
+/**
+ * @function roci_is_balanced
+ *
+ * Return true if we are looking at a balanced expression. This can
+ * get messed up with comments, strings, etc., but it a good enough
+ * approximation for now.
+ */
+boolean_t roci_is_balanced(buffer_t* buffer) {
+  int num_open_parens = 0;
+  int num_open_braces = 0;
+  for (uint64_t i = 0; i < buffer->length; i++) {
+    uint8_t ch = buffer_get(buffer, i);
+    switch (ch) {
+    case '(':
+      num_open_parens += 1;
+      break;
+    case ')':
+      num_open_parens -= 1;
+      break;
+    case '{':
+      num_open_braces += 1;
+      break;
+    case '}':
+      num_open_braces -= 1;
+      break;
+    default:
+      break;
+    }
+  }
+  return (num_open_parens == 0) && (num_open_braces == 0);
 }
