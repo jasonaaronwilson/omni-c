@@ -37,12 +37,13 @@ void roci_append_value(buffer_t* buffer, roci_value_t value) {
   case ROCI_TAG_C_PRIMITIVE:
     buffer_printf(buffer, "primitive<%s>", uint64_to_string(value.raw));
     break;
-  case ROCI_TAG_CLOSURE:
+  case ROCI_TAG_CLOSURE: {
     roci_closure_t* closure = cast(roci_closure_t*, value.raw);
     buffer_printf(buffer, "closure<%s,%s>",
                   uint64_to_string(cast(uint64_t, closure->entry_point)),
                   uint64_to_string(cast(uint64_t, closure->env)));
     break;
+  }
   case ROCI_TAG_BOOLEAN:
     if (value.raw) {
       buffer_printf(buffer, "%s", "true");

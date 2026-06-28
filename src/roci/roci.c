@@ -190,7 +190,7 @@ start_bblock:
       *(state->stack_tags++) = ROCI_TAG_STRING;
       break;
 
-    case ROCI_OPCODE_BR_TRUE:
+    case ROCI_OPCODE_BR_TRUE: {
       roci_bb_t* taken_bb = cast(roci_bb_t*, *(state->data_ptr++));
       roci_tag_t tag = *(--state->stack_tags);
       uint64_t tos = *(--state->stack);
@@ -202,6 +202,7 @@ start_bblock:
         goto start_bblock;
       }
       break;
+    }
 
     case ROCI_OPCODE_BR:
       bb = cast(roci_bb_t*, *(state->data_ptr++));
@@ -217,7 +218,7 @@ start_bblock:
       roci_debug_breakpoint();
       break;
 
-    case ROCI_OPCODE_CALL:
+    case ROCI_OPCODE_CALL: {
       // STACK: arg0, ..., argn, closure/primitive
       // DATUM: n_args, return-bblock
       uint64_t n_args = cast(uint64_t, *(state->data_ptr++));
@@ -241,6 +242,7 @@ start_bblock:
         fatal_error(ERROR_ILLEGAL_STATE);
       }
       break;
+    }
 
     case ROCI_OPCODE_RETURN: {
       roci_value_t tos = roci_pop_value(state);

@@ -335,7 +335,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
   } else if (token_matches(token_next, ";") || token_matches(token_next, ",")
              || token_matches(token_next, ")")) {
     switch (token->type) {
-    case TOKEN_TYPE_IDENTIFIER:
+    case TOKEN_TYPE_IDENTIFIER: {
       char* varname = token_to_string(token);
       if (string_equal(varname, "true")) {
         roci_emit_opcode(state, ROCI_OPCODE_PUSH_TRUE);
@@ -345,8 +345,9 @@ void roci_compile_expression(roci_compiler_state_t* state) {
         roci_emit_get_var(state->current_bb, varname);
       }
       break;
+    }
 
-    case TOKEN_TYPE_INTEGER_LITERAL:
+    case TOKEN_TYPE_INTEGER_LITERAL: {
       value_result_t parsed = string_parse_uint64(token_to_string(token));
       if (parsed.nf_error != NF_OK) {
         log_fatal("failed to parse integer");
@@ -355,18 +356,21 @@ void roci_compile_expression(roci_compiler_state_t* state) {
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
       value_array_add(state->current_bb->data, parsed.val);
       break;
+    }
 
-    case TOKEN_TYPE_FLOAT_LITERAL:
+    case TOKEN_TYPE_FLOAT_LITERAL: {
       double dbl = string_parse_double(token_to_string(token));
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_DOUBLE);
       value_array_add(state->current_bb->data, dbl_to_value(dbl));
       break;
+    }
 
-    case TOKEN_TYPE_STRING_LITERAL:
+    case TOKEN_TYPE_STRING_LITERAL: {
       char* str = string_unquote_c_string(token_to_string(token));
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_STRING);
       value_array_add(state->current_bb->data, str_to_value(str));
       break;
+    }
 
     default:
       log_fatal("unexpected token");
