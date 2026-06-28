@@ -127,7 +127,7 @@ ${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/to
 
 /* println(ALL_OMNI_C_SRC); */
 
-let build_omni_c = fn(target_name, omni_c_binary) {
+let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
 
   build_reflection_header();
 
@@ -143,8 +143,7 @@ let build_omni_c = fn(target_name, omni_c_binary) {
 
   // Flags to omni-c generate-library
   list_push(COMMAND_LINE, "--c-output-file");
-  let tname = string_append(target_name, ".c");
-  list_push(COMMAND_LINE, tname);
+  list_push(COMMAND_LINE, c_target_name);
   // Do we still need this?
   list_push(COMMAND_LINE, "--omit-c-armyknife-include=true");
 
@@ -157,11 +156,17 @@ let build_omni_c = fn(target_name, omni_c_binary) {
   list_push_all(CC_COMMAND_LINE, CC_FLAGS);
   list_push(CC_COMMAND_LINE, "-o");
   list_push(CC_COMMAND_LINE, target_name);
-  list_push(CC_COMMAND_LINE, string_append(target_name, ".c"));
+  list_push(CC_COMMAND_LINE, c_target_name);
   list_push(CC_COMMAND_LINE, "-lgc");
 
   let cc_result = shell(CC_COMMAND_LINE);
   println(cc_result);
 };
 
-build_omni_c("/tmp/omni-c-baby", "/home/jawilson/src/omni-c/build-dir/bin/omni-c-stable");
+build_omni_c(string_append(BUILD_DIR, "bin/omni-c"),
+	     string_append(BUILD_DIR, "omni-c.c"),
+	     string_append(BUILD_DIR, "bin/omni-c-stable"));
+
+build_omni_c(string_append(BUILD_DIR, "bin/self"),
+	     string_append(BUILD_DIR, "omni-c-self.c"),
+	     string_append(BUILD_DIR, "bin/omni-c"));
