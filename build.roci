@@ -151,8 +151,6 @@ list_push_all(ALL_OMNI_C_SRC, SOURCE_OMNI_C);
 list_push_all(ALL_OMNI_C_SRC, SOURCE_LIB);
 list_push_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
 
-println(ALL_OMNI_C_SRC);
-
 // TODO(jawilson): why can't we just "inline" the string append?
 let RHEADER = string_append(BUILD_DIR, "gen-files/reflection-header.c");
 list_push(ALL_OMNI_C_SRC, RHEADER);
