@@ -78,7 +78,7 @@ let build_reflection_header = fn() {
     return;
   }
 
-  let command_line = make_list(script, "reflection_header", input);
+  let command_line = make_list(script, "reflection_header", input, out);
   let result = shell(command_line);
   println(result);
 };

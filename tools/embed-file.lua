@@ -3,8 +3,10 @@
 -- Read file path from command line argument
 local var_name = arg[1]
 local file_path = arg[2]
-if not file_path then
-    print("Usage: lua <var-name> <file_path>")
+local output_path = arg[3]
+
+if not var_name or not file_path or not output_path then
+    print("Usage: lua <var-name> <file_path> <output_path>")
     os.exit(1)
 end
 
@@ -75,5 +77,13 @@ end
 
 local c_code = file_to_c_code()
 if c_code then
-    print(c_code)
+    -- Open output file for writing (creates or overwrites)
+    local out_file, err = io.open(output_path, "w")
+    if not out_file then
+        print("Error opening output file: " .. tostring(err))
+        os.exit(1)
+    end
+    
+    out_file:write(c_code)
+    out_file:close()
 end

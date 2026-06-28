@@ -121,7 +121,7 @@ ${BUILD_DIR}/bin/omni-c-stable: omni-c-stable.c
 	gcc ${CC_FLAGS_OPT} ${GC_INCLUDE_FLAG} -o ${BUILD_DIR}/bin/omni-c-stable -std=gnu99 omni-c-stable.c ${GC_LIBPATH_FLAG} -lgc
 
 ${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/tools/embed-file.lua
-	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header embed/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
+	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header embed/reflection.h ${BUILD_DIR}/gen-files/reflection-header.c
 
 ${BUILD_DIR}/bin/lib.oar: ${C_ARMYKNIFE_SRC_C}
 	${STABLE_BINARY_PATH} archive ${C_ARMYKNIFE_SRC_C} --archive-output-file=${BUILD_DIR}/bin/lib.oar
