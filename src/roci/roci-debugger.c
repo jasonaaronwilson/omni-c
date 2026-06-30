@@ -57,6 +57,11 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
   bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
 
   if (is_tty) {
+    roci_debugger_banner(buffer, "*** Source ***");
+  }
+  roci_source_code_to_buffer(buffer, state->debug_info);
+
+  if (is_tty) {
     roci_debugger_instructions(buffer);
   }
 
@@ -153,4 +158,43 @@ void roci_debugger_instructions(buffer_t* buffer) {
   buffer_printf(buffer,
                 "\n[Space] step instruction [n] next statement [c] continue "
                 "[q] quit [e] dump environment [k] dump stack\n");
+}
+
+void roci_source_code_to_buffer(buffer_t* buffer, roci_src_info_t src_info) {
+  uint64_t buffer_number = roci_src_file_number(src_info);
+  int64_t line_number = roci_src_line_number(src_info);
+
+  if (line_number == 0) {
+    buffer_printf(buffer, "<<< No Source Line Info >>>\n");
+    return;
+  }
+
+  int adjacent_lines = 5;
+
+  int64_t start_line_number = line_number - adjacent_lines;
+  if (start_line_number < 1) {
+    start_line_number = 1;
+  }
+  int64_t end_line_number = line_number + adjacent_lines;
+
+  roci_buffer_info_t* buffer_info = get_buffer_info_by_number(buffer_number);
+
+  // Before lines
+  buffer_region_t region
+      = buffer_line_region(buffer_info->buffer, start_line_number, line_number);
+  buffer_copy_region(buffer, buffer_info->buffer, region);
+
+  // The actual line
+  region
+      = buffer_line_region(buffer_info->buffer, line_number, line_number + 1);
+  term_bold(buffer);
+  buffer_copy_region(buffer, buffer_info->buffer, region);
+  term_reset_formatting(buffer);
+
+  // After lines
+  region = buffer_line_region(buffer_info->buffer, line_number + 1,
+                              end_line_number);
+  buffer_copy_region(buffer, buffer_info->buffer, region);
+
+  buffer_printf(buffer, "\n\n<<< %s >>>\n", buffer_info->filename);
 }

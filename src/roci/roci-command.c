@@ -12,6 +12,7 @@ void roci_command(void) {
   value_array_t* files = read_files(FLAG_files);
   for (int i = 0; i < files->length; i++) {
     file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
+    state->buffer_number = roci_register_buffer(file->data, file->file_name);
     roci_compile_buffer(state, file->file_name, file->data);
     value_array_t* bblocks = build_bblocks(state->bblocks);
 

@@ -577,3 +577,38 @@ boolean_t buffer_equal(buffer_t* buffer, char* str) {
   char* cstring = buffer_to_c_string(buffer);
   return string_equal(cstring, str);
 }
+
+typedef buffer_region_t = struct {
+  uint64_t start_position;
+  uint64_t end_position;
+};
+
+buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64_t end_line) {
+
+  uint64_t line = 1;
+  uint64_t start_position = 0;
+  uint64_t end_position = 0;
+
+  for (uint64_t position = 0; position < buffer->length; position++) {
+    uint8_t ch = buffer_get(buffer, position);
+    if (ch == '\n') {
+      line++;
+      if (line == start_line) {
+	start_position = position;
+      }
+      if (line == end_line) {
+	end_position = position;
+	return compound_literal(buffer_region_t, { .start_position = start_position, .end_position = end_position});
+      }
+    }
+  }
+  return compound_literal(buffer_region_t, { .start_position = start_position, .end_position = buffer->length});
+}
+
+void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer, buffer_region_t region) {
+  for (uint64_t position = region.start_position;
+       position < region.end_position;
+       position++) {
+    buffer_append_byte(dst_buffer, buffer_get(src_buffer, position));
+  }
+}
