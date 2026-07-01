@@ -583,6 +583,12 @@ typedef buffer_region_t = struct {
   uint64_t end_position;
 };
 
+void ensure_legal_region(buffer_region_t region) {
+  if (region.start_position > region.end_position) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
 buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64_t end_line) {
 
   uint64_t line = 1;
@@ -606,6 +612,7 @@ buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64
 }
 
 void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer, buffer_region_t region) {
+  ensure_legal_region(region);
   for (uint64_t position = region.start_position;
        position < region.end_position;
        position++) {
