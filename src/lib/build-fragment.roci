@@ -31,6 +31,8 @@ let _LIB_SRC_ = make_list(
    "string-tree.c",
    "flag.c",
    "io.c",
+   "io-linux.c",
+   "io-darwin.c",
    "terminal.c",
    "tokenizer.c",
    "random.c",

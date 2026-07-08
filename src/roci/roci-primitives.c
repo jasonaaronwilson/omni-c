@@ -333,7 +333,7 @@ void roci_primitive_shell_stdout(roci_vm_state_t* state) {
   roci_primitive_list_get(state);
 }
 
-void roci_primitive_platform(roci_vm_state_t* state) {
+void XXX_roci_primitive_platform(roci_vm_state_t* state) {
   if (state->n_args != 0) {
     roci_debug_error(state, "platform expects 0 argument");
   }

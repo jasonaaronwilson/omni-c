@@ -11,6 +11,8 @@ let exit_compilation = fn() {
   exit(1);
 };
 
+let PLATFORM = platform();
+
 /**
  * @function check_shell_command
  *
@@ -218,6 +220,39 @@ ${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/to
 */
 
 /* println(ALL_OMNI_C_SRC); */
+
+let is_platform_file = fn(src) {
+  if (string_ends_with(src, "-linux.c")) {
+    return true;
+  }
+  if (string_ends_with(src, "-darwin.c")) {
+    return true;
+  }
+  if (string_ends_with(src, "-windows.c")) {
+    return true;
+  }
+  return false;
+};
+
+let is_matching_platform = fn(src) {
+  if (is_platform_file(src)) {
+    let suffix = string_append("-", PLATFORM, ".c");
+    return string_ends_with(src, suffix);
+  }
+  return true;
+};
+
+let filter_files_by_platform = fn() {
+    let filtered = make_list();
+    list_for_each(ALL_OMNI_C_SRC, fn(src) {
+	if (is_matching_platform(src)) {
+	  list_push(filtered, src);
+	}
+      });
+    ALL_OMNI_C_SRC = filtered;
+};
+
+filter_files_by_platform();
 
 /**
  * @function build_omni_c
