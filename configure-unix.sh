@@ -12,7 +12,8 @@ echo "                 Welcome to omni-c unix configuation!"
 echo "======================================================================"
 echo
 echo "We're going to put all of the build output in "
-echo "    ${DIR}/build-dir/"
+echo
+echo "==>    ${DIR}/build-dir/"
 echo
 mkdir -p "${DIR}/build-dir/bin"
 # TODO(jawilson): roci should create this directory itself.
@@ -44,7 +45,7 @@ fi
 # ----------------------------------------------------------------------
 # Verify libgc (-lgc) Availability
 # ----------------------------------------------------------------------
-echo "Checking for the Boehm-Demers-Weiser garbage collector..."
+echo "Checking for the Boehm-Demers-Weiser garbage collector."
 echo "int main() { return 0; }" | $CC -x c - -lgc -o /dev/null >/dev/null 2>&1
 
 if [ $? -ne 0 ]; then
@@ -62,7 +63,7 @@ fi
 echo "Just a second, now we are going to build the boot-strap compiler..."
 echo "    ${STABLE}"
 echo
-gcc -o "${STABLE}" "${DIR}/src/omni-c-stable.c" -lgc
+${CC} -o "${STABLE}" "${DIR}/src/omni-c-stable.c" -lgc
 
 if [ $? -ne 0 ]; then
     echo "FAILURE: Building omni-c-stable failed. This must be resolved to continue."
@@ -72,4 +73,5 @@ fi
 echo "SUCCESS: building ${STABLE}!"
 echo
 echo "From now on you can just run: "
-echo "BUILD_DIR=${DIR}/build-dir CC=${CC} ${STABLE} roci build.roci"
+echo
+echo "==>    BUILD_DIR=${DIR}/build-dir CC=${CC} ${STABLE} roci build.roci"
