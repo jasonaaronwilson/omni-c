@@ -290,6 +290,7 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
   list_push_all(CC_COMMAND_LINE, CC_FLAGS);
   list_push_all(CC_COMMAND_LINE, WARN_FLAGS);
   if (string_equal(PLATFORM, "darwin")) {
+    list_push(CC_COMMAND_LINE, "-w"); // Turn off all warnings
     list_push(CC_COMMAND_LINE, "-I/opt/homebrew/opt/bdw-gc/include");
     list_push(CC_COMMAND_LINE, "-L/opt/homebrew/opt/bdw-gc/lib");
   }
