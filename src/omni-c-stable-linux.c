@@ -1,0 +1,36386 @@
+// -*- buffer-read-only: t -*-
+//
+// This is a generated file, so you generally don't want to edit it!
+// The bottom of the file has more information about it's creation.
+
+
+#ifndef _REFLECTION_H_
+#define _REFLECTION_H_
+
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
+#include <string.h>
+
+/* ====================================================================== */
+// These are the reflection API data structures for a program compiled
+// with Omni C. We use linked lists instead of value_array_t to keep
+// compiled programs independent of any particular library
+// data-structures.
+/* ====================================================================== */
+
+// ----------------------------------------------------------------------
+// Enumerations
+// ----------------------------------------------------------------------
+
+typedef struct enum_element_metadata_S {
+  struct enum_element_metadata_S* next;
+  char* name;
+  long value;
+} enum_element_metadata_t;
+
+/**
+ * @structure enum_metadata_t
+ *
+ * The runtime metadata for a reflected enumeration.
+ */
+typedef struct {
+  char* name;
+  enum_element_metadata_t* elements;
+} enum_metadata_t;
+
+// ----------------------------------------------------------------------
+// Structures
+// ----------------------------------------------------------------------
+
+typedef struct field_metadata_S {
+  struct field_metadata_S* next;
+  char* name;
+  char* type_name_string;
+  int start_offset;
+} field_metadata_t;
+
+/**
+ * @structure structure_metadata_t
+ *
+ * The runtime metadata for a reflected structure.
+ */
+typedef struct {
+  char* name;
+  int size;
+  int alignment;
+  field_metadata_t* fields;
+} structure_metadata_t;
+
+// ----------------------------------------------------------------------
+// Unions 
+// ----------------------------------------------------------------------
+
+/*
+ * Unions could be treated exactly like structures however there is no
+ * uniform way to tag a union so making use of the metadata is a bit
+ * problematic. For that reason (and because omni-c doesn't need them
+ * yet), we are skipping them for now.
+ */
+
+// ----------------------------------------------------------------------
+// Functions
+// ----------------------------------------------------------------------
+
+typedef struct function_arg_metadata_S {
+  struct function_arg_metadata_t* next;
+  char* name;
+  char* type_string;
+} function_arg_metadata_t;
+
+/**
+ * @structure function_metadata_t
+ *
+ * The runtime metadata for a reflected structure.
+ */
+typedef struct {
+  char* name;
+  function_arg_metadata_t* arguments;
+} function_metadata_t;
+
+#endif /* _REFLECTION_H_ */
+// ========== system includes ==========
+
+#include <ctype.h>
+#include <errno.h>
+#include <execinfo.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
+#include <gc.h>
+#include <glob.h>
+
+// ========== defines ==========
+
+#define cast(type, expr) ((type) (expr))
+
+#define block_expr(block) block
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
+
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
+#define ERROR_INSUFFICIENT_INPUT -1
+
+#define ERROR_TOO_BIG -2
+
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
+
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
+
+#define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
+
+#define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
+
+#define malloc_struct(struct_name)                                             \
+  ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
+
+#define malloc_copy_of(source, number_of_bytes)                                \
+  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
+
+#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
+
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+
+#define LOGGER_OFF 0
+
+#define LOGGER_TRACE 1
+
+#define LOGGER_DEBUG 2
+
+#define LOGGER_INFO 3
+
+#define LOGGER_WARN 4
+
+#define LOGGER_FATAL 5
+
+#define LOGGER_TEST 6
+
+#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
+
+#define log_none(format, ...)                                                  \
+  do {                                                                         \
+  } while (0);
+
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
+    if (0) {                                                                   \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_trace(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_TRACE) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_debug(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_info(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_INFO) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_warn(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_WARN) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_fatal(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_FATAL) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_test(format, ...)                                                  \
+  do {                                                                         \
+    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
+                ##__VA_ARGS__);                                                \
+  } while (0)
+
+#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
+
+#define value_array_get_ptr(array, index_expression, cast_type)                \
+  (cast(cast_type, value_array_get(array, index_expression).ptr))
+
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
+  do {                                                                         \
+    value_alist_t* head = alist;                                               \
+    while (head) {                                                             \
+      value_t key_var = head->key;                                             \
+      value_t value_var = head->value;                                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
+
+#define string_alist_foreach(alist, key_var, value_var, statements)            \
+  do {                                                                         \
+    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
+                        value_var, {                                           \
+                          char* key_var = (key_var##_value).str;               \
+                          statements;                                          \
+                        });                                                    \
+  } while (0)
+
+#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
+
+#define AK_HT_UPSCALE_MULTIPLIER 1.75
+
+#define value_ht_foreach(ht, key_var, value_var, statements)                   \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      value_alist_t* alist = ht->buckets[ht_index];                            \
+      if (alist != NULL) {                                                     \
+        value_alist_foreach(alist, key_var, value_var, statements);            \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
+
+#define string_ht_foreach(ht, key_var, value_var, statements)                  \
+  do {                                                                         \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
+    });                                                                        \
+  } while (0)
+
+#define value_tree_foreach(tree, key_var, value_var, statements)               \
+  do {                                                                         \
+    int stack_n_elements = 0;                                                  \
+    value_tree_t* stack[64];                                                   \
+    value_tree_t* current = tree;                                              \
+    while (current != NULL || stack_n_elements > 0) {                          \
+      while (current != NULL) {                                                \
+        stack[stack_n_elements++] = current;                                   \
+        current = current->left;                                               \
+      }                                                                        \
+      current = stack[--stack_n_elements];                                     \
+      value_t key_var = current->key;                                          \
+      value_t value_var = current->value;                                      \
+      statements;                                                              \
+      current = current->right;                                                \
+    }                                                                          \
+  } while (0)
+
+#define string_tree_foreach(tree, key_var, value_var, statements)              \
+  do {                                                                         \
+    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
+                       {                                                       \
+                         char* key_var = (key_var##_value).str;                \
+                         statements;                                           \
+                       });                                                     \
+  } while (0)
+
+#define FILE_COPY_STREAM_BUFFER_SIZE 1024
+
+#define KEY_DOWN 1      /* down-arrow key */
+
+#define KEY_UP 2        /* up-arrow key */
+
+#define KEY_LEFT 3      /* left-arrow key */
+
+#define KEY_RIGHT 4     /* right-arrow key */
+
+#define KEY_HOME 5      /* home key */
+
+#define KEY_BACKSPACE 6 /* backspace key */
+
+#define KEY_F0 7        /* Function keys */
+
+#define KEY_F1 8
+
+#define KEY_F2 9
+
+#define KEY_F3 10
+
+#define KEY_F4 11
+
+#define KEY_F5 12
+
+#define KEY_F6 13
+
+#define KEY_F7 14
+
+#define KEY_F8 15
+
+#define KEY_F9 16
+
+#define KEY_F10 17
+
+#define KEY_F11 18
+
+#define KEY_F12 19
+
+#define KEY_F13 20
+
+#define KEY_F14 21
+
+#define KEY_F15 22
+
+#define KEY_DL 23        /* delete-line key */
+
+#define KEY_IL 24        /* insert-line key */
+
+#define KEY_DC 25        /* delete-character key */
+
+#define KEY_IC 26        /* insert-character key */
+
+#define KEY_EIC 27       /* sent by rmir or smir in insert mode */
+
+#define KEY_CLEAR 28     /* clear-screen or erase key */
+
+#define KEY_EOS 29       /* clear-to-end-of-screen key */
+
+#define KEY_EOL 30       /* clear-to-end-of-line key */
+
+#define KEY_SF 31        /* scroll-forward key */
+
+#define KEY_SR 32        /* scroll-backward key */
+
+#define KEY_NPAGE 33     /* next-page key */
+
+#define KEY_PPAGE 34     /* previous-page key */
+
+#define KEY_STAB 35      /* set-tab key */
+
+#define KEY_CTAB 36      /* clear-tab key */
+
+#define KEY_CATAB 37     /* clear-all-tabs key */
+
+#define KEY_ENTER 38     /* enter/send key */
+
+#define KEY_PRINT 39     /* print key */
+
+#define KEY_LL 40        /* lower-left key (home down) */
+
+#define KEY_A1 41        /* upper left of keypad */
+
+#define KEY_A3 42        /* upper right of keypad */
+
+#define KEY_B2 43        /* center of keypad */
+
+#define KEY_C1 44        /* lower left of keypad */
+
+#define KEY_C3 45        /* lower right of keypad */
+
+#define KEY_BTAB 46      /* back-tab key */
+
+#define KEY_BEG 47       /* begin key */
+
+#define KEY_CANCEL 48    /* cancel key */
+
+#define KEY_CLOSE 49     /* close key */
+
+#define KEY_COMMAND 50   /* command key */
+
+#define KEY_COPY 51      /* copy key */
+
+#define KEY_CREATE 52    /* create key */
+
+#define KEY_END 53       /* end key */
+
+#define KEY_EXIT 54      /* exit key */
+
+#define KEY_FIND 55      /* find key */
+
+#define KEY_HELP 56      /* help key */
+
+#define KEY_MARK 57      /* mark key */
+
+#define KEY_MESSAGE 58   /* message key */
+
+#define KEY_MOVE 59      /* move key */
+
+#define KEY_NEXT 60      /* next key */
+
+#define KEY_OPEN 61      /* open key */
+
+#define KEY_OPTIONS 62   /* options key */
+
+#define KEY_PREVIOUS 63  /* previous key */
+
+#define KEY_REDO 64      /* redo key */
+
+#define KEY_REFERENCE 65 /* reference key */
+
+#define KEY_REFRESH 66   /* refresh key */
+
+#define KEY_REPLACE 67   /* replace key */
+
+#define KEY_RESTART 68   /* restart key */
+
+#define KEY_RESUME 69    /* resume key */
+
+#define KEY_SAVE 70      /* save key */
+
+#define KEY_SBEG 71      /* shifted begin key */
+
+#define KEY_SCANCEL 72   /* shifted cancel key */
+
+#define KEY_SCOMMAND 73  /* shifted command key */
+
+#define KEY_SCOPY 74     /* shifted copy key */
+
+#define KEY_SCREATE 75   /* shifted create key */
+
+#define KEY_SDC 76       /* shifted delete-character key */
+
+#define KEY_SDL 77       /* shifted delete-line key */
+
+#define KEY_SELECT 78    /* select key */
+
+#define KEY_SEND 79      /* shifted end key */
+
+#define KEY_SEOL 80      /* shifted clear-to-end-of-line key */
+
+#define KEY_SEXIT 81     /* shifted exit key */
+
+#define KEY_SFIND 82     /* shifted find key */
+
+#define KEY_SHELP 83     /* shifted help key */
+
+#define KEY_SHOME 84     /* shifted home key */
+
+#define KEY_SIC 85       /* shifted insert-character key */
+
+#define KEY_SLEFT 86     /* shifted left-arrow key */
+
+#define KEY_SMESSAGE 87  /* shifted message key */
+
+#define KEY_SMOVE 88     /* shifted move key */
+
+#define KEY_SNEXT 89     /* shifted next key */
+
+#define KEY_SOPTIONS 90  /* shifted options key */
+
+#define KEY_SPREVIOUS 91 /* shifted previous key */
+
+#define KEY_SPRINT 92    /* shifted print key */
+
+#define KEY_SREDO 93     /* shifted redo key */
+
+#define KEY_SREPLACE 94  /* shifted replace key */
+
+#define KEY_SRIGHT 95    /* shifted right-arrow key */
+
+#define KEY_SRSUME 96    /* shifted resume key */
+
+#define KEY_SSAVE 97     /* shifted save key */
+
+#define KEY_SSUSPEND 98  /* shifted suspend key */
+
+#define KEY_SUNDO 99     /* shifted undo key */
+
+#define KEY_SUSPEND 100  /* suspend key */
+
+#define KEY_UNDO 101     /* undo key */
+
+#define KEY_MOUSE 102    /* Mouse event has occurred */
+
+#define KEY_RESIZE 103   /* Terminal resize event */
+
+#define TERM_ESCAPE_START_STR "\033["
+
+#define TERM_ESCAPE_END_STR "m"
+
+#define TERM_ESCAPE_STRING_START_AND_END(str)                                  \
+  (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
+
+#define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
+
+#define test_fail(format, ...)                                                 \
+  do {                                                                         \
+    test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
+  } while (0)
+
+#define test_assert(condition)                                                 \
+  do {                                                                         \
+    if (!(condition))                                                          \
+      test_fail("A test assertion failed. Condition expression was: %s",       \
+                #condition);                                                   \
+  } while (0)
+
+#define test_assert_integer_equal(a, b)                                        \
+  do {                                                                         \
+    unsigned long long casted_a = (unsigned long long) (a);                    \
+    unsigned long long casted_b = (unsigned long long) (b);                    \
+    if (a != b) {                                                              \
+      test_fail(                                                               \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
+          "But was:\n    ⟦%llu⟧\n",                                            \
+          casted_a, casted_b);                                                 \
+    }                                                                          \
+  } while (0)
+
+#define test_assert_string_equal(a, b)                                          \
+  do {                                                                          \
+    if (!b) {                                                                   \
+      test_fail(                                                                \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
+          "But was:\n    nullptr\n",                                            \
+          a);                                                                   \
+    }                                                                           \
+    if (!string_equal(a, b)) {                                                  \
+      test_fail(                                                                \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
+          "But was:\n    ⟦%s⟧\n",                                               \
+          a, b);                                                                \
+    }                                                                           \
+  } while (0)
+
+#define read_token(token_reader_function_name)                                 \
+  do {                                                                         \
+    token_or_error_t token_or_error = token_reader_function_name(buffer, pos); \
+    if (token_or_error.error_code) {                                           \
+      return compound_literal(                                                 \
+          tokenizer_result_t,                                                  \
+          {.tokenizer_error_code = token_or_error.error_code,                  \
+           .tokenizer_error_position = token_or_error.error_position});        \
+    }                                                                          \
+    token = heap_allocate_token(token_or_error.token);                         \
+    value_array_add(result_tokens, ptr_to_value(token));                       \
+    pos = token_or_error.token.end;                                            \
+  } while (0)
+
+// ========== enums ==========
+
+// ========== typedefs ==========
+
+typedef bool boolean_t;
+
+typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
+
+typedef struct signed_decode_result__generated_S signed_decode_result;
+
+typedef struct fatal_error_config_t__generated_S fatal_error_config_t;
+
+typedef enum {
+  ERROR_UKNOWN,
+  ERROR_SIGSEGV,
+  ERROR_ACCESS_OUT_OF_BOUNDS,
+  ERROR_BAD_COMMAND_LINE,
+  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
+  ERROR_ILLEGAL_ENUM_VALUE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
+  ERROR_ILLEGAL_NULL_ARGUMENT,
+  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
+  ERROR_ILLEGAL_RANGE,
+  ERROR_MEMORY_ALLOCATION,
+  ERROR_MEMORY_FREE_NULL,
+  ERROR_NOT_REACHED,
+  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_UNIMPLEMENTED,
+  ERROR_OPEN_LOG_FILE,
+  ERROR_TEST,
+  ERROR_INTERNAL_ASSERTION_FAILURE,
+  ERROR_BAD_ALLOCATION_SIZE,
+  ERROR_ILLEGAL_ARGUMENT,
+  ERROR_MEMORY_START_PADDING_ERROR,
+  ERROR_MEMORY_END_PADDING_ERROR,
+  ERROR_FATAL,
+  ERROR_ILLEGAL_STATE,
+  ERROR_ILLEGAL_INPUT,
+  ERROR_ILLEGAL_UTF_8_CODE_POINT,
+  ERROR_ILLEGAL_TERMINAL_COORDINATES,
+} error_code_t;
+
+typedef union  {
+  uint64_t u64;
+  uint64_t i64;
+  char* str;
+  void* ptr;
+  double dbl;
+} value_t;
+
+typedef enum {
+  NF_OK,
+  NF_ERROR_NOT_FOUND,
+  NF_ERROR_NOT_PARSED_AS_NUMBER,
+  NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM,
+} non_fatal_error_code_t;
+
+typedef struct value_result_t__generated_S value_result_t;
+
+typedef fn_t(int, value_t, value_t) value_comparison_fn;
+
+typedef fn_t(uint64_t, value_t) value_hash_fn;
+
+typedef struct logger_state_t__generated_S logger_state_t;
+
+typedef struct utf8_decode_result_t__generated_S utf8_decode_result_t;
+
+typedef struct buffer_t__generated_S buffer_t;
+
+typedef struct line_and_column_t__generated_S line_and_column_t;
+
+typedef struct byte_stream_source_t__generated_S byte_stream_source_t;
+
+typedef struct byte_stream_target_t__generated_S byte_stream_target_t;
+
+typedef struct buffer_byte_stream_source_data_t__generated_S buffer_byte_stream_source_data_t;
+
+typedef struct cstring_byte_stream_source_data_t__generated_S cstring_byte_stream_source_data_t;
+
+typedef struct value_array_t__generated_S value_array_t;
+
+typedef struct value_alist_t__generated_S value_alist_t;
+
+typedef struct string_alist_S string_alist_t;
+
+typedef struct value_hashtable_t__generated_S value_hashtable_t;
+
+typedef struct string_hashtable_S string_hashtable_t;
+
+typedef struct value_tree_t__generated_S value_tree_t;
+
+typedef struct string_tree_S string_tree_t;
+
+typedef enum {
+  flag_type_none,
+  flag_type_boolean,
+  flag_type_string,
+  flag_type_uint64,
+  flag_type_int64,
+  flag_type_double,
+  flag_type_enum,
+  flag_type_custom,
+} flag_type_t;
+
+typedef struct program_descriptor_t__generated_S program_descriptor_t;
+
+typedef struct command_descriptor_t__generated_S command_descriptor_t;
+
+typedef struct flag_descriptor_t__generated_S flag_descriptor_t;
+
+typedef struct flag_key_value_S flag_key_value_t;
+
+typedef struct box_drawing_t__generated_S box_drawing_t;
+
+typedef struct term_keypress_t__generated_S term_keypress_t;
+
+typedef struct random_state_t__generated_S random_state_t;
+
+typedef struct cdl_printer_t__generated_S cdl_printer_t;
+
+typedef enum {
+  EXIT_STATUS_UNKNOWN,
+  EXIT_STATUS_NORMAL_EXIT,
+  EXIT_STATUS_SIGNAL,
+  EXIT_STATUS_ABNORMAL,
+} sub_process_exit_status_t;
+
+typedef struct sub_process_t__generated_S sub_process_t;
+
+typedef fn_t(boolean_t, FILE*, string_tree_t*, int64_t, void*) oarchive_stream_headers_callback_t;
+
+typedef enum {
+  INPUT_MODE_OMNI_C,
+  INPUT_MODE_STANDARD_C,
+  INPUT_MODE_C_PLUS_PLUS,
+} input_mode_t;
+
+typedef enum {
+  OUTPUT_MODE_STANDARD_C,
+  OUTPUT_MODE_C_PLUS_PLUS,
+} output_mode_t;
+
+typedef enum {
+  OMNI_C_SOURCE_FILE,
+  STD_C_SOURCE_FILE,
+  DATA_FILE,
+} file_tag_t;
+
+typedef struct file_S file_t;
+
+typedef enum {
+  TOKENIZER_ERROR_UNKNOWN,
+  TOKENIZER_ERROR_UTF_DECODE_ERROR,
+  TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
+  TOKENIZER_ERROR_UNTERMINATED_COMMENT,
+  TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL,
+  TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL,
+} tokenizer_error_t;
+
+typedef enum {
+  PARSE_ERROR_UNKNOWN,
+  PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED,
+  PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON,
+  PARSE_ERROR_EXPECTED_SEMICOLON,
+  PARSE_ERROR_IDENTIFIER_EXPECTED,
+  PARSE_ERROR_NOT_LITERAL_NODE,
+  PARSE_ERROR_INTEGER_LITERAL_EXPECTED,
+  PARSE_ERROR_OPEN_BRACE_EXPECTED,
+  PARSE_ERROR_CLOSE_BRACKET_EXPECTED,
+  PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION,
+  PARSE_ERROR_SEMICOLON_EXPECTED,
+  PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER,
+  PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER,
+  PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE,
+  PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE,
+  PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL,
+  PARSE_ERROR_EXPECTED_STATEMENT,
+  PARSE_ERROR_EXPECTED_TOKEN,
+  PARSE_ERROR_EXPECTED_TOKEN_TYPE,
+  PARSE_ERROR_EOF,
+  PARSE_ERROR_UNHANDLED_INSTRUCTION,
+  PARSE_ERROR_BAD_INITIALIZER,
+} parse_error_code_t;
+
+typedef struct compiler_error_S compiler_error_t;
+
+typedef struct src_code_snippets_t__generated_S src_code_snippets_t;
+
+typedef enum {
+  TOKEN_TYPE_UNKNOWN,
+  TOKEN_TYPE_WHITESPACE,
+  TOKEN_TYPE_COMMENT,
+  TOKEN_TYPE_IDENTIFIER,
+  TOKEN_TYPE_PUNCTUATION,
+  TOKEN_TYPE_INTEGER_LITERAL,
+  TOKEN_TYPE_FLOAT_LITERAL,
+  TOKEN_TYPE_STRING_LITERAL,
+  TOKEN_TYPE_CHARACTER_LITERAL,
+} token_type_t;
+
+typedef struct token_S token_t;
+
+typedef struct tokenizer_result_S tokenizer_result_t;
+
+typedef struct token_or_error_S token_or_error_t;
+
+typedef enum {
+  NUMERIC_LITERAL_ENCODING_UNDECIDED,
+  NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL,
+  NUMERIC_LITERAL_ENCODING_BINARY,
+  NUMERIC_LITERAL_ENCODING_OCTAL,
+  NUMERIC_LITERAL_ENCODING_HEX,
+  NUMERIC_LITERAL_ENCODING_DECIMAL,
+  NUMERIC_LITERAL_ENCODING_FLOAT,
+} numeric_literal_encoding_t;
+
+typedef struct token_list_S token_list_t;
+
+typedef struct token_transformer_options_S token_transformer_options_t;
+
+typedef enum {
+  PARSE_NODE_UNKNOWN,
+  PARSE_NODE_DECLARATIONS,
+  PARSE_NODE_ENUM,
+  PARSE_NODE_ENUM_ELEMENT,
+  PARSE_NODE_FIELD,
+  PARSE_NODE_GLOBAL_FUNCTION,
+  PARSE_NODE_VARIABLE_DEFINITION,
+  PARSE_NODE_LIST_OF_NODES,
+  PARSE_NODE_STRUCT,
+  PARSE_NODE_UNION,
+  PARSE_NODE_TYPE,
+  PARSE_NODE_LITERAL,
+  PARSE_NODE_FUNCTION,
+  PARSE_NODE_FUNCTION_ARGUMENT,
+  PARSE_NODE_TYPEDEF,
+  PARSE_NODE_UNPARSED_EXPRESSION,
+  PARSE_NODE_ATTRIBUTE,
+  PARSE_NODE_CPP_INCLUDE,
+  PARSE_NODE_CPP_DEFINE,
+  PARSE_NODE_OPERATOR,
+  PARSE_NODE_IDENTIFIER,
+  PARSE_NODE_IF_STATEMENT,
+  PARSE_NODE_FOR_STATEMENT,
+  PARSE_NODE_DO_STATEMENT,
+  PARSE_NODE_WHILE_STATEMENT,
+  PARSE_NODE_EMPTY_STATEMENT,
+  PARSE_NODE_BLOCK,
+  PARSE_NODE_RETURN_STATEMENT,
+  PARSE_NODE_SWITCH_STATEMENT,
+  PARSE_NODE_CASE_LABEL,
+  PARSE_NODE_DEFAULT_LABEL,
+  PARSE_NODE_GOTO_STATEMENT,
+  PARSE_NODE_BREAK_STATEMENT,
+  PARSE_NODE_CONTINUE_STATEMENT,
+  PARSE_NODE_LABEL_STATEMENT,
+  PARSE_NODE_VARIABLE_STATEMENT,
+  PARSE_NODE_EXPRESSION_STATEMENT,
+  PARSE_NODE_BALANCED_CONSTRUCT,
+  PARSE_NODE_CALL,
+  PARSE_NODE_CONDITIONAL,
+  PARSE_NODE_COMPOUND_LITERAL,
+  PARSE_NODE_DESIGNATED_INITIALIZER,
+} parse_node_type_t;
+
+typedef struct parse_node_S parse_node_t;
+
+typedef boolean_t pstatus_t;
+
+typedef struct pstate_t__generated_S pstate_t;
+
+typedef struct declarations_node_S declarations_node_t;
+
+typedef struct typedef_node_S typedef_node_t;
+
+typedef struct function_node_S function_node_t;
+
+typedef struct function_argument_node_S function_argument_node_t;
+
+typedef struct unparsed_expression_S unparsed_expression_t;
+
+typedef struct attribute_node_S attribute_node_t;
+
+typedef struct cpp_include_node_t__generated_S cpp_include_node_t;
+
+typedef struct cpp_define_node_t__generated_S cpp_define_node_t;
+
+typedef struct node_list_S node_list_t;
+
+typedef struct symbol_table_binding_S symbol_table_binding_t;
+
+typedef struct symbol_table_map_S symbol_table_map_t;
+
+typedef struct symbol_table_S symbol_table_t;
+
+typedef struct c_preprocess_options_t__generated_S c_preprocess_options_t;
+
+typedef struct c_preprocessor_directive_range_t__generated_S c_preprocessor_directive_range_t;
+
+typedef enum {
+  PRATT_PARSE_UNKNOWN,
+  PRATT_PARSE_PREFIX_OPERATOR,
+  PRATT_PARSE_BINARY_OPERATOR,
+  PRATT_PARSE_POSTFIX_OPERATOR,
+  PRATT_PARSE_CONDITIONAL,
+  PRATT_PARSE_IDENTIFIER,
+  PRATT_PARSE_LITERAL,
+  PRATT_PARSE_SUB_EXPRESSION,
+  PRATT_PARSE_INDEX_EXPRESSION,
+  PRATT_PARSE_SIZEOF,
+  PRATT_PARSE_CAST_MACRO,
+  PRATT_PARSE_TYPE_OF,
+  PRATT_PARSE_BLOCK_EXPR,
+  PRATT_PARSE_CALL,
+} pratt_parser_operation_t;
+
+typedef enum {
+  LEFT_TO_RIGHT,
+  RIGHT_TO_LEFT,
+} associativity_t;
+
+typedef enum {
+  PRECEDENCE_UNKNOWN = 0,
+  PRECEDENCE_COMMA = 10,
+  PRECEDENCE_ASSIGNMENT = 20,
+  PRECEDENCE_CONDITIONAL = 30,
+  PRECEDENCE_LOGICAL_OR = 40,
+  PRECEDENCE_LOGICAL_AND = 50,
+  PRECEDENCE_OR = 60,
+  PRECEDENCE_XOR = 70,
+  PRECEDENCE_AND = 80,
+  PRECEDENCE_EQUALITY = 90,
+  PRECEDENCE_RELATIONAL = 100,
+  PRECEDENCE_SHIFT = 110,
+  PRECEDENCE_ADDITIVE = 120,
+  PRECEDENCE_MULTIPICITIVE = 130,
+  PRECEDENCE_UNARY = 140,
+  PRECEDENCE_POSTFIX = 150,
+  PRECEDENCE_PRIMARY = 160,
+} precedence_t;
+
+typedef struct pratt_parser_instruction_t__generated_S pratt_parser_instruction_t;
+
+typedef struct identifier_node_t__generated_S identifier_node_t;
+
+typedef struct operator_node_t__generated_S operator_node_t;
+
+typedef struct call_node_t__generated_S call_node_t;
+
+typedef struct conditional_node_t__generated_S conditional_node_t;
+
+typedef struct if_statement_node_t__generated_S if_statement_node_t;
+
+typedef struct for_statement_node_t__generated_S for_statement_node_t;
+
+typedef struct do_statement_node_t__generated_S do_statement_node_t;
+
+typedef struct while_statement_node_t__generated_S while_statement_node_t;
+
+typedef struct empty_statement_node_t__generated_S empty_statement_node_t;
+
+typedef struct block_node_t__generated_S block_node_t;
+
+typedef struct return_statement_node_t__generated_S return_statement_node_t;
+
+typedef struct switch_statement_node_t__generated_S switch_statement_node_t;
+
+typedef struct case_label_node_t__generated_S case_label_node_t;
+
+typedef struct default_label_node_t__generated_S default_label_node_t;
+
+typedef struct goto_statement_node_t__generated_S goto_statement_node_t;
+
+typedef struct break_statement_node_t__generated_S break_statement_node_t;
+
+typedef struct continue_statement_node_t__generated_S continue_statement_node_t;
+
+typedef struct label_statement_node_t__generated_S label_statement_node_t;
+
+typedef struct expression_statement_node_t__generated_S expression_statement_node_t;
+
+typedef enum {
+  TYPE_QUALIFIER_NONE = 0,
+  TYPE_QUALIFIER_CONST = 1,
+  TYPE_QUALIFIER_VOLATILE = 2,
+  TYPE_QUALIFIER_RESTRICT = 4,
+} type_qualifier_t;
+
+typedef enum {
+  TYPE_NODE_KIND_UNKNOWN,
+  TYPE_NODE_KIND_POINTER,
+  TYPE_NODE_KIND_ARRAY,
+  TYPE_NODE_KIND_SIZED_ARRAY,
+  TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY,
+  TYPE_NODE_KIND_PRIMITIVE_TYPENAME,
+  TYPE_NODE_KIND_TYPENAME,
+  TYPE_NODE_KIND_TYPE_EXPRESSION,
+  TYPE_NODE_KIND_TYPEOF,
+} type_node_kind_t;
+
+typedef struct type_node_S type_node_t;
+
+typedef struct canonical_type_result_s canonical_type_result_t;
+
+typedef struct struct_node_S struct_node_t;
+
+typedef struct union_node_S union_node_t;
+
+typedef struct field_node_S field_node_t;
+
+typedef struct enum_node_S enum_node_t;
+
+typedef struct enum_element_S enum_element_t;
+
+typedef struct variable_definition_node_t__generated_S variable_definition_node_t;
+
+typedef struct literal_node_t__generated_S literal_node_t;
+
+typedef struct compound_literal_node_t__generated_S compound_literal_node_t;
+
+typedef struct designated_initializer_node_t__generated_S designated_initializer_node_t;
+
+typedef struct balanced_construct_node_S balanced_construct_node_t;
+
+typedef struct printer_S printer_t;
+
+typedef struct tmp_provider_t__generated_S tmp_provider_t;
+
+typedef enum {
+  OUTPUT_TYPE_UNKNOWN,
+  OUTPUT_TYPE_C_HEADER_FILE,
+  OUTPUT_TYPE_C_LIBRARY_FILE,
+  OUTPUT_TYPE_C_UNIT_TEST_FILE,
+} output_file_type_t;
+
+typedef struct roci_bb_builder_t__generated_S roci_bb_builder_t;
+
+typedef value_array_t roci_bb_builder_array_t;
+
+typedef struct roci_bb_t__generated_S roci_bb_t;
+
+typedef enum {
+  ROCI_COMPILE_TIME_ERROR_NONE,
+  ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
+  ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
+} roci_compile_time_error_t;
+
+typedef struct roci_compiler_state_t__generated_S roci_compiler_state_t;
+
+typedef uint64_t roci_src_info_t;
+
+typedef struct roci_env_t__generated_S roci_env_t;
+
+typedef struct roci_value_t__generated_S roci_value_t;
+
+typedef enum {
+  ROCI_TAG_UNKNOWN,
+  ROCI_TAG_BOOLEAN,
+  ROCI_TAG_INTEGER,
+  ROCI_TAG_DOUBLE,
+  ROCI_TAG_STRING,
+  ROCI_TAG_CLOSURE,
+  ROCI_TAG_C_PRIMITIVE,
+  ROCI_TAG_LIST,
+  ROCI_TAG_STACK_MARKER,
+} roci_tag_t;
+
+typedef enum {
+  ROCI_OPCODE_TRAP,
+  ROCI_OPCODE_PUSH_FALSE,
+  ROCI_OPCODE_PUSH_TRUE,
+  ROCI_OPCODE_PUSH_INTEGER,
+  ROCI_OPCODE_PUSH_DOUBLE,
+  ROCI_OPCODE_PUSH_STRING,
+  ROCI_OPCODE_DROP,
+  ROCI_OPCODE_NEW_ENVIRONMENT,
+  ROCI_OPCODE_DROP_ENVIRONMENT,
+  ROCI_OPCODE_DEFINE_VAR,
+  ROCI_OPCODE_GET_VAR,
+  ROCI_OPCODE_SET_VAR,
+  ROCI_OPCODE_BR_TRUE,
+  ROCI_OPCODE_BR,
+  ROCI_OPCODE_MAKE_CLOSURE,
+  ROCI_OPCODE_RETURN,
+  ROCI_OPCODE_CALL,
+  ROCI_OPCODE_CHECK_ARGS,
+  ROCI_OPCODE_DEBUG_INFO,
+  ROCI_OPCODE_COMMENT,
+} roci_opcode_t;
+
+typedef enum {
+  ROCI_RUNTIME_ERROR_NONE,
+  ROCI_RUNTIME_ERROR_TRAP,
+  ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE,
+  ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED,
+} roci_runtime_error_t;
+
+typedef struct roci_closure_t__generated_S roci_closure_t;
+
+typedef struct roci_cont_t__generated_S roci_cont_t;
+
+typedef struct roci_debug_state_t__generated_S roci_debug_state_t;
+
+typedef struct roci_vm_state_t__generated_S roci_vm_state_t;
+
+typedef fn_t(void, roci_vm_state_t*) roci_c_primitive_t;
+
+// ========== stuctures/unions ==========
+
+struct string_alist_S {
+};
+
+struct string_hashtable_S {
+};
+
+struct string_tree_S {
+};
+
+struct token_S {
+  buffer_t* buffer;
+  token_type_t type;
+  int32_t start;
+  int32_t end;
+  int32_t line_number;
+  int32_t column_number;
+  boolean_t is_cpp_token;
+};
+
+struct token_or_error_S {
+  token_t token;
+  tokenizer_error_t error_code;
+  uint64_t error_position;
+};
+
+struct unsigned_decode_result__generated_S {
+  uint64_t number;
+  int size;
+};
+
+struct signed_decode_result__generated_S {
+  uint64_t number;
+  int size;
+};
+
+struct fatal_error_config_t__generated_S {
+  boolean_t catch_sigsegv;
+};
+
+struct value_result_t__generated_S {
+  union  {
+    uint64_t u64;
+    int64_t i64;
+    double dbl;
+    char* str;
+    void* ptr;
+    value_t val;
+} ;
+  non_fatal_error_code_t nf_error;
+};
+
+struct logger_state_t__generated_S {
+  boolean_t initialized;
+  int level;
+  char* logger_output_filename;
+  FILE* output;
+};
+
+struct utf8_decode_result_t__generated_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+struct buffer_t__generated_S {
+  uint32_t length;
+  uint32_t capacity;
+  uint8_t* elements;
+};
+
+struct line_and_column_t__generated_S {
+  uint64_t line;
+  uint64_t column;
+};
+
+struct byte_stream_source_t__generated_S {
+  fn_t(uint8_t, byte_stream_source_t*, boolean_t*) read_byte;
+  void* data;
+};
+
+struct byte_stream_target_t__generated_S {
+  fn_t(byte_stream_target_t*, byte_stream_target_t*, uint8_t) write_byte;
+  void* data;
+};
+
+struct buffer_byte_stream_source_data_t__generated_S {
+  buffer_t* buffer;
+  uint64_t position;
+};
+
+struct cstring_byte_stream_source_data_t__generated_S {
+  char* string;
+  uint64_t length;
+  uint64_t position;
+};
+
+struct value_array_t__generated_S {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
+
+struct value_alist_t__generated_S {
+  value_alist_t* next;
+  value_t key;
+  value_t value;
+};
+
+struct value_hashtable_t__generated_S {
+  uint64_t n_buckets;
+  uint64_t n_entries;
+  value_alist_t** buckets;
+};
+
+struct value_tree_t__generated_S {
+  value_t key;
+  value_t value;
+  uint32_t level;
+  value_tree_t* left;
+  value_tree_t* right;
+};
+
+struct program_descriptor_t__generated_S {
+  char* name;
+  char* description;
+  string_tree_t* flags;
+  string_tree_t* commands;
+  value_array_t** write_back_file_args_ptr;
+};
+
+struct command_descriptor_t__generated_S {
+  program_descriptor_t* program;
+  char* name;
+  char* description;
+  char** write_back_ptr;
+  value_array_t** write_back_file_args_ptr;
+  string_tree_t* flags;
+};
+
+struct flag_descriptor_t__generated_S {
+  char* name;
+  char* description;
+  flag_type_t flag_type;
+  char* help_string;
+  void* write_back_ptr;
+  int enum_size;
+  string_tree_t* enum_values;
+};
+
+struct flag_key_value_S {
+  char* key;
+  char* value;
+};
+
+struct box_drawing_t__generated_S {
+  uint32_t upper_left_corner;
+  uint32_t upper_right_corner;
+  uint32_t lower_left_corner;
+  uint32_t lower_right_corner;
+  uint32_t top_edge;
+  uint32_t left_edge;
+  uint32_t right_edge;
+  uint32_t bottom_edge;
+};
+
+struct term_keypress_t__generated_S {
+  uint32_t code_point;
+  uint8_t key_code;
+  uint8_t n_bytes_consumed;
+  uint8_t shift;
+  uint8_t ctrl;
+  uint8_t meta;
+  uint8_t super;
+  uint8_t hyper;
+};
+
+struct random_state_t__generated_S {
+  uint64_t a;
+  uint64_t b;
+};
+
+struct cdl_printer_t__generated_S {
+  buffer_t* buffer;
+  char* key_token;
+  int indention_level;
+};
+
+struct sub_process_t__generated_S {
+  value_array_t* argv;
+  pid_t pid;
+  int stdin;
+  int stdout;
+  int stderr;
+  sub_process_exit_status_t exit_status;
+  int exit_code;
+  int exit_signal;
+};
+
+struct file_S {
+  file_tag_t tag;
+  char* file_name;
+  buffer_t* data;
+};
+
+struct compiler_error_S {
+  uint64_t error_position;
+  tokenizer_error_t tokenizer_error_code;
+  parse_error_code_t parse_error_code;
+  struct token_S* error_token;
+  char* file_name;
+};
+
+struct src_code_snippets_t__generated_S {
+  char* previous_lines;
+  char* current_line;
+  char* next_lines;
+};
+
+struct tokenizer_result_S {
+  value_array_t* tokens;
+  uint64_t tokenizer_error_position;
+  tokenizer_error_t tokenizer_error_code;
+};
+
+struct token_list_S {
+  value_array_t* list;
+};
+
+struct token_transformer_options_S {
+  boolean_t keep_whitespace;
+  boolean_t keep_javadoc_comments;
+  boolean_t keep_comments;
+  boolean_t keep_c_preprocessor_lines;
+};
+
+struct parse_node_S {
+  parse_node_type_t tag;
+};
+
+struct pstate_t__generated_S {
+  value_array_t* tokens;
+  uint64_t position;
+  boolean_t use_statement_parser;
+  parse_node_t* result_node;
+  token_t* result_token;
+  compiler_error_t error;
+};
+
+struct node_list_S {
+  value_array_t* list;
+};
+
+struct declarations_node_S {
+  parse_node_type_t tag;
+  node_list_t declarations;
+};
+
+struct typedef_node_S {
+  parse_node_type_t tag;
+  token_t* name;
+  type_node_t* type_node;
+};
+
+struct function_node_S {
+  parse_node_type_t tag;
+  node_list_t attributes;
+  token_t* storage_class_specifier;
+  token_list_t function_specifiers;
+  type_node_t* return_type;
+  token_t* function_name;
+  node_list_t function_args;
+  parse_node_t* body;
+};
+
+struct function_argument_node_S {
+  parse_node_type_t tag;
+  type_node_t* arg_type;
+  token_t* arg_name;
+  boolean_t is_var_args;
+};
+
+struct unparsed_expression_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  token_t* last_token;
+};
+
+struct attribute_node_S {
+  parse_node_type_t tag;
+  token_t* inner_start_token;
+  token_t* inner_end_token;
+};
+
+struct cpp_include_node_t__generated_S {
+  parse_node_type_t tag;
+  char* text;
+};
+
+struct cpp_define_node_t__generated_S {
+  parse_node_type_t tag;
+  char* text;
+};
+
+struct symbol_table_binding_S {
+  char* key_string;
+  value_array_t* definition_nodes;
+  boolean_t visited;
+};
+
+struct symbol_table_map_S {
+  string_hashtable_t* ht;
+  value_array_t* ordered_bindings;
+};
+
+struct symbol_table_S {
+  symbol_table_t* parent;
+  value_array_t* files;
+  value_array_t* system_includes;
+  value_array_t* user_includes;
+  value_array_t* defines;
+  symbol_table_map_t* enums;
+  symbol_table_map_t* typedefs;
+  symbol_table_map_t* structures;
+  symbol_table_map_t* variables;
+  symbol_table_map_t* functions;
+};
+
+struct c_preprocess_options_t__generated_S {
+  boolean_t keep_system_includes;
+  boolean_t keep_user_includes;
+};
+
+struct c_preprocessor_directive_range_t__generated_S {
+  uint64_t token_start_position;
+  uint64_t token_end_position;
+  uint64_t buffer_start_position;
+  uint64_t buffer_end_position;
+  buffer_t* buffer;
+};
+
+struct pratt_parser_instruction_t__generated_S {
+  token_t* token;
+  pratt_parser_operation_t operation;
+  precedence_t precedence;
+};
+
+struct identifier_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* token;
+};
+
+struct operator_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* operator;
+  parse_node_t* left;
+  parse_node_t* right;
+};
+
+struct call_node_t__generated_S {
+  parse_node_type_t tag;
+  parse_node_t* function;
+  node_list_t args;
+};
+
+struct conditional_node_t__generated_S {
+  parse_node_type_t tag;
+  parse_node_t* condition;
+  parse_node_t* expr_if_true;
+  parse_node_t* expr_if_false;
+};
+
+struct if_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* if_condition;
+  parse_node_t* if_true;
+  parse_node_t* if_else;
+};
+
+struct for_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* for_init;
+  parse_node_t* for_test;
+  parse_node_t* for_increment;
+  parse_node_t* for_body;
+};
+
+struct do_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* body;
+  parse_node_t* condition;
+};
+
+struct while_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* condition;
+  parse_node_t* body;
+};
+
+struct empty_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* semi_colon_token;
+};
+
+struct block_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  node_list_t statements;
+};
+
+struct return_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* expression;
+};
+
+struct switch_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* expression;
+  parse_node_t* block;
+};
+
+struct case_label_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* expression;
+};
+
+struct default_label_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* default_token;
+};
+
+struct goto_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  token_t* label;
+};
+
+struct break_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* break_keyword_token;
+};
+
+struct continue_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* continue_keyword_token;
+};
+
+struct label_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* label;
+};
+
+struct expression_statement_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* first_token;
+  parse_node_t* expression;
+};
+
+struct type_node_S {
+  parse_node_type_t tag;
+  type_node_kind_t type_node_kind;
+  type_qualifier_t qualifiers;
+  token_t* type_name;
+  parse_node_t* user_type;
+  node_list_t type_args;
+};
+
+struct canonical_type_result_s {
+  token_t* canonical_type;
+  int consumed_tokens;
+};
+
+struct struct_node_S {
+  parse_node_type_t tag;
+  token_t* name;
+  node_list_t fields;
+  boolean_t partial_definition;
+};
+
+struct union_node_S {
+  parse_node_type_t tag;
+  token_t* name;
+  node_list_t fields;
+  boolean_t partial_definition;
+};
+
+struct field_node_S {
+  parse_node_type_t tag;
+  type_node_t* type;
+  token_t* name;
+  token_t* bit_field_width;
+  value_array_t* suffixes;
+};
+
+struct enum_node_S {
+  parse_node_type_t tag;
+  token_t* name;
+  node_list_t elements;
+  boolean_t partial_definition;
+};
+
+struct enum_element_S {
+  parse_node_type_t tag;
+  token_t* name;
+  parse_node_t* value_expr;
+};
+
+struct variable_definition_node_t__generated_S {
+  parse_node_type_t tag;
+  boolean_t is_global;
+  token_t* storage_class_specifier;
+  type_node_t* type;
+  token_t* name;
+  parse_node_t* value;
+  value_array_t* suffixes;
+};
+
+struct literal_node_t__generated_S {
+  parse_node_type_t tag;
+  token_t* token;
+  value_array_t* tokens;
+  parse_node_t* initializer_node;
+  parse_node_t* initializer_type;
+};
+
+struct compound_literal_node_t__generated_S {
+  parse_node_type_t tag;
+  parse_node_t* type_node;
+  node_list_t initializers;
+};
+
+struct designated_initializer_node_t__generated_S {
+  parse_node_type_t tag;
+  parse_node_t* index_expression;
+  token_t* member_name;
+  parse_node_t* value;
+};
+
+struct balanced_construct_node_S {
+  parse_node_type_t tag;
+  token_t* start_token;
+  token_t* end_token;
+};
+
+struct printer_S {
+  symbol_table_t* symbol_table;
+  buffer_t* buffer;
+  uint32_t indent_width;
+  uint32_t indent_level;
+  boolean_t convert_nullptr;
+  boolean_t output_line_directives;
+};
+
+struct tmp_provider_t__generated_S {
+  fn_t(token_t*, tmp_provider_t*) get;
+  uint32_t count;
+};
+
+struct roci_bb_builder_t__generated_S {
+  char* bblock_label;
+  roci_bb_t* bblock;
+  value_array_t* data;
+  buffer_t* opcodes;
+};
+
+struct roci_bb_t__generated_S {
+  uint32_t num_data;
+  uint32_t num_opcodes;
+};
+
+struct roci_compiler_state_t__generated_S {
+  roci_compile_time_error_t compiler_error;
+  long bb_label_count;
+  roci_bb_builder_array_t* bblocks;
+  roci_bb_builder_t* current_bb;
+  value_array_t* tokens;
+  long position;
+  long env_depth;
+};
+
+struct roci_env_t__generated_S {
+  roci_env_t* parent;
+  string_hashtable_t* bindings;
+};
+
+struct roci_value_t__generated_S {
+  uint64_t raw;
+  roci_tag_t tag;
+};
+
+struct roci_closure_t__generated_S {
+  roci_bb_t* entry_point;
+  roci_env_t* env;
+};
+
+struct roci_cont_t__generated_S {
+  roci_bb_t* bb;
+  roci_env_t* env;
+  uint64_t* stack;
+  uint8_t* stack_tags;
+};
+
+struct roci_debug_state_t__generated_S {
+  int64_t n_instructions;
+  boolean_t break_on_call_target;
+  boolean_t break_on_return;
+  boolean_t break_on_next_statement;
+  boolean_t trace;
+};
+
+struct roci_vm_state_t__generated_S {
+  roci_runtime_error_t runtime_error;
+  roci_bb_t* current_bb;
+  uint8_t* opcode_ptr;
+  uint64_t* data_ptr;
+  uint64_t* stack;
+  uint8_t* stack_tags;
+  roci_env_t* env;
+  roci_cont_t** continuations;
+  roci_debug_state_t* debug;
+  uint64_t n_args;
+  roci_src_info_t debug_info;
+};
+
+// ========== global variables ==========
+
+
+# 66 "lib/fatal-error.c"
+fatal_error_config_t fatal_error_config = {0};
+
+
+# 205 "lib/logger.c"
+logger_state_t global_logger_state = ((logger_state_t) {.level = LOGGER_DEFAULT_LEVEL});
+
+
+# 145 "lib/flag.c"
+program_descriptor_t* current_program;
+
+
+# 146 "lib/flag.c"
+command_descriptor_t* current_command;
+
+
+# 147 "lib/flag.c"
+flag_descriptor_t* current_flag;
+
+
+# 29 "lib/random.c"
+random_state_t shared_random_state = {0};
+
+
+# 1 "keywords.c"
+char* c_keywords_array[] = {
+    /* C89/C90 Keywords */
+    "auto", "break", "case", "char", "const", "continue", "default", "do",
+    "double", "else", "enum", "extern", "float", "for", "goto", "if", "int",
+    "long", "register", "return", "short", "signed", "sizeof", "static",
+    "struct", "switch", "typedef", "union", "unsigned", "void", "volatile",
+    "while",
+
+    /* C99 Keywords */
+    "_Bool", "_Complex", "_Imaginary", "inline", "restrict",
+
+    /* C11 Keywords */
+    "_Alignas", "_Atomic", "_Generic", "_Noreturn", "_Static_assert",
+    "_Thread_local",
+
+    /* C23 Keywords */
+    "true", "false", "nullptr"};
+
+
+# 19 "keywords.c"
+char* c_builtin_types_array[] = {
+    "char",   // Single character
+    "short",  // Short integer
+    "int",    // Integer
+    "long",   // Long integer
+    "float",  // Single-precision floating-point
+    "double", // Double-precision floating-point
+    "void",   // Represents no value or type
+
+    // Modifiers (Can be combined with core types)
+    "signed", "unsigned",
+
+    // C99 and later
+    "_Bool",     // Boolean (true or false)
+    "_Complex",  // Complex number representation
+    "_Imaginary" // Imaginary number representation
+};
+
+
+# 37 "keywords.c"
+char* cpp_keywords_array[] = {
+    // C++98 Keywords (includes most C keywords)
+    "asm",      // Inline assembly
+    "class",    // Define a class
+    "new",      // Dynamic memory allocation
+    "delete",   // Dynamic memory deallocation
+    "template", // Templates (generic programming)
+    "typename", // Used in templates
+    "this",     // Pointer to current object
+    "try",      // Start of try block (exception handling)
+    "catch",    // Start of catch block (exception handling)
+    "throw",    // Throw an exception
+
+    // C++11 Keywords
+    "nullptr",   // Null pointer literal
+    "constexpr", // Constant expressions
+    "decltype",  // Deduce type
+    "noexcept",  // Function doesn't throw exceptions
+    "override",  // Explicitly override virtual function
+    "final",     // Prevent virtual function overriding/class inheritance
+    "default",   // Used in switch, or to request default constructor/destructor
+    "auto",      // Automatic type deduction
+
+    // C++14 Keywords
+    "declval", // Used in SFINAE (complicated, advanced usage)
+
+    // C++17 Keywords
+    "static_assert", // Compile-time assertions
+    "inline",        // Can now be used for variables
+
+    // C++20 Keywords
+    "char8_t",   // Type for UTF-8 characters
+    "concept",   // Define constraints for templates
+    "requires",  // Specify requirements for template parameters
+    "coroutine", // Keyword related to coroutines (advanced)
+    "co_await",  // Used with coroutines
+    "co_yield",  // Used with coroutines
+    "co_return", // Used with coroutines
+};
+
+
+# 77 "keywords.c"
+string_hashtable_t* c_keywords_ht = ((void *)0);
+
+
+# 78 "keywords.c"
+string_hashtable_t* c_builtin_types_ht = ((void *)0);
+
+
+# 80 "keywords.c"
+string_hashtable_t* cpp_keywords_ht = ((void *)0);
+
+
+# 81 "keywords.c"
+string_hashtable_t* cpp_builtin_types_ht = ((void *)0);
+
+
+# 83 "keywords.c"
+string_hashtable_t* oc_keywords_ht = ((void *)0);
+
+
+# 84 "keywords.c"
+string_hashtable_t* oc_builtin_types_ht = ((void *)0);
+
+
+# 120 "compiler-errors.c"
+char* formatted_snippet = "======================================================================\n" "{error-prefix-lines}" "{error-highlight-on}" "{error-current-line}" "{error-highlight-off}" "{error-suffix-lines}" "\n======================================================================" "\n";
+
+
+# 174 "compiler-errors.c"
+char* parse_error_unknown = "A parse error has occurred but the error message is unavailable.\n" "{formatted_snippet}";
+
+
+# 178 "compiler-errors.c"
+char* error_field_width_or_semicolon = "A parse error has occurred while trying to read a structure or union " "field.\n" "{formatted_snippet}" "Expected a field width or a semi-colon.";
+
+
+# 184 "compiler-errors.c"
+char* error_open_brace_expected = "A parse error has occurred while trying to parse after an opening '[' " "character. Expected a closing ']'.\n" "{formatted_snippet}";
+
+
+# 189 "compiler-errors.c"
+char* error_open_semicolon_expected = "A parse error has occurred since a semicolon was expected.\n" "{formatted_snippet}";
+
+
+# 193 "compiler-errors.c"
+char* error_unrecognized_top_level_declaration = "Unable to parse a top-level declaration.\n" "{formatted_snippet}" "\nVariables, functions, " "structures, unions, and typedefs are currently supported.\n\n" "(Additionally, C pre-processor directives are allowed but " "are currently skipped before parsing.)";
+
+
+# 201 "compiler-errors.c"
+char* error_conflicting_storage_class_specifier = "Conflicting storage class specifiers.\n" "{formatted_snippet}" "\nA storage class specifier is either static, extern, auto, or " "register\n" "For each 'declaration', only one of them is allowed.";
+
+
+# 208 "compiler-errors.c"
+char* error_conflicting_function_specifier = "Conflicting function specifier.\n" "{formatted_snippet}" "\nThe only known function specifier is inline so you likely repeated " "it.";
+
+
+# 214 "compiler-errors.c"
+char* error_expected_open_paren_for_underscore_attribute = "This doesn't look like a valid attribute specification.\n" "{formatted_snippet}" "\nAttributes roughly look like __attribute__((...))\n" "\nYou might have unbalanced parens...";
+
+
+# 220 "compiler-errors.c"
+char* error_expected_matching_close_paren_after_underscore_attribute = "This doesn't look like a valid attribute specification.\n" "{formatted_snippet}" "\nAttributes roughly look like __attribute__((...))\n" "\nYou might have unbalanced parens...";
+
+
+# 401 "lexer.c"
+char* c_punctuation[] = {
+    "!=",
+    "%=",
+    "&&",
+    "&=",
+    "*=",
+    "++",
+    "+=",
+    "--",
+    "-=",
+    "->",
+    "...",
+    "/=",
+    "::",
+    "<<=",
+    "<=",
+    "==",
+    ">=",
+    ">>=",
+    "[[",
+    "]]",
+    "^=",
+    "|=",
+    "||",
+    "<<",
+    ">>",
+
+    // Since we match from top-to-bottom, we generally want the
+    // longest tokens first.
+
+    "!",
+    "%",
+    "&",
+    "(",
+    ")",
+    "*",
+    "+",
+    ",",
+    "-",
+    ".",
+    "/",
+    ":",
+    ";",
+    ";",
+    "<",
+    "=",
+    ">",
+    "?",
+    "[",
+    "]",
+    "^",
+    "{",
+    "|",
+    "}",
+    "~",
+
+    // *****************************************************************
+    // Hopefully enough to parse C preprocessor stuff (after going
+    // through the token-transformer...)
+    // *****************************************************************
+    "#",
+    // This won't work forever... We special case this in
+    // transform_tokens()...
+    "\\\n",
+};
+
+
+# 10 "flags.c"
+value_array_t* FLAG_files = ((void *)0);
+
+
+# 11 "flags.c"
+char* FLAG_command = ((void *)0);
+
+
+# 12 "flags.c"
+boolean_t FLAG_print_command_line = true;
+
+
+# 13 "flags.c"
+boolean_t FLAG_include_unnamed_nodes = false;
+
+
+# 14 "flags.c"
+boolean_t FLAG_print_tokens_show_tokens = false;
+
+
+# 15 "flags.c"
+boolean_t FLAG_print_tokens_include_whitespace = false;
+
+
+# 16 "flags.c"
+boolean_t FLAG_print_tokens_include_comments = false;
+
+
+# 17 "flags.c"
+boolean_t FLAG_print_tokens_parse_and_print = true;
+
+
+# 18 "flags.c"
+boolean_t FLAG_print_tokens_show_appended_tokens = true;
+
+
+# 19 "flags.c"
+char* FLAG_c_output_file = ((void *)0);
+
+
+# 20 "flags.c"
+char* FLAG_binary_output_file = ((void *)0);
+
+
+# 21 "flags.c"
+char* FLAG_archive_output_file = ((void *)0);
+
+
+# 22 "flags.c"
+boolean_t FLAG_generate_enum_convertors = true;
+
+
+# 23 "flags.c"
+char* FLAG_expression = ((void *)0);
+
+
+# 24 "flags.c"
+char* FLAG_statement = ((void *)0);
+
+
+# 25 "flags.c"
+boolean_t FLAG_dump_symbol_table = false;
+
+
+# 26 "flags.c"
+boolean_t FLAG_use_statement_parser = true;
+
+
+# 27 "flags.c"
+boolean_t FLAG_to_c = true;
+
+
+# 28 "flags.c"
+boolean_t FLAG_omit_c_armyknife_include = false;
+
+
+# 29 "flags.c"
+char* FLAG_c_compiler = "clang";
+
+
+# 30 "flags.c"
+boolean_t FLAG_roci_debug = false;
+
+
+# 31 "flags.c"
+boolean_t FLAG_roci_print_bbs = false;
+
+// ========== function prototypes ==========
+
+unsigned encode_sleb_128(int64_t Value, uint8_t* p);
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end);
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end);
+void segmentation_fault_handler(int signal_number);
+void configure_fatal_errors(fatal_error_config_t config);
+void print_fatal_error_banner();
+void print_backtrace();
+void print_error_code_name(int error_code);
+char* get_command_line();
+char* get_program_path();
+_Noreturn void fatal_error_impl(char* file, int line, int error_code);
+int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
+uint8_t* checked_malloc(char* file, int line, uint64_t amount);
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
+void checked_free(char* file, int line, void* pointer);
+int uint64_highest_bit_set(uint64_t n);
+uint64_t double_as_uint64(double d);
+uint64_t uint64_as_double(uint64_t u);
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
+int string_is_null_or_empty(const char* str);
+int string_equal(const char* str1, const char* str2);
+int string_starts_with(const char* str1, const char* str2);
+int string_ends_with(const char* str1, const char* str2);
+boolean_t string_contains_char(const char* str, char ch);
+int string_index_of_char(const char* str, char ch);
+uint64_t string_hash(const char* str);
+char* string_substring(const char* str, int start, int end);
+value_result_t string_parse_uint64_dec(const char* string);
+value_result_t string_parse_uint64_bin(const char* string);
+value_result_t string_parse_uint64_hex(const char* string);
+value_result_t string_parse_uint64(const char* string);
+char* string_duplicate(const char* src);
+char* string_append(const char* a, const char* b);
+char* uint64_to_string(uint64_t number);
+char* int64_to_string(int64_t number);
+char* string_left_pad(const char* str, int n, char ch);
+char* string_right_pad(const char* str, int n, char ch);
+char* string_truncate(char* str, int limit, char* at_limit_suffix);
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...);
+double string_parse_double(char* str);
+value_result_t parse_log_level_enum(char* str);
+void logger_init(void);
+char* logger_level_to_string(int level);
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
+utf8_decode_result_t utf8_decode(const uint8_t* array);
+buffer_t* make_buffer(uint64_t initial_capacity);
+uint64_t buffer_length(buffer_t* array);
+void buffer_clear(buffer_t* buffer);
+uint8_t buffer_get(buffer_t* buffer, uint64_t position);
+char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
+char* buffer_to_c_string(buffer_t* buffer);
+buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element);
+buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
+buffer_t* buffer_append_string(buffer_t* buffer, const char* str);
+extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
+__attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...);
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
+extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str);
+int64_t buffer_index_of(buffer_t* buffer, char* str);
+buffer_t* buffer_from_string(char* string);
+buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width);
+buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text);
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position);
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text);
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement);
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start);
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
+extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer);
+buffer_t* buffer_to_uppercase(buffer_t* buffer);
+buffer_t* buffer_to_lowercase(buffer_t* buffer);
+boolean_t buffer_ends_with(buffer_t* buffer, char* str);
+boolean_t buffer_equal(buffer_t* buffer, char* str);
+byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer);
+uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
+byte_stream_source_t* cstring_to_byte_source(char* string);
+uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
+byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer);
+byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte);
+value_array_t* make_value_array(uint64_t initial_capacity);
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
+value_t value_array_get(value_array_t* array, uint32_t index);
+void value_array_replace(value_array_t* array, uint32_t index, value_t element);
+void value_array_add(value_array_t* array, value_t element);
+void value_array_push(value_array_t* array, value_t element);
+value_t value_array_pop(value_array_t* array);
+void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
+value_t value_array_delete_at(value_array_t* array, uint32_t position);
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+value_tree_t* value_tree_skew(value_tree_t* t);
+value_tree_t* value_tree_split(value_tree_t* t);
+value_tree_t* make_value_tree_leaf(value_t key, value_t value);
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_tree_t* value_tree_decrease_level(value_tree_t* t);
+value_tree_t* value_tree_predecessor(value_tree_t* t);
+value_tree_t* value_tree_successor(value_tree_t* t);
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+void flag_program_name(char* name);
+void flag_command(char* name, char** write_back_ptr);
+void flag_description(char* description);
+void flag_file_args(value_array_t** write_back_file_args_ptr);
+void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type);
+void flag_boolean(char* name, boolean_t* write_back_ptr);
+void flag_string(char* name, char** write_back_ptr);
+void flag_uint64(char* name, uint64_t* write_back_ptr);
+void flag_int64(char* name, int64_t* write_back_ptr);
+void flag_double(char* name, double* write_back_ptr);
+void flag_enum(char* name, int* write_back_ptr);
+void flag_enum_64(char* name, uint64_t* write_back_ptr);
+void flag_enum_value(char* name, uint64_t value);
+void flag_alias(char* alias);
+char* flag_parse_command_line(int argc, char** argv);
+command_descriptor_t* flag_find_command_descriptor(char* name);
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name);
+flag_key_value_t flag_split_argument(char* arg);
+char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
+char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value);
+char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value);
+char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
+void flag_print_flags(FILE* out, char* header, string_tree_t* flags);
+void flag_print_help(FILE* out, char* message);
+buffer_t* buffer_read_file(char* file_name);
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
+__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input);
+void buffer_write_file(buffer_t* bytes, char* file_name);
+void buffer_write_all(FILE* output, buffer_t* buffer);
+void make_file_read_only(char* file_name);
+void make_writable_if_exists(const char* file_name);
+buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
+int file_peek_byte(FILE* input);
+boolean_t file_eof(FILE* input);
+void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
+void file_skip_bytes(FILE* input, uint64_t n_bytes);
+int64_t get_file_modification_time(const char* filename);
+void term_set_foreground_color(buffer_t* buffer, uint32_t color);
+void term_set_background_color(buffer_t* buffer, uint32_t color);
+void term_move_cursor_absolute(buffer_t* buffer, int x, int y);
+void term_move_cursor_relative(buffer_t* buffer, int x, int y);
+void term_bold(buffer_t* buffer);
+void term_dim(buffer_t* buffer);
+void term_italic(buffer_t* buffer);
+void term_underline(buffer_t* buffer);
+void term_reset_formatting(buffer_t* buffer);
+void term_clear_screen(buffer_t* buffer);
+void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
+extern struct termios term_echo_off();
+extern void term_echo_restore(struct termios oldt);
+void term_alt_buffer(buffer_t* buffer);
+void term_main_buffer(buffer_t* buffer);
+void term_home(buffer_t* buffer);
+uint32_t term_width(void);
+uint32_t term_height(void);
+void add_duplicate(value_array_t* token_array, const char* data);
+value_array_t* string_tokenize(const char* str, const char* delimiters);
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters);
+random_state_t random_state_for_test(void);
+random_state_t* random_state(void);
+uint64_t random_next(random_state_t* state);
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
+cdl_printer_t* make_cdl_printer(buffer_t* buffer);
+void cdl_indent(cdl_printer_t* printer);
+boolean_t is_safe_string(char* string);
+void cdl_output_token(cdl_printer_t* printer, char* string);
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean);
+void cdl_string(cdl_printer_t* printer, char* string);
+void cdl_int64(cdl_printer_t* printer, int64_t number);
+void cdl_uint64(cdl_printer_t* printer, uint64_t number);
+void cdl_double(cdl_printer_t* printer, double number);
+void cdl_start_array(cdl_printer_t* printer);
+void cdl_end_array(cdl_printer_t* printer);
+void cdl_start_table(cdl_printer_t* printer);
+void cdl_key(cdl_printer_t* printer, char* key);
+void cdl_end_table(cdl_printer_t* printer);
+sub_process_t* make_sub_process(value_array_t* argv);
+boolean_t sub_process_launch(sub_process_t* sub_process);
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
+void sub_process_close_stdin(sub_process_t* sub_process);
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
+boolean_t is_sub_process_running(sub_process_t* sub_process);
+void sub_process_wait(sub_process_t* sub_process);
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
+buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
+void oarchive_append_header_and_file_contents(FILE* out, char* filename);
+string_tree_t* oarchive_read_header(FILE* in);
+void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data);
+char* quote_c_string(char* input);
+char* string_unquote_c_string(char* input);
+__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
+void initialize_keyword_maps(void);
+boolean_t is_reserved_word(input_mode_t mode, char* str);
+boolean_t is_builtin_type_name(input_mode_t mode, char* str);
+value_array_t* read_files(value_array_t* files);
+file_t* read_file(char* file_name);
+void add_all_oarchive_members(value_array_t* result, char* archive_file_name);
+boolean_t add_orachive_file(FILE* input, string_tree_t* metadata, int64_t size, void* callback_data);
+buffer_t* buffer_append_human_readable_error(buffer_t* buffer, compiler_error_t* error);
+src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location, int before_lines, int after_lines);
+char* do_common_replacements(char* template, compiler_error_t* error);
+buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer, compiler_error_t* error);
+buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_error_t* error);
+char* token_to_string(token_t* token);
+token_t* make_derived_token(token_t* source_token);
+__attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, token_t token);
+buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token);
+token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position);
+boolean_t is_identifier_start(uint32_t code_point);
+token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position);
+token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position);
+boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_point, uint32_t previous_code_point);
+token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position);
+boolean_t is_comment_start(buffer_t* buffer, uint64_t position);
+token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position);
+boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position);
+boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position);
+token_or_error_t tokenize_string_literal(buffer_t* buffer, uint64_t start_position);
+token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position);
+uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position);
+tokenizer_result_t tokenize(buffer_t* buffer);
+value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options_t xform_options);
+boolean_t pstate_is_eof(pstate_t* pstate);
+pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code);
+pstate_t* pstate_ignore_error(pstate_t* pstate);
+pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position);
+pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token);
+pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node);
+token_t* pstate_get_result_token(pstate_t* pstate);
+parse_node_t* pstate_get_result_node(pstate_t* pstate);
+parse_node_t* pstate_get_optional_result_node(pstate_t* pstate);
+token_t* pstate_peek(pstate_t* pstate, int offset);
+token_t* pstate_advance(pstate_t* pstate);
+boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string);
+pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string);
+pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type);
+void pstate_rollback(pstate_t* pstate, uint64_t saved_position);
+pstatus_t parse_declarations(pstate_t* pstate);
+pstatus_t parse_declaration(pstate_t* pstate);
+pstatus_t parse_enum_node_declaration(pstate_t* pstate);
+pstatus_t parse_structure_node_declaration(pstate_t* pstate);
+pstatus_t parse_union_node_declaration(pstate_t* pstate);
+pstatus_t parse_attribute_node(pstate_t* pstate);
+pstatus_t parse_function_node(pstate_t* pstate);
+pstatus_t parse_function_argument_node(pstate_t* pstate);
+pstatus_t parse_function_body_node(pstate_t* pstate);
+pstatus_t parse_typedef_node(pstate_t* pstate);
+pstatus_t parse_improved_typedef_node(pstate_t* pstate);
+void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node);
+void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list);
+void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, char* field_name);
+void buffer_append_dbg_declarations(cdl_printer_t* printer, declarations_node_t* node);
+void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node);
+void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node);
+void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node);
+void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node);
+void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node);
+void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node);
+void buffer_append_dbg_literal_node(cdl_printer_t* printer, literal_node_t* node);
+void buffer_append_dbg_function_node(cdl_printer_t* printer, function_node_t* node);
+void buffer_append_dbg_function_argument_node(cdl_printer_t* printer, function_argument_node_t* node);
+void buffer_append_dbg_balanced_construct_node(cdl_printer_t* printer, balanced_construct_node_t* node);
+void buffer_append_dbg_typedef_node(cdl_printer_t* printer, typedef_node_t* node);
+void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable_definition_node_t* node);
+void buffer_append_dbg_attribute_node(cdl_printer_t* printer, attribute_node_t* node);
+void buffer_append_dbg_empty_statement_node(cdl_printer_t* printer, empty_statement_node_t* node);
+void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node);
+void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node);
+void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t* node);
+void buffer_append_dbg_for_node(cdl_printer_t* printer, for_statement_node_t* node);
+void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node);
+void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statement_node_t* node);
+void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_statement_node_t* node);
+void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statement_node_t* node);
+void buffer_append_dbg_goto_statement_node(cdl_printer_t* printer, goto_statement_node_t* node);
+void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t* node);
+void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_node_t* node);
+void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node);
+void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, expression_statement_node_t* node);
+void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t* node);
+void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* node);
+void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node);
+void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node_t* node);
+void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node_t* node);
+void buffer_append_dbg_compound_literal(cdl_printer_t* printer, compound_literal_node_t* node);
+void buffer_append_dbg_designated_initializer(cdl_printer_t* printer, designated_initializer_node_t* node);
+void debug_append_tokens(buffer_t* buffer, value_array_t* tokens);
+printer_t* append_parse_node(printer_t* printer, parse_node_t* node);
+printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* node);
+printer_t* append_c_function_node_prototype(printer_t* printer, function_node_t* node);
+printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct_node_t* node);
+printer_t* append_c_function_node_and_body(printer_t* printer, function_node_t* node);
+printer_t* append_c_function_argument_node(printer_t* printer, function_argument_node_t* node);
+printer_t* append_type_node(printer_t* printer, type_node_t* node);
+printer_t* append_fn_type_node(printer_t* printer, type_node_t* node);
+printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node);
+printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, token_t* end_token);
+printer_t* append_enum_node(printer_t* printer, enum_node_t* node);
+printer_t* append_enum_element(printer_t* printer, enum_element_t* node);
+printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string);
+printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string);
+printer_t* append_field_node(printer_t* printer, field_node_t* node);
+printer_t* append_struct_node(printer_t* printer, struct_node_t* node);
+printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node);
+printer_t* append_cpp_include_node(printer_t* printer, cpp_include_node_t* node);
+printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node);
+printer_t* append_variable_definition_node(printer_t* printer, variable_definition_node_t* node, boolean_t is_library);
+printer_t* append_literal_node(printer_t* printer, literal_node_t* node);
+printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node);
+printer_t* append_empty_statement_node(printer_t* printer, empty_statement_node_t* node);
+printer_t* append_break_statement_node(printer_t* printer, break_statement_node_t* node);
+printer_t* append_continue_statement_node(printer_t* printer, continue_statement_node_t* node);
+printer_t* append_label_statement_node(printer_t* printer, label_statement_node_t* node);
+printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node);
+printer_t* append_default_label_node(printer_t* printer, default_label_node_t* node);
+printer_t* append_expression_statement_node(printer_t* printer, expression_statement_node_t* node);
+printer_t* append_block_node(printer_t* printer, block_node_t* node);
+printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* node);
+printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node);
+printer_t* append_switch_statement_node(printer_t* printer, switch_statement_node_t* node);
+printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* node);
+printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* node);
+printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node);
+printer_t* append_goto_statement_node(printer_t* printer, goto_statement_node_t* node);
+printer_t* append_operator_node(printer_t* printer, operator_node_t* node);
+printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node);
+printer_t* append_call_node(printer_t* printer, call_node_t* node);
+buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string);
+printer_t* append_line_directive(printer_t* printer, token_t* token);
+printer_t* append_compound_literal_node(printer_t* printer, compound_literal_node_t* node);
+printer_t* append_designated_initializer_node(printer_t* printer, designated_initializer_node_t* node);
+symbol_table_map_t* make_symbol_table_map(void);
+symbol_table_t* make_symbol_table(void);
+symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_string);
+parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char* key_string);
+void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string, parse_node_t* node);
+void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_node_t* root);
+buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table);
+void buffer_append_dgb_binding(cdl_printer_t* printer, symbol_table_binding_t* binding);
+void buffer_appennd_dbg_symbol_table_map(cdl_printer_t* printer, symbol_table_map_t* symbol_table_map);
+void buffer_append_dgb_symbol_table(cdl_printer_t* printer, symbol_table_t* symbol_table);
+token_t* generate_struct_name_from_typedef_name(token_t* name);
+void split_structure_typedefs(symbol_table_t* symbol_table);
+void reorder_symbol_table_typedefs(symbol_table_t* symbol_table);
+void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings);
+struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* binding);
+symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* symbol_table, type_node_t* type_node);
+void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_table, symbol_table_binding_t* binding, value_array_t* reordered_bindings);
+void reorder_symbol_table_structures(symbol_table_t* symbol_table);
+c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position);
+uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens, uint64_t start_position);
+void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens);
+void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names, boolean_t use_statement_parser);
+void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, char* file_name, boolean_t use_statement_parser);
+file_t* symbol_table_token_to_file(symbol_table_t* symbol_table, token_t* token);
+void srcgen_enum_to_string_converters(symbol_table_t* symbol_table);
+pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence);
+pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left);
+pratt_parser_instruction_t get_prefix_instruction(pstate_t* pstate, token_t* token);
+pratt_parser_instruction_t get_infix_instruction(token_t* token);
+associativity_t precedence_to_associativity(precedence_t precedence);
+pstatus_t parse_statement(pstate_t* pstate);
+pstatus_t parse_block(pstate_t* pstate);
+pstatus_t parse_return_statement(pstate_t* pstate);
+pstatus_t parse_if_statement(pstate_t* pstate);
+pstatus_t parse_while_statement(pstate_t* pstate);
+pstatus_t parse_do_statement(pstate_t* pstate);
+pstatus_t parse_for_statement(pstate_t* pstate);
+pstatus_t parse_switch_statement(pstate_t* pstate);
+pstatus_t parse_case_label(pstate_t* pstate);
+pstatus_t parse_expression_statement(pstate_t* pstate);
+pstatus_t parse_goto_statement(pstate_t* pstate);
+pstatus_t parse_break_statement(pstate_t* pstate);
+pstatus_t parse_continue_statement(pstate_t* pstate);
+pstatus_t parse_label_statement(pstate_t* pstate);
+pstatus_t parse_default_label(pstate_t* pstate);
+pstatus_t parse_empty_statement(pstate_t* pstate);
+break_statement_node_t* make_break_statement(token_t* break_keyword_token);
+break_statement_node_t* to_break_statement_node(parse_node_t* ptr);
+continue_statement_node_t* make_continue_statement(token_t* keyword_token);
+continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr);
+label_statement_node_t* make_label_statement(token_t* label);
+label_statement_node_t* to_label_statement_node(parse_node_t* ptr);
+goto_statement_node_t* make_goto_statement(token_t* first_token, token_t* label);
+goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr);
+empty_statement_node_t* make_empty_statement(token_t* semi_colon_token);
+empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr);
+switch_statement_node_t* make_switch_statement(token_t* first_token, parse_node_t* expression, parse_node_t* block);
+switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr);
+case_label_node_t* make_case_label(token_t* first_token, parse_node_t* expression);
+case_label_node_t* to_case_label_node(parse_node_t* ptr);
+default_label_node_t* make_default_label(token_t* default_token);
+default_label_node_t* to_default_label_node(parse_node_t* ptr);
+block_node_t* make_block_node(token_t* first_token);
+block_node_t* to_block_node(parse_node_t* ptr);
+for_statement_node_t* make_for_statement(token_t* first_token, parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body);
+for_statement_node_t* to_for_statement_node(parse_node_t* ptr);
+if_statement_node_t* make_if_statement(token_t* first_token, parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else);
+if_statement_node_t* to_if_statement_node(parse_node_t* ptr);
+expression_statement_node_t* make_expression_statement_node(token_t* first_token, parse_node_t* expression);
+expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr);
+return_statement_node_t* make_return_statement(token_t* first_token, parse_node_t* expression);
+return_statement_node_t* to_return_statement_node(parse_node_t* ptr);
+while_statement_node_t* make_while_statement(token_t* first_token, parse_node_t* condition, parse_node_t* body);
+while_statement_node_t* to_while_statement_node(parse_node_t* ptr);
+do_statement_node_t* make_do_statement(token_t* first_token, parse_node_t* body, parse_node_t* condition);
+do_statement_node_t* to_do_statement_node(parse_node_t* ptr);
+pstatus_t parse_type_node(pstate_t* pstate);
+canonical_type_result_t make_type_token_result(char* str, int consumed_tokens);
+pstatus_t parse_typeof_node(pstate_t* pstate);
+canonical_type_result_t parse_canonical_type(pstate_t* pstate);
+pstatus_t parse_function_type(pstate_t* pstate);
+pstatus_t parse_function_type_argument(pstate_t* pstate);
+pstatus_t parse_structure_node(pstate_t* pstate);
+pstatus_t parse_field_node(pstate_t* pstate);
+pstatus_t parse_union_node(pstate_t* pstate);
+pstatus_t parse_user_type_node(pstate_t* pstate);
+pstatus_t parse_enum_node(pstate_t* pstate);
+pstatus_t parse_enum_element_node(pstate_t* pstate);
+pstatus_t parse_expression(pstate_t* pstate);
+pstatus_t parse_initializer(pstate_t* pstate);
+pstatus_t parse_variable_definition_node(pstate_t* pstate);
+pstatus_t parse_literal_node(pstate_t* pstate);
+pstatus_t parse_compound_literal(pstate_t* pstate);
+pstatus_t parse_designated_initializer_node(pstate_t* pstate);
+pstatus_t parse_balanced_construct(pstate_t* pstate);
+printer_t* make_printer(buffer_t* buffer, symbol_table_t* symbol_table, int indent_width);
+printer_t* append_string(printer_t* printer, char* string);
+printer_t* append_token(printer_t* printer, token_t* token);
+printer_t* printer_newline(printer_t* printer);
+printer_t* printer_space(printer_t* printer);
+printer_t* printer_indent(printer_t* printer);
+printer_t* printer_increase_indent(printer_t* printer);
+printer_t* printer_decrease_indent(printer_t* printer);
+void linearize_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node);
+void linearize_expression(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node, token_t* target);
+void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider, block_node_t* node);
+void linearize_statement_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, call_node_t* node);
+void linearize_if_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, if_statement_node_t* node);
+void linearize_do_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, do_statement_node_t* node);
+void linearize_expression_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, expression_statement_node_t* node);
+tmp_provider_t* make_tmp_provider();
+token_t* tmp_provider_get(tmp_provider_t* data);
+parse_node_t* tmp_to_var_reference(token_t* tmp);
+int main(int argc, char** argv);
+buffer_t* command_line_args_to_buffer(int argc, char** argv);
+void archive_command(void);
+void generate_archive_file(void);
+void build_command(buffer_t* command_line_comment);
+void generate_c_output_file(output_file_type_t output_type, buffer_t* command_line_overview_comment);
+boolean_t is_unit_test_function(function_node_t* node);
+boolean_t is_inlined_function(function_node_t* node);
+void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table);
+char* include_node_to_string(cpp_include_node_t* node);
+void add_generated_c_file_header(buffer_t* buffer);
+void generate_header_file_command(buffer_t* command_line_overview_comment);
+void generate_library_command(buffer_t* command_line_overview_comment);
+int invoke_c_compiler(char* input_file, char* output_file);
+value_array_t* c_compiler_command_line(char* input_file, char* output_file);
+buffer_t* git_hash_object(char* filename);
+void do_print_tokens(value_array_t* tokens, char* message);
+void print_tokens(void);
+void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer);
+void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer);
+void test_command(buffer_t* command_line_comment);
+void run_test_binary(char* binary_file_name);
+void handle_if_internal_test(void);
+void handle_statement_test(char* file_name);
+void handle_expression_test(char* file_name);
+void test_assembler_command();
+void configure_flags(void);
+void configure_parse_expression(void);
+void configure_parse_statement(void);
+void configure_test_assembler_command(void);
+void configure_print_tokens_command(void);
+void configure_regular_commands(void);
+uint64_t skip_whitespace_and_comments(buffer_t* buffer, uint64_t position);
+uint64_t read_roci_token(buffer_t* buffer, uint64_t position, buffer_t* token);
+boolean_t token_is_double(buffer_t* token);
+roci_bb_builder_array_t* roci_assemble(buffer_t* buffer);
+roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks);
+value_array_t* build_bblocks(roci_bb_builder_array_t* bblocks);
+void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks, roci_bb_builder_t* builder);
+uint64_t bb_label_to_address(roci_bb_builder_array_t* bblocks, char* label);
+void roci_command(void);
+void roci_compile_buffer(roci_compiler_state_t* state, char* file_name, buffer_t* buffer);
+value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer);
+void roci_compile_tokens(roci_compiler_state_t* state);
+void roci_compile_statement(roci_compiler_state_t* state);
+void roci_compile_return(roci_compiler_state_t* state);
+void roci_compile_let(roci_compiler_state_t* state);
+void roci_compile_assignment(roci_compiler_state_t* state);
+void roci_compile_if(roci_compiler_state_t* state);
+roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state);
+void roci_compile_while(roci_compiler_state_t* state);
+void roci_compile_expression(roci_compiler_state_t* state);
+void roci_compile_function_call(roci_compiler_state_t* state);
+void roci_compile_closure(roci_compiler_state_t* state);
+int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args);
+void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode);
+void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str);
+void roci_emit_int_datum(roci_compiler_state_t* state, uint64_t val);
+void roci_emit_new_environment(roci_compiler_state_t* state);
+void roci_emit_drop_environment(roci_compiler_state_t* state);
+void roci_emit_return(roci_compiler_state_t* state);
+void roci_emit_get_var(roci_bb_builder_t* bb, char* fn_name);
+void roci_emit_comment(roci_bb_builder_t* bb, char* str);
+void roci_emit_debug_info(roci_compiler_state_t* state, char* filename, token_t* token);
+roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state, char* label_prefix);
+void roci_emit_branch(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock);
+void roci_emit_br_true(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock);
+boolean_t roci_eof(roci_compiler_state_t* state);
+void roci_skip_token(roci_compiler_state_t* state);
+token_t* roci_peek_token(roci_compiler_state_t* state);
+token_t* roci_next_token(roci_compiler_state_t* state);
+void roci_expect_token(roci_compiler_state_t* state, char* token_string);
+void roci_verify_identifier(token_t* token);
+void roci_debug_error(roci_vm_state_t* state, char* error_message);
+void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer);
+void roci_debug_breakpoint(void);
+void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer);
+boolean_t roci_is_tty(void);
+void roci_debugger_banner(buffer_t* buffer, char* text);
+void roci_debugger_instructions(buffer_t* buffer);
+void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb, uint8_t* address);
+uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint64_t* data_ptr);
+double raw_double_to_double(uint64_t raw_bits);
+void disassemble_bblocks(value_array_t* bblocks, buffer_t* buffer);
+roci_value_t* roci_get_var(roci_env_t* env, char* name);
+void roci_set_var(roci_vm_state_t* state, char* name, value_t value, roci_tag_t tag);
+void roci_define_var(roci_env_t* env, char* name, value_t value, roci_tag_t tag);
+roci_env_t* roci_new_env(roci_env_t* parent);
+void roci_dump_env(roci_env_t* env, buffer_t* buffer);
+void roci_add_primitives_to_env(roci_env_t* env);
+void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name);
+void roci_primitive_exit(roci_vm_state_t* state);
+void roci_primitive_load(roci_vm_state_t* state);
+void roci_primitive_print_env(roci_vm_state_t* state);
+void roci_primitive_print_string(roci_vm_state_t* state);
+void roci_primitive_println(roci_vm_state_t* state);
+void roci_primitive_string_equal(roci_vm_state_t* state);
+void roci_primitive_string_starts_with(roci_vm_state_t* state);
+void roci_primitive_string_ends_with(roci_vm_state_t* state);
+void roci_primitive_string_substring(roci_vm_state_t* state);
+void roci_primitive_string_append(roci_vm_state_t* state);
+void roci_primitive_make_list(roci_vm_state_t* state);
+void roci_primitive_list_get(roci_vm_state_t* state);
+void roci_primitive_list_set(roci_vm_state_t* state);
+void roci_primitive_list_push(roci_vm_state_t* state);
+void roci_primitive_list_for_each(roci_vm_state_t* state);
+void roci_primitive_to_string(roci_vm_state_t* state);
+void roci_primitive_timestamp(roci_vm_state_t* state);
+void roci_primitive_shell(roci_vm_state_t* state);
+void roci_primitive_shell_exit_code(roci_vm_state_t* state);
+void roci_primitive_shell_stdout(roci_vm_state_t* state);
+void roci_primitive_platform(roci_vm_state_t* state);
+void roci_primitive_glob(roci_vm_state_t* state);
+void roci_primitive_iadd(roci_vm_state_t* state);
+void roci_primitive_iequal(roci_vm_state_t* state);
+void roci_primitive_not(roci_vm_state_t* state);
+void roci_primitive_getenv(roci_vm_state_t* state);
+void roci_primitive_is_boolean(roci_vm_state_t* state);
+void roci_primitive_is_string(roci_vm_state_t* state);
+void roci_primitive_is_integer(roci_vm_state_t* state);
+void roci_primitive_is_list(roci_vm_state_t* state);
+void roci_primitive_is_double(roci_vm_state_t* state);
+void roci_primitive_pwd(roci_vm_state_t* state);
+void roci_primitive_cd(roci_vm_state_t* state);
+void roci_primitive_igte(roci_vm_state_t* state);
+void roci_primitive_neg(roci_vm_state_t* state);
+void roci_repl(roci_env_t* env);
+buffer_t* roci_repl_read(roci_env_t* env);
+boolean_t roci_is_balanced(buffer_t* buffer);
+void roci_append_value(buffer_t* buffer, roci_value_t value);
+char* roci_value_to_c_string(roci_value_t value);
+roci_value_t* roci_value_to_heap(roci_value_t value);
+roci_value_t* string_to_roci_string(char* str);
+roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point);
+roci_vm_state_t* roci_make_vm_state(roci_env_t* env);
+void roci_runtime_error(roci_runtime_error_t runtime_error);
+roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state);
+void roci_call(roci_vm_state_t* state, roci_value_t proc, int64_t n_args);
+buffer_t* get_reflection_header_buffer(void);
+char* error_code_to_string(error_code_t value);
+error_code_t string_to_error_code(char* value);
+enum_metadata_t* error_code_metadata();
+char* non_fatal_error_code_to_string(non_fatal_error_code_t value);
+non_fatal_error_code_t string_to_non_fatal_error_code(char* value);
+enum_metadata_t* non_fatal_error_code_metadata();
+char* flag_type_to_string(flag_type_t value);
+flag_type_t string_to_flag_type(char* value);
+enum_metadata_t* flag_type_metadata();
+char* sub_process_exit_status_to_string(sub_process_exit_status_t value);
+sub_process_exit_status_t string_to_sub_process_exit_status(char* value);
+enum_metadata_t* sub_process_exit_status_metadata();
+char* input_mode_to_string(input_mode_t value);
+input_mode_t string_to_input_mode(char* value);
+enum_metadata_t* input_mode_metadata();
+char* output_mode_to_string(output_mode_t value);
+output_mode_t string_to_output_mode(char* value);
+enum_metadata_t* output_mode_metadata();
+char* file_tag_to_string(file_tag_t value);
+file_tag_t string_to_file_tag(char* value);
+enum_metadata_t* file_tag_metadata();
+char* tokenizer_error_to_string(tokenizer_error_t value);
+tokenizer_error_t string_to_tokenizer_error(char* value);
+enum_metadata_t* tokenizer_error_metadata();
+char* parse_error_code_to_string(parse_error_code_t value);
+parse_error_code_t string_to_parse_error_code(char* value);
+enum_metadata_t* parse_error_code_metadata();
+char* token_type_to_string(token_type_t value);
+token_type_t string_to_token_type(char* value);
+enum_metadata_t* token_type_metadata();
+char* numeric_literal_encoding_to_string(numeric_literal_encoding_t value);
+numeric_literal_encoding_t string_to_numeric_literal_encoding(char* value);
+enum_metadata_t* numeric_literal_encoding_metadata();
+char* parse_node_type_to_string(parse_node_type_t value);
+parse_node_type_t string_to_parse_node_type(char* value);
+enum_metadata_t* parse_node_type_metadata();
+char* pratt_parser_operation_to_string(pratt_parser_operation_t value);
+pratt_parser_operation_t string_to_pratt_parser_operation(char* value);
+enum_metadata_t* pratt_parser_operation_metadata();
+char* associativity_to_string(associativity_t value);
+associativity_t string_to_associativity(char* value);
+enum_metadata_t* associativity_metadata();
+char* precedence_to_string(precedence_t value);
+precedence_t string_to_precedence(char* value);
+enum_metadata_t* precedence_metadata();
+char* type_qualifier_to_string(type_qualifier_t value);
+type_qualifier_t string_to_type_qualifier(char* value);
+enum_metadata_t* type_qualifier_metadata();
+char* type_node_kind_to_string(type_node_kind_t value);
+type_node_kind_t string_to_type_node_kind(char* value);
+enum_metadata_t* type_node_kind_metadata();
+char* output_file_type_to_string(output_file_type_t value);
+output_file_type_t string_to_output_file_type(char* value);
+enum_metadata_t* output_file_type_metadata();
+char* roci_compile_time_error_to_string(roci_compile_time_error_t value);
+roci_compile_time_error_t string_to_roci_compile_time_error(char* value);
+enum_metadata_t* roci_compile_time_error_metadata();
+char* roci_tag_to_string(roci_tag_t value);
+roci_tag_t string_to_roci_tag(char* value);
+enum_metadata_t* roci_tag_metadata();
+char* roci_opcode_to_string(roci_opcode_t value);
+roci_opcode_t string_to_roci_opcode(char* value);
+enum_metadata_t* roci_opcode_metadata();
+char* roci_runtime_error_to_string(roci_runtime_error_t value);
+roci_runtime_error_t string_to_roci_runtime_error(char* value);
+enum_metadata_t* roci_runtime_error_metadata();
+
+// ========== inlined functions ==========
+
+
+# 139 "lib/value.c"
+static inline boolean_t is_ok(value_result_t value)
+# 139 "lib/value.c"
+{
+
+# 140 "lib/value.c"
+  return ((value.nf_error)==NF_OK);
+}
+
+
+# 149 "lib/value.c"
+static inline boolean_t is_not_ok(value_result_t value)
+# 149 "lib/value.c"
+{
+
+# 150 "lib/value.c"
+  return ((value.nf_error)!=NF_OK);
+}
+
+
+# 168 "lib/string-util.c"
+static inline boolean_t is_hex_digit(char ch)
+# 168 "lib/string-util.c"
+{
+
+# 169 "lib/string-util.c"
+  return (((ch>='0')&&(ch<='9'))||((ch>='a')&&(ch<='f')));
+}
+
+
+# 172 "lib/string-util.c"
+static inline uint64_t hex_digit_to_value(char ch)
+# 172 "lib/string-util.c"
+{
+
+# 173 "lib/string-util.c"
+  if (((ch>='0')&&(ch<='9')))
+
+# 173 "lib/string-util.c"
+  {
+
+# 174 "lib/string-util.c"
+    return (ch-'0');
+  }
+  else
+
+# 175 "lib/string-util.c"
+  {
+
+# 176 "lib/string-util.c"
+    return ((ch-'a')+10);
+  }
+}
+
+
+# 461 "lib/string-util.c"
+static inline uint64_t mix(uint64_t h)
+# 461 "lib/string-util.c"
+{
+
+# 462 "lib/string-util.c"
+  (h^=(h>>23));
+
+# 463 "lib/string-util.c"
+  (h*=0x2127599bf4325c37ULL);
+
+# 464 "lib/string-util.c"
+  (h^=(h>>47));
+
+# 465 "lib/string-util.c"
+  return h;
+}
+
+
+# 158 "lib/logger.c"
+static inline boolean_t should_log_info()
+# 158 "lib/logger.c"
+{
+
+# 159 "lib/logger.c"
+  return ((global_logger_state.level)<=LOGGER_INFO);
+}
+
+
+# 20 "lib/string-alist.c"
+static inline value_result_t alist_find(string_alist_t* list, char* key)
+# 20 "lib/string-alist.c"
+{
+
+# 21 "lib/string-alist.c"
+  return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
+}
+
+
+# 31 "lib/string-alist.c"
+__attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value)
+# 31 "lib/string-alist.c"
+{
+
+# 32 "lib/string-alist.c"
+  return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
+}
+
+
+# 45 "lib/string-alist.c"
+__attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key)
+# 45 "lib/string-alist.c"
+{
+
+# 46 "lib/string-alist.c"
+  return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
+}
+
+
+# 59 "lib/string-alist.c"
+__attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list)
+# 59 "lib/string-alist.c"
+{
+
+# 60 "lib/string-alist.c"
+  return value_alist_length((/*CAST*/(value_alist_t*) list));
+}
+
+
+# 45 "lib/value-hashtable.c"
+static inline uint64_t value_ht_num_entries(value_hashtable_t* ht)
+# 45 "lib/value-hashtable.c"
+{
+
+# 46 "lib/value-hashtable.c"
+  return (ht->n_entries);
+}
+
+
+# 13 "lib/string-hashtable.c"
+static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht)
+# 13 "lib/string-hashtable.c"
+{
+
+# 14 "lib/string-hashtable.c"
+  return (/*CAST*/(value_hashtable_t*) ht);
+}
+
+
+# 26 "lib/string-hashtable.c"
+static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets)
+# 26 "lib/string-hashtable.c"
+{
+
+# 27 "lib/string-hashtable.c"
+  return (/*CAST*/(string_hashtable_t*) make_value_hashtable(n_buckets));
+}
+
+
+# 36 "lib/string-hashtable.c"
+static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value)
+# 36 "lib/string-hashtable.c"
+{
+
+# 37 "lib/string-hashtable.c"
+  return (/*CAST*/(string_hashtable_t*) value_ht_insert(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key), value));
+}
+
+
+# 49 "lib/string-hashtable.c"
+static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key)
+# 49 "lib/string-hashtable.c"
+{
+
+# 50 "lib/string-hashtable.c"
+  return (/*CAST*/(string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key)));
+}
+
+
+# 60 "lib/string-hashtable.c"
+static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key)
+# 60 "lib/string-hashtable.c"
+{
+
+# 61 "lib/string-hashtable.c"
+  return value_ht_find(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key));
+}
+
+
+# 70 "lib/string-hashtable.c"
+static inline uint64_t string_ht_num_entries(string_hashtable_t* ht)
+# 70 "lib/string-hashtable.c"
+{
+
+# 71 "lib/string-hashtable.c"
+  return value_ht_num_entries(to_value_hashtable(ht));
+}
+
+
+# 164 "lib/value-tree.c"
+static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b)
+# 164 "lib/value-tree.c"
+{
+
+# 165 "lib/value-tree.c"
+  return ((a<b) ? a : b);
+}
+
+
+# 198 "lib/value-tree.c"
+static inline boolean_t value_tree_is_leaf(value_tree_t* t)
+# 198 "lib/value-tree.c"
+{
+
+# 199 "lib/value-tree.c"
+  return (((t->left)==NULL)&&((t->right)==NULL));
+}
+
+
+# 17 "lib/string-tree.c"
+static inline value_result_t string_tree_find(string_tree_t* t, char* key)
+# 17 "lib/string-tree.c"
+{
+
+# 18 "lib/string-tree.c"
+  return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
+}
+
+
+# 29 "lib/string-tree.c"
+__attribute__((warn_unused_result)) static inline string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value)
+# 29 "lib/string-tree.c"
+{
+
+# 30 "lib/string-tree.c"
+  return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
+}
+
+
+# 42 "lib/string-tree.c"
+__attribute__((warn_unused_result)) static inline string_tree_t* string_tree_delete(string_tree_t* t, char* key)
+# 42 "lib/string-tree.c"
+{
+
+# 43 "lib/string-tree.c"
+  return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
+}
+
+
+# 47 "lib/random.c"
+static inline uint64_t rotl(uint64_t x, int k)
+# 47 "lib/random.c"
+{
+
+# 48 "lib/random.c"
+  return ((x<<k)|(x>>(64-k)));
+}
+
+
+# 123 "keywords.c"
+static inline void maybe_initialize_keyword_maps(void)
+# 123 "keywords.c"
+{
+
+# 124 "keywords.c"
+  if ((c_keywords_ht==((void *)0)))
+
+# 124 "keywords.c"
+  {
+
+# 125 "keywords.c"
+    initialize_keyword_maps();
+  }
+}
+
+
+# 40 "lexer.c"
+static inline token_or_error_t make_token_result(buffer_t* buffer, token_type_t token_type, uint64_t start, uint64_t end)
+# 42 "lexer.c"
+{
+
+# 43 "lexer.c"
+  return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
+                                                             .type = token_type,
+                                                             .start = start,
+                                                             .end = end})});
+}
+
+
+# 51 "lexer.c"
+static inline token_or_error_t make_token_error_result(tokenizer_error_t tokenizer_error_code, uint64_t position)
+# 52 "lexer.c"
+{
+
+# 53 "lexer.c"
+  return ((token_or_error_t) {.error_position = position, .error_code = tokenizer_error_code});
+}
+
+
+# 58 "lexer.c"
+static inline token_t* token_at(value_array_t* tokens, uint64_t position)
+# 58 "lexer.c"
+{
+
+# 59 "lexer.c"
+  if ((position>=(tokens->length)))
+
+# 59 "lexer.c"
+  {
+
+# 60 "lexer.c"
+    return ((void *)0);
+  }
+
+# 62 "lexer.c"
+  return value_array_get_ptr(tokens, position, typeof(token_t*));
+}
+
+
+# 65 "lexer.c"
+static inline boolean_t token_matches(token_t* token, char* str)
+# 65 "lexer.c"
+{
+
+# 66 "lexer.c"
+  if ((token==((void *)0)))
+
+# 66 "lexer.c"
+  {
+
+# 67 "lexer.c"
+    return false;
+  }
+
+# 69 "lexer.c"
+  int str_len = strlen(str);
+
+# 70 "lexer.c"
+  return ((str_len==((token->end)-(token->start)))&&buffer_match_string_at((token->buffer), (token->start), str));
+}
+
+
+# 74 "lexer.c"
+static inline boolean_t token_starts_with(token_t* token, char* str)
+# 74 "lexer.c"
+{
+
+# 75 "lexer.c"
+  return buffer_match_string_at((token->buffer), (token->start), str);
+}
+
+
+# 78 "lexer.c"
+static inline boolean_t token_contains(token_t* token, char* str)
+# 78 "lexer.c"
+{
+
+# 79 "lexer.c"
+  return buffer_region_contains((token->buffer), (token->start), (token->end), str);
+}
+
+
+# 645 "lexer.c"
+static inline token_t* heap_allocate_token(token_t token)
+# 645 "lexer.c"
+{
+
+# 646 "lexer.c"
+  token_t* result = malloc_struct(token_t);
+
+# 647 "lexer.c"
+  ((*result)=token);
+
+# 648 "lexer.c"
+  return result;
+}
+
+
+# 21 "token-list.c"
+static inline void token_list_add(token_list_t* token_list, token_t* token)
+# 21 "token-list.c"
+{
+
+# 22 "token-list.c"
+  if ((token==((void *)0)))
+
+# 22 "token-list.c"
+  {
+
+# 23 "token-list.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 25 "token-list.c"
+  if (((token_list->list)==((void *)0)))
+
+# 25 "token-list.c"
+  {
+
+# 26 "token-list.c"
+    ((token_list->list)=make_value_array(2));
+  }
+
+# 28 "token-list.c"
+  value_array_add((token_list->list), ptr_to_value(token));
+}
+
+
+# 36 "token-list.c"
+static inline uint64_t token_list_length(token_list_t token_list)
+# 36 "token-list.c"
+{
+
+# 37 "token-list.c"
+  if (((token_list.list)==((void *)0)))
+
+# 37 "token-list.c"
+  {
+
+# 38 "token-list.c"
+    return 0;
+  }
+
+# 40 "token-list.c"
+  return ((token_list.list)->length);
+}
+
+
+# 48 "token-list.c"
+static inline boolean_t token_list_is_empty(token_list_t token_list)
+# 48 "token-list.c"
+{
+
+# 49 "token-list.c"
+  return (token_list_length(token_list)==0);
+}
+
+
+# 57 "token-list.c"
+static inline token_t* token_list_get(token_list_t token_list, uint64_t index)
+# 57 "token-list.c"
+{
+
+# 58 "token-list.c"
+  if (((token_list.list)==((void *)0)))
+
+# 58 "token-list.c"
+  {
+
+# 59 "token-list.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+  }
+
+# 61 "token-list.c"
+  return value_array_get_ptr((token_list.list), index, typeof(token_t*));
+}
+
+
+# 69 "token-list.c"
+static inline boolean_t token_list_contains(token_list_t token_list, char* token_string)
+# 70 "token-list.c"
+{
+
+# 71 "token-list.c"
+  for (
+
+# 71 "token-list.c"
+
+# 71 "token-list.c"
+    int i = 0;
+
+# 71 "token-list.c"
+    (i<token_list_length(token_list));
+
+# 71 "token-list.c"
+    (i++))
+
+# 71 "token-list.c"
+  {
+
+# 72 "token-list.c"
+    if (token_matches(token_list_get(token_list, i), token_string))
+
+# 72 "token-list.c"
+    {
+
+# 73 "token-list.c"
+      return true;
+    }
+  }
+
+# 76 "token-list.c"
+  return false;
+}
+
+
+# 104 "parser.c"
+static inline parse_node_t* to_node(void* ptr)
+# 104 "parser.c"
+{
+
+# 105 "parser.c"
+  return (/*CAST*/(parse_node_t*) ptr);
+}
+
+
+# 139 "declaration-parser.c"
+static inline declarations_node_t* to_declarations_node(parse_node_t* ptr)
+# 139 "declaration-parser.c"
+{
+
+# 140 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DECLARATIONS)))
+
+# 140 "declaration-parser.c"
+  {
+
+# 141 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 143 "declaration-parser.c"
+  return (/*CAST*/(declarations_node_t*) ptr);
+}
+
+
+# 152 "declaration-parser.c"
+static inline literal_node_t* to_literal_node(parse_node_t* ptr)
+# 152 "declaration-parser.c"
+{
+
+# 153 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_LITERAL)))
+
+# 153 "declaration-parser.c"
+  {
+
+# 154 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 156 "declaration-parser.c"
+  return (/*CAST*/(literal_node_t*) ptr);
+}
+
+
+# 165 "declaration-parser.c"
+static inline function_node_t* to_function_node(parse_node_t* ptr)
+# 165 "declaration-parser.c"
+{
+
+# 166 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FUNCTION)))
+
+# 166 "declaration-parser.c"
+  {
+
+# 167 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 169 "declaration-parser.c"
+  return (/*CAST*/(function_node_t*) ptr);
+}
+
+
+# 179 "declaration-parser.c"
+static inline function_argument_node_t* to_function_argument_node(parse_node_t* ptr)
+# 179 "declaration-parser.c"
+{
+
+# 180 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FUNCTION_ARGUMENT)))
+
+# 180 "declaration-parser.c"
+  {
+
+# 181 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 183 "declaration-parser.c"
+  return (/*CAST*/(function_argument_node_t*) ptr);
+}
+
+
+# 192 "declaration-parser.c"
+static inline typedef_node_t* to_typedef_node(parse_node_t* ptr)
+# 192 "declaration-parser.c"
+{
+
+# 193 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_TYPEDEF)))
+
+# 193 "declaration-parser.c"
+  {
+
+# 194 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 196 "declaration-parser.c"
+  return (/*CAST*/(typedef_node_t*) ptr);
+}
+
+
+# 205 "declaration-parser.c"
+static inline unparsed_expression_t* to_unparsed_expression(parse_node_t* ptr)
+# 205 "declaration-parser.c"
+{
+
+# 206 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_UNPARSED_EXPRESSION)))
+
+# 206 "declaration-parser.c"
+  {
+
+# 207 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 209 "declaration-parser.c"
+  return (/*CAST*/(unparsed_expression_t*) ptr);
+}
+
+
+# 218 "declaration-parser.c"
+static inline attribute_node_t* to_attribute_node(parse_node_t* ptr)
+# 218 "declaration-parser.c"
+{
+
+# 219 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_ATTRIBUTE)))
+
+# 219 "declaration-parser.c"
+  {
+
+# 220 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 222 "declaration-parser.c"
+  return (/*CAST*/(attribute_node_t*) ptr);
+}
+
+
+# 231 "declaration-parser.c"
+static inline cpp_define_node_t* to_cpp_define_node(parse_node_t* ptr)
+# 231 "declaration-parser.c"
+{
+
+# 232 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CPP_DEFINE)))
+
+# 232 "declaration-parser.c"
+  {
+
+# 233 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 235 "declaration-parser.c"
+  return (/*CAST*/(cpp_define_node_t*) ptr);
+}
+
+
+# 244 "declaration-parser.c"
+static inline cpp_include_node_t* to_cpp_include_node(parse_node_t* ptr)
+# 244 "declaration-parser.c"
+{
+
+# 245 "declaration-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CPP_INCLUDE)))
+
+# 245 "declaration-parser.c"
+  {
+
+# 246 "declaration-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 248 "declaration-parser.c"
+  return (/*CAST*/(cpp_include_node_t*) ptr);
+}
+
+
+# 255 "declaration-parser.c"
+static inline declarations_node_t* make_declarations(void)
+# 255 "declaration-parser.c"
+{
+
+# 256 "declaration-parser.c"
+  declarations_node_t* result = malloc_struct(declarations_node_t);
+
+# 257 "declaration-parser.c"
+  ((result->tag)=PARSE_NODE_DECLARATIONS);
+
+# 258 "declaration-parser.c"
+  return result;
+}
+
+
+# 261 "declaration-parser.c"
+static inline function_node_t* make_function_node(void)
+# 261 "declaration-parser.c"
+{
+
+# 262 "declaration-parser.c"
+  function_node_t* result = malloc_struct(function_node_t);
+
+# 263 "declaration-parser.c"
+  ((result->tag)=PARSE_NODE_FUNCTION);
+
+# 264 "declaration-parser.c"
+  return result;
+}
+
+
+# 267 "declaration-parser.c"
+static inline function_argument_node_t* make_function_argument_node(void)
+# 267 "declaration-parser.c"
+{
+
+# 268 "declaration-parser.c"
+  function_argument_node_t* result = malloc_struct(function_argument_node_t);
+
+# 269 "declaration-parser.c"
+  ((result->tag)=PARSE_NODE_FUNCTION_ARGUMENT);
+
+# 270 "declaration-parser.c"
+  return result;
+}
+
+
+# 273 "declaration-parser.c"
+static inline typedef_node_t* make_typedef_node(void)
+# 273 "declaration-parser.c"
+{
+
+# 274 "declaration-parser.c"
+  typedef_node_t* result = malloc_struct(typedef_node_t);
+
+# 275 "declaration-parser.c"
+  ((result->tag)=PARSE_NODE_TYPEDEF);
+
+# 276 "declaration-parser.c"
+  return result;
+}
+
+
+# 279 "declaration-parser.c"
+static inline attribute_node_t* make_attribute_node(void)
+# 279 "declaration-parser.c"
+{
+
+# 280 "declaration-parser.c"
+  attribute_node_t* result = malloc_struct(attribute_node_t);
+
+# 281 "declaration-parser.c"
+  ((result->tag)=PARSE_NODE_ATTRIBUTE);
+
+# 282 "declaration-parser.c"
+  return result;
+}
+
+
+# 285 "declaration-parser.c"
+static inline cpp_include_node_t* make_cpp_include_node(void)
+# 285 "declaration-parser.c"
+{
+
+# 286 "declaration-parser.c"
+  cpp_include_node_t* result = malloc_struct(cpp_include_node_t);
+
+# 287 "declaration-parser.c"
+  ((result->tag)=PARSE_NODE_CPP_INCLUDE);
+
+# 288 "declaration-parser.c"
+  return result;
+}
+
+
+# 291 "declaration-parser.c"
+static inline cpp_define_node_t* make_cpp_define_node(void)
+# 291 "declaration-parser.c"
+{
+
+# 292 "declaration-parser.c"
+  cpp_define_node_t* result = malloc_struct(cpp_define_node_t);
+
+# 293 "declaration-parser.c"
+  ((result->tag)=PARSE_NODE_CPP_DEFINE);
+
+# 294 "declaration-parser.c"
+  return result;
+}
+
+
+# 39 "node-list.c"
+static inline void node_list_add_node(node_list_t* node_list, parse_node_t* oc_node)
+# 40 "node-list.c"
+{
+
+# 41 "node-list.c"
+  if ((oc_node==((void *)0)))
+
+# 41 "node-list.c"
+  {
+
+# 42 "node-list.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 44 "node-list.c"
+  if (((node_list->list)==((void *)0)))
+
+# 44 "node-list.c"
+  {
+
+# 45 "node-list.c"
+    ((node_list->list)=make_value_array(2));
+  }
+
+# 47 "node-list.c"
+  value_array_add((node_list->list), ptr_to_value(oc_node));
+}
+
+
+# 55 "node-list.c"
+static inline uint64_t node_list_length(node_list_t node_list)
+# 55 "node-list.c"
+{
+
+# 56 "node-list.c"
+  if (((node_list.list)==((void *)0)))
+
+# 56 "node-list.c"
+  {
+
+# 57 "node-list.c"
+    return 0;
+  }
+
+# 59 "node-list.c"
+  return ((node_list.list)->length);
+}
+
+
+# 67 "node-list.c"
+static inline boolean_t node_list_is_empty(node_list_t node_list)
+# 67 "node-list.c"
+{
+
+# 68 "node-list.c"
+  return (node_list_length(node_list)==0);
+}
+
+
+# 76 "node-list.c"
+static inline parse_node_t* node_list_get(node_list_t node_list, uint64_t index)
+# 77 "node-list.c"
+{
+
+# 78 "node-list.c"
+  if (((node_list.list)==((void *)0)))
+
+# 78 "node-list.c"
+  {
+
+# 79 "node-list.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+  }
+
+# 81 "node-list.c"
+  return value_array_get_ptr((node_list.list), index, typeof(parse_node_t*));
+}
+
+
+# 3 "header-file-extractor.c"
+static inline char* remove_type_suffix(char* typename)
+# 3 "header-file-extractor.c"
+{
+
+# 4 "header-file-extractor.c"
+  if (string_ends_with(typename, "_t"))
+
+# 4 "header-file-extractor.c"
+  {
+
+# 5 "header-file-extractor.c"
+    return string_substring(typename, 0, (strlen(typename)-2));
+  }
+  else
+
+# 6 "header-file-extractor.c"
+  {
+
+# 7 "header-file-extractor.c"
+    return typename;
+  }
+}
+
+
+# 9 "srcgen.c"
+static inline char* remove_type_suffix_1(char* typename)
+# 9 "srcgen.c"
+{
+
+# 10 "srcgen.c"
+  if (string_ends_with(typename, "_t"))
+
+# 10 "srcgen.c"
+  {
+
+# 11 "srcgen.c"
+    return string_substring(typename, 0, (strlen(typename)-2));
+  }
+  else
+
+# 12 "srcgen.c"
+  {
+
+# 13 "srcgen.c"
+    return typename;
+  }
+}
+
+
+# 111 "pratt-parser.c"
+static inline operator_node_t* make_operator_node(void)
+# 111 "pratt-parser.c"
+{
+
+# 112 "pratt-parser.c"
+  operator_node_t* result = malloc_struct(operator_node_t);
+
+# 113 "pratt-parser.c"
+  ((result->tag)=PARSE_NODE_OPERATOR);
+
+# 114 "pratt-parser.c"
+  return result;
+}
+
+
+# 117 "pratt-parser.c"
+static inline identifier_node_t* make_identifier_node(void)
+# 117 "pratt-parser.c"
+{
+
+# 118 "pratt-parser.c"
+  identifier_node_t* result = malloc_struct(identifier_node_t);
+
+# 119 "pratt-parser.c"
+  ((result->tag)=PARSE_NODE_IDENTIFIER);
+
+# 120 "pratt-parser.c"
+  return result;
+}
+
+
+# 123 "pratt-parser.c"
+static inline call_node_t* make_call_node(void)
+# 123 "pratt-parser.c"
+{
+
+# 124 "pratt-parser.c"
+  call_node_t* result = malloc_struct(call_node_t);
+
+# 125 "pratt-parser.c"
+  ((result->tag)=PARSE_NODE_CALL);
+
+# 126 "pratt-parser.c"
+  return result;
+}
+
+
+# 129 "pratt-parser.c"
+static inline conditional_node_t* make_conditional_node(void)
+# 129 "pratt-parser.c"
+{
+
+# 130 "pratt-parser.c"
+  conditional_node_t* result = malloc_struct(conditional_node_t);
+
+# 131 "pratt-parser.c"
+  ((result->tag)=PARSE_NODE_CONDITIONAL);
+
+# 132 "pratt-parser.c"
+  return result;
+}
+
+
+# 141 "pratt-parser.c"
+static inline identifier_node_t* to_identifier_node(parse_node_t* ptr)
+# 141 "pratt-parser.c"
+{
+
+# 142 "pratt-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_IDENTIFIER)))
+
+# 142 "pratt-parser.c"
+  {
+
+# 143 "pratt-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 145 "pratt-parser.c"
+  return (/*CAST*/(identifier_node_t*) ptr);
+}
+
+
+# 154 "pratt-parser.c"
+static inline operator_node_t* to_operator_node(parse_node_t* ptr)
+# 154 "pratt-parser.c"
+{
+
+# 155 "pratt-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_OPERATOR)))
+
+# 155 "pratt-parser.c"
+  {
+
+# 156 "pratt-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 158 "pratt-parser.c"
+  return (/*CAST*/(operator_node_t*) ptr);
+}
+
+
+# 167 "pratt-parser.c"
+static inline call_node_t* to_call_node(parse_node_t* ptr)
+# 167 "pratt-parser.c"
+{
+
+# 168 "pratt-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CALL)))
+
+# 168 "pratt-parser.c"
+  {
+
+# 169 "pratt-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 171 "pratt-parser.c"
+  return (/*CAST*/(call_node_t*) ptr);
+}
+
+
+# 180 "pratt-parser.c"
+static inline conditional_node_t* to_conditional_node(parse_node_t* ptr)
+# 180 "pratt-parser.c"
+{
+
+# 181 "pratt-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CONDITIONAL)))
+
+# 181 "pratt-parser.c"
+  {
+
+# 182 "pratt-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 184 "pratt-parser.c"
+  return (/*CAST*/(conditional_node_t*) ptr);
+}
+
+
+# 188 "pratt-parser.c"
+static inline pratt_parser_instruction_t make_parser_instruction(token_t* token, pratt_parser_operation_t operation, precedence_t precedence)
+# 189 "pratt-parser.c"
+{
+
+# 190 "pratt-parser.c"
+  return ((pratt_parser_instruction_t) {.token = token, .operation = operation, .precedence = precedence});
+}
+
+
+# 65 "type-parser.c"
+static inline type_node_t* make_type_node(void)
+# 65 "type-parser.c"
+{
+
+# 66 "type-parser.c"
+  type_node_t* result = malloc_struct(type_node_t);
+
+# 67 "type-parser.c"
+  ((result->tag)=PARSE_NODE_TYPE);
+
+# 68 "type-parser.c"
+  return result;
+}
+
+
+# 77 "type-parser.c"
+static inline type_node_t* to_type_node(parse_node_t* ptr)
+# 77 "type-parser.c"
+{
+
+# 78 "type-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_TYPE)))
+
+# 78 "type-parser.c"
+  {
+
+# 79 "type-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 81 "type-parser.c"
+  return (/*CAST*/(type_node_t*) ptr);
+}
+
+
+# 72 "user-type-parser.c"
+static inline boolean_t is_struct_node(parse_node_t* ptr)
+# 72 "user-type-parser.c"
+{
+
+# 73 "user-type-parser.c"
+  return ((ptr!=((void *)0))&&((ptr->tag)==PARSE_NODE_STRUCT));
+}
+
+
+# 82 "user-type-parser.c"
+static inline boolean_t is_enum_node(parse_node_t* ptr)
+# 82 "user-type-parser.c"
+{
+
+# 83 "user-type-parser.c"
+  return ((ptr!=((void *)0))&&((ptr->tag)==PARSE_NODE_ENUM));
+}
+
+
+# 92 "user-type-parser.c"
+static inline struct_node_t* to_struct_node(parse_node_t* ptr)
+# 92 "user-type-parser.c"
+{
+
+# 94 "user-type-parser.c"
+  if (((ptr==((void *)0))||(!(((ptr->tag)==PARSE_NODE_STRUCT)||((ptr->tag)==PARSE_NODE_UNION)))))
+
+# 95 "user-type-parser.c"
+  {
+
+# 96 "user-type-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 98 "user-type-parser.c"
+  return (/*CAST*/(struct_node_t*) ptr);
+}
+
+
+# 107 "user-type-parser.c"
+static inline union_node_t* to_union_node(parse_node_t* ptr)
+# 107 "user-type-parser.c"
+{
+
+# 108 "user-type-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_UNION)))
+
+# 108 "user-type-parser.c"
+  {
+
+# 109 "user-type-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 111 "user-type-parser.c"
+  return (/*CAST*/(union_node_t*) ptr);
+}
+
+
+# 120 "user-type-parser.c"
+static inline field_node_t* to_field_node(parse_node_t* ptr)
+# 120 "user-type-parser.c"
+{
+
+# 121 "user-type-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FIELD)))
+
+# 121 "user-type-parser.c"
+  {
+
+# 122 "user-type-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 124 "user-type-parser.c"
+  return (/*CAST*/(field_node_t*) ptr);
+}
+
+
+# 133 "user-type-parser.c"
+static inline enum_node_t* to_enum_node(parse_node_t* ptr)
+# 133 "user-type-parser.c"
+{
+
+# 134 "user-type-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_ENUM)))
+
+# 134 "user-type-parser.c"
+  {
+
+# 135 "user-type-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 137 "user-type-parser.c"
+  return (/*CAST*/(enum_node_t*) ptr);
+}
+
+
+# 146 "user-type-parser.c"
+static inline enum_element_t* to_enum_element_node(parse_node_t* ptr)
+# 146 "user-type-parser.c"
+{
+
+# 147 "user-type-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_ENUM_ELEMENT)))
+
+# 147 "user-type-parser.c"
+  {
+
+# 148 "user-type-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 150 "user-type-parser.c"
+  return (/*CAST*/(enum_element_t*) ptr);
+}
+
+
+# 153 "user-type-parser.c"
+static inline enum_node_t* make_enum_node(void)
+# 153 "user-type-parser.c"
+{
+
+# 154 "user-type-parser.c"
+  enum_node_t* result = malloc_struct(enum_node_t);
+
+# 155 "user-type-parser.c"
+  ((result->tag)=PARSE_NODE_ENUM);
+
+# 156 "user-type-parser.c"
+  return result;
+}
+
+
+# 159 "user-type-parser.c"
+static inline enum_element_t* make_enum_element(void)
+# 159 "user-type-parser.c"
+{
+
+# 160 "user-type-parser.c"
+  enum_element_t* result = malloc_struct(enum_element_t);
+
+# 161 "user-type-parser.c"
+  ((result->tag)=PARSE_NODE_ENUM_ELEMENT);
+
+# 162 "user-type-parser.c"
+  return result;
+}
+
+
+# 165 "user-type-parser.c"
+static inline struct_node_t* make_struct_node(void)
+# 165 "user-type-parser.c"
+{
+
+# 166 "user-type-parser.c"
+  struct_node_t* result = malloc_struct(struct_node_t);
+
+# 167 "user-type-parser.c"
+  ((result->tag)=PARSE_NODE_STRUCT);
+
+# 168 "user-type-parser.c"
+  return result;
+}
+
+
+# 171 "user-type-parser.c"
+static inline union_node_t* make_union_node(void)
+# 171 "user-type-parser.c"
+{
+
+# 172 "user-type-parser.c"
+  union_node_t* result = malloc_struct(union_node_t);
+
+# 173 "user-type-parser.c"
+  ((result->tag)=PARSE_NODE_UNION);
+
+# 174 "user-type-parser.c"
+  return result;
+}
+
+
+# 177 "user-type-parser.c"
+static inline field_node_t* make_field_node(void)
+# 177 "user-type-parser.c"
+{
+
+# 178 "user-type-parser.c"
+  field_node_t* result = malloc_struct(field_node_t);
+
+# 179 "user-type-parser.c"
+  ((result->tag)=PARSE_NODE_FIELD);
+
+# 180 "user-type-parser.c"
+  return result;
+}
+
+
+# 25 "variable-definition-parser.c"
+static inline variable_definition_node_t* to_variable_definition_node(parse_node_t* ptr)
+# 25 "variable-definition-parser.c"
+{
+
+# 26 "variable-definition-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_VARIABLE_DEFINITION)))
+
+# 26 "variable-definition-parser.c"
+  {
+
+# 27 "variable-definition-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 29 "variable-definition-parser.c"
+  return (/*CAST*/(variable_definition_node_t*) ptr);
+}
+
+
+# 32 "variable-definition-parser.c"
+static inline variable_definition_node_t* make_variable_definition_node(void)
+# 32 "variable-definition-parser.c"
+{
+
+# 33 "variable-definition-parser.c"
+  variable_definition_node_t* result = malloc_struct(variable_definition_node_t);
+
+# 35 "variable-definition-parser.c"
+  ((result->tag)=PARSE_NODE_VARIABLE_DEFINITION);
+
+# 36 "variable-definition-parser.c"
+  return result;
+}
+
+
+# 37 "literal-parser.c"
+static inline literal_node_t* make_literal_node(void)
+# 37 "literal-parser.c"
+{
+
+# 38 "literal-parser.c"
+  literal_node_t* result = malloc_struct(literal_node_t);
+
+# 39 "literal-parser.c"
+  ((result->tag)=PARSE_NODE_LITERAL);
+
+# 40 "literal-parser.c"
+  return result;
+}
+
+
+# 43 "literal-parser.c"
+static inline compound_literal_node_t* make_compound_literal_node(void)
+# 43 "literal-parser.c"
+{
+
+# 44 "literal-parser.c"
+  compound_literal_node_t* result = malloc_struct(compound_literal_node_t);
+
+# 45 "literal-parser.c"
+  ((result->tag)=PARSE_NODE_COMPOUND_LITERAL);
+
+# 46 "literal-parser.c"
+  return result;
+}
+
+
+# 50 "literal-parser.c"
+static inline compound_literal_node_t* to_compound_literal_node(parse_node_t* ptr)
+# 50 "literal-parser.c"
+{
+
+# 51 "literal-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_COMPOUND_LITERAL)))
+
+# 51 "literal-parser.c"
+  {
+
+# 52 "literal-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 54 "literal-parser.c"
+  return (/*CAST*/(compound_literal_node_t*) ptr);
+}
+
+
+# 58 "literal-parser.c"
+static inline designated_initializer_node_t* make_designated_initializer_node(void)
+# 58 "literal-parser.c"
+{
+
+# 59 "literal-parser.c"
+  designated_initializer_node_t* result = malloc_struct(designated_initializer_node_t);
+
+# 61 "literal-parser.c"
+  ((result->tag)=PARSE_NODE_DESIGNATED_INITIALIZER);
+
+# 62 "literal-parser.c"
+  return result;
+}
+
+
+# 66 "literal-parser.c"
+static inline designated_initializer_node_t* to_designated_initializer_node(parse_node_t* ptr)
+# 66 "literal-parser.c"
+{
+
+# 67 "literal-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DESIGNATED_INITIALIZER)))
+
+# 67 "literal-parser.c"
+  {
+
+# 68 "literal-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 70 "literal-parser.c"
+  return (/*CAST*/(designated_initializer_node_t*) ptr);
+}
+
+
+# 25 "balanced-construct-parser.c"
+static inline balanced_construct_node_t* to_balanced_construct_node(parse_node_t* ptr)
+# 25 "balanced-construct-parser.c"
+{
+
+# 26 "balanced-construct-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_BALANCED_CONSTRUCT)))
+
+# 26 "balanced-construct-parser.c"
+  {
+
+# 27 "balanced-construct-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 29 "balanced-construct-parser.c"
+  return (/*CAST*/(balanced_construct_node_t*) ptr);
+}
+
+
+# 35 "balanced-construct-parser.c"
+static inline balanced_construct_node_t* make_balanced_construct_node()
+# 35 "balanced-construct-parser.c"
+{
+
+# 36 "balanced-construct-parser.c"
+  balanced_construct_node_t* result = malloc_struct(balanced_construct_node_t);
+
+# 37 "balanced-construct-parser.c"
+  ((result->tag)=PARSE_NODE_BALANCED_CONSTRUCT);
+
+# 38 "balanced-construct-parser.c"
+  return result;
+}
+
+
+# 28 "roci/roci-bb.c"
+static inline uint8_t* bblock_opcode_pointer(roci_bb_t* bb)
+# 28 "roci/roci-bb.c"
+{
+
+# 29 "roci/roci-bb.c"
+  return (((/*CAST*/(uint8_t*) bb)+8)+((bb->num_data)*8));
+}
+
+
+# 37 "roci/roci-bb.c"
+static inline uint64_t* bblock_data_pointer(roci_bb_t* bb)
+# 37 "roci/roci-bb.c"
+{
+
+# 38 "roci/roci-bb.c"
+  return ((/*CAST*/(uint64_t*) bb)+1);
+}
+
+
+# 16 "roci/roci-debugger.c"
+static inline roci_src_info_t token_to_roci_src_info(uint64_t file_number, token_t* token)
+# 17 "roci/roci-debugger.c"
+{
+
+# 18 "roci/roci-debugger.c"
+  uint64_t line_number = (token->line_number);
+
+# 19 "roci/roci-debugger.c"
+  return (/*CAST*/(roci_src_info_t) (file_number|(line_number<<32)));
+}
+
+
+# 22 "roci/roci-debugger.c"
+static inline uint64_t roci_src_file_number(roci_src_info_t info)
+# 22 "roci/roci-debugger.c"
+{
+
+# 23 "roci/roci-debugger.c"
+  return (info&0xffffffff);
+}
+
+
+# 26 "roci/roci-debugger.c"
+static inline uint64_t roci_src_line_number(roci_src_info_t info)
+# 26 "roci/roci-debugger.c"
+{
+
+# 27 "roci/roci-debugger.c"
+  return (info>>32);
+}
+
+
+# 10 "roci/roci-stack.c"
+static inline void roci_push_false(roci_vm_state_t* state)
+# 10 "roci/roci-stack.c"
+{
+
+# 11 "roci/roci-stack.c"
+  ((*((state->stack)++))=0);
+
+# 12 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
+}
+
+
+# 15 "roci/roci-stack.c"
+static inline void roci_push_true(roci_vm_state_t* state)
+# 15 "roci/roci-stack.c"
+{
+
+# 16 "roci/roci-stack.c"
+  ((*((state->stack)++))=1);
+
+# 17 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
+}
+
+
+# 20 "roci/roci-stack.c"
+static inline void roci_push_boolean(roci_vm_state_t* state, boolean_t value)
+# 20 "roci/roci-stack.c"
+{
+
+# 21 "roci/roci-stack.c"
+  ((*((state->stack)++))=(value ? 1 : 0));
+
+# 22 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
+}
+
+
+# 25 "roci/roci-stack.c"
+static inline void roci_push_integer(roci_vm_state_t* state, int64_t number)
+# 25 "roci/roci-stack.c"
+{
+
+# 26 "roci/roci-stack.c"
+  ((*((state->stack)++))=number);
+
+# 27 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_INTEGER);
+}
+
+
+# 30 "roci/roci-stack.c"
+static inline void roci_push_double(roci_vm_state_t* state, double number)
+# 30 "roci/roci-stack.c"
+{
+
+# 31 "roci/roci-stack.c"
+  ((*((state->stack)++))=double_as_uint64(number));
+
+# 32 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_DOUBLE);
+}
+
+
+# 35 "roci/roci-stack.c"
+static inline void roci_push_string(roci_vm_state_t* state, char* str)
+# 35 "roci/roci-stack.c"
+{
+
+# 36 "roci/roci-stack.c"
+  ((*((state->stack)++))=(/*CAST*/(uint64_t) str));
+
+# 37 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_STRING);
+}
+
+
+# 40 "roci/roci-stack.c"
+static inline void roci_push_list(roci_vm_state_t* state, value_array_t* str)
+# 40 "roci/roci-stack.c"
+{
+
+# 41 "roci/roci-stack.c"
+  ((*((state->stack)++))=(/*CAST*/(uint64_t) str));
+
+# 42 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=ROCI_TAG_LIST);
+}
+
+
+# 45 "roci/roci-stack.c"
+static inline void roci_push_value_parts(roci_vm_state_t* state, uint64_t data, roci_tag_t tag)
+# 46 "roci/roci-stack.c"
+{
+
+# 47 "roci/roci-stack.c"
+  ((*((state->stack)++))=data);
+
+# 48 "roci/roci-stack.c"
+  ((*((state->stack_tags)++))=tag);
+}
+
+
+# 51 "roci/roci-stack.c"
+static inline void roci_push_value(roci_vm_state_t* state, roci_value_t value)
+# 51 "roci/roci-stack.c"
+{
+
+# 52 "roci/roci-stack.c"
+  roci_push_value_parts(state, (value.raw), (value.tag));
+}
+
+
+# 55 "roci/roci-stack.c"
+static inline boolean_t roci_pop_boolean(roci_vm_state_t* state)
+# 55 "roci/roci-stack.c"
+{
+
+# 56 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 57 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 58 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_BOOLEAN))
+
+# 58 "roci/roci-stack.c"
+  {
+
+# 59 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 61 "roci/roci-stack.c"
+  return tos;
+}
+
+
+# 64 "roci/roci-stack.c"
+static inline int64_t roci_pop_integer(roci_vm_state_t* state)
+# 64 "roci/roci-stack.c"
+{
+
+# 65 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 66 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 67 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_INTEGER))
+
+# 67 "roci/roci-stack.c"
+  {
+
+# 68 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 70 "roci/roci-stack.c"
+  return tos;
+}
+
+
+# 73 "roci/roci-stack.c"
+static inline double roci_pop_double(roci_vm_state_t* state)
+# 73 "roci/roci-stack.c"
+{
+
+# 74 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 75 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 76 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_DOUBLE))
+
+# 76 "roci/roci-stack.c"
+  {
+
+# 77 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 79 "roci/roci-stack.c"
+  return uint64_as_double(tos);
+}
+
+
+# 82 "roci/roci-stack.c"
+static inline char* roci_pop_string(roci_vm_state_t* state)
+# 82 "roci/roci-stack.c"
+{
+
+# 83 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 84 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 85 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_STRING))
+
+# 85 "roci/roci-stack.c"
+  {
+
+# 86 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 88 "roci/roci-stack.c"
+  return (/*CAST*/(char*) tos);
+}
+
+
+# 91 "roci/roci-stack.c"
+static inline value_array_t* roci_pop_list(roci_vm_state_t* state)
+# 91 "roci/roci-stack.c"
+{
+
+# 92 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 93 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 94 "roci/roci-stack.c"
+  if ((tag!=ROCI_TAG_LIST))
+
+# 94 "roci/roci-stack.c"
+  {
+
+# 95 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 97 "roci/roci-stack.c"
+  return (/*CAST*/(value_array_t*) tos);
+}
+
+
+# 100 "roci/roci-stack.c"
+static inline roci_value_t roci_pop_value(roci_vm_state_t* state)
+# 100 "roci/roci-stack.c"
+{
+
+# 101 "roci/roci-stack.c"
+  roci_value_t value;
+
+# 102 "roci/roci-stack.c"
+  roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 103 "roci/roci-stack.c"
+  uint64_t tos = (*(--(state->stack)));
+
+# 104 "roci/roci-stack.c"
+  if ((tag==ROCI_TAG_STACK_MARKER))
+
+# 104 "roci/roci-stack.c"
+  {
+
+# 105 "roci/roci-stack.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 107 "roci/roci-stack.c"
+  ((value.raw)=tos);
+
+# 108 "roci/roci-stack.c"
+  ((value.tag)=tag);
+
+# 109 "roci/roci-stack.c"
+  return value;
+}
+
+
+# 112 "roci/roci-stack.c"
+static inline roci_value_t roci_debug_peek_value(roci_vm_state_t* state, int offset)
+# 113 "roci/roci-stack.c"
+{
+
+# 114 "roci/roci-stack.c"
+  roci_value_t value;
+
+# 115 "roci/roci-stack.c"
+  roci_tag_t tag = (*((state->stack_tags)-offset));
+
+# 116 "roci/roci-stack.c"
+  uint64_t datum = (*((state->stack)-offset));
+
+# 117 "roci/roci-stack.c"
+  ((value.raw)=datum);
+
+# 118 "roci/roci-stack.c"
+  ((value.tag)=tag);
+
+# 119 "roci/roci-stack.c"
+  return value;
+}
+
+
+# 122 "roci/roci-stack.c"
+static inline roci_env_t* roci_current_env(roci_vm_state_t* state)
+# 122 "roci/roci-stack.c"
+{
+
+# 123 "roci/roci-stack.c"
+  return (state->env);
+}
+
+
+# 126 "roci/roci-stack.c"
+static inline void roci_set_env(roci_vm_state_t* state, roci_env_t* env)
+# 126 "roci/roci-stack.c"
+{
+
+# 127 "roci/roci-stack.c"
+  ((state->env)=env);
+}
+
+
+# 130 "roci/roci-stack.c"
+static inline void roci_drop_env(roci_vm_state_t* state)
+# 130 "roci/roci-stack.c"
+{
+
+# 131 "roci/roci-stack.c"
+  ((state->env)=((state->env)->parent));
+}
+
+
+# 134 "roci/roci-stack.c"
+static inline void roci_push_continuation(roci_vm_state_t* state, roci_bb_t* bb, uint32_t stack_arg_numbers)
+# 135 "roci/roci-stack.c"
+{
+
+# 136 "roci/roci-stack.c"
+  roci_cont_t* continuation = malloc_struct(roci_cont_t);
+
+# 137 "roci/roci-stack.c"
+  ((continuation->bb)=bb);
+
+# 138 "roci/roci-stack.c"
+  ((continuation->env)=(state->env));
+
+# 139 "roci/roci-stack.c"
+  ((continuation->stack)=((state->stack)-stack_arg_numbers));
+
+# 140 "roci/roci-stack.c"
+  ((continuation->stack_tags)=((state->stack_tags)-stack_arg_numbers));
+
+# 141 "roci/roci-stack.c"
+  ((*((state->continuations)++))=continuation);
+}
+
+
+# 144 "roci/roci-stack.c"
+static inline roci_cont_t* roci_pop_continuation(roci_vm_state_t* state)
+# 144 "roci/roci-stack.c"
+{
+
+# 145 "roci/roci-stack.c"
+  return (*(--(state->continuations)));
+}
+
+
+// ========== functions ==========
+
+
+# 64 "lib/leb128.c"
+unsigned encode_sleb_128(int64_t Value, uint8_t* p)
+# 64 "lib/leb128.c"
+{
+
+# 65 "lib/leb128.c"
+  uint8_t* orig_p = p;
+
+# 66 "lib/leb128.c"
+  int More;
+
+# 67 "lib/leb128.c"
+  do
+# 67 "lib/leb128.c"
+  {
+
+# 68 "lib/leb128.c"
+    uint8_t Byte = (Value&0x7f);
+
+# 70 "lib/leb128.c"
+    (Value>>=7);
+
+# 71 "lib/leb128.c"
+    (More=(!(((Value==0)&&((Byte&0x40)==0))||((Value==(-1))&&((Byte&0x40)!=0)))));
+
+# 73 "lib/leb128.c"
+    if (More)
+
+# 74 "lib/leb128.c"
+    (Byte|=0x80);
+
+# 75 "lib/leb128.c"
+    ((*(p++))=Byte);
+  }
+  while (More);
+
+# 78 "lib/leb128.c"
+  return (/*CAST*/(unsigned) (p-orig_p));
+}
+
+
+# 88 "lib/leb128.c"
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p)
+# 88 "lib/leb128.c"
+{
+
+# 89 "lib/leb128.c"
+  uint8_t* orig_p = p;
+
+# 90 "lib/leb128.c"
+  do
+# 90 "lib/leb128.c"
+  {
+
+# 91 "lib/leb128.c"
+    uint8_t Byte = (Value&0x7f);
+
+# 92 "lib/leb128.c"
+    (Value>>=7);
+
+# 93 "lib/leb128.c"
+    if ((Value!=0))
+
+# 94 "lib/leb128.c"
+    (Byte|=0x80);
+
+# 95 "lib/leb128.c"
+    ((*(p++))=Byte);
+  }
+  while ((Value!=0));
+
+# 98 "lib/leb128.c"
+  return (/*CAST*/(unsigned) (p-orig_p));
+}
+
+
+# 106 "lib/leb128.c"
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
+# 106 "lib/leb128.c"
+{
+
+# 107 "lib/leb128.c"
+  const uint8_t* orig_p = p;
+
+# 108 "lib/leb128.c"
+  uint64_t Value = 0;
+
+# 109 "lib/leb128.c"
+  unsigned Shift = 0;
+
+# 110 "lib/leb128.c"
+  do
+# 110 "lib/leb128.c"
+  {
+
+# 111 "lib/leb128.c"
+    if ((p==end))
+
+# 111 "lib/leb128.c"
+    {
+
+# 112 "lib/leb128.c"
+      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
+
+# 114 "lib/leb128.c"
+      return result;
+    }
+
+# 116 "lib/leb128.c"
+    uint64_t Slice = ((*p)&0x7f);
+
+# 117 "lib/leb128.c"
+    if ((((Shift>=64)&&(Slice!=0))||(((Slice<<Shift)>>Shift)!=Slice)))
+
+# 117 "lib/leb128.c"
+    {
+
+# 118 "lib/leb128.c"
+      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_TOO_BIG});
+
+# 120 "lib/leb128.c"
+      return result;
+    }
+
+# 122 "lib/leb128.c"
+    (Value+=(Slice<<Shift));
+
+# 123 "lib/leb128.c"
+    (Shift+=7);
+  }
+  while (((*(p++))>=128));
+
+# 125 "lib/leb128.c"
+  unsigned_decode_result result = ((unsigned_decode_result) {Value, cast(unsigned, p - orig_p)});
+
+# 127 "lib/leb128.c"
+  return result;
+}
+
+
+# 135 "lib/leb128.c"
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
+# 135 "lib/leb128.c"
+{
+
+# 136 "lib/leb128.c"
+  const uint8_t* orig_p = p;
+
+# 137 "lib/leb128.c"
+  int64_t Value = 0;
+
+# 138 "lib/leb128.c"
+  unsigned Shift = 0;
+
+# 139 "lib/leb128.c"
+  uint8_t Byte;
+
+# 140 "lib/leb128.c"
+  do
+# 140 "lib/leb128.c"
+  {
+
+# 141 "lib/leb128.c"
+    if ((p==end))
+
+# 141 "lib/leb128.c"
+    {
+
+# 142 "lib/leb128.c"
+      signed_decode_result result = ((signed_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
+
+# 144 "lib/leb128.c"
+      return result;
+    }
+
+# 146 "lib/leb128.c"
+    (Byte=(*p));
+
+# 147 "lib/leb128.c"
+    uint64_t Slice = (Byte&0x7f);
+
+# 150 "lib/leb128.c"
+    if ((((Shift>=64)&&(Slice!=((Value<0) ? 0x7f : 0x00)))||(((Shift==63)&&(Slice!=0))&&(Slice!=0x7f))))
+
+# 151 "lib/leb128.c"
+    {
+
+# 152 "lib/leb128.c"
+      signed_decode_result result = ((signed_decode_result) {0, ERROR_TOO_BIG});
+
+# 154 "lib/leb128.c"
+      return result;
+    }
+
+# 156 "lib/leb128.c"
+    (Value|=(Slice<<Shift));
+
+# 157 "lib/leb128.c"
+    (Shift+=7);
+
+# 158 "lib/leb128.c"
+    (++p);
+  }
+  while ((Byte>=128));
+
+# 161 "lib/leb128.c"
+  if (((Shift<64)&&(Byte&0x40)))
+
+# 162 "lib/leb128.c"
+  (Value|=((-1ULL)<<Shift));
+
+# 163 "lib/leb128.c"
+  signed_decode_result result = ((signed_decode_result) {Value, (p - orig_p)});
+
+# 165 "lib/leb128.c"
+  return result;
+}
+
+
+# 68 "lib/fatal-error.c"
+void segmentation_fault_handler(int signal_number)
+# 68 "lib/fatal-error.c"
+{
+
+# 69 "lib/fatal-error.c"
+  fatal_error(ERROR_SIGSEGV);
+}
+
+
+# 72 "lib/fatal-error.c"
+void configure_fatal_errors(fatal_error_config_t config)
+# 72 "lib/fatal-error.c"
+{
+
+# 73 "lib/fatal-error.c"
+  (fatal_error_config=config);
+
+# 74 "lib/fatal-error.c"
+  if ((config.catch_sigsegv))
+
+# 74 "lib/fatal-error.c"
+  {
+
+# 75 "lib/fatal-error.c"
+    signal(SIGSEGV, segmentation_fault_handler);
+  }
+}
+
+
+# 123 "lib/fatal-error.c"
+void print_fatal_error_banner()
+# 123 "lib/fatal-error.c"
+{
+
+# 126 "lib/fatal-error.c"
+  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
+}
+
+
+# 129 "lib/fatal-error.c"
+void print_backtrace()
+# 129 "lib/fatal-error.c"
+{
+
+# 131 "lib/fatal-error.c"
+  do
+# 131 "lib/fatal-error.c"
+  {
+
+# 132 "lib/fatal-error.c"
+    void* array[10];
+
+# 133 "lib/fatal-error.c"
+    int size = backtrace(array, 10);
+
+# 134 "lib/fatal-error.c"
+    char** strings = backtrace_symbols(array, size);
+
+# 137 "lib/fatal-error.c"
+    for (
+
+# 137 "lib/fatal-error.c"
+
+# 137 "lib/fatal-error.c"
+      int i = 0;
+
+# 137 "lib/fatal-error.c"
+      (i<size);
+
+# 137 "lib/fatal-error.c"
+      (i++))
+
+# 137 "lib/fatal-error.c"
+    {
+
+# 138 "lib/fatal-error.c"
+      printf("#%d %s\n", i, (strings[i]));
+    }
+  }
+  while (0);
+}
+
+
+# 144 "lib/fatal-error.c"
+void print_error_code_name(int error_code)
+# 144 "lib/fatal-error.c"
+{
+
+# 145 "lib/fatal-error.c"
+  fprintf(stderr, " ");
+
+# 146 "lib/fatal-error.c"
+  fprintf(stderr, "*** ");
+
+# 147 "lib/fatal-error.c"
+  fprintf(stderr, "%s", error_code_to_string(error_code));
+
+# 148 "lib/fatal-error.c"
+  fprintf(stderr, " ***\n");
+}
+
+
+# 83 "lib/fatal-error.c"
+char* get_command_line()
+# 83 "lib/fatal-error.c"
+{
+
+# 84 "lib/fatal-error.c"
+  buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
+
+# 86 "lib/fatal-error.c"
+  buffer_replace_matching_byte(buffer, 0, ' ');
+
+# 87 "lib/fatal-error.c"
+  return buffer_to_c_string(buffer);
+}
+
+
+# 90 "lib/fatal-error.c"
+char* get_program_path()
+# 90 "lib/fatal-error.c"
+{
+
+# 91 "lib/fatal-error.c"
+  char buf[4096];
+
+# 92 "lib/fatal-error.c"
+  int n = readlink("/proc/self/exe", buf, (sizeof(buf)));
+
+# 93 "lib/fatal-error.c"
+  if ((n>0))
+
+# 93 "lib/fatal-error.c"
+  {
+
+# 94 "lib/fatal-error.c"
+    return string_duplicate(buf);
+  }
+  else
+
+# 95 "lib/fatal-error.c"
+  {
+
+# 96 "lib/fatal-error.c"
+    return "<program-path-unknown>";
+  }
+}
+
+
+# 100 "lib/fatal-error.c"
+_Noreturn void fatal_error_impl(char* file, int line, int error_code)
+# 100 "lib/fatal-error.c"
+{
+
+# 101 "lib/fatal-error.c"
+  print_fatal_error_banner();
+
+# 102 "lib/fatal-error.c"
+  print_backtrace();
+
+# 103 "lib/fatal-error.c"
+  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
+
+# 104 "lib/fatal-error.c"
+  print_error_code_name(error_code);
+
+# 105 "lib/fatal-error.c"
+  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
+
+# 106 "lib/fatal-error.c"
+  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
+
+# 107 "lib/fatal-error.c"
+  if ((sleep_str!=NULL))
+
+# 107 "lib/fatal-error.c"
+  {
+
+# 108 "lib/fatal-error.c"
+    value_result_t sleep_time = string_parse_uint64(sleep_str);
+
+# 109 "lib/fatal-error.c"
+    if (is_ok(sleep_time))
+
+# 109 "lib/fatal-error.c"
+    {
+
+# 110 "lib/fatal-error.c"
+      fprintf(stderr, "Sleeping for %lu seconds so you can attach a debugger.\n", (sleep_time.u64));
+
+# 113 "lib/fatal-error.c"
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
+
+# 114 "lib/fatal-error.c"
+      sleep((sleep_time.u64));
+    }
+  }
+  else
+
+# 116 "lib/fatal-error.c"
+  {
+
+# 117 "lib/fatal-error.c"
+    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
+  }
+
+# 119 "lib/fatal-error.c"
+  fprintf(stderr, "Necessaria Morte Mori...\n");
+
+# 120 "lib/fatal-error.c"
+  exit((-(error_code+100)));
+}
+
+
+# 182 "lib/value.c"
+int cmp_string_values(value_t value1, value_t value2)
+# 182 "lib/value.c"
+{
+
+# 183 "lib/value.c"
+  return strcmp((value1.str), (value2.str));
+}
+
+
+# 191 "lib/value.c"
+uint64_t hash_string_value(value_t value1)
+# 191 "lib/value.c"
+{
+
+# 191 "lib/value.c"
+  return string_hash((value1.str));
+}
+
+
+# 76 "lib/gc-allocate.c"
+uint8_t* checked_malloc(char* file, int line, uint64_t amount)
+# 76 "lib/gc-allocate.c"
+{
+
+# 78 "lib/gc-allocate.c"
+  if (((amount==0)||(amount>ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT)))
+
+# 78 "lib/gc-allocate.c"
+  {
+
+# 79 "lib/gc-allocate.c"
+    fatal_error(ERROR_BAD_ALLOCATION_SIZE);
+  }
+
+# 82 "lib/gc-allocate.c"
+  uint8_t* result = GC_malloc(amount);
+
+# 84 "lib/gc-allocate.c"
+  if ((result==((void *)0)))
+
+# 84 "lib/gc-allocate.c"
+  {
+
+# 85 "lib/gc-allocate.c"
+    fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
+  }
+
+# 88 "lib/gc-allocate.c"
+  return result;
+}
+
+
+# 97 "lib/gc-allocate.c"
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount)
+# 98 "lib/gc-allocate.c"
+{
+
+# 99 "lib/gc-allocate.c"
+  uint8_t* result = checked_malloc(file, line, amount);
+
+# 100 "lib/gc-allocate.c"
+  memcpy(result, source, amount);
+
+# 101 "lib/gc-allocate.c"
+  return result;
+}
+
+
+# 114 "lib/gc-allocate.c"
+void checked_free(char* file, int line, void* pointer)
+# 114 "lib/gc-allocate.c"
+{
+
+# 115 "lib/gc-allocate.c"
+  return;
+}
+
+
+# 12 "lib/uint64.c"
+int uint64_highest_bit_set(uint64_t n)
+# 12 "lib/uint64.c"
+{
+
+# 13 "lib/uint64.c"
+  if ((n>=(1ULL<<32)))
+
+# 13 "lib/uint64.c"
+  {
+
+# 14 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>32))+32);
+  }
+  else
+
+# 15 "lib/uint64.c"
+  if ((n>=(1ULL<<16)))
+
+# 15 "lib/uint64.c"
+  {
+
+# 16 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>16))+16);
+  }
+  else
+
+# 17 "lib/uint64.c"
+  if ((n>=(1ULL<<8)))
+
+# 17 "lib/uint64.c"
+  {
+
+# 18 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>8))+8);
+  }
+  else
+
+# 19 "lib/uint64.c"
+  if ((n>=(1ULL<<4)))
+
+# 19 "lib/uint64.c"
+  {
+
+# 20 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>4))+4);
+  }
+  else
+
+# 21 "lib/uint64.c"
+  if ((n>=(1ULL<<2)))
+
+# 21 "lib/uint64.c"
+  {
+
+# 22 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>2))+2);
+  }
+  else
+
+# 23 "lib/uint64.c"
+  if ((n>=(1ULL<<1)))
+
+# 23 "lib/uint64.c"
+  {
+
+# 24 "lib/uint64.c"
+    return (uint64_highest_bit_set((n>>1))+1);
+  }
+  else
+
+# 25 "lib/uint64.c"
+  {
+
+# 26 "lib/uint64.c"
+    return 0;
+  }
+}
+
+
+# 4 "lib/double.c"
+uint64_t double_as_uint64(double d)
+# 4 "lib/double.c"
+{
+
+# 5 "lib/double.c"
+  uint64_t u;
+
+# 6 "lib/double.c"
+  memcpy((&u), (&d), (sizeof(d)));
+
+# 7 "lib/double.c"
+  return u;
+}
+
+
+# 13 "lib/double.c"
+uint64_t uint64_as_double(uint64_t u)
+# 13 "lib/double.c"
+{
+
+# 14 "lib/double.c"
+  double d;
+
+# 15 "lib/double.c"
+  memcpy((&d), (&u), (sizeof(u)));
+
+# 16 "lib/double.c"
+  return d;
+}
+
+
+# 470 "lib/string-util.c"
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed)
+# 470 "lib/string-util.c"
+{
+
+# 471 "lib/string-util.c"
+  const uint64_t m = 0x880355f21e6d1965ULL;
+
+# 472 "lib/string-util.c"
+  const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
+
+# 473 "lib/string-util.c"
+  const uint64_t* end = (pos+(len/8));
+
+# 474 "lib/string-util.c"
+  const unsigned char* pos2;
+
+# 475 "lib/string-util.c"
+  uint64_t h = (seed^(len*m));
+
+# 476 "lib/string-util.c"
+  uint64_t v;
+
+# 478 "lib/string-util.c"
+  while ((pos!=end))
+
+# 478 "lib/string-util.c"
+  {
+
+# 479 "lib/string-util.c"
+    (v=(*(pos++)));
+
+# 480 "lib/string-util.c"
+    (h^=mix(v));
+
+# 481 "lib/string-util.c"
+    (h*=m);
+  }
+
+# 484 "lib/string-util.c"
+  (pos2=(/*CAST*/(const unsigned char*) pos));
+
+# 485 "lib/string-util.c"
+  (v=0);
+
+# 487 "lib/string-util.c"
+  switch ((len&7))
+
+# 487 "lib/string-util.c"
+  {
+
+# 488 "lib/string-util.c"
+    case 7:
+
+# 489 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[6]))<<48));
+
+# 490 "lib/string-util.c"
+    case 6:
+
+# 491 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[5]))<<40));
+
+# 492 "lib/string-util.c"
+    case 5:
+
+# 493 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[4]))<<32));
+
+# 494 "lib/string-util.c"
+    case 4:
+
+# 495 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[3]))<<24));
+
+# 496 "lib/string-util.c"
+    case 3:
+
+# 497 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[2]))<<16));
+
+# 498 "lib/string-util.c"
+    case 2:
+
+# 499 "lib/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[1]))<<8));
+
+# 500 "lib/string-util.c"
+    case 1:
+
+# 501 "lib/string-util.c"
+    (v^=(/*CAST*/(uint64_t) (pos2[0])));
+
+# 502 "lib/string-util.c"
+    (h^=mix(v));
+
+# 503 "lib/string-util.c"
+    (h*=m);
+  }
+
+# 506 "lib/string-util.c"
+  return mix(h);
+}
+
+
+# 15 "lib/string-util.c"
+int string_is_null_or_empty(const char* str)
+# 15 "lib/string-util.c"
+{
+
+# 16 "lib/string-util.c"
+  return ((str==((void *)0))||(strlen(str)==0));
+}
+
+
+# 24 "lib/string-util.c"
+int string_equal(const char* str1, const char* str2)
+# 24 "lib/string-util.c"
+{
+
+# 25 "lib/string-util.c"
+  if (string_is_null_or_empty(str1))
+
+# 25 "lib/string-util.c"
+  {
+
+# 26 "lib/string-util.c"
+    return string_is_null_or_empty(str2);
+  }
+
+# 28 "lib/string-util.c"
+  return (strcmp(str1, str2)==0);
+}
+
+
+# 36 "lib/string-util.c"
+int string_starts_with(const char* str1, const char* str2)
+# 36 "lib/string-util.c"
+{
+
+# 37 "lib/string-util.c"
+  return (strncmp(str1, str2, strlen(str2))==0);
+}
+
+
+# 45 "lib/string-util.c"
+int string_ends_with(const char* str1, const char* str2)
+# 45 "lib/string-util.c"
+{
+
+# 46 "lib/string-util.c"
+  size_t len1 = strlen(str1);
+
+# 47 "lib/string-util.c"
+  size_t len2 = strlen(str2);
+
+# 49 "lib/string-util.c"
+  if ((len2>len1))
+
+# 49 "lib/string-util.c"
+  {
+
+# 50 "lib/string-util.c"
+    return 0;
+  }
+
+# 53 "lib/string-util.c"
+  return (strcmp((str1+(len1-len2)), str2)==0);
+}
+
+
+# 61 "lib/string-util.c"
+boolean_t string_contains_char(const char* str, char ch)
+# 61 "lib/string-util.c"
+{
+
+# 62 "lib/string-util.c"
+  return (string_index_of_char(str, ch)>=0);
+}
+
+
+# 75 "lib/string-util.c"
+int string_index_of_char(const char* str, char ch)
+# 75 "lib/string-util.c"
+{
+
+# 76 "lib/string-util.c"
+  if (string_is_null_or_empty(str))
+
+# 76 "lib/string-util.c"
+  {
+
+# 77 "lib/string-util.c"
+    return (-1);
+  }
+
+# 79 "lib/string-util.c"
+  int str_length = strlen(str);
+
+# 80 "lib/string-util.c"
+  for (
+
+# 80 "lib/string-util.c"
+
+# 80 "lib/string-util.c"
+    int i = 0;
+
+# 80 "lib/string-util.c"
+    (i<str_length);
+
+# 80 "lib/string-util.c"
+    (i++))
+
+# 80 "lib/string-util.c"
+  {
+
+# 81 "lib/string-util.c"
+    if (((str[i])==ch))
+
+# 81 "lib/string-util.c"
+    {
+
+# 82 "lib/string-util.c"
+      return i;
+    }
+  }
+
+# 85 "lib/string-util.c"
+  return (-1);
+}
+
+
+# 94 "lib/string-util.c"
+uint64_t string_hash(const char* str)
+# 94 "lib/string-util.c"
+{
+
+# 95 "lib/string-util.c"
+  return fasthash64(str, strlen(str), 0);
+}
+
+
+# 103 "lib/string-util.c"
+char* string_substring(const char* str, int start, int end)
+# 103 "lib/string-util.c"
+{
+
+# 104 "lib/string-util.c"
+  uint64_t len = strlen(str);
+
+# 105 "lib/string-util.c"
+  if ((((start>=len)||(start>=end))||(end<start)))
+
+# 105 "lib/string-util.c"
+  {
+
+# 106 "lib/string-util.c"
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+
+# 108 "lib/string-util.c"
+  int result_size = ((end-start)+1);
+
+# 109 "lib/string-util.c"
+  char* result = (/*CAST*/(char*) malloc_bytes(result_size));
+
+# 110 "lib/string-util.c"
+  for (
+
+# 110 "lib/string-util.c"
+
+# 110 "lib/string-util.c"
+    int i = start;
+
+# 110 "lib/string-util.c"
+    (i<end);
+
+# 110 "lib/string-util.c"
+    (i++))
+
+# 110 "lib/string-util.c"
+  {
+
+# 111 "lib/string-util.c"
+    ((result[(i-start)])=(str[i]));
+  }
+
+# 113 "lib/string-util.c"
+  ((result[(result_size-1)])='\0');
+
+# 114 "lib/string-util.c"
+  return result;
+}
+
+
+# 117 "lib/string-util.c"
+value_result_t string_parse_uint64_dec(const char* string)
+# 117 "lib/string-util.c"
+{
+
+# 118 "lib/string-util.c"
+  uint64_t len = strlen(string);
+
+# 119 "lib/string-util.c"
+  uint64_t integer = 0;
+
+# 121 "lib/string-util.c"
+  if ((len==0))
+
+# 121 "lib/string-util.c"
+  {
+
+# 122 "lib/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 126 "lib/string-util.c"
+  for (
+
+# 126 "lib/string-util.c"
+
+# 126 "lib/string-util.c"
+    int i = 0;
+
+# 126 "lib/string-util.c"
+    (i<len);
+
+# 126 "lib/string-util.c"
+    (i++))
+
+# 126 "lib/string-util.c"
+  {
+
+# 127 "lib/string-util.c"
+    char ch = (string[i]);
+
+# 128 "lib/string-util.c"
+    if (((ch<'0')||(ch>'9')))
+
+# 128 "lib/string-util.c"
+    {
+
+# 129 "lib/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 133 "lib/string-util.c"
+    uint64_t digit = ((string[i])-'0');
+
+# 134 "lib/string-util.c"
+    (integer=((integer*10)+digit));
+  }
+
+# 137 "lib/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 145 "lib/string-util.c"
+value_result_t string_parse_uint64_bin(const char* string)
+# 145 "lib/string-util.c"
+{
+
+# 146 "lib/string-util.c"
+  uint64_t len = strlen(string);
+
+# 147 "lib/string-util.c"
+  uint64_t integer = 0;
+
+# 149 "lib/string-util.c"
+  if ((len==0))
+
+# 149 "lib/string-util.c"
+  {
+
+# 150 "lib/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 154 "lib/string-util.c"
+  for (
+
+# 154 "lib/string-util.c"
+
+# 154 "lib/string-util.c"
+    int i = 0;
+
+# 154 "lib/string-util.c"
+    (i<len);
+
+# 154 "lib/string-util.c"
+    (i++))
+
+# 154 "lib/string-util.c"
+  {
+
+# 155 "lib/string-util.c"
+    char ch = (string[i]);
+
+# 156 "lib/string-util.c"
+    if (((ch<'0')||(ch>'1')))
+
+# 156 "lib/string-util.c"
+    {
+
+# 157 "lib/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 161 "lib/string-util.c"
+    uint64_t digit = ((string[i])-'0');
+
+# 162 "lib/string-util.c"
+    (integer=((integer<<1)|digit));
+  }
+
+# 165 "lib/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 185 "lib/string-util.c"
+value_result_t string_parse_uint64_hex(const char* string)
+# 185 "lib/string-util.c"
+{
+
+# 186 "lib/string-util.c"
+  uint64_t len = strlen(string);
+
+# 187 "lib/string-util.c"
+  uint64_t integer = 0;
+
+# 189 "lib/string-util.c"
+  if ((len==0))
+
+# 189 "lib/string-util.c"
+  {
+
+# 190 "lib/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 194 "lib/string-util.c"
+  for (
+
+# 194 "lib/string-util.c"
+
+# 194 "lib/string-util.c"
+    int i = 0;
+
+# 194 "lib/string-util.c"
+    (i<len);
+
+# 194 "lib/string-util.c"
+    (i++))
+
+# 194 "lib/string-util.c"
+  {
+
+# 195 "lib/string-util.c"
+    char ch = (string[i]);
+
+# 196 "lib/string-util.c"
+    if ((!is_hex_digit(ch)))
+
+# 196 "lib/string-util.c"
+    {
+
+# 197 "lib/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 201 "lib/string-util.c"
+    uint64_t digit = hex_digit_to_value(ch);
+
+# 202 "lib/string-util.c"
+    (integer=((integer<<4)|digit));
+  }
+
+# 205 "lib/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 224 "lib/string-util.c"
+value_result_t string_parse_uint64(const char* string)
+# 224 "lib/string-util.c"
+{
+
+# 225 "lib/string-util.c"
+  if (string_starts_with(string, "0x"))
+
+# 225 "lib/string-util.c"
+  {
+
+# 226 "lib/string-util.c"
+    return string_parse_uint64_hex((&(string[2])));
+  }
+  else
+
+# 227 "lib/string-util.c"
+  if (string_starts_with(string, "0b"))
+
+# 227 "lib/string-util.c"
+  {
+
+# 228 "lib/string-util.c"
+    return string_parse_uint64_bin((&(string[2])));
+  }
+  else
+
+# 229 "lib/string-util.c"
+  {
+
+# 230 "lib/string-util.c"
+    return string_parse_uint64_dec(string);
+  }
+}
+
+
+# 240 "lib/string-util.c"
+char* string_duplicate(const char* src)
+# 240 "lib/string-util.c"
+{
+
+# 241 "lib/string-util.c"
+  if ((src==NULL))
+
+# 241 "lib/string-util.c"
+  {
+
+# 242 "lib/string-util.c"
+    return NULL;
+  }
+
+# 244 "lib/string-util.c"
+  int len = (strlen(src)+1);
+
+# 245 "lib/string-util.c"
+  char* result = (/*CAST*/(char*) malloc_bytes(len));
+
+# 246 "lib/string-util.c"
+  memcpy(result, src, len);
+
+# 248 "lib/string-util.c"
+  return result;
+}
+
+
+# 257 "lib/string-util.c"
+char* string_append(const char* a, const char* b)
+# 257 "lib/string-util.c"
+{
+
+# 258 "lib/string-util.c"
+  if (((a==NULL)||(b==NULL)))
+
+# 258 "lib/string-util.c"
+  {
+
+# 259 "lib/string-util.c"
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+
+# 261 "lib/string-util.c"
+  int total_length = ((strlen(a)+strlen(b))+1);
+
+# 262 "lib/string-util.c"
+  char* result = (/*CAST*/(char*) malloc_bytes(total_length));
+
+# 263 "lib/string-util.c"
+  strcat(result, a);
+
+# 264 "lib/string-util.c"
+  strcat(result, b);
+
+# 265 "lib/string-util.c"
+  return result;
+}
+
+
+# 273 "lib/string-util.c"
+char* uint64_to_string(uint64_t number)
+# 273 "lib/string-util.c"
+{
+
+# 274 "lib/string-util.c"
+  char buffer[32];
+
+# 275 "lib/string-util.c"
+  sprintf(buffer, "%lu", number);
+
+# 276 "lib/string-util.c"
+  return string_duplicate(buffer);
+}
+
+
+# 284 "lib/string-util.c"
+char* int64_to_string(int64_t number)
+# 284 "lib/string-util.c"
+{
+
+# 285 "lib/string-util.c"
+  char buffer[32];
+
+# 286 "lib/string-util.c"
+  sprintf(buffer, "%ld", number);
+
+# 287 "lib/string-util.c"
+  return string_duplicate(buffer);
+}
+
+
+# 296 "lib/string-util.c"
+char* string_left_pad(const char* str, int n, char ch)
+# 296 "lib/string-util.c"
+{
+
+# 297 "lib/string-util.c"
+  if ((n<0))
+
+# 297 "lib/string-util.c"
+  {
+
+# 298 "lib/string-util.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 301 "lib/string-util.c"
+  int input_length = strlen(str);
+
+# 304 "lib/string-util.c"
+  int padding_needed = (n-input_length);
+
+# 312 "lib/string-util.c"
+  int len = 1;
+
+# 314 "lib/string-util.c"
+  buffer_t* buffer = make_buffer(len);
+
+# 315 "lib/string-util.c"
+  for (
+
+# 315 "lib/string-util.c"
+
+# 315 "lib/string-util.c"
+    int i = 0;
+
+# 315 "lib/string-util.c"
+    (i<padding_needed);
+
+# 315 "lib/string-util.c"
+    (i++))
+
+# 315 "lib/string-util.c"
+  {
+
+# 316 "lib/string-util.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 318 "lib/string-util.c"
+  (buffer=buffer_append_string(buffer, str));
+
+# 319 "lib/string-util.c"
+  char* result = buffer_to_c_string(buffer);
+
+# 320 "lib/string-util.c"
+  free_bytes(buffer);
+
+# 321 "lib/string-util.c"
+  return result;
+}
+
+
+# 330 "lib/string-util.c"
+char* string_right_pad(const char* str, int n, char ch)
+# 330 "lib/string-util.c"
+{
+
+# 331 "lib/string-util.c"
+  if ((n<0))
+
+# 331 "lib/string-util.c"
+  {
+
+# 332 "lib/string-util.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 335 "lib/string-util.c"
+  int input_length = strlen(str);
+
+# 338 "lib/string-util.c"
+  int padding_needed = (n-input_length);
+
+# 346 "lib/string-util.c"
+  int len = 1;
+
+# 348 "lib/string-util.c"
+  buffer_t* buffer = make_buffer(len);
+
+# 349 "lib/string-util.c"
+  (buffer=buffer_append_string(buffer, str));
+
+# 350 "lib/string-util.c"
+  for (
+
+# 350 "lib/string-util.c"
+
+# 350 "lib/string-util.c"
+    int i = 0;
+
+# 350 "lib/string-util.c"
+    (i<padding_needed);
+
+# 350 "lib/string-util.c"
+    (i++))
+
+# 350 "lib/string-util.c"
+  {
+
+# 351 "lib/string-util.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 353 "lib/string-util.c"
+  char* result = buffer_to_c_string(buffer);
+
+# 354 "lib/string-util.c"
+  free_bytes(buffer);
+
+# 355 "lib/string-util.c"
+  return result;
+}
+
+
+# 368 "lib/string-util.c"
+char* string_truncate(char* str, int limit, char* at_limit_suffix)
+# 368 "lib/string-util.c"
+{
+
+# 370 "lib/string-util.c"
+  buffer_t* buffer = make_buffer(limit);
+
+# 371 "lib/string-util.c"
+  for (
+
+# 371 "lib/string-util.c"
+
+# 371 "lib/string-util.c"
+    int i = 0;
+
+# 371 "lib/string-util.c"
+    ;
+
+# 371 "lib/string-util.c"
+    (i++))
+
+# 371 "lib/string-util.c"
+  {
+
+# 372 "lib/string-util.c"
+    char ch = (str[i]);
+
+# 373 "lib/string-util.c"
+    if ((ch=='\0'))
+
+# 373 "lib/string-util.c"
+    {
+
+# 374 "lib/string-util.c"
+      char* result = buffer_to_c_string(buffer);
+
+# 375 "lib/string-util.c"
+      free_bytes(buffer);
+
+# 376 "lib/string-util.c"
+      return result;
+    }
+
+# 378 "lib/string-util.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 380 "lib/string-util.c"
+  if (at_limit_suffix)
+
+# 380 "lib/string-util.c"
+  {
+
+# 381 "lib/string-util.c"
+    (buffer=buffer_append_string(buffer, at_limit_suffix));
+  }
+
+# 383 "lib/string-util.c"
+  char* result = buffer_to_c_string(buffer);
+
+# 384 "lib/string-util.c"
+  free_bytes(buffer);
+
+# 385 "lib/string-util.c"
+  return result;
+}
+
+
+# 402 "lib/string-util.c"
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
+# 402 "lib/string-util.c"
+{
+
+# 403 "lib/string-util.c"
+  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+
+# 404 "lib/string-util.c"
+  int n_bytes = 0;
+
+# 405 "lib/string-util.c"
+  do
+# 405 "lib/string-util.c"
+  {
+
+# 406 "lib/string-util.c"
+    va_list args;
+
+# 407 "lib/string-util.c"
+    va_start(args, format);
+
+# 408 "lib/string-util.c"
+    (n_bytes=vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args));
+
+# 410 "lib/string-util.c"
+    va_end(args);
+  }
+  while (0);
+
+# 413 "lib/string-util.c"
+  if ((n_bytes<STRING_PRINTF_INITIAL_BUFFER_SIZE))
+
+# 413 "lib/string-util.c"
+  {
+
+# 414 "lib/string-util.c"
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
+
+# 415 "lib/string-util.c"
+    strcat(result, buffer);
+
+# 416 "lib/string-util.c"
+    return result;
+  }
+  else
+
+# 417 "lib/string-util.c"
+  {
+
+# 418 "lib/string-util.c"
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
+
+# 419 "lib/string-util.c"
+    va_list args;
+
+# 420 "lib/string-util.c"
+    va_start(args, format);
+
+# 421 "lib/string-util.c"
+    int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
+
+# 422 "lib/string-util.c"
+    va_end(args);
+
+# 423 "lib/string-util.c"
+    if ((n_bytes_second!=n_bytes))
+
+# 423 "lib/string-util.c"
+    {
+
+# 424 "lib/string-util.c"
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+
+# 426 "lib/string-util.c"
+    return result;
+  }
+}
+
+
+# 509 "lib/string-util.c"
+double string_parse_double(char* str)
+# 509 "lib/string-util.c"
+{
+
+# 510 "lib/string-util.c"
+  char* endptr = NULL;
+
+# 511 "lib/string-util.c"
+  (errno=0);
+
+# 512 "lib/string-util.c"
+  double value = strtod(str, (&endptr));
+
+# 513 "lib/string-util.c"
+  if (((str==endptr)||(errno==ERANGE)))
+
+# 513 "lib/string-util.c"
+  {
+
+# 514 "lib/string-util.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 516 "lib/string-util.c"
+  log_info("string_parse_double = %f", value);
+
+# 517 "lib/string-util.c"
+  return value;
+}
+
+
+# 208 "lib/logger.c"
+value_result_t parse_log_level_enum(char* str)
+# 208 "lib/logger.c"
+{
+
+# 209 "lib/logger.c"
+  if (((strcmp("FATAL", str)==0)||(strcmp("fatal", str)==0)))
+
+# 209 "lib/logger.c"
+  {
+
+# 210 "lib/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_FATAL});
+  }
+  else
+
+# 211 "lib/logger.c"
+  if (((strcmp("WARN", str)==0)||(strcmp("warn", str)==0)))
+
+# 211 "lib/logger.c"
+  {
+
+# 212 "lib/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_WARN});
+  }
+  else
+
+# 213 "lib/logger.c"
+  if (((strcmp("INFO", str)==0)||(strcmp("info", str)==0)))
+
+# 213 "lib/logger.c"
+  {
+
+# 214 "lib/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_INFO});
+  }
+  else
+
+# 215 "lib/logger.c"
+  if (((strcmp("DEBUG", str)==0)||(strcmp("debug", str)==0)))
+
+# 215 "lib/logger.c"
+  {
+
+# 216 "lib/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_DEBUG});
+  }
+  else
+
+# 217 "lib/logger.c"
+  if (((strcmp("TRACE", str)==0)||(strcmp("trace", str)==0)))
+
+# 217 "lib/logger.c"
+  {
+
+# 218 "lib/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_TRACE});
+  }
+  else
+
+# 219 "lib/logger.c"
+  if (((strcmp("OFF", str)==0)||(strcmp("off", str)==0)))
+
+# 219 "lib/logger.c"
+  {
+
+# 220 "lib/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_OFF});
+  }
+  else
+
+# 221 "lib/logger.c"
+  {
+
+# 222 "lib/logger.c"
+    return ((value_result_t) {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
+  }
+}
+
+
+# 239 "lib/logger.c"
+void logger_init(void)
+# 239 "lib/logger.c"
+{
+
+# 240 "lib/logger.c"
+  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
+
+# 241 "lib/logger.c"
+  if ((level_string!=NULL))
+
+# 241 "lib/logger.c"
+  {
+
+# 242 "lib/logger.c"
+    value_result_t parsed = string_parse_uint64(level_string);
+
+# 243 "lib/logger.c"
+    if (is_ok(parsed))
+
+# 243 "lib/logger.c"
+    {
+
+# 244 "lib/logger.c"
+      ((global_logger_state.level)=(parsed.u64));
+    }
+    else
+
+# 245 "lib/logger.c"
+    {
+
+# 246 "lib/logger.c"
+      value_result_t parsed = parse_log_level_enum(level_string);
+
+# 247 "lib/logger.c"
+      if (is_ok(parsed))
+
+# 247 "lib/logger.c"
+      {
+
+# 248 "lib/logger.c"
+        ((global_logger_state.level)=(parsed.u64));
+      }
+      else
+
+# 249 "lib/logger.c"
+      {
+
+# 250 "lib/logger.c"
+        log_warn("%s could not be converted to a log level.", level_string);
+      }
+    }
+  }
+
+# 255 "lib/logger.c"
+  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
+
+# 259 "lib/logger.c"
+  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
+
+# 266 "lib/logger.c"
+  if ((output_file_name!=NULL))
+
+# 266 "lib/logger.c"
+  {
+
+# 267 "lib/logger.c"
+    ((global_logger_state.output)=fopen(output_file_name, "w"));
+
+# 268 "lib/logger.c"
+    if ((!(global_logger_state.output)))
+
+# 268 "lib/logger.c"
+    {
+
+# 269 "lib/logger.c"
+      fatal_error(ERROR_OPEN_LOG_FILE);
+    }
+
+# 276 "lib/logger.c"
+    ((global_logger_state.logger_output_filename)=output_file_name);
+  }
+  else
+
+# 277 "lib/logger.c"
+  {
+
+# 278 "lib/logger.c"
+    ((global_logger_state.output)=stderr);
+
+# 279 "lib/logger.c"
+    ((global_logger_state.initialized)=true);
+  }
+}
+
+
+# 285 "lib/logger.c"
+char* logger_level_to_string(int level)
+# 285 "lib/logger.c"
+{
+
+# 286 "lib/logger.c"
+  switch (level)
+
+# 286 "lib/logger.c"
+  {
+
+# 287 "lib/logger.c"
+    case LOGGER_OFF:
+
+# 288 "lib/logger.c"
+    return "LOGGER_OFF";
+
+# 289 "lib/logger.c"
+    case LOGGER_TRACE:
+
+# 290 "lib/logger.c"
+    return "TRACE";
+
+# 291 "lib/logger.c"
+    case LOGGER_DEBUG:
+
+# 292 "lib/logger.c"
+    return "DEBUG";
+
+# 293 "lib/logger.c"
+    case LOGGER_INFO:
+
+# 294 "lib/logger.c"
+    return "INFO";
+
+# 295 "lib/logger.c"
+    case LOGGER_WARN:
+
+# 296 "lib/logger.c"
+    return "WARN";
+
+# 297 "lib/logger.c"
+    case LOGGER_FATAL:
+
+# 298 "lib/logger.c"
+    return "FATAL";
+
+# 299 "lib/logger.c"
+    default:
+
+# 300 "lib/logger.c"
+    return "LEVEL_UNKNOWN";
+  }
+}
+
+
+# 312 "lib/logger.c"
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...)
+# 313 "lib/logger.c"
+{
+
+# 315 "lib/logger.c"
+  FILE* output = (global_logger_state.output);
+
+# 319 "lib/logger.c"
+  if ((output==NULL))
+
+# 319 "lib/logger.c"
+  {
+
+# 320 "lib/logger.c"
+    (output=stderr);
+  }
+
+# 323 "lib/logger.c"
+  if ((level>=(global_logger_state.level)))
+
+# 323 "lib/logger.c"
+  {
+
+# 324 "lib/logger.c"
+    fprintf(output, "%s ", logger_level_to_string(level));
+
+# 325 "lib/logger.c"
+    va_list args;
+
+# 326 "lib/logger.c"
+    fprintf(output, "%s:%d %s | ", file, line_number, function);
+
+# 328 "lib/logger.c"
+    va_start(args, format);
+
+# 329 "lib/logger.c"
+    vfprintf(output, format, args);
+
+# 330 "lib/logger.c"
+    va_end(args);
+
+# 332 "lib/logger.c"
+    fprintf(output, "\n");
+  }
+}
+
+
+# 23 "lib/utf8-decoder.c"
+utf8_decode_result_t utf8_decode(const uint8_t* array)
+# 23 "lib/utf8-decoder.c"
+{
+
+# 24 "lib/utf8-decoder.c"
+  uint8_t firstByte = (array[0]);
+
+# 25 "lib/utf8-decoder.c"
+  if (((firstByte&0x80)==0))
+
+# 25 "lib/utf8-decoder.c"
+  {
+
+# 26 "lib/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = firstByte, .num_bytes = 1});
+  }
+  else
+
+# 28 "lib/utf8-decoder.c"
+  if (((firstByte&0xE0)==0xC0))
+
+# 28 "lib/utf8-decoder.c"
+  {
+
+# 29 "lib/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
+         .num_bytes = 2});
+  }
+  else
+
+# 33 "lib/utf8-decoder.c"
+  if (((firstByte&0xF0)==0xE0))
+
+# 33 "lib/utf8-decoder.c"
+  {
+
+# 34 "lib/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x0F) << 12)
+                                           | ((array[1] & 0x3F) << 6)
+                                           | (array[2] & 0x3F),
+                             .num_bytes = 3});
+  }
+  else
+
+# 39 "lib/utf8-decoder.c"
+  if (((firstByte&0xF8)==0xF0))
+
+# 39 "lib/utf8-decoder.c"
+  {
+
+# 40 "lib/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+         .num_bytes = 4});
+  }
+  else
+
+# 45 "lib/utf8-decoder.c"
+  {
+
+# 46 "lib/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.error = true});
+  }
+}
+
+
+# 40 "lib/buffer.c"
+buffer_t* make_buffer(uint64_t initial_capacity)
+# 40 "lib/buffer.c"
+{
+
+# 41 "lib/buffer.c"
+  buffer_t* result = malloc_struct(buffer_t);
+
+# 42 "lib/buffer.c"
+  if ((initial_capacity<16))
+
+# 42 "lib/buffer.c"
+  {
+
+# 43 "lib/buffer.c"
+    (initial_capacity=16);
+  }
+
+# 45 "lib/buffer.c"
+  if ((initial_capacity>0))
+
+# 45 "lib/buffer.c"
+  {
+
+# 46 "lib/buffer.c"
+    ((result->capacity)=initial_capacity);
+
+# 47 "lib/buffer.c"
+    ((result->elements)=malloc_bytes(initial_capacity));
+  }
+
+# 49 "lib/buffer.c"
+  return result;
+}
+
+
+# 57 "lib/buffer.c"
+uint64_t buffer_length(buffer_t* array)
+# 57 "lib/buffer.c"
+{
+
+# 57 "lib/buffer.c"
+  return (array->length);
+}
+
+
+# 64 "lib/buffer.c"
+void buffer_clear(buffer_t* buffer)
+# 64 "lib/buffer.c"
+{
+
+# 65 "lib/buffer.c"
+  for (
+
+# 65 "lib/buffer.c"
+
+# 65 "lib/buffer.c"
+    int i = 0;
+
+# 65 "lib/buffer.c"
+    (i<(buffer->capacity));
+
+# 65 "lib/buffer.c"
+    (i++))
+
+# 65 "lib/buffer.c"
+  {
+
+# 66 "lib/buffer.c"
+    (((buffer->elements)[i])=0);
+  }
+
+# 68 "lib/buffer.c"
+  ((buffer->length)=0);
+}
+
+
+# 76 "lib/buffer.c"
+uint8_t buffer_get(buffer_t* buffer, uint64_t position)
+# 76 "lib/buffer.c"
+{
+
+# 77 "lib/buffer.c"
+  if ((position<(buffer->length)))
+
+# 77 "lib/buffer.c"
+  {
+
+# 78 "lib/buffer.c"
+    return ((buffer->elements)[position]);
+  }
+  else
+
+# 79 "lib/buffer.c"
+  {
+
+# 80 "lib/buffer.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+
+# 83 "lib/buffer.c"
+    return 0;
+  }
+}
+
+
+# 94 "lib/buffer.c"
+char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end)
+# 94 "lib/buffer.c"
+{
+
+# 95 "lib/buffer.c"
+  if ((buffer==((void *)0)))
+
+# 95 "lib/buffer.c"
+  {
+
+# 96 "lib/buffer.c"
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+
+# 99 "lib/buffer.c"
+  if ((start>end))
+
+# 99 "lib/buffer.c"
+  {
+
+# 100 "lib/buffer.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 103 "lib/buffer.c"
+  if ((end>(buffer->length)))
+
+# 103 "lib/buffer.c"
+  {
+
+# 104 "lib/buffer.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 107 "lib/buffer.c"
+  uint64_t copy_length = (end-start);
+
+# 108 "lib/buffer.c"
+  char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
+
+# 109 "lib/buffer.c"
+  if ((copy_length>0))
+
+# 109 "lib/buffer.c"
+  {
+
+# 110 "lib/buffer.c"
+    memcpy(result, (&((buffer->elements)[start])), copy_length);
+  }
+
+# 112 "lib/buffer.c"
+  ((result[copy_length])='\0');
+
+# 113 "lib/buffer.c"
+  return result;
+}
+
+
+# 122 "lib/buffer.c"
+char* buffer_to_c_string(buffer_t* buffer)
+# 122 "lib/buffer.c"
+{
+
+# 123 "lib/buffer.c"
+  return buffer_c_substring(buffer, 0, (buffer->length));
+}
+
+
+# 131 "lib/buffer.c"
+buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element)
+# 131 "lib/buffer.c"
+{
+
+# 132 "lib/buffer.c"
+  if (((buffer->length)<(buffer->capacity)))
+
+# 132 "lib/buffer.c"
+  {
+
+# 133 "lib/buffer.c"
+    (((buffer->elements)[(buffer->length)])=element);
+
+# 134 "lib/buffer.c"
+    ((buffer->length)++);
+
+# 135 "lib/buffer.c"
+    return buffer;
+  }
+
+# 137 "lib/buffer.c"
+  (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
+
+# 138 "lib/buffer.c"
+  return buffer_append_byte(buffer, element);
+}
+
+
+# 146 "lib/buffer.c"
+buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes)
+# 147 "lib/buffer.c"
+{
+
+# 149 "lib/buffer.c"
+  for (
+
+# 149 "lib/buffer.c"
+
+# 149 "lib/buffer.c"
+    int i = 0;
+
+# 149 "lib/buffer.c"
+    (i<n_bytes);
+
+# 149 "lib/buffer.c"
+    (i++))
+
+# 149 "lib/buffer.c"
+  {
+
+# 150 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (bytes[i])));
+  }
+
+# 152 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 161 "lib/buffer.c"
+buffer_t* buffer_append_string(buffer_t* buffer, const char* str)
+# 161 "lib/buffer.c"
+{
+
+# 162 "lib/buffer.c"
+  return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
+}
+
+
+# 173 "lib/buffer.c"
+extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity)
+# 173 "lib/buffer.c"
+{
+
+# 174 "lib/buffer.c"
+  if (((buffer->capacity)<capacity))
+
+# 174 "lib/buffer.c"
+  {
+
+# 175 "lib/buffer.c"
+    uint8_t* new_elements = malloc_bytes(capacity);
+
+# 176 "lib/buffer.c"
+    memcpy(new_elements, (buffer->elements), (buffer->length));
+
+# 177 "lib/buffer.c"
+    free_bytes((buffer->elements));
+
+# 178 "lib/buffer.c"
+    ((buffer->elements)=new_elements);
+
+# 179 "lib/buffer.c"
+    ((buffer->capacity)=capacity);
+  }
+
+# 181 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 195 "lib/buffer.c"
+__attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...)
+# 195 "lib/buffer.c"
+{
+
+# 196 "lib/buffer.c"
+  char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
+
+# 197 "lib/buffer.c"
+  int n_bytes = 0;
+
+# 198 "lib/buffer.c"
+  do
+# 198 "lib/buffer.c"
+  {
+
+# 199 "lib/buffer.c"
+    va_list args;
+
+# 200 "lib/buffer.c"
+    va_start(args, format);
+
+# 201 "lib/buffer.c"
+    (n_bytes=vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args));
+
+# 203 "lib/buffer.c"
+    va_end(args);
+  }
+  while (0);
+
+# 206 "lib/buffer.c"
+  if ((n_bytes<BUFFER_PRINTF_INITIAL_BUFFER_SIZE))
+
+# 206 "lib/buffer.c"
+  {
+
+# 207 "lib/buffer.c"
+    return buffer_append_string(buffer, cbuffer);
+  }
+  else
+
+# 208 "lib/buffer.c"
+  {
+
+# 212 "lib/buffer.c"
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
+
+# 213 "lib/buffer.c"
+    va_list args;
+
+# 214 "lib/buffer.c"
+    va_start(args, format);
+
+# 215 "lib/buffer.c"
+    int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
+
+# 216 "lib/buffer.c"
+    va_end(args);
+
+# 217 "lib/buffer.c"
+    if ((n_bytes_second!=n_bytes))
+
+# 217 "lib/buffer.c"
+    {
+
+# 218 "lib/buffer.c"
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+
+# 220 "lib/buffer.c"
+    (buffer=buffer_append_string(buffer, result));
+
+# 221 "lib/buffer.c"
+    free_bytes(result);
+
+# 222 "lib/buffer.c"
+    return buffer;
+  }
+}
+
+
+# 233 "lib/buffer.c"
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count)
+# 234 "lib/buffer.c"
+{
+
+# 235 "lib/buffer.c"
+  for (
+
+# 235 "lib/buffer.c"
+
+# 235 "lib/buffer.c"
+    int i = 0;
+
+# 235 "lib/buffer.c"
+    (i<count);
+
+# 235 "lib/buffer.c"
+    (i++))
+
+# 235 "lib/buffer.c"
+  {
+
+# 236 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, byte));
+  }
+
+# 238 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 247 "lib/buffer.c"
+utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position)
+# 247 "lib/buffer.c"
+{
+
+# 248 "lib/buffer.c"
+  if ((position>=(buffer->length)))
+
+# 248 "lib/buffer.c"
+  {
+
+# 249 "lib/buffer.c"
+    return ((utf8_decode_result_t) {.error = true});
+  }
+
+# 251 "lib/buffer.c"
+  utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
+
+# 252 "lib/buffer.c"
+  if ((result.error))
+
+# 252 "lib/buffer.c"
+  {
+
+# 253 "lib/buffer.c"
+    return result;
+  }
+
+# 255 "lib/buffer.c"
+  if (((position+(result.num_bytes))>(buffer->length)))
+
+# 255 "lib/buffer.c"
+  {
+
+# 256 "lib/buffer.c"
+    return ((utf8_decode_result_t) {.error = true});
+  }
+
+# 258 "lib/buffer.c"
+  return result;
+}
+
+
+# 273 "lib/buffer.c"
+extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
+# 274 "lib/buffer.c"
+{
+
+# 275 "lib/buffer.c"
+  if ((code_point<0x80))
+
+# 275 "lib/buffer.c"
+  {
+
+# 277 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, code_point));
+
+# 278 "lib/buffer.c"
+    return buffer;
+  }
+  else
+
+# 279 "lib/buffer.c"
+  if ((code_point<0x800))
+
+# 279 "lib/buffer.c"
+  {
+
+# 281 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
+
+# 282 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+
+# 283 "lib/buffer.c"
+    return buffer;
+  }
+  else
+
+# 284 "lib/buffer.c"
+  if ((code_point<0x10000))
+
+# 284 "lib/buffer.c"
+  {
+
+# 286 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
+
+# 287 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+
+# 288 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+
+# 289 "lib/buffer.c"
+    return buffer;
+  }
+  else
+
+# 290 "lib/buffer.c"
+  if ((code_point<=0x10FFFF))
+
+# 290 "lib/buffer.c"
+  {
+
+# 292 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
+
+# 293 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
+
+# 294 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+
+# 295 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+
+# 296 "lib/buffer.c"
+    return buffer;
+  }
+  else
+
+# 297 "lib/buffer.c"
+  {
+
+# 299 "lib/buffer.c"
+    fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
+
+# 300 "lib/buffer.c"
+    return 0;
+  }
+}
+
+
+# 308 "lib/buffer.c"
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str)
+# 309 "lib/buffer.c"
+{
+
+# 310 "lib/buffer.c"
+  for (
+
+# 310 "lib/buffer.c"
+
+# 310 "lib/buffer.c"
+    uint64_t pos = start_position;
+
+# 310 "lib/buffer.c"
+    true;
+
+# 310 "lib/buffer.c"
+    (pos++))
+
+# 310 "lib/buffer.c"
+  {
+
+# 311 "lib/buffer.c"
+    uint8_t byte_str = ((/*CAST*/(uint8_t*) str)[(pos-start_position)]);
+
+# 312 "lib/buffer.c"
+    if ((byte_str==0))
+
+# 312 "lib/buffer.c"
+    {
+
+# 313 "lib/buffer.c"
+      return true;
+    }
+
+# 315 "lib/buffer.c"
+    if ((pos>=buffer_length(buffer)))
+
+# 315 "lib/buffer.c"
+    {
+
+# 316 "lib/buffer.c"
+      return false;
+    }
+
+# 318 "lib/buffer.c"
+    uint8_t byte_buf = buffer_get(buffer, pos);
+
+# 319 "lib/buffer.c"
+    if ((byte_str!=byte_buf))
+
+# 319 "lib/buffer.c"
+    {
+
+# 320 "lib/buffer.c"
+      return false;
+    }
+  }
+
+# 324 "lib/buffer.c"
+  return false;
+}
+
+
+# 332 "lib/buffer.c"
+int64_t buffer_index_of(buffer_t* buffer, char* str)
+# 332 "lib/buffer.c"
+{
+
+# 333 "lib/buffer.c"
+  for (
+
+# 333 "lib/buffer.c"
+
+# 333 "lib/buffer.c"
+    uint64_t i = 0;
+
+# 333 "lib/buffer.c"
+    (i<(buffer->length));
+
+# 333 "lib/buffer.c"
+    (i++))
+
+# 333 "lib/buffer.c"
+  {
+
+# 334 "lib/buffer.c"
+    if (buffer_match_string_at(buffer, i, str))
+
+# 334 "lib/buffer.c"
+    {
+
+# 335 "lib/buffer.c"
+      return i;
+    }
+  }
+
+# 338 "lib/buffer.c"
+  return (-1);
+}
+
+
+# 348 "lib/buffer.c"
+buffer_t* buffer_from_string(char* string)
+# 348 "lib/buffer.c"
+{
+
+# 349 "lib/buffer.c"
+  buffer_t* result = make_buffer(strlen(string));
+
+# 350 "lib/buffer.c"
+  (result=buffer_append_string(result, string));
+
+# 351 "lib/buffer.c"
+  return result;
+}
+
+
+# 361 "lib/buffer.c"
+buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width)
+# 362 "lib/buffer.c"
+{
+
+# 364 "lib/buffer.c"
+  if ((start>end))
+
+# 364 "lib/buffer.c"
+  {
+
+# 365 "lib/buffer.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 367 "lib/buffer.c"
+  uint64_t original_width = (end-start);
+
+# 368 "lib/buffer.c"
+  if ((original_width>new_width))
+
+# 368 "lib/buffer.c"
+  {
+
+# 371 "lib/buffer.c"
+    uint64_t difference = (original_width-new_width);
+
+# 372 "lib/buffer.c"
+    uint64_t tail_length = ((buffer->length)-end);
+
+# 373 "lib/buffer.c"
+    memmove((&((buffer->elements)[(end-difference)])), (&((buffer->elements)[end])), tail_length);
+
+# 375 "lib/buffer.c"
+    ((buffer->length)-=difference);
+  }
+  else
+
+# 376 "lib/buffer.c"
+  if ((original_width<new_width))
+
+# 376 "lib/buffer.c"
+  {
+
+# 379 "lib/buffer.c"
+    uint64_t difference = (new_width-original_width);
+
+# 380 "lib/buffer.c"
+    uint64_t tail_length = ((buffer->length)-end);
+
+# 381 "lib/buffer.c"
+    (buffer=buffer_increase_capacity(buffer, ((buffer->length)+difference)));
+
+# 382 "lib/buffer.c"
+    memmove((&((buffer->elements)[(end+difference)])), (&((buffer->elements)[end])), tail_length);
+
+# 384 "lib/buffer.c"
+    ((buffer->length)+=difference);
+  }
+
+# 386 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 395 "lib/buffer.c"
+buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text)
+# 396 "lib/buffer.c"
+{
+
+# 397 "lib/buffer.c"
+  int len_original = strlen(original_text);
+
+# 398 "lib/buffer.c"
+  int len_replacement = strlen(replacement_text);
+
+# 399 "lib/buffer.c"
+  if ((len_original<(buffer->length)))
+
+# 399 "lib/buffer.c"
+  {
+
+# 400 "lib/buffer.c"
+    uint64_t pos = 0;
+
+# 401 "lib/buffer.c"
+    while ((pos<=((buffer->length)-len_original)))
+
+# 401 "lib/buffer.c"
+    {
+
+# 402 "lib/buffer.c"
+      if (buffer_match_string_at(buffer, pos, original_text))
+
+# 402 "lib/buffer.c"
+      {
+
+# 403 "lib/buffer.c"
+        (buffer=buffer_adjust_region(buffer, pos, (pos+len_original), len_replacement));
+
+# 405 "lib/buffer.c"
+        memmove((&((buffer->elements)[pos])), replacement_text, len_replacement);
+
+# 406 "lib/buffer.c"
+        (pos+=len_replacement);
+      }
+      else
+
+# 407 "lib/buffer.c"
+      {
+
+# 408 "lib/buffer.c"
+        (pos++);
+      }
+    }
+  }
+
+# 412 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 415 "lib/buffer.c"
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position)
+# 416 "lib/buffer.c"
+{
+
+# 417 "lib/buffer.c"
+  uint64_t line = 1;
+
+# 418 "lib/buffer.c"
+  uint64_t column = 1;
+
+# 422 "lib/buffer.c"
+  for (
+
+# 422 "lib/buffer.c"
+
+# 422 "lib/buffer.c"
+    uint64_t pos = 0;
+
+# 422 "lib/buffer.c"
+    (pos<position);
+
+# 422 "lib/buffer.c"
+    (pos++))
+
+# 422 "lib/buffer.c"
+  {
+
+# 423 "lib/buffer.c"
+    uint8_t ch = buffer_get(buffer, pos);
+
+# 424 "lib/buffer.c"
+    if ((ch=='\n'))
+
+# 424 "lib/buffer.c"
+    {
+
+# 425 "lib/buffer.c"
+      (line++);
+
+# 426 "lib/buffer.c"
+      (column=1);
+    }
+    else
+
+# 427 "lib/buffer.c"
+    {
+
+# 428 "lib/buffer.c"
+      (column++);
+    }
+  }
+
+# 431 "lib/buffer.c"
+  return ((line_and_column_t) {
+                                                 .line = line,
+                                                 .column = column,
+                                             });
+}
+
+
+# 442 "lib/buffer.c"
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text)
+# 443 "lib/buffer.c"
+{
+
+# 444 "lib/buffer.c"
+  for (
+
+# 444 "lib/buffer.c"
+
+# 444 "lib/buffer.c"
+    int i = start;
+
+# 444 "lib/buffer.c"
+    (i<end);
+
+# 444 "lib/buffer.c"
+    (i++))
+
+# 444 "lib/buffer.c"
+  {
+
+# 445 "lib/buffer.c"
+    if (buffer_match_string_at(buffer, i, text))
+
+# 445 "lib/buffer.c"
+    {
+
+# 446 "lib/buffer.c"
+      return true;
+    }
+  }
+
+# 449 "lib/buffer.c"
+  return false;
+}
+
+
+# 460 "lib/buffer.c"
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement)
+# 461 "lib/buffer.c"
+{
+
+# 462 "lib/buffer.c"
+  for (
+
+# 462 "lib/buffer.c"
+
+# 462 "lib/buffer.c"
+    int i = 0;
+
+# 462 "lib/buffer.c"
+    (i<(buffer->length));
+
+# 462 "lib/buffer.c"
+    (i++))
+
+# 462 "lib/buffer.c"
+  {
+
+# 463 "lib/buffer.c"
+    if ((((buffer->elements)[i])==original))
+
+# 463 "lib/buffer.c"
+    {
+
+# 464 "lib/buffer.c"
+      (((buffer->elements)[i])=replacement);
+    }
+  }
+
+# 467 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 477 "lib/buffer.c"
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
+# 477 "lib/buffer.c"
+{
+
+# 478 "lib/buffer.c"
+  uint64_t position = start;
+
+# 479 "lib/buffer.c"
+  while ((position>0))
+
+# 479 "lib/buffer.c"
+  {
+
+# 480 "lib/buffer.c"
+    (position--);
+
+# 481 "lib/buffer.c"
+    if ((buffer_get(buffer, position)=='\n'))
+
+# 481 "lib/buffer.c"
+    {
+
+# 482 "lib/buffer.c"
+      return (position+1);
+    }
+  }
+
+# 485 "lib/buffer.c"
+  return position;
+}
+
+
+# 496 "lib/buffer.c"
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start)
+# 496 "lib/buffer.c"
+{
+
+# 497 "lib/buffer.c"
+  uint64_t position = start;
+
+# 498 "lib/buffer.c"
+  while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
+
+# 498 "lib/buffer.c"
+  {
+
+# 499 "lib/buffer.c"
+    (position++);
+  }
+
+# 501 "lib/buffer.c"
+  return position;
+}
+
+
+# 511 "lib/buffer.c"
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer)
+# 511 "lib/buffer.c"
+{
+
+# 512 "lib/buffer.c"
+  return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
+}
+
+
+# 523 "lib/buffer.c"
+extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer)
+# 526 "lib/buffer.c"
+{
+
+# 527 "lib/buffer.c"
+  if ((buffer==src_buffer))
+
+# 527 "lib/buffer.c"
+  {
+
+# 528 "lib/buffer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 530 "lib/buffer.c"
+  for (
+
+# 530 "lib/buffer.c"
+
+# 530 "lib/buffer.c"
+    uint64_t position = start_position;
+
+# 530 "lib/buffer.c"
+    (position<end_position);
+
+# 530 "lib/buffer.c"
+    (position++))
+
+# 531 "lib/buffer.c"
+  {
+
+# 532 "lib/buffer.c"
+    (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
+  }
+
+# 534 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 546 "lib/buffer.c"
+buffer_t* buffer_to_uppercase(buffer_t* buffer)
+# 546 "lib/buffer.c"
+{
+
+# 547 "lib/buffer.c"
+  for (
+
+# 547 "lib/buffer.c"
+
+# 547 "lib/buffer.c"
+    uint64_t i = 0;
+
+# 547 "lib/buffer.c"
+    (i<(buffer->length));
+
+# 547 "lib/buffer.c"
+    (i++))
+
+# 547 "lib/buffer.c"
+  {
+
+# 548 "lib/buffer.c"
+    (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
+  }
+
+# 550 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 562 "lib/buffer.c"
+buffer_t* buffer_to_lowercase(buffer_t* buffer)
+# 562 "lib/buffer.c"
+{
+
+# 563 "lib/buffer.c"
+  for (
+
+# 563 "lib/buffer.c"
+
+# 563 "lib/buffer.c"
+    uint64_t i = 0;
+
+# 563 "lib/buffer.c"
+    (i<(buffer->length));
+
+# 563 "lib/buffer.c"
+    (i++))
+
+# 563 "lib/buffer.c"
+  {
+
+# 564 "lib/buffer.c"
+    (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
+  }
+
+# 566 "lib/buffer.c"
+  return buffer;
+}
+
+
+# 569 "lib/buffer.c"
+boolean_t buffer_ends_with(buffer_t* buffer, char* str)
+# 569 "lib/buffer.c"
+{
+
+# 571 "lib/buffer.c"
+  char* cstring = buffer_to_c_string(buffer);
+
+# 572 "lib/buffer.c"
+  return string_ends_with(cstring, str);
+}
+
+
+# 575 "lib/buffer.c"
+boolean_t buffer_equal(buffer_t* buffer, char* str)
+# 575 "lib/buffer.c"
+{
+
+# 577 "lib/buffer.c"
+  char* cstring = buffer_to_c_string(buffer);
+
+# 578 "lib/buffer.c"
+  return string_equal(cstring, str);
+}
+
+
+# 17 "lib/byte-stream.c"
+byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer)
+# 17 "lib/byte-stream.c"
+{
+
+# 18 "lib/byte-stream.c"
+  byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
+
+# 19 "lib/byte-stream.c"
+  ((result->read_byte)=(&buffer_stream_source_read));
+
+# 20 "lib/byte-stream.c"
+  buffer_byte_stream_source_data_t* data = malloc_struct(buffer_byte_stream_source_data_t);
+
+# 21 "lib/byte-stream.c"
+  ((data->buffer)=buffer);
+
+# 22 "lib/byte-stream.c"
+  ((data->position)=0);
+
+# 23 "lib/byte-stream.c"
+  ((result->data)=(/*CAST*/(void*) data));
+
+# 24 "lib/byte-stream.c"
+  return result;
+}
+
+
+# 32 "lib/byte-stream.c"
+uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
+# 32 "lib/byte-stream.c"
+{
+
+# 33 "lib/byte-stream.c"
+  buffer_byte_stream_source_data_t* data = (/*CAST*/(buffer_byte_stream_source_data_t*) (source->data));
+
+# 34 "lib/byte-stream.c"
+  uint8_t result = 0;
+
+# 35 "lib/byte-stream.c"
+  if (((data->position)<buffer_length((data->buffer))))
+
+# 35 "lib/byte-stream.c"
+  {
+
+# 36 "lib/byte-stream.c"
+    (result=buffer_get((data->buffer), ((data->position)++)));
+
+# 37 "lib/byte-stream.c"
+    ((*has_byte)=true);
+  }
+  else
+
+# 38 "lib/byte-stream.c"
+  {
+
+# 39 "lib/byte-stream.c"
+    ((*has_byte)=false);
+  }
+
+# 41 "lib/byte-stream.c"
+  return result;
+}
+
+
+# 46 "lib/byte-stream.c"
+byte_stream_source_t* cstring_to_byte_source(char* string)
+# 46 "lib/byte-stream.c"
+{
+
+# 47 "lib/byte-stream.c"
+  byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
+
+# 48 "lib/byte-stream.c"
+  ((result->read_byte)=(&cstring_stream_source_read));
+
+# 49 "lib/byte-stream.c"
+  cstring_byte_stream_source_data_t* data = malloc_struct(cstring_byte_stream_source_data_t);
+
+# 50 "lib/byte-stream.c"
+  ((data->string)=string);
+
+# 51 "lib/byte-stream.c"
+  ((data->length)=strlen(string));
+
+# 52 "lib/byte-stream.c"
+  ((data->position)=0);
+
+# 53 "lib/byte-stream.c"
+  ((result->data)=(/*CAST*/(void*) data));
+
+# 54 "lib/byte-stream.c"
+  return result;
+}
+
+
+# 63 "lib/byte-stream.c"
+uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
+# 63 "lib/byte-stream.c"
+{
+
+# 64 "lib/byte-stream.c"
+  cstring_byte_stream_source_data_t* data = (/*CAST*/(cstring_byte_stream_source_data_t*) (source->data));
+
+# 65 "lib/byte-stream.c"
+  uint8_t result = 0;
+
+# 66 "lib/byte-stream.c"
+  if (((data->position)<(data->length)))
+
+# 66 "lib/byte-stream.c"
+  {
+
+# 67 "lib/byte-stream.c"
+    (result=((data->string)[((data->position)++)]));
+
+# 68 "lib/byte-stream.c"
+    ((*has_byte)=true);
+  }
+  else
+
+# 69 "lib/byte-stream.c"
+  {
+
+# 70 "lib/byte-stream.c"
+    ((*has_byte)=false);
+  }
+
+# 72 "lib/byte-stream.c"
+  return result;
+}
+
+
+# 77 "lib/byte-stream.c"
+byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer)
+# 77 "lib/byte-stream.c"
+{
+
+# 78 "lib/byte-stream.c"
+  byte_stream_target_t* result = malloc_struct(byte_stream_target_t);
+
+# 79 "lib/byte-stream.c"
+  ((result->write_byte)=(&buffer_stream_target_write));
+
+# 80 "lib/byte-stream.c"
+  ((result->data)=(/*CAST*/(void*) buffer));
+
+# 81 "lib/byte-stream.c"
+  return result;
+}
+
+
+# 84 "lib/byte-stream.c"
+byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte)
+# 84 "lib/byte-stream.c"
+{
+
+# 85 "lib/byte-stream.c"
+  buffer_t* buffer = (/*CAST*/(buffer_t*) (target->data));
+
+# 86 "lib/byte-stream.c"
+  buffer_append_byte(buffer, byte);
+
+# 87 "lib/byte-stream.c"
+  return target;
+}
+
+
+# 46 "lib/value-array.c"
+value_array_t* make_value_array(uint64_t initial_capacity)
+# 46 "lib/value-array.c"
+{
+
+# 47 "lib/value-array.c"
+  if ((initial_capacity==0))
+
+# 47 "lib/value-array.c"
+  {
+
+# 48 "lib/value-array.c"
+    (initial_capacity=1);
+  }
+
+# 51 "lib/value-array.c"
+  value_array_t* result = malloc_struct(value_array_t);
+
+# 52 "lib/value-array.c"
+  ((result->capacity)=initial_capacity);
+
+# 53 "lib/value-array.c"
+  ((result->elements)=(/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*initial_capacity))));
+
+# 56 "lib/value-array.c"
+  return result;
+}
+
+
+# 59 "lib/value-array.c"
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity)
+# 60 "lib/value-array.c"
+{
+
+# 61 "lib/value-array.c"
+  if (((array->capacity)<required_capacity))
+
+# 61 "lib/value-array.c"
+  {
+
+# 62 "lib/value-array.c"
+    uint32_t new_capacity = ((array->capacity)*2);
+
+# 63 "lib/value-array.c"
+    if ((new_capacity<required_capacity))
+
+# 63 "lib/value-array.c"
+    {
+
+# 64 "lib/value-array.c"
+      (new_capacity=required_capacity);
+    }
+
+# 66 "lib/value-array.c"
+    value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
+
+# 68 "lib/value-array.c"
+    for (
+
+# 68 "lib/value-array.c"
+
+# 68 "lib/value-array.c"
+      int i = 0;
+
+# 68 "lib/value-array.c"
+      (i<(array->length));
+
+# 68 "lib/value-array.c"
+      (i++))
+
+# 68 "lib/value-array.c"
+    {
+
+# 69 "lib/value-array.c"
+      ((new_elements[i])=((array->elements)[i]));
+    }
+
+# 71 "lib/value-array.c"
+    ((array->capacity)=new_capacity);
+
+# 72 "lib/value-array.c"
+    free_bytes((array->elements));
+
+# 73 "lib/value-array.c"
+    ((array->elements)=new_elements);
+
+# 74 "lib/value-array.c"
+    return;
+  }
+}
+
+
+# 84 "lib/value-array.c"
+value_t value_array_get(value_array_t* array, uint32_t index)
+# 84 "lib/value-array.c"
+{
+
+# 85 "lib/value-array.c"
+  if ((index<(array->length)))
+
+# 85 "lib/value-array.c"
+  {
+
+# 86 "lib/value-array.c"
+    return ((array->elements)[index]);
+  }
+
+# 88 "lib/value-array.c"
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+
+# 90 "lib/value-array.c"
+  return ((value_t) {0});
+}
+
+
+# 99 "lib/value-array.c"
+void value_array_replace(value_array_t* array, uint32_t index, value_t element)
+# 100 "lib/value-array.c"
+{
+
+# 101 "lib/value-array.c"
+  if ((index<(array->length)))
+
+# 101 "lib/value-array.c"
+  {
+
+# 102 "lib/value-array.c"
+    (((array->elements)[index])=element);
+
+# 103 "lib/value-array.c"
+    return;
+  }
+
+# 105 "lib/value-array.c"
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+
+# 116 "lib/value-array.c"
+void value_array_add(value_array_t* array, value_t element)
+# 116 "lib/value-array.c"
+{
+
+# 117 "lib/value-array.c"
+  value_array_ensure_capacity(array, ((array->length)+1));
+
+# 118 "lib/value-array.c"
+  (((array->elements)[((array->length)++)])=element);
+}
+
+
+# 127 "lib/value-array.c"
+void value_array_push(value_array_t* array, value_t element)
+# 127 "lib/value-array.c"
+{
+
+# 128 "lib/value-array.c"
+  value_array_add(array, element);
+}
+
+
+# 142 "lib/value-array.c"
+value_t value_array_pop(value_array_t* array)
+# 142 "lib/value-array.c"
+{
+
+# 143 "lib/value-array.c"
+  if (((array->length)==0))
+
+# 143 "lib/value-array.c"
+  {
+
+# 144 "lib/value-array.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+  }
+
+# 146 "lib/value-array.c"
+  uint32_t last_index = ((array->length)-1);
+
+# 147 "lib/value-array.c"
+  value_t result = value_array_get(array, last_index);
+
+# 148 "lib/value-array.c"
+  (((array->elements)[last_index])=u64_to_value(0));
+
+# 149 "lib/value-array.c"
+  ((array->length)--);
+
+# 150 "lib/value-array.c"
+  return result;
+}
+
+
+# 170 "lib/value-array.c"
+void value_array_insert_at(value_array_t* array, uint32_t position, value_t element)
+# 171 "lib/value-array.c"
+{
+
+# 172 "lib/value-array.c"
+  if ((position==(array->length)))
+
+# 172 "lib/value-array.c"
+  {
+
+# 173 "lib/value-array.c"
+    value_array_add(array, element);
+
+# 174 "lib/value-array.c"
+    return;
+  }
+
+# 177 "lib/value-array.c"
+  if ((position>(array->length)))
+
+# 177 "lib/value-array.c"
+  {
+
+# 178 "lib/value-array.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+
+# 179 "lib/value-array.c"
+    return;
+  }
+
+# 182 "lib/value-array.c"
+  value_array_ensure_capacity(array, ((array->length)+1));
+
+# 187 "lib/value-array.c"
+  for (
+
+# 187 "lib/value-array.c"
+
+# 187 "lib/value-array.c"
+    int64_t i = ((array->length)-1);
+
+# 187 "lib/value-array.c"
+    (i>=position);
+
+# 187 "lib/value-array.c"
+    (i--))
+
+# 187 "lib/value-array.c"
+  {
+
+# 188 "lib/value-array.c"
+    (((array->elements)[(i+1)])=((array->elements)[i]));
+  }
+
+# 190 "lib/value-array.c"
+  ((array->length)++);
+
+# 191 "lib/value-array.c"
+  (((array->elements)[position])=element);
+}
+
+
+# 203 "lib/value-array.c"
+value_t value_array_delete_at(value_array_t* array, uint32_t position)
+# 203 "lib/value-array.c"
+{
+
+# 204 "lib/value-array.c"
+  value_t result = value_array_get(array, position);
+
+# 205 "lib/value-array.c"
+  for (
+
+# 205 "lib/value-array.c"
+
+# 205 "lib/value-array.c"
+    int i = position;
+
+# 205 "lib/value-array.c"
+    (i<((array->length)-1));
+
+# 205 "lib/value-array.c"
+    (i++))
+
+# 205 "lib/value-array.c"
+  {
+
+# 206 "lib/value-array.c"
+    (((array->elements)[i])=((array->elements)[(i+1)]));
+  }
+
+# 208 "lib/value-array.c"
+  ((array->length)--);
+
+# 209 "lib/value-array.c"
+  return result;
+}
+
+
+# 35 "lib/value-alist.c"
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value)
+# 37 "lib/value-alist.c"
+{
+
+# 38 "lib/value-alist.c"
+  value_alist_t* result = malloc_struct(value_alist_t);
+
+# 39 "lib/value-alist.c"
+  ((result->next)=value_alist_delete(list, cmp_fn, key));
+
+# 40 "lib/value-alist.c"
+  ((result->key)=key);
+
+# 41 "lib/value-alist.c"
+  ((result->value)=value);
+
+# 42 "lib/value-alist.c"
+  return result;
+}
+
+
+# 52 "lib/value-alist.c"
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
+# 53 "lib/value-alist.c"
+{
+
+# 56 "lib/value-alist.c"
+  if ((list==NULL))
+
+# 56 "lib/value-alist.c"
+  {
+
+# 57 "lib/value-alist.c"
+    return list;
+  }
+
+# 59 "lib/value-alist.c"
+  if (((*cmp_fn)(key, (list->key))==0))
+
+# 59 "lib/value-alist.c"
+  {
+
+# 60 "lib/value-alist.c"
+    value_alist_t* result = (list->next);
+
+# 61 "lib/value-alist.c"
+    free_bytes(list);
+
+# 62 "lib/value-alist.c"
+    return result;
+  }
+
+# 64 "lib/value-alist.c"
+  ((list->next)=value_alist_delete((list->next), cmp_fn, key));
+
+# 65 "lib/value-alist.c"
+  return list;
+}
+
+
+# 75 "lib/value-alist.c"
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
+# 76 "lib/value-alist.c"
+{
+
+# 77 "lib/value-alist.c"
+  while (list)
+
+# 77 "lib/value-alist.c"
+  {
+
+# 78 "lib/value-alist.c"
+    if ((cmp_fn(key, (list->key))==0))
+
+# 78 "lib/value-alist.c"
+    {
+
+# 79 "lib/value-alist.c"
+      return ((value_result_t) {.val = list->value});
+    }
+
+# 81 "lib/value-alist.c"
+    (list=(list->next));
+  }
+
+# 83 "lib/value-alist.c"
+  return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
+}
+
+
+# 94 "lib/value-alist.c"
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list)
+# 94 "lib/value-alist.c"
+{
+
+# 95 "lib/value-alist.c"
+  uint64_t result = 0;
+
+# 96 "lib/value-alist.c"
+  while (list)
+
+# 96 "lib/value-alist.c"
+  {
+
+# 97 "lib/value-alist.c"
+    (result++);
+
+# 98 "lib/value-alist.c"
+    (list=(list->next));
+  }
+
+# 100 "lib/value-alist.c"
+  return result;
+}
+
+
+# 75 "lib/value-hashtable.c"
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets)
+# 75 "lib/value-hashtable.c"
+{
+
+# 76 "lib/value-hashtable.c"
+  if ((n_buckets<2))
+
+# 76 "lib/value-hashtable.c"
+  {
+
+# 77 "lib/value-hashtable.c"
+    (n_buckets=2);
+  }
+
+# 79 "lib/value-hashtable.c"
+  value_hashtable_t* result = malloc_struct(value_hashtable_t);
+
+# 80 "lib/value-hashtable.c"
+  ((result->n_buckets)=n_buckets);
+
+# 81 "lib/value-hashtable.c"
+  ((result->buckets)=(/*CAST*/(value_alist_t**) malloc_bytes(((sizeof(typeof(value_alist_t*)))*n_buckets))));
+
+# 84 "lib/value-hashtable.c"
+  return result;
+}
+
+
+# 92 "lib/value-hashtable.c"
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value)
+# 94 "lib/value-hashtable.c"
+{
+
+# 95 "lib/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+# 96 "lib/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+# 97 "lib/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+# 98 "lib/value-hashtable.c"
+  uint64_t len = value_alist_length(list);
+
+# 99 "lib/value-hashtable.c"
+  (list=value_alist_insert(list, cmp_fn, key, value));
+
+# 100 "lib/value-hashtable.c"
+  (((ht->buckets)[bucket])=list);
+
+# 101 "lib/value-hashtable.c"
+  uint64_t len_after = value_alist_length(list);
+
+# 102 "lib/value-hashtable.c"
+  if ((len_after>len))
+
+# 102 "lib/value-hashtable.c"
+  {
+
+# 103 "lib/value-hashtable.c"
+    ((ht->n_entries)++);
+
+# 108 "lib/value-hashtable.c"
+    if (((ht->n_entries)>=((ht->n_buckets)*ARMYKNIFE_HT_LOAD_FACTOR)))
+
+# 108 "lib/value-hashtable.c"
+    {
+
+# 109 "lib/value-hashtable.c"
+      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
+    }
+  }
+
+# 112 "lib/value-hashtable.c"
+  return ht;
+}
+
+
+# 121 "lib/value-hashtable.c"
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
+# 122 "lib/value-hashtable.c"
+{
+
+# 123 "lib/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+# 124 "lib/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+# 125 "lib/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+# 126 "lib/value-hashtable.c"
+  uint64_t len = value_alist_length(list);
+
+# 127 "lib/value-hashtable.c"
+  (list=value_alist_delete(list, cmp_fn, key));
+
+# 128 "lib/value-hashtable.c"
+  (((ht->buckets)[bucket])=list);
+
+# 129 "lib/value-hashtable.c"
+  uint64_t len_after = value_alist_length(list);
+
+# 130 "lib/value-hashtable.c"
+  if ((len_after<len))
+
+# 130 "lib/value-hashtable.c"
+  {
+
+# 131 "lib/value-hashtable.c"
+    ((ht->n_entries)--);
+  }
+
+# 133 "lib/value-hashtable.c"
+  return ht;
+}
+
+
+# 141 "lib/value-hashtable.c"
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
+# 142 "lib/value-hashtable.c"
+{
+
+# 143 "lib/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+# 144 "lib/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+# 145 "lib/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+# 146 "lib/value-hashtable.c"
+  return value_alist_find(list, cmp_fn, key);
+}
+
+
+# 163 "lib/value-hashtable.c"
+void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn)
+# 165 "lib/value-hashtable.c"
+{
+
+# 166 "lib/value-hashtable.c"
+  uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
+
+# 167 "lib/value-hashtable.c"
+  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
+
+# 169 "lib/value-hashtable.c"
+  value_ht_foreach(ht, key, value, 
+# 169 "lib/value-hashtable.c"
+  {
+
+# 170 "lib/value-hashtable.c"
+    value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
+
+# 176 "lib/value-hashtable.c"
+    if ((new_ht!=should_be_result))
+
+# 176 "lib/value-hashtable.c"
+    {
+
+# 177 "lib/value-hashtable.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+);
+
+# 181 "lib/value-hashtable.c"
+  value_alist_t** old_buckets = (ht->buckets);
+
+# 182 "lib/value-hashtable.c"
+  ((ht->buckets)=(new_ht->buckets));
+
+# 183 "lib/value-hashtable.c"
+  ((ht->n_buckets)=(new_ht->n_buckets));
+
+# 184 "lib/value-hashtable.c"
+  ((ht->n_entries)=(new_ht->n_entries));
+
+# 185 "lib/value-hashtable.c"
+  free_bytes(old_buckets);
+
+# 186 "lib/value-hashtable.c"
+  free_bytes(new_ht);
+}
+
+
+# 72 "lib/value-tree.c"
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
+# 73 "lib/value-tree.c"
+{
+
+# 74 "lib/value-tree.c"
+  if ((t==NULL))
+
+# 74 "lib/value-tree.c"
+  {
+
+# 75 "lib/value-tree.c"
+    return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
+  }
+
+# 78 "lib/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+# 79 "lib/value-tree.c"
+  if ((cmp_result<0))
+
+# 79 "lib/value-tree.c"
+  {
+
+# 80 "lib/value-tree.c"
+    return value_tree_find((t->left), cmp_fn, key);
+  }
+  else
+
+# 81 "lib/value-tree.c"
+  if ((cmp_result>0))
+
+# 81 "lib/value-tree.c"
+  {
+
+# 82 "lib/value-tree.c"
+    return value_tree_find((t->right), cmp_fn, key);
+  }
+  else
+
+# 83 "lib/value-tree.c"
+  {
+
+# 84 "lib/value-tree.c"
+    return ((value_result_t) {
+                                                .val = t->value,
+                                            });
+  }
+}
+
+
+# 90 "lib/value-tree.c"
+value_tree_t* value_tree_skew(value_tree_t* t)
+# 90 "lib/value-tree.c"
+{
+
+# 91 "lib/value-tree.c"
+  if ((t==NULL))
+
+# 91 "lib/value-tree.c"
+  {
+
+# 92 "lib/value-tree.c"
+    return NULL;
+  }
+
+# 94 "lib/value-tree.c"
+  if (((t->left)==NULL))
+
+# 94 "lib/value-tree.c"
+  {
+
+# 95 "lib/value-tree.c"
+    return t;
+  }
+
+# 97 "lib/value-tree.c"
+  if ((((t->left)->level)==(t->level)))
+
+# 97 "lib/value-tree.c"
+  {
+
+# 98 "lib/value-tree.c"
+    value_tree_t* L = (t->left);
+
+# 99 "lib/value-tree.c"
+    ((t->left)=(L->right));
+
+# 100 "lib/value-tree.c"
+    ((L->right)=t);
+
+# 101 "lib/value-tree.c"
+    return L;
+  }
+
+# 103 "lib/value-tree.c"
+  return t;
+}
+
+
+# 106 "lib/value-tree.c"
+value_tree_t* value_tree_split(value_tree_t* t)
+# 106 "lib/value-tree.c"
+{
+
+# 107 "lib/value-tree.c"
+  if ((t==NULL))
+
+# 107 "lib/value-tree.c"
+  {
+
+# 108 "lib/value-tree.c"
+    return NULL;
+  }
+
+# 110 "lib/value-tree.c"
+  if ((((t->right)==NULL)||(((t->right)->right)==NULL)))
+
+# 110 "lib/value-tree.c"
+  {
+
+# 111 "lib/value-tree.c"
+    return t;
+  }
+
+# 113 "lib/value-tree.c"
+  if (((t->level)==(((t->right)->right)->level)))
+
+# 113 "lib/value-tree.c"
+  {
+
+# 116 "lib/value-tree.c"
+    value_tree_t* R = (t->right);
+
+# 117 "lib/value-tree.c"
+    ((t->right)=(R->left));
+
+# 118 "lib/value-tree.c"
+    ((R->left)=t);
+
+# 119 "lib/value-tree.c"
+    ((R->level)++);
+
+# 120 "lib/value-tree.c"
+    return R;
+  }
+
+# 122 "lib/value-tree.c"
+  return t;
+}
+
+
+# 125 "lib/value-tree.c"
+value_tree_t* make_value_tree_leaf(value_t key, value_t value)
+# 125 "lib/value-tree.c"
+{
+
+# 126 "lib/value-tree.c"
+  value_tree_t* result = malloc_struct(value_tree_t);
+
+# 127 "lib/value-tree.c"
+  ((result->level)=1);
+
+# 128 "lib/value-tree.c"
+  ((result->key)=key);
+
+# 129 "lib/value-tree.c"
+  ((result->value)=value);
+
+# 130 "lib/value-tree.c"
+  return result;
+}
+
+
+# 139 "lib/value-tree.c"
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value)
+# 140 "lib/value-tree.c"
+{
+
+# 141 "lib/value-tree.c"
+  if ((t==NULL))
+
+# 141 "lib/value-tree.c"
+  {
+
+# 143 "lib/value-tree.c"
+    return make_value_tree_leaf(key, value);
+  }
+
+# 145 "lib/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+# 146 "lib/value-tree.c"
+  if ((cmp_result<0))
+
+# 146 "lib/value-tree.c"
+  {
+
+# 147 "lib/value-tree.c"
+    ((t->left)=value_tree_insert((t->left), cmp_fn, key, value));
+  }
+  else
+
+# 148 "lib/value-tree.c"
+  if ((cmp_result>0))
+
+# 148 "lib/value-tree.c"
+  {
+
+# 149 "lib/value-tree.c"
+    ((t->right)=value_tree_insert((t->right), cmp_fn, key, value));
+  }
+  else
+
+# 150 "lib/value-tree.c"
+  {
+
+# 154 "lib/value-tree.c"
+    ((t->value)=value);
+
+# 155 "lib/value-tree.c"
+    return t;
+  }
+
+# 158 "lib/value-tree.c"
+  (t=value_tree_skew(t));
+
+# 159 "lib/value-tree.c"
+  (t=value_tree_split(t));
+
+# 161 "lib/value-tree.c"
+  return t;
+}
+
+
+# 168 "lib/value-tree.c"
+value_tree_t* value_tree_decrease_level(value_tree_t* t)
+# 168 "lib/value-tree.c"
+{
+
+# 169 "lib/value-tree.c"
+  if (((t->left)&&(t->right)))
+
+# 169 "lib/value-tree.c"
+  {
+
+# 170 "lib/value-tree.c"
+    uint32_t should_be = (value_tree_min_level(((t->left)->level), ((t->right)->level))+1);
+
+# 172 "lib/value-tree.c"
+    if ((should_be<(t->level)))
+
+# 172 "lib/value-tree.c"
+    {
+
+# 173 "lib/value-tree.c"
+      ((t->level)=should_be);
+
+# 174 "lib/value-tree.c"
+      if ((should_be<((t->right)->level)))
+
+# 174 "lib/value-tree.c"
+      {
+
+# 175 "lib/value-tree.c"
+        (((t->right)->level)=should_be);
+      }
+    }
+  }
+
+# 179 "lib/value-tree.c"
+  return t;
+}
+
+
+# 182 "lib/value-tree.c"
+value_tree_t* value_tree_predecessor(value_tree_t* t)
+# 182 "lib/value-tree.c"
+{
+
+# 183 "lib/value-tree.c"
+  (t=(t->left));
+
+# 184 "lib/value-tree.c"
+  while (((t->right)!=NULL))
+
+# 184 "lib/value-tree.c"
+  {
+
+# 185 "lib/value-tree.c"
+    (t=(t->right));
+  }
+
+# 187 "lib/value-tree.c"
+  return t;
+}
+
+
+# 190 "lib/value-tree.c"
+value_tree_t* value_tree_successor(value_tree_t* t)
+# 190 "lib/value-tree.c"
+{
+
+# 191 "lib/value-tree.c"
+  (t=(t->right));
+
+# 192 "lib/value-tree.c"
+  while (((t->left)!=NULL))
+
+# 192 "lib/value-tree.c"
+  {
+
+# 193 "lib/value-tree.c"
+    (t=(t->left));
+  }
+
+# 195 "lib/value-tree.c"
+  return t;
+}
+
+
+# 208 "lib/value-tree.c"
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
+# 209 "lib/value-tree.c"
+{
+
+# 211 "lib/value-tree.c"
+  if ((t==NULL))
+
+# 211 "lib/value-tree.c"
+  {
+
+# 212 "lib/value-tree.c"
+    return t;
+  }
+
+# 215 "lib/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+# 216 "lib/value-tree.c"
+  if ((cmp_result<0))
+
+# 216 "lib/value-tree.c"
+  {
+
+# 217 "lib/value-tree.c"
+    ((t->left)=value_tree_delete((t->left), cmp_fn, key));
+  }
+  else
+
+# 218 "lib/value-tree.c"
+  if ((cmp_result>0))
+
+# 218 "lib/value-tree.c"
+  {
+
+# 219 "lib/value-tree.c"
+    ((t->right)=value_tree_delete((t->right), cmp_fn, key));
+  }
+  else
+
+# 220 "lib/value-tree.c"
+  {
+
+# 221 "lib/value-tree.c"
+    if (value_tree_is_leaf(t))
+
+# 221 "lib/value-tree.c"
+    {
+
+# 226 "lib/value-tree.c"
+      return NULL;
+    }
+    else
+
+# 227 "lib/value-tree.c"
+    if (((t->left)==NULL))
+
+# 227 "lib/value-tree.c"
+    {
+
+# 228 "lib/value-tree.c"
+      value_tree_t* L = value_tree_successor(t);
+
+# 232 "lib/value-tree.c"
+      ((t->key)=(L->key));
+
+# 233 "lib/value-tree.c"
+      ((t->value)=(L->value));
+
+# 234 "lib/value-tree.c"
+      ((t->right)=value_tree_delete((t->right), cmp_fn, (L->key)));
+    }
+    else
+
+# 235 "lib/value-tree.c"
+    {
+
+# 236 "lib/value-tree.c"
+      value_tree_t* L = value_tree_predecessor(t);
+
+# 240 "lib/value-tree.c"
+      ((t->key)=(L->key));
+
+# 241 "lib/value-tree.c"
+      ((t->value)=(L->value));
+
+# 242 "lib/value-tree.c"
+      ((t->left)=value_tree_delete((t->left), cmp_fn, (L->key)));
+    }
+  }
+
+# 249 "lib/value-tree.c"
+  (t=value_tree_decrease_level(t));
+
+# 250 "lib/value-tree.c"
+  (t=value_tree_skew(t));
+
+# 251 "lib/value-tree.c"
+  ((t->right)=value_tree_skew((t->right)));
+
+# 252 "lib/value-tree.c"
+  if (((t->right)!=NULL))
+
+# 252 "lib/value-tree.c"
+  {
+
+# 253 "lib/value-tree.c"
+    (((t->right)->right)=value_tree_skew(((t->right)->right)));
+  }
+
+# 255 "lib/value-tree.c"
+  (t=value_tree_split(t));
+
+# 256 "lib/value-tree.c"
+  ((t->right)=value_tree_split((t->right)));
+
+# 257 "lib/value-tree.c"
+  return t;
+}
+
+
+# 155 "lib/flag.c"
+void flag_program_name(char* name)
+# 155 "lib/flag.c"
+{
+
+# 156 "lib/flag.c"
+  (current_program=malloc_struct(program_descriptor_t));
+
+# 157 "lib/flag.c"
+  ((current_program->name)=name);
+
+# 158 "lib/flag.c"
+  (current_command=NULL);
+
+# 159 "lib/flag.c"
+  (current_flag=NULL);
+}
+
+
+# 168 "lib/flag.c"
+void flag_command(char* name, char** write_back_ptr)
+# 168 "lib/flag.c"
+{
+
+# 169 "lib/flag.c"
+  (current_command=malloc_struct(command_descriptor_t));
+
+# 170 "lib/flag.c"
+  ((current_command->name)=name);
+
+# 171 "lib/flag.c"
+  ((current_command->write_back_ptr)=write_back_ptr);
+
+# 172 "lib/flag.c"
+  (current_flag=NULL);
+
+# 173 "lib/flag.c"
+  ((current_program->commands)=string_tree_insert((current_program->commands), name, ptr_to_value(current_command)));
+}
+
+
+# 182 "lib/flag.c"
+void flag_description(char* description)
+# 182 "lib/flag.c"
+{
+
+# 183 "lib/flag.c"
+  if ((current_flag!=NULL))
+
+# 183 "lib/flag.c"
+  {
+
+# 184 "lib/flag.c"
+    ((current_flag->description)=description);
+  }
+  else
+
+# 185 "lib/flag.c"
+  if ((current_command!=NULL))
+
+# 185 "lib/flag.c"
+  {
+
+# 186 "lib/flag.c"
+    ((current_command->description)=description);
+  }
+  else
+
+# 187 "lib/flag.c"
+  if ((current_program!=NULL))
+
+# 187 "lib/flag.c"
+  {
+
+# 188 "lib/flag.c"
+    ((current_program->description)=description);
+  }
+  else
+
+# 189 "lib/flag.c"
+  {
+
+# 190 "lib/flag.c"
+    log_fatal("A current flag, program or command must be executed first");
+
+# 191 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 208 "lib/flag.c"
+void flag_file_args(value_array_t** write_back_file_args_ptr)
+# 208 "lib/flag.c"
+{
+
+# 209 "lib/flag.c"
+  if ((current_command!=NULL))
+
+# 209 "lib/flag.c"
+  {
+
+# 210 "lib/flag.c"
+    ((current_command->write_back_file_args_ptr)=write_back_file_args_ptr);
+  }
+  else
+
+# 211 "lib/flag.c"
+  if ((current_program!=NULL))
+
+# 211 "lib/flag.c"
+  {
+
+# 212 "lib/flag.c"
+    ((current_program->write_back_file_args_ptr)=write_back_file_args_ptr);
+  }
+  else
+
+# 213 "lib/flag.c"
+  {
+
+# 214 "lib/flag.c"
+    log_fatal("A current program or command must be executed first");
+
+# 215 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 221 "lib/flag.c"
+void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type)
+# 221 "lib/flag.c"
+{
+
+# 222 "lib/flag.c"
+  (current_flag=malloc_struct(flag_descriptor_t));
+
+# 223 "lib/flag.c"
+  ((current_flag->flag_type)=flag_type);
+
+# 224 "lib/flag.c"
+  ((current_flag->name)=name);
+
+# 225 "lib/flag.c"
+  ((current_flag->write_back_ptr)=write_back_ptr);
+
+# 228 "lib/flag.c"
+  if ((current_command!=NULL))
+
+# 228 "lib/flag.c"
+  {
+
+# 229 "lib/flag.c"
+    ((current_command->flags)=string_tree_insert((current_command->flags), name, ptr_to_value(current_flag)));
+  }
+  else
+
+# 231 "lib/flag.c"
+  if ((current_program!=NULL))
+
+# 231 "lib/flag.c"
+  {
+
+# 232 "lib/flag.c"
+    ((current_program->flags)=string_tree_insert((current_program->flags), name, ptr_to_value(current_flag)));
+  }
+  else
+
+# 234 "lib/flag.c"
+  {
+
+# 235 "lib/flag.c"
+    log_fatal("A current program or command must be executed first");
+
+# 236 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 240 "lib/flag.c"
+void flag_boolean(char* name, boolean_t* write_back_ptr)
+# 240 "lib/flag.c"
+{
+
+# 241 "lib/flag.c"
+  add_flag(name, write_back_ptr, flag_type_boolean);
+}
+
+
+# 244 "lib/flag.c"
+void flag_string(char* name, char** write_back_ptr)
+# 244 "lib/flag.c"
+{
+
+# 245 "lib/flag.c"
+  add_flag(name, write_back_ptr, flag_type_string);
+}
+
+
+# 248 "lib/flag.c"
+void flag_uint64(char* name, uint64_t* write_back_ptr)
+# 248 "lib/flag.c"
+{
+
+# 249 "lib/flag.c"
+  add_flag(name, write_back_ptr, flag_type_uint64);
+}
+
+
+# 252 "lib/flag.c"
+void flag_int64(char* name, int64_t* write_back_ptr)
+# 252 "lib/flag.c"
+{
+
+# 253 "lib/flag.c"
+  add_flag(name, write_back_ptr, flag_type_int64);
+}
+
+
+# 256 "lib/flag.c"
+void flag_double(char* name, double* write_back_ptr)
+# 256 "lib/flag.c"
+{
+
+# 257 "lib/flag.c"
+  add_flag(name, write_back_ptr, flag_type_double);
+}
+
+
+# 277 "lib/flag.c"
+void flag_enum(char* name, int* write_back_ptr)
+# 277 "lib/flag.c"
+{
+
+# 278 "lib/flag.c"
+  add_flag(name, write_back_ptr, flag_type_enum);
+
+# 279 "lib/flag.c"
+  ((current_flag->enum_size)=((sizeof(int))*8));
+}
+
+
+# 282 "lib/flag.c"
+void flag_enum_64(char* name, uint64_t* write_back_ptr)
+# 282 "lib/flag.c"
+{
+
+# 283 "lib/flag.c"
+  add_flag(name, write_back_ptr, flag_type_enum);
+
+# 284 "lib/flag.c"
+  ((current_flag->enum_size)=64);
+}
+
+
+# 287 "lib/flag.c"
+void flag_enum_value(char* name, uint64_t value)
+# 287 "lib/flag.c"
+{
+
+# 288 "lib/flag.c"
+  if (((!current_flag)||((current_flag->flag_type)!=flag_type_enum)))
+
+# 288 "lib/flag.c"
+  {
+
+# 289 "lib/flag.c"
+    log_fatal("The current flag is not an enum type");
+
+# 290 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 293 "lib/flag.c"
+  ((current_flag->enum_values)=string_tree_insert((current_flag->enum_values), name, u64_to_value(value)));
+}
+
+
+# 297 "lib/flag.c"
+void flag_alias(char* alias)
+# 297 "lib/flag.c"
+{
+
+# 298 "lib/flag.c"
+  if ((current_flag!=NULL))
+
+# 298 "lib/flag.c"
+  {
+
+# 300 "lib/flag.c"
+    if ((current_command!=NULL))
+
+# 300 "lib/flag.c"
+    {
+
+# 301 "lib/flag.c"
+      ((current_command->flags)=string_tree_insert((current_command->flags), alias, ptr_to_value(current_flag)));
+    }
+    else
+
+# 303 "lib/flag.c"
+    if ((current_program!=NULL))
+
+# 303 "lib/flag.c"
+    {
+
+# 304 "lib/flag.c"
+      ((current_program->flags)=string_tree_insert((current_program->flags), alias, ptr_to_value(current_flag)));
+    }
+    else
+
+# 306 "lib/flag.c"
+    {
+
+# 307 "lib/flag.c"
+      log_fatal("A current program or command must exist first");
+
+# 308 "lib/flag.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+  else
+
+# 310 "lib/flag.c"
+  {
+
+# 311 "lib/flag.c"
+    log_fatal("A current flag must present to use flag_alias");
+
+# 312 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 328 "lib/flag.c"
+char* flag_parse_command_line(int argc, char** argv)
+# 328 "lib/flag.c"
+{
+
+# 329 "lib/flag.c"
+  if ((current_program==NULL))
+
+# 329 "lib/flag.c"
+  {
+
+# 330 "lib/flag.c"
+    log_fatal("flag_parse_command_line can't be called unless flag_program_name() is " "first called.");
+
+# 333 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 336 "lib/flag.c"
+  int start = 1;
+
+# 337 "lib/flag.c"
+  command_descriptor_t* command = NULL;
+
+# 338 "lib/flag.c"
+  if ((current_program->commands))
+
+# 338 "lib/flag.c"
+  {
+
+# 339 "lib/flag.c"
+    if ((argc<=1))
+
+# 339 "lib/flag.c"
+    {
+
+# 340 "lib/flag.c"
+      return "This program requires a command but not enough arguments were " "given";
+    }
+
+# 343 "lib/flag.c"
+    char* name = (argv[1]);
+
+# 344 "lib/flag.c"
+    (command=flag_find_command_descriptor(name));
+
+# 345 "lib/flag.c"
+    if ((command==NULL))
+
+# 345 "lib/flag.c"
+    {
+
+# 346 "lib/flag.c"
+      return string_printf("The first command line argument is not a known command: %s", name);
+    }
+    else
+
+# 348 "lib/flag.c"
+    {
+
+# 349 "lib/flag.c"
+      ((*(command->write_back_ptr))=(command->name));
+    }
+
+# 351 "lib/flag.c"
+    (start=2);
+  }
+
+# 354 "lib/flag.c"
+  value_array_t* files = make_value_array(argc);
+
+# 355 "lib/flag.c"
+  boolean_t parse_flags = true;
+
+# 357 "lib/flag.c"
+  for (
+
+# 357 "lib/flag.c"
+
+# 357 "lib/flag.c"
+    int i = start;
+
+# 357 "lib/flag.c"
+    (i<argc);
+
+# 357 "lib/flag.c"
+    (i++))
+
+# 357 "lib/flag.c"
+  {
+
+# 358 "lib/flag.c"
+    char* arg = (argv[i]);
+
+# 359 "lib/flag.c"
+    if (parse_flags)
+
+# 359 "lib/flag.c"
+    {
+
+# 360 "lib/flag.c"
+      if (string_equal(arg, "--"))
+
+# 360 "lib/flag.c"
+      {
+
+# 361 "lib/flag.c"
+        (parse_flags=false);
+
+# 362 "lib/flag.c"
+        continue;
+      }
+
+# 365 "lib/flag.c"
+      if (string_starts_with(arg, "-"))
+
+# 365 "lib/flag.c"
+      {
+
+# 366 "lib/flag.c"
+        flag_key_value_t key_value = flag_split_argument(arg);
+
+# 367 "lib/flag.c"
+        if (((key_value.key)==NULL))
+
+# 367 "lib/flag.c"
+        {
+
+# 368 "lib/flag.c"
+          return string_printf("This argument is not a well formed flag: %s", arg);
+        }
+
+# 371 "lib/flag.c"
+        flag_descriptor_t* flag = flag_find_flag_descriptor(command, (key_value.key));
+
+# 373 "lib/flag.c"
+        if ((flag==NULL))
+
+# 373 "lib/flag.c"
+        {
+
+# 374 "lib/flag.c"
+          return string_printf("The argument looks like a flag but was not found: '%s'\n\n" "(You may want to use ' -- ' to seperate flags from non flag " "arguments (aka file arguments).)", arg);
+        }
+
+# 385 "lib/flag.c"
+        if (((key_value.value)==NULL))
+
+# 385 "lib/flag.c"
+        {
+
+# 387 "lib/flag.c"
+          (i++);
+
+# 388 "lib/flag.c"
+          ((key_value.value)=(argv[i]));
+        }
+
+# 390 "lib/flag.c"
+        char* error = parse_and_write_value(flag, key_value);
+
+# 391 "lib/flag.c"
+        if (error)
+
+# 391 "lib/flag.c"
+        {
+
+# 392 "lib/flag.c"
+          return error;
+        }
+
+# 394 "lib/flag.c"
+        continue;
+      }
+    }
+
+# 399 "lib/flag.c"
+    value_array_add(files, str_to_value(arg));
+  }
+
+# 403 "lib/flag.c"
+  if (((command!=NULL)&&((command->write_back_file_args_ptr)!=NULL)))
+
+# 403 "lib/flag.c"
+  {
+
+# 404 "lib/flag.c"
+    ((*(command->write_back_file_args_ptr))=files);
+  }
+
+# 406 "lib/flag.c"
+  if (((current_program->write_back_file_args_ptr)!=NULL))
+
+# 406 "lib/flag.c"
+  {
+
+# 407 "lib/flag.c"
+    ((*(current_program->write_back_file_args_ptr))=files);
+  }
+
+# 409 "lib/flag.c"
+  return NULL;
+}
+
+
+# 414 "lib/flag.c"
+command_descriptor_t* flag_find_command_descriptor(char* name)
+# 414 "lib/flag.c"
+{
+
+# 415 "lib/flag.c"
+  if (((current_program->commands)==NULL))
+
+# 415 "lib/flag.c"
+  {
+
+# 416 "lib/flag.c"
+    log_fatal("flag_get_command() shouldn't not be called when we don't have any " "defined commands.");
+
+# 419 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 421 "lib/flag.c"
+  value_result_t command_value = string_tree_find((current_program->commands), name);
+
+# 423 "lib/flag.c"
+  if (is_ok(command_value))
+
+# 423 "lib/flag.c"
+  {
+
+# 424 "lib/flag.c"
+    return (/*CAST*/(command_descriptor_t*) (command_value.ptr));
+  }
+  else
+
+# 425 "lib/flag.c"
+  {
+
+# 426 "lib/flag.c"
+    return NULL;
+  }
+}
+
+
+# 434 "lib/flag.c"
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name)
+# 436 "lib/flag.c"
+{
+
+# 437 "lib/flag.c"
+  if ((command!=NULL))
+
+# 437 "lib/flag.c"
+  {
+
+# 438 "lib/flag.c"
+    value_result_t command_flag_value = string_tree_find((command->flags), name);
+
+# 439 "lib/flag.c"
+    if (is_ok(command_flag_value))
+
+# 439 "lib/flag.c"
+    {
+
+# 440 "lib/flag.c"
+      return (/*CAST*/(flag_descriptor_t*) (command_flag_value.ptr));
+    }
+  }
+
+# 444 "lib/flag.c"
+  value_result_t program_flag_value = string_tree_find((current_program->flags), name);
+
+# 446 "lib/flag.c"
+  if (is_ok(program_flag_value))
+
+# 446 "lib/flag.c"
+  {
+
+# 447 "lib/flag.c"
+    return (/*CAST*/(flag_descriptor_t*) (program_flag_value.ptr));
+  }
+
+# 450 "lib/flag.c"
+  return NULL;
+}
+
+
+# 470 "lib/flag.c"
+flag_key_value_t flag_split_argument(char* arg)
+# 470 "lib/flag.c"
+{
+
+# 471 "lib/flag.c"
+  int equal_sign_index = string_index_of_char(arg, '=');
+
+# 472 "lib/flag.c"
+  if ((equal_sign_index>=0))
+
+# 472 "lib/flag.c"
+  {
+
+# 473 "lib/flag.c"
+    char* key = string_substring(arg, 0, equal_sign_index);
+
+# 478 "lib/flag.c"
+    char* value = string_substring(arg, (equal_sign_index+1), strlen(arg));
+
+# 479 "lib/flag.c"
+    return ((flag_key_value_t) {.key = key, .value = value});
+  }
+
+# 481 "lib/flag.c"
+  return ((flag_key_value_t) {.key = arg, .value = NULL});
+}
+
+
+# 487 "lib/flag.c"
+char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value)
+# 488 "lib/flag.c"
+{
+
+# 489 "lib/flag.c"
+  switch ((flag->flag_type))
+
+# 489 "lib/flag.c"
+  {
+
+# 490 "lib/flag.c"
+    case flag_type_boolean:
+
+# 491 "lib/flag.c"
+    return parse_and_write_boolean(flag, key_value);
+
+# 493 "lib/flag.c"
+    case flag_type_string:
+
+# 494 "lib/flag.c"
+    ((*(/*CAST*/(char**) (flag->write_back_ptr)))=(key_value.value));
+
+# 495 "lib/flag.c"
+    return NULL;
+
+# 497 "lib/flag.c"
+    case flag_type_uint64:
+
+# 498 "lib/flag.c"
+    return parse_and_write_uint64(flag, key_value);
+
+# 500 "lib/flag.c"
+    case flag_type_enum:
+
+# 501 "lib/flag.c"
+    return parse_and_write_enum(flag, key_value);
+
+# 503 "lib/flag.c"
+    default:
+
+# 504 "lib/flag.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 505 "lib/flag.c"
+    break;
+  }
+
+# 507 "lib/flag.c"
+  return "<ILLEGAL-STATE-NOT-REACHED>";
+}
+
+
+# 510 "lib/flag.c"
+char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value)
+# 511 "lib/flag.c"
+{
+
+# 512 "lib/flag.c"
+  char* val = (key_value.value);
+
+# 513 "lib/flag.c"
+  if (((string_equal("true", val)||string_equal("t", val))||string_equal("1", val)))
+
+# 514 "lib/flag.c"
+  {
+
+# 515 "lib/flag.c"
+    ((*(/*CAST*/(boolean_t*) (flag->write_back_ptr)))=true);
+  }
+  else
+
+# 516 "lib/flag.c"
+  if (((string_equal("false", val)||string_equal("f", val))||string_equal("0", val)))
+
+# 517 "lib/flag.c"
+  {
+
+# 518 "lib/flag.c"
+    ((*(/*CAST*/(boolean_t*) (flag->write_back_ptr)))=false);
+  }
+  else
+
+# 519 "lib/flag.c"
+  {
+
+# 520 "lib/flag.c"
+    return string_printf("boolean flag %s does not accept value %s", (key_value.key), (key_value.value));
+  }
+
+# 523 "lib/flag.c"
+  return NULL;
+}
+
+
+# 526 "lib/flag.c"
+char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value)
+# 527 "lib/flag.c"
+{
+
+# 528 "lib/flag.c"
+  value_result_t val_result = string_parse_uint64((key_value.value));
+
+# 529 "lib/flag.c"
+  if (is_ok(val_result))
+
+# 529 "lib/flag.c"
+  {
+
+# 530 "lib/flag.c"
+    ((*(/*CAST*/(uint64_t*) (flag->write_back_ptr)))=(val_result.u64));
+  }
+  else
+
+# 531 "lib/flag.c"
+  {
+
+# 532 "lib/flag.c"
+    return string_printf("uint64_t flag %s does not accept value %s", (key_value.key), (key_value.value));
+  }
+
+# 535 "lib/flag.c"
+  return NULL;
+}
+
+
+# 538 "lib/flag.c"
+char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value)
+# 539 "lib/flag.c"
+{
+
+# 540 "lib/flag.c"
+  value_result_t val_result = string_tree_find((flag->enum_values), (key_value.value));
+
+# 542 "lib/flag.c"
+  if (is_ok(val_result))
+
+# 542 "lib/flag.c"
+  {
+
+# 543 "lib/flag.c"
+    switch ((flag->enum_size))
+
+# 543 "lib/flag.c"
+    {
+
+# 544 "lib/flag.c"
+      case 64:
+
+# 546 "lib/flag.c"
+      ((*(/*CAST*/(uint64_t*) (flag->write_back_ptr)))=(val_result.u64));
+
+# 547 "lib/flag.c"
+      return NULL;
+
+# 548 "lib/flag.c"
+      case 32:
+
+# 550 "lib/flag.c"
+      ((*(/*CAST*/(uint32_t*) (flag->write_back_ptr)))=(val_result.u64));
+
+# 551 "lib/flag.c"
+      return NULL;
+
+# 553 "lib/flag.c"
+      default:
+
+# 554 "lib/flag.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+
+# 555 "lib/flag.c"
+      break;
+    }
+  }
+
+# 558 "lib/flag.c"
+  return string_printf("Flag %s does not accept the argument value %s", (key_value.key), (key_value.value));
+}
+
+
+# 572 "lib/flag.c"
+void flag_print_flags(FILE* out, char* header, string_tree_t* flags)
+# 572 "lib/flag.c"
+{
+
+# 573 "lib/flag.c"
+  fprintf(out, "%s\n", header);
+
+# 575 "lib/flag.c"
+  string_tree_foreach(flags, key, value, 
+# 575 "lib/flag.c"
+  {
+
+# 576 "lib/flag.c"
+    fprintf(out, "      %s\t%s\n", key, ((/*CAST*/(flag_descriptor_t*) (value.ptr))->description));
+  }
+);
+}
+
+
+# 587 "lib/flag.c"
+void flag_print_help(FILE* out, char* message)
+# 587 "lib/flag.c"
+{
+
+# 588 "lib/flag.c"
+  fprintf(out, "\nMessage: %s\n", message);
+
+# 590 "lib/flag.c"
+  if ((current_program==NULL))
+
+# 590 "lib/flag.c"
+  {
+
+# 591 "lib/flag.c"
+    fprintf(out, "Command line parsing was not configured so help can not be " "provided.");
+
+# 594 "lib/flag.c"
+    return;
+  }
+
+# 597 "lib/flag.c"
+  if (((current_program->commands)!=NULL))
+
+# 597 "lib/flag.c"
+  {
+
+# 598 "lib/flag.c"
+    fprintf(out, "\nUsage: %s <command> <flags> <files>\n", (current_program->name));
+
+# 600 "lib/flag.c"
+    fprintf(out, "\nDescription: %s\n\n", (current_program->description));
+
+# 602 "lib/flag.c"
+    flag_print_flags(out, "Global flags:", (current_program->flags));
+
+# 604 "lib/flag.c"
+    fprintf(out, "\nCommands:\n");
+
+# 606 "lib/flag.c"
+    string_tree_foreach((current_program->commands), key, value, 
+# 606 "lib/flag.c"
+    {
+
+# 607 "lib/flag.c"
+      fprintf(out, "\n    %s\t%s\n", key, ((/*CAST*/(command_descriptor_t*) (value.ptr))->description));
+
+# 608 "lib/flag.c"
+      flag_print_flags(out, "      Flags:", ((/*CAST*/(command_descriptor_t*) (value.ptr))->flags));
+    }
+);
+  }
+  else
+
+# 611 "lib/flag.c"
+  {
+
+# 612 "lib/flag.c"
+    fprintf(out, "\nUsage: %s <flags> <files>\n", (current_program->name));
+
+# 613 "lib/flag.c"
+    fprintf(out, "\nDescription: %s\n\n", (current_program->description));
+
+# 614 "lib/flag.c"
+    flag_print_flags(out, "Flags:", (current_program->flags));
+  }
+}
+
+
+# 14 "lib/io.c"
+buffer_t* buffer_read_file(char* file_name)
+# 14 "lib/io.c"
+{
+
+# 15 "lib/io.c"
+  buffer_t* result = make_buffer(1);
+
+# 16 "lib/io.c"
+  return buffer_append_file_contents(result, file_name);
+}
+
+
+# 25 "lib/io.c"
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
+# 25 "lib/io.c"
+{
+
+# 27 "lib/io.c"
+  uint64_t capacity = (bytes->capacity);
+
+# 30 "lib/io.c"
+  {
+
+# 31 "lib/io.c"
+    struct stat st;
+
+# 32 "lib/io.c"
+    if ((stat(file_name, (&st))<0))
+
+# 32 "lib/io.c"
+    {
+
+# 33 "lib/io.c"
+      log_fatal("file does not exist: %s", file_name);
+
+# 34 "lib/io.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 36 "lib/io.c"
+    (capacity=(st.st_size));
+  }
+
+# 39 "lib/io.c"
+  (bytes=buffer_increase_capacity(bytes, capacity));
+
+# 41 "lib/io.c"
+  FILE* file = fopen(file_name, "r");
+
+# 42 "lib/io.c"
+  (bytes=buffer_append_all(bytes, file));
+
+# 43 "lib/io.c"
+  fclose(file);
+
+# 45 "lib/io.c"
+  return bytes;
+}
+
+
+# 55 "lib/io.c"
+__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input)
+# 55 "lib/io.c"
+{
+
+# 56 "lib/io.c"
+  uint8_t buffer[1024];
+
+# 57 "lib/io.c"
+  while (1)
+
+# 57 "lib/io.c"
+  {
+
+# 58 "lib/io.c"
+    uint64_t n_read = fread(buffer, 1, (sizeof(buffer)), input);
+
+# 59 "lib/io.c"
+    if ((n_read==0))
+
+# 59 "lib/io.c"
+    {
+
+# 60 "lib/io.c"
+      break;
+    }
+
+# 62 "lib/io.c"
+    (bytes=buffer_append_bytes(bytes, buffer, n_read));
+  }
+
+# 64 "lib/io.c"
+  return bytes;
+}
+
+
+# 72 "lib/io.c"
+void buffer_write_file(buffer_t* bytes, char* file_name)
+# 72 "lib/io.c"
+{
+
+# 73 "lib/io.c"
+  FILE* file = fopen(file_name, "w");
+
+# 74 "lib/io.c"
+  if ((file==NULL))
+
+# 74 "lib/io.c"
+  {
+
+# 75 "lib/io.c"
+    log_fatal("Failed to open file for writing: %s", file_name);
+
+# 76 "lib/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+# 77 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 79 "lib/io.c"
+  size_t bytes_written = fwrite((bytes->elements), 1, (bytes->length), file);
+
+# 80 "lib/io.c"
+  if ((bytes_written!=(bytes->length)))
+
+# 80 "lib/io.c"
+  {
+
+# 81 "lib/io.c"
+    log_fatal("Failed to write %d bytes to %s", (bytes->length), file_name);
+
+# 82 "lib/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+# 83 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 85 "lib/io.c"
+  if ((fclose(file)!=0))
+
+# 85 "lib/io.c"
+  {
+
+# 86 "lib/io.c"
+    log_fatal("Failed to close file: %s", file_name);
+
+# 87 "lib/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+# 88 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 97 "lib/io.c"
+void buffer_write_all(FILE* output, buffer_t* buffer)
+# 97 "lib/io.c"
+{
+
+# 98 "lib/io.c"
+  size_t bytes_written = fwrite((buffer->elements), 1, (buffer->length), output);
+
+# 99 "lib/io.c"
+  if ((bytes_written!=(buffer->length)))
+
+# 99 "lib/io.c"
+  {
+
+# 100 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 109 "lib/io.c"
+void make_file_read_only(char* file_name)
+# 109 "lib/io.c"
+{
+
+# 111 "lib/io.c"
+  if ((chmod(file_name, ((S_IRUSR|S_IRGRP)|S_IROTH))!=0))
+
+# 111 "lib/io.c"
+  {
+
+# 112 "lib/io.c"
+    log_fatal("Failed to set file permissions: %s", file_name);
+
+# 113 "lib/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+# 114 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 124 "lib/io.c"
+void make_writable_if_exists(const char* file_name)
+# 124 "lib/io.c"
+{
+
+# 126 "lib/io.c"
+  if ((access(file_name, F_OK)!=0))
+
+# 126 "lib/io.c"
+  {
+
+# 128 "lib/io.c"
+    return;
+  }
+
+# 132 "lib/io.c"
+  struct stat file_stat;
+
+# 133 "lib/io.c"
+  if ((stat(file_name, (&file_stat))!=0))
+
+# 133 "lib/io.c"
+  {
+
+# 134 "lib/io.c"
+    log_fatal("Error getting file status for %s: %s\n", file_name, strerror(errno));
+
+# 135 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 139 "lib/io.c"
+  mode_t new_mode = ((file_stat.st_mode)|S_IWUSR);
+
+# 141 "lib/io.c"
+  if ((chmod(file_name, new_mode)!=0))
+
+# 141 "lib/io.c"
+  {
+
+# 142 "lib/io.c"
+    log_fatal("Error setting permissions for %s: %s\n", file_name, strerror(errno));
+
+# 143 "lib/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 164 "lib/io.c"
+buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line)
+# 164 "lib/io.c"
+{
+
+# 165 "lib/io.c"
+  while ((!feof(input)))
+
+# 165 "lib/io.c"
+  {
+
+# 166 "lib/io.c"
+    int ch = fgetc(input);
+
+# 167 "lib/io.c"
+    if ((ch<0))
+
+# 167 "lib/io.c"
+    {
+
+# 168 "lib/io.c"
+      return buffer;
+    }
+
+# 170 "lib/io.c"
+    if ((ch==end_of_line))
+
+# 170 "lib/io.c"
+    {
+
+# 171 "lib/io.c"
+      return buffer;
+    }
+
+# 173 "lib/io.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 175 "lib/io.c"
+  return buffer;
+}
+
+
+# 185 "lib/io.c"
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes)
+# 186 "lib/io.c"
+{
+
+# 187 "lib/io.c"
+  int file_number = fileno(input);
+
+# 188 "lib/io.c"
+  return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
+}
+
+
+# 198 "lib/io.c"
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes)
+# 200 "lib/io.c"
+{
+
+# 201 "lib/io.c"
+  fcntl(file_number, F_SETFL, (fcntl(file_number, F_GETFL)|O_NONBLOCK));
+
+# 203 "lib/io.c"
+  uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
+
+# 204 "lib/io.c"
+  char read_buffer[1024];
+
+# 207 "lib/io.c"
+  while ((bytes_remaining>0))
+
+# 207 "lib/io.c"
+  {
+
+# 208 "lib/io.c"
+    int bytes_read = read(file_number, read_buffer, (sizeof(read_buffer)));
+
+# 209 "lib/io.c"
+    if ((bytes_read>0))
+
+# 209 "lib/io.c"
+    {
+
+# 210 "lib/io.c"
+      for (
+
+# 210 "lib/io.c"
+
+# 210 "lib/io.c"
+        int i = 0;
+
+# 210 "lib/io.c"
+        (i<bytes_read);
+
+# 210 "lib/io.c"
+        (i++))
+
+# 210 "lib/io.c"
+      {
+
+# 211 "lib/io.c"
+        (buffer=buffer_append_byte(buffer, (/*CAST*/(uint8_t) (read_buffer[i]))));
+
+# 212 "lib/io.c"
+        (bytes_remaining--);
+      }
+    }
+    else
+
+# 214 "lib/io.c"
+    if ((bytes_read==0))
+
+# 214 "lib/io.c"
+    {
+
+# 216 "lib/io.c"
+      break;
+    }
+    else
+
+# 217 "lib/io.c"
+    {
+
+# 219 "lib/io.c"
+      if (((errno!=EAGAIN)&&(errno!=EWOULDBLOCK)))
+
+# 219 "lib/io.c"
+      {
+
+# 221 "lib/io.c"
+        log_fatal("Error reading from file descriptor %d: %s", file_number, strerror(errno));
+
+# 223 "lib/io.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 226 "lib/io.c"
+      break;
+    }
+  }
+
+# 230 "lib/io.c"
+  return buffer;
+}
+
+
+# 242 "lib/io.c"
+int file_peek_byte(FILE* input)
+# 242 "lib/io.c"
+{
+
+# 243 "lib/io.c"
+  if (feof(input))
+
+# 243 "lib/io.c"
+  {
+
+# 244 "lib/io.c"
+    return (-1);
+  }
+
+# 246 "lib/io.c"
+  int result = fgetc(input);
+
+# 250 "lib/io.c"
+  if ((result>=0))
+
+# 250 "lib/io.c"
+  {
+
+# 251 "lib/io.c"
+    ungetc(result, input);
+  }
+
+# 253 "lib/io.c"
+  return result;
+}
+
+
+# 262 "lib/io.c"
+boolean_t file_eof(FILE* input)
+# 262 "lib/io.c"
+{
+
+# 263 "lib/io.c"
+  return (feof(input)||(file_peek_byte(input)<0));
+}
+
+
+# 273 "lib/io.c"
+void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size)
+# 274 "lib/io.c"
+{
+
+# 275 "lib/io.c"
+  if (until_eof)
+
+# 275 "lib/io.c"
+  {
+
+# 276 "lib/io.c"
+    (size=ULLONG_MAX);
+  }
+
+# 279 "lib/io.c"
+  uint8_t buffer[FILE_COPY_STREAM_BUFFER_SIZE];
+
+# 280 "lib/io.c"
+  while ((size>0))
+
+# 280 "lib/io.c"
+  {
+
+# 281 "lib/io.c"
+    int minimum = ((size<FILE_COPY_STREAM_BUFFER_SIZE) ? size : FILE_COPY_STREAM_BUFFER_SIZE);
+
+# 284 "lib/io.c"
+    uint64_t n_read = fread(buffer, 1, minimum, input);
+
+# 285 "lib/io.c"
+    if ((n_read==0))
+
+# 285 "lib/io.c"
+    {
+
+# 286 "lib/io.c"
+      break;
+    }
+
+# 288 "lib/io.c"
+    fwrite(buffer, 1, n_read, output);
+
+# 289 "lib/io.c"
+    (size-=n_read);
+  }
+}
+
+
+# 303 "lib/io.c"
+void file_skip_bytes(FILE* input, uint64_t n_bytes)
+# 303 "lib/io.c"
+{
+
+# 310 "lib/io.c"
+  while (1)
+
+# 310 "lib/io.c"
+  {
+
+# 311 "lib/io.c"
+    if (((n_bytes==0)||feof(input)))
+
+# 311 "lib/io.c"
+    {
+
+# 312 "lib/io.c"
+      return;
+    }
+
+# 314 "lib/io.c"
+    int ch = fgetc(input);
+
+# 315 "lib/io.c"
+    if ((ch<0))
+
+# 315 "lib/io.c"
+    {
+
+# 317 "lib/io.c"
+      return;
+    }
+
+# 319 "lib/io.c"
+    (n_bytes--);
+  }
+}
+
+
+# 333 "lib/io.c"
+int64_t get_file_modification_time(const char* filename)
+# 333 "lib/io.c"
+{
+
+# 334 "lib/io.c"
+  struct stat result = ((struct stat) {0});
+
+# 336 "lib/io.c"
+  if ((stat(filename, (&result))!=0))
+
+# 336 "lib/io.c"
+  {
+
+# 338 "lib/io.c"
+    return (-1);
+  }
+
+# 341 "lib/io.c"
+  int64_t total_microseconds = 0;
+
+# 349 "lib/io.c"
+  (total_microseconds=(((/*CAST*/(int64_t) ((result.st_mtim).tv_sec))*1000000LL)+(((result.st_mtim).tv_nsec)/1000)));
+
+# 353 "lib/io.c"
+  return total_microseconds;
+}
+
+
+# 174 "lib/terminal.c"
+void term_set_foreground_color(buffer_t* buffer, uint32_t color)
+# 174 "lib/terminal.c"
+{
+
+# 175 "lib/terminal.c"
+  uint8_t blue = (color&0xff);
+
+# 176 "lib/terminal.c"
+  uint8_t green = ((color>>8)&0xff);
+
+# 177 "lib/terminal.c"
+  uint8_t red = ((color>>16)&0xff);
+
+# 180 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
+}
+
+
+# 194 "lib/terminal.c"
+void term_set_background_color(buffer_t* buffer, uint32_t color)
+# 194 "lib/terminal.c"
+{
+
+# 195 "lib/terminal.c"
+  uint8_t blue = (color&0xff);
+
+# 196 "lib/terminal.c"
+  uint8_t green = ((color>>8)&0xff);
+
+# 197 "lib/terminal.c"
+  uint8_t red = ((color>>16)&0xff);
+
+# 200 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
+}
+
+
+# 216 "lib/terminal.c"
+void term_move_cursor_absolute(buffer_t* buffer, int x, int y)
+# 216 "lib/terminal.c"
+{
+
+# 218 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
+}
+
+
+# 230 "lib/terminal.c"
+void term_move_cursor_relative(buffer_t* buffer, int x, int y)
+# 230 "lib/terminal.c"
+{
+
+# 232 "lib/terminal.c"
+  if ((x>0))
+
+# 232 "lib/terminal.c"
+  {
+
+# 233 "lib/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
+  }
+  else
+
+# 234 "lib/terminal.c"
+  if ((x<0))
+
+# 234 "lib/terminal.c"
+  {
+
+# 235 "lib/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), (-x));
+  }
+
+# 237 "lib/terminal.c"
+  if ((y>0))
+
+# 237 "lib/terminal.c"
+  {
+
+# 238 "lib/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
+  }
+  else
+
+# 239 "lib/terminal.c"
+  {
+
+# 240 "lib/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), (-y));
+  }
+}
+
+
+# 250 "lib/terminal.c"
+void term_bold(buffer_t* buffer)
+# 250 "lib/terminal.c"
+{
+
+# 251 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
+}
+
+
+# 260 "lib/terminal.c"
+void term_dim(buffer_t* buffer)
+# 260 "lib/terminal.c"
+{
+
+# 261 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
+}
+
+
+# 270 "lib/terminal.c"
+void term_italic(buffer_t* buffer)
+# 270 "lib/terminal.c"
+{
+
+# 271 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
+}
+
+
+# 280 "lib/terminal.c"
+void term_underline(buffer_t* buffer)
+# 280 "lib/terminal.c"
+{
+
+# 281 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
+}
+
+
+# 291 "lib/terminal.c"
+void term_reset_formatting(buffer_t* buffer)
+# 291 "lib/terminal.c"
+{
+
+# 292 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
+}
+
+
+# 301 "lib/terminal.c"
+void term_clear_screen(buffer_t* buffer)
+# 301 "lib/terminal.c"
+{
+
+# 302 "lib/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
+}
+
+
+# 310 "lib/terminal.c"
+void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box)
+# 311 "lib/terminal.c"
+{
+
+# 313 "lib/terminal.c"
+  term_move_cursor_absolute(buffer, x0, y0);
+
+# 314 "lib/terminal.c"
+  buffer_append_code_point(buffer, (box->upper_left_corner));
+
+# 315 "lib/terminal.c"
+  for (
+
+# 315 "lib/terminal.c"
+
+# 315 "lib/terminal.c"
+    uint64_t x = (x0+1);
+
+# 315 "lib/terminal.c"
+    (x<x1);
+
+# 315 "lib/terminal.c"
+    (x++))
+
+# 315 "lib/terminal.c"
+  {
+
+# 316 "lib/terminal.c"
+    buffer_append_code_point(buffer, (box->top_edge));
+  }
+
+# 318 "lib/terminal.c"
+  buffer_append_code_point(buffer, (box->upper_right_corner));
+
+# 321 "lib/terminal.c"
+  term_move_cursor_absolute(buffer, x0, y1);
+
+# 322 "lib/terminal.c"
+  buffer_append_code_point(buffer, (box->lower_left_corner));
+
+# 323 "lib/terminal.c"
+  for (
+
+# 323 "lib/terminal.c"
+
+# 323 "lib/terminal.c"
+    uint64_t x = (x0+1);
+
+# 323 "lib/terminal.c"
+    (x<x1);
+
+# 323 "lib/terminal.c"
+    (x++))
+
+# 323 "lib/terminal.c"
+  {
+
+# 324 "lib/terminal.c"
+    buffer_append_code_point(buffer, (box->bottom_edge));
+  }
+
+# 326 "lib/terminal.c"
+  buffer_append_code_point(buffer, (box->lower_right_corner));
+
+# 329 "lib/terminal.c"
+  for (
+
+# 329 "lib/terminal.c"
+
+# 329 "lib/terminal.c"
+    int y = (y0+1);
+
+# 329 "lib/terminal.c"
+    (y<y1);
+
+# 329 "lib/terminal.c"
+    (y++))
+
+# 329 "lib/terminal.c"
+  {
+
+# 330 "lib/terminal.c"
+    term_move_cursor_absolute(buffer, x0, y);
+
+# 331 "lib/terminal.c"
+    buffer_append_code_point(buffer, (box->left_edge));
+
+# 333 "lib/terminal.c"
+    for (
+
+# 333 "lib/terminal.c"
+
+# 333 "lib/terminal.c"
+      int x = (x0+1);
+
+# 333 "lib/terminal.c"
+      (x<x1);
+
+# 333 "lib/terminal.c"
+      (x++))
+
+# 333 "lib/terminal.c"
+    {
+
+# 334 "lib/terminal.c"
+      buffer_append_code_point(buffer, ' ');
+    }
+
+# 338 "lib/terminal.c"
+    buffer_append_code_point(buffer, (box->right_edge));
+  }
+}
+
+
+# 348 "lib/terminal.c"
+extern struct termios term_echo_off()
+# 348 "lib/terminal.c"
+{
+
+# 349 "lib/terminal.c"
+  struct termios oldt;
+
+# 350 "lib/terminal.c"
+  struct termios newt;
+
+# 351 "lib/terminal.c"
+  tcgetattr(STDIN_FILENO, (&oldt));
+
+# 352 "lib/terminal.c"
+  (newt=oldt);
+
+# 355 "lib/terminal.c"
+  tcgetattr(STDIN_FILENO, (&oldt));
+
+# 356 "lib/terminal.c"
+  (newt=oldt);
+
+# 359 "lib/terminal.c"
+  ((newt.c_lflag)&=(~(ICANON|ECHO)));
+
+# 360 "lib/terminal.c"
+  tcsetattr(STDIN_FILENO, TCSANOW, (&newt));
+
+# 362 "lib/terminal.c"
+  return oldt;
+}
+
+
+# 370 "lib/terminal.c"
+extern void term_echo_restore(struct termios oldt)
+# 370 "lib/terminal.c"
+{
+
+# 372 "lib/terminal.c"
+  tcsetattr(STDIN_FILENO, TCSANOW, (&oldt));
+}
+
+
+# 386 "lib/terminal.c"
+void term_alt_buffer(buffer_t* buffer)
+# 386 "lib/terminal.c"
+{
+
+# 387 "lib/terminal.c"
+  buffer_printf(buffer, "\033[?1049h");
+}
+
+
+# 396 "lib/terminal.c"
+void term_main_buffer(buffer_t* buffer)
+# 396 "lib/terminal.c"
+{
+
+# 397 "lib/terminal.c"
+  buffer_printf(buffer, "\033[?1049l");
+}
+
+
+# 400 "lib/terminal.c"
+void term_home(buffer_t* buffer)
+# 400 "lib/terminal.c"
+{
+
+# 401 "lib/terminal.c"
+  buffer_printf(buffer, "\033[H");
+}
+
+
+# 404 "lib/terminal.c"
+uint32_t term_width(void)
+# 404 "lib/terminal.c"
+{
+
+# 405 "lib/terminal.c"
+  struct winsize w;
+
+# 406 "lib/terminal.c"
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, (&w));
+
+# 407 "lib/terminal.c"
+  return (w.ws_col);
+}
+
+
+# 410 "lib/terminal.c"
+uint32_t term_height(void)
+# 410 "lib/terminal.c"
+{
+
+# 411 "lib/terminal.c"
+  struct winsize w;
+
+# 412 "lib/terminal.c"
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, (&w));
+
+# 413 "lib/terminal.c"
+  return (w.ws_row);
+}
+
+
+# 72 "lib/tokenizer.c"
+void add_duplicate(value_array_t* token_array, const char* data)
+# 72 "lib/tokenizer.c"
+{
+
+# 73 "lib/tokenizer.c"
+  value_array_add(token_array, str_to_value(string_duplicate(data)));
+}
+
+
+# 19 "lib/tokenizer.c"
+value_array_t* string_tokenize(const char* str, const char* delimiters)
+# 19 "lib/tokenizer.c"
+{
+
+# 20 "lib/tokenizer.c"
+  return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
+}
+
+
+# 33 "lib/tokenizer.c"
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters)
+# 33 "lib/tokenizer.c"
+{
+
+# 34 "lib/tokenizer.c"
+  return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
+}
+
+
+# 46 "lib/tokenizer.c"
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters)
+# 47 "lib/tokenizer.c"
+{
+
+# 48 "lib/tokenizer.c"
+  value_array_t* result = make_value_array(1);
+
+# 49 "lib/tokenizer.c"
+  char token_data[1024];
+
+# 50 "lib/tokenizer.c"
+  int cpos = 0;
+
+# 51 "lib/tokenizer.c"
+  for (
+
+# 51 "lib/tokenizer.c"
+
+# 51 "lib/tokenizer.c"
+    int i = 0;
+
+# 51 "lib/tokenizer.c"
+    (i<length);
+
+# 51 "lib/tokenizer.c"
+    (i++))
+
+# 51 "lib/tokenizer.c"
+  {
+
+# 52 "lib/tokenizer.c"
+    uint8_t ch = (str[i]);
+
+# 53 "lib/tokenizer.c"
+    if (((ch==0)||string_contains_char(delimiters, ch)))
+
+# 53 "lib/tokenizer.c"
+    {
+
+# 54 "lib/tokenizer.c"
+      ((token_data[(cpos++)])='\0');
+
+# 55 "lib/tokenizer.c"
+      if ((strlen(token_data)>0))
+
+# 55 "lib/tokenizer.c"
+      {
+
+# 56 "lib/tokenizer.c"
+        add_duplicate(result, token_data);
+      }
+
+# 58 "lib/tokenizer.c"
+      (cpos=0);
+    }
+    else
+
+# 59 "lib/tokenizer.c"
+    {
+
+# 60 "lib/tokenizer.c"
+      ((token_data[(cpos++)])=ch);
+    }
+  }
+
+# 63 "lib/tokenizer.c"
+  ((token_data[(cpos++)])='\0');
+
+# 64 "lib/tokenizer.c"
+  if ((strlen(token_data)>0))
+
+# 64 "lib/tokenizer.c"
+  {
+
+# 65 "lib/tokenizer.c"
+    add_duplicate(result, token_data);
+  }
+
+# 68 "lib/tokenizer.c"
+  return result;
+}
+
+
+# 24 "lib/random.c"
+random_state_t random_state_for_test(void)
+# 24 "lib/random.c"
+{
+
+# 25 "lib/random.c"
+  return ((random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
+}
+
+
+# 37 "lib/random.c"
+random_state_t* random_state(void)
+# 37 "lib/random.c"
+{
+
+# 38 "lib/random.c"
+  if (((shared_random_state.a)==0))
+
+# 38 "lib/random.c"
+  {
+
+# 39 "lib/random.c"
+    ((shared_random_state.a)=(0x1E1D43C2CA44B1F5^(/*CAST*/(uint64_t) time(NULL))));
+
+# 40 "lib/random.c"
+    ((shared_random_state.b)=(0x4FDD267452CEDBAC^(/*CAST*/(uint64_t) time(NULL))));
+  }
+
+# 43 "lib/random.c"
+  return (&shared_random_state);
+}
+
+
+# 57 "lib/random.c"
+uint64_t random_next(random_state_t* state)
+# 57 "lib/random.c"
+{
+
+# 58 "lib/random.c"
+  uint64_t s0 = (state->a);
+
+# 59 "lib/random.c"
+  uint64_t s1 = (state->b);
+
+# 60 "lib/random.c"
+  uint64_t result = (rotl((s0*5), 7)*9);
+
+# 61 "lib/random.c"
+  (s1^=s0);
+
+# 62 "lib/random.c"
+  ((state->a)=((rotl(s0, 24)^s1)^(s1<<16)));
+
+# 63 "lib/random.c"
+  ((state->b)=rotl(s1, 37));
+
+# 65 "lib/random.c"
+  return result;
+}
+
+
+# 75 "lib/random.c"
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
+# 75 "lib/random.c"
+{
+
+# 76 "lib/random.c"
+  if ((maximum==0))
+
+# 76 "lib/random.c"
+  {
+
+# 77 "lib/random.c"
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+
+# 81 "lib/random.c"
+  return (random_next(state)%maximum);
+
+# 85 "lib/random.c"
+  int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
+
+# 86 "lib/random.c"
+  while (1)
+
+# 86 "lib/random.c"
+  {
+
+# 87 "lib/random.c"
+    uint64_t n = random_next(state);
+
+# 88 "lib/random.c"
+    (n&=mask);
+
+# 89 "lib/random.c"
+    if ((n<maximum))
+
+# 89 "lib/random.c"
+    {
+
+# 90 "lib/random.c"
+      return n;
+    }
+  }
+}
+
+
+# 38 "lib/cdl-printer.c"
+cdl_printer_t* make_cdl_printer(buffer_t* buffer)
+# 38 "lib/cdl-printer.c"
+{
+
+# 39 "lib/cdl-printer.c"
+  cdl_printer_t* result = malloc_struct(cdl_printer_t);
+
+# 40 "lib/cdl-printer.c"
+  ((result->buffer)=buffer);
+
+# 41 "lib/cdl-printer.c"
+  return result;
+}
+
+
+# 44 "lib/cdl-printer.c"
+void cdl_indent(cdl_printer_t* printer)
+# 44 "lib/cdl-printer.c"
+{
+
+# 45 "lib/cdl-printer.c"
+  buffer_append_repeated_byte((printer->buffer), ' ', (4*(printer->indention_level)));
+}
+
+
+# 49 "lib/cdl-printer.c"
+boolean_t is_safe_string(char* string)
+# 49 "lib/cdl-printer.c"
+{
+
+# 50 "lib/cdl-printer.c"
+  buffer_t* buffer = buffer_from_string(string);
+
+# 51 "lib/cdl-printer.c"
+  for (
+
+# 51 "lib/cdl-printer.c"
+
+# 51 "lib/cdl-printer.c"
+    int pos = 0;
+
+# 51 "lib/cdl-printer.c"
+    (pos<buffer_length(buffer));
+
+# 51 "lib/cdl-printer.c"
+    )
+
+# 51 "lib/cdl-printer.c"
+  {
+
+# 52 "lib/cdl-printer.c"
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+
+# 53 "lib/cdl-printer.c"
+    if ((decode_result.error))
+
+# 53 "lib/cdl-printer.c"
+    {
+
+# 54 "lib/cdl-printer.c"
+      fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
+    }
+
+# 56 "lib/cdl-printer.c"
+    uint32_t code_point = (decode_result.code_point);
+
+# 57 "lib/cdl-printer.c"
+    if ((code_point<=32))
+
+# 57 "lib/cdl-printer.c"
+    {
+
+# 58 "lib/cdl-printer.c"
+      return false;
+    }
+
+# 60 "lib/cdl-printer.c"
+    switch (code_point)
+
+# 60 "lib/cdl-printer.c"
+    {
+
+# 61 "lib/cdl-printer.c"
+      case '"':
+
+# 62 "lib/cdl-printer.c"
+      case '#':
+
+# 63 "lib/cdl-printer.c"
+      case '(':
+
+# 64 "lib/cdl-printer.c"
+      case ')':
+
+# 65 "lib/cdl-printer.c"
+      case ',':
+
+# 66 "lib/cdl-printer.c"
+      case ':':
+
+# 67 "lib/cdl-printer.c"
+      case '=':
+
+# 68 "lib/cdl-printer.c"
+      case '[':
+
+# 69 "lib/cdl-printer.c"
+      case '\'':
+
+# 70 "lib/cdl-printer.c"
+      case ']':
+
+# 71 "lib/cdl-printer.c"
+      case '`':
+
+# 72 "lib/cdl-printer.c"
+      case '{':
+
+# 73 "lib/cdl-printer.c"
+      case '}':
+
+# 74 "lib/cdl-printer.c"
+      return false;
+    }
+
+# 76 "lib/cdl-printer.c"
+    (pos+=(decode_result.num_bytes));
+  }
+
+# 78 "lib/cdl-printer.c"
+  return true;
+}
+
+
+# 81 "lib/cdl-printer.c"
+void cdl_output_token(cdl_printer_t* printer, char* string)
+# 81 "lib/cdl-printer.c"
+{
+
+# 82 "lib/cdl-printer.c"
+  cdl_indent(printer);
+
+# 83 "lib/cdl-printer.c"
+  if (((printer->key_token)!=NULL))
+
+# 83 "lib/cdl-printer.c"
+  {
+
+# 84 "lib/cdl-printer.c"
+    buffer_printf((printer->buffer), "%s = %s\n", (printer->key_token), string);
+
+# 85 "lib/cdl-printer.c"
+    ((printer->key_token)=NULL);
+  }
+  else
+
+# 86 "lib/cdl-printer.c"
+  {
+
+# 87 "lib/cdl-printer.c"
+    buffer_printf((printer->buffer), "%s\n", string);
+  }
+}
+
+
+# 91 "lib/cdl-printer.c"
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean)
+# 91 "lib/cdl-printer.c"
+{
+
+# 92 "lib/cdl-printer.c"
+  cdl_output_token(printer, (boolean ? "true" : "false"));
+}
+
+
+# 95 "lib/cdl-printer.c"
+void cdl_string(cdl_printer_t* printer, char* string)
+# 95 "lib/cdl-printer.c"
+{
+
+# 96 "lib/cdl-printer.c"
+  if ((!is_safe_string(string)))
+
+# 96 "lib/cdl-printer.c"
+  {
+
+# 97 "lib/cdl-printer.c"
+    cdl_output_token(printer, string_printf("\"%s\"", string));
+  }
+  else
+
+# 98 "lib/cdl-printer.c"
+  {
+
+# 99 "lib/cdl-printer.c"
+    cdl_output_token(printer, string);
+  }
+}
+
+
+# 103 "lib/cdl-printer.c"
+void cdl_int64(cdl_printer_t* printer, int64_t number)
+# 103 "lib/cdl-printer.c"
+{
+
+# 104 "lib/cdl-printer.c"
+  cdl_output_token(printer, string_printf("%ld", number));
+}
+
+
+# 107 "lib/cdl-printer.c"
+void cdl_uint64(cdl_printer_t* printer, uint64_t number)
+# 107 "lib/cdl-printer.c"
+{
+
+# 108 "lib/cdl-printer.c"
+  cdl_output_token(printer, uint64_to_string(number));
+}
+
+
+# 111 "lib/cdl-printer.c"
+void cdl_double(cdl_printer_t* printer, double number)
+# 111 "lib/cdl-printer.c"
+{
+
+# 112 "lib/cdl-printer.c"
+  cdl_output_token(printer, string_printf("%lf", number));
+}
+
+
+# 115 "lib/cdl-printer.c"
+void cdl_start_array(cdl_printer_t* printer)
+# 115 "lib/cdl-printer.c"
+{
+
+# 116 "lib/cdl-printer.c"
+  cdl_output_token(printer, "[");
+
+# 117 "lib/cdl-printer.c"
+  ((printer->indention_level)+=1);
+}
+
+
+# 120 "lib/cdl-printer.c"
+void cdl_end_array(cdl_printer_t* printer)
+# 120 "lib/cdl-printer.c"
+{
+
+# 121 "lib/cdl-printer.c"
+  ((printer->indention_level)-=1);
+
+# 122 "lib/cdl-printer.c"
+  cdl_output_token(printer, "]");
+}
+
+
+# 125 "lib/cdl-printer.c"
+void cdl_start_table(cdl_printer_t* printer)
+# 125 "lib/cdl-printer.c"
+{
+
+# 126 "lib/cdl-printer.c"
+  cdl_output_token(printer, "{");
+
+# 127 "lib/cdl-printer.c"
+  ((printer->indention_level)+=1);
+}
+
+
+# 130 "lib/cdl-printer.c"
+void cdl_key(cdl_printer_t* printer, char* key)
+# 130 "lib/cdl-printer.c"
+{
+
+# 130 "lib/cdl-printer.c"
+  ((printer->key_token)=key);
+}
+
+
+# 132 "lib/cdl-printer.c"
+void cdl_end_table(cdl_printer_t* printer)
+# 132 "lib/cdl-printer.c"
+{
+
+# 133 "lib/cdl-printer.c"
+  ((printer->indention_level)-=1);
+
+# 134 "lib/cdl-printer.c"
+  cdl_output_token(printer, "}");
+}
+
+
+# 43 "lib/sub-process.c"
+sub_process_t* make_sub_process(value_array_t* argv)
+# 43 "lib/sub-process.c"
+{
+
+# 44 "lib/sub-process.c"
+  sub_process_t* result = malloc_struct(sub_process_t);
+
+# 45 "lib/sub-process.c"
+  ((result->argv)=argv);
+
+# 46 "lib/sub-process.c"
+  ((result->exit_code)=(-1));
+
+# 47 "lib/sub-process.c"
+  return result;
+}
+
+
+# 56 "lib/sub-process.c"
+boolean_t sub_process_launch(sub_process_t* sub_process)
+# 56 "lib/sub-process.c"
+{
+
+# 57 "lib/sub-process.c"
+  uint64_t length = ((sub_process->argv)->length);
+
+# 58 "lib/sub-process.c"
+  if ((length<1))
+
+# 58 "lib/sub-process.c"
+  {
+
+# 59 "lib/sub-process.c"
+    log_fatal("Expected at least the program path in argv");
+
+# 60 "lib/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 64 "lib/sub-process.c"
+  char** argv = (/*CAST*/(typeof(char**)) malloc_bytes(((length+1)*(sizeof(typeof(char*))))));
+
+# 66 "lib/sub-process.c"
+  for (
+
+# 66 "lib/sub-process.c"
+
+# 66 "lib/sub-process.c"
+    int i = 0;
+
+# 66 "lib/sub-process.c"
+    (i<length);
+
+# 66 "lib/sub-process.c"
+    (i++))
+
+# 66 "lib/sub-process.c"
+  {
+
+# 67 "lib/sub-process.c"
+    ((argv[i])=value_array_get_ptr((sub_process->argv), i, typeof(char*)));
+  }
+
+# 71 "lib/sub-process.c"
+  ((argv[length])=NULL);
+
+# 76 "lib/sub-process.c"
+  int stdin_pipe[2] = {0};
+
+# 77 "lib/sub-process.c"
+  int stdout_pipe[2] = {0};
+
+# 78 "lib/sub-process.c"
+  int stderr_pipe[2] = {0};
+
+# 79 "lib/sub-process.c"
+  if ((((pipe(stdin_pipe)==(-1))||(pipe(stdout_pipe)==(-1)))||(pipe(stderr_pipe)==(-1))))
+
+# 80 "lib/sub-process.c"
+  {
+
+# 81 "lib/sub-process.c"
+    log_fatal("Failed to create pipe for stdin, stdout or stderr");
+
+# 82 "lib/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 83 "lib/sub-process.c"
+    return false;
+  }
+
+# 87 "lib/sub-process.c"
+  pid_t pid = fork();
+
+# 88 "lib/sub-process.c"
+  if ((pid==(-1)))
+
+# 88 "lib/sub-process.c"
+  {
+
+# 89 "lib/sub-process.c"
+    log_fatal("fork() failed.");
+
+# 90 "lib/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 91 "lib/sub-process.c"
+    return false;
+  }
+
+# 94 "lib/sub-process.c"
+  if ((pid==0))
+
+# 94 "lib/sub-process.c"
+  {
+
+# 100 "lib/sub-process.c"
+    dup2((stdin_pipe[0]), STDIN_FILENO);
+
+# 101 "lib/sub-process.c"
+    dup2((stdout_pipe[1]), STDOUT_FILENO);
+
+# 102 "lib/sub-process.c"
+    dup2((stderr_pipe[1]), STDERR_FILENO);
+
+# 103 "lib/sub-process.c"
+    close((stdin_pipe[0]));
+
+# 104 "lib/sub-process.c"
+    close((stdin_pipe[1]));
+
+# 105 "lib/sub-process.c"
+    close((stdout_pipe[0]));
+
+# 106 "lib/sub-process.c"
+    close((stdout_pipe[1]));
+
+# 107 "lib/sub-process.c"
+    close((stderr_pipe[0]));
+
+# 108 "lib/sub-process.c"
+    close((stderr_pipe[1]));
+
+# 111 "lib/sub-process.c"
+    int exec_exit_status = execvp((argv[0]), argv);
+
+# 113 "lib/sub-process.c"
+    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
+
+# 114 "lib/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 115 "lib/sub-process.c"
+    return false;
+  }
+  else
+
+# 116 "lib/sub-process.c"
+  {
+
+# 123 "lib/sub-process.c"
+    close((stdin_pipe[0]));
+
+# 124 "lib/sub-process.c"
+    close((stdout_pipe[1]));
+
+# 125 "lib/sub-process.c"
+    close((stderr_pipe[1]));
+
+# 128 "lib/sub-process.c"
+    ((sub_process->pid)=pid);
+
+# 129 "lib/sub-process.c"
+    ((sub_process->stdin)=(stdin_pipe[1]));
+
+# 130 "lib/sub-process.c"
+    ((sub_process->stdout)=(stdout_pipe[0]));
+
+# 131 "lib/sub-process.c"
+    ((sub_process->stderr)=(stderr_pipe[0]));
+
+# 133 "lib/sub-process.c"
+    free_bytes(argv);
+
+# 135 "lib/sub-process.c"
+    return true;
+  }
+}
+
+
+# 139 "lib/sub-process.c"
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position)
+# 140 "lib/sub-process.c"
+{
+
+# 141 "lib/sub-process.c"
+  int stdin_fd = (sub_process->stdin);
+
+# 144 "lib/sub-process.c"
+  int flags = fcntl(stdin_fd, F_GETFL, 0);
+
+# 145 "lib/sub-process.c"
+  fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
+
+# 147 "lib/sub-process.c"
+  ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
+
+# 150 "lib/sub-process.c"
+  if ((bytes_written==(-1)))
+
+# 150 "lib/sub-process.c"
+  {
+
+# 151 "lib/sub-process.c"
+    if (((errno==EAGAIN)||(errno==EWOULDBLOCK)))
+
+# 151 "lib/sub-process.c"
+    {
+
+# 152 "lib/sub-process.c"
+      return 0;
+    }
+    else
+
+# 153 "lib/sub-process.c"
+    {
+
+# 155 "lib/sub-process.c"
+      log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
+
+# 156 "lib/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 160 "lib/sub-process.c"
+  return bytes_written;
+}
+
+
+# 163 "lib/sub-process.c"
+void sub_process_close_stdin(sub_process_t* sub_process)
+# 163 "lib/sub-process.c"
+{
+
+# 164 "lib/sub-process.c"
+  if (((sub_process->stdin)!=(-1)))
+
+# 164 "lib/sub-process.c"
+  {
+
+# 165 "lib/sub-process.c"
+    if ((close((sub_process->stdin))==(-1)))
+
+# 165 "lib/sub-process.c"
+    {
+
+# 166 "lib/sub-process.c"
+      log_fatal("Error closing subprocess stdin: %s", strerror(errno));
+
+# 167 "lib/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 169 "lib/sub-process.c"
+    ((sub_process->stdin)=(-1));
+  }
+}
+
+
+# 173 "lib/sub-process.c"
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr)
+# 174 "lib/sub-process.c"
+{
+
+# 175 "lib/sub-process.c"
+  if ((stdout!=NULL))
+
+# 175 "lib/sub-process.c"
+  {
+
+# 176 "lib/sub-process.c"
+    buffer_read_ready_bytes_file_number(stdout, (sub_process->stdout), 0xffffffff);
+  }
+
+# 179 "lib/sub-process.c"
+  if ((stderr!=NULL))
+
+# 179 "lib/sub-process.c"
+  {
+
+# 180 "lib/sub-process.c"
+    buffer_read_ready_bytes_file_number(stderr, (sub_process->stderr), 0xffffffff);
+  }
+}
+
+
+# 187 "lib/sub-process.c"
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status)
+# 188 "lib/sub-process.c"
+{
+
+# 189 "lib/sub-process.c"
+  if ((pid==(-1)))
+
+# 189 "lib/sub-process.c"
+  {
+
+# 190 "lib/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
+
+# 191 "lib/sub-process.c"
+    return;
+  }
+
+# 195 "lib/sub-process.c"
+  if (WIFEXITED(status))
+
+# 195 "lib/sub-process.c"
+  {
+
+# 196 "lib/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
+
+# 197 "lib/sub-process.c"
+    ((sub_process->exit_code)=WEXITSTATUS(status));
+  }
+  else
+
+# 198 "lib/sub-process.c"
+  if (WIFSIGNALED(status))
+
+# 198 "lib/sub-process.c"
+  {
+
+# 199 "lib/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
+
+# 200 "lib/sub-process.c"
+    ((sub_process->exit_signal)=WTERMSIG(status));
+  }
+  else
+
+# 201 "lib/sub-process.c"
+  {
+
+# 202 "lib/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
+  }
+}
+
+
+# 213 "lib/sub-process.c"
+boolean_t is_sub_process_running(sub_process_t* sub_process)
+# 213 "lib/sub-process.c"
+{
+
+# 214 "lib/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 214 "lib/sub-process.c"
+  {
+
+# 215 "lib/sub-process.c"
+    return false;
+  }
+
+# 218 "lib/sub-process.c"
+  int status = 0;
+
+# 219 "lib/sub-process.c"
+  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
+
+# 220 "lib/sub-process.c"
+  if ((result==0))
+
+# 220 "lib/sub-process.c"
+  {
+
+# 221 "lib/sub-process.c"
+    return true;
+  }
+
+# 223 "lib/sub-process.c"
+  sub_process_record_exit_status(sub_process, result, status);
+
+# 224 "lib/sub-process.c"
+  return false;
+}
+
+
+# 234 "lib/sub-process.c"
+void sub_process_wait(sub_process_t* sub_process)
+# 234 "lib/sub-process.c"
+{
+
+# 235 "lib/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 235 "lib/sub-process.c"
+  {
+
+# 236 "lib/sub-process.c"
+    int status = 0;
+
+# 237 "lib/sub-process.c"
+    pid_t result = waitpid((sub_process->pid), (&status), 0);
+
+# 238 "lib/sub-process.c"
+    sub_process_record_exit_status(sub_process, result, status);
+  }
+}
+
+
+# 252 "lib/sub-process.c"
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr)
+# 254 "lib/sub-process.c"
+{
+
+# 255 "lib/sub-process.c"
+  sub_process_launch(sub_process);
+
+# 256 "lib/sub-process.c"
+  uint64_t written = 0;
+
+# 257 "lib/sub-process.c"
+  do
+# 257 "lib/sub-process.c"
+  {
+
+# 258 "lib/sub-process.c"
+    if (((child_stdin!=NULL)&&(written<(child_stdin->length))))
+
+# 258 "lib/sub-process.c"
+    {
+
+# 259 "lib/sub-process.c"
+      (written+=sub_process_write(sub_process, child_stdin, written));
+
+# 260 "lib/sub-process.c"
+      if ((written>=(child_stdin->length)))
+
+# 260 "lib/sub-process.c"
+      {
+
+# 261 "lib/sub-process.c"
+        sub_process_close_stdin(sub_process);
+      }
+    }
+
+# 264 "lib/sub-process.c"
+    sub_process_read(sub_process, child_stdout, child_stderr);
+
+# 265 "lib/sub-process.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 267 "lib/sub-process.c"
+  sub_process_read(sub_process, child_stdout, child_stderr);
+
+# 268 "lib/sub-process.c"
+  sub_process_wait(sub_process);
+}
+
+
+# 18 "lib/splitjoin.c"
+buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator)
+# 19 "lib/splitjoin.c"
+{
+
+# 20 "lib/splitjoin.c"
+  buffer_t* result = make_buffer(1);
+
+# 21 "lib/splitjoin.c"
+  for (
+
+# 21 "lib/splitjoin.c"
+
+# 21 "lib/splitjoin.c"
+    int i = 0;
+
+# 21 "lib/splitjoin.c"
+    (i<(array_of_strings->length));
+
+# 21 "lib/splitjoin.c"
+    (i++))
+
+# 21 "lib/splitjoin.c"
+  {
+
+# 22 "lib/splitjoin.c"
+    if ((i>0))
+
+# 22 "lib/splitjoin.c"
+    {
+
+# 23 "lib/splitjoin.c"
+      buffer_append_string(result, separator);
+    }
+
+# 25 "lib/splitjoin.c"
+    buffer_append_string(result, (value_array_get(array_of_strings, i).str));
+  }
+
+# 27 "lib/splitjoin.c"
+  return result;
+}
+
+
+# 17 "lib/oarchive.c"
+void oarchive_append_header_and_file_contents(FILE* out, char* filename)
+# 17 "lib/oarchive.c"
+{
+
+# 18 "lib/oarchive.c"
+  buffer_t* contents = make_buffer(1);
+
+# 19 "lib/oarchive.c"
+  (contents=buffer_append_file_contents(contents, filename));
+
+# 20 "lib/oarchive.c"
+  fprintf(out, "filename=%s", filename);
+
+# 21 "lib/oarchive.c"
+  fputc(0, out);
+
+# 22 "lib/oarchive.c"
+  fprintf(out, "size=%d", (contents->length));
+
+# 23 "lib/oarchive.c"
+  fputc(0, out);
+
+# 24 "lib/oarchive.c"
+  fputc(0, out);
+
+# 26 "lib/oarchive.c"
+  for (
+
+# 26 "lib/oarchive.c"
+
+# 26 "lib/oarchive.c"
+    uint64_t i = 0;
+
+# 26 "lib/oarchive.c"
+    (i<(contents->length));
+
+# 26 "lib/oarchive.c"
+    (i++))
+
+# 26 "lib/oarchive.c"
+  {
+
+# 27 "lib/oarchive.c"
+    fputc(buffer_get(contents, i), out);
+  }
+}
+
+
+# 37 "lib/oarchive.c"
+string_tree_t* oarchive_read_header(FILE* in)
+# 37 "lib/oarchive.c"
+{
+
+# 38 "lib/oarchive.c"
+  string_tree_t* metadata = NULL;
+
+# 39 "lib/oarchive.c"
+  while ((!feof(in)))
+
+# 39 "lib/oarchive.c"
+  {
+
+# 40 "lib/oarchive.c"
+    if ((file_peek_byte(in)=='\0'))
+
+# 40 "lib/oarchive.c"
+    {
+
+# 41 "lib/oarchive.c"
+      fgetc(in);
+
+# 42 "lib/oarchive.c"
+      break;
+    }
+
+# 46 "lib/oarchive.c"
+    buffer_t* key = make_buffer(8);
+
+# 47 "lib/oarchive.c"
+    (key=buffer_read_until(key, in, '='));
+
+# 48 "lib/oarchive.c"
+    buffer_t* value = make_buffer(8);
+
+# 49 "lib/oarchive.c"
+    (value=buffer_read_until(value, in, '\0'));
+
+# 50 "lib/oarchive.c"
+    if ((((key->length)==0)&&((value->length)==0)))
+
+# 50 "lib/oarchive.c"
+    {
+
+# 51 "lib/oarchive.c"
+      return metadata;
+    }
+
+# 53 "lib/oarchive.c"
+    (metadata=string_tree_insert(metadata, buffer_to_c_string(key), str_to_value(buffer_to_c_string(value))));
+  }
+
+# 56 "lib/oarchive.c"
+  return metadata;
+}
+
+
+# 86 "lib/oarchive.c"
+void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data)
+# 88 "lib/oarchive.c"
+{
+
+# 89 "lib/oarchive.c"
+  while ((!file_eof(in)))
+
+# 89 "lib/oarchive.c"
+  {
+
+# 90 "lib/oarchive.c"
+    string_tree_t* metadata = oarchive_read_header(in);
+
+# 92 "lib/oarchive.c"
+    int64_t size = 0;
+
+# 93 "lib/oarchive.c"
+    value_result_t size_value = string_tree_find(metadata, "size");
+
+# 94 "lib/oarchive.c"
+    if ((!is_ok(size_value)))
+
+# 94 "lib/oarchive.c"
+    {
+
+# 95 "lib/oarchive.c"
+      log_warn("Encounterd a header without an explicit size.");
+    }
+    else
+
+# 96 "lib/oarchive.c"
+    {
+
+# 97 "lib/oarchive.c"
+      value_result_t data_size = string_parse_uint64_dec((size_value.str));
+
+# 98 "lib/oarchive.c"
+      if ((!is_ok(data_size)))
+
+# 98 "lib/oarchive.c"
+      {
+
+# 99 "lib/oarchive.c"
+        log_fatal("Encounterd a header with an unparseable size %s", (size_value.str));
+
+# 101 "lib/oarchive.c"
+        fatal_error(ERROR_FATAL);
+      }
+      else
+
+# 102 "lib/oarchive.c"
+      {
+
+# 103 "lib/oarchive.c"
+        (size=(data_size.u64));
+      }
+    }
+
+# 108 "lib/oarchive.c"
+    boolean_t skip_data = callback(in, metadata, size, callback_data);
+
+# 111 "lib/oarchive.c"
+    if ((skip_data&&(size>0)))
+
+# 111 "lib/oarchive.c"
+    {
+
+# 112 "lib/oarchive.c"
+      log_none("Skipping %lu\n", size);
+
+# 114 "lib/oarchive.c"
+      file_skip_bytes(in, size);
+    }
+  }
+}
+
+
+# 7 "lib/quote-util.c"
+char* quote_c_string(char* input)
+# 7 "lib/quote-util.c"
+{
+
+# 8 "lib/quote-util.c"
+  if ((input==((void *)0)))
+
+# 8 "lib/quote-util.c"
+  return ((void *)0);
+
+# 10 "lib/quote-util.c"
+  buffer_t* buf = make_buffer((strlen(input)+10));
+
+# 11 "lib/quote-util.c"
+  buffer_append_byte(buf, '"');
+
+# 13 "lib/quote-util.c"
+  for (
+
+# 13 "lib/quote-util.c"
+
+# 13 "lib/quote-util.c"
+    size_t i = 0;
+
+# 13 "lib/quote-util.c"
+    ((input[i])!=0);
+
+# 13 "lib/quote-util.c"
+    (i++))
+
+# 13 "lib/quote-util.c"
+  {
+
+# 14 "lib/quote-util.c"
+    uint8_t c = (/*CAST*/(uint8_t) (input[i]));
+
+# 16 "lib/quote-util.c"
+    switch (c)
+
+# 16 "lib/quote-util.c"
+    {
+
+# 17 "lib/quote-util.c"
+      case '"':
+
+# 17 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 17 "lib/quote-util.c"
+      buffer_append_byte(buf, '"');
+
+# 17 "lib/quote-util.c"
+      break;
+
+# 18 "lib/quote-util.c"
+      case '\\':
+
+# 18 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 18 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 18 "lib/quote-util.c"
+      break;
+
+# 19 "lib/quote-util.c"
+      case '\n':
+
+# 19 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 19 "lib/quote-util.c"
+      buffer_append_byte(buf, 'n');
+
+# 19 "lib/quote-util.c"
+      break;
+
+# 20 "lib/quote-util.c"
+      case '\t':
+
+# 20 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 20 "lib/quote-util.c"
+      buffer_append_byte(buf, 't');
+
+# 20 "lib/quote-util.c"
+      break;
+
+# 21 "lib/quote-util.c"
+      case '\r':
+
+# 21 "lib/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+# 21 "lib/quote-util.c"
+      buffer_append_byte(buf, 'r');
+
+# 21 "lib/quote-util.c"
+      break;
+
+# 24 "lib/quote-util.c"
+      default:
+
+# 25 "lib/quote-util.c"
+      if (((c>=32)&&(c<126)))
+
+# 25 "lib/quote-util.c"
+      {
+
+# 27 "lib/quote-util.c"
+        buffer_append_byte(buf, c);
+      }
+      else
+
+# 28 "lib/quote-util.c"
+      {
+
+# 29 "lib/quote-util.c"
+        buffer_printf(buf, "\\x%02x", c);
+      }
+
+# 31 "lib/quote-util.c"
+      break;
+    }
+  }
+
+# 35 "lib/quote-util.c"
+  buffer_append_byte(buf, '"');
+
+# 36 "lib/quote-util.c"
+  return buffer_to_c_string(buf);
+}
+
+
+# 39 "lib/quote-util.c"
+char* string_unquote_c_string(char* input)
+# 39 "lib/quote-util.c"
+{
+
+# 40 "lib/quote-util.c"
+  if ((input==((void *)0)))
+
+# 40 "lib/quote-util.c"
+  return ((void *)0);
+
+# 42 "lib/quote-util.c"
+  int limit = (strlen(input)-1);
+
+# 43 "lib/quote-util.c"
+  buffer_t* buf = make_buffer((limit+10));
+
+# 44 "lib/quote-util.c"
+  for (
+
+# 44 "lib/quote-util.c"
+
+# 44 "lib/quote-util.c"
+    size_t i = 1;
+
+# 44 "lib/quote-util.c"
+    (i<limit);
+
+# 44 "lib/quote-util.c"
+    )
+
+# 44 "lib/quote-util.c"
+  {
+
+# 45 "lib/quote-util.c"
+    uint8_t c = (/*CAST*/(uint8_t) (input[(i++)]));
+
+# 47 "lib/quote-util.c"
+    if ((c=='\\'))
+
+# 47 "lib/quote-util.c"
+    {
+
+# 48 "lib/quote-util.c"
+      uint8_t c2 = (/*CAST*/(uint8_t) (input[(i++)]));
+
+# 50 "lib/quote-util.c"
+      switch (c2)
+
+# 50 "lib/quote-util.c"
+      {
+
+# 51 "lib/quote-util.c"
+        case '"':
+
+# 51 "lib/quote-util.c"
+        buffer_append_byte(buf, '\"');
+
+# 51 "lib/quote-util.c"
+        break;
+
+# 52 "lib/quote-util.c"
+        case '\\':
+
+# 52 "lib/quote-util.c"
+        ;
+
+# 52 "lib/quote-util.c"
+        buffer_append_byte(buf, '\\');
+
+# 52 "lib/quote-util.c"
+        break;
+
+# 53 "lib/quote-util.c"
+        case 'n':
+
+# 53 "lib/quote-util.c"
+        buffer_append_byte(buf, '\n');
+
+# 53 "lib/quote-util.c"
+        break;
+
+# 54 "lib/quote-util.c"
+        case 't':
+
+# 54 "lib/quote-util.c"
+        buffer_append_byte(buf, '\t');
+
+# 54 "lib/quote-util.c"
+        break;
+
+# 55 "lib/quote-util.c"
+        case 'r':
+
+# 55 "lib/quote-util.c"
+        buffer_append_byte(buf, '\r');
+
+# 55 "lib/quote-util.c"
+        break;
+
+# 58 "lib/quote-util.c"
+        case 'x':
+
+# 59 "lib/quote-util.c"
+        buffer_t* hex = make_buffer(3);
+
+# 60 "lib/quote-util.c"
+        buffer_append_byte(hex, (input[(i++)]));
+
+# 61 "lib/quote-util.c"
+        buffer_append_byte(hex, (input[(i++)]));
+
+# 62 "lib/quote-util.c"
+        value_result_t result = string_parse_uint64_hex(buffer_to_c_string(hex));
+
+# 63 "lib/quote-util.c"
+        if ((!is_ok(result)))
+
+# 63 "lib/quote-util.c"
+        {
+
+# 64 "lib/quote-util.c"
+          fatal_error(ERROR_ILLEGAL_INPUT);
+        }
+
+# 66 "lib/quote-util.c"
+        buffer_append_byte(buf, (result.u64));
+
+# 67 "lib/quote-util.c"
+        break;
+
+# 68 "lib/quote-util.c"
+        default:
+
+# 69 "lib/quote-util.c"
+        fatal_error(ERROR_ILLEGAL_INPUT);
+
+# 70 "lib/quote-util.c"
+        break;
+      }
+    }
+    else
+
+# 72 "lib/quote-util.c"
+    {
+
+# 73 "lib/quote-util.c"
+      buffer_append_byte(buf, c);
+    }
+  }
+
+# 77 "lib/quote-util.c"
+  return buffer_to_c_string(buf);
+}
+
+
+# 92 "lib/test.c"
+__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...)
+# 92 "lib/test.c"
+{
+
+# 93 "lib/test.c"
+  va_list args;
+
+# 94 "lib/test.c"
+  fprintf(stdout, "%s:%d: ", file_name, line_number);
+
+# 95 "lib/test.c"
+  va_start(args, format);
+
+# 96 "lib/test.c"
+  vfprintf(stdout, format, args);
+
+# 97 "lib/test.c"
+  fprintf(stdout, "\n");
+
+# 98 "lib/test.c"
+  va_end(args);
+
+# 99 "lib/test.c"
+  exit(1);
+}
+
+
+# 86 "keywords.c"
+void initialize_keyword_maps(void)
+# 86 "keywords.c"
+{
+
+# 92 "keywords.c"
+  int num_keywords = ((sizeof(c_keywords_array))/(sizeof((c_keywords_array[0]))));
+
+# 93 "keywords.c"
+  (c_keywords_ht=make_string_hashtable((2*num_keywords)));
+
+# 94 "keywords.c"
+  (cpp_keywords_ht=make_string_hashtable((2*num_keywords)));
+
+# 95 "keywords.c"
+  for (
+
+# 95 "keywords.c"
+
+# 95 "keywords.c"
+    int i = 0;
+
+# 95 "keywords.c"
+    (i<num_keywords);
+
+# 95 "keywords.c"
+    (i++))
+
+# 95 "keywords.c"
+  {
+
+# 96 "keywords.c"
+    (c_keywords_ht=string_ht_insert(c_keywords_ht, (c_keywords_array[i]), u64_to_value(1)));
+
+# 98 "keywords.c"
+    (oc_keywords_ht=string_ht_insert(c_keywords_ht, (c_keywords_array[i]), u64_to_value(1)));
+
+# 100 "keywords.c"
+    (cpp_keywords_ht=string_ht_insert(cpp_keywords_ht, (c_keywords_array[i]), u64_to_value(1)));
+  }
+
+# 104 "keywords.c"
+  int num_types = ((sizeof(c_builtin_types_array))/(sizeof((c_builtin_types_array[0]))));
+
+# 106 "keywords.c"
+  (c_builtin_types_ht=make_string_hashtable((2*num_types)));
+
+# 107 "keywords.c"
+  (cpp_builtin_types_ht=make_string_hashtable((2*num_types)));
+
+# 109 "keywords.c"
+  for (
+
+# 109 "keywords.c"
+
+# 109 "keywords.c"
+    int i = 0;
+
+# 109 "keywords.c"
+    (i<num_types);
+
+# 109 "keywords.c"
+    (i++))
+
+# 109 "keywords.c"
+  {
+
+# 110 "keywords.c"
+    (c_builtin_types_ht=string_ht_insert(c_builtin_types_ht, (c_builtin_types_array[i]), u64_to_value(1)));
+
+# 112 "keywords.c"
+    (oc_builtin_types_ht=string_ht_insert(c_builtin_types_ht, (c_builtin_types_array[i]), u64_to_value(1)));
+
+# 114 "keywords.c"
+    (cpp_builtin_types_ht=string_ht_insert(cpp_builtin_types_ht, (c_builtin_types_array[i]), u64_to_value(1)));
+  }
+
+# 119 "keywords.c"
+  (cpp_builtin_types_ht=string_ht_insert(cpp_builtin_types_ht, "char8_t", u64_to_value(1)));
+}
+
+
+# 135 "keywords.c"
+boolean_t is_reserved_word(input_mode_t mode, char* str)
+# 135 "keywords.c"
+{
+
+# 136 "keywords.c"
+  maybe_initialize_keyword_maps();
+
+# 137 "keywords.c"
+  switch (mode)
+
+# 137 "keywords.c"
+  {
+
+# 138 "keywords.c"
+    case INPUT_MODE_OMNI_C:
+
+# 139 "keywords.c"
+    return is_ok(string_ht_find(oc_keywords_ht, str));
+
+# 140 "keywords.c"
+    case INPUT_MODE_STANDARD_C:
+
+# 141 "keywords.c"
+    return is_ok(string_ht_find(c_keywords_ht, str));
+
+# 142 "keywords.c"
+    case INPUT_MODE_C_PLUS_PLUS:
+
+# 143 "keywords.c"
+    return is_ok(string_ht_find(cpp_keywords_ht, str));
+
+# 144 "keywords.c"
+    default:
+
+# 145 "keywords.c"
+    break;
+  }
+
+# 147 "keywords.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+
+# 156 "keywords.c"
+boolean_t is_builtin_type_name(input_mode_t mode, char* str)
+# 156 "keywords.c"
+{
+
+# 157 "keywords.c"
+  maybe_initialize_keyword_maps();
+
+# 158 "keywords.c"
+  switch (mode)
+
+# 158 "keywords.c"
+  {
+
+# 159 "keywords.c"
+    case INPUT_MODE_OMNI_C:
+
+# 160 "keywords.c"
+    return is_ok(string_ht_find(oc_builtin_types_ht, str));
+
+# 161 "keywords.c"
+    case INPUT_MODE_STANDARD_C:
+
+# 162 "keywords.c"
+    return is_ok(string_ht_find(c_builtin_types_ht, str));
+
+# 163 "keywords.c"
+    case INPUT_MODE_C_PLUS_PLUS:
+
+# 164 "keywords.c"
+    return is_ok(string_ht_find(cpp_builtin_types_ht, str));
+
+# 165 "keywords.c"
+    default:
+
+# 166 "keywords.c"
+    break;
+  }
+
+# 168 "keywords.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+
+# 23 "file-reader.c"
+value_array_t* read_files(value_array_t* files)
+# 23 "file-reader.c"
+{
+
+# 24 "file-reader.c"
+  fprintf(stderr, "Parsing %d files...\n", (files->length));
+
+# 25 "file-reader.c"
+  value_array_t* result = make_value_array((files->length));
+
+# 26 "file-reader.c"
+  for (
+
+# 26 "file-reader.c"
+
+# 26 "file-reader.c"
+    int i = 0;
+
+# 26 "file-reader.c"
+    (i<(files->length));
+
+# 26 "file-reader.c"
+    (i++))
+
+# 26 "file-reader.c"
+  {
+
+# 27 "file-reader.c"
+    char* file_name = (value_array_get(files, i).str);
+
+# 28 "file-reader.c"
+    if (string_ends_with(file_name, ".oar"))
+
+# 28 "file-reader.c"
+    {
+
+# 29 "file-reader.c"
+      fprintf(stderr, "Reading archive %s\n", file_name);
+
+# 30 "file-reader.c"
+      add_all_oarchive_members(result, file_name);
+    }
+    else
+
+# 31 "file-reader.c"
+    {
+
+# 32 "file-reader.c"
+      fprintf(stderr, "Reading %s\n", file_name);
+
+# 33 "file-reader.c"
+      value_array_add(result, ptr_to_value(read_file(file_name)));
+    }
+  }
+
+# 36 "file-reader.c"
+  return result;
+}
+
+
+# 45 "file-reader.c"
+file_t* read_file(char* file_name)
+# 45 "file-reader.c"
+{
+
+# 46 "file-reader.c"
+  file_t* result = malloc_struct(file_t);
+
+# 48 "file-reader.c"
+  buffer_t* buffer = make_buffer((1024*8));
+
+# 49 "file-reader.c"
+  (buffer=buffer_append_file_contents(buffer, file_name));
+
+# 52 "file-reader.c"
+  ((result->tag)=STD_C_SOURCE_FILE);
+
+# 53 "file-reader.c"
+  ((result->file_name)=file_name);
+
+# 54 "file-reader.c"
+  ((result->data)=buffer);
+
+# 55 "file-reader.c"
+  return result;
+}
+
+
+# 58 "file-reader.c"
+void add_all_oarchive_members(value_array_t* result, char* archive_file_name)
+# 58 "file-reader.c"
+{
+
+# 59 "file-reader.c"
+  FILE* in = fopen(archive_file_name, "r");
+
+# 60 "file-reader.c"
+  oarchive_stream_members(in, (&add_orachive_file), result);
+
+# 61 "file-reader.c"
+  fclose(in);
+}
+
+
+# 64 "file-reader.c"
+boolean_t add_orachive_file(FILE* input, string_tree_t* metadata, int64_t size, void* callback_data)
+# 65 "file-reader.c"
+{
+
+# 66 "file-reader.c"
+  value_result_t filename_value = string_tree_find(metadata, "filename");
+
+# 67 "file-reader.c"
+  if (is_ok(filename_value))
+
+# 67 "file-reader.c"
+  {
+
+# 68 "file-reader.c"
+    char* file_name = (filename_value.str);
+
+# 69 "file-reader.c"
+    log_info("Extracting %s from archive", file_name);
+
+# 70 "file-reader.c"
+    file_t* read_file = malloc_struct(file_t);
+
+# 71 "file-reader.c"
+    buffer_t* buffer = make_buffer(size);
+
+# 74 "file-reader.c"
+    while (((size--)>0))
+
+# 74 "file-reader.c"
+    {
+
+# 75 "file-reader.c"
+      int b = fgetc(input);
+
+# 76 "file-reader.c"
+      buffer_append_byte(buffer, b);
+    }
+
+# 80 "file-reader.c"
+    ((read_file->tag)=STD_C_SOURCE_FILE);
+
+# 81 "file-reader.c"
+    ((read_file->file_name)=file_name);
+
+# 82 "file-reader.c"
+    ((read_file->data)=buffer);
+
+# 83 "file-reader.c"
+    value_array_add((/*CAST*/(value_array_t*) callback_data), ptr_to_value(read_file));
+  }
+  else
+
+# 85 "file-reader.c"
+  {
+
+# 86 "file-reader.c"
+    log_fatal("There is no filename for an omni-archive memember.");
+
+# 87 "file-reader.c"
+    log_fatal("Perhaps the .oar file isn't properly formed or created by omni-c " "archive?");
+
+# 90 "file-reader.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 95 "file-reader.c"
+  return false;
+}
+
+
+# 74 "compiler-errors.c"
+buffer_t* buffer_append_human_readable_error(buffer_t* buffer, compiler_error_t* error)
+# 75 "compiler-errors.c"
+{
+
+# 76 "compiler-errors.c"
+  if (((error->tokenizer_error_code)!=TOKENIZER_ERROR_UNKNOWN))
+
+# 76 "compiler-errors.c"
+  {
+
+# 77 "compiler-errors.c"
+    (buffer=buffer_append_human_readable_tokenizer_error(buffer, error));
+  }
+
+# 79 "compiler-errors.c"
+  if (((error->parse_error_code)!=PARSE_ERROR_UNKNOWN))
+
+# 79 "compiler-errors.c"
+  {
+
+# 80 "compiler-errors.c"
+    (buffer=buffer_append_human_readable_parser_error(buffer, error));
+  }
+
+# 82 "compiler-errors.c"
+  return buffer;
+}
+
+
+# 95 "compiler-errors.c"
+src_code_snippets_t get_source_code_snippet(buffer_t* buffer, uint64_t location, int before_lines, int after_lines)
+# 96 "compiler-errors.c"
+{
+
+# 97 "compiler-errors.c"
+  src_code_snippets_t result = {0};
+
+# 99 "compiler-errors.c"
+  uint64_t current_begin = buffer_beginning_of_line(buffer, location);
+
+# 100 "compiler-errors.c"
+  uint64_t current_end = buffer_end_of_line(buffer, location);
+
+# 102 "compiler-errors.c"
+  ((result.current_line)=buffer_c_substring(buffer, current_begin, current_end));
+
+# 104 "compiler-errors.c"
+  uint64_t prefix_begin = current_begin;
+
+# 105 "compiler-errors.c"
+  for (
+
+# 105 "compiler-errors.c"
+
+# 105 "compiler-errors.c"
+    int i = 0;
+
+# 105 "compiler-errors.c"
+    ((i<before_lines)&&(prefix_begin>0));
+
+# 105 "compiler-errors.c"
+    (i++))
+
+# 105 "compiler-errors.c"
+  {
+
+# 106 "compiler-errors.c"
+    (prefix_begin=buffer_beginning_of_line(buffer, (prefix_begin-1)));
+  }
+
+# 108 "compiler-errors.c"
+  ((result.previous_lines)=buffer_c_substring(buffer, prefix_begin, current_begin));
+
+# 111 "compiler-errors.c"
+  uint64_t suffix_end = current_end;
+
+# 112 "compiler-errors.c"
+  for (
+
+# 112 "compiler-errors.c"
+
+# 112 "compiler-errors.c"
+    int i = 0;
+
+# 112 "compiler-errors.c"
+    ((i<after_lines)&&(suffix_end<(buffer->length)));
+
+# 112 "compiler-errors.c"
+    (i++))
+
+# 112 "compiler-errors.c"
+  {
+
+# 113 "compiler-errors.c"
+    (suffix_end=buffer_end_of_line(buffer, (suffix_end+1)));
+  }
+
+# 115 "compiler-errors.c"
+  ((result.next_lines)=buffer_c_substring(buffer, current_end, suffix_end));
+
+# 117 "compiler-errors.c"
+  return result;
+}
+
+
+# 130 "compiler-errors.c"
+char* do_common_replacements(char* template, compiler_error_t* error)
+# 130 "compiler-errors.c"
+{
+
+# 131 "compiler-errors.c"
+  buffer_t* buffer = make_buffer(256);
+
+# 133 "compiler-errors.c"
+  char* file_name = (error->file_name);
+
+# 134 "compiler-errors.c"
+  src_code_snippets_t snippet = {0};
+
+# 136 "compiler-errors.c"
+  if ((error->error_token))
+
+# 136 "compiler-errors.c"
+  {
+
+# 137 "compiler-errors.c"
+    line_and_column_t position_info = buffer_position_to_line_and_column(((error->error_token)->buffer), ((error->error_token)->start));
+
+# 141 "compiler-errors.c"
+    (buffer=buffer_printf(buffer, "%s:%d.%d: ", file_name, ((position_info.line)&0xffffffff), ((position_info.column)&0xffffffff)));
+
+# 145 "compiler-errors.c"
+    (snippet=get_source_code_snippet(((error->error_token)->buffer), ((error->error_token)->start), 5, 3));
+  }
+  else
+
+# 147 "compiler-errors.c"
+  {
+
+# 148 "compiler-errors.c"
+    (buffer=buffer_printf(buffer, "%s:%d.%d: ", file_name, 0, 0));
+  }
+
+# 151 "compiler-errors.c"
+  (buffer=buffer_append_string(buffer, template));
+
+# 154 "compiler-errors.c"
+  (buffer=buffer_replace_all(buffer, "{formatted_snippet}", formatted_snippet));
+
+# 160 "compiler-errors.c"
+  (buffer=buffer_replace_all(buffer, "{error-highlight-on}", "\033[1m"));
+
+# 162 "compiler-errors.c"
+  (buffer=buffer_replace_all(buffer, "{error-highlight-off}", "\033[0m"));
+
+# 164 "compiler-errors.c"
+  (buffer=buffer_replace_all(buffer, "{error-prefix-lines}", (snippet.previous_lines)));
+
+# 166 "compiler-errors.c"
+  (buffer=buffer_replace_all(buffer, "{error-current-line}", (snippet.current_line)));
+
+# 168 "compiler-errors.c"
+  (buffer=buffer_replace_all(buffer, "{error-suffix-lines}", (snippet.next_lines)));
+
+# 171 "compiler-errors.c"
+  return buffer_to_c_string(buffer);
+}
+
+
+# 229 "compiler-errors.c"
+buffer_t* buffer_append_human_readable_tokenizer_error(buffer_t* buffer, compiler_error_t* error)
+# 230 "compiler-errors.c"
+{
+
+# 235 "compiler-errors.c"
+  (buffer=buffer_printf(buffer, "\nlexer error code = %d\n", (error->tokenizer_error_code)));
+
+# 237 "compiler-errors.c"
+  return buffer;
+}
+
+
+# 240 "compiler-errors.c"
+buffer_t* buffer_append_human_readable_parser_error(buffer_t* buffer, compiler_error_t* error)
+# 241 "compiler-errors.c"
+{
+
+# 242 "compiler-errors.c"
+  (buffer=buffer_printf(buffer, "\nparser error code = %d\n", (error->parse_error_code)));
+
+# 244 "compiler-errors.c"
+  char* template = ((void *)0);
+
+# 245 "compiler-errors.c"
+  switch ((error->parse_error_code))
+
+# 245 "compiler-errors.c"
+  {
+
+# 246 "compiler-errors.c"
+    case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
+
+# 247 "compiler-errors.c"
+    (template=error_field_width_or_semicolon);
+
+# 248 "compiler-errors.c"
+    break;
+
+# 250 "compiler-errors.c"
+    case PARSE_ERROR_CLOSE_BRACKET_EXPECTED:
+
+# 251 "compiler-errors.c"
+    (template=error_open_brace_expected);
+
+# 252 "compiler-errors.c"
+    break;
+
+# 254 "compiler-errors.c"
+    case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
+
+# 255 "compiler-errors.c"
+    (template=error_unrecognized_top_level_declaration);
+
+# 256 "compiler-errors.c"
+    break;
+
+# 258 "compiler-errors.c"
+    case PARSE_ERROR_SEMICOLON_EXPECTED:
+
+# 259 "compiler-errors.c"
+    (template=error_open_semicolon_expected);
+
+# 260 "compiler-errors.c"
+    break;
+
+# 262 "compiler-errors.c"
+    case PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER:
+
+# 263 "compiler-errors.c"
+    (template=error_conflicting_storage_class_specifier);
+
+# 264 "compiler-errors.c"
+    break;
+
+# 266 "compiler-errors.c"
+    case PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER:
+
+# 267 "compiler-errors.c"
+    (template=error_conflicting_function_specifier);
+
+# 268 "compiler-errors.c"
+    break;
+
+# 270 "compiler-errors.c"
+    case PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+
+# 271 "compiler-errors.c"
+    (template=error_expected_open_paren_for_underscore_attribute);
+
+# 272 "compiler-errors.c"
+    break;
+
+# 274 "compiler-errors.c"
+    case PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+
+# 275 "compiler-errors.c"
+    (template=error_expected_matching_close_paren_after_underscore_attribute);
+
+# 276 "compiler-errors.c"
+    break;
+
+# 278 "compiler-errors.c"
+    default:
+
+# 279 "compiler-errors.c"
+    (template=parse_error_unknown);
+
+# 280 "compiler-errors.c"
+    break;
+  }
+
+# 283 "compiler-errors.c"
+  char* template_string = do_common_replacements(template, error);
+
+# 284 "compiler-errors.c"
+  return buffer_append_string(buffer, template_string);
+}
+
+
+# 119 "lexer.c"
+char* token_to_string(token_t* token)
+# 119 "lexer.c"
+{
+
+# 120 "lexer.c"
+  return buffer_c_substring((token->buffer), (token->start), (token->end));
+}
+
+
+# 129 "lexer.c"
+token_t* make_derived_token(token_t* source_token)
+# 129 "lexer.c"
+{
+
+# 130 "lexer.c"
+  token_t* result = (/*CAST*/(token_t*) malloc_copy_of((/*CAST*/(uint8_t*) source_token), (sizeof(token_t))));
+
+# 132 "lexer.c"
+  buffer_t* buffer = make_buffer(((source_token->end)-(source_token->start)));
+
+# 133 "lexer.c"
+  (buffer=buffer_append_sub_buffer(buffer, (source_token->start), (source_token->end), (result->buffer)));
+
+# 135 "lexer.c"
+  ((result->buffer)=buffer);
+
+# 136 "lexer.c"
+  ((result->start)=0);
+
+# 137 "lexer.c"
+  ((result->end)=(buffer->length));
+
+# 138 "lexer.c"
+  return result;
+}
+
+
+# 150 "lexer.c"
+__attribute__((warn_unused_result)) buffer_t* append_token_debug_string(buffer_t* buffer, token_t token)
+# 150 "lexer.c"
+{
+
+# 151 "lexer.c"
+  char* str = token_to_string((&token));
+
+# 152 "lexer.c"
+  (buffer=buffer_printf(buffer, "type: %s start: %d end: %d line=%d column=%d str: %s", token_type_to_string((token.type)), (token.start), (token.end), (token.line_number), (token.column_number), str));
+
+# 156 "lexer.c"
+  free_bytes(str);
+
+# 157 "lexer.c"
+  return buffer;
+}
+
+
+# 167 "lexer.c"
+buffer_t* buffer_append_token_string(buffer_t* buffer, token_t* token)
+# 167 "lexer.c"
+{
+
+# 170 "lexer.c"
+  char* str = token_to_string(token);
+
+# 171 "lexer.c"
+  (buffer=buffer_printf(buffer, "%s", str));
+
+# 172 "lexer.c"
+  free_bytes(str);
+
+# 173 "lexer.c"
+  return buffer;
+}
+
+
+# 199 "lexer.c"
+token_or_error_t tokenize_whitespace(buffer_t* buffer, uint64_t start_position)
+# 200 "lexer.c"
+{
+
+# 201 "lexer.c"
+  uint64_t pos = start_position;
+
+# 202 "lexer.c"
+  while ((pos<buffer_length(buffer)))
+
+# 202 "lexer.c"
+  {
+
+# 203 "lexer.c"
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+
+# 204 "lexer.c"
+    if ((decode_result.error))
+
+# 204 "lexer.c"
+    {
+
+# 205 "lexer.c"
+      return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                               .error_position = pos});
+    }
+
+# 209 "lexer.c"
+    uint32_t code_point = (decode_result.code_point);
+
+# 210 "lexer.c"
+    if ((!isspace(code_point)))
+
+# 210 "lexer.c"
+    {
+
+# 211 "lexer.c"
+      break;
+    }
+
+# 213 "lexer.c"
+    (pos+=(decode_result.num_bytes));
+
+# 219 "lexer.c"
+    if ((code_point=='\n'))
+
+# 219 "lexer.c"
+    {
+
+# 220 "lexer.c"
+      break;
+    }
+  }
+
+# 224 "lexer.c"
+  return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
+                                           .type = TOKEN_TYPE_WHITESPACE,
+                                           .start = start_position,
+                                           .end = pos})});
+}
+
+
+# 236 "lexer.c"
+boolean_t is_identifier_start(uint32_t code_point)
+# 236 "lexer.c"
+{
+
+# 241 "lexer.c"
+  switch (code_point)
+
+# 241 "lexer.c"
+  {
+
+# 242 "lexer.c"
+    case '$':
+
+# 243 "lexer.c"
+    return true;
+
+# 244 "lexer.c"
+    case '_':
+
+# 245 "lexer.c"
+    return true;
+
+# 246 "lexer.c"
+    default:
+
+# 247 "lexer.c"
+    return isalpha(code_point);
+  }
+}
+
+
+# 256 "lexer.c"
+token_or_error_t tokenize_identifier(buffer_t* buffer, uint64_t start_position)
+# 257 "lexer.c"
+{
+
+# 258 "lexer.c"
+  uint64_t pos = start_position;
+
+# 259 "lexer.c"
+  while ((pos<buffer_length(buffer)))
+
+# 259 "lexer.c"
+  {
+
+# 260 "lexer.c"
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+
+# 261 "lexer.c"
+    if ((decode_result.error))
+
+# 261 "lexer.c"
+    {
+
+# 262 "lexer.c"
+      return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                               .error_position = pos});
+    }
+
+# 266 "lexer.c"
+    uint32_t code_point = (decode_result.code_point);
+
+# 267 "lexer.c"
+    if ((!(is_identifier_start(code_point)||isdigit(code_point))))
+
+# 267 "lexer.c"
+    {
+
+# 268 "lexer.c"
+      break;
+    }
+
+# 270 "lexer.c"
+    (pos+=(decode_result.num_bytes));
+  }
+
+# 273 "lexer.c"
+  return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
+                                           .type = TOKEN_TYPE_IDENTIFIER,
+                                           .start = start_position,
+                                           .end = pos})});
+}
+
+
+# 298 "lexer.c"
+token_or_error_t tokenize_numeric(buffer_t* buffer, uint64_t start_position)
+# 298 "lexer.c"
+{
+
+# 299 "lexer.c"
+  numeric_literal_encoding_t encoding = NUMERIC_LITERAL_ENCODING_UNDECIDED;
+
+# 300 "lexer.c"
+  uint32_t previous_code_point = 0;
+
+# 302 "lexer.c"
+  token_type_t token_type = TOKEN_TYPE_INTEGER_LITERAL;
+
+# 304 "lexer.c"
+  uint64_t offset = 0;
+
+# 305 "lexer.c"
+  uint64_t pos = start_position;
+
+# 306 "lexer.c"
+  while ((pos<buffer_length(buffer)))
+
+# 306 "lexer.c"
+  {
+
+# 307 "lexer.c"
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+
+# 308 "lexer.c"
+    if ((decode_result.error))
+
+# 308 "lexer.c"
+    {
+
+# 309 "lexer.c"
+      return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR,
+                               .error_position = pos});
+    }
+
+# 313 "lexer.c"
+    uint32_t code_point = (decode_result.code_point);
+
+# 315 "lexer.c"
+    if (((offset==0)&&(code_point!='0')))
+
+# 315 "lexer.c"
+    {
+
+# 316 "lexer.c"
+      (encoding=NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL);
+    }
+
+# 319 "lexer.c"
+    if (((offset==1)&&(encoding==NUMERIC_LITERAL_ENCODING_UNDECIDED)))
+
+# 319 "lexer.c"
+    {
+
+# 320 "lexer.c"
+      boolean_t changed = false;
+
+# 321 "lexer.c"
+      if ((code_point=='x'))
+
+# 321 "lexer.c"
+      {
+
+# 322 "lexer.c"
+        (encoding=NUMERIC_LITERAL_ENCODING_HEX);
+
+# 323 "lexer.c"
+        (changed=true);
+      }
+      else
+
+# 324 "lexer.c"
+      if ((code_point=='o'))
+
+# 324 "lexer.c"
+      {
+
+# 325 "lexer.c"
+        (encoding=NUMERIC_LITERAL_ENCODING_OCTAL);
+
+# 326 "lexer.c"
+        (changed=true);
+      }
+      else
+
+# 327 "lexer.c"
+      if ((code_point=='b'))
+
+# 327 "lexer.c"
+      {
+
+# 328 "lexer.c"
+        (encoding=NUMERIC_LITERAL_ENCODING_HEX);
+
+# 329 "lexer.c"
+        (changed=true);
+      }
+
+# 331 "lexer.c"
+      if (changed)
+
+# 331 "lexer.c"
+      {
+
+# 332 "lexer.c"
+        (pos+=(decode_result.num_bytes));
+
+# 333 "lexer.c"
+        (previous_code_point=code_point);
+
+# 334 "lexer.c"
+        (offset+=1);
+
+# 335 "lexer.c"
+        continue;
+      }
+    }
+
+# 339 "lexer.c"
+    if (((code_point=='.')&&((encoding==NUMERIC_LITERAL_ENCODING_UNDECIDED)||(encoding==NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL))))
+
+# 341 "lexer.c"
+    {
+
+# 342 "lexer.c"
+      (token_type=TOKEN_TYPE_FLOAT_LITERAL);
+
+# 343 "lexer.c"
+      (encoding=NUMERIC_LITERAL_ENCODING_FLOAT);
+
+# 344 "lexer.c"
+      (pos+=(decode_result.num_bytes));
+
+# 345 "lexer.c"
+      (previous_code_point=code_point);
+
+# 346 "lexer.c"
+      (offset+=1);
+
+# 347 "lexer.c"
+      continue;
+    }
+
+# 350 "lexer.c"
+    if ((!can_extend_number(encoding, code_point, previous_code_point)))
+
+# 350 "lexer.c"
+    {
+
+# 351 "lexer.c"
+      break;
+    }
+
+# 354 "lexer.c"
+    (pos+=(decode_result.num_bytes));
+
+# 355 "lexer.c"
+    (previous_code_point=code_point);
+
+# 356 "lexer.c"
+    (offset+=1);
+  }
+
+# 359 "lexer.c"
+  return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
+                                           .type = token_type,
+                                           .start = start_position,
+                                           .end = pos})});
+}
+
+
+# 367 "lexer.c"
+boolean_t can_extend_number(numeric_literal_encoding_t encoding, uint32_t code_point, uint32_t previous_code_point)
+# 368 "lexer.c"
+{
+
+# 369 "lexer.c"
+  switch (encoding)
+
+# 369 "lexer.c"
+  {
+
+# 370 "lexer.c"
+    case NUMERIC_LITERAL_ENCODING_UNDECIDED:
+
+# 371 "lexer.c"
+    return string_contains_char("0123456789.eEobxLlUuFf", code_point);
+
+# 373 "lexer.c"
+    case NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL:
+
+# 374 "lexer.c"
+    return string_contains_char("0123456789.eELlUuFf", code_point);
+
+# 376 "lexer.c"
+    case NUMERIC_LITERAL_ENCODING_BINARY:
+
+# 377 "lexer.c"
+    return string_contains_char("01LlUu", code_point);
+
+# 379 "lexer.c"
+    case NUMERIC_LITERAL_ENCODING_OCTAL:
+
+# 380 "lexer.c"
+    return string_contains_char("01234567LlUu", code_point);
+
+# 382 "lexer.c"
+    case NUMERIC_LITERAL_ENCODING_HEX:
+
+# 383 "lexer.c"
+    return string_contains_char("0123456789abcdefABCDEFLlUu", code_point);
+
+# 385 "lexer.c"
+    case NUMERIC_LITERAL_ENCODING_DECIMAL:
+
+# 386 "lexer.c"
+    return string_contains_char("0123456789LlUu", code_point);
+
+# 388 "lexer.c"
+    case NUMERIC_LITERAL_ENCODING_FLOAT:
+
+# 389 "lexer.c"
+    return (string_contains_char("0123456789FfeE", code_point)||(((previous_code_point=='e')||(previous_code_point=='E'))&&string_contains_char("+-", code_point)));
+
+# 393 "lexer.c"
+    default:
+
+# 394 "lexer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 395 "lexer.c"
+    return false;
+  }
+
+# 398 "lexer.c"
+  return false;
+}
+
+
+# 467 "lexer.c"
+token_or_error_t tokenize_punctuation(buffer_t* buffer, uint64_t start_position)
+# 468 "lexer.c"
+{
+
+# 469 "lexer.c"
+  int num_elements = ((sizeof(c_punctuation))/(sizeof((c_punctuation[0]))));
+
+# 470 "lexer.c"
+  for (
+
+# 470 "lexer.c"
+
+# 470 "lexer.c"
+    int i = 0;
+
+# 470 "lexer.c"
+    (i<num_elements);
+
+# 470 "lexer.c"
+    (i++))
+
+# 470 "lexer.c"
+  {
+
+# 471 "lexer.c"
+    if (buffer_match_string_at(buffer, start_position, (c_punctuation[i])))
+
+# 471 "lexer.c"
+    {
+
+# 472 "lexer.c"
+      return ((token_or_error_t) {.token = compound_literal(
+               token_t, {.buffer = buffer,
+                         .type = TOKEN_TYPE_PUNCTUATION,
+                         .start = start_position,
+                         .end = start_position + strlen(c_punctuation[i])})});
+    }
+  }
+
+# 481 "lexer.c"
+  return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION,
+                         .error_position = start_position});
+}
+
+
+# 486 "lexer.c"
+boolean_t is_comment_start(buffer_t* buffer, uint64_t position)
+# 486 "lexer.c"
+{
+
+# 487 "lexer.c"
+  return (buffer_match_string_at(buffer, position, "//")||buffer_match_string_at(buffer, position, "/*"));
+}
+
+
+# 491 "lexer.c"
+token_or_error_t tokenize_comment(buffer_t* buffer, uint64_t start_position)
+# 491 "lexer.c"
+{
+
+# 492 "lexer.c"
+  if (buffer_match_string_at(buffer, start_position, "//"))
+
+# 492 "lexer.c"
+  {
+
+# 493 "lexer.c"
+    for (
+
+# 493 "lexer.c"
+
+# 493 "lexer.c"
+      uint64_t position = (start_position+2);
+
+# 493 "lexer.c"
+      (position<(buffer->length));
+
+# 493 "lexer.c"
+      (position++))
+
+# 494 "lexer.c"
+    {
+
+# 495 "lexer.c"
+      if (buffer_match_string_at(buffer, position, "\n"))
+
+# 495 "lexer.c"
+      {
+
+# 496 "lexer.c"
+        return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
+                                                 .type = TOKEN_TYPE_COMMENT,
+                                                 .start = start_position,
+                                                 .end = position + 1})});
+      }
+    }
+  }
+  else
+
+# 504 "lexer.c"
+  {
+
+# 505 "lexer.c"
+    for (
+
+# 505 "lexer.c"
+
+# 505 "lexer.c"
+      uint64_t position = (start_position+2);
+
+# 505 "lexer.c"
+      (position<(buffer->length));
+
+# 505 "lexer.c"
+      (position++))
+
+# 506 "lexer.c"
+    {
+
+# 507 "lexer.c"
+      if (buffer_match_string_at(buffer, position, "*/"))
+
+# 507 "lexer.c"
+      {
+
+# 508 "lexer.c"
+        return ((token_or_error_t) {.token = compound_literal(token_t, {.buffer = buffer,
+                                                 .type = TOKEN_TYPE_COMMENT,
+                                                 .start = start_position,
+                                                 .end = position + 2})});
+      }
+    }
+  }
+
+# 518 "lexer.c"
+  return ((token_or_error_t) {.error_code = TOKENIZER_ERROR_UNTERMINATED_COMMENT,
+                           .error_position = start_position});
+}
+
+
+# 523 "lexer.c"
+boolean_t is_string_literal_start(buffer_t* buffer, uint64_t position)
+# 523 "lexer.c"
+{
+
+# 524 "lexer.c"
+  return buffer_match_string_at(buffer, position, "\"");
+}
+
+
+# 527 "lexer.c"
+boolean_t is_character_literal_start(buffer_t* buffer, uint64_t position)
+# 527 "lexer.c"
+{
+
+# 528 "lexer.c"
+  return buffer_match_string_at(buffer, position, "'");
+}
+
+
+# 536 "lexer.c"
+token_or_error_t tokenize_string_literal(buffer_t* buffer, uint64_t start_position)
+# 537 "lexer.c"
+{
+
+# 538 "lexer.c"
+  uint64_t position = start_position;
+
+# 539 "lexer.c"
+  if (is_string_literal_start(buffer, position))
+
+# 539 "lexer.c"
+  {
+
+# 540 "lexer.c"
+    (position++);
+
+# 541 "lexer.c"
+    while (true)
+
+# 541 "lexer.c"
+    {
+
+# 542 "lexer.c"
+      if ((position>buffer_length(buffer)))
+
+# 542 "lexer.c"
+      {
+
+# 543 "lexer.c"
+        make_token_error_result(position, TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
+      }
+
+# 546 "lexer.c"
+      if (is_string_literal_start(buffer, position))
+
+# 546 "lexer.c"
+      {
+
+# 547 "lexer.c"
+        return make_token_result(buffer, TOKEN_TYPE_STRING_LITERAL, start_position, (position+1));
+      }
+
+# 550 "lexer.c"
+      (position=advance_char_literal_position(buffer, position));
+    }
+  }
+
+# 553 "lexer.c"
+  return make_token_error_result(position, TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL);
+}
+
+
+# 562 "lexer.c"
+token_or_error_t tokenize_character_literal(buffer_t* buffer, uint64_t start_position)
+# 563 "lexer.c"
+{
+
+# 564 "lexer.c"
+  uint64_t position = start_position;
+
+# 565 "lexer.c"
+  if (is_character_literal_start(buffer, position))
+
+# 565 "lexer.c"
+  {
+
+# 566 "lexer.c"
+    (position++);
+
+# 567 "lexer.c"
+    (position=advance_char_literal_position(buffer, position));
+
+# 568 "lexer.c"
+    if (is_character_literal_start(buffer, position))
+
+# 568 "lexer.c"
+    {
+
+# 569 "lexer.c"
+      return make_token_result(buffer, TOKEN_TYPE_CHARACTER_LITERAL, start_position, (position+1));
+    }
+  }
+
+# 573 "lexer.c"
+  return make_token_error_result(position, TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL);
+}
+
+
+# 577 "lexer.c"
+uint64_t advance_char_literal_position(buffer_t* buffer, uint64_t position)
+# 577 "lexer.c"
+{
+
+# 579 "lexer.c"
+  utf8_decode_result_t result = buffer_utf8_decode(buffer, position);
+
+# 580 "lexer.c"
+  if (((result.num_bytes)==0))
+
+# 580 "lexer.c"
+  {
+
+# 581 "lexer.c"
+    log_fatal("We seem to have non-utf-8 input...");
+
+# 582 "lexer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 584 "lexer.c"
+  if (((result.code_point)=='\\'))
+
+# 584 "lexer.c"
+  {
+
+# 585 "lexer.c"
+    (position+=(result.num_bytes));
+
+# 586 "lexer.c"
+    (result=buffer_utf8_decode(buffer, position));
+
+# 588 "lexer.c"
+    if (((result.num_bytes)==0))
+
+# 588 "lexer.c"
+    {
+
+# 589 "lexer.c"
+      log_fatal("We seem to have non-utf-8 input issue #2...");
+
+# 590 "lexer.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 593 "lexer.c"
+    switch ((result.code_point))
+
+# 593 "lexer.c"
+    {
+
+# 594 "lexer.c"
+      case 'n':
+
+# 595 "lexer.c"
+      case 't':
+
+# 596 "lexer.c"
+      case 'r':
+
+# 597 "lexer.c"
+      case '\\':
+
+# 598 "lexer.c"
+      case '\'':
+
+# 599 "lexer.c"
+      case '"':
+
+# 600 "lexer.c"
+      case 'b':
+
+# 601 "lexer.c"
+      case 'f':
+
+# 602 "lexer.c"
+      (position+=(result.num_bytes));
+
+# 603 "lexer.c"
+      return position;
+
+# 604 "lexer.c"
+      case 'x':
+
+# 605 "lexer.c"
+      (position+=((result.num_bytes)+2));
+
+# 606 "lexer.c"
+      return position;
+
+# 607 "lexer.c"
+      case 'u':
+
+# 608 "lexer.c"
+      (position+=((result.num_bytes)+4));
+
+# 609 "lexer.c"
+      return position;
+
+# 611 "lexer.c"
+      case '0':
+
+# 612 "lexer.c"
+      case '1':
+
+# 613 "lexer.c"
+      case '2':
+
+# 614 "lexer.c"
+      case '3':
+
+# 615 "lexer.c"
+      case '4':
+
+# 616 "lexer.c"
+      case '5':
+
+# 617 "lexer.c"
+      case '6':
+
+# 618 "lexer.c"
+      case '7':
+
+# 618 "lexer.c"
+      {
+
+# 620 "lexer.c"
+        (position+=(result.num_bytes));
+
+# 623 "lexer.c"
+        utf8_decode_result_t next = buffer_utf8_decode(buffer, position);
+
+# 624 "lexer.c"
+        if ((((next.code_point)>='0')&&((next.code_point)<='7')))
+
+# 624 "lexer.c"
+        {
+
+# 625 "lexer.c"
+          (position+=(next.num_bytes));
+
+# 628 "lexer.c"
+          (next=buffer_utf8_decode(buffer, position));
+
+# 629 "lexer.c"
+          if ((((next.code_point)>='0')&&((next.code_point)<='7')))
+
+# 629 "lexer.c"
+          {
+
+# 630 "lexer.c"
+            (position+=(next.num_bytes));
+          }
+        }
+
+# 633 "lexer.c"
+        return position;
+      }
+
+# 636 "lexer.c"
+      default:
+
+# 638 "lexer.c"
+      fatal_error(ERROR_ILLEGAL_INPUT);
+
+# 639 "lexer.c"
+      break;
+    }
+  }
+
+# 642 "lexer.c"
+  return (position+(result.num_bytes));
+}
+
+
+# 671 "lexer.c"
+tokenizer_result_t tokenize(buffer_t* buffer)
+# 671 "lexer.c"
+{
+
+# 672 "lexer.c"
+  tokenizer_result_t result = {0};
+
+# 676 "lexer.c"
+  value_array_t* result_tokens = make_value_array(1024);
+
+# 678 "lexer.c"
+  uint64_t line_number = 1;
+
+# 679 "lexer.c"
+  uint64_t column_number = 1;
+
+# 681 "lexer.c"
+  uint32_t pos = 0;
+
+# 682 "lexer.c"
+  while ((pos<buffer_length(buffer)))
+
+# 682 "lexer.c"
+  {
+
+# 683 "lexer.c"
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+
+# 684 "lexer.c"
+    if ((decode_result.error))
+
+# 684 "lexer.c"
+    {
+
+# 685 "lexer.c"
+      return ((tokenizer_result_t) {.tokenizer_error_code = TOKENIZER_ERROR_UTF_DECODE_ERROR});
+    }
+
+# 690 "lexer.c"
+    uint32_t code_point = (decode_result.code_point);
+
+# 691 "lexer.c"
+    token_t* token = ((void *)0);
+
+# 693 "lexer.c"
+    if (isspace(code_point))
+
+# 693 "lexer.c"
+    {
+
+# 694 "lexer.c"
+      read_token(tokenize_whitespace);
+    }
+    else
+
+# 695 "lexer.c"
+    if (is_identifier_start(code_point))
+
+# 695 "lexer.c"
+    {
+
+# 696 "lexer.c"
+      read_token(tokenize_identifier);
+    }
+    else
+
+# 697 "lexer.c"
+    if (isdigit(code_point))
+
+# 697 "lexer.c"
+    {
+
+# 698 "lexer.c"
+      read_token(tokenize_numeric);
+    }
+    else
+
+# 699 "lexer.c"
+    if (is_comment_start(buffer, pos))
+
+# 699 "lexer.c"
+    {
+
+# 700 "lexer.c"
+      read_token(tokenize_comment);
+    }
+    else
+
+# 701 "lexer.c"
+    if (is_string_literal_start(buffer, pos))
+
+# 701 "lexer.c"
+    {
+
+# 702 "lexer.c"
+      read_token(tokenize_string_literal);
+    }
+    else
+
+# 703 "lexer.c"
+    if (is_character_literal_start(buffer, pos))
+
+# 703 "lexer.c"
+    {
+
+# 704 "lexer.c"
+      read_token(tokenize_character_literal);
+    }
+    else
+
+# 705 "lexer.c"
+    {
+
+# 706 "lexer.c"
+      read_token(tokenize_punctuation);
+    }
+
+# 711 "lexer.c"
+    if ((token!=((void *)0)))
+
+# 711 "lexer.c"
+    {
+
+# 712 "lexer.c"
+      ((token->line_number)=line_number);
+
+# 713 "lexer.c"
+      ((token->column_number)=column_number);
+
+# 714 "lexer.c"
+      for (
+
+# 714 "lexer.c"
+
+# 714 "lexer.c"
+        int i = (token->start);
+
+# 714 "lexer.c"
+        (i<(token->end));
+
+# 714 "lexer.c"
+        (i++))
+
+# 714 "lexer.c"
+      {
+
+# 715 "lexer.c"
+        uint8_t ch = buffer_get((token->buffer), i);
+
+# 716 "lexer.c"
+        if ((ch=='\n'))
+
+# 716 "lexer.c"
+        {
+
+# 717 "lexer.c"
+          (line_number++);
+
+# 718 "lexer.c"
+          (column_number=1);
+        }
+        else
+
+# 719 "lexer.c"
+        {
+
+# 720 "lexer.c"
+          (column_number++);
+        }
+      }
+    }
+  }
+
+# 726 "lexer.c"
+  ((result.tokens)=result_tokens);
+
+# 727 "lexer.c"
+  return result;
+}
+
+
+# 36 "token-transformer.c"
+value_array_t* transform_tokens(value_array_t* tokens, token_transformer_options_t xform_options)
+# 37 "token-transformer.c"
+{
+
+# 38 "token-transformer.c"
+  value_array_t* result = make_value_array((tokens->length));
+
+# 39 "token-transformer.c"
+  for (
+
+# 39 "token-transformer.c"
+
+# 39 "token-transformer.c"
+    int position = 0;
+
+# 39 "token-transformer.c"
+    (position<(tokens->length));
+
+# 39 "token-transformer.c"
+    (position++))
+
+# 39 "token-transformer.c"
+  {
+
+# 40 "token-transformer.c"
+    token_t* token = token_at(tokens, position);
+
+# 41 "token-transformer.c"
+    if (((token->is_cpp_token)&&(!(xform_options.keep_c_preprocessor_lines))))
+
+# 41 "token-transformer.c"
+    {
+
+# 42 "token-transformer.c"
+      continue;
+    }
+
+# 44 "token-transformer.c"
+    if ((((token->type)==TOKEN_TYPE_WHITESPACE)&&(!(xform_options.keep_whitespace))))
+
+# 45 "token-transformer.c"
+    {
+
+# 46 "token-transformer.c"
+      continue;
+    }
+
+# 48 "token-transformer.c"
+    if (((token->type)==TOKEN_TYPE_COMMENT))
+
+# 48 "token-transformer.c"
+    {
+
+# 49 "token-transformer.c"
+      if (token_starts_with(token, "/**"))
+
+# 49 "token-transformer.c"
+      {
+
+# 50 "token-transformer.c"
+        if ((!(xform_options.keep_javadoc_comments)))
+
+# 50 "token-transformer.c"
+        {
+
+# 51 "token-transformer.c"
+          continue;
+        }
+      }
+      else
+
+# 53 "token-transformer.c"
+      if ((!(xform_options.keep_comments)))
+
+# 53 "token-transformer.c"
+      {
+
+# 54 "token-transformer.c"
+        continue;
+      }
+    }
+
+# 58 "token-transformer.c"
+    value_array_add(result, ptr_to_value(token));
+  }
+
+# 61 "token-transformer.c"
+  return result;
+}
+
+
+# 6 "pstate.c"
+boolean_t pstate_is_eof(pstate_t* pstate)
+# 6 "pstate.c"
+{
+
+# 7 "pstate.c"
+  return (!((pstate->position)<((pstate->tokens)->length)));
+}
+
+
+# 16 "pstate.c"
+pstatus_t pstate_error(pstate_t* pstate, uint64_t saved_position, parse_error_code_t parse_error_code)
+# 17 "pstate.c"
+{
+
+# 18 "pstate.c"
+  ((pstate->result_token)=((void *)0));
+
+# 19 "pstate.c"
+  ((pstate->result_node)=((void *)0));
+
+# 20 "pstate.c"
+  (((pstate->error).parse_error_code)=parse_error_code);
+
+# 21 "pstate.c"
+  (((pstate->error).error_position)=(pstate->position));
+
+# 22 "pstate.c"
+  (((pstate->error).error_token)=token_at((pstate->tokens), (pstate->position)));
+
+# 24 "pstate.c"
+  ((pstate->position)=saved_position);
+
+# 25 "pstate.c"
+  return false;
+}
+
+
+# 41 "pstate.c"
+pstate_t* pstate_ignore_error(pstate_t* pstate)
+# 41 "pstate.c"
+{
+
+# 42 "pstate.c"
+  ((pstate->error)=((compiler_error_t) {0}));
+
+# 43 "pstate.c"
+  return pstate;
+}
+
+
+# 53 "pstate.c"
+pstatus_t pstate_propagate_error(pstate_t* pstate, uint64_t saved_position)
+# 53 "pstate.c"
+{
+
+# 54 "pstate.c"
+  ((pstate->position)=saved_position);
+
+# 55 "pstate.c"
+  if ((!((pstate->error).parse_error_code)))
+
+# 55 "pstate.c"
+  {
+
+# 56 "pstate.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 58 "pstate.c"
+  return false;
+}
+
+
+# 67 "pstate.c"
+pstatus_t pstate_set_result_token(pstate_t* pstate, token_t* token)
+# 67 "pstate.c"
+{
+
+# 68 "pstate.c"
+  ((pstate->error)=((compiler_error_t) {0}));
+
+# 69 "pstate.c"
+  ((pstate->result_node)=((void *)0));
+
+# 70 "pstate.c"
+  ((pstate->result_token)=token);
+
+# 71 "pstate.c"
+  return true;
+}
+
+
+# 80 "pstate.c"
+pstatus_t pstate_set_result_node(pstate_t* pstate, parse_node_t* node)
+# 80 "pstate.c"
+{
+
+# 81 "pstate.c"
+  ((pstate->error)=((compiler_error_t) {0}));
+
+# 82 "pstate.c"
+  ((pstate->result_node)=node);
+
+# 83 "pstate.c"
+  ((pstate->result_token)=((void *)0));
+
+# 84 "pstate.c"
+  return true;
+}
+
+
+# 94 "pstate.c"
+token_t* pstate_get_result_token(pstate_t* pstate)
+# 94 "pstate.c"
+{
+
+# 95 "pstate.c"
+  if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
+
+# 95 "pstate.c"
+  {
+
+# 96 "pstate.c"
+    log_debug("error code is not zero");
+
+# 97 "pstate.c"
+    ((pstate->error)=((compiler_error_t) {0}));
+  }
+
+# 100 "pstate.c"
+  token_t* token = (pstate->result_token);
+
+# 101 "pstate.c"
+  ((pstate->result_token)=((void *)0));
+
+# 102 "pstate.c"
+  return token;
+}
+
+
+# 111 "pstate.c"
+parse_node_t* pstate_get_result_node(pstate_t* pstate)
+# 111 "pstate.c"
+{
+
+# 112 "pstate.c"
+  if ((((pstate->error).parse_error_code)!=PARSE_ERROR_UNKNOWN))
+
+# 112 "pstate.c"
+  {
+
+# 113 "pstate.c"
+    log_debug("error code is not zero");
+
+# 114 "pstate.c"
+    ((pstate->error)=((compiler_error_t) {0}));
+  }
+
+# 117 "pstate.c"
+  parse_node_t* result = (pstate->result_node);
+
+# 118 "pstate.c"
+  if ((result==((void *)0)))
+
+# 118 "pstate.c"
+  {
+
+# 119 "pstate.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 121 "pstate.c"
+  ((pstate->result_node)=((void *)0));
+
+# 122 "pstate.c"
+  return result;
+}
+
+
+# 131 "pstate.c"
+parse_node_t* pstate_get_optional_result_node(pstate_t* pstate)
+# 131 "pstate.c"
+{
+
+# 132 "pstate.c"
+  ((pstate->error)=((compiler_error_t) {0}));
+
+# 133 "pstate.c"
+  parse_node_t* result = (pstate->result_node);
+
+# 134 "pstate.c"
+  ((pstate->result_node)=((void *)0));
+
+# 135 "pstate.c"
+  return result;
+}
+
+
+# 144 "pstate.c"
+token_t* pstate_peek(pstate_t* pstate, int offset)
+# 144 "pstate.c"
+{
+
+# 145 "pstate.c"
+  return token_at((pstate->tokens), ((pstate->position)+offset));
+}
+
+
+# 155 "pstate.c"
+token_t* pstate_advance(pstate_t* pstate)
+# 155 "pstate.c"
+{
+
+# 156 "pstate.c"
+  if (((pstate->error).parse_error_code))
+
+# 156 "pstate.c"
+  {
+
+# 157 "pstate.c"
+    log_debug("error code is not zero");
+
+# 158 "pstate.c"
+    ((pstate->error)=((compiler_error_t) {0}));
+  }
+
+# 161 "pstate.c"
+  token_t* token = pstate_peek(pstate, 0);
+
+# 162 "pstate.c"
+  ((pstate->position)++);
+
+# 163 "pstate.c"
+  return token;
+}
+
+
+# 171 "pstate.c"
+boolean_t pstate_match_token_string(pstate_t* pstate, char* token_string)
+# 171 "pstate.c"
+{
+
+# 172 "pstate.c"
+  token_t* token = pstate_peek(pstate, 0);
+
+# 173 "pstate.c"
+  return token_matches(token, token_string);
+}
+
+
+# 188 "pstate.c"
+pstatus_t pstate_expect_token_string(pstate_t* pstate, char* token_string)
+# 188 "pstate.c"
+{
+
+# 189 "pstate.c"
+  token_t* token = pstate_peek(pstate, 0);
+
+# 190 "pstate.c"
+  if (token_matches(token, token_string))
+
+# 190 "pstate.c"
+  {
+
+# 191 "pstate.c"
+    ((pstate->result_node)=((void *)0));
+
+# 192 "pstate.c"
+    ((pstate->result_token)=token);
+
+# 193 "pstate.c"
+    ((pstate->position)+=1);
+
+# 194 "pstate.c"
+    return true;
+  }
+
+# 196 "pstate.c"
+  (((pstate->error).parse_error_code)=PARSE_ERROR_EXPECTED_TOKEN);
+
+# 197 "pstate.c"
+  return false;
+}
+
+
+# 209 "pstate.c"
+pstatus_t pstate_expect_token_type(pstate_t* pstate, token_type_t token_type)
+# 209 "pstate.c"
+{
+
+# 210 "pstate.c"
+  token_t* token = pstate_peek(pstate, 0);
+
+# 211 "pstate.c"
+  if ((token_type==(token->type)))
+
+# 211 "pstate.c"
+  {
+
+# 212 "pstate.c"
+    ((pstate->result_node)=((void *)0));
+
+# 213 "pstate.c"
+    ((pstate->result_token)=token);
+
+# 214 "pstate.c"
+    ((pstate->position)+=1);
+
+# 215 "pstate.c"
+    return true;
+  }
+
+# 217 "pstate.c"
+  (((pstate->error).parse_error_code)=PARSE_ERROR_EXPECTED_TOKEN_TYPE);
+
+# 218 "pstate.c"
+  return false;
+}
+
+
+# 227 "pstate.c"
+void pstate_rollback(pstate_t* pstate, uint64_t saved_position)
+# 227 "pstate.c"
+{
+
+# 228 "pstate.c"
+  ((pstate->position)=saved_position);
+
+# 229 "pstate.c"
+  ((pstate->result_node)=((void *)0));
+
+# 230 "pstate.c"
+  ((pstate->result_token)=((void *)0));
+
+# 231 "pstate.c"
+  pstate_ignore_error(pstate);
+}
+
+
+# 308 "declaration-parser.c"
+pstatus_t parse_declarations(pstate_t* pstate)
+# 308 "declaration-parser.c"
+{
+
+# 309 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 310 "declaration-parser.c"
+  declarations_node_t* result = make_declarations();
+
+# 311 "declaration-parser.c"
+  while (((pstate->position)<((pstate->tokens)->length)))
+
+# 311 "declaration-parser.c"
+  {
+
+# 312 "declaration-parser.c"
+    if ((!parse_declaration(pstate)))
+
+# 312 "declaration-parser.c"
+    {
+
+# 313 "declaration-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 315 "declaration-parser.c"
+    node_list_add_node((&(result->declarations)), pstate_get_result_node(pstate));
+  }
+
+# 317 "declaration-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 323 "declaration-parser.c"
+pstatus_t parse_declaration(pstate_t* pstate)
+# 323 "declaration-parser.c"
+{
+
+# 324 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 325 "declaration-parser.c"
+  if (((((((parse_function_node(pstate)||parse_improved_typedef_node(pstate_ignore_error(pstate)))||parse_typedef_node(pstate_ignore_error(pstate)))||parse_enum_node_declaration(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_structure_node_declaration(pstate_ignore_error(pstate)))||parse_union_node_declaration(pstate_ignore_error(pstate))))
+
+# 331 "declaration-parser.c"
+  {
+
+# 332 "declaration-parser.c"
+    return true;
+  }
+
+# 334 "declaration-parser.c"
+  return pstate_error(pstate, saved_position, PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION);
+}
+
+
+# 343 "declaration-parser.c"
+pstatus_t parse_enum_node_declaration(pstate_t* pstate)
+# 343 "declaration-parser.c"
+{
+
+# 344 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 347 "declaration-parser.c"
+  if ((!parse_enum_node(pstate)))
+
+# 347 "declaration-parser.c"
+  {
+
+# 348 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 350 "declaration-parser.c"
+  parse_node_t* result = pstate_get_result_node(pstate);
+
+# 351 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 351 "declaration-parser.c"
+  {
+
+# 352 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 355 "declaration-parser.c"
+  return pstate_set_result_node(pstate, result);
+}
+
+
+# 363 "declaration-parser.c"
+pstatus_t parse_structure_node_declaration(pstate_t* pstate)
+# 363 "declaration-parser.c"
+{
+
+# 364 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 367 "declaration-parser.c"
+  if ((!parse_structure_node(pstate)))
+
+# 367 "declaration-parser.c"
+  {
+
+# 368 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 370 "declaration-parser.c"
+  parse_node_t* result = pstate_get_result_node(pstate);
+
+# 371 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 371 "declaration-parser.c"
+  {
+
+# 372 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 375 "declaration-parser.c"
+  return pstate_set_result_node(pstate, result);
+}
+
+
+# 383 "declaration-parser.c"
+pstatus_t parse_union_node_declaration(pstate_t* pstate)
+# 383 "declaration-parser.c"
+{
+
+# 384 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 387 "declaration-parser.c"
+  if ((!parse_union_node(pstate)))
+
+# 387 "declaration-parser.c"
+  {
+
+# 388 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 390 "declaration-parser.c"
+  parse_node_t* result = pstate_get_result_node(pstate);
+
+# 391 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 391 "declaration-parser.c"
+  {
+
+# 392 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 395 "declaration-parser.c"
+  return pstate_set_result_node(pstate, result);
+}
+
+
+# 403 "declaration-parser.c"
+pstatus_t parse_attribute_node(pstate_t* pstate)
+# 403 "declaration-parser.c"
+{
+
+# 404 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 405 "declaration-parser.c"
+  if (((!pstate_expect_token_string(pstate, "__attribute__"))||(!parse_balanced_construct(pstate))))
+
+# 406 "declaration-parser.c"
+  {
+
+# 407 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 409 "declaration-parser.c"
+  attribute_node_t* result = make_attribute_node();
+
+# 410 "declaration-parser.c"
+  ((result->inner_start_token)=token_at((pstate->tokens), saved_position));
+
+# 411 "declaration-parser.c"
+  ((result->inner_end_token)=pstate_peek(pstate, (-1)));
+
+# 412 "declaration-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 421 "declaration-parser.c"
+pstatus_t parse_function_node(pstate_t* pstate)
+# 421 "declaration-parser.c"
+{
+
+# 422 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 424 "declaration-parser.c"
+  token_t* storage_class_specifier = ((void *)0);
+
+# 425 "declaration-parser.c"
+  token_list_t function_specifiers = {0};
+
+# 426 "declaration-parser.c"
+  node_list_t attributes = {0};
+
+# 428 "declaration-parser.c"
+  while (1)
+
+# 428 "declaration-parser.c"
+  {
+
+# 429 "declaration-parser.c"
+    if ((((pstate_expect_token_string(pstate, "static")||pstate_expect_token_string(pstate_ignore_error(pstate), "extern"))||pstate_expect_token_string(pstate_ignore_error(pstate), "auto"))||pstate_expect_token_string(pstate_ignore_error(pstate), "register")))
+
+# 433 "declaration-parser.c"
+    {
+
+# 434 "declaration-parser.c"
+      if ((storage_class_specifier==((void *)0)))
+
+# 434 "declaration-parser.c"
+      {
+
+# 435 "declaration-parser.c"
+        (storage_class_specifier=pstate_get_result_token(pstate));
+      }
+      else
+
+# 436 "declaration-parser.c"
+      {
+
+# 437 "declaration-parser.c"
+        return pstate_error(pstate, saved_position, PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);
+      }
+    }
+    else
+
+# 440 "declaration-parser.c"
+    if ((pstate_expect_token_string(pstate_ignore_error(pstate), "inline")||pstate_expect_token_string(pstate_ignore_error(pstate), "_Noreturn")))
+
+# 442 "declaration-parser.c"
+    {
+
+# 443 "declaration-parser.c"
+      token_list_add((&function_specifiers), pstate_get_result_token(pstate));
+    }
+    else
+
+# 444 "declaration-parser.c"
+    if (parse_attribute_node(pstate_ignore_error(pstate)))
+
+# 444 "declaration-parser.c"
+    {
+
+# 445 "declaration-parser.c"
+      node_list_add_node((&attributes), pstate_get_result_node(pstate));
+    }
+    else
+
+# 446 "declaration-parser.c"
+    {
+
+# 447 "declaration-parser.c"
+      pstate_ignore_error(pstate);
+
+# 448 "declaration-parser.c"
+      break;
+    }
+  }
+
+# 452 "declaration-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 452 "declaration-parser.c"
+  {
+
+# 453 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 455 "declaration-parser.c"
+  type_node_t* return_type = to_type_node(pstate_get_result_node(pstate));
+
+# 457 "declaration-parser.c"
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+
+# 457 "declaration-parser.c"
+  {
+
+# 458 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 460 "declaration-parser.c"
+  token_t* fn_name = pstate_get_result_token(pstate);
+
+# 462 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, "(")))
+
+# 462 "declaration-parser.c"
+  {
+
+# 463 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 466 "declaration-parser.c"
+  function_node_t* fn_node = make_function_node();
+
+# 467 "declaration-parser.c"
+  ((fn_node->attributes)=attributes);
+
+# 468 "declaration-parser.c"
+  ((fn_node->storage_class_specifier)=storage_class_specifier);
+
+# 469 "declaration-parser.c"
+  ((fn_node->function_specifiers)=function_specifiers);
+
+# 470 "declaration-parser.c"
+  ((fn_node->return_type)=return_type);
+
+# 471 "declaration-parser.c"
+  ((fn_node->function_name)=fn_name);
+
+# 473 "declaration-parser.c"
+  while (parse_function_argument_node(pstate))
+
+# 473 "declaration-parser.c"
+  {
+
+# 474 "declaration-parser.c"
+    node_list_add_node((&(fn_node->function_args)), pstate_get_result_node(pstate));
+  }
+
+# 476 "declaration-parser.c"
+  pstate_ignore_error(pstate);
+
+# 478 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, ")")))
+
+# 478 "declaration-parser.c"
+  {
+
+# 479 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 482 "declaration-parser.c"
+  if (parse_function_body_node(pstate))
+
+# 482 "declaration-parser.c"
+  {
+
+# 483 "declaration-parser.c"
+    ((fn_node->body)=pstate_get_result_node(pstate));
+  }
+  else
+
+# 484 "declaration-parser.c"
+  {
+
+# 485 "declaration-parser.c"
+    pstate_ignore_error(pstate);
+
+# 486 "declaration-parser.c"
+    if ((!pstate_expect_token_string(pstate, ";")))
+
+# 486 "declaration-parser.c"
+    {
+
+# 487 "declaration-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+  }
+
+# 491 "declaration-parser.c"
+  return pstate_set_result_node(pstate, to_node(fn_node));
+}
+
+
+# 499 "declaration-parser.c"
+pstatus_t parse_function_argument_node(pstate_t* pstate)
+# 499 "declaration-parser.c"
+{
+
+# 500 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 501 "declaration-parser.c"
+  function_argument_node_t* result = make_function_argument_node();
+
+# 503 "declaration-parser.c"
+  if (pstate_match_token_string(pstate, "..."))
+
+# 503 "declaration-parser.c"
+  {
+
+# 504 "declaration-parser.c"
+    pstate_advance(pstate);
+
+# 505 "declaration-parser.c"
+    ((result->is_var_args)=true);
+  }
+  else
+
+# 506 "declaration-parser.c"
+  {
+
+# 507 "declaration-parser.c"
+    if ((!parse_type_node(pstate)))
+
+# 507 "declaration-parser.c"
+    {
+
+# 508 "declaration-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 510 "declaration-parser.c"
+    ((result->arg_type)=to_type_node(pstate_get_result_node(pstate)));
+
+# 511 "declaration-parser.c"
+    if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
+
+# 511 "declaration-parser.c"
+    {
+
+# 512 "declaration-parser.c"
+      ((result->arg_name)=pstate_get_result_token(pstate));
+    }
+    else
+
+# 513 "declaration-parser.c"
+    {
+
+# 514 "declaration-parser.c"
+      pstate_ignore_error(pstate);
+    }
+  }
+
+# 517 "declaration-parser.c"
+  if (pstate_match_token_string(pstate, ","))
+
+# 517 "declaration-parser.c"
+  {
+
+# 518 "declaration-parser.c"
+    pstate_advance(pstate);
+  }
+
+# 520 "declaration-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 530 "declaration-parser.c"
+pstatus_t parse_function_body_node(pstate_t* pstate)
+# 530 "declaration-parser.c"
+{
+
+# 531 "declaration-parser.c"
+  if ((pstate->use_statement_parser))
+
+# 531 "declaration-parser.c"
+  {
+
+# 532 "declaration-parser.c"
+    log_info("USING STATEMENT PARSER");
+
+# 533 "declaration-parser.c"
+    return parse_block(pstate);
+  }
+  else
+
+# 534 "declaration-parser.c"
+  {
+
+# 535 "declaration-parser.c"
+    return parse_balanced_construct(pstate);
+  }
+}
+
+
+# 547 "declaration-parser.c"
+pstatus_t parse_typedef_node(pstate_t* pstate)
+# 547 "declaration-parser.c"
+{
+
+# 548 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 549 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, "typedef")))
+
+# 549 "declaration-parser.c"
+  {
+
+# 550 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 552 "declaration-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 552 "declaration-parser.c"
+  {
+
+# 553 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 555 "declaration-parser.c"
+  type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
+
+# 556 "declaration-parser.c"
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+
+# 556 "declaration-parser.c"
+  {
+
+# 557 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 559 "declaration-parser.c"
+  token_t* name = pstate_get_result_token(pstate);
+
+# 560 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 560 "declaration-parser.c"
+  {
+
+# 561 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 564 "declaration-parser.c"
+  typedef_node_t* result = make_typedef_node();
+
+# 565 "declaration-parser.c"
+  ((result->type_node)=type_node);
+
+# 566 "declaration-parser.c"
+  ((result->name)=name);
+
+# 567 "declaration-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 575 "declaration-parser.c"
+pstatus_t parse_improved_typedef_node(pstate_t* pstate)
+# 575 "declaration-parser.c"
+{
+
+# 576 "declaration-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 577 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, "typedef")))
+
+# 577 "declaration-parser.c"
+  {
+
+# 578 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 580 "declaration-parser.c"
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+
+# 580 "declaration-parser.c"
+  {
+
+# 581 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 583 "declaration-parser.c"
+  token_t* name = pstate_get_result_token(pstate);
+
+# 585 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, "=")))
+
+# 585 "declaration-parser.c"
+  {
+
+# 586 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 589 "declaration-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 589 "declaration-parser.c"
+  {
+
+# 590 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 592 "declaration-parser.c"
+  type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
+
+# 594 "declaration-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 594 "declaration-parser.c"
+  {
+
+# 595 "declaration-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 598 "declaration-parser.c"
+  typedef_node_t* result = make_typedef_node();
+
+# 599 "declaration-parser.c"
+  ((result->type_node)=type_node);
+
+# 600 "declaration-parser.c"
+  ((result->name)=name);
+
+# 601 "declaration-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 17 "debug-printer.c"
+void buffer_append_dbg_parse_node(cdl_printer_t* printer, parse_node_t* node)
+# 17 "debug-printer.c"
+{
+
+# 18 "debug-printer.c"
+  switch ((node->tag))
+
+# 18 "debug-printer.c"
+  {
+
+# 19 "debug-printer.c"
+    case PARSE_NODE_DECLARATIONS:
+
+# 20 "debug-printer.c"
+    buffer_append_dbg_declarations(printer, to_declarations_node(node));
+
+# 21 "debug-printer.c"
+    break;
+
+# 23 "debug-printer.c"
+    case PARSE_NODE_ENUM:
+
+# 24 "debug-printer.c"
+    buffer_append_dbg_enum(printer, to_enum_node(node));
+
+# 25 "debug-printer.c"
+    break;
+
+# 27 "debug-printer.c"
+    case PARSE_NODE_ENUM_ELEMENT:
+
+# 28 "debug-printer.c"
+    buffer_append_dbg_enum_element(printer, to_enum_element_node(node));
+
+# 29 "debug-printer.c"
+    break;
+
+# 31 "debug-printer.c"
+    case PARSE_NODE_STRUCT:
+
+# 32 "debug-printer.c"
+    buffer_append_dbg_struct_node(printer, to_struct_node(node));
+
+# 33 "debug-printer.c"
+    break;
+
+# 35 "debug-printer.c"
+    case PARSE_NODE_UNION:
+
+# 36 "debug-printer.c"
+    buffer_append_dbg_union_node(printer, to_union_node(node));
+
+# 37 "debug-printer.c"
+    break;
+
+# 39 "debug-printer.c"
+    case PARSE_NODE_FIELD:
+
+# 40 "debug-printer.c"
+    buffer_append_dbg_field_node(printer, to_field_node(node));
+
+# 41 "debug-printer.c"
+    break;
+
+# 43 "debug-printer.c"
+    case PARSE_NODE_TYPE:
+
+# 44 "debug-printer.c"
+    buffer_append_dbg_type_node(printer, to_type_node(node));
+
+# 45 "debug-printer.c"
+    break;
+
+# 46 "debug-printer.c"
+    ;
+
+# 48 "debug-printer.c"
+    case PARSE_NODE_LITERAL:
+
+# 49 "debug-printer.c"
+    buffer_append_dbg_literal_node(printer, to_literal_node(node));
+
+# 50 "debug-printer.c"
+    break;
+
+# 52 "debug-printer.c"
+    case PARSE_NODE_FUNCTION:
+
+# 53 "debug-printer.c"
+    buffer_append_dbg_function_node(printer, to_function_node(node));
+
+# 54 "debug-printer.c"
+    break;
+
+# 56 "debug-printer.c"
+    case PARSE_NODE_FUNCTION_ARGUMENT:
+
+# 57 "debug-printer.c"
+    buffer_append_dbg_function_argument_node(printer, to_function_argument_node(node));
+
+# 59 "debug-printer.c"
+    break;
+
+# 61 "debug-printer.c"
+    case PARSE_NODE_BALANCED_CONSTRUCT:
+
+# 62 "debug-printer.c"
+    buffer_append_dbg_balanced_construct_node(printer, to_balanced_construct_node(node));
+
+# 64 "debug-printer.c"
+    break;
+
+# 66 "debug-printer.c"
+    case PARSE_NODE_TYPEDEF:
+
+# 67 "debug-printer.c"
+    buffer_append_dbg_typedef_node(printer, to_typedef_node(node));
+
+# 68 "debug-printer.c"
+    break;
+
+# 70 "debug-printer.c"
+    case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 71 "debug-printer.c"
+    buffer_append_dbg_variable_definition_node(printer, to_variable_definition_node(node));
+
+# 73 "debug-printer.c"
+    break;
+
+# 75 "debug-printer.c"
+    case PARSE_NODE_ATTRIBUTE:
+
+# 76 "debug-printer.c"
+    buffer_append_dbg_attribute_node(printer, to_attribute_node(node));
+
+# 77 "debug-printer.c"
+    break;
+
+# 79 "debug-printer.c"
+    case PARSE_NODE_IDENTIFIER:
+
+# 80 "debug-printer.c"
+    buffer_append_dbg_identifier_node(printer, to_identifier_node(node));
+
+# 81 "debug-printer.c"
+    break;
+
+# 83 "debug-printer.c"
+    case PARSE_NODE_OPERATOR:
+
+# 84 "debug-printer.c"
+    buffer_append_dbg_operator_node(printer, to_operator_node(node));
+
+# 85 "debug-printer.c"
+    break;
+
+# 87 "debug-printer.c"
+    case PARSE_NODE_BREAK_STATEMENT:
+
+# 88 "debug-printer.c"
+    buffer_append_dbg_break_statement_node(printer, to_break_statement_node(node));
+
+# 90 "debug-printer.c"
+    break;
+
+# 92 "debug-printer.c"
+    case PARSE_NODE_CONTINUE_STATEMENT:
+
+# 93 "debug-printer.c"
+    buffer_append_dbg_continue_statement_node(printer, to_continue_statement_node(node));
+
+# 95 "debug-printer.c"
+    break;
+
+# 97 "debug-printer.c"
+    case PARSE_NODE_LABEL_STATEMENT:
+
+# 98 "debug-printer.c"
+    buffer_append_dbg_label_statement_node(printer, to_label_statement_node(node));
+
+# 100 "debug-printer.c"
+    break;
+
+# 102 "debug-printer.c"
+    case PARSE_NODE_GOTO_STATEMENT:
+
+# 103 "debug-printer.c"
+    buffer_append_dbg_goto_statement_node(printer, to_goto_statement_node(node));
+
+# 105 "debug-printer.c"
+    break;
+
+# 107 "debug-printer.c"
+    case PARSE_NODE_CASE_LABEL:
+
+# 108 "debug-printer.c"
+    buffer_append_dbg_case_label_node(printer, to_case_label_node(node));
+
+# 109 "debug-printer.c"
+    break;
+
+# 111 "debug-printer.c"
+    case PARSE_NODE_DEFAULT_LABEL:
+
+# 112 "debug-printer.c"
+    buffer_append_dbg_default_label_node(printer, to_default_label_node(node));
+
+# 113 "debug-printer.c"
+    break;
+
+# 115 "debug-printer.c"
+    case PARSE_NODE_CALL:
+
+# 116 "debug-printer.c"
+    buffer_append_dbg_call_node(printer, to_call_node(node));
+
+# 117 "debug-printer.c"
+    break;
+
+# 119 "debug-printer.c"
+    case PARSE_NODE_BLOCK:
+
+# 120 "debug-printer.c"
+    buffer_append_dbg_block_node(printer, to_block_node(node));
+
+# 121 "debug-printer.c"
+    break;
+
+# 123 "debug-printer.c"
+    case PARSE_NODE_WHILE_STATEMENT:
+
+# 124 "debug-printer.c"
+    buffer_append_dbg_while_node(printer, to_while_statement_node(node));
+
+# 125 "debug-printer.c"
+    break;
+
+# 127 "debug-printer.c"
+    case PARSE_NODE_FOR_STATEMENT:
+
+# 128 "debug-printer.c"
+    buffer_append_dbg_for_node(printer, to_for_statement_node(node));
+
+# 129 "debug-printer.c"
+    break;
+
+# 131 "debug-printer.c"
+    case PARSE_NODE_DO_STATEMENT:
+
+# 132 "debug-printer.c"
+    buffer_append_dbg_do_node(printer, to_do_statement_node(node));
+
+# 133 "debug-printer.c"
+    break;
+
+# 135 "debug-printer.c"
+    case PARSE_NODE_IF_STATEMENT:
+
+# 136 "debug-printer.c"
+    buffer_append_dbg_if_node(printer, to_if_statement_node(node));
+
+# 137 "debug-printer.c"
+    break;
+
+# 139 "debug-printer.c"
+    case PARSE_NODE_EMPTY_STATEMENT:
+
+# 140 "debug-printer.c"
+    buffer_append_dbg_empty_statement_node(printer, to_empty_statement_node(node));
+
+# 142 "debug-printer.c"
+    break;
+
+# 144 "debug-printer.c"
+    case PARSE_NODE_RETURN_STATEMENT:
+
+# 145 "debug-printer.c"
+    buffer_append_dbg_return_statement_node(printer, to_return_statement_node(node));
+
+# 147 "debug-printer.c"
+    break;
+
+# 149 "debug-printer.c"
+    case PARSE_NODE_EXPRESSION_STATEMENT:
+
+# 150 "debug-printer.c"
+    buffer_append_dbg_expression_statement_node(printer, to_expression_statement_node(node));
+
+# 152 "debug-printer.c"
+    break;
+
+# 154 "debug-printer.c"
+    case PARSE_NODE_SWITCH_STATEMENT:
+
+# 155 "debug-printer.c"
+    buffer_append_dbg_switch_node(printer, to_switch_statement_node(node));
+
+# 156 "debug-printer.c"
+    break;
+
+# 158 "debug-printer.c"
+    case PARSE_NODE_CONDITIONAL:
+
+# 159 "debug-printer.c"
+    buffer_append_dbg_conditional_node(printer, to_conditional_node(node));
+
+# 160 "debug-printer.c"
+    break;
+
+# 162 "debug-printer.c"
+    case PARSE_NODE_COMPOUND_LITERAL:
+
+# 163 "debug-printer.c"
+    buffer_append_dbg_compound_literal(printer, to_compound_literal_node(node));
+
+# 164 "debug-printer.c"
+    break;
+
+# 166 "debug-printer.c"
+    case PARSE_NODE_DESIGNATED_INITIALIZER:
+
+# 167 "debug-printer.c"
+    buffer_append_dbg_designated_initializer(printer, to_designated_initializer_node(node));
+
+# 169 "debug-printer.c"
+    break;
+
+# 171 "debug-printer.c"
+    default:
+
+# 172 "debug-printer.c"
+    log_fatal("No debug printer for %s", parse_node_type_to_string((node->tag)));
+
+# 173 "debug-printer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 174 "debug-printer.c"
+    break;
+  }
+}
+
+
+# 183 "debug-printer.c"
+void buffer_append_dbg_node_list(cdl_printer_t* printer, node_list_t list)
+# 183 "debug-printer.c"
+{
+
+# 184 "debug-printer.c"
+  cdl_start_array(printer);
+
+# 185 "debug-printer.c"
+  uint64_t length = node_list_length(list);
+
+# 186 "debug-printer.c"
+  for (
+
+# 186 "debug-printer.c"
+
+# 186 "debug-printer.c"
+    uint64_t i = 0;
+
+# 186 "debug-printer.c"
+    (i<length);
+
+# 186 "debug-printer.c"
+    (i++))
+
+# 186 "debug-printer.c"
+  {
+
+# 187 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, node_list_get(list, i));
+  }
+
+# 189 "debug-printer.c"
+  cdl_end_array(printer);
+}
+
+
+# 198 "debug-printer.c"
+void buffer_append_dbg_tokens(cdl_printer_t* printer, value_array_t* tokens, char* field_name)
+# 199 "debug-printer.c"
+{
+
+# 200 "debug-printer.c"
+  cdl_key(printer, field_name);
+
+# 201 "debug-printer.c"
+  cdl_start_array(printer);
+
+# 202 "debug-printer.c"
+  uint64_t length = (tokens->length);
+
+# 203 "debug-printer.c"
+  for (
+
+# 203 "debug-printer.c"
+
+# 203 "debug-printer.c"
+    uint64_t i = 0;
+
+# 203 "debug-printer.c"
+    (i<length);
+
+# 203 "debug-printer.c"
+    (i++))
+
+# 203 "debug-printer.c"
+  {
+
+# 204 "debug-printer.c"
+    token_t* token = value_array_get_ptr(tokens, i, typeof(token_t*));
+
+# 205 "debug-printer.c"
+    cdl_string(printer, token_to_string(token));
+  }
+
+# 207 "debug-printer.c"
+  cdl_end_array(printer);
+}
+
+
+# 211 "debug-printer.c"
+void buffer_append_dbg_declarations(cdl_printer_t* printer, declarations_node_t* node)
+# 212 "debug-printer.c"
+{
+
+# 213 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->declarations));
+}
+
+
+# 216 "debug-printer.c"
+void buffer_append_dbg_enum(cdl_printer_t* printer, enum_node_t* node)
+# 216 "debug-printer.c"
+{
+
+# 217 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 218 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 219 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_ENUM");
+
+# 220 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 220 "debug-printer.c"
+  {
+
+# 221 "debug-printer.c"
+    cdl_key(printer, "name");
+
+# 222 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->name)));
+  }
+
+# 224 "debug-printer.c"
+  cdl_key(printer, "elements");
+
+# 225 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->elements));
+
+# 226 "debug-printer.c"
+  cdl_key(printer, "partial_definition");
+
+# 227 "debug-printer.c"
+  cdl_boolean(printer, (node->partial_definition));
+
+# 228 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 231 "debug-printer.c"
+void buffer_append_dbg_struct_node(cdl_printer_t* printer, struct_node_t* node)
+# 232 "debug-printer.c"
+{
+
+# 233 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 234 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 235 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_STRUCT");
+
+# 236 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 236 "debug-printer.c"
+  {
+
+# 237 "debug-printer.c"
+    cdl_key(printer, "name");
+
+# 238 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->name)));
+  }
+
+# 240 "debug-printer.c"
+  cdl_key(printer, "partial_definition");
+
+# 241 "debug-printer.c"
+  cdl_boolean(printer, (node->partial_definition));
+
+# 242 "debug-printer.c"
+  cdl_key(printer, "fields");
+
+# 243 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->fields));
+
+# 244 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 247 "debug-printer.c"
+void buffer_append_dbg_union_node(cdl_printer_t* printer, union_node_t* node)
+# 247 "debug-printer.c"
+{
+
+# 248 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 249 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 250 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_UNION");
+
+# 251 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 251 "debug-printer.c"
+  {
+
+# 252 "debug-printer.c"
+    cdl_key(printer, "name");
+
+# 253 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->name)));
+  }
+
+# 255 "debug-printer.c"
+  cdl_key(printer, "partial_definition");
+
+# 256 "debug-printer.c"
+  cdl_boolean(printer, (node->partial_definition));
+
+# 257 "debug-printer.c"
+  cdl_key(printer, "fields");
+
+# 258 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->fields));
+
+# 259 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 262 "debug-printer.c"
+void buffer_append_dbg_enum_element(cdl_printer_t* printer, enum_element_t* node)
+# 263 "debug-printer.c"
+{
+
+# 264 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 265 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 266 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_ENUM_ELEMENT");
+
+# 267 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 267 "debug-printer.c"
+  {
+
+# 268 "debug-printer.c"
+    cdl_key(printer, "name");
+
+# 269 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->name)));
+  }
+
+# 271 "debug-printer.c"
+  if (((node->value_expr)!=((void *)0)))
+
+# 271 "debug-printer.c"
+  {
+
+# 272 "debug-printer.c"
+    cdl_key(printer, "value_expr");
+
+# 273 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->value_expr));
+  }
+
+# 275 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 278 "debug-printer.c"
+void buffer_append_dbg_field_node(cdl_printer_t* printer, field_node_t* node)
+# 278 "debug-printer.c"
+{
+
+# 279 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 280 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 281 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_FIELD");
+
+# 282 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 282 "debug-printer.c"
+  {
+
+# 283 "debug-printer.c"
+    cdl_key(printer, "name");
+
+# 284 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->name)));
+  }
+
+# 286 "debug-printer.c"
+  if (((node->type)!=((void *)0)))
+
+# 286 "debug-printer.c"
+  {
+
+# 287 "debug-printer.c"
+    cdl_key(printer, "type");
+
+# 288 "debug-printer.c"
+    buffer_append_dbg_type_node(printer, (node->type));
+  }
+
+# 290 "debug-printer.c"
+  if (((node->suffixes)!=((void *)0)))
+
+# 290 "debug-printer.c"
+  {
+
+# 291 "debug-printer.c"
+    cdl_key(printer, "suffixes");
+
+# 292 "debug-printer.c"
+    cdl_start_array(printer);
+
+# 293 "debug-printer.c"
+    for (
+
+# 293 "debug-printer.c"
+
+# 293 "debug-printer.c"
+      uint64_t i = 0;
+
+# 293 "debug-printer.c"
+      (i<((node->suffixes)->length));
+
+# 293 "debug-printer.c"
+      (i++))
+
+# 293 "debug-printer.c"
+    {
+
+# 294 "debug-printer.c"
+      parse_node_t* suffix = value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*));
+
+# 296 "debug-printer.c"
+      buffer_append_dbg_parse_node(printer, suffix);
+    }
+
+# 298 "debug-printer.c"
+    cdl_end_array(printer);
+  }
+
+# 301 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 304 "debug-printer.c"
+void buffer_append_dbg_type_node(cdl_printer_t* printer, type_node_t* node)
+# 304 "debug-printer.c"
+{
+
+# 305 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 306 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 307 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_TYPE");
+
+# 308 "debug-printer.c"
+  cdl_key(printer, "type_node_kind");
+
+# 309 "debug-printer.c"
+  cdl_string(printer, type_node_kind_to_string((node->type_node_kind)));
+
+# 313 "debug-printer.c"
+  if (((node->qualifiers)>0))
+
+# 313 "debug-printer.c"
+  {
+
+# 314 "debug-printer.c"
+    cdl_key(printer, "qualifiers");
+
+# 315 "debug-printer.c"
+    cdl_start_array(printer);
+
+# 316 "debug-printer.c"
+    if ((((node->qualifiers)&TYPE_QUALIFIER_CONST)==TYPE_QUALIFIER_CONST))
+
+# 316 "debug-printer.c"
+    {
+
+# 317 "debug-printer.c"
+      cdl_string(printer, "const");
+    }
+
+# 319 "debug-printer.c"
+    if ((((node->qualifiers)&TYPE_QUALIFIER_VOLATILE)==TYPE_QUALIFIER_VOLATILE))
+
+# 320 "debug-printer.c"
+    {
+
+# 321 "debug-printer.c"
+      cdl_string(printer, "volatile");
+    }
+
+# 323 "debug-printer.c"
+    if ((((node->qualifiers)&TYPE_QUALIFIER_RESTRICT)==TYPE_QUALIFIER_RESTRICT))
+
+# 324 "debug-printer.c"
+    {
+
+# 325 "debug-printer.c"
+      cdl_string(printer, "restrict");
+    }
+
+# 327 "debug-printer.c"
+    cdl_end_array(printer);
+  }
+
+# 330 "debug-printer.c"
+  if (((node->type_name)!=((void *)0)))
+
+# 330 "debug-printer.c"
+  {
+
+# 331 "debug-printer.c"
+    cdl_key(printer, "type_name");
+
+# 332 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->type_name)));
+  }
+
+# 334 "debug-printer.c"
+  if (((node->user_type)!=((void *)0)))
+
+# 334 "debug-printer.c"
+  {
+
+# 335 "debug-printer.c"
+    cdl_key(printer, "user_type");
+
+# 336 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->user_type));
+  }
+
+# 338 "debug-printer.c"
+  cdl_key(printer, "type_args");
+
+# 339 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->type_args));
+
+# 340 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 343 "debug-printer.c"
+void buffer_append_dbg_literal_node(cdl_printer_t* printer, literal_node_t* node)
+# 344 "debug-printer.c"
+{
+
+# 345 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 346 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 347 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_LITERAL");
+
+# 348 "debug-printer.c"
+  if (((node->token)!=((void *)0)))
+
+# 348 "debug-printer.c"
+  {
+
+# 349 "debug-printer.c"
+    cdl_key(printer, "token");
+
+# 350 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->token)));
+  }
+
+# 352 "debug-printer.c"
+  if (((node->tokens)!=((void *)0)))
+
+# 352 "debug-printer.c"
+  {
+
+# 353 "debug-printer.c"
+    buffer_append_dbg_tokens(printer, (node->tokens), "tokens");
+  }
+
+# 355 "debug-printer.c"
+  if (((node->initializer_node)!=((void *)0)))
+
+# 355 "debug-printer.c"
+  {
+
+# 356 "debug-printer.c"
+    cdl_key(printer, "initializer_node");
+
+# 357 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->initializer_node));
+  }
+
+# 359 "debug-printer.c"
+  if (((node->initializer_type)!=((void *)0)))
+
+# 359 "debug-printer.c"
+  {
+
+# 360 "debug-printer.c"
+    cdl_key(printer, "initializer_type");
+
+# 361 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->initializer_type));
+  }
+
+# 363 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 366 "debug-printer.c"
+void buffer_append_dbg_function_node(cdl_printer_t* printer, function_node_t* node)
+# 367 "debug-printer.c"
+{
+
+# 368 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 369 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 370 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_FUNCTION");
+
+# 371 "debug-printer.c"
+  cdl_key(printer, "attributes");
+
+# 372 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->attributes));
+
+# 374 "debug-printer.c"
+  if (((node->storage_class_specifier)!=((void *)0)))
+
+# 374 "debug-printer.c"
+  {
+
+# 375 "debug-printer.c"
+    cdl_key(printer, "storage_class_specifier");
+
+# 376 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->storage_class_specifier)));
+  }
+
+# 381 "debug-printer.c"
+  if (((node->return_type)!=((void *)0)))
+
+# 381 "debug-printer.c"
+  {
+
+# 382 "debug-printer.c"
+    cdl_key(printer, "return_type");
+
+# 383 "debug-printer.c"
+    buffer_append_dbg_type_node(printer, (node->return_type));
+  }
+
+# 386 "debug-printer.c"
+  if (((node->function_name)!=((void *)0)))
+
+# 386 "debug-printer.c"
+  {
+
+# 387 "debug-printer.c"
+    cdl_key(printer, "function_name");
+
+# 388 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->function_name)));
+  }
+
+# 391 "debug-printer.c"
+  cdl_key(printer, "function_args");
+
+# 392 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->function_args));
+
+# 393 "debug-printer.c"
+  if (((node->body)!=((void *)0)))
+
+# 393 "debug-printer.c"
+  {
+
+# 394 "debug-printer.c"
+    cdl_key(printer, "body");
+
+# 395 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->body));
+  }
+
+# 397 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 400 "debug-printer.c"
+void buffer_append_dbg_function_argument_node(cdl_printer_t* printer, function_argument_node_t* node)
+# 401 "debug-printer.c"
+{
+
+# 402 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 403 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 404 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_FUNCTION_ARGUEMENT");
+
+# 406 "debug-printer.c"
+  if (((node->arg_type)!=((void *)0)))
+
+# 406 "debug-printer.c"
+  {
+
+# 407 "debug-printer.c"
+    cdl_key(printer, "arg_type");
+
+# 408 "debug-printer.c"
+    buffer_append_dbg_type_node(printer, (node->arg_type));
+  }
+
+# 410 "debug-printer.c"
+  if (((node->arg_name)!=((void *)0)))
+
+# 410 "debug-printer.c"
+  {
+
+# 411 "debug-printer.c"
+    cdl_key(printer, "arg_name");
+
+# 412 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->arg_name)));
+  }
+
+# 414 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 417 "debug-printer.c"
+void buffer_append_dbg_balanced_construct_node(cdl_printer_t* printer, balanced_construct_node_t* node)
+# 418 "debug-printer.c"
+{
+
+# 419 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 420 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 421 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_BALANCED_CONSTRUCT");
+
+# 422 "debug-printer.c"
+  if (((node->start_token)!=((void *)0)))
+
+# 422 "debug-printer.c"
+  {
+
+# 423 "debug-printer.c"
+    cdl_key(printer, "start_token");
+
+# 424 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->start_token)));
+  }
+
+# 426 "debug-printer.c"
+  if (((node->end_token)!=((void *)0)))
+
+# 426 "debug-printer.c"
+  {
+
+# 427 "debug-printer.c"
+    cdl_key(printer, "end_token");
+
+# 428 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->end_token)));
+  }
+
+# 430 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 433 "debug-printer.c"
+void buffer_append_dbg_typedef_node(cdl_printer_t* printer, typedef_node_t* node)
+# 434 "debug-printer.c"
+{
+
+# 435 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 436 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 437 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_TYPEDEF");
+
+# 438 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 438 "debug-printer.c"
+  {
+
+# 439 "debug-printer.c"
+    cdl_key(printer, "name");
+
+# 440 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->name)));
+  }
+
+# 442 "debug-printer.c"
+  if (((node->type_node)!=((void *)0)))
+
+# 442 "debug-printer.c"
+  {
+
+# 443 "debug-printer.c"
+    cdl_key(printer, "type_node");
+
+# 444 "debug-printer.c"
+    buffer_append_dbg_type_node(printer, (node->type_node));
+  }
+
+# 446 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 449 "debug-printer.c"
+void buffer_append_dbg_variable_definition_node(cdl_printer_t* printer, variable_definition_node_t* node)
+# 450 "debug-printer.c"
+{
+
+# 451 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 452 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 453 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_VARIABLE_DEFINITION");
+
+# 454 "debug-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 454 "debug-printer.c"
+  {
+
+# 455 "debug-printer.c"
+    cdl_key(printer, "name");
+
+# 456 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->name)));
+  }
+
+# 458 "debug-printer.c"
+  if (((node->type)!=((void *)0)))
+
+# 458 "debug-printer.c"
+  {
+
+# 459 "debug-printer.c"
+    cdl_key(printer, "type");
+
+# 460 "debug-printer.c"
+    buffer_append_dbg_type_node(printer, (node->type));
+  }
+
+# 462 "debug-printer.c"
+  if (((node->value)!=((void *)0)))
+
+# 462 "debug-printer.c"
+  {
+
+# 463 "debug-printer.c"
+    cdl_key(printer, "value");
+
+# 464 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->value));
+  }
+
+# 466 "debug-printer.c"
+  if (((node->storage_class_specifier)!=((void *)0)))
+
+# 466 "debug-printer.c"
+  {
+
+# 467 "debug-printer.c"
+    cdl_key(printer, "storage_class_specifier");
+
+# 468 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->storage_class_specifier)));
+  }
+
+# 470 "debug-printer.c"
+  if (((node->suffixes)!=((void *)0)))
+
+# 470 "debug-printer.c"
+  {
+
+# 471 "debug-printer.c"
+    cdl_key(printer, "suffixes");
+
+# 472 "debug-printer.c"
+    cdl_start_array(printer);
+
+# 473 "debug-printer.c"
+    for (
+
+# 473 "debug-printer.c"
+
+# 473 "debug-printer.c"
+      uint64_t i = 0;
+
+# 473 "debug-printer.c"
+      (i<((node->suffixes)->length));
+
+# 473 "debug-printer.c"
+      (i++))
+
+# 473 "debug-printer.c"
+    {
+
+# 474 "debug-printer.c"
+      parse_node_t* suffix = value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*));
+
+# 476 "debug-printer.c"
+      buffer_append_dbg_parse_node(printer, suffix);
+    }
+
+# 478 "debug-printer.c"
+    cdl_end_array(printer);
+  }
+
+# 480 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 483 "debug-printer.c"
+void buffer_append_dbg_attribute_node(cdl_printer_t* printer, attribute_node_t* node)
+# 484 "debug-printer.c"
+{
+
+# 485 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 486 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 487 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_ATTRIBUTE");
+
+# 488 "debug-printer.c"
+  if (((node->inner_start_token)!=((void *)0)))
+
+# 488 "debug-printer.c"
+  {
+
+# 489 "debug-printer.c"
+    cdl_key(printer, "inner_start_token");
+
+# 490 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->inner_start_token)));
+  }
+
+# 492 "debug-printer.c"
+  if (((node->inner_end_token)!=((void *)0)))
+
+# 492 "debug-printer.c"
+  {
+
+# 493 "debug-printer.c"
+    cdl_key(printer, "inner_end_token");
+
+# 494 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->inner_end_token)));
+  }
+
+# 496 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 506 "debug-printer.c"
+void buffer_append_dbg_empty_statement_node(cdl_printer_t* printer, empty_statement_node_t* node)
+# 507 "debug-printer.c"
+{
+
+# 508 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 509 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 510 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_EMPTY_STATEMENT");
+
+# 511 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 517 "debug-printer.c"
+void buffer_append_dbg_block_node(cdl_printer_t* printer, block_node_t* node)
+# 517 "debug-printer.c"
+{
+
+# 518 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 519 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 520 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_BLOCK");
+
+# 521 "debug-printer.c"
+  cdl_key(printer, "statements");
+
+# 522 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->statements));
+
+# 523 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 526 "debug-printer.c"
+void buffer_append_dbg_if_node(cdl_printer_t* printer, if_statement_node_t* node)
+# 527 "debug-printer.c"
+{
+
+# 528 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 529 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 530 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_IF_STATEMENT");
+
+# 531 "debug-printer.c"
+  if (((node->if_condition)!=((void *)0)))
+
+# 531 "debug-printer.c"
+  {
+
+# 532 "debug-printer.c"
+    cdl_key(printer, "if_condition");
+
+# 533 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->if_condition));
+  }
+
+# 535 "debug-printer.c"
+  if (((node->if_true)!=((void *)0)))
+
+# 535 "debug-printer.c"
+  {
+
+# 536 "debug-printer.c"
+    cdl_key(printer, "if_true");
+
+# 537 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->if_true));
+  }
+
+# 539 "debug-printer.c"
+  if (((node->if_else)!=((void *)0)))
+
+# 539 "debug-printer.c"
+  {
+
+# 540 "debug-printer.c"
+    cdl_key(printer, "if_else");
+
+# 541 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->if_else));
+  }
+
+# 543 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 547 "debug-printer.c"
+void buffer_append_dbg_while_node(cdl_printer_t* printer, while_statement_node_t* node)
+# 548 "debug-printer.c"
+{
+
+# 549 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 550 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 551 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_WHILE_STATEMENT");
+
+# 552 "debug-printer.c"
+  if (((node->condition)!=((void *)0)))
+
+# 552 "debug-printer.c"
+  {
+
+# 553 "debug-printer.c"
+    cdl_key(printer, "condition");
+
+# 554 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->condition));
+  }
+
+# 556 "debug-printer.c"
+  if (((node->body)!=((void *)0)))
+
+# 556 "debug-printer.c"
+  {
+
+# 557 "debug-printer.c"
+    cdl_key(printer, "body");
+
+# 558 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->body));
+  }
+
+# 560 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 563 "debug-printer.c"
+void buffer_append_dbg_for_node(cdl_printer_t* printer, for_statement_node_t* node)
+# 564 "debug-printer.c"
+{
+
+# 565 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 566 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 567 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_FOR_STATEMENT");
+
+# 568 "debug-printer.c"
+  if (((node->for_init)!=((void *)0)))
+
+# 568 "debug-printer.c"
+  {
+
+# 569 "debug-printer.c"
+    cdl_key(printer, "for_init");
+
+# 570 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->for_init));
+  }
+
+# 572 "debug-printer.c"
+  if (((node->for_test)!=((void *)0)))
+
+# 572 "debug-printer.c"
+  {
+
+# 573 "debug-printer.c"
+    cdl_key(printer, "for_test");
+
+# 574 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->for_test));
+  }
+
+# 576 "debug-printer.c"
+  if (((node->for_increment)!=((void *)0)))
+
+# 576 "debug-printer.c"
+  {
+
+# 577 "debug-printer.c"
+    cdl_key(printer, "for_increment");
+
+# 578 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->for_increment));
+  }
+
+# 580 "debug-printer.c"
+  if (((node->for_body)!=((void *)0)))
+
+# 580 "debug-printer.c"
+  {
+
+# 581 "debug-printer.c"
+    cdl_key(printer, "for_body");
+
+# 582 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->for_body));
+  }
+
+# 584 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 587 "debug-printer.c"
+void buffer_append_dbg_do_node(cdl_printer_t* printer, do_statement_node_t* node)
+# 588 "debug-printer.c"
+{
+
+# 589 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 590 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 591 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_DO_STATEMENT");
+
+# 592 "debug-printer.c"
+  if (((node->body)!=((void *)0)))
+
+# 592 "debug-printer.c"
+  {
+
+# 593 "debug-printer.c"
+    cdl_key(printer, "body");
+
+# 594 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->body));
+  }
+
+# 596 "debug-printer.c"
+  if (((node->condition)!=((void *)0)))
+
+# 596 "debug-printer.c"
+  {
+
+# 597 "debug-printer.c"
+    cdl_key(printer, "condition");
+
+# 598 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->condition));
+  }
+
+# 600 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 603 "debug-printer.c"
+void buffer_append_dbg_break_statement_node(cdl_printer_t* printer, break_statement_node_t* node)
+# 604 "debug-printer.c"
+{
+
+# 605 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 606 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 607 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_BREAK_STATEMENT");
+
+# 608 "debug-printer.c"
+  if (((node->break_keyword_token)!=((void *)0)))
+
+# 608 "debug-printer.c"
+  {
+
+# 609 "debug-printer.c"
+    cdl_key(printer, "break_keyword_token");
+
+# 610 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->break_keyword_token)));
+  }
+
+# 612 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 615 "debug-printer.c"
+void buffer_append_dbg_continue_statement_node(cdl_printer_t* printer, continue_statement_node_t* node)
+# 616 "debug-printer.c"
+{
+
+# 617 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 618 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 619 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_CONTINUE_STATEMENT");
+
+# 620 "debug-printer.c"
+  if (((node->continue_keyword_token)!=((void *)0)))
+
+# 620 "debug-printer.c"
+  {
+
+# 621 "debug-printer.c"
+    cdl_key(printer, "continue_keyword_token");
+
+# 622 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->continue_keyword_token)));
+  }
+
+# 624 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 627 "debug-printer.c"
+void buffer_append_dbg_label_statement_node(cdl_printer_t* printer, label_statement_node_t* node)
+# 628 "debug-printer.c"
+{
+
+# 629 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 630 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 631 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_LABEL_STATEMENT");
+
+# 632 "debug-printer.c"
+  if (((node->label)!=((void *)0)))
+
+# 632 "debug-printer.c"
+  {
+
+# 633 "debug-printer.c"
+    cdl_key(printer, "label");
+
+# 634 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->label)));
+  }
+
+# 636 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 639 "debug-printer.c"
+void buffer_append_dbg_goto_statement_node(cdl_printer_t* printer, goto_statement_node_t* node)
+# 640 "debug-printer.c"
+{
+
+# 641 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 642 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 643 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_GOTO_STATEMENT");
+
+# 644 "debug-printer.c"
+  if (((node->label)!=((void *)0)))
+
+# 644 "debug-printer.c"
+  {
+
+# 645 "debug-printer.c"
+    cdl_key(printer, "label");
+
+# 646 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->label)));
+  }
+
+# 648 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 651 "debug-printer.c"
+void buffer_append_dbg_case_label_node(cdl_printer_t* printer, case_label_node_t* node)
+# 652 "debug-printer.c"
+{
+
+# 653 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 654 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 655 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_CASE_LABEL");
+
+# 656 "debug-printer.c"
+  if (((node->expression)!=((void *)0)))
+
+# 656 "debug-printer.c"
+  {
+
+# 657 "debug-printer.c"
+    cdl_key(printer, "expression");
+
+# 658 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->expression));
+  }
+
+# 660 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 663 "debug-printer.c"
+void buffer_append_dbg_default_label_node(cdl_printer_t* printer, default_label_node_t* node)
+# 664 "debug-printer.c"
+{
+
+# 665 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 666 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 667 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_DEFAULT_LABEL");
+
+# 668 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 671 "debug-printer.c"
+void buffer_append_dbg_return_statement_node(cdl_printer_t* printer, return_statement_node_t* node)
+# 672 "debug-printer.c"
+{
+
+# 673 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 674 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 675 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_RETURN_STATEMENT");
+
+# 676 "debug-printer.c"
+  if (((node->expression)!=((void *)0)))
+
+# 676 "debug-printer.c"
+  {
+
+# 677 "debug-printer.c"
+    cdl_key(printer, "expression");
+
+# 678 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->expression));
+  }
+
+# 680 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 683 "debug-printer.c"
+void buffer_append_dbg_expression_statement_node(cdl_printer_t* printer, expression_statement_node_t* node)
+# 684 "debug-printer.c"
+{
+
+# 685 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 686 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 687 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_EXPRESSION_STATEMENT");
+
+# 688 "debug-printer.c"
+  if (((node->expression)!=((void *)0)))
+
+# 688 "debug-printer.c"
+  {
+
+# 689 "debug-printer.c"
+    cdl_key(printer, "expression");
+
+# 690 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->expression));
+  }
+
+# 692 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 697 "debug-printer.c"
+void buffer_append_dbg_identifier_node(cdl_printer_t* printer, identifier_node_t* node)
+# 698 "debug-printer.c"
+{
+
+# 699 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 700 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 701 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_IDENTIFIER");
+
+# 702 "debug-printer.c"
+  cdl_key(printer, "token");
+
+# 703 "debug-printer.c"
+  cdl_string(printer, token_to_string((node->token)));
+
+# 704 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 707 "debug-printer.c"
+void buffer_append_dbg_operator_node(cdl_printer_t* printer, operator_node_t* node)
+# 708 "debug-printer.c"
+{
+
+# 709 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 710 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 711 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_OPERATOR");
+
+# 712 "debug-printer.c"
+  cdl_key(printer, "operator");
+
+# 713 "debug-printer.c"
+  cdl_string(printer, token_to_string((node->operator)));
+
+# 714 "debug-printer.c"
+  if (((node->left)!=((void *)0)))
+
+# 714 "debug-printer.c"
+  {
+
+# 715 "debug-printer.c"
+    cdl_key(printer, "left");
+
+# 716 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->left));
+  }
+
+# 718 "debug-printer.c"
+  if (((node->right)!=((void *)0)))
+
+# 718 "debug-printer.c"
+  {
+
+# 719 "debug-printer.c"
+    cdl_key(printer, "right");
+
+# 720 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->right));
+  }
+
+# 722 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 725 "debug-printer.c"
+void buffer_append_dbg_call_node(cdl_printer_t* printer, call_node_t* node)
+# 725 "debug-printer.c"
+{
+
+# 726 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 727 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 728 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_CALL");
+
+# 729 "debug-printer.c"
+  cdl_key(printer, "function");
+
+# 730 "debug-printer.c"
+  buffer_append_dbg_parse_node(printer, (node->function));
+
+# 731 "debug-printer.c"
+  cdl_key(printer, "args");
+
+# 732 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->args));
+
+# 733 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 736 "debug-printer.c"
+void buffer_append_dbg_conditional_node(cdl_printer_t* printer, conditional_node_t* node)
+# 737 "debug-printer.c"
+{
+
+# 738 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 739 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 740 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_CONDITIONAL");
+
+# 741 "debug-printer.c"
+  if (((node->condition)!=((void *)0)))
+
+# 741 "debug-printer.c"
+  {
+
+# 742 "debug-printer.c"
+    cdl_key(printer, "condition");
+
+# 743 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->condition));
+  }
+
+# 745 "debug-printer.c"
+  if (((node->expr_if_true)!=((void *)0)))
+
+# 745 "debug-printer.c"
+  {
+
+# 746 "debug-printer.c"
+    cdl_key(printer, "expr_if_true");
+
+# 747 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->expr_if_true));
+  }
+
+# 749 "debug-printer.c"
+  if (((node->expr_if_false)!=((void *)0)))
+
+# 749 "debug-printer.c"
+  {
+
+# 750 "debug-printer.c"
+    cdl_key(printer, "expr_if_false");
+
+# 751 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->expr_if_false));
+  }
+
+# 753 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 756 "debug-printer.c"
+void buffer_append_dbg_switch_node(cdl_printer_t* printer, switch_statement_node_t* node)
+# 757 "debug-printer.c"
+{
+
+# 758 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 759 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 760 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_SWITCH_STATEMENT");
+
+# 761 "debug-printer.c"
+  if (((node->expression)!=((void *)0)))
+
+# 761 "debug-printer.c"
+  {
+
+# 762 "debug-printer.c"
+    cdl_key(printer, "expression");
+
+# 763 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->expression));
+  }
+
+# 765 "debug-printer.c"
+  if (((node->block)!=((void *)0)))
+
+# 765 "debug-printer.c"
+  {
+
+# 766 "debug-printer.c"
+    cdl_key(printer, "block");
+
+# 767 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->block));
+  }
+
+# 769 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 772 "debug-printer.c"
+void buffer_append_dbg_compound_literal(cdl_printer_t* printer, compound_literal_node_t* node)
+# 773 "debug-printer.c"
+{
+
+# 774 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 775 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 776 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_COMPOUND_LITERAL");
+
+# 777 "debug-printer.c"
+  if (((node->type_node)!=((void *)0)))
+
+# 777 "debug-printer.c"
+  {
+
+# 778 "debug-printer.c"
+    cdl_key(printer, "type_node");
+
+# 779 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->type_node));
+  }
+
+# 781 "debug-printer.c"
+  cdl_key(printer, "initializers");
+
+# 782 "debug-printer.c"
+  buffer_append_dbg_node_list(printer, (node->initializers));
+
+# 783 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 786 "debug-printer.c"
+void buffer_append_dbg_designated_initializer(cdl_printer_t* printer, designated_initializer_node_t* node)
+# 787 "debug-printer.c"
+{
+
+# 788 "debug-printer.c"
+  cdl_start_table(printer);
+
+# 789 "debug-printer.c"
+  cdl_key(printer, "tag");
+
+# 790 "debug-printer.c"
+  cdl_string(printer, "PARSE_NODE_DESIGNATED_INITIALIZER");
+
+# 791 "debug-printer.c"
+  if (((node->index_expression)!=((void *)0)))
+
+# 791 "debug-printer.c"
+  {
+
+# 792 "debug-printer.c"
+    cdl_key(printer, "index_expression");
+
+# 793 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->index_expression));
+  }
+
+# 795 "debug-printer.c"
+  if (((node->member_name)!=((void *)0)))
+
+# 795 "debug-printer.c"
+  {
+
+# 796 "debug-printer.c"
+    cdl_key(printer, "member_name");
+
+# 797 "debug-printer.c"
+    cdl_string(printer, token_to_string((node->member_name)));
+  }
+
+# 799 "debug-printer.c"
+  if (((node->value)!=((void *)0)))
+
+# 799 "debug-printer.c"
+  {
+
+# 800 "debug-printer.c"
+    cdl_key(printer, "value");
+
+# 801 "debug-printer.c"
+    buffer_append_dbg_parse_node(printer, (node->value));
+  }
+
+# 803 "debug-printer.c"
+  cdl_end_table(printer);
+}
+
+
+# 816 "debug-printer.c"
+void debug_append_tokens(buffer_t* buffer, value_array_t* tokens)
+# 816 "debug-printer.c"
+{
+
+# 817 "debug-printer.c"
+  for (
+
+# 817 "debug-printer.c"
+
+# 817 "debug-printer.c"
+    int i = 0;
+
+# 817 "debug-printer.c"
+    (i<(tokens->length));
+
+# 817 "debug-printer.c"
+    (i++))
+
+# 817 "debug-printer.c"
+  {
+
+# 818 "debug-printer.c"
+    token_t* token = token_at(tokens, i);
+
+# 819 "debug-printer.c"
+    buffer_append_sub_buffer(buffer, (token->start), (token->end), (token->buffer));
+  }
+}
+
+
+# 25 "c-file-printer.c"
+printer_t* append_parse_node(printer_t* printer, parse_node_t* node)
+# 25 "c-file-printer.c"
+{
+
+# 26 "c-file-printer.c"
+  switch ((node->tag))
+
+# 26 "c-file-printer.c"
+  {
+
+# 28 "c-file-printer.c"
+    case PARSE_NODE_ENUM:
+
+# 29 "c-file-printer.c"
+    return append_enum_node(printer, to_enum_node(node));
+
+# 31 "c-file-printer.c"
+    case PARSE_NODE_STRUCT:
+
+# 32 "c-file-printer.c"
+    case PARSE_NODE_UNION:
+
+# 33 "c-file-printer.c"
+    return append_struct_node(printer, to_struct_node(node));
+
+# 35 "c-file-printer.c"
+    case PARSE_NODE_TYPE:
+
+# 36 "c-file-printer.c"
+    return append_type_node(printer, to_type_node(node));
+
+# 38 "c-file-printer.c"
+    case PARSE_NODE_LITERAL:
+
+# 39 "c-file-printer.c"
+    return append_literal_node(printer, to_literal_node(node));
+
+# 41 "c-file-printer.c"
+    case PARSE_NODE_IDENTIFIER:
+
+# 42 "c-file-printer.c"
+    return append_identifier_node(printer, to_identifier_node(node));
+
+# 49 "c-file-printer.c"
+    case PARSE_NODE_TYPEDEF:
+
+# 50 "c-file-printer.c"
+    return append_typedef_node(printer, to_typedef_node(node));
+
+# 52 "c-file-printer.c"
+    case PARSE_NODE_BLOCK:
+
+# 53 "c-file-printer.c"
+    return append_block_node(printer, to_block_node(node));
+
+# 55 "c-file-printer.c"
+    case PARSE_NODE_BALANCED_CONSTRUCT:
+
+# 56 "c-file-printer.c"
+    return append_balanced_construct_node(printer, to_balanced_construct_node(node));
+
+# 62 "c-file-printer.c"
+    case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 63 "c-file-printer.c"
+    return append_variable_definition_node(printer, to_variable_definition_node(node), true);
+
+# 66 "c-file-printer.c"
+    case PARSE_NODE_WHILE_STATEMENT:
+
+# 67 "c-file-printer.c"
+    return append_while_statement_node(printer, to_while_statement_node(node));
+
+# 69 "c-file-printer.c"
+    case PARSE_NODE_FOR_STATEMENT:
+
+# 70 "c-file-printer.c"
+    return append_for_statement_node(printer, to_for_statement_node(node));
+
+# 72 "c-file-printer.c"
+    case PARSE_NODE_DO_STATEMENT:
+
+# 73 "c-file-printer.c"
+    return append_do_statement_node(printer, to_do_statement_node(node));
+
+# 75 "c-file-printer.c"
+    case PARSE_NODE_EMPTY_STATEMENT:
+
+# 76 "c-file-printer.c"
+    return append_empty_statement_node(printer, to_empty_statement_node(node));
+
+# 78 "c-file-printer.c"
+    case PARSE_NODE_IF_STATEMENT:
+
+# 79 "c-file-printer.c"
+    return append_if_statement_node(printer, to_if_statement_node(node));
+
+# 81 "c-file-printer.c"
+    case PARSE_NODE_RETURN_STATEMENT:
+
+# 82 "c-file-printer.c"
+    return append_return_statement_node(printer, to_return_statement_node(node));
+
+# 85 "c-file-printer.c"
+    case PARSE_NODE_BREAK_STATEMENT:
+
+# 86 "c-file-printer.c"
+    return append_break_statement_node(printer, to_break_statement_node(node));
+
+# 88 "c-file-printer.c"
+    case PARSE_NODE_CONTINUE_STATEMENT:
+
+# 89 "c-file-printer.c"
+    return append_continue_statement_node(printer, to_continue_statement_node(node));
+
+# 92 "c-file-printer.c"
+    case PARSE_NODE_LABEL_STATEMENT:
+
+# 93 "c-file-printer.c"
+    return append_label_statement_node(printer, to_label_statement_node(node));
+
+# 95 "c-file-printer.c"
+    case PARSE_NODE_CASE_LABEL:
+
+# 96 "c-file-printer.c"
+    return append_case_label_node(printer, to_case_label_node(node));
+
+# 98 "c-file-printer.c"
+    case PARSE_NODE_DEFAULT_LABEL:
+
+# 99 "c-file-printer.c"
+    return append_default_label_node(printer, to_default_label_node(node));
+
+# 101 "c-file-printer.c"
+    case PARSE_NODE_EXPRESSION_STATEMENT:
+
+# 102 "c-file-printer.c"
+    return append_expression_statement_node(printer, to_expression_statement_node(node));
+
+# 105 "c-file-printer.c"
+    case PARSE_NODE_SWITCH_STATEMENT:
+
+# 106 "c-file-printer.c"
+    return append_switch_statement_node(printer, to_switch_statement_node(node));
+
+# 109 "c-file-printer.c"
+    case PARSE_NODE_OPERATOR:
+
+# 110 "c-file-printer.c"
+    return append_operator_node(printer, to_operator_node(node));
+
+# 112 "c-file-printer.c"
+    case PARSE_NODE_CONDITIONAL:
+
+# 113 "c-file-printer.c"
+    return append_conditional_node(printer, to_conditional_node(node));
+
+# 115 "c-file-printer.c"
+    case PARSE_NODE_CALL:
+
+# 116 "c-file-printer.c"
+    return append_call_node(printer, to_call_node(node));
+
+# 118 "c-file-printer.c"
+    case PARSE_NODE_COMPOUND_LITERAL:
+
+# 119 "c-file-printer.c"
+    return append_compound_literal_node(printer, to_compound_literal_node(node));
+
+# 122 "c-file-printer.c"
+    case PARSE_NODE_DESIGNATED_INITIALIZER:
+
+# 123 "c-file-printer.c"
+    return append_designated_initializer_node(printer, to_designated_initializer_node(node));
+
+# 126 "c-file-printer.c"
+    case PARSE_NODE_GOTO_STATEMENT:
+
+# 127 "c-file-printer.c"
+    return append_goto_statement_node(printer, to_goto_statement_node(node));
+
+# 129 "c-file-printer.c"
+    default:
+
+# 130 "c-file-printer.c"
+    break;
+  }
+
+# 132 "c-file-printer.c"
+  log_fatal("No C file appender for %s", parse_node_type_to_string((node->tag)));
+
+# 133 "c-file-printer.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+
+# 143 "c-file-printer.c"
+printer_t* append_c_function_node_prefix(printer_t* printer, function_node_t* node)
+# 144 "c-file-printer.c"
+{
+
+# 146 "c-file-printer.c"
+  for (
+
+# 146 "c-file-printer.c"
+
+# 146 "c-file-printer.c"
+    int i = 0;
+
+# 146 "c-file-printer.c"
+    (i<node_list_length((node->attributes)));
+
+# 146 "c-file-printer.c"
+    (i++))
+
+# 146 "c-file-printer.c"
+  {
+
+# 147 "c-file-printer.c"
+    append_c_attribute_node(printer, to_attribute_node(node_list_get((node->attributes), i)));
+
+# 149 "c-file-printer.c"
+    append_string(printer, " ");
+  }
+
+# 152 "c-file-printer.c"
+  if (((node->storage_class_specifier)!=((void *)0)))
+
+# 152 "c-file-printer.c"
+  {
+
+# 153 "c-file-printer.c"
+    append_token(printer, (node->storage_class_specifier));
+
+# 154 "c-file-printer.c"
+    append_string(printer, " ");
+  }
+
+# 157 "c-file-printer.c"
+  for (
+
+# 157 "c-file-printer.c"
+
+# 157 "c-file-printer.c"
+    int i = 0;
+
+# 157 "c-file-printer.c"
+    (i<token_list_length((node->function_specifiers)));
+
+# 157 "c-file-printer.c"
+    (i++))
+
+# 157 "c-file-printer.c"
+  {
+
+# 158 "c-file-printer.c"
+    append_token(printer, token_list_get((node->function_specifiers), i));
+
+# 159 "c-file-printer.c"
+    append_string(printer, " ");
+  }
+
+# 162 "c-file-printer.c"
+  append_type_node(printer, (node->return_type));
+
+# 163 "c-file-printer.c"
+  printer_space(printer);
+
+# 164 "c-file-printer.c"
+  append_token(printer, (node->function_name));
+
+# 165 "c-file-printer.c"
+  append_string(printer, "(");
+
+# 167 "c-file-printer.c"
+  for (
+
+# 167 "c-file-printer.c"
+
+# 167 "c-file-printer.c"
+    int i = 0;
+
+# 167 "c-file-printer.c"
+    (i<node_list_length((node->function_args)));
+
+# 167 "c-file-printer.c"
+    (i++))
+
+# 167 "c-file-printer.c"
+  {
+
+# 168 "c-file-printer.c"
+    if ((i>0))
+
+# 168 "c-file-printer.c"
+    {
+
+# 169 "c-file-printer.c"
+      append_string(printer, ", ");
+    }
+
+# 171 "c-file-printer.c"
+    function_argument_node_t* arg_node = to_function_argument_node(node_list_get((node->function_args), i));
+
+# 173 "c-file-printer.c"
+    append_c_function_argument_node(printer, arg_node);
+  }
+
+# 175 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 176 "c-file-printer.c"
+  return printer;
+}
+
+
+# 179 "c-file-printer.c"
+printer_t* append_c_function_node_prototype(printer_t* printer, function_node_t* node)
+# 180 "c-file-printer.c"
+{
+
+# 181 "c-file-printer.c"
+  append_c_function_node_prefix(printer, node);
+
+# 182 "c-file-printer.c"
+  append_string(printer, ";\n");
+
+# 183 "c-file-printer.c"
+  return printer;
+}
+
+
+# 186 "c-file-printer.c"
+printer_t* append_balanced_construct_node(printer_t* printer, balanced_construct_node_t* node)
+# 187 "c-file-printer.c"
+{
+
+# 188 "c-file-printer.c"
+  uint64_t start = ((node->start_token)->start);
+
+# 189 "c-file-printer.c"
+  uint64_t end = ((node->end_token)->end);
+
+# 190 "c-file-printer.c"
+  buffer_append_sub_buffer((printer->buffer), start, end, ((node->start_token)->buffer));
+
+# 192 "c-file-printer.c"
+  return printer;
+}
+
+
+# 195 "c-file-printer.c"
+printer_t* append_c_function_node_and_body(printer_t* printer, function_node_t* node)
+# 196 "c-file-printer.c"
+{
+
+# 197 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 197 "c-file-printer.c"
+  {
+
+# 198 "c-file-printer.c"
+    append_line_directive(printer, (node->function_name));
+  }
+
+# 200 "c-file-printer.c"
+  append_c_function_node_prefix(printer, node);
+
+# 201 "c-file-printer.c"
+  append_parse_node(printer, (node->body));
+
+# 202 "c-file-printer.c"
+  printer_newline(printer);
+
+# 203 "c-file-printer.c"
+  return printer;
+}
+
+
+# 206 "c-file-printer.c"
+printer_t* append_c_function_argument_node(printer_t* printer, function_argument_node_t* node)
+# 207 "c-file-printer.c"
+{
+
+# 208 "c-file-printer.c"
+  if ((node->is_var_args))
+
+# 208 "c-file-printer.c"
+  {
+
+# 209 "c-file-printer.c"
+    append_string(printer, "...");
+  }
+  else
+
+# 210 "c-file-printer.c"
+  {
+
+# 211 "c-file-printer.c"
+    append_type_node(printer, (node->arg_type));
+
+# 212 "c-file-printer.c"
+    if (((node->arg_name)!=((void *)0)))
+
+# 212 "c-file-printer.c"
+    {
+
+# 213 "c-file-printer.c"
+      printer_space(printer);
+
+# 214 "c-file-printer.c"
+      append_token(printer, (node->arg_name));
+    }
+  }
+
+# 217 "c-file-printer.c"
+  return printer;
+}
+
+
+# 225 "c-file-printer.c"
+printer_t* append_type_node(printer_t* printer, type_node_t* node)
+# 225 "c-file-printer.c"
+{
+
+# 227 "c-file-printer.c"
+  if ((((node->qualifiers)&TYPE_QUALIFIER_CONST)==TYPE_QUALIFIER_CONST))
+
+# 227 "c-file-printer.c"
+  {
+
+# 228 "c-file-printer.c"
+    append_string(printer, "const ");
+  }
+
+# 230 "c-file-printer.c"
+  if ((((node->qualifiers)&TYPE_QUALIFIER_VOLATILE)==TYPE_QUALIFIER_VOLATILE))
+
+# 230 "c-file-printer.c"
+  {
+
+# 231 "c-file-printer.c"
+    append_string(printer, "volatile ");
+  }
+
+# 233 "c-file-printer.c"
+  if ((((node->qualifiers)&TYPE_QUALIFIER_RESTRICT)==TYPE_QUALIFIER_RESTRICT))
+
+# 233 "c-file-printer.c"
+  {
+
+# 234 "c-file-printer.c"
+    append_string(printer, "restrict ");
+  }
+
+# 237 "c-file-printer.c"
+  switch ((node->type_node_kind))
+
+# 237 "c-file-printer.c"
+  {
+
+# 238 "c-file-printer.c"
+    case TYPE_NODE_KIND_POINTER:
+
+# 239 "c-file-printer.c"
+    append_type_node(printer, to_type_node(node_list_get((node->type_args), 0)));
+
+# 240 "c-file-printer.c"
+    append_string(printer, "*");
+
+# 241 "c-file-printer.c"
+    break;
+
+# 243 "c-file-printer.c"
+    case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
+
+# 244 "c-file-printer.c"
+    case TYPE_NODE_KIND_TYPENAME:
+
+# 245 "c-file-printer.c"
+    if (((node->type_name)!=((void *)0)))
+
+# 245 "c-file-printer.c"
+    {
+
+# 246 "c-file-printer.c"
+      append_token(printer, (node->type_name));
+    }
+
+# 248 "c-file-printer.c"
+    break;
+
+# 250 "c-file-printer.c"
+    case TYPE_NODE_KIND_TYPE_EXPRESSION:
+
+# 251 "c-file-printer.c"
+    if (token_matches((node->type_name), "fn_t"))
+
+# 251 "c-file-printer.c"
+    {
+
+# 252 "c-file-printer.c"
+      append_fn_type_node(printer, node);
+    }
+    else
+
+# 253 "c-file-printer.c"
+    {
+
+# 258 "c-file-printer.c"
+      append_parse_node(printer, (node->user_type));
+    }
+
+# 260 "c-file-printer.c"
+    break;
+
+# 262 "c-file-printer.c"
+    case TYPE_NODE_KIND_ARRAY:
+
+# 263 "c-file-printer.c"
+    append_string(printer, "typeof(");
+
+# 264 "c-file-printer.c"
+    append_type_node(printer, to_type_node(node_list_get((node->type_args), 0)));
+
+# 265 "c-file-printer.c"
+    append_string(printer, "[])");
+
+# 266 "c-file-printer.c"
+    break;
+
+# 268 "c-file-printer.c"
+    case TYPE_NODE_KIND_TYPEOF:
+
+# 269 "c-file-printer.c"
+    append_string(printer, "typeof(");
+
+# 270 "c-file-printer.c"
+    append_type_node(printer, to_type_node((node->user_type)));
+
+# 271 "c-file-printer.c"
+    append_string(printer, ")");
+
+# 272 "c-file-printer.c"
+    break;
+
+# 274 "c-file-printer.c"
+    default:
+
+# 275 "c-file-printer.c"
+    log_fatal("type_node_kind is not expected %s", type_node_kind_to_string((node->type_node_kind)));
+
+# 277 "c-file-printer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 278 "c-file-printer.c"
+    break;
+  }
+
+# 281 "c-file-printer.c"
+  return printer;
+}
+
+
+# 291 "c-file-printer.c"
+printer_t* append_fn_type_node(printer_t* printer, type_node_t* node)
+# 291 "c-file-printer.c"
+{
+
+# 292 "c-file-printer.c"
+  append_token(printer, (node->type_name));
+
+# 293 "c-file-printer.c"
+  append_string(printer, "(");
+
+# 294 "c-file-printer.c"
+  for (
+
+# 294 "c-file-printer.c"
+
+# 294 "c-file-printer.c"
+    int i = 0;
+
+# 294 "c-file-printer.c"
+    (i<node_list_length((node->type_args)));
+
+# 294 "c-file-printer.c"
+    (i++))
+
+# 294 "c-file-printer.c"
+  {
+
+# 295 "c-file-printer.c"
+    if ((i>0))
+
+# 295 "c-file-printer.c"
+    {
+
+# 296 "c-file-printer.c"
+      append_string(printer, ", ");
+    }
+
+# 298 "c-file-printer.c"
+    append_parse_node(printer, node_list_get((node->type_args), i));
+  }
+
+# 300 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 301 "c-file-printer.c"
+  return printer;
+}
+
+
+# 304 "c-file-printer.c"
+printer_t* append_c_attribute_node(printer_t* printer, attribute_node_t* node)
+# 304 "c-file-printer.c"
+{
+
+# 317 "c-file-printer.c"
+  append_c_raw_token_span(printer, (node->inner_start_token), (node->inner_end_token));
+
+# 319 "c-file-printer.c"
+  return printer;
+}
+
+
+# 328 "c-file-printer.c"
+printer_t* append_c_raw_token_span(printer_t* printer, token_t* start_token, token_t* end_token)
+# 329 "c-file-printer.c"
+{
+
+# 330 "c-file-printer.c"
+  if (((start_token->buffer)!=(end_token->buffer)))
+
+# 330 "c-file-printer.c"
+  {
+
+# 331 "c-file-printer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 333 "c-file-printer.c"
+  buffer_append_sub_buffer((printer->buffer), (start_token->start), (end_token->end), (start_token->buffer));
+
+# 335 "c-file-printer.c"
+  return printer;
+}
+
+
+# 338 "c-file-printer.c"
+printer_t* append_enum_node(printer_t* printer, enum_node_t* node)
+# 338 "c-file-printer.c"
+{
+
+# 340 "c-file-printer.c"
+  append_string(printer, "enum ");
+
+# 341 "c-file-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 341 "c-file-printer.c"
+  {
+
+# 342 "c-file-printer.c"
+    append_token(printer, (node->name));
+
+# 343 "c-file-printer.c"
+    printer_newline(printer);
+  }
+
+# 345 "c-file-printer.c"
+  if ((node->partial_definition))
+
+# 345 "c-file-printer.c"
+  {
+
+# 346 "c-file-printer.c"
+    return printer;
+  }
+
+# 349 "c-file-printer.c"
+  append_string(printer, "{\n");
+
+# 350 "c-file-printer.c"
+  printer_increase_indent(printer);
+
+# 352 "c-file-printer.c"
+  for (
+
+# 352 "c-file-printer.c"
+
+# 352 "c-file-printer.c"
+    int i = 0;
+
+# 352 "c-file-printer.c"
+    (i<node_list_length((node->elements)));
+
+# 352 "c-file-printer.c"
+    (i++))
+
+# 352 "c-file-printer.c"
+  {
+
+# 353 "c-file-printer.c"
+    printer_indent(printer);
+
+# 354 "c-file-printer.c"
+    append_enum_element(printer, to_enum_element_node(node_list_get((node->elements), i)));
+
+# 356 "c-file-printer.c"
+    append_string(printer, ",\n");
+  }
+
+# 358 "c-file-printer.c"
+  append_string(printer, "}");
+
+# 359 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 361 "c-file-printer.c"
+  return printer;
+}
+
+
+# 364 "c-file-printer.c"
+printer_t* append_enum_element(printer_t* printer, enum_element_t* node)
+# 364 "c-file-printer.c"
+{
+
+# 365 "c-file-printer.c"
+  append_token(printer, (node->name));
+
+# 366 "c-file-printer.c"
+  if (((node->value_expr)!=((void *)0)))
+
+# 366 "c-file-printer.c"
+  {
+
+# 367 "c-file-printer.c"
+    append_string(printer, " = ");
+
+# 368 "c-file-printer.c"
+    append_parse_node(printer, (node->value_expr));
+  }
+
+# 370 "c-file-printer.c"
+  return printer;
+}
+
+
+# 379 "c-file-printer.c"
+printer_t* append_enum_to_string(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string)
+# 380 "c-file-printer.c"
+{
+
+# 381 "c-file-printer.c"
+  append_string(printer, "char* ");
+
+# 382 "c-file-printer.c"
+  append_string(printer, to_string_fn_prefix);
+
+# 383 "c-file-printer.c"
+  append_string(printer, "_to_string(");
+
+# 384 "c-file-printer.c"
+  append_string(printer, type_string);
+
+# 385 "c-file-printer.c"
+  append_string(printer, " value) {\n");
+
+# 386 "c-file-printer.c"
+  printer_increase_indent(printer);
+
+# 387 "c-file-printer.c"
+  printer_indent(printer);
+
+# 388 "c-file-printer.c"
+  append_string(printer, "switch (value) {\n");
+
+# 389 "c-file-printer.c"
+  printer_indent(printer);
+
+# 391 "c-file-printer.c"
+  for (
+
+# 391 "c-file-printer.c"
+
+# 391 "c-file-printer.c"
+    int i = 0;
+
+# 391 "c-file-printer.c"
+    (i<node_list_length((node->elements)));
+
+# 391 "c-file-printer.c"
+    (i++))
+
+# 391 "c-file-printer.c"
+  {
+
+# 392 "c-file-printer.c"
+    enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
+
+# 394 "c-file-printer.c"
+    printer_indent(printer);
+
+# 395 "c-file-printer.c"
+    append_string(printer, "case ");
+
+# 396 "c-file-printer.c"
+    append_token(printer, (element->name));
+
+# 397 "c-file-printer.c"
+    append_string(printer, ":\n");
+
+# 398 "c-file-printer.c"
+    printer_increase_indent(printer);
+
+# 399 "c-file-printer.c"
+    printer_indent(printer);
+
+# 400 "c-file-printer.c"
+    append_string(printer, "return \"");
+
+# 401 "c-file-printer.c"
+    append_token(printer, (element->name));
+
+# 402 "c-file-printer.c"
+    append_string(printer, "\";\n");
+
+# 403 "c-file-printer.c"
+    printer_decrease_indent(printer);
+  }
+
+# 406 "c-file-printer.c"
+  printer_indent(printer);
+
+# 407 "c-file-printer.c"
+  append_string(printer, "default:\n");
+
+# 409 "c-file-printer.c"
+  printer_increase_indent(printer);
+
+# 410 "c-file-printer.c"
+  printer_indent(printer);
+
+# 411 "c-file-printer.c"
+  append_string(printer, "return \"<<unknown-");
+
+# 412 "c-file-printer.c"
+  append_string(printer, to_string_fn_prefix);
+
+# 413 "c-file-printer.c"
+  append_string(printer, ">>\";\n");
+
+# 414 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 415 "c-file-printer.c"
+  printer_indent(printer);
+
+# 416 "c-file-printer.c"
+  append_string(printer, "}\n");
+
+# 417 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 418 "c-file-printer.c"
+  append_string(printer, "}\n\n");
+
+# 420 "c-file-printer.c"
+  return printer;
+}
+
+
+# 429 "c-file-printer.c"
+printer_t* append_string_to_enum(printer_t* printer, enum_node_t* node, char* to_string_fn_prefix, char* type_string)
+# 430 "c-file-printer.c"
+{
+
+# 431 "c-file-printer.c"
+  append_string(printer, type_string);
+
+# 432 "c-file-printer.c"
+  append_string(printer, " string_to_");
+
+# 433 "c-file-printer.c"
+  append_string(printer, to_string_fn_prefix);
+
+# 434 "c-file-printer.c"
+  append_string(printer, "(char* value) {\n");
+
+# 435 "c-file-printer.c"
+  printer_increase_indent(printer);
+
+# 437 "c-file-printer.c"
+  for (
+
+# 437 "c-file-printer.c"
+
+# 437 "c-file-printer.c"
+    int i = 0;
+
+# 437 "c-file-printer.c"
+    (i<node_list_length((node->elements)));
+
+# 437 "c-file-printer.c"
+    (i++))
+
+# 437 "c-file-printer.c"
+  {
+
+# 438 "c-file-printer.c"
+    enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
+
+# 440 "c-file-printer.c"
+    printer_indent(printer);
+
+# 441 "c-file-printer.c"
+    append_string(printer, "if (strcmp(value, \"");
+
+# 442 "c-file-printer.c"
+    append_token(printer, (element->name));
+
+# 443 "c-file-printer.c"
+    append_string(printer, "\") == 0) {\n");
+
+# 444 "c-file-printer.c"
+    printer_increase_indent(printer);
+
+# 445 "c-file-printer.c"
+    printer_indent(printer);
+
+# 446 "c-file-printer.c"
+    append_string(printer, "return ");
+
+# 447 "c-file-printer.c"
+    append_token(printer, (element->name));
+
+# 448 "c-file-printer.c"
+    append_string(printer, ";\n");
+
+# 449 "c-file-printer.c"
+    printer_decrease_indent(printer);
+
+# 450 "c-file-printer.c"
+    printer_indent(printer);
+
+# 451 "c-file-printer.c"
+    append_string(printer, "}\n");
+  }
+
+# 453 "c-file-printer.c"
+  printer_indent(printer);
+
+# 454 "c-file-printer.c"
+  append_string(printer, "return 0;\n");
+
+# 455 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 456 "c-file-printer.c"
+  append_string(printer, "}\n\n");
+
+# 458 "c-file-printer.c"
+  return printer;
+}
+
+
+# 461 "c-file-printer.c"
+printer_t* append_field_node(printer_t* printer, field_node_t* node)
+# 461 "c-file-printer.c"
+{
+
+# 462 "c-file-printer.c"
+  append_type_node(printer, (node->type));
+
+# 463 "c-file-printer.c"
+  append_string(printer, " ");
+
+# 464 "c-file-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 464 "c-file-printer.c"
+  {
+
+# 465 "c-file-printer.c"
+    append_token(printer, (node->name));
+  }
+
+# 467 "c-file-printer.c"
+  if ((node->suffixes))
+
+# 467 "c-file-printer.c"
+  {
+
+# 468 "c-file-printer.c"
+    for (
+
+# 468 "c-file-printer.c"
+
+# 468 "c-file-printer.c"
+      int i = 0;
+
+# 468 "c-file-printer.c"
+      (i<((node->suffixes)->length));
+
+# 468 "c-file-printer.c"
+      (i++))
+
+# 468 "c-file-printer.c"
+    {
+
+# 469 "c-file-printer.c"
+      append_parse_node(printer, value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*)));
+    }
+  }
+
+# 475 "c-file-printer.c"
+  return printer;
+}
+
+
+# 481 "c-file-printer.c"
+printer_t* append_struct_node(printer_t* printer, struct_node_t* node)
+# 481 "c-file-printer.c"
+{
+
+# 482 "c-file-printer.c"
+  append_string(printer, (((node->tag)==PARSE_NODE_UNION) ? "union " : "struct "));
+
+# 483 "c-file-printer.c"
+  if (((node->name)!=((void *)0)))
+
+# 483 "c-file-printer.c"
+  {
+
+# 484 "c-file-printer.c"
+    append_token(printer, (node->name));
+  }
+
+# 487 "c-file-printer.c"
+  if ((!(node->partial_definition)))
+
+# 487 "c-file-printer.c"
+  {
+
+# 488 "c-file-printer.c"
+    append_string(printer, " {\n");
+
+# 489 "c-file-printer.c"
+    printer_increase_indent(printer);
+
+# 490 "c-file-printer.c"
+    for (
+
+# 490 "c-file-printer.c"
+
+# 490 "c-file-printer.c"
+      int i = 0;
+
+# 490 "c-file-printer.c"
+      (i<node_list_length((node->fields)));
+
+# 490 "c-file-printer.c"
+      (i++))
+
+# 490 "c-file-printer.c"
+    {
+
+# 491 "c-file-printer.c"
+      printer_indent(printer);
+
+# 492 "c-file-printer.c"
+      append_field_node(printer, to_field_node(node_list_get((node->fields), i)));
+
+# 493 "c-file-printer.c"
+      append_string(printer, ";\n");
+    }
+
+# 495 "c-file-printer.c"
+    printer_decrease_indent(printer);
+
+# 496 "c-file-printer.c"
+    append_string(printer, "}");
+  }
+
+# 499 "c-file-printer.c"
+  return printer;
+}
+
+
+# 505 "c-file-printer.c"
+printer_t* append_typedef_node(printer_t* printer, typedef_node_t* node)
+# 505 "c-file-printer.c"
+{
+
+# 506 "c-file-printer.c"
+  append_string(printer, "typedef ");
+
+# 507 "c-file-printer.c"
+  append_type_node(printer, (node->type_node));
+
+# 508 "c-file-printer.c"
+  append_string(printer, " ");
+
+# 509 "c-file-printer.c"
+  append_token(printer, (node->name));
+
+# 510 "c-file-printer.c"
+  append_string(printer, ";\n");
+
+# 511 "c-file-printer.c"
+  return printer;
+}
+
+
+# 517 "c-file-printer.c"
+printer_t* append_cpp_include_node(printer_t* printer, cpp_include_node_t* node)
+# 518 "c-file-printer.c"
+{
+
+# 519 "c-file-printer.c"
+  append_string(printer, (node->text));
+
+# 520 "c-file-printer.c"
+  return printer;
+}
+
+
+# 526 "c-file-printer.c"
+printer_t* append_cpp_define_node(printer_t* printer, cpp_define_node_t* node)
+# 526 "c-file-printer.c"
+{
+
+# 527 "c-file-printer.c"
+  append_string(printer, (node->text));
+
+# 528 "c-file-printer.c"
+  return printer;
+}
+
+
+# 534 "c-file-printer.c"
+printer_t* append_variable_definition_node(printer_t* printer, variable_definition_node_t* node, boolean_t is_library)
+# 536 "c-file-printer.c"
+{
+
+# 537 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 537 "c-file-printer.c"
+  {
+
+# 538 "c-file-printer.c"
+    append_line_directive(printer, (node->name));
+  }
+
+# 540 "c-file-printer.c"
+  printer_indent(printer);
+
+# 541 "c-file-printer.c"
+  boolean_t is_header_file = (!is_library);
+
+# 542 "c-file-printer.c"
+  if (((node->storage_class_specifier)!=((void *)0)))
+
+# 542 "c-file-printer.c"
+  {
+
+# 543 "c-file-printer.c"
+    append_token(printer, (node->storage_class_specifier));
+
+# 544 "c-file-printer.c"
+    append_string(printer, " ");
+  }
+  else
+
+# 545 "c-file-printer.c"
+  if (is_header_file)
+
+# 545 "c-file-printer.c"
+  {
+
+# 546 "c-file-printer.c"
+    append_string(printer, "extern ");
+  }
+
+# 549 "c-file-printer.c"
+  append_type_node(printer, (node->type));
+
+# 550 "c-file-printer.c"
+  append_string(printer, " ");
+
+# 551 "c-file-printer.c"
+  append_token(printer, (node->name));
+
+# 552 "c-file-printer.c"
+  if ((node->suffixes))
+
+# 552 "c-file-printer.c"
+  {
+
+# 553 "c-file-printer.c"
+    for (
+
+# 553 "c-file-printer.c"
+
+# 553 "c-file-printer.c"
+      int i = 0;
+
+# 553 "c-file-printer.c"
+      (i<((node->suffixes)->length));
+
+# 553 "c-file-printer.c"
+      (i++))
+
+# 553 "c-file-printer.c"
+    {
+
+# 554 "c-file-printer.c"
+      append_parse_node(printer, value_array_get_ptr((node->suffixes), i, typeof(parse_node_t*)));
+    }
+  }
+
+# 558 "c-file-printer.c"
+  if ((is_library&&((node->value)!=((void *)0))))
+
+# 558 "c-file-printer.c"
+  {
+
+# 559 "c-file-printer.c"
+    append_string(printer, " = ");
+
+# 560 "c-file-printer.c"
+    append_parse_node(printer, (node->value));
+  }
+
+# 562 "c-file-printer.c"
+  append_string(printer, ";\n");
+
+# 563 "c-file-printer.c"
+  return printer;
+}
+
+
+# 569 "c-file-printer.c"
+printer_t* append_literal_node(printer_t* printer, literal_node_t* node)
+# 569 "c-file-printer.c"
+{
+
+# 570 "c-file-printer.c"
+  if (((node->token)!=((void *)0)))
+
+# 570 "c-file-printer.c"
+  {
+
+# 571 "c-file-printer.c"
+    append_token(printer, (node->token));
+  }
+  else
+
+# 572 "c-file-printer.c"
+  if (((node->initializer_node)!=((void *)0)))
+
+# 572 "c-file-printer.c"
+  {
+
+# 573 "c-file-printer.c"
+    if (((node->initializer_type)!=((void *)0)))
+
+# 573 "c-file-printer.c"
+    {
+
+# 574 "c-file-printer.c"
+      append_string(printer, "((");
+
+# 575 "c-file-printer.c"
+      append_parse_node(printer, (node->initializer_type));
+
+# 576 "c-file-printer.c"
+      append_string(printer, ") ");
+    }
+
+# 578 "c-file-printer.c"
+    append_balanced_construct_node(printer, to_balanced_construct_node((node->initializer_node)));
+
+# 580 "c-file-printer.c"
+    if (((node->initializer_type)!=((void *)0)))
+
+# 580 "c-file-printer.c"
+    {
+
+# 581 "c-file-printer.c"
+      append_string(printer, ")");
+    }
+  }
+  else
+
+# 583 "c-file-printer.c"
+  if ((((node->tokens)!=((void *)0))&&(((node->tokens)->length)>0)))
+
+# 583 "c-file-printer.c"
+  {
+
+# 584 "c-file-printer.c"
+    for (
+
+# 584 "c-file-printer.c"
+
+# 584 "c-file-printer.c"
+      uint64_t i = 0;
+
+# 584 "c-file-printer.c"
+      (i<((node->tokens)->length));
+
+# 584 "c-file-printer.c"
+      (i++))
+
+# 584 "c-file-printer.c"
+    {
+
+# 585 "c-file-printer.c"
+      if ((i>0))
+
+# 585 "c-file-printer.c"
+      {
+
+# 586 "c-file-printer.c"
+        append_string(printer, " ");
+      }
+
+# 588 "c-file-printer.c"
+      token_t* token = value_array_get_ptr((node->tokens), i, typeof(token_t*));
+
+# 589 "c-file-printer.c"
+      append_token(printer, token);
+    }
+  }
+  else
+
+# 591 "c-file-printer.c"
+  {
+
+# 592 "c-file-printer.c"
+    append_string(printer, "FIXME");
+  }
+
+# 594 "c-file-printer.c"
+  return printer;
+}
+
+
+# 600 "c-file-printer.c"
+printer_t* append_identifier_node(printer_t* printer, identifier_node_t* node)
+# 600 "c-file-printer.c"
+{
+
+# 601 "c-file-printer.c"
+  if (((node->token)==((void *)0)))
+
+# 601 "c-file-printer.c"
+  {
+
+# 602 "c-file-printer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 604 "c-file-printer.c"
+  if (token_matches((node->token), "nullptr"))
+
+# 604 "c-file-printer.c"
+  {
+
+# 605 "c-file-printer.c"
+    append_string(printer, "((void *)0)");
+  }
+  else
+
+# 606 "c-file-printer.c"
+  {
+
+# 607 "c-file-printer.c"
+    append_token(printer, (node->token));
+  }
+
+# 609 "c-file-printer.c"
+  return printer;
+}
+
+
+# 619 "c-file-printer.c"
+printer_t* append_empty_statement_node(printer_t* printer, empty_statement_node_t* node)
+# 620 "c-file-printer.c"
+{
+
+# 621 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 621 "c-file-printer.c"
+  {
+
+# 622 "c-file-printer.c"
+    append_line_directive(printer, (node->semi_colon_token));
+  }
+
+# 624 "c-file-printer.c"
+  printer_indent(printer);
+
+# 625 "c-file-printer.c"
+  append_string(printer, ";\n");
+
+# 626 "c-file-printer.c"
+  return printer;
+}
+
+
+# 632 "c-file-printer.c"
+printer_t* append_break_statement_node(printer_t* printer, break_statement_node_t* node)
+# 633 "c-file-printer.c"
+{
+
+# 634 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 634 "c-file-printer.c"
+  {
+
+# 635 "c-file-printer.c"
+    append_line_directive(printer, (node->break_keyword_token));
+  }
+
+# 637 "c-file-printer.c"
+  printer_indent(printer);
+
+# 638 "c-file-printer.c"
+  append_string(printer, "break;\n");
+
+# 639 "c-file-printer.c"
+  return printer;
+}
+
+
+# 645 "c-file-printer.c"
+printer_t* append_continue_statement_node(printer_t* printer, continue_statement_node_t* node)
+# 646 "c-file-printer.c"
+{
+
+# 647 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 647 "c-file-printer.c"
+  {
+
+# 648 "c-file-printer.c"
+    append_line_directive(printer, (node->continue_keyword_token));
+  }
+
+# 650 "c-file-printer.c"
+  printer_indent(printer);
+
+# 651 "c-file-printer.c"
+  append_string(printer, "continue;\n");
+
+# 652 "c-file-printer.c"
+  return printer;
+}
+
+
+# 658 "c-file-printer.c"
+printer_t* append_label_statement_node(printer_t* printer, label_statement_node_t* node)
+# 659 "c-file-printer.c"
+{
+
+# 660 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 660 "c-file-printer.c"
+  {
+
+# 661 "c-file-printer.c"
+    append_line_directive(printer, (node->label));
+  }
+
+# 663 "c-file-printer.c"
+  printer_indent(printer);
+
+# 664 "c-file-printer.c"
+  append_token(printer, (node->label));
+
+# 665 "c-file-printer.c"
+  append_string(printer, ":\n");
+
+# 666 "c-file-printer.c"
+  return printer;
+}
+
+
+# 672 "c-file-printer.c"
+printer_t* append_case_label_node(printer_t* printer, case_label_node_t* node)
+# 672 "c-file-printer.c"
+{
+
+# 673 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 673 "c-file-printer.c"
+  {
+
+# 674 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 676 "c-file-printer.c"
+  printer_indent(printer);
+
+# 677 "c-file-printer.c"
+  append_string(printer, "case ");
+
+# 678 "c-file-printer.c"
+  append_parse_node(printer, (node->expression));
+
+# 679 "c-file-printer.c"
+  append_string(printer, ":\n");
+
+# 680 "c-file-printer.c"
+  return printer;
+}
+
+
+# 686 "c-file-printer.c"
+printer_t* append_default_label_node(printer_t* printer, default_label_node_t* node)
+# 687 "c-file-printer.c"
+{
+
+# 688 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 688 "c-file-printer.c"
+  {
+
+# 689 "c-file-printer.c"
+    append_line_directive(printer, (node->default_token));
+  }
+
+# 691 "c-file-printer.c"
+  printer_indent(printer);
+
+# 692 "c-file-printer.c"
+  append_string(printer, "default:\n");
+
+# 693 "c-file-printer.c"
+  return printer;
+}
+
+
+# 699 "c-file-printer.c"
+printer_t* append_expression_statement_node(printer_t* printer, expression_statement_node_t* node)
+# 700 "c-file-printer.c"
+{
+
+# 701 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 701 "c-file-printer.c"
+  {
+
+# 702 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 704 "c-file-printer.c"
+  printer_indent(printer);
+
+# 705 "c-file-printer.c"
+  append_parse_node(printer, (node->expression));
+
+# 706 "c-file-printer.c"
+  append_string(printer, ";\n");
+
+# 707 "c-file-printer.c"
+  return printer;
+}
+
+
+# 713 "c-file-printer.c"
+printer_t* append_block_node(printer_t* printer, block_node_t* node)
+# 713 "c-file-printer.c"
+{
+
+# 714 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 714 "c-file-printer.c"
+  {
+
+# 715 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 717 "c-file-printer.c"
+  printer_indent(printer);
+
+# 718 "c-file-printer.c"
+  append_string(printer, "{\n");
+
+# 719 "c-file-printer.c"
+  printer_increase_indent(printer);
+
+# 720 "c-file-printer.c"
+  uint64_t length = node_list_length((node->statements));
+
+# 721 "c-file-printer.c"
+  for (
+
+# 721 "c-file-printer.c"
+
+# 721 "c-file-printer.c"
+    uint64_t i = 0;
+
+# 721 "c-file-printer.c"
+    (i<length);
+
+# 721 "c-file-printer.c"
+    (i++))
+
+# 721 "c-file-printer.c"
+  {
+
+# 722 "c-file-printer.c"
+    append_parse_node(printer, node_list_get((node->statements), i));
+  }
+
+# 724 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 725 "c-file-printer.c"
+  printer_indent(printer);
+
+# 726 "c-file-printer.c"
+  append_string(printer, "}\n");
+
+# 727 "c-file-printer.c"
+  return printer;
+}
+
+
+# 733 "c-file-printer.c"
+printer_t* append_if_statement_node(printer_t* printer, if_statement_node_t* node)
+# 734 "c-file-printer.c"
+{
+
+# 735 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 735 "c-file-printer.c"
+  {
+
+# 736 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 738 "c-file-printer.c"
+  printer_indent(printer);
+
+# 739 "c-file-printer.c"
+  append_string(printer, "if (");
+
+# 740 "c-file-printer.c"
+  append_parse_node(printer, (node->if_condition));
+
+# 741 "c-file-printer.c"
+  append_string(printer, ")\n");
+
+# 742 "c-file-printer.c"
+  append_parse_node(printer, (node->if_true));
+
+# 743 "c-file-printer.c"
+  if ((node->if_else))
+
+# 743 "c-file-printer.c"
+  {
+
+# 744 "c-file-printer.c"
+    printer_indent(printer);
+
+# 745 "c-file-printer.c"
+    append_string(printer, "else\n");
+
+# 746 "c-file-printer.c"
+    append_parse_node(printer, (node->if_else));
+  }
+
+# 748 "c-file-printer.c"
+  return printer;
+}
+
+
+# 754 "c-file-printer.c"
+printer_t* append_while_statement_node(printer_t* printer, while_statement_node_t* node)
+# 755 "c-file-printer.c"
+{
+
+# 756 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 756 "c-file-printer.c"
+  {
+
+# 757 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 759 "c-file-printer.c"
+  printer_indent(printer);
+
+# 760 "c-file-printer.c"
+  append_string(printer, "while (");
+
+# 761 "c-file-printer.c"
+  append_parse_node(printer, (node->condition));
+
+# 762 "c-file-printer.c"
+  append_string(printer, ")\n");
+
+# 763 "c-file-printer.c"
+  append_parse_node(printer, (node->body));
+
+# 764 "c-file-printer.c"
+  return printer;
+}
+
+
+# 770 "c-file-printer.c"
+printer_t* append_switch_statement_node(printer_t* printer, switch_statement_node_t* node)
+# 771 "c-file-printer.c"
+{
+
+# 772 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 772 "c-file-printer.c"
+  {
+
+# 773 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 775 "c-file-printer.c"
+  printer_indent(printer);
+
+# 776 "c-file-printer.c"
+  append_string(printer, "switch (");
+
+# 777 "c-file-printer.c"
+  append_parse_node(printer, (node->expression));
+
+# 778 "c-file-printer.c"
+  append_string(printer, ")\n");
+
+# 779 "c-file-printer.c"
+  append_parse_node(printer, (node->block));
+
+# 780 "c-file-printer.c"
+  return printer;
+}
+
+
+# 786 "c-file-printer.c"
+printer_t* append_for_statement_node(printer_t* printer, for_statement_node_t* node)
+# 787 "c-file-printer.c"
+{
+
+# 788 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 788 "c-file-printer.c"
+  {
+
+# 789 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 791 "c-file-printer.c"
+  printer_indent(printer);
+
+# 793 "c-file-printer.c"
+  append_string(printer, "for (\n");
+
+# 794 "c-file-printer.c"
+  printer_increase_indent(printer);
+
+# 797 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 797 "c-file-printer.c"
+  {
+
+# 798 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 802 "c-file-printer.c"
+  if (((node->for_init)!=((void *)0)))
+
+# 802 "c-file-printer.c"
+  {
+
+# 803 "c-file-printer.c"
+    append_parse_node(printer, (node->for_init));
+  }
+  else
+
+# 804 "c-file-printer.c"
+  {
+
+# 805 "c-file-printer.c"
+    printer_indent(printer);
+
+# 806 "c-file-printer.c"
+    append_string(printer, ";\n");
+  }
+
+# 810 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 810 "c-file-printer.c"
+  {
+
+# 811 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 815 "c-file-printer.c"
+  printer_indent(printer);
+
+# 816 "c-file-printer.c"
+  if (((node->for_test)!=((void *)0)))
+
+# 816 "c-file-printer.c"
+  {
+
+# 817 "c-file-printer.c"
+    append_parse_node(printer, (node->for_test));
+  }
+
+# 819 "c-file-printer.c"
+  append_string(printer, ";");
+
+# 820 "c-file-printer.c"
+  printer_newline(printer);
+
+# 823 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 823 "c-file-printer.c"
+  {
+
+# 824 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 828 "c-file-printer.c"
+  printer_indent(printer);
+
+# 829 "c-file-printer.c"
+  if (((node->for_increment)!=((void *)0)))
+
+# 829 "c-file-printer.c"
+  {
+
+# 830 "c-file-printer.c"
+    append_parse_node(printer, (node->for_increment));
+  }
+
+# 832 "c-file-printer.c"
+  append_string(printer, ")\n");
+
+# 833 "c-file-printer.c"
+  printer_decrease_indent(printer);
+
+# 834 "c-file-printer.c"
+  append_parse_node(printer, (node->for_body));
+
+# 835 "c-file-printer.c"
+  return printer;
+}
+
+
+# 841 "c-file-printer.c"
+printer_t* append_do_statement_node(printer_t* printer, do_statement_node_t* node)
+# 842 "c-file-printer.c"
+{
+
+# 843 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 843 "c-file-printer.c"
+  {
+
+# 844 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 846 "c-file-printer.c"
+  printer_indent(printer);
+
+# 847 "c-file-printer.c"
+  append_string(printer, "do");
+
+# 848 "c-file-printer.c"
+  append_parse_node(printer, (node->body));
+
+# 849 "c-file-printer.c"
+  printer_indent(printer);
+
+# 850 "c-file-printer.c"
+  append_string(printer, "while (");
+
+# 851 "c-file-printer.c"
+  append_parse_node(printer, (node->condition));
+
+# 852 "c-file-printer.c"
+  append_string(printer, ");\n");
+
+# 853 "c-file-printer.c"
+  return printer;
+}
+
+
+# 860 "c-file-printer.c"
+printer_t* append_return_statement_node(printer_t* printer, return_statement_node_t* node)
+# 861 "c-file-printer.c"
+{
+
+# 862 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 862 "c-file-printer.c"
+  {
+
+# 863 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 865 "c-file-printer.c"
+  printer_indent(printer);
+
+# 866 "c-file-printer.c"
+  append_string(printer, "return");
+
+# 867 "c-file-printer.c"
+  if (((node->expression)!=((void *)0)))
+
+# 867 "c-file-printer.c"
+  {
+
+# 868 "c-file-printer.c"
+    append_string(printer, " ");
+
+# 869 "c-file-printer.c"
+    append_parse_node(printer, (node->expression));
+  }
+
+# 871 "c-file-printer.c"
+  append_string(printer, ";\n");
+
+# 872 "c-file-printer.c"
+  return printer;
+}
+
+
+# 878 "c-file-printer.c"
+printer_t* append_goto_statement_node(printer_t* printer, goto_statement_node_t* node)
+# 879 "c-file-printer.c"
+{
+
+# 880 "c-file-printer.c"
+  if ((printer->output_line_directives))
+
+# 880 "c-file-printer.c"
+  {
+
+# 881 "c-file-printer.c"
+    append_line_directive(printer, (node->first_token));
+  }
+
+# 883 "c-file-printer.c"
+  printer_indent(printer);
+
+# 884 "c-file-printer.c"
+  append_string(printer, "goto");
+
+# 885 "c-file-printer.c"
+  append_string(printer, " ");
+
+# 886 "c-file-printer.c"
+  append_token(printer, (node->label));
+
+# 887 "c-file-printer.c"
+  append_string(printer, ";\n");
+
+# 888 "c-file-printer.c"
+  return printer;
+}
+
+
+# 894 "c-file-printer.c"
+printer_t* append_operator_node(printer_t* printer, operator_node_t* node)
+# 894 "c-file-printer.c"
+{
+
+# 895 "c-file-printer.c"
+  if (token_matches((node->operator), "cast"))
+
+# 895 "c-file-printer.c"
+  {
+
+# 896 "c-file-printer.c"
+    append_string(printer, "(/*CAST*/(");
+
+# 897 "c-file-printer.c"
+    append_parse_node(printer, (node->left));
+
+# 898 "c-file-printer.c"
+    append_string(printer, ") ");
+
+# 899 "c-file-printer.c"
+    append_parse_node(printer, (node->right));
+
+# 900 "c-file-printer.c"
+    append_string(printer, ")");
+
+# 901 "c-file-printer.c"
+    return printer;
+  }
+
+# 904 "c-file-printer.c"
+  if (token_matches((node->operator), "block_expr"))
+
+# 904 "c-file-printer.c"
+  {
+
+# 905 "c-file-printer.c"
+    return append_parse_node(printer, (node->left));
+  }
+
+# 908 "c-file-printer.c"
+  if (token_matches((node->operator), "typeof"))
+
+# 908 "c-file-printer.c"
+  {
+
+# 910 "c-file-printer.c"
+    append_string(printer, "typeof(");
+
+# 911 "c-file-printer.c"
+    append_parse_node(printer, (node->left));
+
+# 912 "c-file-printer.c"
+    append_string(printer, ")");
+
+# 913 "c-file-printer.c"
+    return printer;
+  }
+
+# 916 "c-file-printer.c"
+  append_string(printer, "(");
+
+# 917 "c-file-printer.c"
+  if (((node->left)!=((void *)0)))
+
+# 917 "c-file-printer.c"
+  {
+
+# 918 "c-file-printer.c"
+    append_parse_node(printer, (node->left));
+  }
+
+# 920 "c-file-printer.c"
+  append_token(printer, (node->operator));
+
+# 921 "c-file-printer.c"
+  if (token_matches((node->operator), "sizeof"))
+
+# 921 "c-file-printer.c"
+  {
+
+# 922 "c-file-printer.c"
+    append_string(printer, "(");
+  }
+
+# 924 "c-file-printer.c"
+  if (((node->right)!=((void *)0)))
+
+# 924 "c-file-printer.c"
+  {
+
+# 925 "c-file-printer.c"
+    append_parse_node(printer, (node->right));
+  }
+
+# 927 "c-file-printer.c"
+  if (token_matches((node->operator), "sizeof"))
+
+# 927 "c-file-printer.c"
+  {
+
+# 928 "c-file-printer.c"
+    append_string(printer, ")");
+  }
+  else
+
+# 929 "c-file-printer.c"
+  if (token_matches((node->operator), "["))
+
+# 929 "c-file-printer.c"
+  {
+
+# 930 "c-file-printer.c"
+    append_string(printer, "]");
+  }
+
+# 932 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 933 "c-file-printer.c"
+  return printer;
+}
+
+
+# 939 "c-file-printer.c"
+printer_t* append_conditional_node(printer_t* printer, conditional_node_t* node)
+# 940 "c-file-printer.c"
+{
+
+# 941 "c-file-printer.c"
+  append_string(printer, "(");
+
+# 942 "c-file-printer.c"
+  if (((node->condition)!=((void *)0)))
+
+# 942 "c-file-printer.c"
+  {
+
+# 943 "c-file-printer.c"
+    append_parse_node(printer, (node->condition));
+  }
+
+# 945 "c-file-printer.c"
+  append_string(printer, " ? ");
+
+# 946 "c-file-printer.c"
+  if (((node->expr_if_true)!=((void *)0)))
+
+# 946 "c-file-printer.c"
+  {
+
+# 947 "c-file-printer.c"
+    append_parse_node(printer, (node->expr_if_true));
+  }
+
+# 949 "c-file-printer.c"
+  append_string(printer, " : ");
+
+# 950 "c-file-printer.c"
+  if (((node->expr_if_false)!=((void *)0)))
+
+# 950 "c-file-printer.c"
+  {
+
+# 951 "c-file-printer.c"
+    append_parse_node(printer, (node->expr_if_false));
+  }
+
+# 953 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 954 "c-file-printer.c"
+  return printer;
+}
+
+
+# 960 "c-file-printer.c"
+printer_t* append_call_node(printer_t* printer, call_node_t* node)
+# 960 "c-file-printer.c"
+{
+
+# 961 "c-file-printer.c"
+  append_parse_node(printer, (node->function));
+
+# 962 "c-file-printer.c"
+  append_string(printer, "(");
+
+# 963 "c-file-printer.c"
+  for (
+
+# 963 "c-file-printer.c"
+
+# 963 "c-file-printer.c"
+    int i = 0;
+
+# 963 "c-file-printer.c"
+    (i<node_list_length((node->args)));
+
+# 963 "c-file-printer.c"
+    (i++))
+
+# 963 "c-file-printer.c"
+  {
+
+# 964 "c-file-printer.c"
+    if ((i>0))
+
+# 964 "c-file-printer.c"
+    {
+
+# 965 "c-file-printer.c"
+      append_string(printer, ", ");
+    }
+
+# 967 "c-file-printer.c"
+    append_parse_node(printer, node_list_get((node->args), i));
+  }
+
+# 969 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 970 "c-file-printer.c"
+  return printer;
+}
+
+
+# 977 "c-file-printer.c"
+buffer_t* buffer_append_enum_metadata(buffer_t* buffer, enum_node_t* node, char* fn_prefix, char* type_string)
+# 978 "c-file-printer.c"
+{
+
+# 980 "c-file-printer.c"
+  char* code_template = "enum_metadata_t* ${fn_prefix}_metadata() {\n" "${element_constructions}" "    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {\n" "        .name = \"${enum_name}\",\n" "        .elements = ${previous_var_address}\n" "    };\n" "    return &enum_metadata_result;\n" "}\n\n";
+
+# 990 "c-file-printer.c"
+  char* field_template = "    static enum_element_metadata_t ${var_id} = (enum_element_metadata_t) {\n" "        .next = ${previous_var_address},\n" "        .name = \"${element_name}\",\n" "        .value = ${element_name}\n" "    };\n";
+
+# 998 "c-file-printer.c"
+  buffer_t* element_constructions = make_buffer(128);
+
+# 999 "c-file-printer.c"
+  buffer_t* buf = make_buffer(128);
+
+# 1001 "c-file-printer.c"
+  char* previous_var_address = "((void*)0)";
+
+# 1005 "c-file-printer.c"
+  for (
+
+# 1005 "c-file-printer.c"
+
+# 1005 "c-file-printer.c"
+    int i = 0;
+
+# 1005 "c-file-printer.c"
+    (i<node_list_length((node->elements)));
+
+# 1005 "c-file-printer.c"
+    (i++))
+
+# 1005 "c-file-printer.c"
+  {
+
+# 1006 "c-file-printer.c"
+    enum_element_t* element = to_enum_element_node(node_list_get((node->elements), i));
+
+# 1008 "c-file-printer.c"
+    char* var_id = string_printf("var_%d", i);
+
+# 1009 "c-file-printer.c"
+    char* element_name = token_to_string((element->name));
+
+# 1011 "c-file-printer.c"
+    buffer_clear(buf);
+
+# 1012 "c-file-printer.c"
+    buffer_append_string(buf, field_template);
+
+# 1013 "c-file-printer.c"
+    buffer_replace_all(buf, "${var_id}", var_id);
+
+# 1014 "c-file-printer.c"
+    buffer_replace_all(buf, "${previous_var_address}", previous_var_address);
+
+# 1015 "c-file-printer.c"
+    buffer_replace_all(buf, "${element_name}", element_name);
+
+# 1017 "c-file-printer.c"
+    buffer_append_buffer(element_constructions, buf);
+
+# 1018 "c-file-printer.c"
+    (previous_var_address=string_printf("&%s", var_id));
+  }
+
+# 1021 "c-file-printer.c"
+  buffer_t* code = buffer_append_string(make_buffer(128), code_template);
+
+# 1022 "c-file-printer.c"
+  buffer_replace_all(code, "${fn_prefix}", fn_prefix);
+
+# 1023 "c-file-printer.c"
+  buffer_replace_all(code, "${enum_name}", type_string);
+
+# 1024 "c-file-printer.c"
+  buffer_replace_all(code, "${previous_var_address}", previous_var_address);
+
+# 1025 "c-file-printer.c"
+  buffer_replace_all(code, "${element_constructions}", buffer_to_c_string(element_constructions));
+
+# 1028 "c-file-printer.c"
+  return buffer_append_buffer(buffer, code);
+}
+
+
+# 1031 "c-file-printer.c"
+printer_t* append_line_directive(printer_t* printer, token_t* token)
+# 1031 "c-file-printer.c"
+{
+
+# 1032 "c-file-printer.c"
+  if ((token==((void *)0)))
+
+# 1032 "c-file-printer.c"
+  {
+
+# 1033 "c-file-printer.c"
+    buffer_printf((printer->buffer), "\n// (no 'first token') provided)\n");
+
+# 1034 "c-file-printer.c"
+    return printer;
+  }
+
+# 1036 "c-file-printer.c"
+  if (((printer->symbol_table)==((void *)0)))
+
+# 1036 "c-file-printer.c"
+  {
+
+# 1037 "c-file-printer.c"
+    log_fatal("printer->symbol_table is not set.");
+
+# 1038 "c-file-printer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 1040 "c-file-printer.c"
+  file_t* file = symbol_table_token_to_file((printer->symbol_table), token);
+
+# 1041 "c-file-printer.c"
+  if ((file!=((void *)0)))
+
+# 1041 "c-file-printer.c"
+  {
+
+# 1042 "c-file-printer.c"
+    buffer_printf((printer->buffer), "\n# %d \"%s\"\n", (token->line_number), ((file==((void *)0)) ? "fixme.c" : (file->file_name)));
+  }
+
+# 1045 "c-file-printer.c"
+  return printer;
+}
+
+
+# 1048 "c-file-printer.c"
+printer_t* append_compound_literal_node(printer_t* printer, compound_literal_node_t* node)
+# 1049 "c-file-printer.c"
+{
+
+# 1050 "c-file-printer.c"
+  append_string(printer, "(");
+
+# 1051 "c-file-printer.c"
+  append_parse_node(printer, (node->type_node));
+
+# 1052 "c-file-printer.c"
+  append_string(printer, ")");
+
+# 1053 "c-file-printer.c"
+  append_string(printer, "{");
+
+# 1055 "c-file-printer.c"
+  for (
+
+# 1055 "c-file-printer.c"
+
+# 1055 "c-file-printer.c"
+    int i = 0;
+
+# 1055 "c-file-printer.c"
+    (i<node_list_length((node->initializers)));
+
+# 1055 "c-file-printer.c"
+    (i++))
+
+# 1055 "c-file-printer.c"
+  {
+
+# 1056 "c-file-printer.c"
+    if ((i>0))
+
+# 1056 "c-file-printer.c"
+    {
+
+# 1057 "c-file-printer.c"
+      append_string(printer, ", ");
+    }
+
+# 1059 "c-file-printer.c"
+    parse_node_t* initializer = node_list_get((node->initializers), i);
+
+# 1060 "c-file-printer.c"
+    append_parse_node(printer, initializer);
+  }
+
+# 1063 "c-file-printer.c"
+  append_string(printer, "}");
+
+# 1064 "c-file-printer.c"
+  return printer;
+}
+
+
+# 1068 "c-file-printer.c"
+printer_t* append_designated_initializer_node(printer_t* printer, designated_initializer_node_t* node)
+# 1069 "c-file-printer.c"
+{
+
+# 1070 "c-file-printer.c"
+  append_string(printer, ".");
+
+# 1071 "c-file-printer.c"
+  append_token(printer, (node->member_name));
+
+# 1072 "c-file-printer.c"
+  append_string(printer, "=");
+
+# 1073 "c-file-printer.c"
+  append_parse_node(printer, (node->value));
+
+# 1074 "c-file-printer.c"
+  return printer;
+}
+
+
+# 85 "symbol-table.c"
+symbol_table_map_t* make_symbol_table_map(void)
+# 85 "symbol-table.c"
+{
+
+# 86 "symbol-table.c"
+  symbol_table_map_t* result = malloc_struct(symbol_table_map_t);
+
+# 87 "symbol-table.c"
+  ((result->ht)=make_string_hashtable(16));
+
+# 88 "symbol-table.c"
+  ((result->ordered_bindings)=make_value_array(16));
+
+# 89 "symbol-table.c"
+  return result;
+}
+
+
+# 92 "symbol-table.c"
+symbol_table_t* make_symbol_table(void)
+# 92 "symbol-table.c"
+{
+
+# 93 "symbol-table.c"
+  symbol_table_t* result = malloc_struct(symbol_table_t);
+
+# 94 "symbol-table.c"
+  ((result->files)=make_value_array(16));
+
+# 95 "symbol-table.c"
+  ((result->system_includes)=make_value_array(16));
+
+# 96 "symbol-table.c"
+  ((result->user_includes)=make_value_array(16));
+
+# 97 "symbol-table.c"
+  ((result->defines)=make_value_array(16));
+
+# 98 "symbol-table.c"
+  ((result->enums)=make_symbol_table_map());
+
+# 99 "symbol-table.c"
+  ((result->typedefs)=make_symbol_table_map());
+
+# 100 "symbol-table.c"
+  ((result->structures)=make_symbol_table_map());
+
+# 101 "symbol-table.c"
+  ((result->variables)=make_symbol_table_map());
+
+# 102 "symbol-table.c"
+  ((result->functions)=make_symbol_table_map());
+
+# 103 "symbol-table.c"
+  return result;
+}
+
+
+# 111 "symbol-table.c"
+symbol_table_binding_t* symbol_table_map_get(symbol_table_map_t* map, char* key_string)
+# 112 "symbol-table.c"
+{
+
+# 113 "symbol-table.c"
+  value_result_t result = string_ht_find((map->ht), key_string);
+
+# 114 "symbol-table.c"
+  if (is_ok(result))
+
+# 114 "symbol-table.c"
+  {
+
+# 115 "symbol-table.c"
+    return (/*CAST*/(symbol_table_binding_t*) (result.ptr));
+  }
+
+# 117 "symbol-table.c"
+  return ((void *)0);
+}
+
+
+# 128 "symbol-table.c"
+parse_node_t* symbol_table_map_get_only_definition(symbol_table_map_t* map, char* key_string)
+# 129 "symbol-table.c"
+{
+
+# 130 "symbol-table.c"
+  value_result_t result = string_ht_find((map->ht), key_string);
+
+# 131 "symbol-table.c"
+  if (is_ok(result))
+
+# 131 "symbol-table.c"
+  {
+
+# 132 "symbol-table.c"
+    symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (result.ptr));
+
+# 133 "symbol-table.c"
+    if ((((binding->definition_nodes)->length)!=1))
+
+# 133 "symbol-table.c"
+    {
+
+# 134 "symbol-table.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 136 "symbol-table.c"
+    return value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*));
+  }
+
+# 139 "symbol-table.c"
+  return ((void *)0);
+}
+
+
+# 142 "symbol-table.c"
+void symbol_table_add_declaration_node(symbol_table_map_t* map, char* key_string, parse_node_t* node)
+# 143 "symbol-table.c"
+{
+
+# 144 "symbol-table.c"
+  value_result_t previous_binding = string_ht_find((map->ht), key_string);
+
+# 145 "symbol-table.c"
+  if (is_ok(previous_binding))
+
+# 145 "symbol-table.c"
+  {
+
+# 146 "symbol-table.c"
+    symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (previous_binding.ptr));
+
+# 148 "symbol-table.c"
+    value_array_add((binding->definition_nodes), ptr_to_value(node));
+
+# 149 "symbol-table.c"
+    return;
+  }
+
+# 151 "symbol-table.c"
+  symbol_table_binding_t* binding = malloc_struct(symbol_table_binding_t);
+
+# 152 "symbol-table.c"
+  ((binding->key_string)=key_string);
+
+# 157 "symbol-table.c"
+  ((binding->definition_nodes)=make_value_array(2));
+
+# 158 "symbol-table.c"
+  value_array_add((binding->definition_nodes), ptr_to_value(node));
+
+# 159 "symbol-table.c"
+  ((map->ht)=string_ht_insert((map->ht), (binding->key_string), ptr_to_value(binding)));
+
+# 161 "symbol-table.c"
+  value_array_add((map->ordered_bindings), ptr_to_value(binding));
+}
+
+
+# 170 "symbol-table.c"
+void symbol_table_add_declartions(symbol_table_t* symbol_table, declarations_node_t* root)
+# 171 "symbol-table.c"
+{
+
+# 172 "symbol-table.c"
+  uint64_t length = node_list_length((root->declarations));
+
+# 173 "symbol-table.c"
+  for (
+
+# 173 "symbol-table.c"
+
+# 173 "symbol-table.c"
+    uint64_t i = 0;
+
+# 173 "symbol-table.c"
+    (i<length);
+
+# 173 "symbol-table.c"
+    (i++))
+
+# 173 "symbol-table.c"
+  {
+
+# 174 "symbol-table.c"
+    parse_node_t* node = node_list_get((root->declarations), i);
+
+# 175 "symbol-table.c"
+    switch ((node->tag))
+
+# 175 "symbol-table.c"
+    {
+
+# 177 "symbol-table.c"
+      case PARSE_NODE_ENUM:
+
+# 178 "symbol-table.c"
+      symbol_table_add_declaration_node((symbol_table->enums), token_to_string((to_enum_node(node)->name)), node);
+
+# 180 "symbol-table.c"
+      break;
+
+# 182 "symbol-table.c"
+      case PARSE_NODE_FUNCTION:
+
+# 183 "symbol-table.c"
+      symbol_table_add_declaration_node((symbol_table->functions), token_to_string((to_function_node(node)->function_name)), node);
+
+# 186 "symbol-table.c"
+      break;
+
+# 188 "symbol-table.c"
+      case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 189 "symbol-table.c"
+      symbol_table_add_declaration_node((symbol_table->variables), token_to_string((to_variable_definition_node(node)->name)), node);
+
+# 192 "symbol-table.c"
+      break;
+
+# 194 "symbol-table.c"
+      case PARSE_NODE_STRUCT:
+
+# 195 "symbol-table.c"
+      case PARSE_NODE_UNION:
+
+# 196 "symbol-table.c"
+      symbol_table_add_declaration_node((symbol_table->structures), token_to_string((to_struct_node(node)->name)), node);
+
+# 199 "symbol-table.c"
+      break;
+
+# 201 "symbol-table.c"
+      case PARSE_NODE_TYPEDEF:
+
+# 202 "symbol-table.c"
+      symbol_table_add_declaration_node((symbol_table->typedefs), token_to_string((to_typedef_node(node)->name)), node);
+
+# 205 "symbol-table.c"
+      break;
+
+# 207 "symbol-table.c"
+      default:
+
+# 208 "symbol-table.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+
+# 209 "symbol-table.c"
+      break;
+    }
+  }
+}
+
+
+# 214 "symbol-table.c"
+buffer_t* symbol_table_stats(buffer_t* buffer, symbol_table_t* symbol_table)
+# 214 "symbol-table.c"
+{
+
+# 215 "symbol-table.c"
+  (buffer=buffer_printf(buffer, "Symbol Table Stats\n"));
+
+# 216 "symbol-table.c"
+  (buffer=buffer_printf(buffer, "#enums %d\n", string_ht_num_entries(((symbol_table->enums)->ht))));
+
+# 218 "symbol-table.c"
+  (buffer=buffer_printf(buffer, "#typedefs %d\n", string_ht_num_entries(((symbol_table->typedefs)->ht))));
+
+# 220 "symbol-table.c"
+  (buffer=buffer_printf(buffer, "#structures %d\n", string_ht_num_entries(((symbol_table->structures)->ht))));
+
+# 222 "symbol-table.c"
+  (buffer=buffer_printf(buffer, "#variables %d\n", string_ht_num_entries(((symbol_table->variables)->ht))));
+
+# 224 "symbol-table.c"
+  (buffer=buffer_printf(buffer, "#functions %d\n", string_ht_num_entries(((symbol_table->functions)->ht))));
+
+# 226 "symbol-table.c"
+  return buffer;
+}
+
+
+# 229 "symbol-table.c"
+void buffer_append_dgb_binding(cdl_printer_t* printer, symbol_table_binding_t* binding)
+# 230 "symbol-table.c"
+{
+
+# 231 "symbol-table.c"
+  cdl_key(printer, (binding->key_string));
+
+# 232 "symbol-table.c"
+  buffer_append_dbg_parse_node(printer, value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
+}
+
+
+# 237 "symbol-table.c"
+void buffer_appennd_dbg_symbol_table_map(cdl_printer_t* printer, symbol_table_map_t* symbol_table_map)
+# 238 "symbol-table.c"
+{
+
+# 239 "symbol-table.c"
+  cdl_start_table(printer);
+
+# 240 "symbol-table.c"
+  for (
+
+# 240 "symbol-table.c"
+
+# 240 "symbol-table.c"
+    int i = 0;
+
+# 240 "symbol-table.c"
+    (i<((symbol_table_map->ordered_bindings)->length));
+
+# 240 "symbol-table.c"
+    (i++))
+
+# 240 "symbol-table.c"
+  {
+
+# 241 "symbol-table.c"
+    symbol_table_binding_t* binding = value_array_get_ptr((symbol_table_map->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 243 "symbol-table.c"
+    buffer_append_dgb_binding(printer, binding);
+  }
+
+# 245 "symbol-table.c"
+  cdl_end_table(printer);
+}
+
+
+# 248 "symbol-table.c"
+void buffer_append_dgb_symbol_table(cdl_printer_t* printer, symbol_table_t* symbol_table)
+# 249 "symbol-table.c"
+{
+
+# 250 "symbol-table.c"
+  cdl_start_table(printer);
+
+# 252 "symbol-table.c"
+  cdl_key(printer, "enumerations");
+
+# 253 "symbol-table.c"
+  buffer_appennd_dbg_symbol_table_map(printer, (symbol_table->enums));
+
+# 255 "symbol-table.c"
+  cdl_key(printer, "typedefs");
+
+# 256 "symbol-table.c"
+  buffer_appennd_dbg_symbol_table_map(printer, (symbol_table->typedefs));
+
+# 258 "symbol-table.c"
+  cdl_key(printer, "structures");
+
+# 259 "symbol-table.c"
+  buffer_appennd_dbg_symbol_table_map(printer, (symbol_table->structures));
+
+# 261 "symbol-table.c"
+  cdl_key(printer, "variables");
+
+# 262 "symbol-table.c"
+  buffer_appennd_dbg_symbol_table_map(printer, (symbol_table->variables));
+
+# 264 "symbol-table.c"
+  cdl_key(printer, "functions");
+
+# 265 "symbol-table.c"
+  buffer_appennd_dbg_symbol_table_map(printer, (symbol_table->functions));
+
+# 267 "symbol-table.c"
+  cdl_end_table(printer);
+}
+
+
+# 17 "source-to-source.c"
+token_t* generate_struct_name_from_typedef_name(token_t* name)
+# 17 "source-to-source.c"
+{
+
+# 18 "source-to-source.c"
+  token_t* generated = make_derived_token(name);
+
+# 19 "source-to-source.c"
+  buffer_append_string((generated->buffer), "__generated_S");
+
+# 20 "source-to-source.c"
+  ((generated->end)=((generated->buffer)->length));
+
+# 21 "source-to-source.c"
+  return generated;
+}
+
+
+# 40 "source-to-source.c"
+void split_structure_typedefs(symbol_table_t* symbol_table)
+# 40 "source-to-source.c"
+{
+
+# 41 "source-to-source.c"
+  for (
+
+# 41 "source-to-source.c"
+
+# 41 "source-to-source.c"
+    int i = 0;
+
+# 41 "source-to-source.c"
+    (i<(((symbol_table->typedefs)->ordered_bindings)->length));
+
+# 41 "source-to-source.c"
+    (i++))
+
+# 41 "source-to-source.c"
+  {
+
+# 42 "source-to-source.c"
+    symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (value_array_get(((symbol_table->typedefs)->ordered_bindings), i).ptr));
+
+# 45 "source-to-source.c"
+    if ((((binding->definition_nodes)->length)!=1))
+
+# 45 "source-to-source.c"
+    {
+
+# 46 "source-to-source.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 48 "source-to-source.c"
+    typedef_node_t* node = to_typedef_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
+
+# 50 "source-to-source.c"
+    if (((((node->type_node)->type_node_kind)==TYPE_NODE_KIND_TYPE_EXPRESSION)&&is_struct_node(((node->type_node)->user_type))))
+
+# 51 "source-to-source.c"
+    {
+
+# 52 "source-to-source.c"
+      struct_node_t* struct_node = to_struct_node(((node->type_node)->user_type));
+
+# 53 "source-to-source.c"
+      if ((!(struct_node->partial_definition)))
+
+# 53 "source-to-source.c"
+      {
+
+# 55 "source-to-source.c"
+        if (((struct_node->name)==((void *)0)))
+
+# 55 "source-to-source.c"
+        {
+
+# 56 "source-to-source.c"
+          ((struct_node->name)=generate_struct_name_from_typedef_name((node->name)));
+        }
+
+# 60 "source-to-source.c"
+        log_debug("Splitting %s off from %s", token_to_string((node->name)), token_to_string((struct_node->name)));
+
+# 74 "source-to-source.c"
+        struct_node_t* partial_definition = make_struct_node();
+
+# 75 "source-to-source.c"
+        ((partial_definition->partial_definition)=true);
+
+# 76 "source-to-source.c"
+        ((partial_definition->name)=(struct_node->name));
+
+# 78 "source-to-source.c"
+        (((node->type_node)->user_type)=(/*CAST*/(parse_node_t*) partial_definition));
+
+# 79 "source-to-source.c"
+        symbol_table_add_declaration_node((symbol_table->structures), token_to_string((struct_node->name)), (/*CAST*/(parse_node_t*) struct_node));
+      }
+    }
+  }
+}
+
+
+# 129 "source-to-source.c"
+void reorder_symbol_table_typedefs(symbol_table_t* symbol_table)
+# 129 "source-to-source.c"
+{
+
+# 130 "source-to-source.c"
+  value_array_t* bindings = ((symbol_table->typedefs)->ordered_bindings);
+
+# 131 "source-to-source.c"
+  value_array_t* reordered_bindings = make_value_array((bindings->length));
+
+# 132 "source-to-source.c"
+  for (
+
+# 132 "source-to-source.c"
+
+# 132 "source-to-source.c"
+    int i = 0;
+
+# 132 "source-to-source.c"
+    (i<(bindings->length));
+
+# 132 "source-to-source.c"
+    (i++))
+
+# 132 "source-to-source.c"
+  {
+
+# 133 "source-to-source.c"
+    symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (value_array_get(bindings, i).ptr));
+
+# 135 "source-to-source.c"
+    reorder_symbol_table_typedefs__process_binding((symbol_table->typedefs), binding, reordered_bindings);
+  }
+
+# 138 "source-to-source.c"
+  (((symbol_table->typedefs)->ordered_bindings)=reordered_bindings);
+}
+
+
+# 141 "source-to-source.c"
+void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings)
+# 143 "source-to-source.c"
+{
+
+# 144 "source-to-source.c"
+  log_debug("processing binding %s", (binding->key_string));
+
+# 145 "source-to-source.c"
+  if ((!(binding->visited)))
+
+# 145 "source-to-source.c"
+  {
+
+# 146 "source-to-source.c"
+    if ((((binding->definition_nodes)->length)!=1))
+
+# 146 "source-to-source.c"
+    {
+
+# 147 "source-to-source.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 149 "source-to-source.c"
+    parse_node_t* node = (/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr));
+
+# 151 "source-to-source.c"
+    typedef_node_t* typedef_node = to_typedef_node(node);
+
+# 152 "source-to-source.c"
+    type_node_t* type_node = (typedef_node->type_node);
+
+# 154 "source-to-source.c"
+    while (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
+
+# 154 "source-to-source.c"
+    {
+
+# 155 "source-to-source.c"
+      (type_node=to_type_node(node_list_get((type_node->type_args), 0)));
+    }
+
+# 157 "source-to-source.c"
+    if (((type_node->type_node_kind)==TYPE_NODE_KIND_TYPENAME))
+
+# 157 "source-to-source.c"
+    {
+
+# 158 "source-to-source.c"
+      char* type_name = token_to_string((type_node->type_name));
+
+# 159 "source-to-source.c"
+      symbol_table_binding_t* dependent_binding = symbol_table_map_get(typedefs, type_name);
+
+# 161 "source-to-source.c"
+      if ((dependent_binding!=((void *)0)))
+
+# 161 "source-to-source.c"
+      {
+
+# 162 "source-to-source.c"
+        reorder_symbol_table_typedefs__process_binding(typedefs, dependent_binding, reordered_bindings);
+      }
+    }
+    else
+
+# 165 "source-to-source.c"
+    if (((type_node->type_node_kind)==TYPE_NODE_KIND_TYPE_EXPRESSION))
+
+# 165 "source-to-source.c"
+    {
+    }
+    else
+
+# 171 "source-to-source.c"
+    if (((type_node->type_node_kind)!=TYPE_NODE_KIND_PRIMITIVE_TYPENAME))
+
+# 171 "source-to-source.c"
+    {
+
+# 172 "source-to-source.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 175 "source-to-source.c"
+    log_debug("adding binding %s at position %d", (binding->key_string), (reordered_bindings->length));
+
+# 178 "source-to-source.c"
+    value_array_add(reordered_bindings, ptr_to_value(binding));
+
+# 179 "source-to-source.c"
+    ((binding->visited)=true);
+  }
+}
+
+
+# 188 "source-to-source.c"
+struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* binding)
+# 188 "source-to-source.c"
+{
+
+# 189 "source-to-source.c"
+  for (
+
+# 189 "source-to-source.c"
+
+# 189 "source-to-source.c"
+    uint64_t i = 0;
+
+# 189 "source-to-source.c"
+    (i<((binding->definition_nodes)->length));
+
+# 189 "source-to-source.c"
+    (i++))
+
+# 189 "source-to-source.c"
+  {
+
+# 190 "source-to-source.c"
+    parse_node_t* node = (/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), i).ptr));
+
+# 192 "source-to-source.c"
+    struct_node_t* structure_node = to_struct_node(node);
+
+# 193 "source-to-source.c"
+    if ((!(structure_node->partial_definition)))
+
+# 193 "source-to-source.c"
+    {
+
+# 194 "source-to-source.c"
+      return structure_node;
+    }
+  }
+
+# 197 "source-to-source.c"
+  return ((void *)0);
+}
+
+
+# 201 "source-to-source.c"
+symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* symbol_table, type_node_t* type_node)
+# 202 "source-to-source.c"
+{
+
+# 203 "source-to-source.c"
+  if (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
+
+# 203 "source-to-source.c"
+  {
+
+# 204 "source-to-source.c"
+    log_debug("resolve_typename_to_structure_binding -- not looking through pointers " "%p", type_node);
+
+# 208 "source-to-source.c"
+    return ((void *)0);
+  }
+
+# 211 "source-to-source.c"
+  if (((type_node->type_node_kind)==TYPE_NODE_KIND_TYPE_EXPRESSION))
+
+# 211 "source-to-source.c"
+  {
+
+# 212 "source-to-source.c"
+    parse_node_t* user_type = (type_node->user_type);
+
+# 213 "source-to-source.c"
+    if (is_struct_node(user_type))
+
+# 213 "source-to-source.c"
+    {
+
+# 214 "source-to-source.c"
+      struct_node_t* struct_node = to_struct_node(user_type);
+
+# 215 "source-to-source.c"
+      if (((struct_node->name)!=((void *)0)))
+
+# 215 "source-to-source.c"
+      {
+
+# 216 "source-to-source.c"
+        char* key_name = token_to_string((struct_node->name));
+
+# 217 "source-to-source.c"
+        symbol_table_binding_t* binding = symbol_table_map_get((symbol_table->structures), key_name);
+
+# 219 "source-to-source.c"
+        buffer_t* buffer = make_buffer(10);
+
+# 220 "source-to-source.c"
+        buffer_append_dgb_binding(make_cdl_printer(buffer), binding);
+
+# 221 "source-to-source.c"
+        char* dbg_binding = buffer_to_c_string(buffer);
+
+# 222 "source-to-source.c"
+        log_debug("resolve_typename_to_structure_binding -- returning binding %p %s", binding, dbg_binding);
+
+# 225 "source-to-source.c"
+        return binding;
+      }
+    }
+
+# 229 "source-to-source.c"
+    return ((void *)0);
+  }
+
+# 233 "source-to-source.c"
+  char* key_string = token_to_string((type_node->type_name));
+
+# 234 "source-to-source.c"
+  log_debug("resolve_typename_to_structure_binding -- %d %s", (type_node->tag), key_string);
+
+# 236 "source-to-source.c"
+  symbol_table_binding_t* typedef_binding = symbol_table_map_get((symbol_table->typedefs), key_string);
+
+# 238 "source-to-source.c"
+  if ((typedef_binding!=((void *)0)))
+
+# 238 "source-to-source.c"
+  {
+
+# 239 "source-to-source.c"
+    if ((((typedef_binding->definition_nodes)->length)!=1))
+
+# 239 "source-to-source.c"
+    {
+
+# 240 "source-to-source.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 242 "source-to-source.c"
+    typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr((typedef_binding->definition_nodes), 0, typeof(parse_node_t*)));
+
+# 244 "source-to-source.c"
+    return resolve_typename_to_structure_binding(symbol_table, (typedef_node->type_node));
+  }
+  else
+
+# 246 "source-to-source.c"
+  {
+
+# 247 "source-to-source.c"
+    return symbol_table_map_get((symbol_table->structures), key_string);
+  }
+}
+
+
+# 251 "source-to-source.c"
+void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_table, symbol_table_binding_t* binding, value_array_t* reordered_bindings)
+# 253 "source-to-source.c"
+{
+
+# 254 "source-to-source.c"
+  log_debug("processing %s", (binding->key_string));
+
+# 255 "source-to-source.c"
+  if ((!(binding->visited)))
+
+# 255 "source-to-source.c"
+  {
+
+# 256 "source-to-source.c"
+    ((binding->visited)=true);
+
+# 257 "source-to-source.c"
+    struct_node_t* structure_node = get_full_structure_definition_node(binding);
+
+# 258 "source-to-source.c"
+    if ((structure_node==((void *)0)))
+
+# 258 "source-to-source.c"
+    {
+
+# 261 "source-to-source.c"
+      return;
+    }
+
+# 263 "source-to-source.c"
+    uint64_t length = node_list_length((structure_node->fields));
+
+# 264 "source-to-source.c"
+    for (
+
+# 264 "source-to-source.c"
+
+# 264 "source-to-source.c"
+      uint64_t i = 0;
+
+# 264 "source-to-source.c"
+      (i<length);
+
+# 264 "source-to-source.c"
+      (i++))
+
+# 264 "source-to-source.c"
+    {
+
+# 265 "source-to-source.c"
+      field_node_t* field = to_field_node(node_list_get((structure_node->fields), i));
+
+# 267 "source-to-source.c"
+      type_node_t* type_node = (field->type);
+
+# 268 "source-to-source.c"
+      if ((type_node!=((void *)0)))
+
+# 268 "source-to-source.c"
+      {
+
+# 269 "source-to-source.c"
+        symbol_table_binding_t* field_type_binding = resolve_typename_to_structure_binding(symbol_table, type_node);
+
+# 271 "source-to-source.c"
+        if (((field_type_binding!=((void *)0))&&(!(field_type_binding->visited))))
+
+# 271 "source-to-source.c"
+        {
+
+# 272 "source-to-source.c"
+          reorder_symbol_table_structures_process_binding(symbol_table, field_type_binding, reordered_bindings);
+        }
+      }
+    }
+
+# 277 "source-to-source.c"
+    value_array_add(reordered_bindings, ptr_to_value(binding));
+  }
+}
+
+
+# 292 "source-to-source.c"
+void reorder_symbol_table_structures(symbol_table_t* symbol_table)
+# 292 "source-to-source.c"
+{
+
+# 293 "source-to-source.c"
+  value_array_t* bindings = ((symbol_table->structures)->ordered_bindings);
+
+# 294 "source-to-source.c"
+  value_array_t* reordered_bindings = make_value_array((bindings->length));
+
+# 295 "source-to-source.c"
+  for (
+
+# 295 "source-to-source.c"
+
+# 295 "source-to-source.c"
+    int i = 0;
+
+# 295 "source-to-source.c"
+    (i<(bindings->length));
+
+# 295 "source-to-source.c"
+    (i++))
+
+# 295 "source-to-source.c"
+  {
+
+# 296 "source-to-source.c"
+    symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (value_array_get(bindings, i).ptr));
+
+# 298 "source-to-source.c"
+    reorder_symbol_table_structures_process_binding(symbol_table, binding, reordered_bindings);
+  }
+
+# 301 "source-to-source.c"
+  (((symbol_table->structures)->ordered_bindings)=reordered_bindings);
+}
+
+
+# 48 "preprocessor.c"
+c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position)
+# 50 "preprocessor.c"
+{
+
+# 52 "preprocessor.c"
+  c_preprocessor_directive_range_t result = {0};
+
+# 59 "preprocessor.c"
+  uint64_t position = start_position;
+
+# 60 "preprocessor.c"
+  for (
+
+# 60 "preprocessor.c"
+
+# 60 "preprocessor.c"
+    ;
+
+# 60 "preprocessor.c"
+    (position<(tokens->length));
+
+# 60 "preprocessor.c"
+    (position++))
+
+# 60 "preprocessor.c"
+  {
+
+# 61 "preprocessor.c"
+    token_t* token = token_at(tokens, position);
+
+# 62 "preprocessor.c"
+    ((token->is_cpp_token)=true);
+
+# 63 "preprocessor.c"
+    if ((position==start_position))
+
+# 63 "preprocessor.c"
+    {
+
+# 64 "preprocessor.c"
+      ((result.token_start_position)=start_position);
+
+# 65 "preprocessor.c"
+      ((result.buffer_start_position)=(token->start));
+
+# 66 "preprocessor.c"
+      ((result.buffer)=(token->buffer));
+    }
+
+# 68 "preprocessor.c"
+    if (((result.buffer)!=(token->buffer)))
+
+# 68 "preprocessor.c"
+    {
+
+# 69 "preprocessor.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 71 "preprocessor.c"
+    ((result.token_end_position)=(position+1));
+
+# 72 "preprocessor.c"
+    ((result.buffer_end_position)=(token->end));
+
+# 73 "preprocessor.c"
+    if ((((token->type)==TOKEN_TYPE_WHITESPACE)&&token_contains(token, "\n")))
+
+# 73 "preprocessor.c"
+    {
+
+# 74 "preprocessor.c"
+      break;
+    }
+  }
+
+# 77 "preprocessor.c"
+  return result;
+}
+
+
+# 80 "preprocessor.c"
+uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens, uint64_t start_position)
+# 83 "preprocessor.c"
+{
+
+# 84 "preprocessor.c"
+  c_preprocessor_directive_range_t range = mark_c_preprocessor_directive(options, tokens, start_position);
+
+# 86 "preprocessor.c"
+  token_t* directive_name = token_at(tokens, (start_position+1));
+
+# 88 "preprocessor.c"
+  if (token_matches(directive_name, "include"))
+
+# 88 "preprocessor.c"
+  {
+
+# 89 "preprocessor.c"
+    cpp_include_node_t* node = make_cpp_include_node();
+
+# 90 "preprocessor.c"
+    ((node->text)=buffer_c_substring((range.buffer), (range.buffer_start_position), (range.buffer_end_position)));
+
+# 92 "preprocessor.c"
+    if (string_contains_char((node->text), '<'))
+
+# 92 "preprocessor.c"
+    {
+
+# 93 "preprocessor.c"
+      value_array_add((symbol_table->system_includes), ptr_to_value(node));
+    }
+    else
+
+# 94 "preprocessor.c"
+    {
+
+# 95 "preprocessor.c"
+      value_array_add((symbol_table->user_includes), ptr_to_value(node));
+    }
+  }
+  else
+
+# 97 "preprocessor.c"
+  if (token_matches(directive_name, "define"))
+
+# 97 "preprocessor.c"
+  {
+
+# 98 "preprocessor.c"
+    cpp_define_node_t* node = make_cpp_define_node();
+
+# 99 "preprocessor.c"
+    ((node->text)=buffer_c_substring((range.buffer), (range.buffer_start_position), (range.buffer_end_position)));
+
+# 101 "preprocessor.c"
+    value_array_add((symbol_table->defines), ptr_to_value(node));
+  }
+
+# 103 "preprocessor.c"
+  return (range.token_end_position);
+}
+
+
+# 106 "preprocessor.c"
+void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens)
+# 108 "preprocessor.c"
+{
+
+# 109 "preprocessor.c"
+  for (
+
+# 109 "preprocessor.c"
+
+# 109 "preprocessor.c"
+    uint64_t position = 0;
+
+# 109 "preprocessor.c"
+    (position<(tokens->length));
+
+# 109 "preprocessor.c"
+    )
+
+# 109 "preprocessor.c"
+  {
+
+# 110 "preprocessor.c"
+    token_t* token = token_at(tokens, position);
+
+# 111 "preprocessor.c"
+    if (token_matches(token, "#"))
+
+# 111 "preprocessor.c"
+    {
+
+# 112 "preprocessor.c"
+      (position=handle_c_preprocessor_directive(options, symbol_table, tokens, position));
+    }
+    else
+
+# 114 "preprocessor.c"
+    {
+
+# 115 "preprocessor.c"
+      (position++);
+    }
+  }
+}
+
+
+# 12 "symbol-table-builder.c"
+void parse_and_add_top_level_definitions(symbol_table_t* symbol_table, value_array_t* file_names, boolean_t use_statement_parser)
+# 14 "symbol-table-builder.c"
+{
+
+# 15 "symbol-table-builder.c"
+  value_array_t* files = read_files(file_names);
+
+# 16 "symbol-table-builder.c"
+  for (
+
+# 16 "symbol-table-builder.c"
+
+# 16 "symbol-table-builder.c"
+    int i = 0;
+
+# 16 "symbol-table-builder.c"
+    (i<(files->length));
+
+# 16 "symbol-table-builder.c"
+    (i++))
+
+# 16 "symbol-table-builder.c"
+  {
+
+# 17 "symbol-table-builder.c"
+    file_t* file = (/*CAST*/(file_t*) (value_array_get(files, i).ptr));
+
+# 18 "symbol-table-builder.c"
+    value_array_add((symbol_table->files), ptr_to_value(file));
+
+# 19 "symbol-table-builder.c"
+    symbol_table_parse_buffer(symbol_table, (file->data), (file->file_name), use_statement_parser);
+  }
+}
+
+
+# 34 "symbol-table-builder.c"
+void symbol_table_parse_buffer(symbol_table_t* symbol_table, buffer_t* buffer, char* file_name, boolean_t use_statement_parser)
+# 36 "symbol-table-builder.c"
+{
+
+# 37 "symbol-table-builder.c"
+  tokenizer_result_t tokenizer_result = tokenize(buffer);
+
+# 38 "symbol-table-builder.c"
+  if ((tokenizer_result.tokenizer_error_code))
+
+# 38 "symbol-table-builder.c"
+  {
+
+# 39 "symbol-table-builder.c"
+    log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name, (tokenizer_result.tokenizer_error_position), (tokenizer_result.tokenizer_error_code));
+
+# 42 "symbol-table-builder.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 44 "symbol-table-builder.c"
+  value_array_t* tokens = (tokenizer_result.tokens);
+
+# 46 "symbol-table-builder.c"
+  handle_c_preprocessor_directives(((c_preprocess_options_t) {
+                           .keep_system_includes = true,
+                           .keep_user_includes = false,
+                       }), symbol_table, tokens);
+
+# 54 "symbol-table-builder.c"
+  (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
+                                   .keep_whitespace = false,
+                                   .keep_comments = false,
+                                   .keep_javadoc_comments = false,
+                                   .keep_c_preprocessor_lines = false,
+                               })));
+
+# 62 "symbol-table-builder.c"
+  pstate_t pstate = ((pstate_t) {.tokens = tokens, .use_statement_parser = use_statement_parser});
+
+# 65 "symbol-table-builder.c"
+  if ((!parse_declarations((&pstate))))
+
+# 65 "symbol-table-builder.c"
+  {
+
+# 66 "symbol-table-builder.c"
+    (((pstate.error).file_name)=file_name);
+
+# 67 "symbol-table-builder.c"
+    buffer_t* buffer = make_buffer(1);
+
+# 68 "symbol-table-builder.c"
+    (buffer=buffer_append_human_readable_error(buffer, (&(pstate.error))));
+
+# 69 "symbol-table-builder.c"
+    log_fatal("%s", buffer_to_c_string(buffer));
+
+# 70 "symbol-table-builder.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 73 "symbol-table-builder.c"
+  declarations_node_t* root = to_declarations_node(pstate_get_result_node((&pstate)));
+
+# 75 "symbol-table-builder.c"
+  symbol_table_add_declartions(symbol_table, root);
+}
+
+
+# 87 "symbol-table-builder.c"
+file_t* symbol_table_token_to_file(symbol_table_t* symbol_table, token_t* token)
+# 88 "symbol-table-builder.c"
+{
+
+# 89 "symbol-table-builder.c"
+  value_array_t* files = (symbol_table->files);
+
+# 90 "symbol-table-builder.c"
+  buffer_t* buffer = (token->buffer);
+
+# 91 "symbol-table-builder.c"
+  for (
+
+# 91 "symbol-table-builder.c"
+
+# 91 "symbol-table-builder.c"
+    int i = 0;
+
+# 91 "symbol-table-builder.c"
+    (i<(files->length));
+
+# 91 "symbol-table-builder.c"
+    (i++))
+
+# 91 "symbol-table-builder.c"
+  {
+
+# 92 "symbol-table-builder.c"
+    file_t* file = (/*CAST*/(file_t*) (value_array_get(files, i).ptr));
+
+# 93 "symbol-table-builder.c"
+    if (((file->data)==buffer))
+
+# 93 "symbol-table-builder.c"
+    {
+
+# 94 "symbol-table-builder.c"
+      return file;
+    }
+  }
+
+# 97 "symbol-table-builder.c"
+  return ((void *)0);
+}
+
+
+# 27 "srcgen.c"
+void srcgen_enum_to_string_converters(symbol_table_t* symbol_table)
+# 27 "srcgen.c"
+{
+
+# 28 "srcgen.c"
+  buffer_t* buffer = make_buffer(1);
+
+# 29 "srcgen.c"
+  printer_t* printer = make_printer(buffer, symbol_table, 2);
+
+# 31 "srcgen.c"
+  for (
+
+# 31 "srcgen.c"
+
+# 31 "srcgen.c"
+    int i = 0;
+
+# 31 "srcgen.c"
+    (i<(((symbol_table->typedefs)->ordered_bindings)->length));
+
+# 31 "srcgen.c"
+    (i++))
+
+# 31 "srcgen.c"
+  {
+
+# 32 "srcgen.c"
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->typedefs)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 35 "srcgen.c"
+    typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
+
+# 37 "srcgen.c"
+    if (is_enum_node(((typedef_node->type_node)->user_type)))
+
+# 37 "srcgen.c"
+    {
+
+# 38 "srcgen.c"
+      enum_node_t* enum_node = to_enum_node(((typedef_node->type_node)->user_type));
+
+# 39 "srcgen.c"
+      char* enum_node_name = token_to_string((typedef_node->name));
+
+# 41 "srcgen.c"
+      log_debug("Generating converters for %s", enum_node_name);
+
+# 43 "srcgen.c"
+      char* to_string_prefix = remove_type_suffix_1(enum_node_name);
+
+# 44 "srcgen.c"
+      char* enum_node_type_string = enum_node_name;
+
+# 46 "srcgen.c"
+      append_enum_to_string(printer, enum_node, to_string_prefix, enum_node_type_string);
+
+# 48 "srcgen.c"
+      append_string_to_enum(printer, enum_node, to_string_prefix, enum_node_type_string);
+
+# 50 "srcgen.c"
+      buffer_append_enum_metadata(buffer, enum_node, to_string_prefix, enum_node_type_string);
+    }
+  }
+
+# 55 "srcgen.c"
+  for (
+
+# 55 "srcgen.c"
+
+# 55 "srcgen.c"
+    int i = 0;
+
+# 55 "srcgen.c"
+    (i<(((symbol_table->enums)->ordered_bindings)->length));
+
+# 55 "srcgen.c"
+    (i++))
+
+# 55 "srcgen.c"
+  {
+
+# 56 "srcgen.c"
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->enums)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 59 "srcgen.c"
+    enum_node_t* enum_node = to_enum_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
+
+# 61 "srcgen.c"
+    char* enum_node_name = token_to_string((enum_node->name));
+
+# 62 "srcgen.c"
+    char* to_string_prefix = remove_type_suffix_1(enum_node_name);
+
+# 63 "srcgen.c"
+    char* enum_node_type_string = string_printf("enum %s", enum_node_name);
+
+# 64 "srcgen.c"
+    append_enum_to_string(printer, enum_node, to_string_prefix, enum_node_type_string);
+
+# 66 "srcgen.c"
+    append_string_to_enum(printer, enum_node, to_string_prefix, enum_node_type_string);
+
+# 68 "srcgen.c"
+    buffer_append_enum_metadata(buffer, enum_node, to_string_prefix, enum_node_type_string);
+  }
+
+# 72 "srcgen.c"
+  if (((buffer->length)>0))
+
+# 72 "srcgen.c"
+  {
+
+# 73 "srcgen.c"
+    symbol_table_parse_buffer(symbol_table, buffer, "#<internal-code-generator>", false);
+  }
+}
+
+
+# 200 "pratt-parser.c"
+pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence)
+# 200 "pratt-parser.c"
+{
+
+# 201 "pratt-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 202 "pratt-parser.c"
+  token_t* token = pstate_peek(pstate, 0);
+
+# 203 "pratt-parser.c"
+  if ((token==((void *)0)))
+
+# 203 "pratt-parser.c"
+  {
+
+# 204 "pratt-parser.c"
+    return pstate_error(pstate, saved_position, PARSE_ERROR_EOF);
+  }
+
+# 206 "pratt-parser.c"
+  pratt_parser_instruction_t prefix_instruction = get_prefix_instruction(pstate, token);
+
+# 208 "pratt-parser.c"
+  if (((prefix_instruction.operation)==PRATT_PARSE_UNKNOWN))
+
+# 208 "pratt-parser.c"
+  {
+
+# 209 "pratt-parser.c"
+    log_debug("(RETURNING ERROR) No prefix for %s\n", token_to_string(token));
+
+# 210 "pratt-parser.c"
+    return pstate_error(pstate, saved_position, PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL);
+  }
+
+# 214 "pratt-parser.c"
+  if ((!pratt_handle_instruction(pstate, prefix_instruction, ((void *)0))))
+
+# 214 "pratt-parser.c"
+  {
+
+# 215 "pratt-parser.c"
+    log_debug("(RETURNING ERROR) handle instruction\n", token_to_string(token));
+
+# 216 "pratt-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 219 "pratt-parser.c"
+  parse_node_t* left = pstate_get_result_node(pstate);
+
+# 221 "pratt-parser.c"
+  while (1)
+
+# 221 "pratt-parser.c"
+  {
+
+# 222 "pratt-parser.c"
+    pratt_parser_instruction_t infix_instruction = get_infix_instruction(pstate_peek(pstate, 0));
+
+# 224 "pratt-parser.c"
+    if ((((infix_instruction.operation)==PRATT_PARSE_UNKNOWN)||(precedence>=(infix_instruction.precedence))))
+
+# 225 "pratt-parser.c"
+    {
+
+# 226 "pratt-parser.c"
+      return pstate_set_result_node(pstate, left);
+    }
+
+# 228 "pratt-parser.c"
+    if ((!pratt_handle_instruction(pstate, infix_instruction, left)))
+
+# 228 "pratt-parser.c"
+    {
+
+# 229 "pratt-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 231 "pratt-parser.c"
+    (left=pstate_get_result_node(pstate));
+  }
+
+# 235 "pratt-parser.c"
+  return ((void *)0);
+}
+
+
+# 243 "pratt-parser.c"
+pstatus_t pratt_handle_instruction(pstate_t* pstate, pratt_parser_instruction_t instruction, parse_node_t* left)
+# 245 "pratt-parser.c"
+{
+
+# 246 "pratt-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 247 "pratt-parser.c"
+  token_t* token = pstate_peek(pstate, 0);
+
+# 249 "pratt-parser.c"
+  switch ((instruction.operation))
+
+# 249 "pratt-parser.c"
+  {
+
+# 250 "pratt-parser.c"
+    case PRATT_PARSE_BINARY_OPERATOR:
+
+# 251 "pratt-parser.c"
+    do
+# 251 "pratt-parser.c"
+    {
+
+# 252 "pratt-parser.c"
+      pstate_advance(pstate);
+
+# 253 "pratt-parser.c"
+      int recursive_precedence = (instruction.precedence);
+
+# 254 "pratt-parser.c"
+      if ((precedence_to_associativity(recursive_precedence)==LEFT_TO_RIGHT))
+
+# 254 "pratt-parser.c"
+      {
+
+# 255 "pratt-parser.c"
+        (recursive_precedence++);
+      }
+      else
+
+# 256 "pratt-parser.c"
+      {
+
+# 257 "pratt-parser.c"
+        (recursive_precedence--);
+      }
+
+# 259 "pratt-parser.c"
+      if ((!pratt_parse_expression(pstate, recursive_precedence)))
+
+# 259 "pratt-parser.c"
+      {
+
+# 260 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 262 "pratt-parser.c"
+      operator_node_t* result = make_operator_node();
+
+# 263 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 264 "pratt-parser.c"
+      ((result->left)=left);
+
+# 265 "pratt-parser.c"
+      ((result->right)=pstate_get_result_node(pstate));
+
+# 266 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 269 "pratt-parser.c"
+    case PRATT_PARSE_IDENTIFIER:
+
+# 270 "pratt-parser.c"
+    do
+# 270 "pratt-parser.c"
+    {
+
+# 271 "pratt-parser.c"
+      pstate_advance(pstate);
+
+# 272 "pratt-parser.c"
+      identifier_node_t* result = make_identifier_node();
+
+# 273 "pratt-parser.c"
+      ((result->token)=token);
+
+# 274 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 277 "pratt-parser.c"
+    case PRATT_PARSE_LITERAL:
+
+# 278 "pratt-parser.c"
+    return parse_literal_node(pstate);
+
+# 280 "pratt-parser.c"
+    case PRATT_PARSE_PREFIX_OPERATOR:
+
+# 281 "pratt-parser.c"
+    do
+# 281 "pratt-parser.c"
+    {
+
+# 282 "pratt-parser.c"
+      pstate_advance(pstate);
+
+# 283 "pratt-parser.c"
+      if ((!pratt_parse_expression(pstate, (instruction.precedence))))
+
+# 283 "pratt-parser.c"
+      {
+
+# 284 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 286 "pratt-parser.c"
+      operator_node_t* result = make_operator_node();
+
+# 287 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 288 "pratt-parser.c"
+      if ((left!=((void *)0)))
+
+# 288 "pratt-parser.c"
+      {
+
+# 289 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 291 "pratt-parser.c"
+      ((result->left)=((void *)0));
+
+# 292 "pratt-parser.c"
+      ((result->right)=pstate_get_result_node(pstate));
+
+# 293 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 296 "pratt-parser.c"
+    case PRATT_PARSE_POSTFIX_OPERATOR:
+
+# 297 "pratt-parser.c"
+    do
+# 297 "pratt-parser.c"
+    {
+
+# 298 "pratt-parser.c"
+      pstate_advance(pstate);
+
+# 299 "pratt-parser.c"
+      operator_node_t* result = make_operator_node();
+
+# 300 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 301 "pratt-parser.c"
+      ((result->left)=left);
+
+# 302 "pratt-parser.c"
+      ((result->right)=((void *)0));
+
+# 303 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 306 "pratt-parser.c"
+    case PRATT_PARSE_SUB_EXPRESSION:
+
+# 307 "pratt-parser.c"
+    do
+# 307 "pratt-parser.c"
+    {
+
+# 308 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "(")))
+
+# 308 "pratt-parser.c"
+      {
+
+# 309 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 311 "pratt-parser.c"
+      if ((!pratt_parse_expression(pstate, 0)))
+
+# 311 "pratt-parser.c"
+      {
+
+# 312 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 314 "pratt-parser.c"
+      parse_node_t* inner_expression = pstate_get_result_node(pstate);
+
+# 315 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, ")")))
+
+# 315 "pratt-parser.c"
+      {
+
+# 316 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 318 "pratt-parser.c"
+      return pstate_set_result_node(pstate, inner_expression);
+    }
+    while (0);
+
+# 320 "pratt-parser.c"
+    break;
+
+# 322 "pratt-parser.c"
+    case PRATT_PARSE_INDEX_EXPRESSION:
+
+# 323 "pratt-parser.c"
+    do
+# 323 "pratt-parser.c"
+    {
+
+# 324 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "[")))
+
+# 324 "pratt-parser.c"
+      {
+
+# 325 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 327 "pratt-parser.c"
+      if ((!pratt_parse_expression(pstate, 0)))
+
+# 327 "pratt-parser.c"
+      {
+
+# 328 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 330 "pratt-parser.c"
+      parse_node_t* inner_expression = pstate_get_result_node(pstate);
+
+# 331 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "]")))
+
+# 331 "pratt-parser.c"
+      {
+
+# 332 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 334 "pratt-parser.c"
+      operator_node_t* result = make_operator_node();
+
+# 335 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 336 "pratt-parser.c"
+      ((result->left)=left);
+
+# 337 "pratt-parser.c"
+      ((result->right)=inner_expression);
+
+# 338 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 340 "pratt-parser.c"
+    break;
+
+# 342 "pratt-parser.c"
+    case PRATT_PARSE_SIZEOF:
+
+# 343 "pratt-parser.c"
+    do
+# 343 "pratt-parser.c"
+    {
+
+# 344 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "sizeof")))
+
+# 344 "pratt-parser.c"
+      {
+
+# 345 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 347 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "(")))
+
+# 347 "pratt-parser.c"
+      {
+
+# 348 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 355 "pratt-parser.c"
+      if ((!pratt_parse_expression(pstate, 0)))
+
+# 355 "pratt-parser.c"
+      {
+
+# 356 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 358 "pratt-parser.c"
+      parse_node_t* inner_expression = pstate_get_result_node(pstate);
+
+# 359 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, ")")))
+
+# 359 "pratt-parser.c"
+      {
+
+# 360 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 362 "pratt-parser.c"
+      operator_node_t* result = make_operator_node();
+
+# 363 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 364 "pratt-parser.c"
+      ((result->right)=inner_expression);
+
+# 365 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 367 "pratt-parser.c"
+    break;
+
+# 369 "pratt-parser.c"
+    case PRATT_PARSE_CAST_MACRO:
+
+# 370 "pratt-parser.c"
+    do
+# 370 "pratt-parser.c"
+    {
+
+# 371 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "cast")))
+
+# 371 "pratt-parser.c"
+      {
+
+# 372 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 374 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "(")))
+
+# 374 "pratt-parser.c"
+      {
+
+# 375 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 377 "pratt-parser.c"
+      if ((!parse_type_node(pstate)))
+
+# 377 "pratt-parser.c"
+      {
+
+# 378 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 380 "pratt-parser.c"
+      parse_node_t* type_node = pstate_get_result_node(pstate);
+
+# 381 "pratt-parser.c"
+      if (((!pstate_expect_token_string(pstate, ","))||(!pratt_parse_expression(pstate, PRECEDENCE_ASSIGNMENT))))
+
+# 382 "pratt-parser.c"
+      {
+
+# 383 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 385 "pratt-parser.c"
+      parse_node_t* expression = pstate_get_result_node(pstate);
+
+# 386 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, ")")))
+
+# 386 "pratt-parser.c"
+      {
+
+# 387 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 389 "pratt-parser.c"
+      operator_node_t* result = make_operator_node();
+
+# 390 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 391 "pratt-parser.c"
+      ((result->left)=type_node);
+
+# 392 "pratt-parser.c"
+      ((result->right)=expression);
+
+# 393 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 395 "pratt-parser.c"
+    break;
+
+# 399 "pratt-parser.c"
+    case PRATT_PARSE_BLOCK_EXPR:
+
+# 400 "pratt-parser.c"
+    do
+# 400 "pratt-parser.c"
+    {
+
+# 401 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "block_expr")))
+
+# 401 "pratt-parser.c"
+      {
+
+# 402 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 404 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "(")))
+
+# 404 "pratt-parser.c"
+      {
+
+# 405 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 407 "pratt-parser.c"
+      if ((!parse_block(pstate)))
+
+# 407 "pratt-parser.c"
+      {
+
+# 408 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 410 "pratt-parser.c"
+      parse_node_t* block_node = pstate_get_result_node(pstate);
+
+# 411 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, ")")))
+
+# 411 "pratt-parser.c"
+      {
+
+# 412 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 414 "pratt-parser.c"
+      operator_node_t* result = make_operator_node();
+
+# 415 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 416 "pratt-parser.c"
+      ((result->left)=block_node);
+
+# 417 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 419 "pratt-parser.c"
+    break;
+
+# 423 "pratt-parser.c"
+    case PRATT_PARSE_TYPE_OF:
+
+# 424 "pratt-parser.c"
+    do
+# 424 "pratt-parser.c"
+    {
+
+# 425 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "typeof")))
+
+# 425 "pratt-parser.c"
+      {
+
+# 426 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 428 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "(")))
+
+# 428 "pratt-parser.c"
+      {
+
+# 429 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 431 "pratt-parser.c"
+      if ((!parse_type_node(pstate)))
+
+# 431 "pratt-parser.c"
+      {
+
+# 432 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 434 "pratt-parser.c"
+      parse_node_t* type_node = pstate_get_result_node(pstate);
+
+# 435 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, ")")))
+
+# 435 "pratt-parser.c"
+      {
+
+# 436 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 438 "pratt-parser.c"
+      operator_node_t* result = make_operator_node();
+
+# 439 "pratt-parser.c"
+      ((result->operator)=token);
+
+# 440 "pratt-parser.c"
+      ((result->left)=type_node);
+
+# 441 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 443 "pratt-parser.c"
+    break;
+
+# 445 "pratt-parser.c"
+    case PRATT_PARSE_CALL:
+
+# 446 "pratt-parser.c"
+    do
+# 446 "pratt-parser.c"
+    {
+
+# 447 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, "(")))
+
+# 447 "pratt-parser.c"
+      {
+
+# 448 "pratt-parser.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 450 "pratt-parser.c"
+      call_node_t* result = make_call_node();
+
+# 451 "pratt-parser.c"
+      ((result->function)=left);
+
+# 452 "pratt-parser.c"
+      boolean_t expect_comma = false;
+
+# 453 "pratt-parser.c"
+      while ((!token_matches(pstate_peek(pstate, 0), ")")))
+
+# 453 "pratt-parser.c"
+      {
+
+# 454 "pratt-parser.c"
+        if (expect_comma)
+
+# 454 "pratt-parser.c"
+        {
+
+# 455 "pratt-parser.c"
+          if ((!pstate_expect_token_string(pstate, ",")))
+
+# 455 "pratt-parser.c"
+          {
+
+# 456 "pratt-parser.c"
+            return pstate_propagate_error(pstate, saved_position);
+          }
+        }
+        else
+
+# 458 "pratt-parser.c"
+        {
+
+# 459 "pratt-parser.c"
+          (expect_comma=true);
+        }
+
+# 461 "pratt-parser.c"
+        if ((!pratt_parse_expression(pstate, PRECEDENCE_ASSIGNMENT)))
+
+# 461 "pratt-parser.c"
+        {
+
+# 462 "pratt-parser.c"
+          return pstate_propagate_error(pstate, saved_position);
+        }
+
+# 464 "pratt-parser.c"
+        node_list_add_node((&(result->args)), pstate_get_result_node(pstate));
+      }
+
+# 466 "pratt-parser.c"
+      if ((!pstate_expect_token_string(pstate, ")")))
+
+# 466 "pratt-parser.c"
+      {
+
+# 467 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 469 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 471 "pratt-parser.c"
+    break;
+
+# 473 "pratt-parser.c"
+    case PRATT_PARSE_CONDITIONAL:
+
+# 474 "pratt-parser.c"
+    do
+# 474 "pratt-parser.c"
+    {
+
+# 475 "pratt-parser.c"
+      pstate_advance(pstate);
+
+# 476 "pratt-parser.c"
+      int recursive_precedence = (instruction.precedence);
+
+# 477 "pratt-parser.c"
+      if ((!pratt_parse_expression(pstate, recursive_precedence)))
+
+# 477 "pratt-parser.c"
+      {
+
+# 478 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 480 "pratt-parser.c"
+      parse_node_t* expr_if_true = pstate_get_result_node(pstate);
+
+# 481 "pratt-parser.c"
+      if (((!pstate_expect_token_string(pstate, ":"))||(!pratt_parse_expression(pstate, recursive_precedence))))
+
+# 482 "pratt-parser.c"
+      {
+
+# 483 "pratt-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 485 "pratt-parser.c"
+      parse_node_t* expr_if_false = pstate_get_result_node(pstate);
+
+# 486 "pratt-parser.c"
+      conditional_node_t* result = make_conditional_node();
+
+# 487 "pratt-parser.c"
+      ((result->condition)=left);
+
+# 488 "pratt-parser.c"
+      ((result->expr_if_true)=expr_if_true);
+
+# 489 "pratt-parser.c"
+      ((result->expr_if_false)=expr_if_false);
+
+# 490 "pratt-parser.c"
+      return pstate_set_result_node(pstate, to_node(result));
+    }
+    while (0);
+
+# 493 "pratt-parser.c"
+    default:
+
+# 494 "pratt-parser.c"
+    break;
+  }
+
+# 496 "pratt-parser.c"
+  return pstate_error(pstate, saved_position, PARSE_ERROR_UNHANDLED_INSTRUCTION);
+}
+
+
+# 511 "pratt-parser.c"
+pratt_parser_instruction_t get_prefix_instruction(pstate_t* pstate, token_t* token)
+# 512 "pratt-parser.c"
+{
+
+# 513 "pratt-parser.c"
+  switch ((token->type))
+
+# 513 "pratt-parser.c"
+  {
+
+# 515 "pratt-parser.c"
+    case TOKEN_TYPE_IDENTIFIER:
+
+# 516 "pratt-parser.c"
+    if (token_matches(token, "sizeof"))
+
+# 516 "pratt-parser.c"
+    {
+
+# 517 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_SIZEOF, PRECEDENCE_UNARY);
+    }
+
+# 520 "pratt-parser.c"
+    if (token_matches(token, "cast"))
+
+# 520 "pratt-parser.c"
+    {
+
+# 521 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_CAST_MACRO, PRECEDENCE_UNARY);
+    }
+
+# 524 "pratt-parser.c"
+    if (token_matches(token, "typeof"))
+
+# 524 "pratt-parser.c"
+    {
+
+# 525 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_TYPE_OF, PRECEDENCE_UNARY);
+    }
+
+# 528 "pratt-parser.c"
+    if (token_matches(token, "block_expr"))
+
+# 528 "pratt-parser.c"
+    {
+
+# 529 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_BLOCK_EXPR, PRECEDENCE_UNARY);
+    }
+
+# 532 "pratt-parser.c"
+    if (token_matches(token, "compound_literal"))
+
+# 532 "pratt-parser.c"
+    {
+
+# 533 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_LITERAL, PRECEDENCE_UNARY);
+    }
+
+# 536 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_IDENTIFIER, PRECEDENCE_PRIMARY);
+
+# 539 "pratt-parser.c"
+    case TOKEN_TYPE_INTEGER_LITERAL:
+
+# 540 "pratt-parser.c"
+    case TOKEN_TYPE_FLOAT_LITERAL:
+
+# 541 "pratt-parser.c"
+    case TOKEN_TYPE_STRING_LITERAL:
+
+# 542 "pratt-parser.c"
+    case TOKEN_TYPE_CHARACTER_LITERAL:
+
+# 543 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_LITERAL, PRECEDENCE_PRIMARY);
+
+# 546 "pratt-parser.c"
+    case TOKEN_TYPE_PUNCTUATION:
+
+# 547 "pratt-parser.c"
+    break;
+
+# 549 "pratt-parser.c"
+    default:
+
+# 550 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_UNKNOWN, PRECEDENCE_UNKNOWN);
+  }
+
+# 554 "pratt-parser.c"
+  if (token_matches(token, "("))
+
+# 554 "pratt-parser.c"
+  {
+
+# 556 "pratt-parser.c"
+    uint64_t saved_position = (pstate->position);
+
+# 558 "pratt-parser.c"
+    if (parse_compound_literal(pstate))
+
+# 558 "pratt-parser.c"
+    {
+
+# 559 "pratt-parser.c"
+      pstate_rollback(pstate, saved_position);
+
+# 560 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_LITERAL, PRECEDENCE_PRIMARY);
+    }
+    else
+
+# 562 "pratt-parser.c"
+    {
+
+# 563 "pratt-parser.c"
+      pstate_ignore_error(pstate);
+
+# 564 "pratt-parser.c"
+      return make_parser_instruction(token, PRATT_PARSE_SUB_EXPRESSION, PRECEDENCE_PRIMARY);
+    }
+  }
+
+# 570 "pratt-parser.c"
+  if (((((((((token_matches(token, "+")||token_matches(token, "-"))||token_matches(token, "~"))||token_matches(token, "!"))||token_matches(token, "!"))||token_matches(token, "++"))||token_matches(token, "--"))||token_matches(token, "*"))||token_matches(token, "&")))
+
+# 574 "pratt-parser.c"
+  {
+
+# 575 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_PREFIX_OPERATOR, PRECEDENCE_UNARY);
+  }
+
+# 579 "pratt-parser.c"
+  return ((pratt_parser_instruction_t) {0});
+}
+
+
+# 589 "pratt-parser.c"
+pratt_parser_instruction_t get_infix_instruction(token_t* token)
+# 589 "pratt-parser.c"
+{
+
+# 590 "pratt-parser.c"
+  if ((token_matches(token, "+")||token_matches(token, "-")))
+
+# 590 "pratt-parser.c"
+  {
+
+# 591 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_ADDITIVE);
+  }
+
+# 594 "pratt-parser.c"
+  if (((token_matches(token, "*")||token_matches(token, "/"))||token_matches(token, "%")))
+
+# 595 "pratt-parser.c"
+  {
+
+# 596 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_MULTIPICITIVE);
+  }
+
+# 599 "pratt-parser.c"
+  if ((token_matches(token, "<<")||token_matches(token, ">>")))
+
+# 599 "pratt-parser.c"
+  {
+
+# 600 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_SHIFT);
+  }
+
+# 603 "pratt-parser.c"
+  if (token_matches(token, "||"))
+
+# 603 "pratt-parser.c"
+  {
+
+# 604 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_LOGICAL_OR);
+  }
+
+# 607 "pratt-parser.c"
+  if (token_matches(token, "&&"))
+
+# 607 "pratt-parser.c"
+  {
+
+# 608 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_LOGICAL_AND);
+  }
+
+# 611 "pratt-parser.c"
+  if (token_matches(token, "|"))
+
+# 611 "pratt-parser.c"
+  {
+
+# 612 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_OR);
+  }
+
+# 615 "pratt-parser.c"
+  if (token_matches(token, "^"))
+
+# 615 "pratt-parser.c"
+  {
+
+# 616 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_XOR);
+  }
+
+# 619 "pratt-parser.c"
+  if (token_matches(token, "&"))
+
+# 619 "pratt-parser.c"
+  {
+
+# 620 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_AND);
+  }
+
+# 623 "pratt-parser.c"
+  if ((token_matches(token, "==")||token_matches(token, "!=")))
+
+# 623 "pratt-parser.c"
+  {
+
+# 624 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_EQUALITY);
+  }
+
+# 627 "pratt-parser.c"
+  if ((((token_matches(token, "<")||token_matches(token, "<="))||token_matches(token, ">"))||token_matches(token, ">=")))
+
+# 628 "pratt-parser.c"
+  {
+
+# 629 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_RELATIONAL);
+  }
+
+# 632 "pratt-parser.c"
+  if ((token_matches(token, "->")||token_matches(token, ".")))
+
+# 632 "pratt-parser.c"
+  {
+
+# 633 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_POSTFIX);
+  }
+
+# 636 "pratt-parser.c"
+  if ((token_matches(token, "++")||token_matches(token, "--")))
+
+# 636 "pratt-parser.c"
+  {
+
+# 637 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_POSTFIX_OPERATOR, PRECEDENCE_POSTFIX);
+  }
+
+# 640 "pratt-parser.c"
+  if (((((((((((token_matches(token, "=")||token_matches(token, "+="))||token_matches(token, "-="))||token_matches(token, "*="))||token_matches(token, "/="))||token_matches(token, "%="))||token_matches(token, "&="))||token_matches(token, "^="))||token_matches(token, "|="))||token_matches(token, "<<="))||token_matches(token, ">>=")))
+
+# 645 "pratt-parser.c"
+  {
+
+# 646 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_BINARY_OPERATOR, PRECEDENCE_ASSIGNMENT);
+  }
+
+# 649 "pratt-parser.c"
+  if (token_matches(token, "["))
+
+# 649 "pratt-parser.c"
+  {
+
+# 650 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_INDEX_EXPRESSION, PRECEDENCE_POSTFIX);
+  }
+
+# 653 "pratt-parser.c"
+  if (token_matches(token, "("))
+
+# 653 "pratt-parser.c"
+  {
+
+# 654 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_CALL, PRECEDENCE_POSTFIX);
+  }
+
+# 656 "pratt-parser.c"
+  if (token_matches(token, "?"))
+
+# 656 "pratt-parser.c"
+  {
+
+# 657 "pratt-parser.c"
+    return make_parser_instruction(token, PRATT_PARSE_CONDITIONAL, PRECEDENCE_CONDITIONAL);
+  }
+
+# 661 "pratt-parser.c"
+  return ((pratt_parser_instruction_t) {0});
+}
+
+
+# 675 "pratt-parser.c"
+associativity_t precedence_to_associativity(precedence_t precedence)
+# 675 "pratt-parser.c"
+{
+
+# 676 "pratt-parser.c"
+  switch (precedence)
+
+# 676 "pratt-parser.c"
+  {
+
+# 677 "pratt-parser.c"
+    case PRECEDENCE_PRIMARY:
+
+# 678 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 679 "pratt-parser.c"
+    case PRECEDENCE_POSTFIX:
+
+# 680 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 681 "pratt-parser.c"
+    case PRECEDENCE_UNARY:
+
+# 682 "pratt-parser.c"
+    return RIGHT_TO_LEFT;
+
+# 683 "pratt-parser.c"
+    case PRECEDENCE_MULTIPICITIVE:
+
+# 684 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 685 "pratt-parser.c"
+    case PRECEDENCE_ADDITIVE:
+
+# 686 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 687 "pratt-parser.c"
+    case PRECEDENCE_SHIFT:
+
+# 688 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 689 "pratt-parser.c"
+    case PRECEDENCE_RELATIONAL:
+
+# 690 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 691 "pratt-parser.c"
+    case PRECEDENCE_EQUALITY:
+
+# 692 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 693 "pratt-parser.c"
+    case PRECEDENCE_AND:
+
+# 694 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 695 "pratt-parser.c"
+    case PRECEDENCE_XOR:
+
+# 696 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 697 "pratt-parser.c"
+    case PRECEDENCE_OR:
+
+# 698 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 699 "pratt-parser.c"
+    case PRECEDENCE_LOGICAL_AND:
+
+# 700 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 701 "pratt-parser.c"
+    case PRECEDENCE_LOGICAL_OR:
+
+# 702 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 703 "pratt-parser.c"
+    case PRECEDENCE_CONDITIONAL:
+
+# 704 "pratt-parser.c"
+    return RIGHT_TO_LEFT;
+
+# 705 "pratt-parser.c"
+    case PRECEDENCE_ASSIGNMENT:
+
+# 706 "pratt-parser.c"
+    return RIGHT_TO_LEFT;
+
+# 707 "pratt-parser.c"
+    case PRECEDENCE_COMMA:
+
+# 708 "pratt-parser.c"
+    return LEFT_TO_RIGHT;
+
+# 709 "pratt-parser.c"
+    default:
+
+# 710 "pratt-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 712 "pratt-parser.c"
+  return 0;
+}
+
+
+# 155 "statement-parser.c"
+pstatus_t parse_statement(pstate_t* pstate)
+# 155 "statement-parser.c"
+{
+
+# 156 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 157 "statement-parser.c"
+  if ((((((((((((((((parse_block(pstate)||parse_break_statement(pstate_ignore_error(pstate)))||parse_return_statement(pstate_ignore_error(pstate)))||parse_if_statement(pstate_ignore_error(pstate)))||parse_while_statement(pstate_ignore_error(pstate)))||parse_do_statement(pstate_ignore_error(pstate)))||parse_for_statement(pstate_ignore_error(pstate)))||parse_switch_statement(pstate_ignore_error(pstate)))||parse_case_label(pstate_ignore_error(pstate)))||parse_default_label(pstate_ignore_error(pstate)))||parse_continue_statement(pstate_ignore_error(pstate)))||parse_goto_statement(pstate_ignore_error(pstate)))||parse_label_statement(pstate_ignore_error(pstate)))||parse_variable_definition_node(pstate_ignore_error(pstate)))||parse_expression_statement(pstate_ignore_error(pstate)))||parse_empty_statement(pstate_ignore_error(pstate))))
+
+# 171 "statement-parser.c"
+  {
+
+# 172 "statement-parser.c"
+    return true;
+  }
+
+# 174 "statement-parser.c"
+  return pstate_error(pstate, saved_position, PARSE_ERROR_EXPECTED_STATEMENT);
+}
+
+
+# 180 "statement-parser.c"
+pstatus_t parse_block(pstate_t* pstate)
+# 180 "statement-parser.c"
+{
+
+# 181 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 182 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, "{")))
+
+# 182 "statement-parser.c"
+  {
+
+# 183 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 185 "statement-parser.c"
+  block_node_t* result = make_block_node(token_at((pstate->tokens), saved_position));
+
+# 187 "statement-parser.c"
+  while (parse_statement(pstate))
+
+# 187 "statement-parser.c"
+  {
+
+# 188 "statement-parser.c"
+    node_list_add_node((&(result->statements)), pstate_get_result_node(pstate));
+  }
+
+# 190 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, "}")))
+
+# 190 "statement-parser.c"
+  {
+
+# 191 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 193 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 199 "statement-parser.c"
+pstatus_t parse_return_statement(pstate_t* pstate)
+# 199 "statement-parser.c"
+{
+
+# 200 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 201 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, "return")))
+
+# 201 "statement-parser.c"
+  {
+
+# 202 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 204 "statement-parser.c"
+  parse_expression(pstate);
+
+# 205 "statement-parser.c"
+  parse_node_t* expr = pstate_get_optional_result_node(pstate);
+
+# 206 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 206 "statement-parser.c"
+  {
+
+# 207 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 209 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_return_statement(token_at((pstate->tokens), saved_position), expr)));
+}
+
+
+# 217 "statement-parser.c"
+pstatus_t parse_if_statement(pstate_t* pstate)
+# 217 "statement-parser.c"
+{
+
+# 218 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 219 "statement-parser.c"
+  if ((((!pstate_expect_token_string(pstate, "if"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
+
+# 221 "statement-parser.c"
+  {
+
+# 222 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 224 "statement-parser.c"
+  parse_node_t* if_test = pstate_get_result_node(pstate);
+
+# 225 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, ")"))||(!parse_statement(pstate))))
+
+# 225 "statement-parser.c"
+  {
+
+# 226 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 228 "statement-parser.c"
+  parse_node_t* if_true = pstate_get_result_node(pstate);
+
+# 229 "statement-parser.c"
+  parse_node_t* if_false = ((void *)0);
+
+# 230 "statement-parser.c"
+  if (pstate_match_token_string(pstate, "else"))
+
+# 230 "statement-parser.c"
+  {
+
+# 231 "statement-parser.c"
+    pstate_advance(pstate);
+
+# 232 "statement-parser.c"
+    if ((!parse_statement(pstate)))
+
+# 232 "statement-parser.c"
+    {
+
+# 233 "statement-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 235 "statement-parser.c"
+    (if_false=pstate_get_result_node(pstate));
+  }
+
+# 237 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_if_statement(token_at((pstate->tokens), saved_position), if_test, if_true, if_false)));
+}
+
+
+# 246 "statement-parser.c"
+pstatus_t parse_while_statement(pstate_t* pstate)
+# 246 "statement-parser.c"
+{
+
+# 247 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 248 "statement-parser.c"
+  if ((((!pstate_expect_token_string(pstate, "while"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
+
+# 250 "statement-parser.c"
+  {
+
+# 251 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 253 "statement-parser.c"
+  parse_node_t* while_test = pstate_get_result_node(pstate);
+
+# 254 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, ")"))||(!parse_statement(pstate))))
+
+# 254 "statement-parser.c"
+  {
+
+# 255 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 257 "statement-parser.c"
+  parse_node_t* while_body = pstate_get_result_node(pstate);
+
+# 258 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_while_statement(token_at((pstate->tokens), saved_position), while_test, while_body)));
+}
+
+
+# 267 "statement-parser.c"
+pstatus_t parse_do_statement(pstate_t* pstate)
+# 267 "statement-parser.c"
+{
+
+# 268 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 269 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, "do"))||(!parse_statement(pstate))))
+
+# 269 "statement-parser.c"
+  {
+
+# 270 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 272 "statement-parser.c"
+  parse_node_t* do_while_body = pstate_get_result_node(pstate);
+
+# 273 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, "while"))||(!pstate_expect_token_string(pstate, "("))))
+
+# 274 "statement-parser.c"
+  {
+
+# 275 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 277 "statement-parser.c"
+  if ((!parse_expression(pstate)))
+
+# 277 "statement-parser.c"
+  {
+
+# 278 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 280 "statement-parser.c"
+  parse_node_t* do_while_condition = pstate_get_result_node(pstate);
+
+# 281 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, ")"))||(!pstate_expect_token_string(pstate, ";"))))
+
+# 282 "statement-parser.c"
+  {
+
+# 283 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 285 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_do_statement(token_at((pstate->tokens), saved_position), do_while_body, do_while_condition)));
+}
+
+
+# 294 "statement-parser.c"
+pstatus_t parse_for_statement(pstate_t* pstate)
+# 294 "statement-parser.c"
+{
+
+# 295 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 296 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, "for"))||(!pstate_expect_token_string(pstate, "("))))
+
+# 297 "statement-parser.c"
+  {
+
+# 298 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 300 "statement-parser.c"
+  if ((!parse_statement(pstate)))
+
+# 300 "statement-parser.c"
+  {
+
+# 301 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 303 "statement-parser.c"
+  parse_node_t* for_init = pstate_get_result_node(pstate);
+
+# 304 "statement-parser.c"
+  parse_node_t* for_test = ((void *)0);
+
+# 305 "statement-parser.c"
+  if (parse_expression(pstate))
+
+# 305 "statement-parser.c"
+  {
+
+# 306 "statement-parser.c"
+    (for_test=pstate_get_result_node(pstate));
+  }
+
+# 308 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 308 "statement-parser.c"
+  {
+
+# 309 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 311 "statement-parser.c"
+  parse_node_t* for_increment = ((void *)0);
+
+# 312 "statement-parser.c"
+  if (parse_expression(pstate))
+
+# 312 "statement-parser.c"
+  {
+
+# 313 "statement-parser.c"
+    (for_increment=pstate_get_result_node(pstate));
+  }
+
+# 315 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, ")")))
+
+# 315 "statement-parser.c"
+  {
+
+# 316 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 318 "statement-parser.c"
+  if ((!parse_statement(pstate)))
+
+# 318 "statement-parser.c"
+  {
+
+# 319 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 321 "statement-parser.c"
+  parse_node_t* for_body = pstate_get_result_node(pstate);
+
+# 322 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_for_statement(token_at((pstate->tokens), saved_position), for_init, for_test, for_increment, for_body)));
+}
+
+
+# 331 "statement-parser.c"
+pstatus_t parse_switch_statement(pstate_t* pstate)
+# 331 "statement-parser.c"
+{
+
+# 332 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 333 "statement-parser.c"
+  if ((((!pstate_expect_token_string(pstate, "switch"))||(!pstate_expect_token_string(pstate, "(")))||(!parse_expression(pstate))))
+
+# 335 "statement-parser.c"
+  {
+
+# 336 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 338 "statement-parser.c"
+  parse_node_t* switch_item = pstate_get_result_node(pstate);
+
+# 339 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, ")"))||(!parse_block(pstate))))
+
+# 339 "statement-parser.c"
+  {
+
+# 340 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 342 "statement-parser.c"
+  parse_node_t* block = pstate_get_result_node(pstate);
+
+# 343 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_switch_statement(token_at((pstate->tokens), saved_position), switch_item, block)));
+}
+
+
+# 352 "statement-parser.c"
+pstatus_t parse_case_label(pstate_t* pstate)
+# 352 "statement-parser.c"
+{
+
+# 353 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 354 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, "case"))||(!parse_expression(pstate))))
+
+# 355 "statement-parser.c"
+  {
+
+# 356 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 358 "statement-parser.c"
+  parse_node_t* case_expr = pstate_get_result_node(pstate);
+
+# 359 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, ":")))
+
+# 359 "statement-parser.c"
+  {
+
+# 360 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 362 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_case_label(token_at((pstate->tokens), saved_position), case_expr)));
+}
+
+
+# 373 "statement-parser.c"
+pstatus_t parse_expression_statement(pstate_t* pstate)
+# 373 "statement-parser.c"
+{
+
+# 374 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 375 "statement-parser.c"
+  if ((!parse_expression(pstate)))
+
+# 375 "statement-parser.c"
+  {
+
+# 376 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 378 "statement-parser.c"
+  parse_node_t* expr = pstate_get_result_node(pstate);
+
+# 379 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 379 "statement-parser.c"
+  {
+
+# 380 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 382 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_expression_statement_node(token_at((pstate->tokens), saved_position), expr)));
+}
+
+
+# 390 "statement-parser.c"
+pstatus_t parse_goto_statement(pstate_t* pstate)
+# 390 "statement-parser.c"
+{
+
+# 391 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 392 "statement-parser.c"
+  token_t* label_token = pstate_peek(pstate, 1);
+
+# 393 "statement-parser.c"
+  if ((((!pstate_expect_token_string(pstate, "goto"))||(!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))||(!pstate_expect_token_string(pstate, ";"))))
+
+# 395 "statement-parser.c"
+  {
+
+# 396 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 398 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_goto_statement(token_at((pstate->tokens), saved_position), label_token)));
+}
+
+
+# 406 "statement-parser.c"
+pstatus_t parse_break_statement(pstate_t* pstate)
+# 406 "statement-parser.c"
+{
+
+# 407 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 408 "statement-parser.c"
+  token_t* keyword_token = pstate_peek(pstate, 0);
+
+# 409 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, "break"))||(!pstate_expect_token_string(pstate, ";"))))
+
+# 410 "statement-parser.c"
+  {
+
+# 411 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 413 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_break_statement(keyword_token)));
+}
+
+
+# 420 "statement-parser.c"
+pstatus_t parse_continue_statement(pstate_t* pstate)
+# 420 "statement-parser.c"
+{
+
+# 421 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 422 "statement-parser.c"
+  token_t* keyword_token = pstate_peek(pstate, 0);
+
+# 423 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, "continue"))||(!pstate_expect_token_string(pstate, ";"))))
+
+# 424 "statement-parser.c"
+  {
+
+# 425 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 427 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_continue_statement(keyword_token)));
+}
+
+
+# 434 "statement-parser.c"
+pstatus_t parse_label_statement(pstate_t* pstate)
+# 434 "statement-parser.c"
+{
+
+# 435 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 436 "statement-parser.c"
+  token_t* label_token = pstate_peek(pstate, 0);
+
+# 437 "statement-parser.c"
+  if (((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))||(!pstate_expect_token_string(pstate, ":"))))
+
+# 438 "statement-parser.c"
+  {
+
+# 439 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 441 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_label_statement(label_token)));
+}
+
+
+# 448 "statement-parser.c"
+pstatus_t parse_default_label(pstate_t* pstate)
+# 448 "statement-parser.c"
+{
+
+# 449 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 450 "statement-parser.c"
+  token_t* default_token = pstate_peek(pstate, 0);
+
+# 451 "statement-parser.c"
+  if (((!pstate_expect_token_string(pstate, "default"))||(!pstate_expect_token_string(pstate, ":"))))
+
+# 452 "statement-parser.c"
+  {
+
+# 453 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 455 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_default_label(default_token)));
+}
+
+
+# 462 "statement-parser.c"
+pstatus_t parse_empty_statement(pstate_t* pstate)
+# 462 "statement-parser.c"
+{
+
+# 463 "statement-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 464 "statement-parser.c"
+  token_t* semi_colon_token = pstate_peek(pstate, 0);
+
+# 465 "statement-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 465 "statement-parser.c"
+  {
+
+# 466 "statement-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 468 "statement-parser.c"
+  return pstate_set_result_node(pstate, to_node(make_empty_statement(semi_colon_token)));
+}
+
+
+# 481 "statement-parser.c"
+break_statement_node_t* make_break_statement(token_t* break_keyword_token)
+# 481 "statement-parser.c"
+{
+
+# 482 "statement-parser.c"
+  break_statement_node_t* result = malloc_struct(break_statement_node_t);
+
+# 483 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_BREAK_STATEMENT);
+
+# 484 "statement-parser.c"
+  ((result->break_keyword_token)=break_keyword_token);
+
+# 485 "statement-parser.c"
+  return result;
+}
+
+
+# 494 "statement-parser.c"
+break_statement_node_t* to_break_statement_node(parse_node_t* ptr)
+# 494 "statement-parser.c"
+{
+
+# 495 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_BREAK_STATEMENT)))
+
+# 495 "statement-parser.c"
+  {
+
+# 496 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 498 "statement-parser.c"
+  return (/*CAST*/(break_statement_node_t*) ptr);
+}
+
+
+# 508 "statement-parser.c"
+continue_statement_node_t* make_continue_statement(token_t* keyword_token)
+# 508 "statement-parser.c"
+{
+
+# 509 "statement-parser.c"
+  continue_statement_node_t* result = malloc_struct(continue_statement_node_t);
+
+# 510 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_CONTINUE_STATEMENT);
+
+# 511 "statement-parser.c"
+  ((result->continue_keyword_token)=keyword_token);
+
+# 512 "statement-parser.c"
+  return result;
+}
+
+
+# 521 "statement-parser.c"
+continue_statement_node_t* to_continue_statement_node(parse_node_t* ptr)
+# 521 "statement-parser.c"
+{
+
+# 522 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CONTINUE_STATEMENT)))
+
+# 522 "statement-parser.c"
+  {
+
+# 523 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 525 "statement-parser.c"
+  return (/*CAST*/(continue_statement_node_t*) ptr);
+}
+
+
+# 535 "statement-parser.c"
+label_statement_node_t* make_label_statement(token_t* label)
+# 535 "statement-parser.c"
+{
+
+# 536 "statement-parser.c"
+  label_statement_node_t* result = malloc_struct(label_statement_node_t);
+
+# 537 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_LABEL_STATEMENT);
+
+# 538 "statement-parser.c"
+  ((result->label)=label);
+
+# 539 "statement-parser.c"
+  return result;
+}
+
+
+# 548 "statement-parser.c"
+label_statement_node_t* to_label_statement_node(parse_node_t* ptr)
+# 548 "statement-parser.c"
+{
+
+# 549 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_LABEL_STATEMENT)))
+
+# 549 "statement-parser.c"
+  {
+
+# 550 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 552 "statement-parser.c"
+  return (/*CAST*/(label_statement_node_t*) ptr);
+}
+
+
+# 562 "statement-parser.c"
+goto_statement_node_t* make_goto_statement(token_t* first_token, token_t* label)
+# 563 "statement-parser.c"
+{
+
+# 564 "statement-parser.c"
+  goto_statement_node_t* result = malloc_struct(goto_statement_node_t);
+
+# 565 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_GOTO_STATEMENT);
+
+# 566 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 567 "statement-parser.c"
+  ((result->label)=label);
+
+# 568 "statement-parser.c"
+  return result;
+}
+
+
+# 577 "statement-parser.c"
+goto_statement_node_t* to_goto_statement_node(parse_node_t* ptr)
+# 577 "statement-parser.c"
+{
+
+# 578 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_GOTO_STATEMENT)))
+
+# 578 "statement-parser.c"
+  {
+
+# 579 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 581 "statement-parser.c"
+  return (/*CAST*/(goto_statement_node_t*) ptr);
+}
+
+
+# 591 "statement-parser.c"
+empty_statement_node_t* make_empty_statement(token_t* semi_colon_token)
+# 591 "statement-parser.c"
+{
+
+# 592 "statement-parser.c"
+  empty_statement_node_t* result = malloc_struct(empty_statement_node_t);
+
+# 593 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_EMPTY_STATEMENT);
+
+# 594 "statement-parser.c"
+  ((result->semi_colon_token)=semi_colon_token);
+
+# 595 "statement-parser.c"
+  return result;
+}
+
+
+# 604 "statement-parser.c"
+empty_statement_node_t* to_empty_statement_node(parse_node_t* ptr)
+# 604 "statement-parser.c"
+{
+
+# 605 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_EMPTY_STATEMENT)))
+
+# 605 "statement-parser.c"
+  {
+
+# 606 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 608 "statement-parser.c"
+  return (/*CAST*/(empty_statement_node_t*) ptr);
+}
+
+
+# 618 "statement-parser.c"
+switch_statement_node_t* make_switch_statement(token_t* first_token, parse_node_t* expression, parse_node_t* block)
+# 620 "statement-parser.c"
+{
+
+# 621 "statement-parser.c"
+  switch_statement_node_t* result = malloc_struct(switch_statement_node_t);
+
+# 622 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_SWITCH_STATEMENT);
+
+# 623 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 624 "statement-parser.c"
+  ((result->expression)=expression);
+
+# 625 "statement-parser.c"
+  ((result->block)=block);
+
+# 626 "statement-parser.c"
+  return result;
+}
+
+
+# 635 "statement-parser.c"
+switch_statement_node_t* to_switch_statement_node(parse_node_t* ptr)
+# 635 "statement-parser.c"
+{
+
+# 636 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_SWITCH_STATEMENT)))
+
+# 636 "statement-parser.c"
+  {
+
+# 637 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 639 "statement-parser.c"
+  return (/*CAST*/(switch_statement_node_t*) ptr);
+}
+
+
+# 649 "statement-parser.c"
+case_label_node_t* make_case_label(token_t* first_token, parse_node_t* expression)
+# 650 "statement-parser.c"
+{
+
+# 651 "statement-parser.c"
+  case_label_node_t* result = malloc_struct(case_label_node_t);
+
+# 652 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_CASE_LABEL);
+
+# 653 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 654 "statement-parser.c"
+  ((result->expression)=expression);
+
+# 655 "statement-parser.c"
+  return result;
+}
+
+
+# 664 "statement-parser.c"
+case_label_node_t* to_case_label_node(parse_node_t* ptr)
+# 664 "statement-parser.c"
+{
+
+# 665 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_CASE_LABEL)))
+
+# 665 "statement-parser.c"
+  {
+
+# 666 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 668 "statement-parser.c"
+  return (/*CAST*/(case_label_node_t*) ptr);
+}
+
+
+# 678 "statement-parser.c"
+default_label_node_t* make_default_label(token_t* default_token)
+# 678 "statement-parser.c"
+{
+
+# 679 "statement-parser.c"
+  default_label_node_t* result = malloc_struct(default_label_node_t);
+
+# 680 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_DEFAULT_LABEL);
+
+# 681 "statement-parser.c"
+  ((result->default_token)=default_token);
+
+# 682 "statement-parser.c"
+  return result;
+}
+
+
+# 691 "statement-parser.c"
+default_label_node_t* to_default_label_node(parse_node_t* ptr)
+# 691 "statement-parser.c"
+{
+
+# 692 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DEFAULT_LABEL)))
+
+# 692 "statement-parser.c"
+  {
+
+# 693 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 695 "statement-parser.c"
+  return (/*CAST*/(default_label_node_t*) ptr);
+}
+
+
+# 706 "statement-parser.c"
+block_node_t* make_block_node(token_t* first_token)
+# 706 "statement-parser.c"
+{
+
+# 707 "statement-parser.c"
+  block_node_t* result = malloc_struct(block_node_t);
+
+# 708 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 709 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_BLOCK);
+
+# 710 "statement-parser.c"
+  return result;
+}
+
+
+# 719 "statement-parser.c"
+block_node_t* to_block_node(parse_node_t* ptr)
+# 719 "statement-parser.c"
+{
+
+# 720 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_BLOCK)))
+
+# 720 "statement-parser.c"
+  {
+
+# 721 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 723 "statement-parser.c"
+  return (/*CAST*/(block_node_t*) ptr);
+}
+
+
+# 734 "statement-parser.c"
+for_statement_node_t* make_for_statement(token_t* first_token, parse_node_t* for_init, parse_node_t* for_test, parse_node_t* for_increment, parse_node_t* for_body)
+# 738 "statement-parser.c"
+{
+
+# 739 "statement-parser.c"
+  for_statement_node_t* result = malloc_struct(for_statement_node_t);
+
+# 740 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_FOR_STATEMENT);
+
+# 741 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 742 "statement-parser.c"
+  ((result->for_init)=for_init);
+
+# 743 "statement-parser.c"
+  ((result->for_test)=for_test);
+
+# 744 "statement-parser.c"
+  ((result->for_increment)=for_increment);
+
+# 745 "statement-parser.c"
+  ((result->for_body)=for_body);
+
+# 746 "statement-parser.c"
+  return result;
+}
+
+
+# 755 "statement-parser.c"
+for_statement_node_t* to_for_statement_node(parse_node_t* ptr)
+# 755 "statement-parser.c"
+{
+
+# 756 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_FOR_STATEMENT)))
+
+# 756 "statement-parser.c"
+  {
+
+# 757 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 759 "statement-parser.c"
+  return (/*CAST*/(for_statement_node_t*) ptr);
+}
+
+
+# 769 "statement-parser.c"
+if_statement_node_t* make_if_statement(token_t* first_token, parse_node_t* if_condition, parse_node_t* if_true, parse_node_t* if_else)
+# 772 "statement-parser.c"
+{
+
+# 773 "statement-parser.c"
+  if_statement_node_t* result = malloc_struct(if_statement_node_t);
+
+# 774 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_IF_STATEMENT);
+
+# 775 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 776 "statement-parser.c"
+  ((result->if_condition)=if_condition);
+
+# 777 "statement-parser.c"
+  ((result->if_true)=if_true);
+
+# 778 "statement-parser.c"
+  ((result->if_else)=if_else);
+
+# 779 "statement-parser.c"
+  return result;
+}
+
+
+# 788 "statement-parser.c"
+if_statement_node_t* to_if_statement_node(parse_node_t* ptr)
+# 788 "statement-parser.c"
+{
+
+# 789 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_IF_STATEMENT)))
+
+# 789 "statement-parser.c"
+  {
+
+# 790 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 792 "statement-parser.c"
+  return (/*CAST*/(if_statement_node_t*) ptr);
+}
+
+
+# 803 "statement-parser.c"
+expression_statement_node_t* make_expression_statement_node(token_t* first_token, parse_node_t* expression)
+# 804 "statement-parser.c"
+{
+
+# 805 "statement-parser.c"
+  expression_statement_node_t* result = malloc_struct(expression_statement_node_t);
+
+# 807 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_EXPRESSION_STATEMENT);
+
+# 808 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 809 "statement-parser.c"
+  ((result->expression)=expression);
+
+# 810 "statement-parser.c"
+  return result;
+}
+
+
+# 819 "statement-parser.c"
+expression_statement_node_t* to_expression_statement_node(parse_node_t* ptr)
+# 819 "statement-parser.c"
+{
+
+# 820 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_EXPRESSION_STATEMENT)))
+
+# 820 "statement-parser.c"
+  {
+
+# 821 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 823 "statement-parser.c"
+  return (/*CAST*/(expression_statement_node_t*) ptr);
+}
+
+
+# 833 "statement-parser.c"
+return_statement_node_t* make_return_statement(token_t* first_token, parse_node_t* expression)
+# 834 "statement-parser.c"
+{
+
+# 835 "statement-parser.c"
+  return_statement_node_t* result = malloc_struct(return_statement_node_t);
+
+# 836 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_RETURN_STATEMENT);
+
+# 837 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 838 "statement-parser.c"
+  ((result->expression)=expression);
+
+# 839 "statement-parser.c"
+  return result;
+}
+
+
+# 848 "statement-parser.c"
+return_statement_node_t* to_return_statement_node(parse_node_t* ptr)
+# 848 "statement-parser.c"
+{
+
+# 849 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_RETURN_STATEMENT)))
+
+# 849 "statement-parser.c"
+  {
+
+# 850 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 852 "statement-parser.c"
+  return (/*CAST*/(return_statement_node_t*) ptr);
+}
+
+
+# 862 "statement-parser.c"
+while_statement_node_t* make_while_statement(token_t* first_token, parse_node_t* condition, parse_node_t* body)
+# 864 "statement-parser.c"
+{
+
+# 865 "statement-parser.c"
+  while_statement_node_t* result = malloc_struct(while_statement_node_t);
+
+# 866 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_WHILE_STATEMENT);
+
+# 867 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 868 "statement-parser.c"
+  ((result->condition)=condition);
+
+# 869 "statement-parser.c"
+  ((result->body)=body);
+
+# 870 "statement-parser.c"
+  return result;
+}
+
+
+# 879 "statement-parser.c"
+while_statement_node_t* to_while_statement_node(parse_node_t* ptr)
+# 879 "statement-parser.c"
+{
+
+# 880 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_WHILE_STATEMENT)))
+
+# 880 "statement-parser.c"
+  {
+
+# 881 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 883 "statement-parser.c"
+  return (/*CAST*/(while_statement_node_t*) ptr);
+}
+
+
+# 893 "statement-parser.c"
+do_statement_node_t* make_do_statement(token_t* first_token, parse_node_t* body, parse_node_t* condition)
+# 894 "statement-parser.c"
+{
+
+# 895 "statement-parser.c"
+  do_statement_node_t* result = malloc_struct(do_statement_node_t);
+
+# 896 "statement-parser.c"
+  ((result->tag)=PARSE_NODE_DO_STATEMENT);
+
+# 897 "statement-parser.c"
+  ((result->first_token)=first_token);
+
+# 898 "statement-parser.c"
+  ((result->body)=body);
+
+# 899 "statement-parser.c"
+  ((result->condition)=condition);
+
+# 900 "statement-parser.c"
+  return result;
+}
+
+
+# 909 "statement-parser.c"
+do_statement_node_t* to_do_statement_node(parse_node_t* ptr)
+# 909 "statement-parser.c"
+{
+
+# 910 "statement-parser.c"
+  if (((ptr==((void *)0))||((ptr->tag)!=PARSE_NODE_DO_STATEMENT)))
+
+# 910 "statement-parser.c"
+  {
+
+# 911 "statement-parser.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 913 "statement-parser.c"
+  return (/*CAST*/(do_statement_node_t*) ptr);
+}
+
+
+# 94 "type-parser.c"
+pstatus_t parse_type_node(pstate_t* pstate)
+# 94 "type-parser.c"
+{
+
+# 95 "type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 97 "type-parser.c"
+  if ((parse_typeof_node(pstate)||parse_function_type(pstate)))
+
+# 97 "type-parser.c"
+  {
+
+# 98 "type-parser.c"
+    return true;
+  }
+
+# 101 "type-parser.c"
+  type_node_t* result = make_type_node();
+
+# 103 "type-parser.c"
+  type_qualifier_t qualifiers = TYPE_QUALIFIER_NONE;
+
+# 106 "type-parser.c"
+  if (pstate_match_token_string(pstate, "const"))
+
+# 106 "type-parser.c"
+  {
+
+# 107 "type-parser.c"
+    pstate_advance(pstate);
+
+# 108 "type-parser.c"
+    (qualifiers|=TYPE_QUALIFIER_CONST);
+  }
+
+# 112 "type-parser.c"
+  canonical_type_result_t canonical_type_result = parse_canonical_type(pstate);
+
+# 113 "type-parser.c"
+  token_t* type_name = (canonical_type_result.canonical_type);
+
+# 115 "type-parser.c"
+  if ((type_name!=((void *)0)))
+
+# 115 "type-parser.c"
+  {
+
+# 116 "type-parser.c"
+    while (((canonical_type_result.consumed_tokens)>0))
+
+# 116 "type-parser.c"
+    {
+
+# 117 "type-parser.c"
+      ((canonical_type_result.consumed_tokens)--);
+
+# 118 "type-parser.c"
+      pstate_advance(pstate);
+    }
+
+# 120 "type-parser.c"
+    ((result->type_node_kind)=TYPE_NODE_KIND_PRIMITIVE_TYPENAME);
+
+# 121 "type-parser.c"
+    ((result->type_name)=type_name);
+  }
+  else
+
+# 122 "type-parser.c"
+  if (parse_user_type_node(pstate))
+
+# 122 "type-parser.c"
+  {
+
+# 123 "type-parser.c"
+    ((result->type_node_kind)=TYPE_NODE_KIND_TYPE_EXPRESSION);
+
+# 124 "type-parser.c"
+    ((result->user_type)=pstate_get_result_node(pstate));
+  }
+  else
+
+# 125 "type-parser.c"
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
+
+# 125 "type-parser.c"
+  {
+
+# 126 "type-parser.c"
+    ((result->type_node_kind)=TYPE_NODE_KIND_TYPENAME);
+
+# 127 "type-parser.c"
+    ((result->type_name)=pstate_get_result_token(pstate));
+  }
+  else
+
+# 128 "type-parser.c"
+  {
+
+# 129 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 134 "type-parser.c"
+  while (true)
+
+# 134 "type-parser.c"
+  {
+
+# 135 "type-parser.c"
+    if (pstate_expect_token_string(pstate, "*"))
+
+# 135 "type-parser.c"
+    {
+
+# 136 "type-parser.c"
+      type_node_t* ptr_result = make_type_node();
+
+# 137 "type-parser.c"
+      ((ptr_result->type_node_kind)=TYPE_NODE_KIND_POINTER);
+
+# 138 "type-parser.c"
+      node_list_add_node((&(ptr_result->type_args)), to_node(result));
+
+# 139 "type-parser.c"
+      (result=ptr_result);
+    }
+    else
+
+# 140 "type-parser.c"
+    if (token_matches(pstate_peek(pstate, 0), "["))
+
+# 140 "type-parser.c"
+    {
+
+# 141 "type-parser.c"
+      pstate_advance(pstate);
+
+# 142 "type-parser.c"
+      type_node_t* array_result = make_type_node();
+
+# 143 "type-parser.c"
+      ((array_result->type_node_kind)=TYPE_NODE_KIND_ARRAY);
+
+# 144 "type-parser.c"
+      node_list_add_node((&(array_result->type_args)), to_node(result));
+
+# 145 "type-parser.c"
+      if (pstate_expect_token_type(pstate, TOKEN_TYPE_INTEGER_LITERAL))
+
+# 145 "type-parser.c"
+      {
+
+# 146 "type-parser.c"
+        literal_node_t* literal = make_literal_node();
+
+# 147 "type-parser.c"
+        ((literal->token)=pstate_get_result_token(pstate));
+
+# 148 "type-parser.c"
+        ((array_result->type_node_kind)=TYPE_NODE_KIND_SIZED_ARRAY);
+
+# 149 "type-parser.c"
+        node_list_add_node((&(array_result->type_args)), to_node(literal));
+      }
+      else
+
+# 150 "type-parser.c"
+      {
+
+# 151 "type-parser.c"
+        pstate_ignore_error(pstate);
+      }
+
+# 154 "type-parser.c"
+      if ((!pstate_expect_token_string(pstate, "]")))
+
+# 154 "type-parser.c"
+      {
+
+# 155 "type-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 157 "type-parser.c"
+      (result=array_result);
+    }
+    else
+
+# 158 "type-parser.c"
+    {
+
+# 159 "type-parser.c"
+      pstate_ignore_error(pstate);
+
+# 160 "type-parser.c"
+      break;
+    }
+  }
+
+# 163 "type-parser.c"
+  ((result->qualifiers)=qualifiers);
+
+# 164 "type-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 167 "type-parser.c"
+canonical_type_result_t make_type_token_result(char* str, int consumed_tokens)
+# 167 "type-parser.c"
+{
+
+# 168 "type-parser.c"
+  token_t* canonical_token = malloc_struct(typeof(token_t));
+
+# 169 "type-parser.c"
+  ((canonical_token->type)=TOKEN_TYPE_IDENTIFIER);
+
+# 170 "type-parser.c"
+  ((canonical_token->buffer)=buffer_from_string(str));
+
+# 171 "type-parser.c"
+  ((canonical_token->start)=0);
+
+# 172 "type-parser.c"
+  ((canonical_token->end)=strlen(str));
+
+# 173 "type-parser.c"
+  return ((canonical_type_result_t) {.canonical_type = canonical_token, .consumed_tokens = consumed_tokens});
+}
+
+
+# 178 "type-parser.c"
+pstatus_t parse_typeof_node(pstate_t* pstate)
+# 178 "type-parser.c"
+{
+
+# 179 "type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 180 "type-parser.c"
+  if ((!pstate_expect_token_string(pstate, "typeof")))
+
+# 180 "type-parser.c"
+  {
+
+# 181 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 183 "type-parser.c"
+  if ((!pstate_expect_token_string(pstate, "(")))
+
+# 183 "type-parser.c"
+  {
+
+# 184 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 186 "type-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 186 "type-parser.c"
+  {
+
+# 187 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 189 "type-parser.c"
+  parse_node_t* type_node = pstate_get_result_node(pstate);
+
+# 190 "type-parser.c"
+  if ((!pstate_expect_token_string(pstate, ")")))
+
+# 190 "type-parser.c"
+  {
+
+# 191 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 194 "type-parser.c"
+  type_node_t* result = make_type_node();
+
+# 195 "type-parser.c"
+  ((result->type_node_kind)=TYPE_NODE_KIND_TYPEOF);
+
+# 196 "type-parser.c"
+  ((result->user_type)=type_node);
+
+# 197 "type-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 207 "type-parser.c"
+canonical_type_result_t parse_canonical_type(pstate_t* pstate)
+# 207 "type-parser.c"
+{
+
+# 208 "type-parser.c"
+  token_t* a = pstate_peek(pstate, 0);
+
+# 209 "type-parser.c"
+  token_t* b = pstate_peek(pstate, 1);
+
+# 210 "type-parser.c"
+  token_t* c = pstate_peek(pstate, 2);
+
+# 212 "type-parser.c"
+  if (((token_matches(a, "signed")&&token_matches(b, "short"))&&token_matches(c, "int")))
+
+# 213 "type-parser.c"
+  {
+
+# 214 "type-parser.c"
+    return make_type_token_result("short", 3);
+  }
+
+# 217 "type-parser.c"
+  if (((token_matches(a, "unsigned")&&token_matches(b, "short"))&&token_matches(c, "int")))
+
+# 218 "type-parser.c"
+  {
+
+# 219 "type-parser.c"
+    return make_type_token_result("unsigned short int", 3);
+  }
+
+# 222 "type-parser.c"
+  if (((token_matches(a, "signed")&&token_matches(b, "long"))&&token_matches(c, "int")))
+
+# 223 "type-parser.c"
+  {
+
+# 224 "type-parser.c"
+    return make_type_token_result("long", 3);
+  }
+
+# 227 "type-parser.c"
+  if (((token_matches(a, "unsigned")&&token_matches(b, "long"))&&token_matches(c, "int")))
+
+# 228 "type-parser.c"
+  {
+
+# 229 "type-parser.c"
+    return make_type_token_result("unsigned long", 3);
+  }
+
+# 232 "type-parser.c"
+  if ((token_matches(a, "short")&&token_matches(b, "int")))
+
+# 232 "type-parser.c"
+  {
+
+# 233 "type-parser.c"
+    return make_type_token_result("short", 2);
+  }
+
+# 236 "type-parser.c"
+  if ((token_matches(a, "signed")&&token_matches(b, "short")))
+
+# 236 "type-parser.c"
+  {
+
+# 237 "type-parser.c"
+    return make_type_token_result("short", 2);
+  }
+
+# 240 "type-parser.c"
+  if ((token_matches(a, "signed")&&token_matches(b, "int")))
+
+# 240 "type-parser.c"
+  {
+
+# 241 "type-parser.c"
+    return make_type_token_result("int", 2);
+  }
+
+# 244 "type-parser.c"
+  if ((token_matches(a, "long")&&token_matches(b, "int")))
+
+# 244 "type-parser.c"
+  {
+
+# 245 "type-parser.c"
+    return make_type_token_result("long", 2);
+  }
+
+# 248 "type-parser.c"
+  if ((token_matches(a, "long")&&token_matches(b, "long")))
+
+# 248 "type-parser.c"
+  {
+
+# 249 "type-parser.c"
+    return make_type_token_result("long long", 2);
+  }
+
+# 252 "type-parser.c"
+  if ((token_matches(a, "long")&&token_matches(b, "double")))
+
+# 252 "type-parser.c"
+  {
+
+# 253 "type-parser.c"
+    return make_type_token_result("long double", 2);
+  }
+
+# 256 "type-parser.c"
+  if ((token_matches(a, "signed")&&token_matches(b, "long")))
+
+# 256 "type-parser.c"
+  {
+
+# 257 "type-parser.c"
+    return make_type_token_result("long", 2);
+  }
+
+# 260 "type-parser.c"
+  if ((token_matches(a, "unsigned")&&token_matches(b, "int")))
+
+# 260 "type-parser.c"
+  {
+
+# 261 "type-parser.c"
+    return make_type_token_result("unsigned int", 2);
+  }
+
+# 264 "type-parser.c"
+  if ((token_matches(a, "unsigned")&&token_matches(b, "long")))
+
+# 264 "type-parser.c"
+  {
+
+# 265 "type-parser.c"
+    return make_type_token_result("unsigned long", 2);
+  }
+
+# 268 "type-parser.c"
+  if ((token_matches(a, "unsigned")&&token_matches(b, "char")))
+
+# 268 "type-parser.c"
+  {
+
+# 269 "type-parser.c"
+    return make_type_token_result("unsigned char", 2);
+  }
+
+# 272 "type-parser.c"
+  if ((token_matches(a, "signed")&&token_matches(b, "char")))
+
+# 272 "type-parser.c"
+  {
+
+# 273 "type-parser.c"
+    return make_type_token_result("char", 2);
+  }
+
+# 276 "type-parser.c"
+  if ((token_matches(a, "long")&&token_matches(b, "float")))
+
+# 276 "type-parser.c"
+  {
+
+# 278 "type-parser.c"
+    return make_type_token_result("double", 2);
+  }
+
+# 281 "type-parser.c"
+  if (token_matches(a, "signed"))
+
+# 281 "type-parser.c"
+  {
+
+# 282 "type-parser.c"
+    return make_type_token_result("int", 1);
+  }
+
+# 285 "type-parser.c"
+  if (token_matches(a, "char"))
+
+# 285 "type-parser.c"
+  {
+
+# 286 "type-parser.c"
+    return make_type_token_result("char", 1);
+  }
+
+# 289 "type-parser.c"
+  if (token_matches(a, "int"))
+
+# 289 "type-parser.c"
+  {
+
+# 290 "type-parser.c"
+    return make_type_token_result("int", 1);
+  }
+
+# 293 "type-parser.c"
+  if (token_matches(a, "long"))
+
+# 293 "type-parser.c"
+  {
+
+# 294 "type-parser.c"
+    return make_type_token_result("long", 1);
+  }
+
+# 297 "type-parser.c"
+  if (token_matches(a, "float"))
+
+# 297 "type-parser.c"
+  {
+
+# 298 "type-parser.c"
+    return make_type_token_result("float", 1);
+  }
+
+# 301 "type-parser.c"
+  if (token_matches(a, "double"))
+
+# 301 "type-parser.c"
+  {
+
+# 302 "type-parser.c"
+    return make_type_token_result("double", 1);
+  }
+
+# 307 "type-parser.c"
+  return ((canonical_type_result_t) {.canonical_type = NULL, .consumed_tokens = 0});
+}
+
+
+# 323 "type-parser.c"
+pstatus_t parse_function_type(pstate_t* pstate)
+# 323 "type-parser.c"
+{
+
+# 324 "type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 326 "type-parser.c"
+  token_t* fn_t_token = pstate_peek(pstate, 0);
+
+# 328 "type-parser.c"
+  if (((!pstate_expect_token_string(pstate, "fn_t"))||(!pstate_expect_token_string(pstate, "("))))
+
+# 329 "type-parser.c"
+  {
+
+# 330 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 333 "type-parser.c"
+  type_node_t* result = make_type_node();
+
+# 334 "type-parser.c"
+  ((result->type_node_kind)=TYPE_NODE_KIND_TYPE_EXPRESSION);
+
+# 335 "type-parser.c"
+  ((result->type_name)=fn_t_token);
+
+# 338 "type-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 338 "type-parser.c"
+  {
+
+# 339 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 341 "type-parser.c"
+  node_list_add_node((&(result->type_args)), pstate_get_result_node(pstate));
+
+# 344 "type-parser.c"
+  while (parse_function_type_argument(pstate))
+
+# 344 "type-parser.c"
+  {
+
+# 345 "type-parser.c"
+    node_list_add_node((&(result->type_args)), pstate_get_result_node(pstate));
+  }
+
+# 348 "type-parser.c"
+  if ((!pstate_expect_token_string(pstate, ")")))
+
+# 348 "type-parser.c"
+  {
+
+# 349 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 352 "type-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 364 "type-parser.c"
+pstatus_t parse_function_type_argument(pstate_t* pstate)
+# 364 "type-parser.c"
+{
+
+# 365 "type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 368 "type-parser.c"
+  if ((!pstate_expect_token_string(pstate, ",")))
+
+# 368 "type-parser.c"
+  {
+
+# 369 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 373 "type-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 373 "type-parser.c"
+  {
+
+# 374 "type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 378 "type-parser.c"
+  token_t* suffix = pstate_peek(pstate, 0);
+
+# 379 "type-parser.c"
+  if (((suffix->type)==TOKEN_TYPE_IDENTIFIER))
+
+# 379 "type-parser.c"
+  {
+
+# 380 "type-parser.c"
+    pstate_advance(pstate);
+  }
+
+# 383 "type-parser.c"
+  return true;
+}
+
+
+# 186 "user-type-parser.c"
+pstatus_t parse_structure_node(pstate_t* pstate)
+# 186 "user-type-parser.c"
+{
+
+# 187 "user-type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 188 "user-type-parser.c"
+  if ((!pstate_expect_token_string(pstate, "struct")))
+
+# 188 "user-type-parser.c"
+  {
+
+# 189 "user-type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 191 "user-type-parser.c"
+  struct_node_t* result = make_struct_node();
+
+# 193 "user-type-parser.c"
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
+
+# 193 "user-type-parser.c"
+  {
+
+# 194 "user-type-parser.c"
+    ((result->name)=pstate_get_result_token(pstate));
+  }
+  else
+
+# 195 "user-type-parser.c"
+  {
+
+# 196 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 199 "user-type-parser.c"
+  if (pstate_expect_token_string(pstate, "{"))
+
+# 199 "user-type-parser.c"
+  {
+
+# 200 "user-type-parser.c"
+    ((result->partial_definition)=false);
+
+# 201 "user-type-parser.c"
+    while (true)
+
+# 201 "user-type-parser.c"
+    {
+
+# 202 "user-type-parser.c"
+      if (pstate_expect_token_string(pstate, "}"))
+
+# 202 "user-type-parser.c"
+      {
+
+# 203 "user-type-parser.c"
+        break;
+      }
+
+# 205 "user-type-parser.c"
+      pstate_ignore_error(pstate);
+
+# 206 "user-type-parser.c"
+      if ((!parse_field_node(pstate)))
+
+# 206 "user-type-parser.c"
+      {
+
+# 207 "user-type-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 209 "user-type-parser.c"
+      node_list_add_node((&(result->fields)), pstate_get_result_node(pstate));
+    }
+  }
+  else
+
+# 211 "user-type-parser.c"
+  {
+
+# 212 "user-type-parser.c"
+    ((result->partial_definition)=true);
+
+# 213 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 216 "user-type-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 222 "user-type-parser.c"
+pstatus_t parse_field_node(pstate_t* pstate)
+# 222 "user-type-parser.c"
+{
+
+# 223 "user-type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 224 "user-type-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 224 "user-type-parser.c"
+  {
+
+# 225 "user-type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 227 "user-type-parser.c"
+  type_node_t* field_type = to_type_node(pstate_get_result_node(pstate));
+
+# 228 "user-type-parser.c"
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+
+# 228 "user-type-parser.c"
+  {
+
+# 229 "user-type-parser.c"
+    log_warn("Allowing unnamed field in case the type is a union");
+
+# 230 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 233 "user-type-parser.c"
+  token_t* field_name = pstate_get_result_token(pstate);
+
+# 234 "user-type-parser.c"
+  if (pstate_expect_token_string(pstate, ":"))
+
+# 234 "user-type-parser.c"
+  {
+
+# 236 "user-type-parser.c"
+    pstate_advance(pstate);
+  }
+  else
+
+# 237 "user-type-parser.c"
+  {
+
+# 238 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 241 "user-type-parser.c"
+  value_array_t* suffixes = ((void *)0);
+
+# 243 "user-type-parser.c"
+  while (pstate_match_token_string(pstate, "["))
+
+# 243 "user-type-parser.c"
+  {
+
+# 244 "user-type-parser.c"
+    if ((!parse_balanced_construct(pstate)))
+
+# 244 "user-type-parser.c"
+    {
+
+# 245 "user-type-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 247 "user-type-parser.c"
+    if ((suffixes==((void *)0)))
+
+# 247 "user-type-parser.c"
+    {
+
+# 248 "user-type-parser.c"
+      (suffixes=make_value_array(1));
+    }
+
+# 250 "user-type-parser.c"
+    value_array_add(suffixes, ptr_to_value(pstate_get_result_node(pstate)));
+  }
+
+# 253 "user-type-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 253 "user-type-parser.c"
+  {
+
+# 254 "user-type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 256 "user-type-parser.c"
+  field_node_t* result = make_field_node();
+
+# 257 "user-type-parser.c"
+  ((result->type)=field_type);
+
+# 258 "user-type-parser.c"
+  ((result->name)=field_name);
+
+# 259 "user-type-parser.c"
+  ((result->suffixes)=suffixes);
+
+# 260 "user-type-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 266 "user-type-parser.c"
+pstatus_t parse_union_node(pstate_t* pstate)
+# 266 "user-type-parser.c"
+{
+
+# 267 "user-type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 268 "user-type-parser.c"
+  if ((!pstate_expect_token_string(pstate, "union")))
+
+# 268 "user-type-parser.c"
+  {
+
+# 269 "user-type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 271 "user-type-parser.c"
+  union_node_t* result = make_union_node();
+
+# 273 "user-type-parser.c"
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
+
+# 273 "user-type-parser.c"
+  {
+
+# 274 "user-type-parser.c"
+    ((result->name)=pstate_get_result_token(pstate));
+  }
+  else
+
+# 275 "user-type-parser.c"
+  {
+
+# 276 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 279 "user-type-parser.c"
+  if (pstate_expect_token_string(pstate, "{"))
+
+# 279 "user-type-parser.c"
+  {
+
+# 280 "user-type-parser.c"
+    ((result->partial_definition)=false);
+
+# 281 "user-type-parser.c"
+    while (true)
+
+# 281 "user-type-parser.c"
+    {
+
+# 282 "user-type-parser.c"
+      if (pstate_expect_token_string(pstate, "}"))
+
+# 282 "user-type-parser.c"
+      {
+
+# 283 "user-type-parser.c"
+        break;
+      }
+
+# 285 "user-type-parser.c"
+      pstate_ignore_error(pstate);
+
+# 286 "user-type-parser.c"
+      if ((!parse_field_node(pstate)))
+
+# 286 "user-type-parser.c"
+      {
+
+# 287 "user-type-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 289 "user-type-parser.c"
+      node_list_add_node((&(result->fields)), pstate_get_result_node(pstate));
+    }
+  }
+  else
+
+# 291 "user-type-parser.c"
+  {
+
+# 292 "user-type-parser.c"
+    ((result->partial_definition)=true);
+
+# 293 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 296 "user-type-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 304 "user-type-parser.c"
+pstatus_t parse_user_type_node(pstate_t* pstate)
+# 304 "user-type-parser.c"
+{
+
+# 305 "user-type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 306 "user-type-parser.c"
+  if (((parse_enum_node(pstate)||parse_structure_node(pstate_ignore_error(pstate)))||parse_union_node(pstate_ignore_error(pstate))))
+
+# 308 "user-type-parser.c"
+  {
+
+# 309 "user-type-parser.c"
+    return true;
+  }
+  else
+
+# 310 "user-type-parser.c"
+  {
+
+# 311 "user-type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+}
+
+
+# 320 "user-type-parser.c"
+pstatus_t parse_enum_node(pstate_t* pstate)
+# 320 "user-type-parser.c"
+{
+
+# 321 "user-type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 322 "user-type-parser.c"
+  if ((!pstate_expect_token_string(pstate, "enum")))
+
+# 322 "user-type-parser.c"
+  {
+
+# 323 "user-type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 325 "user-type-parser.c"
+  enum_node_t* result = make_enum_node();
+
+# 327 "user-type-parser.c"
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER))
+
+# 327 "user-type-parser.c"
+  {
+
+# 328 "user-type-parser.c"
+    ((result->name)=pstate_get_result_token(pstate));
+  }
+  else
+
+# 329 "user-type-parser.c"
+  {
+
+# 330 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 333 "user-type-parser.c"
+  if ((!pstate_expect_token_string(pstate, "{")))
+
+# 333 "user-type-parser.c"
+  {
+
+# 334 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+
+# 335 "user-type-parser.c"
+    ((result->partial_definition)=true);
+
+# 336 "user-type-parser.c"
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+
+# 339 "user-type-parser.c"
+  while (true)
+
+# 339 "user-type-parser.c"
+  {
+
+# 340 "user-type-parser.c"
+    if (pstate_expect_token_string(pstate, "}"))
+
+# 340 "user-type-parser.c"
+    {
+
+# 341 "user-type-parser.c"
+      break;
+    }
+
+# 343 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+
+# 344 "user-type-parser.c"
+    if ((!parse_enum_element_node(pstate)))
+
+# 344 "user-type-parser.c"
+    {
+
+# 345 "user-type-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 347 "user-type-parser.c"
+    node_list_add_node((&(result->elements)), pstate_get_result_node(pstate));
+  }
+
+# 350 "user-type-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 359 "user-type-parser.c"
+pstatus_t parse_enum_element_node(pstate_t* pstate)
+# 359 "user-type-parser.c"
+{
+
+# 360 "user-type-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 361 "user-type-parser.c"
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+
+# 361 "user-type-parser.c"
+  {
+
+# 362 "user-type-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 364 "user-type-parser.c"
+  token_t* name = pstate_get_result_token(pstate);
+
+# 365 "user-type-parser.c"
+  parse_node_t* value_expr = ((void *)0);
+
+# 366 "user-type-parser.c"
+  if (pstate_expect_token_string(pstate, "="))
+
+# 366 "user-type-parser.c"
+  {
+
+# 367 "user-type-parser.c"
+    if ((!pratt_parse_expression(pstate, 0)))
+
+# 367 "user-type-parser.c"
+    {
+
+# 368 "user-type-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 370 "user-type-parser.c"
+    (value_expr=pstate_get_result_node(pstate));
+  }
+
+# 373 "user-type-parser.c"
+  if ((!pstate_expect_token_string(pstate, ",")))
+
+# 373 "user-type-parser.c"
+  {
+
+# 374 "user-type-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 377 "user-type-parser.c"
+  enum_element_t* result = make_enum_element();
+
+# 378 "user-type-parser.c"
+  ((result->name)=name);
+
+# 379 "user-type-parser.c"
+  ((result->value_expr)=value_expr);
+
+# 381 "user-type-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 44 "variable-definition-parser.c"
+pstatus_t parse_expression(pstate_t* pstate)
+# 44 "variable-definition-parser.c"
+{
+
+# 45 "variable-definition-parser.c"
+  return pratt_parse_expression(pstate, 0);
+}
+
+
+# 53 "variable-definition-parser.c"
+pstatus_t parse_initializer(pstate_t* pstate)
+# 53 "variable-definition-parser.c"
+{
+
+# 55 "variable-definition-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 56 "variable-definition-parser.c"
+  if (token_matches(pstate_peek(pstate, 0), "{"))
+
+# 56 "variable-definition-parser.c"
+  {
+
+# 57 "variable-definition-parser.c"
+    return parse_balanced_construct(pstate);
+  }
+
+# 59 "variable-definition-parser.c"
+  return pstate_error(pstate, saved_position, PARSE_ERROR_CLOSE_BRACKET_EXPECTED);
+}
+
+
+# 69 "variable-definition-parser.c"
+pstatus_t parse_variable_definition_node(pstate_t* pstate)
+# 69 "variable-definition-parser.c"
+{
+
+# 70 "variable-definition-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 71 "variable-definition-parser.c"
+  token_t* storage_class_specifier = ((void *)0);
+
+# 73 "variable-definition-parser.c"
+  while ((pstate_expect_token_string(pstate, "static")||pstate_expect_token_string(pstate_ignore_error(pstate), "extern")))
+
+# 74 "variable-definition-parser.c"
+  {
+
+# 75 "variable-definition-parser.c"
+    if ((storage_class_specifier!=((void *)0)))
+
+# 75 "variable-definition-parser.c"
+    {
+
+# 76 "variable-definition-parser.c"
+      return pstate_error(pstate, saved_position, PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);
+    }
+
+# 79 "variable-definition-parser.c"
+    (storage_class_specifier=pstate_get_result_token(pstate));
+  }
+
+# 81 "variable-definition-parser.c"
+  pstate_ignore_error(pstate);
+
+# 82 "variable-definition-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 82 "variable-definition-parser.c"
+  {
+
+# 83 "variable-definition-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 85 "variable-definition-parser.c"
+  type_node_t* type_node = to_type_node(pstate_get_result_node(pstate));
+
+# 86 "variable-definition-parser.c"
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+
+# 86 "variable-definition-parser.c"
+  {
+
+# 87 "variable-definition-parser.c"
+    return pstate_error(pstate, saved_position, PARSE_ERROR_IDENTIFIER_EXPECTED);
+  }
+
+# 90 "variable-definition-parser.c"
+  token_t* name = pstate_get_result_token(pstate);
+
+# 92 "variable-definition-parser.c"
+  variable_definition_node_t* result = make_variable_definition_node();
+
+# 93 "variable-definition-parser.c"
+  ((result->type)=type_node);
+
+# 94 "variable-definition-parser.c"
+  ((result->name)=name);
+
+# 96 "variable-definition-parser.c"
+  while (pstate_match_token_string(pstate, "["))
+
+# 96 "variable-definition-parser.c"
+  {
+
+# 97 "variable-definition-parser.c"
+    if ((!parse_balanced_construct(pstate)))
+
+# 97 "variable-definition-parser.c"
+    {
+
+# 98 "variable-definition-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 100 "variable-definition-parser.c"
+    if (((result->suffixes)==((void *)0)))
+
+# 100 "variable-definition-parser.c"
+    {
+
+# 101 "variable-definition-parser.c"
+      ((result->suffixes)=make_value_array(1));
+    }
+
+# 103 "variable-definition-parser.c"
+    value_array_add((result->suffixes), ptr_to_value(pstate_get_result_node(pstate)));
+  }
+
+# 107 "variable-definition-parser.c"
+  if (pstate_expect_token_string(pstate, "="))
+
+# 107 "variable-definition-parser.c"
+  {
+
+# 108 "variable-definition-parser.c"
+    if ((parse_initializer(pstate)||parse_expression(pstate_ignore_error(pstate))))
+
+# 109 "variable-definition-parser.c"
+    {
+
+# 110 "variable-definition-parser.c"
+      ((result->value)=pstate_get_result_node(pstate));
+    }
+    else
+
+# 111 "variable-definition-parser.c"
+    {
+
+# 112 "variable-definition-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+  }
+  else
+
+# 114 "variable-definition-parser.c"
+  {
+
+# 115 "variable-definition-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 118 "variable-definition-parser.c"
+  if ((!pstate_expect_token_string(pstate, ";")))
+
+# 118 "variable-definition-parser.c"
+  {
+
+# 119 "variable-definition-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 122 "variable-definition-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 73 "literal-parser.c"
+pstatus_t parse_literal_node(pstate_t* pstate)
+# 73 "literal-parser.c"
+{
+
+# 74 "literal-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 75 "literal-parser.c"
+  if (pstate_expect_token_type(pstate, TOKEN_TYPE_STRING_LITERAL))
+
+# 75 "literal-parser.c"
+  {
+
+# 76 "literal-parser.c"
+    literal_node_t* result = make_literal_node();
+
+# 77 "literal-parser.c"
+    ((result->tokens)=make_value_array(1));
+
+# 78 "literal-parser.c"
+    value_array_add((result->tokens), ptr_to_value(pstate_get_result_token(pstate)));
+
+# 80 "literal-parser.c"
+    while (pstate_expect_token_type(pstate, TOKEN_TYPE_STRING_LITERAL))
+
+# 80 "literal-parser.c"
+    {
+
+# 81 "literal-parser.c"
+      value_array_add((result->tokens), ptr_to_value(pstate_get_result_token(pstate)));
+    }
+
+# 84 "literal-parser.c"
+    pstate_ignore_error(pstate);
+
+# 85 "literal-parser.c"
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+
+# 88 "literal-parser.c"
+  if (((pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_INTEGER_LITERAL)||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_FLOAT_LITERAL))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_CHARACTER_LITERAL)))
+
+# 93 "literal-parser.c"
+  {
+
+# 94 "literal-parser.c"
+    literal_node_t* result = make_literal_node();
+
+# 95 "literal-parser.c"
+    ((result->tokens)=make_value_array(1));
+
+# 96 "literal-parser.c"
+    value_array_add((result->tokens), ptr_to_value(pstate_get_result_token(pstate)));
+
+# 98 "literal-parser.c"
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+  else
+
+# 99 "literal-parser.c"
+  {
+
+# 100 "literal-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 103 "literal-parser.c"
+  if (pstate_match_token_string(pstate, "{"))
+
+# 103 "literal-parser.c"
+  {
+
+# 104 "literal-parser.c"
+    if ((!parse_balanced_construct(pstate)))
+
+# 104 "literal-parser.c"
+    {
+
+# 105 "literal-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 107 "literal-parser.c"
+    literal_node_t* result = make_literal_node();
+
+# 108 "literal-parser.c"
+    ((result->initializer_node)=pstate_get_result_node(pstate));
+
+# 109 "literal-parser.c"
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+
+# 115 "literal-parser.c"
+  if (pstate_match_token_string(pstate, "compound_literal"))
+
+# 115 "literal-parser.c"
+  {
+
+# 116 "literal-parser.c"
+    pstate_advance(pstate);
+
+# 117 "literal-parser.c"
+    if (((!pstate_expect_token_string(pstate, "("))||(!parse_type_node(pstate))))
+
+# 117 "literal-parser.c"
+    {
+
+# 118 "literal-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 120 "literal-parser.c"
+    parse_node_t* type_node = pstate_get_result_node(pstate);
+
+# 121 "literal-parser.c"
+    if ((!pstate_expect_token_string(pstate, ",")))
+
+# 121 "literal-parser.c"
+    {
+
+# 122 "literal-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 124 "literal-parser.c"
+    if ((!parse_balanced_construct(pstate)))
+
+# 124 "literal-parser.c"
+    {
+
+# 125 "literal-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 127 "literal-parser.c"
+    parse_node_t* initializer_node = pstate_get_result_node(pstate);
+
+# 128 "literal-parser.c"
+    if ((!pstate_expect_token_string(pstate, ")")))
+
+# 128 "literal-parser.c"
+    {
+
+# 129 "literal-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 132 "literal-parser.c"
+    literal_node_t* result = make_literal_node();
+
+# 133 "literal-parser.c"
+    ((result->initializer_node)=initializer_node);
+
+# 134 "literal-parser.c"
+    ((result->initializer_type)=type_node);
+
+# 135 "literal-parser.c"
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+
+# 138 "literal-parser.c"
+  if (parse_compound_literal(pstate))
+
+# 138 "literal-parser.c"
+  {
+
+# 139 "literal-parser.c"
+    return true;
+  }
+  else
+
+# 140 "literal-parser.c"
+  {
+
+# 141 "literal-parser.c"
+    pstate_ignore_error(pstate);
+  }
+
+# 144 "literal-parser.c"
+  if (((((((pstate_expect_token_string(pstate, "NULL")||pstate_expect_token_string(pstate_ignore_error(pstate), "nullptr"))||pstate_expect_token_string(pstate_ignore_error(pstate), "true"))||pstate_expect_token_string(pstate_ignore_error(pstate), "false"))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_INTEGER_LITERAL))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_FLOAT_LITERAL))||pstate_expect_token_type(pstate_ignore_error(pstate), TOKEN_TYPE_CHARACTER_LITERAL)))
+
+# 153 "literal-parser.c"
+  {
+
+# 154 "literal-parser.c"
+    literal_node_t* result = make_literal_node();
+
+# 155 "literal-parser.c"
+    ((result->token)=pstate_get_result_token(pstate));
+
+# 156 "literal-parser.c"
+    return pstate_set_result_node(pstate, to_node(result));
+  }
+
+# 159 "literal-parser.c"
+  return pstate_error(pstate, saved_position, PARSE_ERROR_NOT_LITERAL_NODE);
+}
+
+
+# 163 "literal-parser.c"
+pstatus_t parse_compound_literal(pstate_t* pstate)
+# 163 "literal-parser.c"
+{
+
+# 164 "literal-parser.c"
+  log_info("Trying to parse a casted compound literal...");
+
+# 166 "literal-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 167 "literal-parser.c"
+  if ((!pstate_expect_token_string(pstate, "(")))
+
+# 167 "literal-parser.c"
+  {
+
+# 168 "literal-parser.c"
+    log_info("Failed to match expected token '('...");
+
+# 169 "literal-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 171 "literal-parser.c"
+  log_info("MATCHED token '('...");
+
+# 172 "literal-parser.c"
+  if ((!parse_type_node(pstate)))
+
+# 172 "literal-parser.c"
+  {
+
+# 173 "literal-parser.c"
+    log_info("Failed to match a parse type node...");
+
+# 174 "literal-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 176 "literal-parser.c"
+  log_info("MATCHED type...");
+
+# 177 "literal-parser.c"
+  parse_node_t* type_node = pstate_get_result_node(pstate);
+
+# 178 "literal-parser.c"
+  if ((!pstate_expect_token_string(pstate, ")")))
+
+# 178 "literal-parser.c"
+  {
+
+# 179 "literal-parser.c"
+    log_info("Failed to match expected token ')'...");
+
+# 180 "literal-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 182 "literal-parser.c"
+  log_info("MATCHED ')'...");
+
+# 183 "literal-parser.c"
+  if ((!pstate_expect_token_string(pstate, "{")))
+
+# 183 "literal-parser.c"
+  {
+
+# 184 "literal-parser.c"
+    log_info("Failed to match expected token '{'...");
+
+# 185 "literal-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 187 "literal-parser.c"
+  log_info("MATCHED '{'...");
+
+# 188 "literal-parser.c"
+  node_list_t initializers = ((node_list_t) {0});
+
+# 190 "literal-parser.c"
+  while (true)
+
+# 190 "literal-parser.c"
+  {
+
+# 191 "literal-parser.c"
+    if (pstate_is_eof(pstate))
+
+# 191 "literal-parser.c"
+    {
+
+# 192 "literal-parser.c"
+      log_info("Didn't find a matching '}' before EOF...");
+
+# 193 "literal-parser.c"
+      return pstate_propagate_error(pstate, saved_position);
+    }
+
+# 195 "literal-parser.c"
+    if (pstate_match_token_string(pstate, "}"))
+
+# 195 "literal-parser.c"
+    {
+
+# 196 "literal-parser.c"
+      log_info("MATCHED expected token '}'...");
+
+# 197 "literal-parser.c"
+      pstate_advance(pstate);
+
+# 198 "literal-parser.c"
+      break;
+    }
+
+# 201 "literal-parser.c"
+    if ((node_list_length(initializers)>0))
+
+# 201 "literal-parser.c"
+    {
+
+# 202 "literal-parser.c"
+      if ((!pstate_expect_token_string(pstate, ",")))
+
+# 202 "literal-parser.c"
+      {
+
+# 203 "literal-parser.c"
+        log_info("Failed to match expected token ','...");
+
+# 204 "literal-parser.c"
+        return pstate_propagate_error(pstate, saved_position);
+      }
+
+# 206 "literal-parser.c"
+      log_info("MATCHED expected token ','...");
+    }
+
+# 209 "literal-parser.c"
+    if (parse_designated_initializer_node(pstate))
+
+# 209 "literal-parser.c"
+    {
+
+# 210 "literal-parser.c"
+      log_info("MATCHED designated initializer...");
+
+# 211 "literal-parser.c"
+      parse_node_t* initializer = pstate_get_result_node(pstate);
+
+# 212 "literal-parser.c"
+      node_list_add_node((&initializers), initializer);
+    }
+    else
+
+# 213 "literal-parser.c"
+    {
+
+# 214 "literal-parser.c"
+      log_info("Failed to match a designated initializer (trying literal node)...");
+
+# 216 "literal-parser.c"
+      if (parse_literal_node(pstate))
+
+# 216 "literal-parser.c"
+      {
+
+# 217 "literal-parser.c"
+        log_info("MATCHED literal...");
+
+# 218 "literal-parser.c"
+        parse_node_t* initializer = pstate_get_result_node(pstate);
+
+# 219 "literal-parser.c"
+        node_list_add_node((&initializers), initializer);
+      }
+      else
+
+# 220 "literal-parser.c"
+      {
+
+# 221 "literal-parser.c"
+        log_info("Failed to match designated initializer or literal...");
+
+# 222 "literal-parser.c"
+        return pstate_error(pstate, saved_position, PARSE_ERROR_BAD_INITIALIZER);
+      }
+    }
+  }
+
+# 228 "literal-parser.c"
+  compound_literal_node_t* result = make_compound_literal_node();
+
+# 229 "literal-parser.c"
+  ((result->type_node)=type_node);
+
+# 230 "literal-parser.c"
+  ((result->initializers)=initializers);
+
+# 231 "literal-parser.c"
+  pstate_set_result_node(pstate, to_node(result));
+
+# 233 "literal-parser.c"
+  return true;
+}
+
+
+# 237 "literal-parser.c"
+pstatus_t parse_designated_initializer_node(pstate_t* pstate)
+# 237 "literal-parser.c"
+{
+
+# 238 "literal-parser.c"
+  log_info("Trying to parse a designated_initializer_node...");
+
+# 240 "literal-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 244 "literal-parser.c"
+  if ((!pstate_expect_token_string(pstate, ".")))
+
+# 244 "literal-parser.c"
+  {
+
+# 245 "literal-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 247 "literal-parser.c"
+  if ((!pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)))
+
+# 247 "literal-parser.c"
+  {
+
+# 248 "literal-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 251 "literal-parser.c"
+  token_t* member_name = pstate_get_result_token(pstate);
+
+# 253 "literal-parser.c"
+  if ((!pstate_expect_token_string(pstate, "=")))
+
+# 253 "literal-parser.c"
+  {
+
+# 254 "literal-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 257 "literal-parser.c"
+  if ((!parse_expression(pstate)))
+
+# 257 "literal-parser.c"
+  {
+
+# 258 "literal-parser.c"
+    return pstate_propagate_error(pstate, saved_position);
+  }
+
+# 261 "literal-parser.c"
+  designated_initializer_node_t* result = make_designated_initializer_node();
+
+# 262 "literal-parser.c"
+  ((result->member_name)=member_name);
+
+# 263 "literal-parser.c"
+  ((result->value)=pstate_get_result_node(pstate));
+
+# 264 "literal-parser.c"
+  pstate_set_result_node(pstate, to_node(result));
+
+# 266 "literal-parser.c"
+  return true;
+}
+
+
+# 48 "balanced-construct-parser.c"
+pstatus_t parse_balanced_construct(pstate_t* pstate)
+# 48 "balanced-construct-parser.c"
+{
+
+# 49 "balanced-construct-parser.c"
+  uint64_t saved_position = (pstate->position);
+
+# 51 "balanced-construct-parser.c"
+  int open_parens = 0;
+
+# 52 "balanced-construct-parser.c"
+  int open_brackets = 0;
+
+# 53 "balanced-construct-parser.c"
+  int open_braces = 0;
+
+# 54 "balanced-construct-parser.c"
+  do
+# 54 "balanced-construct-parser.c"
+  {
+
+# 55 "balanced-construct-parser.c"
+    if (pstate_expect_token_string(pstate, "("))
+
+# 55 "balanced-construct-parser.c"
+    {
+
+# 56 "balanced-construct-parser.c"
+      (open_parens++);
+    }
+    else
+
+# 57 "balanced-construct-parser.c"
+    if (pstate_expect_token_string(pstate_ignore_error(pstate), "["))
+
+# 57 "balanced-construct-parser.c"
+    {
+
+# 58 "balanced-construct-parser.c"
+      (open_brackets++);
+    }
+    else
+
+# 59 "balanced-construct-parser.c"
+    if (pstate_expect_token_string(pstate_ignore_error(pstate), "{"))
+
+# 59 "balanced-construct-parser.c"
+    {
+
+# 60 "balanced-construct-parser.c"
+      (open_braces++);
+    }
+    else
+
+# 61 "balanced-construct-parser.c"
+    if (pstate_expect_token_string(pstate_ignore_error(pstate), ")"))
+
+# 61 "balanced-construct-parser.c"
+    {
+
+# 62 "balanced-construct-parser.c"
+      (open_parens--);
+    }
+    else
+
+# 63 "balanced-construct-parser.c"
+    if (pstate_expect_token_string(pstate_ignore_error(pstate), "]"))
+
+# 63 "balanced-construct-parser.c"
+    {
+
+# 64 "balanced-construct-parser.c"
+      (open_brackets--);
+    }
+    else
+
+# 65 "balanced-construct-parser.c"
+    if (pstate_expect_token_string(pstate_ignore_error(pstate), "}"))
+
+# 65 "balanced-construct-parser.c"
+    {
+
+# 66 "balanced-construct-parser.c"
+      (open_braces--);
+    }
+    else
+
+# 67 "balanced-construct-parser.c"
+    {
+
+# 68 "balanced-construct-parser.c"
+      pstate_advance(pstate_ignore_error(pstate));
+    }
+  }
+  while (((((open_parens+open_brackets)+open_braces)>0)&&((pstate->position)<((pstate->tokens)->length))));
+
+# 73 "balanced-construct-parser.c"
+  if (((pstate->position)==(saved_position+1)))
+
+# 73 "balanced-construct-parser.c"
+  {
+
+# 75 "balanced-construct-parser.c"
+    return pstate_error(pstate, saved_position, PARSE_ERROR_OPEN_BRACE_EXPECTED);
+  }
+
+# 79 "balanced-construct-parser.c"
+  balanced_construct_node_t* result = make_balanced_construct_node();
+
+# 80 "balanced-construct-parser.c"
+  ((result->start_token)=token_at((pstate->tokens), saved_position));
+
+# 81 "balanced-construct-parser.c"
+  ((result->end_token)=pstate_peek(pstate, (-1)));
+
+# 83 "balanced-construct-parser.c"
+  return pstate_set_result_node(pstate, to_node(result));
+}
+
+
+# 21 "printer.c"
+printer_t* make_printer(buffer_t* buffer, symbol_table_t* symbol_table, int indent_width)
+# 22 "printer.c"
+{
+
+# 23 "printer.c"
+  printer_t* result = malloc_struct(printer_t);
+
+# 24 "printer.c"
+  ((result->symbol_table)=symbol_table);
+
+# 25 "printer.c"
+  ((result->buffer)=buffer);
+
+# 26 "printer.c"
+  ((result->indent_width)=indent_width);
+
+# 27 "printer.c"
+  ((result->convert_nullptr)=true);
+
+# 28 "printer.c"
+  ((result->output_line_directives)=true);
+
+# 29 "printer.c"
+  return result;
+}
+
+
+# 32 "printer.c"
+printer_t* append_string(printer_t* printer, char* string)
+# 32 "printer.c"
+{
+
+# 33 "printer.c"
+  buffer_append_string((printer->buffer), string);
+
+# 34 "printer.c"
+  return printer;
+}
+
+
+# 37 "printer.c"
+printer_t* append_token(printer_t* printer, token_t* token)
+# 37 "printer.c"
+{
+
+# 38 "printer.c"
+  buffer_append_sub_buffer((printer->buffer), (token->start), (token->end), (token->buffer));
+
+# 40 "printer.c"
+  return printer;
+}
+
+
+# 43 "printer.c"
+printer_t* printer_newline(printer_t* printer)
+# 43 "printer.c"
+{
+
+# 44 "printer.c"
+  buffer_append_byte((printer->buffer), '\n');
+
+# 45 "printer.c"
+  return printer;
+}
+
+
+# 48 "printer.c"
+printer_t* printer_space(printer_t* printer)
+# 48 "printer.c"
+{
+
+# 49 "printer.c"
+  buffer_append_byte((printer->buffer), ' ');
+
+# 50 "printer.c"
+  return printer;
+}
+
+
+# 53 "printer.c"
+printer_t* printer_indent(printer_t* printer)
+# 53 "printer.c"
+{
+
+# 54 "printer.c"
+  buffer_append_repeated_byte((printer->buffer), ' ', ((printer->indent_width)*(printer->indent_level)));
+
+# 56 "printer.c"
+  return printer;
+}
+
+
+# 59 "printer.c"
+printer_t* printer_increase_indent(printer_t* printer)
+# 59 "printer.c"
+{
+
+# 60 "printer.c"
+  ((printer->indent_level)++);
+
+# 61 "printer.c"
+  return printer;
+}
+
+
+# 64 "printer.c"
+printer_t* printer_decrease_indent(printer_t* printer)
+# 64 "printer.c"
+{
+
+# 65 "printer.c"
+  ((printer->indent_level)--);
+
+# 66 "printer.c"
+  return printer;
+}
+
+
+# 25 "linearizer.c"
+void linearize_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node)
+# 26 "linearizer.c"
+{
+
+# 27 "linearizer.c"
+  switch ((node->tag))
+
+# 27 "linearizer.c"
+  {
+
+# 28 "linearizer.c"
+    case PARSE_NODE_BLOCK:
+
+# 29 "linearizer.c"
+    linearize_block(target_block, tmp_provider, to_block_node(node));
+
+# 30 "linearizer.c"
+    break;
+
+# 31 "linearizer.c"
+    case PARSE_NODE_BREAK_STATEMENT:
+
+# 32 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 33 "linearizer.c"
+    break;
+
+# 34 "linearizer.c"
+    case PARSE_NODE_CALL:
+
+# 35 "linearizer.c"
+    linearize_statement_call_node(target_block, tmp_provider, to_call_node(node));
+
+# 37 "linearizer.c"
+    break;
+
+# 38 "linearizer.c"
+    case PARSE_NODE_CASE_LABEL:
+
+# 39 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 40 "linearizer.c"
+    break;
+
+# 41 "linearizer.c"
+    case PARSE_NODE_COMPOUND_LITERAL:
+
+# 43 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 44 "linearizer.c"
+    break;
+
+# 45 "linearizer.c"
+    case PARSE_NODE_CONDITIONAL:
+
+# 48 "linearizer.c"
+    break;
+
+# 49 "linearizer.c"
+    case PARSE_NODE_CONTINUE_STATEMENT:
+
+# 50 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 51 "linearizer.c"
+    break;
+
+# 52 "linearizer.c"
+    case PARSE_NODE_DEFAULT_LABEL:
+
+# 53 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 54 "linearizer.c"
+    break;
+
+# 55 "linearizer.c"
+    case PARSE_NODE_DESIGNATED_INITIALIZER:
+
+# 57 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 58 "linearizer.c"
+    break;
+
+# 59 "linearizer.c"
+    case PARSE_NODE_DO_STATEMENT:
+
+# 60 "linearizer.c"
+    linearize_do_statement(target_block, tmp_provider, to_do_statement_node(node));
+
+# 62 "linearizer.c"
+    break;
+
+# 63 "linearizer.c"
+    case PARSE_NODE_EMPTY_STATEMENT:
+
+# 66 "linearizer.c"
+    break;
+
+# 67 "linearizer.c"
+    case PARSE_NODE_EXPRESSION_STATEMENT:
+
+# 68 "linearizer.c"
+    linearize_expression_statement(target_block, tmp_provider, to_expression_statement_node(node));
+
+# 70 "linearizer.c"
+    break;
+
+# 71 "linearizer.c"
+    case PARSE_NODE_FOR_STATEMENT:
+
+# 73 "linearizer.c"
+    break;
+
+# 74 "linearizer.c"
+    case PARSE_NODE_IF_STATEMENT:
+
+# 75 "linearizer.c"
+    linearize_if_statement(target_block, tmp_provider, to_if_statement_node(node));
+
+# 77 "linearizer.c"
+    break;
+
+# 78 "linearizer.c"
+    case PARSE_NODE_LABEL_STATEMENT:
+
+# 79 "linearizer.c"
+    node_list_add_node((&(target_block->statements)), node);
+
+# 80 "linearizer.c"
+    break;
+
+# 81 "linearizer.c"
+    case PARSE_NODE_RETURN_STATEMENT:
+
+# 82 "linearizer.c"
+    break;
+
+# 83 "linearizer.c"
+    case PARSE_NODE_SWITCH_STATEMENT:
+
+# 84 "linearizer.c"
+    break;
+
+# 85 "linearizer.c"
+    case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 86 "linearizer.c"
+    break;
+
+# 87 "linearizer.c"
+    case PARSE_NODE_WHILE_STATEMENT:
+
+# 88 "linearizer.c"
+    break;
+
+# 90 "linearizer.c"
+    case PARSE_NODE_BALANCED_CONSTRUCT:
+
+# 91 "linearizer.c"
+    default:
+
+# 92 "linearizer.c"
+    log_fatal("Unexpected input node to linearizer %s", parse_node_type_to_string((node->tag)));
+
+# 94 "linearizer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 104 "linearizer.c"
+void linearize_expression(block_node_t* target_block, tmp_provider_t* tmp_provider, parse_node_t* node, token_t* target)
+# 106 "linearizer.c"
+{
+
+# 107 "linearizer.c"
+  switch ((node->tag))
+
+# 107 "linearizer.c"
+  {
+
+# 108 "linearizer.c"
+    case PARSE_NODE_CALL:
+
+# 109 "linearizer.c"
+    break;
+
+# 110 "linearizer.c"
+    case PARSE_NODE_COMPOUND_LITERAL:
+
+# 111 "linearizer.c"
+    break;
+
+# 112 "linearizer.c"
+    case PARSE_NODE_CONDITIONAL:
+
+# 114 "linearizer.c"
+    break;
+
+# 115 "linearizer.c"
+    case PARSE_NODE_IDENTIFIER:
+
+# 117 "linearizer.c"
+    break;
+
+# 118 "linearizer.c"
+    case PARSE_NODE_LITERAL:
+
+# 119 "linearizer.c"
+    break;
+
+# 120 "linearizer.c"
+    case PARSE_NODE_OPERATOR:
+
+# 121 "linearizer.c"
+    break;
+
+# 122 "linearizer.c"
+    case PARSE_NODE_TYPE:
+
+# 123 "linearizer.c"
+    break;
+
+# 124 "linearizer.c"
+    case PARSE_NODE_VARIABLE_DEFINITION:
+
+# 125 "linearizer.c"
+    break;
+
+# 126 "linearizer.c"
+    case PARSE_NODE_BALANCED_CONSTRUCT:
+
+# 127 "linearizer.c"
+    break;
+
+# 128 "linearizer.c"
+    default:
+
+# 129 "linearizer.c"
+    log_fatal("Unexpected input node to linearizer %s", parse_node_type_to_string((node->tag)));
+
+# 131 "linearizer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 135 "linearizer.c"
+void linearize_block(block_node_t* target_block, tmp_provider_t* tmp_provider, block_node_t* node)
+# 136 "linearizer.c"
+{
+
+# 137 "linearizer.c"
+  uint64_t length = node_list_length((node->statements));
+
+# 138 "linearizer.c"
+  for (
+
+# 138 "linearizer.c"
+
+# 138 "linearizer.c"
+    uint64_t i = 0;
+
+# 138 "linearizer.c"
+    (i<length);
+
+# 138 "linearizer.c"
+    (i++))
+
+# 138 "linearizer.c"
+  {
+
+# 139 "linearizer.c"
+    linearize_statement(target_block, tmp_provider, node_list_get((node->statements), i));
+  }
+}
+
+
+# 145 "linearizer.c"
+void linearize_statement_call_node(block_node_t* target_block, tmp_provider_t* tmp_provider, call_node_t* node)
+# 147 "linearizer.c"
+{
+
+# 148 "linearizer.c"
+  call_node_t* rewritten = make_call_node();
+
+# 149 "linearizer.c"
+  if ((((node->function)->tag)==PARSE_NODE_IDENTIFIER))
+
+# 149 "linearizer.c"
+  {
+
+# 150 "linearizer.c"
+    ((rewritten->function)=(node->function));
+  }
+  else
+
+# 151 "linearizer.c"
+  {
+
+# 152 "linearizer.c"
+    token_t* fn_ptr_target = (tmp_provider->get)(tmp_provider);
+
+# 153 "linearizer.c"
+    linearize_expression(target_block, tmp_provider, (node->function), fn_ptr_target);
+
+# 155 "linearizer.c"
+    ((rewritten->function)=tmp_to_var_reference(fn_ptr_target));
+  }
+
+# 158 "linearizer.c"
+  for (
+
+# 158 "linearizer.c"
+
+# 158 "linearizer.c"
+    int i = 0;
+
+# 158 "linearizer.c"
+    (i<node_list_length((node->args)));
+
+# 158 "linearizer.c"
+    (i++))
+
+# 158 "linearizer.c"
+  {
+
+# 159 "linearizer.c"
+    parse_node_t* arg = node_list_get((node->args), i);
+
+# 160 "linearizer.c"
+    token_t* arg_target = (tmp_provider->get)(tmp_provider);
+
+# 161 "linearizer.c"
+    linearize_expression(target_block, tmp_provider, arg, arg_target);
+
+# 162 "linearizer.c"
+    node_list_add_node((&(rewritten->args)), tmp_to_var_reference(arg_target));
+  }
+
+# 164 "linearizer.c"
+  node_list_add_node((&(target_block->statements)), to_node(rewritten));
+}
+
+
+# 167 "linearizer.c"
+void linearize_if_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, if_statement_node_t* node)
+# 169 "linearizer.c"
+{
+
+# 171 "linearizer.c"
+  token_t* condition_target = (tmp_provider->get)(tmp_provider);
+
+# 172 "linearizer.c"
+  linearize_expression(target_block, tmp_provider, (node->if_condition), condition_target);
+
+# 175 "linearizer.c"
+  block_node_t* if_true = make_block_node(((void *)0));
+
+# 176 "linearizer.c"
+  if (((node->if_true)!=((void *)0)))
+
+# 176 "linearizer.c"
+  {
+
+# 177 "linearizer.c"
+    linearize_statement(if_true, tmp_provider, (node->if_true));
+  }
+
+# 180 "linearizer.c"
+  block_node_t* if_else = make_block_node(((void *)0));
+
+# 181 "linearizer.c"
+  if (((node->if_else)!=((void *)0)))
+
+# 181 "linearizer.c"
+  {
+
+# 182 "linearizer.c"
+    linearize_statement(if_else, tmp_provider, (node->if_else));
+  }
+
+# 185 "linearizer.c"
+  node_list_add_node((&(target_block->statements)), to_node(make_if_statement((node->first_token), tmp_to_var_reference(condition_target), to_node(if_true), to_node(if_else))));
+}
+
+
+# 192 "linearizer.c"
+void linearize_do_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, do_statement_node_t* node)
+# 194 "linearizer.c"
+{
+
+# 195 "linearizer.c"
+  block_node_t* body = make_block_node(((void *)0));
+
+# 196 "linearizer.c"
+  linearize_statement(body, tmp_provider, (node->body));
+
+# 197 "linearizer.c"
+  token_t* condition_target = (tmp_provider->get)(tmp_provider);
+
+# 198 "linearizer.c"
+  linearize_expression(body, tmp_provider, (node->condition), condition_target);
+
+# 199 "linearizer.c"
+  node_list_add_node((&(target_block->statements)), to_node(make_do_statement((node->first_token), to_node(body), tmp_to_var_reference(condition_target))));
+}
+
+
+# 213 "linearizer.c"
+void linearize_expression_statement(block_node_t* target_block, tmp_provider_t* tmp_provider, expression_statement_node_t* node)
+# 215 "linearizer.c"
+{
+
+# 216 "linearizer.c"
+  token_t* target = (tmp_provider->get)(tmp_provider);
+
+# 217 "linearizer.c"
+  linearize_expression(target_block, tmp_provider, (node->expression), target);
+}
+
+
+# 244 "linearizer.c"
+tmp_provider_t* make_tmp_provider()
+# 244 "linearizer.c"
+{
+
+# 245 "linearizer.c"
+  tmp_provider_t* result = malloc_struct(tmp_provider_t);
+
+# 246 "linearizer.c"
+  ((result->get)=(&tmp_provider_get));
+
+# 247 "linearizer.c"
+  return result;
+}
+
+
+# 250 "linearizer.c"
+token_t* tmp_provider_get(tmp_provider_t* data)
+# 250 "linearizer.c"
+{
+
+# 251 "linearizer.c"
+  token_t* result = malloc_struct(token_t);
+
+# 252 "linearizer.c"
+  ((result->buffer)=make_buffer(8));
+
+# 253 "linearizer.c"
+  buffer_printf((result->buffer), "tmp__%d", ((data->count)++));
+
+# 254 "linearizer.c"
+  ((result->end)=((result->buffer)->length));
+
+# 255 "linearizer.c"
+  return result;
+}
+
+
+# 258 "linearizer.c"
+parse_node_t* tmp_to_var_reference(token_t* tmp)
+# 258 "linearizer.c"
+{
+
+# 259 "linearizer.c"
+  identifier_node_t* result = make_identifier_node();
+
+# 260 "linearizer.c"
+  ((result->token)=tmp);
+
+# 261 "linearizer.c"
+  return (/*CAST*/(parse_node_t*) result);
+}
+
+
+# 15 "main.c"
+int main(int argc, char** argv)
+# 15 "main.c"
+{
+
+# 16 "main.c"
+  configure_fatal_errors(((fatal_error_config_t) {
+                                                 .catch_sigsegv = true,
+                                             }));
+
+# 20 "main.c"
+  logger_init();
+
+# 22 "main.c"
+  configure_flags();
+
+# 24 "main.c"
+  char* error = flag_parse_command_line(argc, argv);
+
+# 25 "main.c"
+  if (error)
+
+# 25 "main.c"
+  {
+
+# 26 "main.c"
+    flag_print_help(stderr, error);
+
+# 27 "main.c"
+    exit(1);
+  }
+
+# 30 "main.c"
+  if (FLAG_print_command_line)
+
+# 30 "main.c"
+  {
+
+# 31 "main.c"
+    fprintf(stderr, "Command Line:");
+
+# 32 "main.c"
+    for (
+
+# 32 "main.c"
+
+# 32 "main.c"
+      int i = 0;
+
+# 32 "main.c"
+      (i<argc);
+
+# 32 "main.c"
+      (i++))
+
+# 32 "main.c"
+    {
+
+# 33 "main.c"
+      fprintf(stderr, " %s", (argv[i]));
+    }
+
+# 35 "main.c"
+    fprintf(stderr, "\n");
+  }
+
+# 38 "main.c"
+  if ((FLAG_command==((void *)0)))
+
+# 38 "main.c"
+  {
+
+# 43 "main.c"
+    fatal_error(ERROR_BAD_COMMAND_LINE);
+  }
+  else
+
+# 44 "main.c"
+  if (string_equal("archive", FLAG_command))
+
+# 44 "main.c"
+  {
+
+# 45 "main.c"
+    archive_command();
+  }
+  else
+
+# 46 "main.c"
+  if (string_equal("generate-header-file", FLAG_command))
+
+# 46 "main.c"
+  {
+
+# 47 "main.c"
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+
+# 48 "main.c"
+    generate_header_file_command(command_line_comment);
+  }
+  else
+
+# 49 "main.c"
+  if (string_equal("generate-library", FLAG_command))
+
+# 49 "main.c"
+  {
+
+# 50 "main.c"
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+
+# 51 "main.c"
+    generate_library_command(command_line_comment);
+  }
+  else
+
+# 52 "main.c"
+  if (string_equal("build", FLAG_command))
+
+# 52 "main.c"
+  {
+
+# 53 "main.c"
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+
+# 54 "main.c"
+    build_command(command_line_comment);
+  }
+  else
+
+# 55 "main.c"
+  if (string_equal("test", FLAG_command))
+
+# 55 "main.c"
+  {
+
+# 56 "main.c"
+    buffer_t* command_line_comment = command_line_args_to_buffer(argc, argv);
+
+# 57 "main.c"
+    test_command(command_line_comment);
+  }
+  else
+
+# 58 "main.c"
+  if (string_equal("print-tokens", FLAG_command))
+
+# 58 "main.c"
+  {
+
+# 59 "main.c"
+    print_tokens();
+  }
+  else
+
+# 60 "main.c"
+  if (string_equal("test-assembler", FLAG_command))
+
+# 60 "main.c"
+  {
+
+# 61 "main.c"
+    test_assembler_command();
+  }
+  else
+
+# 62 "main.c"
+  if (string_equal("roci", FLAG_command))
+
+# 62 "main.c"
+  {
+
+# 63 "main.c"
+    roci_command();
+  }
+  else
+
+# 64 "main.c"
+  if (string_equal("repl", FLAG_command))
+
+# 64 "main.c"
+  {
+
+# 65 "main.c"
+    roci_env_t* env = roci_new_env(((void *)0));
+
+# 66 "main.c"
+    roci_add_primitives_to_env(env);
+
+# 67 "main.c"
+    roci_repl(env);
+  }
+  else
+
+# 68 "main.c"
+  {
+
+# 69 "main.c"
+    fprintf(stderr, "Unknown command: %s\n", FLAG_command);
+  }
+
+# 72 "main.c"
+  exit(0);
+}
+
+
+# 83 "main.c"
+buffer_t* command_line_args_to_buffer(int argc, char** argv)
+# 83 "main.c"
+{
+
+# 84 "main.c"
+  buffer_t* output = make_buffer((argc*5));
+
+# 86 "main.c"
+  buffer_printf(output, "// Full Compiler Command Line:\n//\n");
+
+# 87 "main.c"
+  for (
+
+# 87 "main.c"
+
+# 87 "main.c"
+    int i = 0;
+
+# 87 "main.c"
+    (i<argc);
+
+# 87 "main.c"
+    (i++))
+
+# 87 "main.c"
+  {
+
+# 88 "main.c"
+    buffer_printf(output, "//%s%s\n", ((i>0) ? "    " : " "), (argv[i]));
+  }
+
+# 91 "main.c"
+  buffer_append_string(output, "\n");
+
+# 92 "main.c"
+  buffer_append_string(output, "// These checksums are currently easy to fake for example by using a\n");
+
+# 95 "main.c"
+  buffer_append_string(output, "// hacked git in the PATH at the time this compile was run.\n");
+
+# 97 "main.c"
+  buffer_append_string(output, "//\n");
+
+# 99 "main.c"
+  for (
+
+# 99 "main.c"
+
+# 99 "main.c"
+    int i = 0;
+
+# 99 "main.c"
+    (i<(FLAG_files->length));
+
+# 99 "main.c"
+    (i++))
+
+# 99 "main.c"
+  {
+
+# 100 "main.c"
+    char* filename = (value_array_get(FLAG_files, i).str);
+
+# 102 "main.c"
+    buffer_t* git_hash = git_hash_object(filename);
+
+# 103 "main.c"
+    buffer_replace_all(git_hash, "\n", "");
+
+# 104 "main.c"
+    buffer_append_string(output, "// git cat-file -p ");
+
+# 105 "main.c"
+    buffer_append_buffer(output, git_hash);
+
+# 106 "main.c"
+    buffer_printf(output, " > %s\n", filename);
+  }
+
+# 109 "main.c"
+  return output;
+}
+
+
+# 8 "archive-command.c"
+void archive_command(void)
+# 8 "archive-command.c"
+{
+
+# 9 "archive-command.c"
+  generate_archive_file();
+
+# 10 "archive-command.c"
+  log_info("Exiting normally.");
+
+# 11 "archive-command.c"
+  exit(0);
+}
+
+
+# 14 "archive-command.c"
+void generate_archive_file(void)
+# 14 "archive-command.c"
+{
+
+# 15 "archive-command.c"
+  if ((FLAG_archive_output_file==((void *)0)))
+
+# 15 "archive-command.c"
+  {
+
+# 16 "archive-command.c"
+    log_fatal("Must specify the archive output file name");
+
+# 17 "archive-command.c"
+    exit((-1));
+  }
+
+# 19 "archive-command.c"
+  if (((FLAG_files==((void *)0))||((FLAG_files->length)==0)))
+
+# 19 "archive-command.c"
+  {
+
+# 20 "archive-command.c"
+    log_warn("No archive members specified.");
+
+# 21 "archive-command.c"
+    exit((-1));
+  }
+
+# 25 "archive-command.c"
+  FILE* out = fopen(FLAG_archive_output_file, "w");
+
+# 26 "archive-command.c"
+  for (
+
+# 26 "archive-command.c"
+
+# 26 "archive-command.c"
+    int i = 0;
+
+# 26 "archive-command.c"
+    (i<(FLAG_files->length));
+
+# 26 "archive-command.c"
+    (i++))
+
+# 26 "archive-command.c"
+  {
+
+# 27 "archive-command.c"
+    oarchive_append_header_and_file_contents(out, (value_array_get(FLAG_files, i).str));
+  }
+
+# 30 "archive-command.c"
+  fclose(out);
+}
+
+
+# 8 "build-command.c"
+void build_command(buffer_t* command_line_comment)
+# 8 "build-command.c"
+{
+
+# 9 "build-command.c"
+  if (string_is_null_or_empty(FLAG_c_output_file))
+
+# 9 "build-command.c"
+  {
+
+# 10 "build-command.c"
+    log_fatal("Must supply --c-output-file");
+
+# 11 "build-command.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 13 "build-command.c"
+  if (string_is_null_or_empty(FLAG_binary_output_file))
+
+# 13 "build-command.c"
+  {
+
+# 14 "build-command.c"
+    log_fatal("Must supply --binary-output-file");
+
+# 15 "build-command.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 17 "build-command.c"
+  generate_c_output_file(OUTPUT_TYPE_C_LIBRARY_FILE, command_line_comment);
+
+# 18 "build-command.c"
+  int status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
+
+# 19 "build-command.c"
+  if ((status==0))
+
+# 19 "build-command.c"
+  {
+
+# 20 "build-command.c"
+    log_info("Exiting normally.");
+
+# 21 "build-command.c"
+    exit(0);
+  }
+  else
+
+# 22 "build-command.c"
+  {
+
+# 23 "build-command.c"
+    log_warn("Exiting abnormally.");
+
+# 24 "build-command.c"
+    exit(status);
+  }
+}
+
+
+# 22 "generate-c-output-file.c"
+void generate_c_output_file(output_file_type_t output_type, buffer_t* command_line_overview_comment)
+# 23 "generate-c-output-file.c"
+{
+
+# 25 "generate-c-output-file.c"
+  boolean_t is_header_file = (output_type==OUTPUT_TYPE_C_HEADER_FILE);
+
+# 27 "generate-c-output-file.c"
+  symbol_table_t* symbol_table = make_symbol_table();
+
+# 28 "generate-c-output-file.c"
+  parse_and_add_top_level_definitions(symbol_table, FLAG_files, FLAG_use_statement_parser);
+
+# 30 "generate-c-output-file.c"
+  dump_symbol_table("initial parse", symbol_table);
+
+# 31 "generate-c-output-file.c"
+  if (FLAG_generate_enum_convertors)
+
+# 31 "generate-c-output-file.c"
+  {
+
+# 32 "generate-c-output-file.c"
+    srcgen_enum_to_string_converters(symbol_table);
+
+# 33 "generate-c-output-file.c"
+    dump_symbol_table("enum to string generation", symbol_table);
+  }
+
+# 35 "generate-c-output-file.c"
+  split_structure_typedefs(symbol_table);
+
+# 36 "generate-c-output-file.c"
+  dump_symbol_table("split structures", symbol_table);
+
+# 37 "generate-c-output-file.c"
+  reorder_symbol_table_typedefs(symbol_table);
+
+# 38 "generate-c-output-file.c"
+  dump_symbol_table("reorder typedefs", symbol_table);
+
+# 39 "generate-c-output-file.c"
+  reorder_symbol_table_structures(symbol_table);
+
+# 40 "generate-c-output-file.c"
+  dump_symbol_table("reorder structures", symbol_table);
+
+# 42 "generate-c-output-file.c"
+  buffer_t* buffer = make_buffer((1024*8));
+
+# 43 "generate-c-output-file.c"
+  printer_t* printer = make_printer(buffer, symbol_table, 2);
+
+# 45 "generate-c-output-file.c"
+  add_generated_c_file_header(buffer);
+
+# 47 "generate-c-output-file.c"
+  char* guard_name = "_HEADER_FILE_GUARD_";
+
+# 49 "generate-c-output-file.c"
+  if (is_header_file)
+
+# 49 "generate-c-output-file.c"
+  {
+
+# 50 "generate-c-output-file.c"
+    buffer_printf(buffer, "#ifndef %s\n#define %s\n\n", guard_name, guard_name);
+  }
+
+# 53 "generate-c-output-file.c"
+  buffer_append_buffer(buffer, get_reflection_header_buffer());
+
+# 55 "generate-c-output-file.c"
+  boolean_t append_newline_after_system_includes = false;
+
+# 56 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== system includes ==========\n\n");
+
+# 57 "generate-c-output-file.c"
+  string_hashtable_t* system_includes_set = make_string_hashtable(19);
+
+# 58 "generate-c-output-file.c"
+  for (
+
+# 58 "generate-c-output-file.c"
+
+# 58 "generate-c-output-file.c"
+    uint64_t i = 0;
+
+# 58 "generate-c-output-file.c"
+    (i<((symbol_table->system_includes)->length));
+
+# 58 "generate-c-output-file.c"
+    (i++))
+
+# 58 "generate-c-output-file.c"
+  {
+
+# 59 "generate-c-output-file.c"
+    (append_newline_after_system_includes=true);
+
+# 60 "generate-c-output-file.c"
+    cpp_include_node_t* node = value_array_get_ptr((symbol_table->system_includes), i, typeof(cpp_include_node_t*));
+
+# 62 "generate-c-output-file.c"
+    char* include_statement = include_node_to_string(node);
+
+# 63 "generate-c-output-file.c"
+    if ((FLAG_omit_c_armyknife_include&&string_starts_with(include_statement, "#include <c-armyknife-lib")))
+
+# 64 "generate-c-output-file.c"
+    {
+
+# 65 "generate-c-output-file.c"
+      continue;
+    }
+
+# 67 "generate-c-output-file.c"
+    if ((!is_ok(string_ht_find(system_includes_set, include_statement))))
+
+# 67 "generate-c-output-file.c"
+    {
+
+# 68 "generate-c-output-file.c"
+      (system_includes_set=string_ht_insert(system_includes_set, include_statement, boolean_to_value(true)));
+
+# 70 "generate-c-output-file.c"
+      buffer_append_string(buffer, include_statement);
+    }
+  }
+
+# 73 "generate-c-output-file.c"
+  if (append_newline_after_system_includes)
+
+# 73 "generate-c-output-file.c"
+  {
+
+# 74 "generate-c-output-file.c"
+    buffer_append_string(buffer, "\n");
+  }
+
+# 79 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== defines ==========\n\n");
+
+# 80 "generate-c-output-file.c"
+  for (
+
+# 80 "generate-c-output-file.c"
+
+# 80 "generate-c-output-file.c"
+    uint64_t i = 0;
+
+# 80 "generate-c-output-file.c"
+    (i<((symbol_table->defines)->length));
+
+# 80 "generate-c-output-file.c"
+    (i++))
+
+# 80 "generate-c-output-file.c"
+  {
+
+# 81 "generate-c-output-file.c"
+    cpp_define_node_t* node = value_array_get_ptr((symbol_table->defines), i, typeof(cpp_define_node_t*));
+
+# 83 "generate-c-output-file.c"
+    append_cpp_define_node(printer, node);
+
+# 84 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+
+# 87 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== enums ==========\n\n");
+
+# 89 "generate-c-output-file.c"
+  for (
+
+# 89 "generate-c-output-file.c"
+
+# 89 "generate-c-output-file.c"
+    int i = 0;
+
+# 89 "generate-c-output-file.c"
+    (i<(((symbol_table->enums)->ordered_bindings)->length));
+
+# 89 "generate-c-output-file.c"
+    (i++))
+
+# 89 "generate-c-output-file.c"
+  {
+
+# 90 "generate-c-output-file.c"
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->enums)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 93 "generate-c-output-file.c"
+    enum_node_t* enum_node = to_enum_node(value_array_get_ptr((binding->definition_nodes), 0, typeof(parse_node_t*)));
+
+# 95 "generate-c-output-file.c"
+    append_enum_node(printer, enum_node);
+
+# 96 "generate-c-output-file.c"
+    append_string(printer, ";\n\n");
+  }
+
+# 99 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== typedefs ==========\n\n");
+
+# 100 "generate-c-output-file.c"
+  for (
+
+# 100 "generate-c-output-file.c"
+
+# 100 "generate-c-output-file.c"
+    int i = 0;
+
+# 100 "generate-c-output-file.c"
+    (i<(((symbol_table->typedefs)->ordered_bindings)->length));
+
+# 100 "generate-c-output-file.c"
+    (i++))
+
+# 100 "generate-c-output-file.c"
+  {
+
+# 101 "generate-c-output-file.c"
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->typedefs)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 104 "generate-c-output-file.c"
+    typedef_node_t* typedef_node = to_typedef_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
+
+# 106 "generate-c-output-file.c"
+    append_typedef_node(printer, typedef_node);
+
+# 107 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+
+# 110 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== stuctures/unions ==========\n\n");
+
+# 111 "generate-c-output-file.c"
+  for (
+
+# 111 "generate-c-output-file.c"
+
+# 111 "generate-c-output-file.c"
+    int i = 0;
+
+# 111 "generate-c-output-file.c"
+    (i<(((symbol_table->structures)->ordered_bindings)->length));
+
+# 111 "generate-c-output-file.c"
+    (i++))
+
+# 111 "generate-c-output-file.c"
+  {
+
+# 112 "generate-c-output-file.c"
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->structures)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 115 "generate-c-output-file.c"
+    struct_node_t* struct_node = get_full_structure_definition_node(binding);
+
+# 116 "generate-c-output-file.c"
+    if ((struct_node==((void *)0)))
+
+# 116 "generate-c-output-file.c"
+    {
+
+# 117 "generate-c-output-file.c"
+      (struct_node=value_array_get_ptr((binding->definition_nodes), 0, typeof(struct_node_t*)));
+    }
+
+# 120 "generate-c-output-file.c"
+    append_struct_node(printer, struct_node);
+
+# 121 "generate-c-output-file.c"
+    append_string(printer, ";\n\n");
+  }
+
+# 124 "generate-c-output-file.c"
+  boolean_t append_newline_after_variables = false;
+
+# 125 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== global variables ==========\n\n");
+
+# 126 "generate-c-output-file.c"
+  for (
+
+# 126 "generate-c-output-file.c"
+
+# 126 "generate-c-output-file.c"
+    int i = 0;
+
+# 126 "generate-c-output-file.c"
+    (i<(((symbol_table->variables)->ordered_bindings)->length));
+
+# 126 "generate-c-output-file.c"
+    (i++))
+
+# 126 "generate-c-output-file.c"
+  {
+
+# 127 "generate-c-output-file.c"
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->variables)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 130 "generate-c-output-file.c"
+    append_variable_definition_node(printer, value_array_get_ptr((binding->definition_nodes), 0, typeof(variable_definition_node_t*)), (!is_header_file));
+
+# 135 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+
+# 138 "generate-c-output-file.c"
+  if (append_newline_after_variables)
+
+# 138 "generate-c-output-file.c"
+  {
+
+# 139 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+
+# 142 "generate-c-output-file.c"
+  boolean_t append_newline_after_prototypes = false;
+
+# 143 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== function prototypes ==========\n\n");
+
+# 145 "generate-c-output-file.c"
+  for (
+
+# 145 "generate-c-output-file.c"
+
+# 145 "generate-c-output-file.c"
+    int i = 0;
+
+# 145 "generate-c-output-file.c"
+    (i<(((symbol_table->functions)->ordered_bindings)->length));
+
+# 145 "generate-c-output-file.c"
+    (i++))
+
+# 145 "generate-c-output-file.c"
+  {
+
+# 146 "generate-c-output-file.c"
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 149 "generate-c-output-file.c"
+    function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
+
+# 151 "generate-c-output-file.c"
+    if ((!is_inlined_function(function_node)))
+
+# 151 "generate-c-output-file.c"
+    {
+
+# 152 "generate-c-output-file.c"
+      (append_newline_after_prototypes=true);
+
+# 153 "generate-c-output-file.c"
+      append_c_function_node_prototype(printer, function_node);
+    }
+  }
+
+# 156 "generate-c-output-file.c"
+  if (append_newline_after_prototypes)
+
+# 156 "generate-c-output-file.c"
+  {
+
+# 157 "generate-c-output-file.c"
+    append_string(printer, "\n");
+  }
+
+# 160 "generate-c-output-file.c"
+  boolean_t append_newline_after_inlines = false;
+
+# 161 "generate-c-output-file.c"
+  buffer_append_string(buffer, "// ========== inlined functions ==========\n\n");
+
+# 163 "generate-c-output-file.c"
+  for (
+
+# 163 "generate-c-output-file.c"
+
+# 163 "generate-c-output-file.c"
+    int i = 0;
+
+# 163 "generate-c-output-file.c"
+    (i<(((symbol_table->functions)->ordered_bindings)->length));
+
+# 163 "generate-c-output-file.c"
+    (i++))
+
+# 163 "generate-c-output-file.c"
+  {
+
+# 164 "generate-c-output-file.c"
+    symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 167 "generate-c-output-file.c"
+    function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr)));
+
+# 169 "generate-c-output-file.c"
+    if (is_inlined_function(function_node))
+
+# 169 "generate-c-output-file.c"
+    {
+
+# 170 "generate-c-output-file.c"
+      (append_newline_after_inlines=true);
+
+# 171 "generate-c-output-file.c"
+      append_c_function_node_and_body(printer, function_node);
+    }
+  }
+
+# 175 "generate-c-output-file.c"
+  if (append_newline_after_inlines)
+
+# 175 "generate-c-output-file.c"
+  {
+
+# 176 "generate-c-output-file.c"
+    buffer_append_string(buffer, "\n");
+  }
+
+# 181 "generate-c-output-file.c"
+  buffer_t* test_main_function_buffer = make_buffer(1);
+
+# 182 "generate-c-output-file.c"
+  buffer_append_string(test_main_function_buffer, "void do_start_test(char* fn_name) {\n    " "fprintf(stderr, \"Testing %s...\\n\", fn_name);\n}\n");
+
+# 186 "generate-c-output-file.c"
+  buffer_printf(test_main_function_buffer, "int main(int argc, char** argv) {\n");
+
+# 191 "generate-c-output-file.c"
+  boolean_t append_newline_after_functions = false;
+
+# 192 "generate-c-output-file.c"
+  if ((!is_header_file))
+
+# 192 "generate-c-output-file.c"
+  {
+
+# 193 "generate-c-output-file.c"
+    buffer_append_string(buffer, "// ========== functions ==========\n\n");
+
+# 194 "generate-c-output-file.c"
+    for (
+
+# 194 "generate-c-output-file.c"
+
+# 194 "generate-c-output-file.c"
+      int i = 0;
+
+# 194 "generate-c-output-file.c"
+      (i<(((symbol_table->functions)->ordered_bindings)->length));
+
+# 194 "generate-c-output-file.c"
+      (i++))
+
+# 195 "generate-c-output-file.c"
+    {
+
+# 196 "generate-c-output-file.c"
+      symbol_table_binding_t* binding = value_array_get_ptr(((symbol_table->functions)->ordered_bindings), i, typeof(symbol_table_binding_t*));
+
+# 199 "generate-c-output-file.c"
+      for (
+
+# 199 "generate-c-output-file.c"
+
+# 199 "generate-c-output-file.c"
+        int j = 0;
+
+# 199 "generate-c-output-file.c"
+        (j<((binding->definition_nodes)->length));
+
+# 199 "generate-c-output-file.c"
+        (j++))
+
+# 199 "generate-c-output-file.c"
+      {
+
+# 200 "generate-c-output-file.c"
+        function_node_t* function_node = to_function_node((/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), j).ptr)));
+
+# 202 "generate-c-output-file.c"
+        if (((!is_inlined_function(function_node))&&((function_node->body)!=((void *)0))))
+
+# 203 "generate-c-output-file.c"
+        {
+
+# 204 "generate-c-output-file.c"
+          (append_newline_after_functions=true);
+
+# 205 "generate-c-output-file.c"
+          append_c_function_node_and_body(printer, function_node);
+
+# 206 "generate-c-output-file.c"
+          if (is_unit_test_function(function_node))
+
+# 206 "generate-c-output-file.c"
+          {
+
+# 207 "generate-c-output-file.c"
+            char* fn_name = token_to_string((function_node->function_name));
+
+# 208 "generate-c-output-file.c"
+            buffer_printf(test_main_function_buffer, "    do_start_test(\"%s\");\n", fn_name);
+
+# 210 "generate-c-output-file.c"
+            buffer_printf(test_main_function_buffer, "    %s();\n", fn_name);
+          }
+        }
+      }
+    }
+  }
+
+# 216 "generate-c-output-file.c"
+  if (append_newline_after_functions)
+
+# 216 "generate-c-output-file.c"
+  {
+
+# 217 "generate-c-output-file.c"
+    buffer_append_string(buffer, "\n");
+  }
+
+# 219 "generate-c-output-file.c"
+  buffer_printf(test_main_function_buffer, "    exit(0);\n");
+
+# 220 "generate-c-output-file.c"
+  buffer_printf(test_main_function_buffer, "}\n\n");
+
+# 222 "generate-c-output-file.c"
+  if (is_header_file)
+
+# 222 "generate-c-output-file.c"
+  {
+
+# 223 "generate-c-output-file.c"
+    buffer_printf(buffer, "\n#endif /* %s */\n", guard_name);
+  }
+
+# 226 "generate-c-output-file.c"
+  if ((output_type==OUTPUT_TYPE_C_UNIT_TEST_FILE))
+
+# 226 "generate-c-output-file.c"
+  {
+
+# 227 "generate-c-output-file.c"
+    buffer_append_buffer(buffer, test_main_function_buffer);
+  }
+
+# 230 "generate-c-output-file.c"
+  buffer_append_buffer(buffer, command_line_overview_comment);
+
+# 232 "generate-c-output-file.c"
+  if ((FLAG_c_output_file==((void *)0)))
+
+# 232 "generate-c-output-file.c"
+  {
+
+# 233 "generate-c-output-file.c"
+    fprintf(stdout, "%s\n", buffer_to_c_string(buffer));
+  }
+  else
+
+# 234 "generate-c-output-file.c"
+  {
+
+# 235 "generate-c-output-file.c"
+    log_info("Attempting to write buffer to %s", FLAG_c_output_file);
+
+# 237 "generate-c-output-file.c"
+    buffer_write_file(buffer, FLAG_c_output_file);
+  }
+}
+
+
+# 244 "generate-c-output-file.c"
+boolean_t is_unit_test_function(function_node_t* node)
+# 244 "generate-c-output-file.c"
+{
+
+# 245 "generate-c-output-file.c"
+  char* function_name = token_to_string((node->function_name));
+
+# 246 "generate-c-output-file.c"
+  return (string_starts_with(function_name, "test_")&&(!string_equal(function_name, "test_fail_and_exit")));
+}
+
+
+# 250 "generate-c-output-file.c"
+boolean_t is_inlined_function(function_node_t* node)
+# 250 "generate-c-output-file.c"
+{
+
+# 251 "generate-c-output-file.c"
+  return (token_matches((node->storage_class_specifier), "static")&&token_list_contains((node->function_specifiers), "inline"));
+}
+
+
+# 255 "generate-c-output-file.c"
+void dump_symbol_table(char* phase_name, symbol_table_t* symbol_table)
+# 255 "generate-c-output-file.c"
+{
+
+# 256 "generate-c-output-file.c"
+  if (FLAG_dump_symbol_table)
+
+# 256 "generate-c-output-file.c"
+  {
+
+# 257 "generate-c-output-file.c"
+    fprintf(stderr, "==================================================================" "====\n");
+
+# 260 "generate-c-output-file.c"
+    fprintf(stderr, "%s\n", phase_name);
+
+# 261 "generate-c-output-file.c"
+    fprintf(stderr, "==================================================================" "====\n\n");
+
+# 264 "generate-c-output-file.c"
+    buffer_t* buffer = make_buffer(128);
+
+# 265 "generate-c-output-file.c"
+    (buffer=symbol_table_stats(buffer, symbol_table));
+
+# 266 "generate-c-output-file.c"
+    buffer_append_dgb_symbol_table(make_cdl_printer(buffer), symbol_table);
+
+# 268 "generate-c-output-file.c"
+    fprintf(stderr, "%s", buffer_to_c_string(buffer));
+  }
+}
+
+
+# 272 "generate-c-output-file.c"
+char* include_node_to_string(cpp_include_node_t* node)
+# 272 "generate-c-output-file.c"
+{
+
+# 273 "generate-c-output-file.c"
+  buffer_t* buffer = make_buffer(32);
+
+# 274 "generate-c-output-file.c"
+  printer_t* printer = make_printer(buffer, make_symbol_table(), 2);
+
+# 275 "generate-c-output-file.c"
+  append_cpp_include_node(printer, node);
+
+# 276 "generate-c-output-file.c"
+  char* include_statement = buffer_to_c_string(buffer);
+
+# 277 "generate-c-output-file.c"
+  return include_statement;
+}
+
+
+# 280 "generate-c-output-file.c"
+void add_generated_c_file_header(buffer_t* buffer)
+# 280 "generate-c-output-file.c"
+{
+
+# 281 "generate-c-output-file.c"
+  buffer_printf(buffer, "// -*- buffer-read-only: t -*-\n//\n");
+
+# 282 "generate-c-output-file.c"
+  buffer_printf(buffer, "// This is a generated file, so you generally don't want to edit it!\n");
+
+# 285 "generate-c-output-file.c"
+  buffer_printf(buffer, "// The bottom of the file has more information about it's " "creation.\n\n\n");
+}
+
+
+# 10 "generate-header-file-command.c"
+void generate_header_file_command(buffer_t* command_line_overview_comment)
+# 10 "generate-header-file-command.c"
+{
+
+# 11 "generate-header-file-command.c"
+  generate_c_output_file(OUTPUT_TYPE_C_HEADER_FILE, command_line_overview_comment);
+
+# 13 "generate-header-file-command.c"
+  log_info("Exiting normally.");
+
+# 14 "generate-header-file-command.c"
+  exit(0);
+}
+
+
+# 8 "generate-library-command.c"
+void generate_library_command(buffer_t* command_line_overview_comment)
+# 8 "generate-library-command.c"
+{
+
+# 9 "generate-library-command.c"
+  generate_c_output_file(OUTPUT_TYPE_C_LIBRARY_FILE, command_line_overview_comment);
+
+# 11 "generate-library-command.c"
+  log_info("Exiting normally.");
+
+# 12 "generate-library-command.c"
+  exit(0);
+}
+
+
+# 1 "c-compiler-backend.c"
+int invoke_c_compiler(char* input_file, char* output_file)
+# 1 "c-compiler-backend.c"
+{
+
+# 2 "c-compiler-backend.c"
+  value_array_t* argv = c_compiler_command_line(input_file, output_file);
+
+# 4 "c-compiler-backend.c"
+  log_warn("Invoking C compiler with these arguments: %s", buffer_to_c_string(join_array_of_strings(argv, " ")));
+
+# 6 "c-compiler-backend.c"
+  sub_process_t* sub_process = make_sub_process(argv);
+
+# 7 "c-compiler-backend.c"
+  sub_process_launch(sub_process);
+
+# 9 "c-compiler-backend.c"
+  buffer_t* buffer = make_buffer(1);
+
+# 10 "c-compiler-backend.c"
+  do
+# 10 "c-compiler-backend.c"
+  {
+
+# 11 "c-compiler-backend.c"
+    sub_process_read(sub_process, buffer, buffer);
+
+# 12 "c-compiler-backend.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 14 "c-compiler-backend.c"
+  sub_process_read(sub_process, buffer, buffer);
+
+# 15 "c-compiler-backend.c"
+  sub_process_wait(sub_process);
+
+# 17 "c-compiler-backend.c"
+  log_warn(">>> Exit Status %d <<<\n%s", (sub_process->exit_code), buffer_to_c_string(buffer));
+
+# 20 "c-compiler-backend.c"
+  return (sub_process->exit_code);
+}
+
+
+# 23 "c-compiler-backend.c"
+value_array_t* c_compiler_command_line(char* input_file, char* output_file)
+# 23 "c-compiler-backend.c"
+{
+
+# 24 "c-compiler-backend.c"
+  if ((((string_equal("clang", FLAG_c_compiler)||string_equal("gcc", FLAG_c_compiler))||string_equal("tcc", FLAG_c_compiler))||string_equal("zig", FLAG_c_compiler)))
+
+# 27 "c-compiler-backend.c"
+  {
+
+# 28 "c-compiler-backend.c"
+    value_array_t* argv = make_value_array(2);
+
+# 29 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value(FLAG_c_compiler));
+
+# 30 "c-compiler-backend.c"
+    if (string_equal("zig", FLAG_c_compiler))
+
+# 30 "c-compiler-backend.c"
+    {
+
+# 31 "c-compiler-backend.c"
+      value_array_add(argv, str_to_value("cc"));
+    }
+
+# 33 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-g"));
+
+# 34 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-rdynamic"));
+
+# 35 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-O3"));
+
+# 36 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-std=gnu99"));
+
+# 37 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-o"));
+
+# 38 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value(output_file));
+
+# 39 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value(input_file));
+
+# 40 "c-compiler-backend.c"
+    value_array_add(argv, str_to_value("-lgc"));
+
+# 41 "c-compiler-backend.c"
+    return argv;
+  }
+  else
+
+# 42 "c-compiler-backend.c"
+  {
+
+# 43 "c-compiler-backend.c"
+    log_fatal("Unknown C compiler %s\n", FLAG_c_compiler);
+
+# 44 "c-compiler-backend.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+}
+
+
+# 22 "git-hash-object.c"
+buffer_t* git_hash_object(char* filename)
+# 22 "git-hash-object.c"
+{
+
+# 23 "git-hash-object.c"
+  value_array_t* argv = make_value_array(2);
+
+# 24 "git-hash-object.c"
+  value_array_add(argv, str_to_value("git"));
+
+# 25 "git-hash-object.c"
+  value_array_add(argv, str_to_value("hash-object"));
+
+# 26 "git-hash-object.c"
+  value_array_add(argv, str_to_value(filename));
+
+# 28 "git-hash-object.c"
+  sub_process_t* sub_process = make_sub_process(argv);
+
+# 29 "git-hash-object.c"
+  sub_process_launch(sub_process);
+
+# 31 "git-hash-object.c"
+  buffer_t* buffer = make_buffer(1);
+
+# 32 "git-hash-object.c"
+  do
+# 32 "git-hash-object.c"
+  {
+
+# 33 "git-hash-object.c"
+    sub_process_read(sub_process, buffer, ((void *)0));
+
+# 34 "git-hash-object.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 36 "git-hash-object.c"
+  sub_process_read(sub_process, buffer, ((void *)0));
+
+# 37 "git-hash-object.c"
+  sub_process_wait(sub_process);
+
+# 39 "git-hash-object.c"
+  return buffer;
+}
+
+
+# 1 "print-tokens.c"
+void do_print_tokens(value_array_t* tokens, char* message)
+# 1 "print-tokens.c"
+{
+
+# 2 "print-tokens.c"
+  if (FLAG_print_tokens_show_tokens)
+
+# 2 "print-tokens.c"
+  {
+
+# 6 "print-tokens.c"
+    buffer_t* buffer = make_buffer(((tokens->length)*60));
+
+# 7 "print-tokens.c"
+    for (
+
+# 7 "print-tokens.c"
+
+# 7 "print-tokens.c"
+      int j = 0;
+
+# 7 "print-tokens.c"
+      (j<(tokens->length));
+
+# 7 "print-tokens.c"
+      (j++))
+
+# 7 "print-tokens.c"
+    {
+
+# 8 "print-tokens.c"
+      token_t* token = token_at(tokens, j);
+
+# 9 "print-tokens.c"
+      (buffer=append_token_debug_string(buffer, (*token)));
+
+# 10 "print-tokens.c"
+      (buffer=buffer_append_string(buffer, "\n"));
+    }
+
+# 12 "print-tokens.c"
+    fprintf(stdout, "** %s **\n%s\n", message, buffer_to_c_string(buffer));
+  }
+}
+
+
+# 16 "print-tokens.c"
+void print_tokens(void)
+# 16 "print-tokens.c"
+{
+
+# 17 "print-tokens.c"
+  log_info("print_tokens()");
+
+# 19 "print-tokens.c"
+  value_array_t* files = read_files(FLAG_files);
+
+# 20 "print-tokens.c"
+  for (
+
+# 20 "print-tokens.c"
+
+# 20 "print-tokens.c"
+    int i = 0;
+
+# 20 "print-tokens.c"
+    (i<(FLAG_files->length));
+
+# 20 "print-tokens.c"
+    (i++))
+
+# 20 "print-tokens.c"
+  {
+
+# 21 "print-tokens.c"
+    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
+
+# 23 "print-tokens.c"
+    fprintf(stdout, "====================================================\n");
+
+# 24 "print-tokens.c"
+    fprintf(stdout, "====> Processing %s\n", (file->file_name));
+
+# 25 "print-tokens.c"
+    fprintf(stdout, "====================================================\n");
+
+# 27 "print-tokens.c"
+    tokenizer_result_t tokenizer_result = tokenize((file->data));
+
+# 29 "print-tokens.c"
+    if ((tokenizer_result.tokenizer_error_code))
+
+# 29 "print-tokens.c"
+    {
+
+# 30 "print-tokens.c"
+      log_warn("Tokenizer error: \"%s\"::%d -- %d", (value_array_get(FLAG_files, i).str), (tokenizer_result.tokenizer_error_position), (tokenizer_result.tokenizer_error_code));
+
+# 34 "print-tokens.c"
+      continue;
+    }
+
+# 37 "print-tokens.c"
+    value_array_t* tokens = (tokenizer_result.tokens);
+
+# 39 "print-tokens.c"
+    if (FLAG_print_tokens_show_appended_tokens)
+
+# 39 "print-tokens.c"
+    {
+
+# 40 "print-tokens.c"
+      buffer_t* appended_tokens = make_buffer(1);
+
+# 41 "print-tokens.c"
+      debug_append_tokens(appended_tokens, tokens);
+
+# 42 "print-tokens.c"
+      fprintf(stdout, "%s", buffer_to_c_string(appended_tokens));
+    }
+
+# 45 "print-tokens.c"
+    do_print_tokens(tokens, "before xform tokens");
+
+# 47 "print-tokens.c"
+    (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
+                .keep_whitespace = FLAG_print_tokens_include_whitespace,
+                .keep_comments = FLAG_print_tokens_include_comments,
+                .keep_javadoc_comments = FLAG_print_tokens_include_comments,
+                .keep_c_preprocessor_lines = false,
+            })));
+
+# 58 "print-tokens.c"
+    do_print_tokens(tokens, "after xform tokens");
+
+# 60 "print-tokens.c"
+    if (FLAG_print_tokens_parse_and_print)
+
+# 60 "print-tokens.c"
+    {
+
+# 61 "print-tokens.c"
+      pstate_t pstate = ((pstate_t) {.tokens = tokens,
+                     .use_statement_parser = FLAG_use_statement_parser});
+
+# 64 "print-tokens.c"
+      ;
+
+# 65 "print-tokens.c"
+      if ((!parse_declarations((&pstate))))
+
+# 65 "print-tokens.c"
+      {
+
+# 66 "print-tokens.c"
+        (((pstate.error).file_name)=(file->file_name));
+
+# 67 "print-tokens.c"
+        buffer_t* buffer = make_buffer(1);
+
+# 68 "print-tokens.c"
+        (buffer=buffer_append_human_readable_error(buffer, (&(pstate.error))));
+
+# 69 "print-tokens.c"
+        log_fatal("%s", buffer_to_c_string(buffer));
+
+# 70 "print-tokens.c"
+        fatal_error(ERROR_ILLEGAL_INPUT);
+      }
+      else
+
+# 71 "print-tokens.c"
+      {
+
+# 72 "print-tokens.c"
+        buffer_t* buffer = make_buffer(1024);
+
+# 73 "print-tokens.c"
+        buffer_append_dbg_parse_node(make_cdl_printer(buffer), pstate_get_result_node((&pstate)));
+
+# 75 "print-tokens.c"
+        fprintf(stdout, "** Parse Nodes %s **\n%s\n", (file->file_name), buffer_to_c_string(buffer));
+      }
+    }
+  }
+}
+
+
+# 6 "parse-test.c"
+void parse_expression_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer)
+# 7 "parse-test.c"
+{
+
+# 8 "parse-test.c"
+  tokenizer_result_t tokenizer_result = tokenize(input_buffer);
+
+# 9 "parse-test.c"
+  if ((tokenizer_result.tokenizer_error_code))
+
+# 9 "parse-test.c"
+  {
+
+# 10 "parse-test.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 13 "parse-test.c"
+  value_array_t* tokens = (tokenizer_result.tokens);
+
+# 14 "parse-test.c"
+  (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
+                                   .keep_whitespace = false,
+                                   .keep_comments = false,
+                                   .keep_javadoc_comments = false,
+                                   .keep_c_preprocessor_lines = false,
+                               })));
+
+# 23 "parse-test.c"
+  pstate_t pstate = ((pstate_t) {0});
+
+# 24 "parse-test.c"
+  ((pstate.use_statement_parser)=true);
+
+# 25 "parse-test.c"
+  ((pstate.tokens)=tokens);
+
+# 26 "parse-test.c"
+  if ((!parse_expression((&pstate))))
+
+# 26 "parse-test.c"
+  {
+
+# 27 "parse-test.c"
+    fprintf(stderr, "FAIL\n");
+
+# 28 "parse-test.c"
+    exit(1);
+  }
+
+# 30 "parse-test.c"
+  parse_node_t* node = pstate_get_result_node((&pstate));
+
+# 31 "parse-test.c"
+  if ((!pstate_expect_token_string((&pstate), ";")))
+
+# 31 "parse-test.c"
+  {
+
+# 32 "parse-test.c"
+    fprintf(stderr, "FAIL (expected ';')\n");
+
+# 33 "parse-test.c"
+    exit(1);
+  }
+
+# 35 "parse-test.c"
+  buffer_t* output = make_buffer(1);
+
+# 36 "parse-test.c"
+  buffer_append_dbg_parse_node(make_cdl_printer(output), node);
+
+# 37 "parse-test.c"
+  if (FLAG_to_c)
+
+# 37 "parse-test.c"
+  {
+
+# 38 "parse-test.c"
+    buffer_append_string(output, "\n// C Output\n");
+
+# 39 "parse-test.c"
+    printer_t* printer = make_printer(output, make_symbol_table(), 2);
+
+# 40 "parse-test.c"
+    append_parse_node(printer, node);
+  }
+
+# 42 "parse-test.c"
+  fprintf(stdout, "%s\n", buffer_to_c_string(output));
+}
+
+
+# 45 "parse-test.c"
+void parse_statement_string_and_print_parse_tree_from_buffer(buffer_t* input_buffer)
+# 46 "parse-test.c"
+{
+
+# 47 "parse-test.c"
+  tokenizer_result_t tokenizer_result = tokenize(input_buffer);
+
+# 48 "parse-test.c"
+  if ((tokenizer_result.tokenizer_error_code))
+
+# 48 "parse-test.c"
+  {
+
+# 49 "parse-test.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 51 "parse-test.c"
+  value_array_t* tokens = (tokenizer_result.tokens);
+
+# 52 "parse-test.c"
+  (tokens=transform_tokens(tokens, ((token_transformer_options_t) {
+                                   .keep_whitespace = false,
+                                   .keep_comments = false,
+                                   .keep_javadoc_comments = false,
+                                   .keep_c_preprocessor_lines = false,
+                               })));
+
+# 60 "parse-test.c"
+  pstate_t state = ((pstate_t) {0});
+
+# 61 "parse-test.c"
+  ((state.use_statement_parser)=true);
+
+# 62 "parse-test.c"
+  ((state.tokens)=tokens);
+
+# 63 "parse-test.c"
+  pstatus_t status = parse_statement((&state));
+
+# 64 "parse-test.c"
+  if ((!status))
+
+# 64 "parse-test.c"
+  {
+
+# 65 "parse-test.c"
+    fprintf(stderr, "FAIL");
+
+# 66 "parse-test.c"
+    exit(1);
+  }
+
+# 68 "parse-test.c"
+  parse_node_t* node = pstate_get_result_node((&state));
+
+# 69 "parse-test.c"
+  buffer_t* output = make_buffer(1);
+
+# 70 "parse-test.c"
+  buffer_append_dbg_parse_node(make_cdl_printer(output), node);
+
+# 71 "parse-test.c"
+  buffer_append_string(output, "\n// C Output\n");
+
+# 72 "parse-test.c"
+  printer_t* printer = make_printer(output, make_symbol_table(), 2);
+
+# 73 "parse-test.c"
+  append_parse_node(printer, node);
+
+# 74 "parse-test.c"
+  fprintf(stdout, "%s\n", buffer_to_c_string(output));
+}
+
+
+# 12 "test-command.c"
+void test_command(buffer_t* command_line_comment)
+# 12 "test-command.c"
+{
+
+# 13 "test-command.c"
+  handle_if_internal_test();
+
+# 15 "test-command.c"
+  if (((FLAG_files->length)==0))
+
+# 15 "test-command.c"
+  {
+
+# 16 "test-command.c"
+    log_fatal("At least one file is required when using the test command.");
+
+# 17 "test-command.c"
+    exit(1);
+  }
+
+# 21 "test-command.c"
+  char* rand_binary_file_name = "/tmp/foo";
+
+# 23 "test-command.c"
+  if (string_is_null_or_empty(FLAG_binary_output_file))
+
+# 23 "test-command.c"
+  {
+
+# 24 "test-command.c"
+    (FLAG_binary_output_file=rand_binary_file_name);
+  }
+
+# 26 "test-command.c"
+  if (string_is_null_or_empty(FLAG_c_output_file))
+
+# 26 "test-command.c"
+  {
+
+# 27 "test-command.c"
+    (FLAG_c_output_file=string_printf("%s.test.c", FLAG_binary_output_file));
+  }
+
+# 34 "test-command.c"
+  generate_c_output_file(OUTPUT_TYPE_C_UNIT_TEST_FILE, command_line_comment);
+
+# 36 "test-command.c"
+  int error_status = invoke_c_compiler(FLAG_c_output_file, FLAG_binary_output_file);
+
+# 38 "test-command.c"
+  if (error_status)
+
+# 38 "test-command.c"
+  {
+
+# 39 "test-command.c"
+    log_fatal("The underlying C compiler produced an error compiling the test(s).");
+
+# 43 "test-command.c"
+    exit(error_status);
+  }
+
+# 46 "test-command.c"
+  run_test_binary(rand_binary_file_name);
+}
+
+
+# 49 "test-command.c"
+void run_test_binary(char* binary_file_name)
+# 49 "test-command.c"
+{
+
+# 50 "test-command.c"
+  log_info("Running test binary %s", binary_file_name);
+
+# 52 "test-command.c"
+  value_array_t* argv = make_value_array(1);
+
+# 53 "test-command.c"
+  value_array_add(argv, str_to_value(binary_file_name));
+
+# 55 "test-command.c"
+  buffer_t* child_stdin = make_buffer(1);
+
+# 56 "test-command.c"
+  buffer_t* child_stdout = make_buffer(1);
+
+# 57 "test-command.c"
+  buffer_t* child_stderr = make_buffer(1);
+
+# 59 "test-command.c"
+  sub_process_t* sub_process = make_sub_process(argv);
+
+# 60 "test-command.c"
+  sub_process_launch_and_wait(sub_process, child_stdin, child_stdout, child_stderr);
+
+# 63 "test-command.c"
+  if ((sub_process->exit_code))
+
+# 63 "test-command.c"
+  {
+
+# 64 "test-command.c"
+    log_warn("The test binary was NOT happy.");
+
+# 65 "test-command.c"
+    log_warn("   Child stdout was %s\n", buffer_to_c_string(child_stdin));
+
+# 66 "test-command.c"
+    log_warn("   Child stderr was %s\n", buffer_to_c_string(child_stderr));
+  }
+  else
+
+# 67 "test-command.c"
+  {
+
+# 68 "test-command.c"
+    log_warn("The test binary was happy. :)");
+  }
+
+# 71 "test-command.c"
+  exit((sub_process->exit_code));
+}
+
+
+# 74 "test-command.c"
+void handle_if_internal_test(void)
+# 74 "test-command.c"
+{
+
+# 75 "test-command.c"
+  for (
+
+# 75 "test-command.c"
+
+# 75 "test-command.c"
+    int i = 0;
+
+# 75 "test-command.c"
+    (i<(FLAG_files->length));
+
+# 75 "test-command.c"
+    (i++))
+
+# 75 "test-command.c"
+  {
+
+# 76 "test-command.c"
+    char* filename = (value_array_get(FLAG_files, i).str);
+
+# 77 "test-command.c"
+    if (string_ends_with(filename, ".expr"))
+
+# 77 "test-command.c"
+    {
+
+# 79 "test-command.c"
+      handle_expression_test(filename);
+    }
+    else
+
+# 80 "test-command.c"
+    if (string_ends_with(filename, ".stmt"))
+
+# 80 "test-command.c"
+    {
+
+# 82 "test-command.c"
+      handle_statement_test(filename);
+    }
+  }
+}
+
+
+# 87 "test-command.c"
+void handle_statement_test(char* file_name)
+# 87 "test-command.c"
+{
+
+# 88 "test-command.c"
+  parse_statement_string_and_print_parse_tree_from_buffer(buffer_read_file(file_name));
+
+# 90 "test-command.c"
+  exit(0);
+}
+
+
+# 93 "test-command.c"
+void handle_expression_test(char* file_name)
+# 93 "test-command.c"
+{
+
+# 94 "test-command.c"
+  parse_expression_string_and_print_parse_tree_from_buffer(buffer_read_file(file_name));
+
+# 96 "test-command.c"
+  exit(0);
+}
+
+
+# 9 "test-assembler.c"
+void test_assembler_command()
+# 9 "test-assembler.c"
+{
+
+# 10 "test-assembler.c"
+  log_info("test_assembler_command()\n");
+
+# 11 "test-assembler.c"
+  value_array_t* files = read_files(FLAG_files);
+
+# 12 "test-assembler.c"
+  for (
+
+# 12 "test-assembler.c"
+
+# 12 "test-assembler.c"
+    int i = 0;
+
+# 12 "test-assembler.c"
+    (i<(FLAG_files->length));
+
+# 12 "test-assembler.c"
+    (i++))
+
+# 12 "test-assembler.c"
+  {
+
+# 13 "test-assembler.c"
+    log_info("test_assembler_command(%d)\n", i);
+
+# 14 "test-assembler.c"
+    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
+
+# 15 "test-assembler.c"
+    roci_bb_builder_array_t* builders = roci_assemble((file->data));
+
+# 16 "test-assembler.c"
+    value_array_t* bblocks = build_bblocks(builders);
+
+# 17 "test-assembler.c"
+    buffer_t* buffer = make_buffer(1);
+
+# 18 "test-assembler.c"
+    disassemble_bblocks(bblocks, buffer);
+
+# 19 "test-assembler.c"
+    fprintf(stderr, buffer_to_c_string(buffer));
+  }
+}
+
+
+# 33 "flags.c"
+void configure_flags(void)
+# 33 "flags.c"
+{
+
+# 34 "flags.c"
+  flag_program_name("omni-c");
+
+# 35 "flags.c"
+  flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
+
+# 40 "flags.c"
+  flag_boolean("--print-command-line", (&FLAG_print_command_line));
+
+# 41 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 43 "flags.c"
+  configure_regular_commands();
+
+# 45 "flags.c"
+  configure_print_tokens_command();
+
+# 46 "flags.c"
+  configure_parse_expression();
+
+# 47 "flags.c"
+  configure_parse_statement();
+
+# 48 "flags.c"
+  configure_test_assembler_command();
+}
+
+
+# 51 "flags.c"
+void configure_parse_expression(void)
+# 51 "flags.c"
+{
+
+# 52 "flags.c"
+  flag_command("parse-expression", (&FLAG_command));
+
+# 53 "flags.c"
+  flag_description("** UNIT TESTING **");
+
+# 54 "flags.c"
+  flag_string("--expression", (&FLAG_expression));
+
+# 55 "flags.c"
+  flag_boolean("--to-c", (&FLAG_to_c));
+}
+
+
+# 58 "flags.c"
+void configure_parse_statement(void)
+# 58 "flags.c"
+{
+
+# 59 "flags.c"
+  flag_command("parse-statement", (&FLAG_command));
+
+# 60 "flags.c"
+  flag_description("** UNIT TESTING **");
+
+# 61 "flags.c"
+  flag_string("--statement", (&FLAG_statement));
+}
+
+
+# 64 "flags.c"
+void configure_test_assembler_command(void)
+# 64 "flags.c"
+{
+
+# 65 "flags.c"
+  flag_command("test-assembler", (&FLAG_command));
+
+# 66 "flags.c"
+  flag_description("Tests the assembler");
+
+# 67 "flags.c"
+  flag_file_args((&FLAG_files));
+}
+
+
+# 71 "flags.c"
+void configure_print_tokens_command(void)
+# 71 "flags.c"
+{
+
+# 72 "flags.c"
+  flag_command("print-tokens", (&FLAG_command));
+
+# 73 "flags.c"
+  flag_description("** UNIT TESTING **");
+
+# 74 "flags.c"
+  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
+
+# 75 "flags.c"
+  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
+
+# 76 "flags.c"
+  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
+
+# 77 "flags.c"
+  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
+
+# 78 "flags.c"
+  flag_boolean("--show-appended-tokens", (&FLAG_print_tokens_show_appended_tokens));
+
+# 80 "flags.c"
+  flag_file_args((&FLAG_files));
+}
+
+
+# 83 "flags.c"
+void configure_regular_commands(void)
+# 83 "flags.c"
+{
+
+# 84 "flags.c"
+  flag_command("generate-header-file", (&FLAG_command));
+
+# 85 "flags.c"
+  flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
+
+# 88 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 89 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 90 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 91 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 92 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 94 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 96 "flags.c"
+  flag_command("generate-library", (&FLAG_command));
+
+# 97 "flags.c"
+  flag_description("create a single C file 'library' of C99 code; most users will prefer " "'build'");
+
+# 100 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 101 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 102 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 103 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 104 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 105 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 107 "flags.c"
+  flag_command("build", (&FLAG_command));
+
+# 108 "flags.c"
+  flag_description("build an executable by generating the C code and invoking the C " "compiler");
+
+# 111 "flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 112 "flags.c"
+  flag_string("--binary-output-file", (&FLAG_binary_output_file));
+
+# 113 "flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 114 "flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 115 "flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 116 "flags.c"
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
+
+# 117 "flags.c"
+  flag_string("--c-compiler", (&FLAG_c_compiler));
+
+# 118 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 120 "flags.c"
+  flag_command("archive", (&FLAG_command));
+
+# 121 "flags.c"
+  flag_description("create an archive of unprocessed source files");
+
+# 122 "flags.c"
+  flag_string("--archive-output-file", (&FLAG_archive_output_file));
+
+# 123 "flags.c"
+  flag_description("the target path of the output archive");
+
+# 124 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 126 "flags.c"
+  flag_command("test", (&FLAG_command));
+
+# 127 "flags.c"
+  flag_description("compile and run all unit tests in the input files");
+
+# 130 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 132 "flags.c"
+  flag_command("roci", (&FLAG_command));
+
+# 133 "flags.c"
+  flag_description("run the roci interpreter on the files in order");
+
+# 134 "flags.c"
+  flag_boolean("--debug", (&FLAG_roci_debug));
+
+# 135 "flags.c"
+  flag_boolean("--print-bbs", (&FLAG_roci_print_bbs));
+
+# 136 "flags.c"
+  flag_file_args((&FLAG_files));
+
+# 138 "flags.c"
+  flag_command("repl", (&FLAG_command));
+
+# 139 "flags.c"
+  flag_description("enter the roci repl");
+
+# 140 "flags.c"
+  flag_boolean("--debug", (&FLAG_roci_debug));
+}
+
+
+# 26 "roci/roci-assembler.c"
+uint64_t skip_whitespace_and_comments(buffer_t* buffer, uint64_t position)
+# 26 "roci/roci-assembler.c"
+{
+
+# 27 "roci/roci-assembler.c"
+  log_info("skip_whitespace_and_comments");
+
+# 28 "roci/roci-assembler.c"
+  uint64_t length = buffer_length(buffer);
+
+# 29 "roci/roci-assembler.c"
+  while ((position<length))
+
+# 29 "roci/roci-assembler.c"
+  {
+
+# 30 "roci/roci-assembler.c"
+    char ch = buffer_get(buffer, position);
+
+# 31 "roci/roci-assembler.c"
+    if (isspace(ch))
+
+# 31 "roci/roci-assembler.c"
+    {
+
+# 32 "roci/roci-assembler.c"
+      (position++);
+    }
+    else
+
+# 33 "roci/roci-assembler.c"
+    if ((ch==';'))
+
+# 33 "roci/roci-assembler.c"
+    {
+
+# 34 "roci/roci-assembler.c"
+      (ch=buffer_get(buffer, (++position)));
+
+# 35 "roci/roci-assembler.c"
+      while ((ch!='\n'))
+
+# 35 "roci/roci-assembler.c"
+      {
+
+# 36 "roci/roci-assembler.c"
+        (ch=buffer_get(buffer, (++position)));
+      }
+
+# 38 "roci/roci-assembler.c"
+      (position++);
+    }
+    else
+
+# 39 "roci/roci-assembler.c"
+    {
+
+# 40 "roci/roci-assembler.c"
+      return position;
+    }
+  }
+
+# 43 "roci/roci-assembler.c"
+  return position;
+}
+
+
+# 46 "roci/roci-assembler.c"
+uint64_t read_roci_token(buffer_t* buffer, uint64_t position, buffer_t* token)
+# 46 "roci/roci-assembler.c"
+{
+
+# 47 "roci/roci-assembler.c"
+  log_info("read_roci_token");
+
+# 48 "roci/roci-assembler.c"
+  buffer_clear(token);
+
+# 49 "roci/roci-assembler.c"
+  (position=skip_whitespace_and_comments(buffer, position));
+
+# 50 "roci/roci-assembler.c"
+  while ((position<buffer_length(buffer)))
+
+# 50 "roci/roci-assembler.c"
+  {
+
+# 51 "roci/roci-assembler.c"
+    int ch = buffer_get(buffer, position);
+
+# 52 "roci/roci-assembler.c"
+    (position++);
+
+# 53 "roci/roci-assembler.c"
+    if (isspace(ch))
+
+# 53 "roci/roci-assembler.c"
+    {
+
+# 54 "roci/roci-assembler.c"
+      return position;
+    }
+
+# 56 "roci/roci-assembler.c"
+    buffer_append_byte(token, ch);
+  }
+
+# 59 "roci/roci-assembler.c"
+  return position;
+}
+
+
+# 62 "roci/roci-assembler.c"
+boolean_t token_is_double(buffer_t* token)
+# 62 "roci/roci-assembler.c"
+{
+
+# 63 "roci/roci-assembler.c"
+  for (
+
+# 63 "roci/roci-assembler.c"
+
+# 63 "roci/roci-assembler.c"
+    int i = 0;
+
+# 63 "roci/roci-assembler.c"
+    (i<(token->length));
+
+# 63 "roci/roci-assembler.c"
+    (i++))
+
+# 63 "roci/roci-assembler.c"
+  {
+
+# 64 "roci/roci-assembler.c"
+    if ((buffer_get(token, i)=='.'))
+
+# 64 "roci/roci-assembler.c"
+    {
+
+# 65 "roci/roci-assembler.c"
+      return true;
+    }
+  }
+
+# 68 "roci/roci-assembler.c"
+  return false;
+}
+
+
+# 77 "roci/roci-assembler.c"
+roci_bb_builder_array_t* roci_assemble(buffer_t* buffer)
+# 77 "roci/roci-assembler.c"
+{
+
+# 78 "roci/roci-assembler.c"
+  log_info("roci_assemble");
+
+# 80 "roci/roci-assembler.c"
+  roci_bb_builder_array_t* bblocks = make_value_array(16);
+
+# 81 "roci/roci-assembler.c"
+  roci_bb_builder_t* current_bb = NULL;
+
+# 82 "roci/roci-assembler.c"
+  buffer_t* token = make_buffer(16);
+
+# 84 "roci/roci-assembler.c"
+  uint64_t position = 0;
+
+# 85 "roci/roci-assembler.c"
+  while ((position<buffer_length(buffer)))
+
+# 85 "roci/roci-assembler.c"
+  {
+
+# 86 "roci/roci-assembler.c"
+    (position=read_roci_token(buffer, position, token));
+
+# 87 "roci/roci-assembler.c"
+    if ((buffer_length(buffer)==0))
+
+# 87 "roci/roci-assembler.c"
+    {
+
+# 88 "roci/roci-assembler.c"
+      break;
+    }
+
+# 91 "roci/roci-assembler.c"
+    if (buffer_ends_with(token, ":"))
+
+# 91 "roci/roci-assembler.c"
+    {
+
+# 93 "roci/roci-assembler.c"
+      (current_bb=add_bblock(bblocks));
+
+# 94 "roci/roci-assembler.c"
+      ((current_bb->bblock_label)=buffer_c_substring(token, 0, (buffer_length(token)-1)));
+
+# 96 "roci/roci-assembler.c"
+      continue;
+    }
+
+# 99 "roci/roci-assembler.c"
+    if ((!current_bb))
+
+# 99 "roci/roci-assembler.c"
+    {
+
+# 100 "roci/roci-assembler.c"
+      log_fatal("Assembler error: Instruction found outside of a basic block label.");
+
+# 102 "roci/roci-assembler.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 105 "roci/roci-assembler.c"
+    if (buffer_equal(token, "push"))
+
+# 105 "roci/roci-assembler.c"
+    {
+
+# 106 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 107 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 107 "roci/roci-assembler.c"
+      {
+
+# 108 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 111 "roci/roci-assembler.c"
+      int first_char = buffer_get(token, 0);
+
+# 113 "roci/roci-assembler.c"
+      if ((first_char=='"'))
+
+# 113 "roci/roci-assembler.c"
+      {
+
+# 114 "roci/roci-assembler.c"
+        buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_STRING);
+
+# 115 "roci/roci-assembler.c"
+        value_array_add((current_bb->data), u64_to_value((/*CAST*/(uint64_t) buffer_c_substring(token, 1, (buffer_length(token)-1)))));
+      }
+      else
+
+# 120 "roci/roci-assembler.c"
+      if (buffer_equal(token, "true"))
+
+# 120 "roci/roci-assembler.c"
+      {
+
+# 121 "roci/roci-assembler.c"
+        buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_TRUE);
+      }
+      else
+
+# 122 "roci/roci-assembler.c"
+      if (buffer_equal(token, "false"))
+
+# 122 "roci/roci-assembler.c"
+      {
+
+# 123 "roci/roci-assembler.c"
+        buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_FALSE);
+      }
+      else
+
+# 124 "roci/roci-assembler.c"
+      {
+
+# 125 "roci/roci-assembler.c"
+        if (isdigit(first_char))
+
+# 125 "roci/roci-assembler.c"
+        {
+
+# 126 "roci/roci-assembler.c"
+          if (token_is_double(token))
+
+# 126 "roci/roci-assembler.c"
+          {
+
+# 127 "roci/roci-assembler.c"
+            double dbl = string_parse_double(buffer_to_c_string(token));
+
+# 128 "roci/roci-assembler.c"
+            buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_DOUBLE);
+
+# 129 "roci/roci-assembler.c"
+            value_array_add((current_bb->data), dbl_to_value(dbl));
+          }
+          else
+
+# 130 "roci/roci-assembler.c"
+          {
+
+# 131 "roci/roci-assembler.c"
+            buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_PUSH_INTEGER);
+
+# 132 "roci/roci-assembler.c"
+            value_array_add((current_bb->data), u64_to_value((string_parse_uint64(buffer_to_c_string(token)).u64)));
+          }
+        }
+        else
+
+# 137 "roci/roci-assembler.c"
+        {
+
+# 138 "roci/roci-assembler.c"
+          fatal_error(ERROR_ILLEGAL_STATE);
+        }
+      }
+    }
+    else
+
+# 142 "roci/roci-assembler.c"
+    if (buffer_equal(token, "drop"))
+
+# 142 "roci/roci-assembler.c"
+    {
+
+# 143 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_DROP);
+    }
+    else
+
+# 144 "roci/roci-assembler.c"
+    if (buffer_equal(token, "br"))
+
+# 144 "roci/roci-assembler.c"
+    {
+
+# 145 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 146 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 146 "roci/roci-assembler.c"
+      {
+
+# 147 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 149 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_BR);
+
+# 150 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), ptr_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 152 "roci/roci-assembler.c"
+    if (buffer_equal(token, "br_true"))
+
+# 152 "roci/roci-assembler.c"
+    {
+
+# 153 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 154 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 154 "roci/roci-assembler.c"
+      {
+
+# 155 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 157 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_BR_TRUE);
+
+# 158 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), ptr_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 160 "roci/roci-assembler.c"
+    if (buffer_equal(token, "call"))
+
+# 160 "roci/roci-assembler.c"
+    {
+    }
+    else
+
+# 161 "roci/roci-assembler.c"
+    if (buffer_equal(token, "return"))
+
+# 161 "roci/roci-assembler.c"
+    {
+
+# 162 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_RETURN);
+    }
+    else
+
+# 163 "roci/roci-assembler.c"
+    if (buffer_equal(token, "trap"))
+
+# 163 "roci/roci-assembler.c"
+    {
+
+# 164 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_TRAP);
+    }
+    else
+
+# 165 "roci/roci-assembler.c"
+    if (buffer_equal(token, "get_var"))
+
+# 165 "roci/roci-assembler.c"
+    {
+
+# 166 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 167 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 167 "roci/roci-assembler.c"
+      {
+
+# 168 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 170 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_GET_VAR);
+
+# 171 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), str_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 173 "roci/roci-assembler.c"
+    if (buffer_equal(token, "set_var"))
+
+# 173 "roci/roci-assembler.c"
+    {
+
+# 174 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 175 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 175 "roci/roci-assembler.c"
+      {
+
+# 176 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 178 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_SET_VAR);
+
+# 179 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), str_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 181 "roci/roci-assembler.c"
+    if (buffer_equal(token, "define_var"))
+
+# 181 "roci/roci-assembler.c"
+    {
+
+# 182 "roci/roci-assembler.c"
+      (position=read_roci_token(buffer, position, token));
+
+# 183 "roci/roci-assembler.c"
+      if ((buffer_length(buffer)==0))
+
+# 183 "roci/roci-assembler.c"
+      {
+
+# 184 "roci/roci-assembler.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 186 "roci/roci-assembler.c"
+      buffer_append_byte((current_bb->opcodes), ROCI_OPCODE_DEFINE_VAR);
+
+# 187 "roci/roci-assembler.c"
+      value_array_add((current_bb->data), str_to_value(buffer_to_c_string(token)));
+    }
+    else
+
+# 189 "roci/roci-assembler.c"
+    {
+
+# 190 "roci/roci-assembler.c"
+      log_fatal("unrecognized opcode '%s' at position %d", buffer_to_c_string(token), buffer_length(token), position);
+
+# 192 "roci/roci-assembler.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 196 "roci/roci-assembler.c"
+  return bblocks;
+}
+
+
+# 22 "roci/roci-bb-builder.c"
+roci_bb_builder_t* add_bblock(roci_bb_builder_array_t* bblocks)
+# 22 "roci/roci-bb-builder.c"
+{
+
+# 23 "roci/roci-bb-builder.c"
+  roci_bb_builder_t* result = malloc_struct(roci_bb_builder_t);
+
+# 24 "roci/roci-bb-builder.c"
+  ((result->opcodes)=make_buffer(10));
+
+# 25 "roci/roci-bb-builder.c"
+  ((result->data)=make_value_array(1));
+
+# 26 "roci/roci-bb-builder.c"
+  value_array_add(bblocks, ptr_to_value(result));
+
+# 27 "roci/roci-bb-builder.c"
+  return result;
+}
+
+
+# 40 "roci/roci-bb-builder.c"
+value_array_t* build_bblocks(roci_bb_builder_array_t* bblocks)
+# 40 "roci/roci-bb-builder.c"
+{
+
+# 41 "roci/roci-bb-builder.c"
+  log_info("roci -- build_bblocks\n");
+
+# 44 "roci/roci-bb-builder.c"
+  value_array_t* result = make_value_array(1);
+
+# 48 "roci/roci-bb-builder.c"
+  for (
+
+# 48 "roci/roci-bb-builder.c"
+
+# 48 "roci/roci-bb-builder.c"
+    int i = 0;
+
+# 48 "roci/roci-bb-builder.c"
+    (i<(bblocks->length));
+
+# 48 "roci/roci-bb-builder.c"
+    (i++))
+
+# 48 "roci/roci-bb-builder.c"
+  {
+
+# 49 "roci/roci-bb-builder.c"
+    log_info("roci -- allocating %d\n", i);
+
+# 50 "roci/roci-bb-builder.c"
+    roci_bb_builder_t* builder = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
+
+# 53 "roci/roci-bb-builder.c"
+    log_info("roci -- builder %d, %d\n", ((builder->data)->length), ((builder->opcodes)->length));
+
+# 56 "roci/roci-bb-builder.c"
+    roci_bb_t* bblock = (/*CAST*/(roci_bb_t*) malloc_bytes((((1+((builder->data)->length))*8)+((builder->opcodes)->length))));
+
+# 59 "roci/roci-bb-builder.c"
+    ((bblock->num_data)=((builder->data)->length));
+
+# 60 "roci/roci-bb-builder.c"
+    ((bblock->num_opcodes)=((builder->opcodes)->length));
+
+# 61 "roci/roci-bb-builder.c"
+    ((builder->bblock)=bblock);
+
+# 62 "roci/roci-bb-builder.c"
+    value_array_add(result, ptr_to_value(bblock));
+
+# 63 "roci/roci-bb-builder.c"
+    log_info("roci -- allocated %d\n", i);
+  }
+
+# 68 "roci/roci-bb-builder.c"
+  for (
+
+# 68 "roci/roci-bb-builder.c"
+
+# 68 "roci/roci-bb-builder.c"
+    int i = 0;
+
+# 68 "roci/roci-bb-builder.c"
+    (i<(bblocks->length));
+
+# 68 "roci/roci-bb-builder.c"
+    (i++))
+
+# 68 "roci/roci-bb-builder.c"
+  {
+
+# 69 "roci/roci-bb-builder.c"
+    log_info("roci -- copying opcodes %d\n", i);
+
+# 70 "roci/roci-bb-builder.c"
+    copy_opcodes_and_link(bblocks, value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*)));
+
+# 72 "roci/roci-bb-builder.c"
+    log_info("roci -- done copying opcodes %d\n", i);
+  }
+
+# 75 "roci/roci-bb-builder.c"
+  return result;
+}
+
+
+# 78 "roci/roci-bb-builder.c"
+void copy_opcodes_and_link(roci_bb_builder_array_t* bblocks, roci_bb_builder_t* builder)
+# 79 "roci/roci-bb-builder.c"
+{
+
+# 80 "roci/roci-bb-builder.c"
+  roci_bb_t* bb = (builder->bblock);
+
+# 81 "roci/roci-bb-builder.c"
+  uint8_t* opcode_ptr = bblock_opcode_pointer(bb);
+
+# 82 "roci/roci-bb-builder.c"
+  uint64_t* data_ptr = bblock_data_pointer(bb);
+
+# 83 "roci/roci-bb-builder.c"
+  int dindex = 0;
+
+# 85 "roci/roci-bb-builder.c"
+  for (
+
+# 85 "roci/roci-bb-builder.c"
+
+# 85 "roci/roci-bb-builder.c"
+    int i = 0;
+
+# 85 "roci/roci-bb-builder.c"
+    (i<((builder->opcodes)->length));
+
+# 85 "roci/roci-bb-builder.c"
+    (i++))
+
+# 85 "roci/roci-bb-builder.c"
+  {
+
+# 86 "roci/roci-bb-builder.c"
+    roci_opcode_t opcode = buffer_get((builder->opcodes), i);
+
+# 87 "roci/roci-bb-builder.c"
+    ((*(opcode_ptr++))=opcode);
+
+# 88 "roci/roci-bb-builder.c"
+    switch (opcode)
+
+# 88 "roci/roci-bb-builder.c"
+    {
+
+# 89 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_PUSH_INTEGER:
+
+# 90 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_PUSH_DOUBLE:
+
+# 91 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_PUSH_STRING:
+
+# 92 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_GET_VAR:
+
+# 93 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_SET_VAR:
+
+# 94 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_DEFINE_VAR:
+
+# 95 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_COMMENT:
+
+# 96 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CHECK_ARGS:
+
+# 97 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_DEBUG_INFO:
+
+# 98 "roci/roci-bb-builder.c"
+      ((*(data_ptr++))=(value_array_get((builder->data), (dindex++)).u64));
+
+# 99 "roci/roci-bb-builder.c"
+      break;
+
+# 101 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_BR_TRUE:
+
+# 102 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_BR:
+
+# 103 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_MAKE_CLOSURE:
+
+# 104 "roci/roci-bb-builder.c"
+      char* br_label = value_array_get_ptr((builder->data), (dindex++), typeof(char*));
+
+# 106 "roci/roci-bb-builder.c"
+      ((*(data_ptr++))=bb_label_to_address(bblocks, br_label));
+
+# 107 "roci/roci-bb-builder.c"
+      break;
+
+# 109 "roci/roci-bb-builder.c"
+      case ROCI_OPCODE_CALL:
+
+# 110 "roci/roci-bb-builder.c"
+      ((*(data_ptr++))=(value_array_get((builder->data), (dindex++)).u64));
+
+# 111 "roci/roci-bb-builder.c"
+      char* call_label = value_array_get_ptr((builder->data), (dindex++), typeof(char*));
+
+# 113 "roci/roci-bb-builder.c"
+      ((*(data_ptr++))=bb_label_to_address(bblocks, call_label));
+
+# 114 "roci/roci-bb-builder.c"
+      break;
+
+# 116 "roci/roci-bb-builder.c"
+      default:
+
+# 117 "roci/roci-bb-builder.c"
+      break;
+    }
+  }
+}
+
+
+# 122 "roci/roci-bb-builder.c"
+uint64_t bb_label_to_address(roci_bb_builder_array_t* bblocks, char* label)
+# 122 "roci/roci-bb-builder.c"
+{
+
+# 123 "roci/roci-bb-builder.c"
+  for (
+
+# 123 "roci/roci-bb-builder.c"
+
+# 123 "roci/roci-bb-builder.c"
+    int i = 0;
+
+# 123 "roci/roci-bb-builder.c"
+    (i<(bblocks->length));
+
+# 123 "roci/roci-bb-builder.c"
+    (i++))
+
+# 123 "roci/roci-bb-builder.c"
+  {
+
+# 124 "roci/roci-bb-builder.c"
+    roci_bb_builder_t* builder = value_array_get_ptr(bblocks, i, typeof(roci_bb_builder_t*));
+
+# 126 "roci/roci-bb-builder.c"
+    if (string_equal((builder->bblock_label), label))
+
+# 126 "roci/roci-bb-builder.c"
+    {
+
+# 127 "roci/roci-bb-builder.c"
+      return (/*CAST*/(uint64_t) (builder->bblock));
+    }
+  }
+
+# 130 "roci/roci-bb-builder.c"
+  log_fatal("bblock with label %s not found", label);
+
+# 131 "roci/roci-bb-builder.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+
+# 132 "roci/roci-bb-builder.c"
+  return 0;
+}
+
+
+# 6 "roci/roci-command.c"
+void roci_command(void)
+# 6 "roci/roci-command.c"
+{
+
+# 7 "roci/roci-command.c"
+  log_info("roci_command()");
+
+# 9 "roci/roci-command.c"
+  roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
+
+# 10 "roci/roci-command.c"
+  ((state->bblocks)=make_value_array(16));
+
+# 12 "roci/roci-command.c"
+  value_array_t* files = read_files(FLAG_files);
+
+# 13 "roci/roci-command.c"
+  for (
+
+# 13 "roci/roci-command.c"
+
+# 13 "roci/roci-command.c"
+    int i = 0;
+
+# 13 "roci/roci-command.c"
+    (i<(files->length));
+
+# 13 "roci/roci-command.c"
+    (i++))
+
+# 13 "roci/roci-command.c"
+  {
+
+# 14 "roci/roci-command.c"
+    file_t* file = value_array_get_ptr(files, i, typeof(file_t*));
+
+# 15 "roci/roci-command.c"
+    roci_compile_buffer(state, (file->file_name), (file->data));
+
+# 16 "roci/roci-command.c"
+    value_array_t* bblocks = build_bblocks((state->bblocks));
+
+# 18 "roci/roci-command.c"
+    if (FLAG_roci_print_bbs)
+
+# 18 "roci/roci-command.c"
+    {
+
+# 19 "roci/roci-command.c"
+      buffer_t* buffer = make_buffer(1);
+
+# 20 "roci/roci-command.c"
+      disassemble_bblocks(bblocks, buffer);
+
+# 21 "roci/roci-command.c"
+      fprintf(stderr, buffer_to_c_string(buffer));
+    }
+
+# 24 "roci/roci-command.c"
+    if (true)
+
+# 24 "roci/roci-command.c"
+    {
+
+# 25 "roci/roci-command.c"
+      roci_env_t* env = roci_new_env(((void *)0));
+
+# 26 "roci/roci-command.c"
+      roci_add_primitives_to_env(env);
+
+# 27 "roci/roci-command.c"
+      roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
+
+# 29 "roci/roci-command.c"
+      roci_execute(env, entry_point);
+
+# 30 "roci/roci-command.c"
+      if (false)
+
+# 30 "roci/roci-command.c"
+      {
+
+# 31 "roci/roci-command.c"
+        buffer_t* buffer = make_buffer(10);
+
+# 32 "roci/roci-command.c"
+        buffer_printf(buffer, "\n");
+
+# 33 "roci/roci-command.c"
+        roci_dump_env(env, buffer);
+
+# 34 "roci/roci-command.c"
+        fprintf(stdout, "%s", buffer_to_c_string(buffer));
+      }
+    }
+
+# 37 "roci/roci-command.c"
+    ((state->bblocks)=make_value_array(16));
+  }
+
+# 40 "roci/roci-command.c"
+  log_info("Exiting normally.");
+
+# 41 "roci/roci-command.c"
+  exit(0);
+}
+
+
+# 66 "roci/roci-compiler.c"
+void roci_compile_buffer(roci_compiler_state_t* state, char* file_name, buffer_t* buffer)
+# 67 "roci/roci-compiler.c"
+{
+
+# 68 "roci/roci-compiler.c"
+  ((state->tokens)=roci_tokenize_file(file_name, buffer));
+
+# 69 "roci/roci-compiler.c"
+  ((state->position)=0);
+
+# 70 "roci/roci-compiler.c"
+  ((state->current_bb)=roci_new_bblock(state, "bb_file_start"));
+
+# 71 "roci/roci-compiler.c"
+  roci_compile_tokens(state);
+}
+
+
+# 80 "roci/roci-compiler.c"
+value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer)
+# 80 "roci/roci-compiler.c"
+{
+
+# 81 "roci/roci-compiler.c"
+  tokenizer_result_t tokenizer_result = tokenize(buffer);
+
+# 82 "roci/roci-compiler.c"
+  if ((tokenizer_result.tokenizer_error_code))
+
+# 82 "roci/roci-compiler.c"
+  {
+
+# 83 "roci/roci-compiler.c"
+    log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name, (tokenizer_result.tokenizer_error_position), (tokenizer_result.tokenizer_error_code));
+
+# 86 "roci/roci-compiler.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+
+# 88 "roci/roci-compiler.c"
+  return transform_tokens((tokenizer_result.tokens), ((token_transformer_options_t) {
+                           .keep_whitespace = false,
+                           .keep_comments = false,
+                           .keep_javadoc_comments = false,
+                           .keep_c_preprocessor_lines = false,
+                       }));
+}
+
+
+# 105 "roci/roci-compiler.c"
+void roci_compile_tokens(roci_compiler_state_t* state)
+# 105 "roci/roci-compiler.c"
+{
+
+# 108 "roci/roci-compiler.c"
+  log_info("roci_compile_tokens begin");
+
+# 109 "roci/roci-compiler.c"
+  while (((state->position)<((state->tokens)->length)))
+
+# 109 "roci/roci-compiler.c"
+  {
+
+# 110 "roci/roci-compiler.c"
+    roci_compile_statement(state);
+
+# 111 "roci/roci-compiler.c"
+    if (((state->compiler_error)!=ROCI_COMPILE_TIME_ERROR_NONE))
+
+# 111 "roci/roci-compiler.c"
+    {
+
+# 112 "roci/roci-compiler.c"
+      log_fatal("compiler error %s", roci_compile_time_error_to_string((state->compiler_error)));
+
+# 114 "roci/roci-compiler.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 117 "roci/roci-compiler.c"
+  log_info("roci_compile_tokens end");
+
+# 118 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_TRAP);
+}
+
+
+# 126 "roci/roci-compiler.c"
+void roci_compile_statement(roci_compiler_state_t* state)
+# 126 "roci/roci-compiler.c"
+{
+
+# 127 "roci/roci-compiler.c"
+  token_t* token = roci_peek_token(state);
+
+# 128 "roci/roci-compiler.c"
+  log_info("CURRENT TOKEN IS %s", token_to_string(token));
+
+# 129 "roci/roci-compiler.c"
+  if (token_matches(token, "return"))
+
+# 129 "roci/roci-compiler.c"
+  {
+
+# 130 "roci/roci-compiler.c"
+    roci_compile_return(state);
+  }
+  else
+
+# 131 "roci/roci-compiler.c"
+  if (token_matches(token, "if"))
+
+# 131 "roci/roci-compiler.c"
+  {
+
+# 132 "roci/roci-compiler.c"
+    roci_compile_if(state);
+  }
+  else
+
+# 133 "roci/roci-compiler.c"
+  if (token_matches(token, "let"))
+
+# 133 "roci/roci-compiler.c"
+  {
+
+# 134 "roci/roci-compiler.c"
+    roci_compile_let(state);
+  }
+  else
+
+# 135 "roci/roci-compiler.c"
+  if (token_matches(token, "while"))
+
+# 135 "roci/roci-compiler.c"
+  {
+
+# 136 "roci/roci-compiler.c"
+    roci_compile_while(state);
+  }
+  else
+
+# 137 "roci/roci-compiler.c"
+  {
+
+# 138 "roci/roci-compiler.c"
+    (token=token_at((state->tokens), ((state->position)+1)));
+
+# 139 "roci/roci-compiler.c"
+    if (token_matches(token, "="))
+
+# 139 "roci/roci-compiler.c"
+    {
+
+# 140 "roci/roci-compiler.c"
+      roci_compile_assignment(state);
+    }
+    else
+
+# 141 "roci/roci-compiler.c"
+    if (token_matches(token, "("))
+
+# 141 "roci/roci-compiler.c"
+    {
+
+# 142 "roci/roci-compiler.c"
+      roci_compile_function_call(state);
+
+# 143 "roci/roci-compiler.c"
+      roci_expect_token(state, ";");
+
+# 144 "roci/roci-compiler.c"
+      roci_emit_opcode(state, ROCI_OPCODE_DROP);
+    }
+  }
+}
+
+
+# 161 "roci/roci-compiler.c"
+void roci_compile_return(roci_compiler_state_t* state)
+# 161 "roci/roci-compiler.c"
+{
+
+# 162 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 163 "roci/roci-compiler.c"
+  roci_expect_token(state, "return");
+
+# 164 "roci/roci-compiler.c"
+  token_t* token = roci_peek_token(state);
+
+# 165 "roci/roci-compiler.c"
+  if (token_matches(token, ";"))
+
+# 165 "roci/roci-compiler.c"
+  {
+
+# 166 "roci/roci-compiler.c"
+    roci_skip_token(state);
+
+# 167 "roci/roci-compiler.c"
+    roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+  }
+  else
+
+# 168 "roci/roci-compiler.c"
+  {
+
+# 169 "roci/roci-compiler.c"
+    roci_compile_expression(state);
+
+# 170 "roci/roci-compiler.c"
+    roci_expect_token(state, ";");
+  }
+
+# 172 "roci/roci-compiler.c"
+  roci_emit_return(state);
+}
+
+
+# 188 "roci/roci-compiler.c"
+void roci_compile_let(roci_compiler_state_t* state)
+# 188 "roci/roci-compiler.c"
+{
+
+# 189 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 190 "roci/roci-compiler.c"
+  roci_expect_token(state, "let");
+
+# 191 "roci/roci-compiler.c"
+  token_t* varname = roci_next_token(state);
+
+# 192 "roci/roci-compiler.c"
+  roci_verify_identifier(varname);
+
+# 193 "roci/roci-compiler.c"
+  roci_expect_token(state, "=");
+
+# 194 "roci/roci-compiler.c"
+  roci_compile_expression(state);
+
+# 195 "roci/roci-compiler.c"
+  roci_expect_token(state, ";");
+
+# 196 "roci/roci-compiler.c"
+  roci_emit_token_string_datum(state, token_to_string(varname));
+
+# 197 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+}
+
+
+# 207 "roci/roci-compiler.c"
+void roci_compile_assignment(roci_compiler_state_t* state)
+# 207 "roci/roci-compiler.c"
+{
+
+# 208 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 209 "roci/roci-compiler.c"
+  token_t* varname = roci_next_token(state);
+
+# 211 "roci/roci-compiler.c"
+  roci_expect_token(state, "=");
+
+# 212 "roci/roci-compiler.c"
+  roci_compile_expression(state);
+
+# 213 "roci/roci-compiler.c"
+  roci_expect_token(state, ";");
+
+# 214 "roci/roci-compiler.c"
+  roci_emit_token_string_datum(state, token_to_string(varname));
+
+# 215 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_SET_VAR);
+}
+
+
+# 223 "roci/roci-compiler.c"
+void roci_compile_if(roci_compiler_state_t* state)
+# 223 "roci/roci-compiler.c"
+{
+
+# 224 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 225 "roci/roci-compiler.c"
+  roci_expect_token(state, "if");
+
+# 226 "roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 227 "roci/roci-compiler.c"
+  roci_compile_expression(state);
+
+# 228 "roci/roci-compiler.c"
+  roci_expect_token(state, ")");
+
+# 230 "roci/roci-compiler.c"
+  roci_bb_builder_t* if_bb = (state->current_bb);
+
+# 232 "roci/roci-compiler.c"
+  roci_bb_builder_t* true_bb = roci_compile_block(state);
+
+# 233 "roci/roci-compiler.c"
+  roci_bb_builder_t* end_of_true_bb = (state->current_bb);
+
+# 235 "roci/roci-compiler.c"
+  roci_emit_br_true(if_bb, true_bb);
+
+# 237 "roci/roci-compiler.c"
+  token_t* peek_token = roci_peek_token(state);
+
+# 238 "roci/roci-compiler.c"
+  if (token_matches(peek_token, "else"))
+
+# 238 "roci/roci-compiler.c"
+  {
+
+# 239 "roci/roci-compiler.c"
+    roci_skip_token(state);
+
+# 240 "roci/roci-compiler.c"
+    roci_bb_builder_t* false_bb = roci_compile_block(state);
+
+# 241 "roci/roci-compiler.c"
+    roci_bb_builder_t* after_bb = roci_new_bblock(state, "if_after_bb");
+
+# 242 "roci/roci-compiler.c"
+    roci_emit_branch(if_bb, false_bb);
+
+# 243 "roci/roci-compiler.c"
+    roci_emit_branch((state->current_bb), after_bb);
+
+# 244 "roci/roci-compiler.c"
+    roci_emit_branch(end_of_true_bb, after_bb);
+
+# 245 "roci/roci-compiler.c"
+    ((state->current_bb)=after_bb);
+  }
+  else
+
+# 246 "roci/roci-compiler.c"
+  {
+
+# 247 "roci/roci-compiler.c"
+    roci_bb_builder_t* after_bb = roci_new_bblock(state, "if_after_bb");
+
+# 248 "roci/roci-compiler.c"
+    roci_emit_branch(end_of_true_bb, after_bb);
+
+# 249 "roci/roci-compiler.c"
+    roci_emit_branch(if_bb, after_bb);
+
+# 250 "roci/roci-compiler.c"
+    ((state->current_bb)=after_bb);
+  }
+}
+
+
+# 263 "roci/roci-compiler.c"
+roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state)
+# 263 "roci/roci-compiler.c"
+{
+
+# 264 "roci/roci-compiler.c"
+  roci_bb_builder_t* result_bb = roci_new_bblock(state, "block_bb_");
+
+# 265 "roci/roci-compiler.c"
+  ((state->current_bb)=result_bb);
+
+# 267 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 268 "roci/roci-compiler.c"
+  roci_emit_new_environment(state);
+
+# 269 "roci/roci-compiler.c"
+  roci_expect_token(state, "{");
+
+# 271 "roci/roci-compiler.c"
+  while (((state->position)<((state->tokens)->length)))
+
+# 271 "roci/roci-compiler.c"
+  {
+
+# 272 "roci/roci-compiler.c"
+    roci_compile_statement(state);
+
+# 273 "roci/roci-compiler.c"
+    token_t* close_b = roci_peek_token(state);
+
+# 274 "roci/roci-compiler.c"
+    if (token_matches(close_b, "}"))
+
+# 274 "roci/roci-compiler.c"
+    {
+
+# 275 "roci/roci-compiler.c"
+      roci_skip_token(state);
+
+# 276 "roci/roci-compiler.c"
+      roci_emit_drop_environment(state);
+
+# 277 "roci/roci-compiler.c"
+      return result_bb;
+    }
+  }
+
+# 280 "roci/roci-compiler.c"
+  log_fatal("closing brace not found!");
+
+# 281 "roci/roci-compiler.c"
+  fatal_error(ERROR_ILLEGAL_INPUT);
+}
+
+
+# 285 "roci/roci-compiler.c"
+void roci_compile_while(roci_compiler_state_t* state)
+# 285 "roci/roci-compiler.c"
+{
+
+# 286 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 287 "roci/roci-compiler.c"
+  roci_expect_token(state, "while");
+
+# 288 "roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 291 "roci/roci-compiler.c"
+  roci_bb_builder_t* cond_bb = roci_new_bblock(state, "while_cond_bb");
+
+# 292 "roci/roci-compiler.c"
+  roci_emit_branch((state->current_bb), cond_bb);
+
+# 293 "roci/roci-compiler.c"
+  ((state->current_bb)=cond_bb);
+
+# 296 "roci/roci-compiler.c"
+  roci_compile_expression(state);
+
+# 297 "roci/roci-compiler.c"
+  roci_expect_token(state, ")");
+
+# 300 "roci/roci-compiler.c"
+  roci_bb_builder_t* body_bb = roci_compile_block(state);
+
+# 301 "roci/roci-compiler.c"
+  roci_bb_builder_t* end_of_body_bb = (state->current_bb);
+
+# 304 "roci/roci-compiler.c"
+  roci_bb_builder_t* after_bb = roci_new_bblock(state, "while_after_bb");
+
+# 307 "roci/roci-compiler.c"
+  roci_emit_branch(end_of_body_bb, cond_bb);
+
+# 310 "roci/roci-compiler.c"
+  roci_emit_br_true(cond_bb, body_bb);
+
+# 311 "roci/roci-compiler.c"
+  roci_emit_branch(cond_bb, after_bb);
+
+# 313 "roci/roci-compiler.c"
+  ((state->current_bb)=after_bb);
+}
+
+
+# 323 "roci/roci-compiler.c"
+void roci_compile_expression(roci_compiler_state_t* state)
+# 323 "roci/roci-compiler.c"
+{
+
+# 324 "roci/roci-compiler.c"
+  token_t* token = roci_peek_token(state);
+
+# 325 "roci/roci-compiler.c"
+  if (token_matches(token, "fn"))
+
+# 325 "roci/roci-compiler.c"
+  {
+
+# 326 "roci/roci-compiler.c"
+    roci_compile_closure(state);
+
+# 327 "roci/roci-compiler.c"
+    return;
+  }
+  else
+
+# 328 "roci/roci-compiler.c"
+  if (token_matches(token, "("))
+
+# 328 "roci/roci-compiler.c"
+  {
+  }
+
+# 332 "roci/roci-compiler.c"
+  token_t* token_next = token_at((state->tokens), ((state->position)+1));
+
+# 333 "roci/roci-compiler.c"
+  if (token_matches(token_next, "("))
+
+# 333 "roci/roci-compiler.c"
+  {
+
+# 334 "roci/roci-compiler.c"
+    roci_compile_function_call(state);
+  }
+  else
+
+# 335 "roci/roci-compiler.c"
+  if (((token_matches(token_next, ";")||token_matches(token_next, ","))||token_matches(token_next, ")")))
+
+# 336 "roci/roci-compiler.c"
+  {
+
+# 337 "roci/roci-compiler.c"
+    switch ((token->type))
+
+# 337 "roci/roci-compiler.c"
+    {
+
+# 338 "roci/roci-compiler.c"
+      case TOKEN_TYPE_IDENTIFIER:
+
+# 339 "roci/roci-compiler.c"
+      char* varname = token_to_string(token);
+
+# 340 "roci/roci-compiler.c"
+      if (string_equal(varname, "true"))
+
+# 340 "roci/roci-compiler.c"
+      {
+
+# 341 "roci/roci-compiler.c"
+        roci_emit_opcode(state, ROCI_OPCODE_PUSH_TRUE);
+      }
+      else
+
+# 342 "roci/roci-compiler.c"
+      if (string_equal(varname, "false"))
+
+# 342 "roci/roci-compiler.c"
+      {
+
+# 343 "roci/roci-compiler.c"
+        roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+      }
+      else
+
+# 344 "roci/roci-compiler.c"
+      {
+
+# 345 "roci/roci-compiler.c"
+        roci_emit_get_var((state->current_bb), varname);
+      }
+
+# 347 "roci/roci-compiler.c"
+      break;
+
+# 349 "roci/roci-compiler.c"
+      case TOKEN_TYPE_INTEGER_LITERAL:
+
+# 350 "roci/roci-compiler.c"
+      value_result_t parsed = string_parse_uint64(token_to_string(token));
+
+# 351 "roci/roci-compiler.c"
+      if (((parsed.nf_error)!=NF_OK))
+
+# 351 "roci/roci-compiler.c"
+      {
+
+# 352 "roci/roci-compiler.c"
+        log_fatal("failed to parse integer");
+
+# 353 "roci/roci-compiler.c"
+        fatal_error(ERROR_ILLEGAL_INPUT);
+      }
+
+# 355 "roci/roci-compiler.c"
+      buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_INTEGER);
+
+# 356 "roci/roci-compiler.c"
+      value_array_add(((state->current_bb)->data), (parsed.val));
+
+# 357 "roci/roci-compiler.c"
+      break;
+
+# 359 "roci/roci-compiler.c"
+      case TOKEN_TYPE_FLOAT_LITERAL:
+
+# 360 "roci/roci-compiler.c"
+      double dbl = string_parse_double(token_to_string(token));
+
+# 361 "roci/roci-compiler.c"
+      buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_DOUBLE);
+
+# 362 "roci/roci-compiler.c"
+      value_array_add(((state->current_bb)->data), dbl_to_value(dbl));
+
+# 363 "roci/roci-compiler.c"
+      break;
+
+# 365 "roci/roci-compiler.c"
+      case TOKEN_TYPE_STRING_LITERAL:
+
+# 366 "roci/roci-compiler.c"
+      char* str = string_unquote_c_string(token_to_string(token));
+
+# 367 "roci/roci-compiler.c"
+      buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_STRING);
+
+# 368 "roci/roci-compiler.c"
+      value_array_add(((state->current_bb)->data), str_to_value(str));
+
+# 369 "roci/roci-compiler.c"
+      break;
+
+# 371 "roci/roci-compiler.c"
+      default:
+
+# 372 "roci/roci-compiler.c"
+      log_fatal("unexpected token");
+
+# 373 "roci/roci-compiler.c"
+      fatal_error(ERROR_ILLEGAL_INPUT);
+    }
+
+# 375 "roci/roci-compiler.c"
+    roci_skip_token(state);
+  }
+  else
+
+# 376 "roci/roci-compiler.c"
+  {
+
+# 377 "roci/roci-compiler.c"
+    ((state->compiler_error)=ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION);
+  }
+}
+
+
+# 381 "roci/roci-compiler.c"
+void roci_compile_function_call(roci_compiler_state_t* state)
+# 381 "roci/roci-compiler.c"
+{
+
+# 382 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", roci_peek_token(state));
+
+# 383 "roci/roci-compiler.c"
+  int num_args = 0;
+
+# 384 "roci/roci-compiler.c"
+  token_t* fn_name = roci_next_token(state);
+
+# 385 "roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 386 "roci/roci-compiler.c"
+  while (true)
+
+# 386 "roci/roci-compiler.c"
+  {
+
+# 387 "roci/roci-compiler.c"
+    token_t* token = roci_peek_token(state);
+
+# 388 "roci/roci-compiler.c"
+    if (token_matches(token, ")"))
+
+# 388 "roci/roci-compiler.c"
+    {
+
+# 389 "roci/roci-compiler.c"
+      roci_skip_token(state);
+
+# 390 "roci/roci-compiler.c"
+      break;
+    }
+
+# 392 "roci/roci-compiler.c"
+    roci_compile_expression(state);
+
+# 393 "roci/roci-compiler.c"
+    (num_args++);
+
+# 394 "roci/roci-compiler.c"
+    (token=roci_peek_token(state));
+
+# 395 "roci/roci-compiler.c"
+    if (token_matches(token, ","))
+
+# 395 "roci/roci-compiler.c"
+    {
+
+# 396 "roci/roci-compiler.c"
+      roci_skip_token(state);
+    }
+    else
+
+# 397 "roci/roci-compiler.c"
+    if ((!token_matches(token, ")")))
+
+# 397 "roci/roci-compiler.c"
+    {
+
+# 398 "roci/roci-compiler.c"
+      log_fatal("Expected comma or close paren.");
+
+# 399 "roci/roci-compiler.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 403 "roci/roci-compiler.c"
+  roci_emit_get_var((state->current_bb), token_to_string(fn_name));
+
+# 405 "roci/roci-compiler.c"
+  roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
+
+# 406 "roci/roci-compiler.c"
+  buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_CALL);
+
+# 407 "roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), i64_to_value(num_args));
+
+# 408 "roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), str_to_value((return_bb->bblock_label)));
+
+# 410 "roci/roci-compiler.c"
+  ((state->current_bb)=return_bb);
+}
+
+
+# 413 "roci/roci-compiler.c"
+void roci_compile_closure(roci_compiler_state_t* state)
+# 413 "roci/roci-compiler.c"
+{
+
+# 414 "roci/roci-compiler.c"
+  token_t* first_token = roci_peek_token(state);
+
+# 415 "roci/roci-compiler.c"
+  roci_expect_token(state, "fn");
+
+# 416 "roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 418 "roci/roci-compiler.c"
+  token_t* args[32];
+
+# 419 "roci/roci-compiler.c"
+  int64_t arg_num = roci_collect_fn_args(state, args);
+
+# 421 "roci/roci-compiler.c"
+  roci_bb_builder_t* current_bb = (state->current_bb);
+
+# 422 "roci/roci-compiler.c"
+  int current_env_depth = (state->env_depth);
+
+# 424 "roci/roci-compiler.c"
+  roci_bb_builder_t* fn_entry_bb = roci_new_bblock(state, "fn_header");
+
+# 425 "roci/roci-compiler.c"
+  ((state->env_depth)=1);
+
+# 426 "roci/roci-compiler.c"
+  ((state->current_bb)=fn_entry_bb);
+
+# 428 "roci/roci-compiler.c"
+  roci_emit_debug_info(state, "", first_token);
+
+# 429 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
+
+# 430 "roci/roci-compiler.c"
+  roci_emit_int_datum(state, arg_num);
+
+# 432 "roci/roci-compiler.c"
+  roci_emit_new_environment(state);
+
+# 433 "roci/roci-compiler.c"
+  while ((arg_num>0))
+
+# 433 "roci/roci-compiler.c"
+  {
+
+# 434 "roci/roci-compiler.c"
+    token_t* varname = (args[(--arg_num)]);
+
+# 435 "roci/roci-compiler.c"
+    roci_emit_token_string_datum(state, token_to_string(varname));
+
+# 436 "roci/roci-compiler.c"
+    roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
+  }
+
+# 439 "roci/roci-compiler.c"
+  roci_bb_builder_t* body_bb = roci_compile_block(state);
+
+# 440 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+
+# 441 "roci/roci-compiler.c"
+  roci_emit_return(state);
+
+# 443 "roci/roci-compiler.c"
+  roci_emit_branch(fn_entry_bb, body_bb);
+
+# 445 "roci/roci-compiler.c"
+  ((state->env_depth)=current_env_depth);
+
+# 446 "roci/roci-compiler.c"
+  ((state->current_bb)=current_bb);
+
+# 447 "roci/roci-compiler.c"
+  roci_emit_token_string_datum(state, (fn_entry_bb->bblock_label));
+
+# 448 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_MAKE_CLOSURE);
+}
+
+
+# 451 "roci/roci-compiler.c"
+int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args)
+# 451 "roci/roci-compiler.c"
+{
+
+# 452 "roci/roci-compiler.c"
+  int64_t arg_num = 0;
+
+# 453 "roci/roci-compiler.c"
+  while (true)
+
+# 453 "roci/roci-compiler.c"
+  {
+
+# 454 "roci/roci-compiler.c"
+    token_t* token = roci_peek_token(state);
+
+# 455 "roci/roci-compiler.c"
+    if (token_matches(token, ")"))
+
+# 455 "roci/roci-compiler.c"
+    {
+
+# 456 "roci/roci-compiler.c"
+      roci_skip_token(state);
+
+# 457 "roci/roci-compiler.c"
+      break;
+    }
+
+# 459 "roci/roci-compiler.c"
+    roci_verify_identifier(token);
+
+# 460 "roci/roci-compiler.c"
+    roci_skip_token(state);
+
+# 462 "roci/roci-compiler.c"
+    ((args[(arg_num++)])=token);
+
+# 463 "roci/roci-compiler.c"
+    (token=roci_peek_token(state));
+
+# 464 "roci/roci-compiler.c"
+    if (token_matches(token, ","))
+
+# 464 "roci/roci-compiler.c"
+    {
+
+# 465 "roci/roci-compiler.c"
+      roci_skip_token(state);
+    }
+  }
+
+# 468 "roci/roci-compiler.c"
+  return arg_num;
+}
+
+
+# 474 "roci/roci-compiler.c"
+void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode)
+# 474 "roci/roci-compiler.c"
+{
+
+# 475 "roci/roci-compiler.c"
+  buffer_append_byte(((state->current_bb)->opcodes), opcode);
+}
+
+
+# 478 "roci/roci-compiler.c"
+void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str)
+# 478 "roci/roci-compiler.c"
+{
+
+# 479 "roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), str_to_value(str));
+}
+
+
+# 482 "roci/roci-compiler.c"
+void roci_emit_int_datum(roci_compiler_state_t* state, uint64_t val)
+# 482 "roci/roci-compiler.c"
+{
+
+# 483 "roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), u64_to_value(val));
+}
+
+
+# 486 "roci/roci-compiler.c"
+void roci_emit_new_environment(roci_compiler_state_t* state)
+# 486 "roci/roci-compiler.c"
+{
+
+# 487 "roci/roci-compiler.c"
+  ((state->env_depth)++);
+
+# 488 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_NEW_ENVIRONMENT);
+}
+
+
+# 491 "roci/roci-compiler.c"
+void roci_emit_drop_environment(roci_compiler_state_t* state)
+# 491 "roci/roci-compiler.c"
+{
+
+# 492 "roci/roci-compiler.c"
+  ((state->env_depth)--);
+
+# 493 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_DROP_ENVIRONMENT);
+}
+
+
+# 496 "roci/roci-compiler.c"
+void roci_emit_return(roci_compiler_state_t* state)
+# 496 "roci/roci-compiler.c"
+{
+
+# 497 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_RETURN);
+}
+
+
+# 500 "roci/roci-compiler.c"
+void roci_emit_get_var(roci_bb_builder_t* bb, char* fn_name)
+# 500 "roci/roci-compiler.c"
+{
+
+# 501 "roci/roci-compiler.c"
+  buffer_append_byte((bb->opcodes), ROCI_OPCODE_GET_VAR);
+
+# 502 "roci/roci-compiler.c"
+  value_array_add((bb->data), ptr_to_value(fn_name));
+}
+
+
+# 505 "roci/roci-compiler.c"
+void roci_emit_comment(roci_bb_builder_t* bb, char* str)
+# 505 "roci/roci-compiler.c"
+{
+
+# 506 "roci/roci-compiler.c"
+  buffer_append_byte((bb->opcodes), ROCI_OPCODE_COMMENT);
+
+# 507 "roci/roci-compiler.c"
+  value_array_add((bb->data), ptr_to_value(str));
+}
+
+
+# 510 "roci/roci-compiler.c"
+void roci_emit_debug_info(roci_compiler_state_t* state, char* filename, token_t* token)
+# 511 "roci/roci-compiler.c"
+{
+
+# 512 "roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_DEBUG_INFO);
+
+# 513 "roci/roci-compiler.c"
+  roci_emit_int_datum(state, token_to_roci_src_info(0, token));
+}
+
+
+# 526 "roci/roci-compiler.c"
+roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state, char* label_prefix)
+# 527 "roci/roci-compiler.c"
+{
+
+# 528 "roci/roci-compiler.c"
+  if ((label_prefix==((void *)0)))
+
+# 528 "roci/roci-compiler.c"
+  {
+
+# 529 "roci/roci-compiler.c"
+    (label_prefix="bb_");
+  }
+
+# 531 "roci/roci-compiler.c"
+  roci_bb_builder_t* result = add_bblock((state->bblocks));
+
+# 532 "roci/roci-compiler.c"
+  ((result->bblock_label)=string_printf("%s%d", label_prefix, ((state->bb_label_count)++)));
+
+# 534 "roci/roci-compiler.c"
+  roci_emit_comment(result, (result->bblock_label));
+
+# 535 "roci/roci-compiler.c"
+  return result;
+}
+
+
+# 538 "roci/roci-compiler.c"
+void roci_emit_branch(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
+# 539 "roci/roci-compiler.c"
+{
+
+# 540 "roci/roci-compiler.c"
+  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR);
+
+# 541 "roci/roci-compiler.c"
+  value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
+}
+
+
+# 544 "roci/roci-compiler.c"
+void roci_emit_br_true(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
+# 545 "roci/roci-compiler.c"
+{
+
+# 546 "roci/roci-compiler.c"
+  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR_TRUE);
+
+# 547 "roci/roci-compiler.c"
+  value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
+}
+
+
+# 559 "roci/roci-compiler.c"
+boolean_t roci_eof(roci_compiler_state_t* state)
+# 559 "roci/roci-compiler.c"
+{
+
+# 560 "roci/roci-compiler.c"
+  return ((state->position)>=((state->tokens)->length));
+}
+
+
+# 563 "roci/roci-compiler.c"
+void roci_skip_token(roci_compiler_state_t* state)
+# 563 "roci/roci-compiler.c"
+{
+
+# 563 "roci/roci-compiler.c"
+  roci_next_token(state);
+}
+
+
+# 565 "roci/roci-compiler.c"
+token_t* roci_peek_token(roci_compiler_state_t* state)
+# 565 "roci/roci-compiler.c"
+{
+
+# 566 "roci/roci-compiler.c"
+  return token_at((state->tokens), (state->position));
+}
+
+
+# 569 "roci/roci-compiler.c"
+token_t* roci_next_token(roci_compiler_state_t* state)
+# 569 "roci/roci-compiler.c"
+{
+
+# 570 "roci/roci-compiler.c"
+  return token_at((state->tokens), ((state->position)++));
+}
+
+
+# 573 "roci/roci-compiler.c"
+void roci_expect_token(roci_compiler_state_t* state, char* token_string)
+# 573 "roci/roci-compiler.c"
+{
+
+# 574 "roci/roci-compiler.c"
+  token_t* token = roci_next_token(state);
+
+# 575 "roci/roci-compiler.c"
+  if ((!token_matches(token, token_string)))
+
+# 575 "roci/roci-compiler.c"
+  {
+
+# 576 "roci/roci-compiler.c"
+    log_fatal("roci expected %s as the next token but got %s", token_string, token_to_string(token));
+
+# 578 "roci/roci-compiler.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+}
+
+
+# 582 "roci/roci-compiler.c"
+void roci_verify_identifier(token_t* token)
+# 582 "roci/roci-compiler.c"
+{
+
+# 583 "roci/roci-compiler.c"
+  if (((token->type)!=TOKEN_TYPE_IDENTIFIER))
+
+# 583 "roci/roci-compiler.c"
+  {
+
+# 584 "roci/roci-compiler.c"
+    fatal_error(ERROR_ILLEGAL_INPUT);
+  }
+}
+
+
+# 32 "roci/roci-debugger.c"
+void roci_debug_error(roci_vm_state_t* state, char* error_message)
+# 32 "roci/roci-debugger.c"
+{
+
+# 33 "roci/roci-debugger.c"
+  log_fatal(error_message);
+
+# 34 "roci/roci-debugger.c"
+  roci_repl((state->env));
+
+# 35 "roci/roci-debugger.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+
+# 38 "roci/roci-debugger.c"
+void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer)
+# 38 "roci/roci-debugger.c"
+{
+
+# 39 "roci/roci-debugger.c"
+  boolean_t is_tty = roci_is_tty();
+
+# 41 "roci/roci-debugger.c"
+  buffer_clear(buffer);
+
+# 43 "roci/roci-debugger.c"
+  if ((!is_tty))
+
+# 43 "roci/roci-debugger.c"
+  {
+
+# 44 "roci/roci-debugger.c"
+    buffer_printf(buffer, "--------------------------------------------------------------" "--------\n");
+  }
+  else
+
+# 48 "roci/roci-debugger.c"
+  {
+
+# 49 "roci/roci-debugger.c"
+    term_home(buffer);
+
+# 50 "roci/roci-debugger.c"
+    term_alt_buffer(buffer);
+
+# 51 "roci/roci-debugger.c"
+    term_clear_screen(buffer);
+  }
+
+# 54 "roci/roci-debugger.c"
+  if (is_tty)
+
+# 54 "roci/roci-debugger.c"
+  {
+
+# 55 "roci/roci-debugger.c"
+    roci_debugger_banner(buffer, "*** Disassembly ***");
+  }
+
+# 57 "roci/roci-debugger.c"
+  bblock_to_buffer(buffer, (state->current_bb), (state->opcode_ptr));
+
+# 59 "roci/roci-debugger.c"
+  if (is_tty)
+
+# 59 "roci/roci-debugger.c"
+  {
+
+# 60 "roci/roci-debugger.c"
+    roci_debugger_instructions(buffer);
+  }
+
+# 63 "roci/roci-debugger.c"
+  buffer_write_all(stderr, buffer);
+
+# 64 "roci/roci-debugger.c"
+  fflush(stderr);
+
+# 66 "roci/roci-debugger.c"
+  if (is_tty)
+
+# 66 "roci/roci-debugger.c"
+  {
+
+# 67 "roci/roci-debugger.c"
+    buffer_t* input_buffer = make_buffer(10);
+
+# 69 "roci/roci-debugger.c"
+    struct termios oldt = term_echo_off();
+
+# 71 "roci/roci-debugger.c"
+    while (true)
+
+# 71 "roci/roci-debugger.c"
+    {
+
+# 72 "roci/roci-debugger.c"
+      buffer_clear(buffer);
+
+# 73 "roci/roci-debugger.c"
+      (buffer=buffer_read_ready_bytes(buffer, stdin, 10));
+
+# 74 "roci/roci-debugger.c"
+      if ((buffer_length(buffer)>0))
+
+# 74 "roci/roci-debugger.c"
+      {
+
+# 75 "roci/roci-debugger.c"
+        uint8_t byte = buffer_get(buffer, 0);
+
+# 76 "roci/roci-debugger.c"
+        if ((byte==' '))
+
+# 76 "roci/roci-debugger.c"
+        {
+
+# 77 "roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 78 "roci/roci-debugger.c"
+          break;
+        }
+        else
+
+# 79 "roci/roci-debugger.c"
+        if ((byte=='q'))
+
+# 79 "roci/roci-debugger.c"
+        {
+
+# 80 "roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 81 "roci/roci-debugger.c"
+          term_main_buffer(buffer);
+
+# 82 "roci/roci-debugger.c"
+          fprintf(stderr, "\nExiting program from roci debugger.\n");
+
+# 83 "roci/roci-debugger.c"
+          exit(1);
+        }
+        else
+
+# 84 "roci/roci-debugger.c"
+        if ((byte=='c'))
+
+# 84 "roci/roci-debugger.c"
+        {
+
+# 85 "roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 86 "roci/roci-debugger.c"
+          (((state->debug)->n_instructions)=0xffffffffffffffff);
+
+# 87 "roci/roci-debugger.c"
+          (((state->debug)->break_on_call_target)=false);
+
+# 88 "roci/roci-debugger.c"
+          (((state->debug)->break_on_return)=false);
+
+# 89 "roci/roci-debugger.c"
+          (((state->debug)->break_on_next_statement)=false);
+
+# 90 "roci/roci-debugger.c"
+          (((state->debug)->trace)=false);
+
+# 91 "roci/roci-debugger.c"
+          break;
+        }
+        else
+
+# 92 "roci/roci-debugger.c"
+        if ((byte=='e'))
+
+# 92 "roci/roci-debugger.c"
+        {
+
+# 93 "roci/roci-debugger.c"
+          buffer_t* buffer = make_buffer(10);
+
+# 94 "roci/roci-debugger.c"
+          if (is_tty)
+
+# 94 "roci/roci-debugger.c"
+          {
+
+# 95 "roci/roci-debugger.c"
+            roci_debugger_banner(buffer, "*** Environment ***");
+          }
+
+# 97 "roci/roci-debugger.c"
+          roci_dump_env((state->env), buffer);
+
+# 98 "roci/roci-debugger.c"
+          fprintf(stdout, buffer_to_c_string(buffer));
+
+# 99 "roci/roci-debugger.c"
+          fflush(stdout);
+        }
+        else
+
+# 100 "roci/roci-debugger.c"
+        if ((byte=='k'))
+
+# 100 "roci/roci-debugger.c"
+        {
+
+# 101 "roci/roci-debugger.c"
+          buffer_t* buffer = make_buffer(10);
+
+# 102 "roci/roci-debugger.c"
+          if (is_tty)
+
+# 102 "roci/roci-debugger.c"
+          {
+
+# 103 "roci/roci-debugger.c"
+            roci_debugger_banner(buffer, "*** Stack ***");
+          }
+
+# 105 "roci/roci-debugger.c"
+          roci_dump_stack(state, buffer);
+
+# 106 "roci/roci-debugger.c"
+          fprintf(stdout, buffer_to_c_string(buffer));
+
+# 107 "roci/roci-debugger.c"
+          fflush(stdout);
+        }
+      }
+
+# 110 "roci/roci-debugger.c"
+      usleep(1000);
+    }
+
+# 112 "roci/roci-debugger.c"
+    term_main_buffer(buffer);
+  }
+}
+
+
+# 116 "roci/roci-debugger.c"
+void roci_debug_breakpoint(void)
+# 116 "roci/roci-debugger.c"
+{
+}
+
+
+# 118 "roci/roci-debugger.c"
+void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer)
+# 118 "roci/roci-debugger.c"
+{
+
+# 120 "roci/roci-debugger.c"
+  for (
+
+# 120 "roci/roci-debugger.c"
+
+# 120 "roci/roci-debugger.c"
+    int i = 1;
+
+# 120 "roci/roci-debugger.c"
+    (i<1024);
+
+# 120 "roci/roci-debugger.c"
+    (i++))
+
+# 120 "roci/roci-debugger.c"
+  {
+
+# 121 "roci/roci-debugger.c"
+    roci_value_t value = roci_debug_peek_value(state, i);
+
+# 122 "roci/roci-debugger.c"
+    if ((((value.tag)==ROCI_TAG_STACK_MARKER)||((value.tag)==ROCI_TAG_UNKNOWN)))
+
+# 122 "roci/roci-debugger.c"
+    {
+
+# 123 "roci/roci-debugger.c"
+      break;
+    }
+
+# 125 "roci/roci-debugger.c"
+    buffer_printf(buffer, "stack[%d] = %s\n", i, roci_value_to_c_string(value));
+
+# 126 "roci/roci-debugger.c"
+    if ((i==1023))
+
+# 126 "roci/roci-debugger.c"
+    {
+
+# 127 "roci/roci-debugger.c"
+      log_fatal("ROCI_TAG_STACK_MARKER not found.");
+
+# 128 "roci/roci-debugger.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+}
+
+
+# 135 "roci/roci-debugger.c"
+boolean_t roci_is_tty(void)
+# 135 "roci/roci-debugger.c"
+{
+
+# 136 "roci/roci-debugger.c"
+  return (isatty(fileno(stdout))&&(!string_equal("dumb", getenv("TERM"))));
+}
+
+
+# 139 "roci/roci-debugger.c"
+void roci_debugger_banner(buffer_t* buffer, char* text)
+# 139 "roci/roci-debugger.c"
+{
+
+# 140 "roci/roci-debugger.c"
+  int width = term_width();
+
+# 141 "roci/roci-debugger.c"
+  term_set_background_color(buffer, 0xbfbfbf);
+
+# 142 "roci/roci-debugger.c"
+  term_set_foreground_color(buffer, 0xff0000);
+
+# 143 "roci/roci-debugger.c"
+  term_bold(buffer);
+
+# 144 "roci/roci-debugger.c"
+  buffer_printf(buffer, "               %s", text);
+
+# 145 "roci/roci-debugger.c"
+  buffer_append_repeated_byte(buffer, ' ', ((width-strlen(text))-15));
+
+# 146 "roci/roci-debugger.c"
+  buffer_printf(buffer, "\n", text);
+
+# 147 "roci/roci-debugger.c"
+  term_set_background_color(buffer, 0x000000);
+
+# 148 "roci/roci-debugger.c"
+  term_set_foreground_color(buffer, 0xffffff);
+
+# 149 "roci/roci-debugger.c"
+  term_reset_formatting(buffer);
+}
+
+
+# 152 "roci/roci-debugger.c"
+void roci_debugger_instructions(buffer_t* buffer)
+# 152 "roci/roci-debugger.c"
+{
+
+# 153 "roci/roci-debugger.c"
+  buffer_printf(buffer, "\n[Space] step instruction [n] next statement [c] continue " "[q] quit [e] dump environment [k] dump stack\n");
+}
+
+
+# 8 "roci/roci-disassembler.c"
+void bblock_to_buffer(buffer_t* buffer, roci_bb_t* bb, uint8_t* address)
+# 8 "roci/roci-disassembler.c"
+{
+
+# 9 "roci/roci-disassembler.c"
+  buffer_printf(buffer, "%s:\n", uint64_to_string((/*CAST*/(uint64_t) bb)));
+
+# 10 "roci/roci-disassembler.c"
+  uint8_t* opcode_ptr = bblock_opcode_pointer(bb);
+
+# 11 "roci/roci-disassembler.c"
+  uint64_t* data_ptr = bblock_data_pointer(bb);
+
+# 12 "roci/roci-disassembler.c"
+  for (
+
+# 12 "roci/roci-disassembler.c"
+
+# 12 "roci/roci-disassembler.c"
+    int i = 0;
+
+# 12 "roci/roci-disassembler.c"
+    (i<(bb->num_opcodes));
+
+# 12 "roci/roci-disassembler.c"
+    (i++))
+
+# 12 "roci/roci-disassembler.c"
+  {
+
+# 13 "roci/roci-disassembler.c"
+    if ((opcode_ptr==address))
+
+# 13 "roci/roci-disassembler.c"
+    {
+
+# 14 "roci/roci-disassembler.c"
+      term_bold(buffer);
+    }
+
+# 16 "roci/roci-disassembler.c"
+    (data_ptr+=roci_instruction_to_buffer(buffer, opcode_ptr, data_ptr));
+
+# 17 "roci/roci-disassembler.c"
+    if ((opcode_ptr==address))
+
+# 17 "roci/roci-disassembler.c"
+    {
+
+# 18 "roci/roci-disassembler.c"
+      term_reset_formatting(buffer);
+    }
+
+# 20 "roci/roci-disassembler.c"
+    (opcode_ptr++);
+  }
+}
+
+
+# 24 "roci/roci-disassembler.c"
+uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr, uint64_t* data_ptr)
+# 25 "roci/roci-disassembler.c"
+{
+
+# 26 "roci/roci-disassembler.c"
+  switch ((*opcode_ptr))
+
+# 26 "roci/roci-disassembler.c"
+  {
+
+# 27 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_TRAP:
+
+# 28 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    trap\n");
+
+# 29 "roci/roci-disassembler.c"
+    return 0;
+
+# 30 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DROP:
+
+# 31 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    drop\n");
+
+# 32 "roci/roci-disassembler.c"
+    return 0;
+
+# 33 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_RETURN:
+
+# 34 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    return\n");
+
+# 35 "roci/roci-disassembler.c"
+    return 0;
+
+# 36 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_INTEGER:
+
+# 37 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push %s\n", uint64_to_string((*data_ptr)));
+
+# 38 "roci/roci-disassembler.c"
+    return 1;
+
+# 39 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_TRUE:
+
+# 40 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push true\n");
+
+# 41 "roci/roci-disassembler.c"
+    return 0;
+
+# 42 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_FALSE:
+
+# 43 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push false\n");
+
+# 44 "roci/roci-disassembler.c"
+    return 0;
+
+# 45 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_DOUBLE:
+
+# 46 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push %lf\n", raw_double_to_double((*data_ptr)));
+
+# 47 "roci/roci-disassembler.c"
+    return 1;
+
+# 48 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_PUSH_STRING:
+
+# 49 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    push %s\n", quote_c_string((/*CAST*/(char*) (*data_ptr))));
+
+# 51 "roci/roci-disassembler.c"
+    return 1;
+
+# 52 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_BR:
+
+# 53 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    br %s\n", uint64_to_string((*data_ptr)));
+
+# 54 "roci/roci-disassembler.c"
+    return 1;
+
+# 55 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_BR_TRUE:
+
+# 56 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    br_true %s\n", uint64_to_string((*data_ptr)));
+
+# 57 "roci/roci-disassembler.c"
+    return 1;
+
+# 58 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_NEW_ENVIRONMENT:
+
+# 59 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    new_env\n");
+
+# 60 "roci/roci-disassembler.c"
+    return 0;
+
+# 61 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DROP_ENVIRONMENT:
+
+# 62 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    drop_env\n");
+
+# 63 "roci/roci-disassembler.c"
+    return 0;
+
+# 64 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_GET_VAR:
+
+# 65 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    get_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 66 "roci/roci-disassembler.c"
+    return 1;
+
+# 67 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_SET_VAR:
+
+# 68 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    set_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 69 "roci/roci-disassembler.c"
+    return 1;
+
+# 70 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DEFINE_VAR:
+
+# 71 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    define_var %s\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 72 "roci/roci-disassembler.c"
+    return 1;
+
+# 73 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_COMMENT:
+
+# 74 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    ; %s\n", (/*CAST*/(char*) (*data_ptr)));
+
+# 75 "roci/roci-disassembler.c"
+    return 1;
+
+# 77 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CALL:
+
+# 78 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    call_%d %s\n", (*(data_ptr+0)), uint64_to_string((*(data_ptr+1))));
+
+# 80 "roci/roci-disassembler.c"
+    return 2;
+
+# 81 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_MAKE_CLOSURE:
+
+# 82 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    make_closure %s\n", uint64_to_string((*data_ptr)));
+
+# 84 "roci/roci-disassembler.c"
+    return 1;
+
+# 85 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_CHECK_ARGS:
+
+# 86 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    check_args %s\n", uint64_to_string((*data_ptr)));
+
+# 87 "roci/roci-disassembler.c"
+    return 1;
+
+# 88 "roci/roci-disassembler.c"
+    case ROCI_OPCODE_DEBUG_INFO:
+
+# 88 "roci/roci-disassembler.c"
+    {
+
+# 89 "roci/roci-disassembler.c"
+      roci_src_info_t info = (*data_ptr);
+
+# 90 "roci/roci-disassembler.c"
+      buffer_printf(buffer, "    debug_info %s, %s\n", uint64_to_string(roci_src_file_number(info)), uint64_to_string(roci_src_line_number(info)));
+
+# 93 "roci/roci-disassembler.c"
+      return 1;
+    }
+
+# 95 "roci/roci-disassembler.c"
+    default:
+
+# 96 "roci/roci-disassembler.c"
+    buffer_printf(buffer, "    <unknown-opcode>\n");
+
+# 97 "roci/roci-disassembler.c"
+    return 0;
+  }
+
+# 100 "roci/roci-disassembler.c"
+  return 0;
+}
+
+
+# 103 "roci/roci-disassembler.c"
+double raw_double_to_double(uint64_t raw_bits)
+# 103 "roci/roci-disassembler.c"
+{
+
+# 104 "roci/roci-disassembler.c"
+  double val = 0.0;
+
+# 105 "roci/roci-disassembler.c"
+  memcpy((&val), (&raw_bits), (sizeof(val)));
+
+# 106 "roci/roci-disassembler.c"
+  return val;
+}
+
+
+# 109 "roci/roci-disassembler.c"
+void disassemble_bblocks(value_array_t* bblocks, buffer_t* buffer)
+# 109 "roci/roci-disassembler.c"
+{
+
+# 110 "roci/roci-disassembler.c"
+  for (
+
+# 110 "roci/roci-disassembler.c"
+
+# 110 "roci/roci-disassembler.c"
+    int i = 0;
+
+# 110 "roci/roci-disassembler.c"
+    (i<(bblocks->length));
+
+# 110 "roci/roci-disassembler.c"
+    (i++))
+
+# 110 "roci/roci-disassembler.c"
+  {
+
+# 111 "roci/roci-disassembler.c"
+    bblock_to_buffer(buffer, value_array_get_ptr(bblocks, i, typeof(roci_bb_t*)), ((void *)0));
+  }
+}
+
+
+# 13 "roci/roci-env.c"
+roci_value_t* roci_get_var(roci_env_t* env, char* name)
+# 13 "roci/roci-env.c"
+{
+
+# 14 "roci/roci-env.c"
+  while ((env!=NULL))
+
+# 14 "roci/roci-env.c"
+  {
+
+# 15 "roci/roci-env.c"
+    value_result_t find_result = string_ht_find((env->bindings), name);
+
+# 16 "roci/roci-env.c"
+    if (is_ok(find_result))
+
+# 16 "roci/roci-env.c"
+    {
+
+# 17 "roci/roci-env.c"
+      return (/*CAST*/(roci_value_t*) (find_result.ptr));
+    }
+
+# 19 "roci/roci-env.c"
+    (env=(env->parent));
+  }
+
+# 21 "roci/roci-env.c"
+  return NULL;
+}
+
+
+# 24 "roci/roci-env.c"
+void roci_set_var(roci_vm_state_t* state, char* name, value_t value, roci_tag_t tag)
+# 25 "roci/roci-env.c"
+{
+
+# 26 "roci/roci-env.c"
+  roci_value_t* binding = roci_get_var((state->env), name);
+
+# 27 "roci/roci-env.c"
+  if ((binding==((void *)0)))
+
+# 27 "roci/roci-env.c"
+  {
+
+# 28 "roci/roci-env.c"
+    roci_debug_error(state, string_printf("Variable not found '%s'", name));
+  }
+
+# 30 "roci/roci-env.c"
+  ((binding->raw)=(value.u64));
+
+# 31 "roci/roci-env.c"
+  ((binding->tag)=tag);
+}
+
+
+# 34 "roci/roci-env.c"
+void roci_define_var(roci_env_t* env, char* name, value_t value, roci_tag_t tag)
+# 35 "roci/roci-env.c"
+{
+
+# 36 "roci/roci-env.c"
+  value_result_t find_result = string_ht_find((env->bindings), name);
+
+# 37 "roci/roci-env.c"
+  if (is_ok(find_result))
+
+# 37 "roci/roci-env.c"
+  {
+
+# 38 "roci/roci-env.c"
+    log_fatal("redefinition of a variable %s", name);
+
+# 39 "roci/roci-env.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 41 "roci/roci-env.c"
+  roci_value_t* binding = malloc_struct(roci_value_t);
+
+# 42 "roci/roci-env.c"
+  ((binding->raw)=(value.u64));
+
+# 43 "roci/roci-env.c"
+  ((binding->tag)=tag);
+
+# 44 "roci/roci-env.c"
+  string_ht_insert((env->bindings), name, ptr_to_value(binding));
+}
+
+
+# 47 "roci/roci-env.c"
+roci_env_t* roci_new_env(roci_env_t* parent)
+# 47 "roci/roci-env.c"
+{
+
+# 48 "roci/roci-env.c"
+  roci_env_t* result = malloc_struct(roci_env_t);
+
+# 49 "roci/roci-env.c"
+  ((result->parent)=parent);
+
+# 50 "roci/roci-env.c"
+  ((result->bindings)=make_string_hashtable(7));
+
+# 51 "roci/roci-env.c"
+  return result;
+}
+
+
+# 54 "roci/roci-env.c"
+void roci_dump_env(roci_env_t* env, buffer_t* buffer)
+# 54 "roci/roci-env.c"
+{
+
+# 55 "roci/roci-env.c"
+  if ((env==((void *)0)))
+
+# 55 "roci/roci-env.c"
+  {
+
+# 56 "roci/roci-env.c"
+    return;
+  }
+
+# 59 "roci/roci-env.c"
+  roci_dump_env((env->parent), buffer);
+
+# 61 "roci/roci-env.c"
+  int depth = 0;
+
+# 62 "roci/roci-env.c"
+  roci_env_t* env2 = env;
+
+# 63 "roci/roci-env.c"
+  while ((env2!=((void *)0)))
+
+# 63 "roci/roci-env.c"
+  {
+
+# 64 "roci/roci-env.c"
+    (depth++);
+
+# 65 "roci/roci-env.c"
+    (env2=(env2->parent));
+  }
+
+# 69 "roci/roci-env.c"
+  string_ht_foreach((env->bindings), key, value, 
+# 69 "roci/roci-env.c"
+  {
+
+# 70 "roci/roci-env.c"
+    buffer_append_repeated_byte(buffer, ' ', (depth*4));
+
+# 71 "roci/roci-env.c"
+    buffer_printf(buffer, "%s = ", (/*CAST*/(char*) key));
+
+# 72 "roci/roci-env.c"
+    roci_append_value(buffer, (*(/*CAST*/(roci_value_t*) (value.ptr))));
+
+# 73 "roci/roci-env.c"
+    buffer_printf(buffer, "\n");
+  }
+);
+}
+
+
+# 10 "roci/roci-primitives.c"
+void roci_add_primitives_to_env(roci_env_t* env)
+# 10 "roci/roci-primitives.c"
+{
+
+# 11 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_load), "load");
+
+# 12 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_exit), "exit");
+
+# 16 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_print_env), "debug_print_env");
+
+# 17 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_to_string), "to_string");
+
+# 18 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_print_string), "print_string");
+
+# 19 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_println), "println");
+
+# 20 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_append), "string_append");
+
+# 21 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_equal), "string_equal");
+
+# 22 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_starts_with), "string_starts_with");
+
+# 24 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_ends_with), "string_ends_with");
+
+# 25 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_string_substring), "string_substring");
+
+# 26 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_make_list), "make_list");
+
+# 27 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_list_get), "list_get");
+
+# 28 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_list_set), "list_set");
+
+# 29 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_list_push), "list_push");
+
+# 30 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_list_for_each), "list_for_each");
+
+# 31 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_timestamp), "timestamp");
+
+# 32 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_shell), "shell");
+
+# 33 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_platform), "platform");
+
+# 34 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_glob), "glob");
+
+# 35 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_iadd), "iadd");
+
+# 36 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_igte), "igte");
+
+# 37 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_iequal), "iequal");
+
+# 38 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_neg), "neg");
+
+# 39 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_not), "not");
+
+# 40 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_getenv), "getenv");
+
+# 41 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_boolean), "is_boolean");
+
+# 42 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_string), "is_string");
+
+# 43 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_integer), "is_integer");
+
+# 44 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_list), "is_list");
+
+# 45 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_is_double), "is_double");
+
+# 46 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_pwd), "pwd");
+
+# 47 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_cd), "cd");
+
+# 48 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_shell_exit_code), "shell_exit_code");
+
+# 49 "roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_shell_stdout), "shell_stdout");
+}
+
+
+# 58 "roci/roci-primitives.c"
+void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name)
+# 59 "roci/roci-primitives.c"
+{
+
+# 60 "roci/roci-primitives.c"
+  roci_define_var(env, name, u64_to_value((/*CAST*/(uint64_t) primitive)), ROCI_TAG_C_PRIMITIVE);
+}
+
+
+# 69 "roci/roci-primitives.c"
+void roci_primitive_exit(roci_vm_state_t* state)
+# 69 "roci/roci-primitives.c"
+{
+
+# 70 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 70 "roci/roci-primitives.c"
+  {
+
+# 71 "roci/roci-primitives.c"
+    roci_debug_error(state, "roci_exit expects 1 argument");
+  }
+
+# 73 "roci/roci-primitives.c"
+  int64_t code = roci_pop_integer(state);
+
+# 74 "roci/roci-primitives.c"
+  exit(code);
+}
+
+
+# 83 "roci/roci-primitives.c"
+void roci_primitive_load(roci_vm_state_t* state)
+# 83 "roci/roci-primitives.c"
+{
+
+# 84 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 84 "roci/roci-primitives.c"
+  {
+
+# 85 "roci/roci-primitives.c"
+    roci_debug_error(state, "roci_load expects 1 argument");
+  }
+
+# 87 "roci/roci-primitives.c"
+  char* filename = roci_pop_string(state);
+
+# 88 "roci/roci-primitives.c"
+  file_t* file = read_file(filename);
+
+# 89 "roci/roci-primitives.c"
+  roci_compiler_state_t* compiler_state = malloc_struct(roci_compiler_state_t);
+
+# 90 "roci/roci-primitives.c"
+  ((compiler_state->bblocks)=make_value_array(16));
+
+# 91 "roci/roci-primitives.c"
+  roci_compile_buffer(compiler_state, (file->file_name), (file->data));
+
+# 92 "roci/roci-primitives.c"
+  value_array_t* bblocks = build_bblocks((compiler_state->bblocks));
+
+# 93 "roci/roci-primitives.c"
+  roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
+
+# 94 "roci/roci-primitives.c"
+  roci_execute((state->env), entry_point);
+
+# 95 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 98 "roci/roci-primitives.c"
+void roci_primitive_print_env(roci_vm_state_t* state)
+# 98 "roci/roci-primitives.c"
+{
+
+# 99 "roci/roci-primitives.c"
+  buffer_t* buffer = make_buffer(10);
+
+# 100 "roci/roci-primitives.c"
+  roci_dump_env((state->env), buffer);
+
+# 101 "roci/roci-primitives.c"
+  fprintf(stdout, "%s", buffer_to_c_string(buffer));
+
+# 102 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 105 "roci/roci-primitives.c"
+void roci_primitive_print_string(roci_vm_state_t* state)
+# 105 "roci/roci-primitives.c"
+{
+
+# 106 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 106 "roci/roci-primitives.c"
+  {
+
+# 107 "roci/roci-primitives.c"
+    roci_debug_error(state, "print_string expects a single string argument");
+  }
+
+# 109 "roci/roci-primitives.c"
+  char* arg = roci_pop_string(state);
+
+# 110 "roci/roci-primitives.c"
+  fprintf(stdout, "%s", arg);
+
+# 111 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 114 "roci/roci-primitives.c"
+void roci_primitive_println(roci_vm_state_t* state)
+# 114 "roci/roci-primitives.c"
+{
+
+# 115 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 115 "roci/roci-primitives.c"
+  {
+
+# 116 "roci/roci-primitives.c"
+    roci_debug_error(state, "println_string expects 1 argument");
+  }
+
+# 118 "roci/roci-primitives.c"
+  roci_value_t element = roci_pop_value(state);
+
+# 119 "roci/roci-primitives.c"
+  if (((element.tag)==ROCI_TAG_STRING))
+
+# 119 "roci/roci-primitives.c"
+  {
+
+# 120 "roci/roci-primitives.c"
+    fprintf(stdout, "%s\n", (/*CAST*/(char*) (element.raw)));
+  }
+  else
+
+# 121 "roci/roci-primitives.c"
+  {
+
+# 122 "roci/roci-primitives.c"
+    fprintf(stdout, "%s\n", roci_value_to_c_string(element));
+  }
+
+# 124 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 128 "roci/roci-primitives.c"
+void roci_primitive_string_equal(roci_vm_state_t* state)
+# 128 "roci/roci-primitives.c"
+{
+
+# 129 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 129 "roci/roci-primitives.c"
+  {
+
+# 130 "roci/roci-primitives.c"
+    roci_debug_error(state, "string_equal expects two string arguments");
+  }
+
+# 132 "roci/roci-primitives.c"
+  char* arg1 = roci_pop_string(state);
+
+# 133 "roci/roci-primitives.c"
+  char* arg0 = roci_pop_string(state);
+
+# 134 "roci/roci-primitives.c"
+  if (string_equal(arg0, arg1))
+
+# 134 "roci/roci-primitives.c"
+  {
+
+# 135 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 136 "roci/roci-primitives.c"
+  {
+
+# 137 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 141 "roci/roci-primitives.c"
+void roci_primitive_string_starts_with(roci_vm_state_t* state)
+# 141 "roci/roci-primitives.c"
+{
+
+# 142 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 142 "roci/roci-primitives.c"
+  {
+
+# 143 "roci/roci-primitives.c"
+    roci_debug_error(state, "string_starts_with expects two string arguments");
+  }
+
+# 145 "roci/roci-primitives.c"
+  char* arg1 = roci_pop_string(state);
+
+# 146 "roci/roci-primitives.c"
+  char* arg0 = roci_pop_string(state);
+
+# 147 "roci/roci-primitives.c"
+  if (string_starts_with(arg0, arg1))
+
+# 147 "roci/roci-primitives.c"
+  {
+
+# 148 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 149 "roci/roci-primitives.c"
+  {
+
+# 150 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 154 "roci/roci-primitives.c"
+void roci_primitive_string_ends_with(roci_vm_state_t* state)
+# 154 "roci/roci-primitives.c"
+{
+
+# 155 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 155 "roci/roci-primitives.c"
+  {
+
+# 156 "roci/roci-primitives.c"
+    roci_debug_error(state, "string_ends_with expects two string arguments");
+  }
+
+# 158 "roci/roci-primitives.c"
+  char* arg1 = roci_pop_string(state);
+
+# 159 "roci/roci-primitives.c"
+  char* arg0 = roci_pop_string(state);
+
+# 160 "roci/roci-primitives.c"
+  if (string_ends_with(arg0, arg1))
+
+# 160 "roci/roci-primitives.c"
+  {
+
+# 161 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 162 "roci/roci-primitives.c"
+  {
+
+# 163 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 167 "roci/roci-primitives.c"
+void roci_primitive_string_substring(roci_vm_state_t* state)
+# 167 "roci/roci-primitives.c"
+{
+
+# 168 "roci/roci-primitives.c"
+  if (((state->n_args)!=3))
+
+# 168 "roci/roci-primitives.c"
+  {
+
+# 169 "roci/roci-primitives.c"
+    roci_debug_error(state, "string_substring expectds 3 arguments");
+  }
+
+# 171 "roci/roci-primitives.c"
+  int64_t end = roci_pop_integer(state);
+
+# 172 "roci/roci-primitives.c"
+  int64_t start = roci_pop_integer(state);
+
+# 173 "roci/roci-primitives.c"
+  char* str = roci_pop_string(state);
+
+# 174 "roci/roci-primitives.c"
+  char* result = string_substring(str, start, end);
+
+# 175 "roci/roci-primitives.c"
+  roci_push_string(state, result);
+}
+
+
+# 183 "roci/roci-primitives.c"
+void roci_primitive_string_append(roci_vm_state_t* state)
+# 183 "roci/roci-primitives.c"
+{
+
+# 184 "roci/roci-primitives.c"
+  buffer_t* buffer = make_buffer(10);
+
+# 185 "roci/roci-primitives.c"
+  for (
+
+# 185 "roci/roci-primitives.c"
+
+# 185 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 185 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 185 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 185 "roci/roci-primitives.c"
+  {
+
+# 186 "roci/roci-primitives.c"
+    roci_value_t value = roci_debug_peek_value(state, ((state->n_args)-arg_num));
+
+# 187 "roci/roci-primitives.c"
+    if (((value.tag)!=ROCI_TAG_STRING))
+
+# 187 "roci/roci-primitives.c"
+    {
+
+# 188 "roci/roci-primitives.c"
+      roci_debug_error(state, "string_append expects string arguments");
+    }
+
+# 190 "roci/roci-primitives.c"
+    buffer_append_string(buffer, (/*CAST*/(char*) (value.raw)));
+  }
+
+# 192 "roci/roci-primitives.c"
+  for (
+
+# 192 "roci/roci-primitives.c"
+
+# 192 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 192 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 192 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 192 "roci/roci-primitives.c"
+  {
+
+# 193 "roci/roci-primitives.c"
+    roci_pop_value(state);
+  }
+
+# 195 "roci/roci-primitives.c"
+  roci_push_string(state, buffer_to_c_string(buffer));
+}
+
+
+# 198 "roci/roci-primitives.c"
+void roci_primitive_make_list(roci_vm_state_t* state)
+# 198 "roci/roci-primitives.c"
+{
+
+# 199 "roci/roci-primitives.c"
+  value_array_t* list = make_value_array((state->n_args));
+
+# 200 "roci/roci-primitives.c"
+  for (
+
+# 200 "roci/roci-primitives.c"
+
+# 200 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 200 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 200 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 200 "roci/roci-primitives.c"
+  {
+
+# 201 "roci/roci-primitives.c"
+    roci_value_t* value = roci_value_to_heap(roci_debug_peek_value(state, ((state->n_args)-arg_num)));
+
+# 203 "roci/roci-primitives.c"
+    value_array_add(list, ptr_to_value(value));
+  }
+
+# 205 "roci/roci-primitives.c"
+  for (
+
+# 205 "roci/roci-primitives.c"
+
+# 205 "roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 205 "roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 205 "roci/roci-primitives.c"
+    (arg_num++))
+
+# 205 "roci/roci-primitives.c"
+  {
+
+# 206 "roci/roci-primitives.c"
+    roci_pop_value(state);
+  }
+
+# 208 "roci/roci-primitives.c"
+  roci_push_list(state, list);
+}
+
+
+# 211 "roci/roci-primitives.c"
+void roci_primitive_list_get(roci_vm_state_t* state)
+# 211 "roci/roci-primitives.c"
+{
+
+# 212 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 212 "roci/roci-primitives.c"
+  {
+
+# 213 "roci/roci-primitives.c"
+    roci_debug_error(state, "list_get expects 2 arguments");
+  }
+
+# 215 "roci/roci-primitives.c"
+  int64_t position = roci_pop_integer(state);
+
+# 216 "roci/roci-primitives.c"
+  value_array_t* list = roci_pop_list(state);
+
+# 217 "roci/roci-primitives.c"
+  roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, position).ptr));
+
+# 219 "roci/roci-primitives.c"
+  roci_push_value(state, (*element));
+}
+
+
+# 222 "roci/roci-primitives.c"
+void roci_primitive_list_set(roci_vm_state_t* state)
+# 222 "roci/roci-primitives.c"
+{
+
+# 223 "roci/roci-primitives.c"
+  if (((state->n_args)!=3))
+
+# 223 "roci/roci-primitives.c"
+  {
+
+# 224 "roci/roci-primitives.c"
+    roci_debug_error(state, "list_set expects 3 arguments");
+  }
+
+# 226 "roci/roci-primitives.c"
+  roci_value_t element = roci_pop_value(state);
+
+# 227 "roci/roci-primitives.c"
+  int64_t position = roci_pop_integer(state);
+
+# 228 "roci/roci-primitives.c"
+  value_array_t* list = roci_pop_list(state);
+
+# 229 "roci/roci-primitives.c"
+  value_array_replace(list, position, ptr_to_value(roci_value_to_heap(element)));
+
+# 231 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 234 "roci/roci-primitives.c"
+void roci_primitive_list_push(roci_vm_state_t* state)
+# 234 "roci/roci-primitives.c"
+{
+
+# 235 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 235 "roci/roci-primitives.c"
+  {
+
+# 236 "roci/roci-primitives.c"
+    roci_debug_error(state, "list_push expects 2 arguments");
+  }
+
+# 238 "roci/roci-primitives.c"
+  roci_value_t element = roci_pop_value(state);
+
+# 239 "roci/roci-primitives.c"
+  value_array_t* list = roci_pop_list(state);
+
+# 240 "roci/roci-primitives.c"
+  value_array_push(list, ptr_to_value(roci_value_to_heap(element)));
+
+# 241 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 245 "roci/roci-primitives.c"
+void roci_primitive_list_for_each(roci_vm_state_t* state)
+# 245 "roci/roci-primitives.c"
+{
+
+# 246 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 246 "roci/roci-primitives.c"
+  {
+
+# 247 "roci/roci-primitives.c"
+    roci_debug_error(state, "list_for_each requires two arguments");
+  }
+
+# 249 "roci/roci-primitives.c"
+  roci_value_t proc = roci_pop_value(state);
+
+# 250 "roci/roci-primitives.c"
+  value_array_t* list = roci_pop_list(state);
+
+# 251 "roci/roci-primitives.c"
+  for (
+
+# 251 "roci/roci-primitives.c"
+
+# 251 "roci/roci-primitives.c"
+    int i = 0;
+
+# 251 "roci/roci-primitives.c"
+    (i<(list->length));
+
+# 251 "roci/roci-primitives.c"
+    (i++))
+
+# 251 "roci/roci-primitives.c"
+  {
+
+# 252 "roci/roci-primitives.c"
+    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, i).ptr));
+
+# 253 "roci/roci-primitives.c"
+    roci_push_value(state, (*element));
+
+# 254 "roci/roci-primitives.c"
+    roci_call(state, proc, 1);
+  }
+
+# 256 "roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 259 "roci/roci-primitives.c"
+void roci_primitive_to_string(roci_vm_state_t* state)
+# 259 "roci/roci-primitives.c"
+{
+
+# 260 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 260 "roci/roci-primitives.c"
+  {
+
+# 261 "roci/roci-primitives.c"
+    roci_debug_error(state, "to_string expects 1 argument");
+  }
+
+# 263 "roci/roci-primitives.c"
+  roci_value_t element = roci_pop_value(state);
+
+# 264 "roci/roci-primitives.c"
+  roci_push_string(state, roci_value_to_c_string(element));
+}
+
+
+# 267 "roci/roci-primitives.c"
+void roci_primitive_timestamp(roci_vm_state_t* state)
+# 267 "roci/roci-primitives.c"
+{
+
+# 268 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 268 "roci/roci-primitives.c"
+  {
+
+# 269 "roci/roci-primitives.c"
+    roci_debug_error(state, "timestamp expects 1 argument");
+  }
+
+# 271 "roci/roci-primitives.c"
+  char* filename = roci_pop_string(state);
+
+# 272 "roci/roci-primitives.c"
+  uint64_t timestamp = get_file_modification_time(filename);
+
+# 273 "roci/roci-primitives.c"
+  roci_push_integer(state, timestamp);
+}
+
+
+# 285 "roci/roci-primitives.c"
+void roci_primitive_shell(roci_vm_state_t* state)
+# 285 "roci/roci-primitives.c"
+{
+
+# 286 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 286 "roci/roci-primitives.c"
+  {
+
+# 287 "roci/roci-primitives.c"
+    roci_debug_error(state, "shell expects 1 argument");
+  }
+
+# 289 "roci/roci-primitives.c"
+  value_array_t* lst = roci_pop_list(state);
+
+# 290 "roci/roci-primitives.c"
+  uint64_t len = (lst->length);
+
+# 291 "roci/roci-primitives.c"
+  value_array_t* argv = make_value_array((lst->length));
+
+# 292 "roci/roci-primitives.c"
+  for (
+
+# 292 "roci/roci-primitives.c"
+
+# 292 "roci/roci-primitives.c"
+    int i = 0;
+
+# 292 "roci/roci-primitives.c"
+    (i<len);
+
+# 292 "roci/roci-primitives.c"
+    (i++))
+
+# 292 "roci/roci-primitives.c"
+  {
+
+# 293 "roci/roci-primitives.c"
+    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(lst, i).ptr));
+
+# 294 "roci/roci-primitives.c"
+    if (((element->tag)!=ROCI_TAG_STRING))
+
+# 294 "roci/roci-primitives.c"
+    {
+
+# 295 "roci/roci-primitives.c"
+      roci_debug_error(state, "shell expects all list elements to be strings");
+    }
+
+# 297 "roci/roci-primitives.c"
+    value_array_push(argv, str_to_value((/*CAST*/(char*) (element->raw))));
+  }
+
+# 300 "roci/roci-primitives.c"
+  sub_process_t* sub_process = make_sub_process(argv);
+
+# 301 "roci/roci-primitives.c"
+  sub_process_launch(sub_process);
+
+# 303 "roci/roci-primitives.c"
+  buffer_t* stdout = make_buffer(1);
+
+# 304 "roci/roci-primitives.c"
+  buffer_t* stderr = stdout;
+
+# 305 "roci/roci-primitives.c"
+  do
+# 305 "roci/roci-primitives.c"
+  {
+
+# 306 "roci/roci-primitives.c"
+    sub_process_read(sub_process, stdout, stderr);
+
+# 307 "roci/roci-primitives.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 309 "roci/roci-primitives.c"
+  sub_process_read(sub_process, stdout, stderr);
+
+# 310 "roci/roci-primitives.c"
+  sub_process_wait(sub_process);
+
+# 312 "roci/roci-primitives.c"
+  roci_push_integer(state, (sub_process->exit_code));
+
+# 313 "roci/roci-primitives.c"
+  roci_push_string(state, buffer_to_c_string(stdout));
+
+# 314 "roci/roci-primitives.c"
+  ((state->n_args)=2);
+
+# 315 "roci/roci-primitives.c"
+  roci_primitive_make_list(state);
+}
+
+
+# 318 "roci/roci-primitives.c"
+void roci_primitive_shell_exit_code(roci_vm_state_t* state)
+# 318 "roci/roci-primitives.c"
+{
+
+# 319 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 319 "roci/roci-primitives.c"
+  {
+
+# 320 "roci/roci-primitives.c"
+    roci_debug_error(state, "shell_exit_code expects 1 argument");
+  }
+
+# 322 "roci/roci-primitives.c"
+  roci_push_integer(state, 0);
+
+# 323 "roci/roci-primitives.c"
+  ((state->n_args)=2);
+
+# 324 "roci/roci-primitives.c"
+  roci_primitive_list_get(state);
+}
+
+
+# 327 "roci/roci-primitives.c"
+void roci_primitive_shell_stdout(roci_vm_state_t* state)
+# 327 "roci/roci-primitives.c"
+{
+
+# 328 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 328 "roci/roci-primitives.c"
+  {
+
+# 329 "roci/roci-primitives.c"
+    roci_debug_error(state, "shell_stdout expects 1 argument");
+  }
+
+# 331 "roci/roci-primitives.c"
+  roci_push_integer(state, 1);
+
+# 332 "roci/roci-primitives.c"
+  ((state->n_args)=2);
+
+# 333 "roci/roci-primitives.c"
+  roci_primitive_list_get(state);
+}
+
+
+# 336 "roci/roci-primitives.c"
+void roci_primitive_platform(roci_vm_state_t* state)
+# 336 "roci/roci-primitives.c"
+{
+
+# 337 "roci/roci-primitives.c"
+  if (((state->n_args)!=0))
+
+# 337 "roci/roci-primitives.c"
+  {
+
+# 338 "roci/roci-primitives.c"
+    roci_debug_error(state, "platform expects 0 argument");
+  }
+
+# 340 "roci/roci-primitives.c"
+  roci_push_string(state, "linux");
+}
+
+
+# 356 "roci/roci-primitives.c"
+void roci_primitive_glob(roci_vm_state_t* state)
+# 356 "roci/roci-primitives.c"
+{
+
+# 357 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 357 "roci/roci-primitives.c"
+  {
+
+# 358 "roci/roci-primitives.c"
+    roci_debug_error(state, "glob expects 1 argument");
+  }
+
+# 360 "roci/roci-primitives.c"
+  char* pattern = roci_pop_string(state);
+
+# 362 "roci/roci-primitives.c"
+  glob_t glob_result = ((glob_t) {0});
+
+# 365 "roci/roci-primitives.c"
+  int return_value = glob(pattern, 0, NULL, (&glob_result));
+
+# 366 "roci/roci-primitives.c"
+  value_array_t* result = make_value_array((state->n_args));
+
+# 367 "roci/roci-primitives.c"
+  if ((return_value==0))
+
+# 367 "roci/roci-primitives.c"
+  {
+
+# 368 "roci/roci-primitives.c"
+    for (
+
+# 368 "roci/roci-primitives.c"
+
+# 368 "roci/roci-primitives.c"
+      int i = 0;
+
+# 368 "roci/roci-primitives.c"
+      (i<(glob_result.gl_pathc));
+
+# 368 "roci/roci-primitives.c"
+      (++i))
+
+# 368 "roci/roci-primitives.c"
+    {
+
+# 369 "roci/roci-primitives.c"
+      value_array_push(result, ptr_to_value(string_to_roci_string(((glob_result.gl_pathv)[i]))));
+    }
+  }
+  else
+
+# 372 "roci/roci-primitives.c"
+  if ((return_value!=GLOB_NOMATCH))
+
+# 372 "roci/roci-primitives.c"
+  {
+
+# 373 "roci/roci-primitives.c"
+    roci_debug_error(state, "An error occurred during globbing.");
+  }
+
+# 375 "roci/roci-primitives.c"
+  roci_push_list(state, result);
+}
+
+
+# 378 "roci/roci-primitives.c"
+void roci_primitive_iadd(roci_vm_state_t* state)
+# 378 "roci/roci-primitives.c"
+{
+
+# 379 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 379 "roci/roci-primitives.c"
+  {
+
+# 380 "roci/roci-primitives.c"
+    roci_debug_error(state, "iadd expects two integer arguments");
+  }
+
+# 382 "roci/roci-primitives.c"
+  uint64_t arg1 = roci_pop_integer(state);
+
+# 383 "roci/roci-primitives.c"
+  uint64_t arg0 = roci_pop_integer(state);
+
+# 384 "roci/roci-primitives.c"
+  roci_push_integer(state, (arg1+arg0));
+}
+
+
+# 387 "roci/roci-primitives.c"
+void roci_primitive_iequal(roci_vm_state_t* state)
+# 387 "roci/roci-primitives.c"
+{
+
+# 388 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 388 "roci/roci-primitives.c"
+  {
+
+# 389 "roci/roci-primitives.c"
+    roci_debug_error(state, "iequal expects two integer arguments");
+  }
+
+# 391 "roci/roci-primitives.c"
+  uint64_t arg1 = roci_pop_integer(state);
+
+# 392 "roci/roci-primitives.c"
+  uint64_t arg0 = roci_pop_integer(state);
+
+# 393 "roci/roci-primitives.c"
+  if ((arg0==arg1))
+
+# 393 "roci/roci-primitives.c"
+  {
+
+# 394 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 395 "roci/roci-primitives.c"
+  {
+
+# 396 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 400 "roci/roci-primitives.c"
+void roci_primitive_not(roci_vm_state_t* state)
+# 400 "roci/roci-primitives.c"
+{
+
+# 401 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 401 "roci/roci-primitives.c"
+  {
+
+# 402 "roci/roci-primitives.c"
+    roci_debug_error(state, "roci_exit expects 1 argument");
+  }
+
+# 404 "roci/roci-primitives.c"
+  boolean_t value = roci_pop_boolean(state);
+
+# 405 "roci/roci-primitives.c"
+  if (value)
+
+# 405 "roci/roci-primitives.c"
+  {
+
+# 406 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
+
+# 407 "roci/roci-primitives.c"
+  {
+
+# 408 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+}
+
+
+# 412 "roci/roci-primitives.c"
+void roci_primitive_getenv(roci_vm_state_t* state)
+# 412 "roci/roci-primitives.c"
+{
+
+# 413 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 413 "roci/roci-primitives.c"
+  {
+
+# 414 "roci/roci-primitives.c"
+    roci_debug_error(state, "getenv expects 1 argument");
+  }
+
+# 416 "roci/roci-primitives.c"
+  char* varname = roci_pop_string(state);
+
+# 417 "roci/roci-primitives.c"
+  char* result = getenv(varname);
+
+# 418 "roci/roci-primitives.c"
+  if ((result==((void *)0)))
+
+# 418 "roci/roci-primitives.c"
+  {
+
+# 419 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
+
+# 420 "roci/roci-primitives.c"
+  {
+
+# 421 "roci/roci-primitives.c"
+    roci_push_string(state, result);
+  }
+}
+
+
+# 425 "roci/roci-primitives.c"
+void roci_primitive_is_boolean(roci_vm_state_t* state)
+# 425 "roci/roci-primitives.c"
+{
+
+# 426 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 426 "roci/roci-primitives.c"
+  {
+
+# 427 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_boolean expects 1 argument");
+  }
+
+# 429 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 430 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_BOOLEAN))
+
+# 430 "roci/roci-primitives.c"
+  {
+
+# 431 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 432 "roci/roci-primitives.c"
+  {
+
+# 433 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 437 "roci/roci-primitives.c"
+void roci_primitive_is_string(roci_vm_state_t* state)
+# 437 "roci/roci-primitives.c"
+{
+
+# 438 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 438 "roci/roci-primitives.c"
+  {
+
+# 439 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_string expects 1 argument");
+  }
+
+# 441 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 442 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_STRING))
+
+# 442 "roci/roci-primitives.c"
+  {
+
+# 443 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 444 "roci/roci-primitives.c"
+  {
+
+# 445 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 449 "roci/roci-primitives.c"
+void roci_primitive_is_integer(roci_vm_state_t* state)
+# 449 "roci/roci-primitives.c"
+{
+
+# 450 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 450 "roci/roci-primitives.c"
+  {
+
+# 451 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_integer expects 1 argument");
+  }
+
+# 453 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 454 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_INTEGER))
+
+# 454 "roci/roci-primitives.c"
+  {
+
+# 455 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 456 "roci/roci-primitives.c"
+  {
+
+# 457 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 461 "roci/roci-primitives.c"
+void roci_primitive_is_list(roci_vm_state_t* state)
+# 461 "roci/roci-primitives.c"
+{
+
+# 462 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 462 "roci/roci-primitives.c"
+  {
+
+# 463 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_list expects 1 argument");
+  }
+
+# 465 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 466 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_LIST))
+
+# 466 "roci/roci-primitives.c"
+  {
+
+# 467 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 468 "roci/roci-primitives.c"
+  {
+
+# 469 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 473 "roci/roci-primitives.c"
+void roci_primitive_is_double(roci_vm_state_t* state)
+# 473 "roci/roci-primitives.c"
+{
+
+# 474 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 474 "roci/roci-primitives.c"
+  {
+
+# 475 "roci/roci-primitives.c"
+    roci_debug_error(state, "is_double expects 1 argument");
+  }
+
+# 477 "roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 478 "roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_DOUBLE))
+
+# 478 "roci/roci-primitives.c"
+  {
+
+# 479 "roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 480 "roci/roci-primitives.c"
+  {
+
+# 481 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 485 "roci/roci-primitives.c"
+void roci_primitive_pwd(roci_vm_state_t* state)
+# 485 "roci/roci-primitives.c"
+{
+
+# 486 "roci/roci-primitives.c"
+  if (((state->n_args)!=0))
+
+# 486 "roci/roci-primitives.c"
+  {
+
+# 487 "roci/roci-primitives.c"
+    roci_debug_error(state, "pwd expects 0 argument");
+  }
+
+# 489 "roci/roci-primitives.c"
+  char cwd[PATH_MAX];
+
+# 490 "roci/roci-primitives.c"
+  if ((getcwd(cwd, (sizeof(cwd)))!=NULL))
+
+# 490 "roci/roci-primitives.c"
+  {
+
+# 491 "roci/roci-primitives.c"
+    roci_push_string(state, string_duplicate(cwd));
+  }
+  else
+
+# 492 "roci/roci-primitives.c"
+  {
+
+# 493 "roci/roci-primitives.c"
+    roci_debug_error(state, "getcwd return NULL");
+  }
+}
+
+
+# 497 "roci/roci-primitives.c"
+void roci_primitive_cd(roci_vm_state_t* state)
+# 497 "roci/roci-primitives.c"
+{
+
+# 498 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 498 "roci/roci-primitives.c"
+  {
+
+# 499 "roci/roci-primitives.c"
+    roci_debug_error(state, "cd expects 1 argument");
+  }
+
+# 501 "roci/roci-primitives.c"
+  if (chdir(roci_pop_string(state)))
+
+# 501 "roci/roci-primitives.c"
+  {
+
+# 502 "roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
+
+# 503 "roci/roci-primitives.c"
+  {
+
+# 504 "roci/roci-primitives.c"
+    roci_debug_error(state, "chdir returned false");
+  }
+}
+
+
+# 508 "roci/roci-primitives.c"
+void roci_primitive_igte(roci_vm_state_t* state)
+# 508 "roci/roci-primitives.c"
+{
+
+# 509 "roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 509 "roci/roci-primitives.c"
+  {
+
+# 510 "roci/roci-primitives.c"
+    roci_debug_error(state, "igte expects two integer arguments");
+  }
+
+# 512 "roci/roci-primitives.c"
+  uint64_t arg1 = roci_pop_integer(state);
+
+# 513 "roci/roci-primitives.c"
+  uint64_t arg0 = roci_pop_integer(state);
+
+# 514 "roci/roci-primitives.c"
+  roci_push_boolean(state, (arg0>=arg1));
+}
+
+
+# 517 "roci/roci-primitives.c"
+void roci_primitive_neg(roci_vm_state_t* state)
+# 517 "roci/roci-primitives.c"
+{
+
+# 518 "roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 518 "roci/roci-primitives.c"
+  {
+
+# 519 "roci/roci-primitives.c"
+    roci_debug_error(state, "neg expects 1 argument");
+  }
+
+# 521 "roci/roci-primitives.c"
+  roci_push_integer(state, (-roci_pop_integer(state)));
+}
+
+
+# 7 "roci/roci-repl.c"
+void roci_repl(roci_env_t* env)
+# 7 "roci/roci-repl.c"
+{
+
+# 8 "roci/roci-repl.c"
+  fprintf(stdout, "/// Wecome to the roci read-eval-print-loop\n");
+
+# 9 "roci/roci-repl.c"
+  fprintf(stdout, "///\n");
+
+# 10 "roci/roci-repl.c"
+  fprintf(stdout, "/// Special commands:\n");
+
+# 11 "roci/roci-repl.c"
+  fprintf(stdout, "/// #exit to exit this repl\n");
+
+# 12 "roci/roci-repl.c"
+  fprintf(stdout, "/// #env to dump the environment\n");
+
+# 13 "roci/roci-repl.c"
+  fprintf(stdout, "///\n");
+
+# 15 "roci/roci-repl.c"
+  while (true)
+
+# 15 "roci/roci-repl.c"
+  {
+
+# 16 "roci/roci-repl.c"
+    buffer_t* buffer = roci_repl_read(env);
+
+# 17 "roci/roci-repl.c"
+    if ((buffer==((void *)0)))
+
+# 17 "roci/roci-repl.c"
+    {
+
+# 18 "roci/roci-repl.c"
+      return;
+    }
+
+# 20 "roci/roci-repl.c"
+    roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
+
+# 21 "roci/roci-repl.c"
+    ((state->bblocks)=make_value_array(16));
+
+# 22 "roci/roci-repl.c"
+    roci_compile_buffer(state, "*repl*", buffer);
+
+# 23 "roci/roci-repl.c"
+    value_array_t* bblocks = build_bblocks((state->bblocks));
+
+# 24 "roci/roci-repl.c"
+    roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
+
+# 26 "roci/roci-repl.c"
+    roci_execute(env, entry_point);
+  }
+}
+
+
+# 30 "roci/roci-repl.c"
+buffer_t* roci_repl_read(roci_env_t* env)
+# 30 "roci/roci-repl.c"
+{
+
+# 31 "roci/roci-repl.c"
+  uint64_t last_length = 0xffffffff;
+
+# 32 "roci/roci-repl.c"
+  buffer_t* buffer = make_buffer(10);
+
+# 33 "roci/roci-repl.c"
+  while (true)
+
+# 33 "roci/roci-repl.c"
+  {
+
+# 35 "roci/roci-repl.c"
+    if ((last_length!=(buffer->length)))
+
+# 35 "roci/roci-repl.c"
+    {
+
+# 36 "roci/roci-repl.c"
+      if ((last_length==0xffffffff))
+
+# 36 "roci/roci-repl.c"
+      {
+
+# 37 "roci/roci-repl.c"
+        fprintf(stdout, "roci> ");
+      }
+      else
+
+# 38 "roci/roci-repl.c"
+      {
+
+# 39 "roci/roci-repl.c"
+        fprintf(stdout, "....> ");
+      }
+
+# 41 "roci/roci-repl.c"
+      fflush(stdout);
+
+# 42 "roci/roci-repl.c"
+      (last_length=(buffer->length));
+    }
+
+# 45 "roci/roci-repl.c"
+    buffer_read_ready_bytes(buffer, stdin, 0xffffffff);
+
+# 46 "roci/roci-repl.c"
+    if (((buffer_ends_with(buffer, ";\n")||buffer_ends_with(buffer, "}\n"))&&roci_is_balanced(buffer)))
+
+# 47 "roci/roci-repl.c"
+    {
+
+# 48 "roci/roci-repl.c"
+      return buffer;
+    }
+    else
+
+# 49 "roci/roci-repl.c"
+    if (buffer_equal(buffer, "#exit\n"))
+
+# 49 "roci/roci-repl.c"
+    {
+
+# 50 "roci/roci-repl.c"
+      return ((void *)0);
+    }
+    else
+
+# 51 "roci/roci-repl.c"
+    if (buffer_equal(buffer, "#env\n"))
+
+# 51 "roci/roci-repl.c"
+    {
+
+# 52 "roci/roci-repl.c"
+      buffer_t* env_buffer = make_buffer(10);
+
+# 53 "roci/roci-repl.c"
+      roci_dump_env(env, env_buffer);
+
+# 54 "roci/roci-repl.c"
+      fprintf(stdout, "----- Environment -----\n");
+
+# 55 "roci/roci-repl.c"
+      fprintf(stdout, "%s", buffer_to_c_string(env_buffer));
+
+# 56 "roci/roci-repl.c"
+      buffer_clear(buffer);
+
+# 57 "roci/roci-repl.c"
+      (last_length=0xffffffff);
+    }
+    else
+
+# 58 "roci/roci-repl.c"
+    {
+
+# 59 "roci/roci-repl.c"
+      if ((buffer_index_of(buffer, "\n\n")>=0))
+
+# 59 "roci/roci-repl.c"
+      {
+
+# 60 "roci/roci-repl.c"
+        return buffer;
+      }
+    }
+  }
+}
+
+
+# 73 "roci/roci-repl.c"
+boolean_t roci_is_balanced(buffer_t* buffer)
+# 73 "roci/roci-repl.c"
+{
+
+# 74 "roci/roci-repl.c"
+  int num_open_parens = 0;
+
+# 75 "roci/roci-repl.c"
+  int num_open_braces = 0;
+
+# 76 "roci/roci-repl.c"
+  for (
+
+# 76 "roci/roci-repl.c"
+
+# 76 "roci/roci-repl.c"
+    uint64_t i = 0;
+
+# 76 "roci/roci-repl.c"
+    (i<(buffer->length));
+
+# 76 "roci/roci-repl.c"
+    (i++))
+
+# 76 "roci/roci-repl.c"
+  {
+
+# 77 "roci/roci-repl.c"
+    uint8_t ch = buffer_get(buffer, i);
+
+# 78 "roci/roci-repl.c"
+    switch (ch)
+
+# 78 "roci/roci-repl.c"
+    {
+
+# 79 "roci/roci-repl.c"
+      case '(':
+
+# 80 "roci/roci-repl.c"
+      (num_open_parens+=1);
+
+# 81 "roci/roci-repl.c"
+      break;
+
+# 82 "roci/roci-repl.c"
+      case ')':
+
+# 83 "roci/roci-repl.c"
+      (num_open_parens-=1);
+
+# 84 "roci/roci-repl.c"
+      break;
+
+# 85 "roci/roci-repl.c"
+      case '{':
+
+# 86 "roci/roci-repl.c"
+      (num_open_braces+=1);
+
+# 87 "roci/roci-repl.c"
+      break;
+
+# 88 "roci/roci-repl.c"
+      case '}':
+
+# 89 "roci/roci-repl.c"
+      (num_open_braces-=1);
+
+# 90 "roci/roci-repl.c"
+      break;
+
+# 91 "roci/roci-repl.c"
+      default:
+
+# 92 "roci/roci-repl.c"
+      break;
+    }
+  }
+
+# 95 "roci/roci-repl.c"
+  return ((num_open_parens==0)&&(num_open_braces==0));
+}
+
+
+# 28 "roci/roci-value.c"
+void roci_append_value(buffer_t* buffer, roci_value_t value)
+# 28 "roci/roci-value.c"
+{
+
+# 29 "roci/roci-value.c"
+  switch ((value.tag))
+
+# 29 "roci/roci-value.c"
+  {
+
+# 30 "roci/roci-value.c"
+    case ROCI_TAG_STRING:
+
+# 31 "roci/roci-value.c"
+    buffer_printf(buffer, "%s", quote_c_string((/*CAST*/(char*) (value.raw))));
+
+# 32 "roci/roci-value.c"
+    break;
+
+# 33 "roci/roci-value.c"
+    case ROCI_TAG_INTEGER:
+
+# 35 "roci/roci-value.c"
+    buffer_printf(buffer, "%s", uint64_to_string((value.raw)));
+
+# 36 "roci/roci-value.c"
+    break;
+
+# 37 "roci/roci-value.c"
+    case ROCI_TAG_C_PRIMITIVE:
+
+# 38 "roci/roci-value.c"
+    buffer_printf(buffer, "primitive<%s>", uint64_to_string((value.raw)));
+
+# 39 "roci/roci-value.c"
+    break;
+
+# 40 "roci/roci-value.c"
+    case ROCI_TAG_CLOSURE:
+
+# 41 "roci/roci-value.c"
+    roci_closure_t* closure = (/*CAST*/(roci_closure_t*) (value.raw));
+
+# 42 "roci/roci-value.c"
+    buffer_printf(buffer, "closure<%s,%s>", uint64_to_string((/*CAST*/(uint64_t) (closure->entry_point))), uint64_to_string((/*CAST*/(uint64_t) (closure->env))));
+
+# 45 "roci/roci-value.c"
+    break;
+
+# 46 "roci/roci-value.c"
+    case ROCI_TAG_BOOLEAN:
+
+# 47 "roci/roci-value.c"
+    if ((value.raw))
+
+# 47 "roci/roci-value.c"
+    {
+
+# 48 "roci/roci-value.c"
+      buffer_printf(buffer, "%s", "true");
+    }
+    else
+
+# 49 "roci/roci-value.c"
+    {
+
+# 50 "roci/roci-value.c"
+      buffer_printf(buffer, "%s", "false");
+    }
+
+# 52 "roci/roci-value.c"
+    break;
+
+# 54 "roci/roci-value.c"
+    case ROCI_TAG_LIST:
+
+# 54 "roci/roci-value.c"
+    {
+
+# 55 "roci/roci-value.c"
+      buffer_printf(buffer, "[");
+
+# 56 "roci/roci-value.c"
+      value_array_t* list = (/*CAST*/(value_array_t*) (value.raw));
+
+# 57 "roci/roci-value.c"
+      for (
+
+# 57 "roci/roci-value.c"
+
+# 57 "roci/roci-value.c"
+        int i = 0;
+
+# 57 "roci/roci-value.c"
+        (i<(list->length));
+
+# 57 "roci/roci-value.c"
+        (i++))
+
+# 57 "roci/roci-value.c"
+      {
+
+# 58 "roci/roci-value.c"
+        if ((i>0))
+
+# 58 "roci/roci-value.c"
+        {
+
+# 59 "roci/roci-value.c"
+          buffer_printf(buffer, ", ");
+        }
+
+# 61 "roci/roci-value.c"
+        roci_value_t* val = value_array_get_ptr(list, i, typeof(roci_value_t*));
+
+# 62 "roci/roci-value.c"
+        roci_append_value(buffer, (*val));
+      }
+
+# 64 "roci/roci-value.c"
+      buffer_printf(buffer, "]");
+
+# 65 "roci/roci-value.c"
+      break;
+    }
+
+# 68 "roci/roci-value.c"
+    default:
+
+# 69 "roci/roci-value.c"
+    log_fatal("unhandled tag %s", roci_tag_to_string((value.tag)));
+
+# 70 "roci/roci-value.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 74 "roci/roci-value.c"
+char* roci_value_to_c_string(roci_value_t value)
+# 74 "roci/roci-value.c"
+{
+
+# 75 "roci/roci-value.c"
+  buffer_t* buf = make_buffer(10);
+
+# 76 "roci/roci-value.c"
+  roci_append_value(buf, value);
+
+# 77 "roci/roci-value.c"
+  return buffer_to_c_string(buf);
+}
+
+
+# 80 "roci/roci-value.c"
+roci_value_t* roci_value_to_heap(roci_value_t value)
+# 80 "roci/roci-value.c"
+{
+
+# 81 "roci/roci-value.c"
+  roci_value_t* result = malloc_struct(roci_value_t);
+
+# 82 "roci/roci-value.c"
+  ((result->raw)=(value.raw));
+
+# 83 "roci/roci-value.c"
+  ((result->tag)=(value.tag));
+
+# 84 "roci/roci-value.c"
+  return result;
+}
+
+
+# 87 "roci/roci-value.c"
+roci_value_t* string_to_roci_string(char* str)
+# 87 "roci/roci-value.c"
+{
+
+# 88 "roci/roci-value.c"
+  roci_value_t* result = malloc_struct(roci_value_t);
+
+# 89 "roci/roci-value.c"
+  ((result->raw)=(/*CAST*/(uint64_t) str));
+
+# 90 "roci/roci-value.c"
+  ((result->tag)=ROCI_TAG_STRING);
+
+# 91 "roci/roci-value.c"
+  return result;
+}
+
+
+# 111 "roci/roci.c"
+roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point)
+# 111 "roci/roci.c"
+{
+
+# 112 "roci/roci.c"
+  roci_vm_state_t* state = roci_make_vm_state(env);
+
+# 113 "roci/roci.c"
+  return roci_execute_bblock(entry_point, state);
+}
+
+
+# 116 "roci/roci.c"
+roci_vm_state_t* roci_make_vm_state(roci_env_t* env)
+# 116 "roci/roci.c"
+{
+
+# 117 "roci/roci.c"
+  roci_vm_state_t* state = malloc_struct(roci_vm_state_t);
+
+# 118 "roci/roci.c"
+  ((state->stack)=(/*CAST*/(uint64_t*) malloc_bytes((1024*8))));
+
+# 119 "roci/roci.c"
+  ((state->stack_tags)=(/*CAST*/(uint8_t*) malloc_bytes(1024)));
+
+# 120 "roci/roci.c"
+  ((state->continuations)=(/*CAST*/(roci_cont_t**) malloc_bytes((1024*8))));
+
+# 121 "roci/roci.c"
+  roci_set_env(state, env);
+
+# 122 "roci/roci.c"
+  if (FLAG_roci_debug)
+
+# 122 "roci/roci.c"
+  {
+
+# 123 "roci/roci.c"
+    ((state->debug)=malloc_struct(roci_debug_state_t));
+
+# 124 "roci/roci.c"
+    (((state->debug)->trace)=true);
+  }
+
+# 128 "roci/roci.c"
+  roci_push_value_parts(state, 0xCAFEBABE, ROCI_TAG_STACK_MARKER);
+
+# 129 "roci/roci.c"
+  return state;
+}
+
+
+# 136 "roci/roci.c"
+void roci_runtime_error(roci_runtime_error_t runtime_error)
+# 136 "roci/roci.c"
+{
+
+# 137 "roci/roci.c"
+  log_fatal("A runtime error has occurred evaluating a roci script");
+
+# 138 "roci/roci.c"
+  fatal_error(ERROR_ILLEGAL_STATE);
+}
+
+
+# 149 "roci/roci.c"
+roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state)
+# 150 "roci/roci.c"
+{
+
+# 151 "roci/roci.c"
+  buffer_t* buffer = make_buffer(80);
+
+# 153 "roci/roci.c"
+  start_bblock:
+
+# 155 "roci/roci.c"
+  ((state->current_bb)=bb);
+
+# 156 "roci/roci.c"
+  ((state->opcode_ptr)=bblock_opcode_pointer(bb));
+
+# 157 "roci/roci.c"
+  ((state->data_ptr)=bblock_data_pointer(bb));
+
+# 159 "roci/roci.c"
+  while (true)
+
+# 159 "roci/roci.c"
+  {
+
+# 160 "roci/roci.c"
+    if ((((state->debug)!=((void *)0))&&((state->debug)->trace)))
+
+# 160 "roci/roci.c"
+    {
+
+# 161 "roci/roci.c"
+      roci_debug_trace(state, buffer);
+    }
+
+# 163 "roci/roci.c"
+    roci_opcode_t opcode = (*((state->opcode_ptr)++));
+
+# 164 "roci/roci.c"
+    switch (opcode)
+
+# 164 "roci/roci.c"
+    {
+
+# 165 "roci/roci.c"
+      case ROCI_OPCODE_TRAP:
+
+# 166 "roci/roci.c"
+      return ROCI_RUNTIME_ERROR_TRAP;
+
+# 168 "roci/roci.c"
+      case ROCI_OPCODE_PUSH_FALSE:
+
+# 169 "roci/roci.c"
+      ((*((state->stack)++))=0);
+
+# 170 "roci/roci.c"
+      ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
+
+# 171 "roci/roci.c"
+      break;
+
+# 173 "roci/roci.c"
+      case ROCI_OPCODE_PUSH_TRUE:
+
+# 174 "roci/roci.c"
+      ((*((state->stack)++))=1);
+
+# 175 "roci/roci.c"
+      ((*((state->stack_tags)++))=ROCI_TAG_BOOLEAN);
+
+# 176 "roci/roci.c"
+      break;
+
+# 178 "roci/roci.c"
+      case ROCI_OPCODE_PUSH_INTEGER:
+
+# 179 "roci/roci.c"
+      ((*((state->stack)++))=(*((state->data_ptr)++)));
+
+# 180 "roci/roci.c"
+      ((*((state->stack_tags)++))=ROCI_TAG_INTEGER);
+
+# 181 "roci/roci.c"
+      break;
+
+# 183 "roci/roci.c"
+      case ROCI_OPCODE_PUSH_DOUBLE:
+
+# 184 "roci/roci.c"
+      ((*((state->stack)++))=(*((state->data_ptr)++)));
+
+# 185 "roci/roci.c"
+      ((*((state->stack_tags)++))=ROCI_TAG_DOUBLE);
+
+# 186 "roci/roci.c"
+      break;
+
+# 188 "roci/roci.c"
+      case ROCI_OPCODE_PUSH_STRING:
+
+# 189 "roci/roci.c"
+      ((*((state->stack)++))=(*((state->data_ptr)++)));
+
+# 190 "roci/roci.c"
+      ((*((state->stack_tags)++))=ROCI_TAG_STRING);
+
+# 191 "roci/roci.c"
+      break;
+
+# 193 "roci/roci.c"
+      case ROCI_OPCODE_BR_TRUE:
+
+# 194 "roci/roci.c"
+      roci_bb_t* taken_bb = (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++)));
+
+# 195 "roci/roci.c"
+      roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 196 "roci/roci.c"
+      uint64_t tos = (*(--(state->stack)));
+
+# 197 "roci/roci.c"
+      if ((tag!=ROCI_TAG_BOOLEAN))
+
+# 197 "roci/roci.c"
+      {
+
+# 198 "roci/roci.c"
+        return ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED;
+      }
+
+# 200 "roci/roci.c"
+      if ((tos!=0))
+
+# 200 "roci/roci.c"
+      {
+
+# 201 "roci/roci.c"
+        (bb=taken_bb);
+
+# 202 "roci/roci.c"
+        goto start_bblock;
+      }
+
+# 204 "roci/roci.c"
+      break;
+
+# 206 "roci/roci.c"
+      case ROCI_OPCODE_BR:
+
+# 207 "roci/roci.c"
+      (bb=(/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))));
+
+# 208 "roci/roci.c"
+      goto start_bblock;
+
+# 210 "roci/roci.c"
+      case ROCI_OPCODE_MAKE_CLOSURE:
+
+# 211 "roci/roci.c"
+      roci_debug_breakpoint();
+
+# 213 "roci/roci.c"
+      roci_closure_t* closure = malloc_struct(roci_closure_t);
+
+# 214 "roci/roci.c"
+      ((closure->entry_point)=(/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))));
+
+# 215 "roci/roci.c"
+      ((closure->env)=roci_current_env(state));
+
+# 216 "roci/roci.c"
+      roci_push_value_parts(state, (/*CAST*/(uint64_t) closure), ROCI_TAG_CLOSURE);
+
+# 217 "roci/roci.c"
+      roci_debug_breakpoint();
+
+# 218 "roci/roci.c"
+      break;
+
+# 220 "roci/roci.c"
+      case ROCI_OPCODE_CALL:
+
+# 223 "roci/roci.c"
+      uint64_t n_args = (/*CAST*/(uint64_t) (*((state->data_ptr)++)));
+
+# 224 "roci/roci.c"
+      ((state->n_args)=n_args);
+
+# 225 "roci/roci.c"
+      roci_value_t proc = roci_pop_value(state);
+
+# 226 "roci/roci.c"
+      if (((proc.tag)==ROCI_TAG_C_PRIMITIVE))
+
+# 226 "roci/roci.c"
+      {
+
+# 227 "roci/roci.c"
+        roci_bb_t* cont_bb = (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++)));
+
+# 228 "roci/roci.c"
+        roci_env_t* cont_env = (state->env);
+
+# 229 "roci/roci.c"
+        (/*CAST*/(roci_c_primitive_t) (proc.raw))(state);
+
+# 230 "roci/roci.c"
+        (bb=cont_bb);
+
+# 231 "roci/roci.c"
+        ((state->env)=cont_env);
+
+# 232 "roci/roci.c"
+        goto start_bblock;
+      }
+      else
+
+# 233 "roci/roci.c"
+      if (((proc.tag)==ROCI_TAG_CLOSURE))
+
+# 233 "roci/roci.c"
+      {
+
+# 234 "roci/roci.c"
+        roci_closure_t* function = (/*CAST*/(roci_closure_t*) (proc.raw));
+
+# 235 "roci/roci.c"
+        roci_push_continuation(state, (/*CAST*/(roci_bb_t*) (*((state->data_ptr)++))), n_args);
+
+# 237 "roci/roci.c"
+        roci_set_env(state, (function->env));
+
+# 238 "roci/roci.c"
+        (bb=(function->entry_point));
+
+# 239 "roci/roci.c"
+        goto start_bblock;
+      }
+      else
+
+# 240 "roci/roci.c"
+      {
+
+# 241 "roci/roci.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+# 243 "roci/roci.c"
+      break;
+
+# 245 "roci/roci.c"
+      case ROCI_OPCODE_RETURN:
+
+# 245 "roci/roci.c"
+      {
+
+# 246 "roci/roci.c"
+        roci_value_t tos = roci_pop_value(state);
+
+# 247 "roci/roci.c"
+        roci_cont_t* continuation = roci_pop_continuation(state);
+
+# 248 "roci/roci.c"
+        (bb=(continuation->bb));
+
+# 249 "roci/roci.c"
+        ((state->stack)=(continuation->stack));
+
+# 250 "roci/roci.c"
+        ((state->stack_tags)=(continuation->stack_tags));
+
+# 251 "roci/roci.c"
+        ((state->env)=(continuation->env));
+
+# 252 "roci/roci.c"
+        roci_push_value_parts(state, (tos.raw), (tos.tag));
+
+# 253 "roci/roci.c"
+        if ((bb==NULL))
+
+# 253 "roci/roci.c"
+        {
+
+# 254 "roci/roci.c"
+          return ROCI_RUNTIME_ERROR_NONE;
+        }
+
+# 256 "roci/roci.c"
+        goto start_bblock;
+      }
+
+# 259 "roci/roci.c"
+      case ROCI_OPCODE_NEW_ENVIRONMENT:
+
+# 260 "roci/roci.c"
+      roci_set_env(state, roci_new_env(roci_current_env(state)));
+
+# 261 "roci/roci.c"
+      break;
+
+# 263 "roci/roci.c"
+      case ROCI_OPCODE_DEFINE_VAR:
+
+# 263 "roci/roci.c"
+      {
+
+# 264 "roci/roci.c"
+        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+
+# 265 "roci/roci.c"
+        roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 266 "roci/roci.c"
+        uint64_t tos = (*(--(state->stack)));
+
+# 267 "roci/roci.c"
+        roci_define_var(roci_current_env(state), str, u64_to_value(tos), tag);
+
+# 268 "roci/roci.c"
+        break;
+      }
+
+# 271 "roci/roci.c"
+      case ROCI_OPCODE_GET_VAR:
+
+# 271 "roci/roci.c"
+      {
+
+# 272 "roci/roci.c"
+        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+
+# 273 "roci/roci.c"
+        roci_value_t* binding = roci_get_var(roci_current_env(state), str);
+
+# 274 "roci/roci.c"
+        if ((binding==((void *)0)))
+
+# 274 "roci/roci.c"
+        {
+
+# 275 "roci/roci.c"
+          roci_debug_error(state, string_printf("variable not found: %s", str));
+        }
+
+# 277 "roci/roci.c"
+        ((*((state->stack)++))=(binding->raw));
+
+# 278 "roci/roci.c"
+        ((*((state->stack_tags)++))=(binding->tag));
+
+# 279 "roci/roci.c"
+        break;
+      }
+
+# 282 "roci/roci.c"
+      case ROCI_OPCODE_SET_VAR:
+
+# 282 "roci/roci.c"
+      {
+
+# 283 "roci/roci.c"
+        char* str = (/*CAST*/(char*) (*((state->data_ptr)++)));
+
+# 284 "roci/roci.c"
+        roci_tag_t tag = (*(--(state->stack_tags)));
+
+# 285 "roci/roci.c"
+        uint64_t tos = (*(--(state->stack)));
+
+# 286 "roci/roci.c"
+        roci_set_var(state, str, u64_to_value(tos), tag);
+
+# 287 "roci/roci.c"
+        break;
+      }
+
+# 290 "roci/roci.c"
+      case ROCI_OPCODE_COMMENT:
+
+# 291 "roci/roci.c"
+      ((state->data_ptr)++);
+
+# 292 "roci/roci.c"
+      break;
+
+# 294 "roci/roci.c"
+      case ROCI_OPCODE_DEBUG_INFO:
+
+# 295 "roci/roci.c"
+      ((state->debug_info)=(*((state->data_ptr)++)));
+
+# 296 "roci/roci.c"
+      break;
+
+# 298 "roci/roci.c"
+      case ROCI_OPCODE_DROP_ENVIRONMENT:
+
+# 299 "roci/roci.c"
+      roci_drop_env(state);
+
+# 300 "roci/roci.c"
+      break;
+
+# 302 "roci/roci.c"
+      case ROCI_OPCODE_CHECK_ARGS:
+
+# 302 "roci/roci.c"
+      {
+
+# 303 "roci/roci.c"
+        uint64_t n_args = (*((state->data_ptr)++));
+
+# 304 "roci/roci.c"
+        if ((n_args!=(state->n_args)))
+
+# 304 "roci/roci.c"
+        {
+
+# 305 "roci/roci.c"
+          roci_debug_error(state, "argument call mismatch");
+        }
+
+# 307 "roci/roci.c"
+        break;
+      }
+
+# 310 "roci/roci.c"
+      case ROCI_OPCODE_DROP:
+
+# 311 "roci/roci.c"
+      roci_pop_value(state);
+
+# 312 "roci/roci.c"
+      break;
+
+# 314 "roci/roci.c"
+      default:
+
+# 315 "roci/roci.c"
+      return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
+    }
+  }
+
+# 318 "roci/roci.c"
+  return ROCI_RUNTIME_ERROR_NONE;
+}
+
+
+# 325 "roci/roci.c"
+void roci_call(roci_vm_state_t* state, roci_value_t proc, int64_t n_args)
+# 325 "roci/roci.c"
+{
+
+# 326 "roci/roci.c"
+  ((state->n_args)=n_args);
+
+# 327 "roci/roci.c"
+  if (((proc.tag)==ROCI_TAG_C_PRIMITIVE))
+
+# 327 "roci/roci.c"
+  {
+
+# 328 "roci/roci.c"
+    (/*CAST*/(roci_c_primitive_t) (proc.raw))(state);
+  }
+  else
+
+# 329 "roci/roci.c"
+  if (((proc.tag)==ROCI_TAG_CLOSURE))
+
+# 329 "roci/roci.c"
+  {
+
+# 330 "roci/roci.c"
+    roci_push_continuation(state, ((void *)0), n_args);
+
+# 331 "roci/roci.c"
+    roci_closure_t* function = (/*CAST*/(roci_closure_t*) (proc.raw));
+
+# 332 "roci/roci.c"
+    roci_set_env(state, (function->env));
+
+# 333 "roci/roci.c"
+    roci_execute_bblock((function->entry_point), state);
+  }
+  else
+
+# 334 "roci/roci.c"
+  {
+
+# 335 "roci/roci.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 2 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+buffer_t* get_reflection_header_buffer(void)
+# 2 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+{
+
+# 3 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+  uint8_t reflection_header[] = {
+    0x23, 0x69, 0x66, 0x6E, 0x64, 0x65, 0x66, 0x20, 0x5F, 0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54,  // #ifndef _REFLECT
+    0x49, 0x4F, 0x4E, 0x5F, 0x48, 0x5F, 0x0A, 0x23, 0x64, 0x65, 0x66, 0x69, 0x6E, 0x65, 0x20, 0x5F,  // ION_H_.#define _
+    0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54, 0x49, 0x4F, 0x4E, 0x5F, 0x48, 0x5F, 0x0A, 0x0A, 0x23,  // REFLECTION_H_..#
+    0x64, 0x65, 0x66, 0x69, 0x6E, 0x65, 0x20, 0x66, 0x6E, 0x5F, 0x74, 0x28, 0x72, 0x65, 0x74, 0x75,  // define fn_t(retu
+    0x72, 0x6E, 0x5F, 0x74, 0x79, 0x70, 0x65, 0x2C, 0x20, 0x2E, 0x2E, 0x2E, 0x29, 0x20, 0x74, 0x79,  // rn_type, ...) ty
+    0x70, 0x65, 0x6F, 0x66, 0x28, 0x72, 0x65, 0x74, 0x75, 0x72, 0x6E, 0x5F, 0x74, 0x79, 0x70, 0x65,  // peof(return_type
+    0x28, 0x2A, 0x29, 0x28, 0x5F, 0x5F, 0x56, 0x41, 0x5F, 0x41, 0x52, 0x47, 0x53, 0x5F, 0x5F, 0x29,  // (*)(__VA_ARGS__)
+    0x29, 0x0A, 0x0A, 0x23, 0x69, 0x6E, 0x63, 0x6C, 0x75, 0x64, 0x65, 0x20, 0x3C, 0x73, 0x74, 0x72,  // )..#include <str
+    0x69, 0x6E, 0x67, 0x2E, 0x68, 0x3E, 0x0A, 0x0A, 0x2F, 0x2A, 0x20, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ing.h>../* =====
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x20, 0x2A, 0x2F, 0x0A, 0x2F, 0x2F, 0x20, 0x54, 0x68, 0x65, 0x73, 0x65, 0x20, 0x61, 0x72,  // = */.// These ar
+    0x65, 0x20, 0x74, 0x68, 0x65, 0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x69, 0x6F, 0x6E,  // e the reflection
+    0x20, 0x41, 0x50, 0x49, 0x20, 0x64, 0x61, 0x74, 0x61, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74,  //  API data struct
+    0x75, 0x72, 0x65, 0x73, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61, 0x20, 0x70, 0x72, 0x6F, 0x67, 0x72,  // ures for a progr
+    0x61, 0x6D, 0x20, 0x63, 0x6F, 0x6D, 0x70, 0x69, 0x6C, 0x65, 0x64, 0x0A, 0x2F, 0x2F, 0x20, 0x77,  // am compiled.// w
+    0x69, 0x74, 0x68, 0x20, 0x4F, 0x6D, 0x6E, 0x69, 0x20, 0x43, 0x2E, 0x20, 0x57, 0x65, 0x20, 0x75,  // ith Omni C. We u
+    0x73, 0x65, 0x20, 0x6C, 0x69, 0x6E, 0x6B, 0x65, 0x64, 0x20, 0x6C, 0x69, 0x73, 0x74, 0x73, 0x20,  // se linked lists 
+    0x69, 0x6E, 0x73, 0x74, 0x65, 0x61, 0x64, 0x20, 0x6F, 0x66, 0x20, 0x76, 0x61, 0x6C, 0x75, 0x65,  // instead of value
+    0x5F, 0x61, 0x72, 0x72, 0x61, 0x79, 0x5F, 0x74, 0x20, 0x74, 0x6F, 0x20, 0x6B, 0x65, 0x65, 0x70,  // _array_t to keep
+    0x0A, 0x2F, 0x2F, 0x20, 0x63, 0x6F, 0x6D, 0x70, 0x69, 0x6C, 0x65, 0x64, 0x20, 0x70, 0x72, 0x6F,  // .// compiled pro
+    0x67, 0x72, 0x61, 0x6D, 0x73, 0x20, 0x69, 0x6E, 0x64, 0x65, 0x70, 0x65, 0x6E, 0x64, 0x65, 0x6E,  // grams independen
+    0x74, 0x20, 0x6F, 0x66, 0x20, 0x61, 0x6E, 0x79, 0x20, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x75,  // t of any particu
+    0x6C, 0x61, 0x72, 0x20, 0x6C, 0x69, 0x62, 0x72, 0x61, 0x72, 0x79, 0x0A, 0x2F, 0x2F, 0x20, 0x64,  // lar library.// d
+    0x61, 0x74, 0x61, 0x2D, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73, 0x2E, 0x0A,  // ata-structures..
+    0x2F, 0x2A, 0x20, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // /* =============
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D,  // ================
+    0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x3D, 0x20, 0x2A, 0x2F, 0x0A, 0x0A, 0x2F, 0x2F,  // ========= */..//
+    0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  //  ---------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x45, 0x6E, 0x75, 0x6D, 0x65,  // -------.// Enume
+    0x72, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // rations.// -----
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x0A, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63,  // -..typedef struc
+    0x74, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D,  // t enum_element_m
+    0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74,  // etadata_S {.  st
+    0x72, 0x75, 0x63, 0x74, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E,  // ruct enum_elemen
+    0x74, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53, 0x2A, 0x20, 0x6E, 0x65,  // t_metadata_S* ne
+    0x78, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65,  // xt;.  char* name
+    0x3B, 0x0A, 0x20, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x76, 0x61, 0x6C, 0x75, 0x65, 0x3B, 0x0A,  // ;.  long value;.
+    0x7D, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D,  // } enum_element_m
+    0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A, 0x2A, 0x0A,  // etadata_t;../**.
+    0x20, 0x2A, 0x20, 0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20, 0x65, 0x6E,  //  * @structure en
+    0x75, 0x6D, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x0A, 0x20, 0x2A,  // um_metadata_t. *
+    0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75, 0x6E, 0x74, 0x69, 0x6D, 0x65, 0x20,  // . * The runtime 
+    0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61, 0x20, 0x72,  // metadata for a r
+    0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x65, 0x72, 0x61,  // eflected enumera
+    0x74, 0x69, 0x6F, 0x6E, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65,  // tion.. */.typede
+    0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61,  // f struct {.  cha
+    0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x65, 0x6E, 0x75, 0x6D, 0x5F,  // r* name;.  enum_
+    0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,  // element_metadata
+    0x5F, 0x74, 0x2A, 0x20, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x73, 0x3B, 0x0A, 0x7D, 0x20,  // _t* elements;.} 
+    0x65, 0x6E, 0x75, 0x6D, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B,  // enum_metadata_t;
+    0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ..// -----------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x53,  // -----------.// S
+    0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D,  // tructures.// ---
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72,  // ---..typedef str
+    0x75, 0x63, 0x74, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61,  // uct field_metada
+    0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20,  // ta_S {.  struct 
+    0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x53,  // field_metadata_S
+    0x2A, 0x20, 0x6E, 0x65, 0x78, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20,  // * next;.  char* 
+    0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x74, 0x79,  // name;.  char* ty
+    0x70, 0x65, 0x5F, 0x6E, 0x61, 0x6D, 0x65, 0x5F, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67, 0x3B, 0x0A,  // pe_name_string;.
+    0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5F, 0x6F, 0x66, 0x66, 0x73,  //   int start_offs
+    0x65, 0x74, 0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65, 0x74, 0x61,  // et;.} field_meta
+    0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A, 0x2A, 0x0A, 0x20, 0x2A, 0x20,  // data_t;../**. * 
+    0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63,  // @structure struc
+    0x74, 0x75, 0x72, 0x65, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x0A,  // ture_metadata_t.
+    0x20, 0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75, 0x6E, 0x74, 0x69, 0x6D,  //  *. * The runtim
+    0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x6F, 0x72, 0x20, 0x61,  // e metadata for a
+    0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63,  //  reflected struc
+    0x74, 0x75, 0x72, 0x65, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79, 0x70, 0x65, 0x64, 0x65,  // ture.. */.typede
+    0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x63, 0x68, 0x61,  // f struct {.  cha
+    0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x73,  // r* name;.  int s
+    0x69, 0x7A, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x69, 0x6E, 0x74, 0x20, 0x61, 0x6C, 0x69, 0x67, 0x6E,  // ize;.  int align
+    0x6D, 0x65, 0x6E, 0x74, 0x3B, 0x0A, 0x20, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x5F, 0x6D, 0x65,  // ment;.  field_me
+    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x66, 0x69, 0x65, 0x6C, 0x64, 0x73,  // tadata_t* fields
+    0x3B, 0x0A, 0x7D, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x5F, 0x6D, 0x65,  // ;.} structure_me
+    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D,  // tadata_t;..// --
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x55, 0x6E, 0x69, 0x6F, 0x6E, 0x73, 0x20, 0x0A,  // ----.// Unions .
+    0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // // -------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x2F, 0x2A, 0x0A, 0x20, 0x2A,  // ---------../*. *
+    0x20, 0x55, 0x6E, 0x69, 0x6F, 0x6E, 0x73, 0x20, 0x63, 0x6F, 0x75, 0x6C, 0x64, 0x20, 0x62, 0x65,  //  Unions could be
+    0x20, 0x74, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x20, 0x65, 0x78, 0x61, 0x63, 0x74, 0x6C, 0x79,  //  treated exactly
+    0x20, 0x6C, 0x69, 0x6B, 0x65, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x73,  //  like structures
+    0x20, 0x68, 0x6F, 0x77, 0x65, 0x76, 0x65, 0x72, 0x20, 0x74, 0x68, 0x65, 0x72, 0x65, 0x20, 0x69,  //  however there i
+    0x73, 0x20, 0x6E, 0x6F, 0x0A, 0x20, 0x2A, 0x20, 0x75, 0x6E, 0x69, 0x66, 0x6F, 0x72, 0x6D, 0x20,  // s no. * uniform 
+    0x77, 0x61, 0x79, 0x20, 0x74, 0x6F, 0x20, 0x74, 0x61, 0x67, 0x20, 0x61, 0x20, 0x75, 0x6E, 0x69,  // way to tag a uni
+    0x6F, 0x6E, 0x20, 0x73, 0x6F, 0x20, 0x6D, 0x61, 0x6B, 0x69, 0x6E, 0x67, 0x20, 0x75, 0x73, 0x65,  // on so making use
+    0x20, 0x6F, 0x66, 0x20, 0x74, 0x68, 0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,  //  of the metadata
+    0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x62, 0x69, 0x74, 0x0A, 0x20, 0x2A, 0x20, 0x70, 0x72, 0x6F,  //  is a bit. * pro
+    0x62, 0x6C, 0x65, 0x6D, 0x61, 0x74, 0x69, 0x63, 0x2E, 0x20, 0x46, 0x6F, 0x72, 0x20, 0x74, 0x68,  // blematic. For th
+    0x61, 0x74, 0x20, 0x72, 0x65, 0x61, 0x73, 0x6F, 0x6E, 0x20, 0x28, 0x61, 0x6E, 0x64, 0x20, 0x62,  // at reason (and b
+    0x65, 0x63, 0x61, 0x75, 0x73, 0x65, 0x20, 0x6F, 0x6D, 0x6E, 0x69, 0x2D, 0x63, 0x20, 0x64, 0x6F,  // ecause omni-c do
+    0x65, 0x73, 0x6E, 0x27, 0x74, 0x20, 0x6E, 0x65, 0x65, 0x64, 0x20, 0x74, 0x68, 0x65, 0x6D, 0x0A,  // esn't need them.
+    0x20, 0x2A, 0x20, 0x79, 0x65, 0x74, 0x29, 0x2C, 0x20, 0x77, 0x65, 0x20, 0x61, 0x72, 0x65, 0x20,  //  * yet), we are 
+    0x73, 0x6B, 0x69, 0x70, 0x70, 0x69, 0x6E, 0x67, 0x20, 0x74, 0x68, 0x65, 0x6D, 0x20, 0x66, 0x6F,  // skipping them fo
+    0x72, 0x20, 0x6E, 0x6F, 0x77, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x0A, 0x2F, 0x2F, 0x20, 0x2D,  // r now.. */..// -
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x2F, 0x2F, 0x20, 0x46, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F,  // -----.// Functio
+    0x6E, 0x73, 0x0A, 0x2F, 0x2F, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ns.// ----------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,  // ----------------
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x0A, 0x0A, 0x74, 0x79,  // ------------..ty
+    0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x66, 0x75, 0x6E,  // pedef struct fun
+    0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61,  // ction_arg_metada
+    0x74, 0x61, 0x5F, 0x53, 0x20, 0x7B, 0x0A, 0x20, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20,  // ta_S {.  struct 
+    0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74,  // function_arg_met
+    0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x6E, 0x65, 0x78, 0x74, 0x3B, 0x0A, 0x20,  // adata_t* next;. 
+    0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x63,  //  char* name;.  c
+    0x68, 0x61, 0x72, 0x2A, 0x20, 0x74, 0x79, 0x70, 0x65, 0x5F, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67,  // har* type_string
+    0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67,  // ;.} function_arg
+    0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x2F, 0x2A,  // _metadata_t;../*
+    0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x40, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x20,  // *. * @structure 
+    0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,  // function_metadat
+    0x61, 0x5F, 0x74, 0x0A, 0x20, 0x2A, 0x0A, 0x20, 0x2A, 0x20, 0x54, 0x68, 0x65, 0x20, 0x72, 0x75,  // a_t. *. * The ru
+    0x6E, 0x74, 0x69, 0x6D, 0x65, 0x20, 0x6D, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66,  // ntime metadata f
+    0x6F, 0x72, 0x20, 0x61, 0x20, 0x72, 0x65, 0x66, 0x6C, 0x65, 0x63, 0x74, 0x65, 0x64, 0x20, 0x73,  // or a reflected s
+    0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x2E, 0x0A, 0x20, 0x2A, 0x2F, 0x0A, 0x74, 0x79,  // tructure.. */.ty
+    0x70, 0x65, 0x64, 0x65, 0x66, 0x20, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x20, 0x7B, 0x0A, 0x20,  // pedef struct {. 
+    0x20, 0x63, 0x68, 0x61, 0x72, 0x2A, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x3B, 0x0A, 0x20, 0x20, 0x66,  //  char* name;.  f
+    0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x61, 0x72, 0x67, 0x5F, 0x6D, 0x65, 0x74, 0x61,  // unction_arg_meta
+    0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x2A, 0x20, 0x61, 0x72, 0x67, 0x75, 0x6D, 0x65, 0x6E, 0x74,  // data_t* argument
+    0x73, 0x3B, 0x0A, 0x7D, 0x20, 0x66, 0x75, 0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x5F, 0x6D, 0x65,  // s;.} function_me
+    0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5F, 0x74, 0x3B, 0x0A, 0x0A, 0x23, 0x65, 0x6E, 0x64, 0x69,  // tadata_t;..#endi
+    0x66, 0x20, 0x2F, 0x2A, 0x20, 0x5F, 0x52, 0x45, 0x46, 0x4C, 0x45, 0x43, 0x54, 0x49, 0x4F, 0x4E,  // f /* _REFLECTION
+    0x5F, 0x48, 0x5F, 0x20, 0x2A, 0x2F, 0x0A,                                                        // _H_ */.
+    };
+
+# 159 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+  buffer_t* result = make_buffer(2455);
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+  for (
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+    int i = 0;
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+    (i<2455);
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+    (i++))
+
+# 160 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+  {
+
+# 161 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+    buffer_append_byte(result, (reflection_header[i]));
+  }
+
+# 163 "/home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c"
+  return result;
+}
+
+char* error_code_to_string(error_code_t value){
+  switch (value) {
+    case ERROR_UKNOWN:
+    return "ERROR_UKNOWN";
+  case ERROR_SIGSEGV:
+    return "ERROR_SIGSEGV";
+  case ERROR_ACCESS_OUT_OF_BOUNDS:
+    return "ERROR_ACCESS_OUT_OF_BOUNDS";
+  case ERROR_BAD_COMMAND_LINE:
+    return "ERROR_BAD_COMMAND_LINE";
+  case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
+    return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
+  case ERROR_ILLEGAL_ENUM_VALUE:
+    return "ERROR_ILLEGAL_ENUM_VALUE";
+  case ERROR_ILLEGAL_INITIAL_CAPACITY:
+    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
+  case ERROR_ILLEGAL_NULL_ARGUMENT:
+    return "ERROR_ILLEGAL_NULL_ARGUMENT";
+  case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
+    return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
+  case ERROR_ILLEGAL_RANGE:
+    return "ERROR_ILLEGAL_RANGE";
+  case ERROR_MEMORY_ALLOCATION:
+    return "ERROR_MEMORY_ALLOCATION";
+  case ERROR_MEMORY_FREE_NULL:
+    return "ERROR_MEMORY_FREE_NULL";
+  case ERROR_NOT_REACHED:
+    return "ERROR_NOT_REACHED";
+  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
+    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
+  case ERROR_UNIMPLEMENTED:
+    return "ERROR_UNIMPLEMENTED";
+  case ERROR_OPEN_LOG_FILE:
+    return "ERROR_OPEN_LOG_FILE";
+  case ERROR_TEST:
+    return "ERROR_TEST";
+  case ERROR_INTERNAL_ASSERTION_FAILURE:
+    return "ERROR_INTERNAL_ASSERTION_FAILURE";
+  case ERROR_BAD_ALLOCATION_SIZE:
+    return "ERROR_BAD_ALLOCATION_SIZE";
+  case ERROR_ILLEGAL_ARGUMENT:
+    return "ERROR_ILLEGAL_ARGUMENT";
+  case ERROR_MEMORY_START_PADDING_ERROR:
+    return "ERROR_MEMORY_START_PADDING_ERROR";
+  case ERROR_MEMORY_END_PADDING_ERROR:
+    return "ERROR_MEMORY_END_PADDING_ERROR";
+  case ERROR_FATAL:
+    return "ERROR_FATAL";
+  case ERROR_ILLEGAL_STATE:
+    return "ERROR_ILLEGAL_STATE";
+  case ERROR_ILLEGAL_INPUT:
+    return "ERROR_ILLEGAL_INPUT";
+  case ERROR_ILLEGAL_UTF_8_CODE_POINT:
+    return "ERROR_ILLEGAL_UTF_8_CODE_POINT";
+  case ERROR_ILLEGAL_TERMINAL_COORDINATES:
+    return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
+  default:
+    return "<<unknown-error_code>>";
+  }
+}
+error_code_t string_to_error_code(char* value){
+  if (strcmp(value, "ERROR_UKNOWN") == 0) {
+    return ERROR_UKNOWN;
+  }
+  if (strcmp(value, "ERROR_SIGSEGV") == 0) {
+    return ERROR_SIGSEGV;
+  }
+  if (strcmp(value, "ERROR_ACCESS_OUT_OF_BOUNDS") == 0) {
+    return ERROR_ACCESS_OUT_OF_BOUNDS;
+  }
+  if (strcmp(value, "ERROR_BAD_COMMAND_LINE") == 0) {
+    return ERROR_BAD_COMMAND_LINE;
+  }
+  if (strcmp(value, "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER") == 0) {
+    return ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_ENUM_VALUE") == 0) {
+    return ERROR_ILLEGAL_ENUM_VALUE;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_INITIAL_CAPACITY") == 0) {
+    return ERROR_ILLEGAL_INITIAL_CAPACITY;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_NULL_ARGUMENT") == 0) {
+    return ERROR_ILLEGAL_NULL_ARGUMENT;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE") == 0) {
+    return ERROR_ILLEGAL_ZERO_HASHCODE_VALUE;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_RANGE") == 0) {
+    return ERROR_ILLEGAL_RANGE;
+  }
+  if (strcmp(value, "ERROR_MEMORY_ALLOCATION") == 0) {
+    return ERROR_MEMORY_ALLOCATION;
+  }
+  if (strcmp(value, "ERROR_MEMORY_FREE_NULL") == 0) {
+    return ERROR_MEMORY_FREE_NULL;
+  }
+  if (strcmp(value, "ERROR_NOT_REACHED") == 0) {
+    return ERROR_NOT_REACHED;
+  }
+  if (strcmp(value, "ERROR_REFERENCE_NOT_EXPECTED_TYPE") == 0) {
+    return ERROR_REFERENCE_NOT_EXPECTED_TYPE;
+  }
+  if (strcmp(value, "ERROR_UNIMPLEMENTED") == 0) {
+    return ERROR_UNIMPLEMENTED;
+  }
+  if (strcmp(value, "ERROR_OPEN_LOG_FILE") == 0) {
+    return ERROR_OPEN_LOG_FILE;
+  }
+  if (strcmp(value, "ERROR_TEST") == 0) {
+    return ERROR_TEST;
+  }
+  if (strcmp(value, "ERROR_INTERNAL_ASSERTION_FAILURE") == 0) {
+    return ERROR_INTERNAL_ASSERTION_FAILURE;
+  }
+  if (strcmp(value, "ERROR_BAD_ALLOCATION_SIZE") == 0) {
+    return ERROR_BAD_ALLOCATION_SIZE;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_ARGUMENT") == 0) {
+    return ERROR_ILLEGAL_ARGUMENT;
+  }
+  if (strcmp(value, "ERROR_MEMORY_START_PADDING_ERROR") == 0) {
+    return ERROR_MEMORY_START_PADDING_ERROR;
+  }
+  if (strcmp(value, "ERROR_MEMORY_END_PADDING_ERROR") == 0) {
+    return ERROR_MEMORY_END_PADDING_ERROR;
+  }
+  if (strcmp(value, "ERROR_FATAL") == 0) {
+    return ERROR_FATAL;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_STATE") == 0) {
+    return ERROR_ILLEGAL_STATE;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_INPUT") == 0) {
+    return ERROR_ILLEGAL_INPUT;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_UTF_8_CODE_POINT") == 0) {
+    return ERROR_ILLEGAL_UTF_8_CODE_POINT;
+  }
+  if (strcmp(value, "ERROR_ILLEGAL_TERMINAL_COORDINATES") == 0) {
+    return ERROR_ILLEGAL_TERMINAL_COORDINATES;
+  }
+  return 0;
+}
+enum_metadata_t* error_code_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "ERROR_UKNOWN",
+        .value = ERROR_UKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "ERROR_SIGSEGV",
+        .value = ERROR_SIGSEGV
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "ERROR_ACCESS_OUT_OF_BOUNDS",
+        .value = ERROR_ACCESS_OUT_OF_BOUNDS
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "ERROR_BAD_COMMAND_LINE",
+        .value = ERROR_BAD_COMMAND_LINE
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER",
+        .value = ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "ERROR_ILLEGAL_ENUM_VALUE",
+        .value = ERROR_ILLEGAL_ENUM_VALUE
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "ERROR_ILLEGAL_INITIAL_CAPACITY",
+        .value = ERROR_ILLEGAL_INITIAL_CAPACITY
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "ERROR_ILLEGAL_NULL_ARGUMENT",
+        .value = ERROR_ILLEGAL_NULL_ARGUMENT
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE",
+        .value = ERROR_ILLEGAL_ZERO_HASHCODE_VALUE
+    };
+    static enum_element_metadata_t var_9 = (enum_element_metadata_t) {
+        .next = &var_8,
+        .name = "ERROR_ILLEGAL_RANGE",
+        .value = ERROR_ILLEGAL_RANGE
+    };
+    static enum_element_metadata_t var_10 = (enum_element_metadata_t) {
+        .next = &var_9,
+        .name = "ERROR_MEMORY_ALLOCATION",
+        .value = ERROR_MEMORY_ALLOCATION
+    };
+    static enum_element_metadata_t var_11 = (enum_element_metadata_t) {
+        .next = &var_10,
+        .name = "ERROR_MEMORY_FREE_NULL",
+        .value = ERROR_MEMORY_FREE_NULL
+    };
+    static enum_element_metadata_t var_12 = (enum_element_metadata_t) {
+        .next = &var_11,
+        .name = "ERROR_NOT_REACHED",
+        .value = ERROR_NOT_REACHED
+    };
+    static enum_element_metadata_t var_13 = (enum_element_metadata_t) {
+        .next = &var_12,
+        .name = "ERROR_REFERENCE_NOT_EXPECTED_TYPE",
+        .value = ERROR_REFERENCE_NOT_EXPECTED_TYPE
+    };
+    static enum_element_metadata_t var_14 = (enum_element_metadata_t) {
+        .next = &var_13,
+        .name = "ERROR_UNIMPLEMENTED",
+        .value = ERROR_UNIMPLEMENTED
+    };
+    static enum_element_metadata_t var_15 = (enum_element_metadata_t) {
+        .next = &var_14,
+        .name = "ERROR_OPEN_LOG_FILE",
+        .value = ERROR_OPEN_LOG_FILE
+    };
+    static enum_element_metadata_t var_16 = (enum_element_metadata_t) {
+        .next = &var_15,
+        .name = "ERROR_TEST",
+        .value = ERROR_TEST
+    };
+    static enum_element_metadata_t var_17 = (enum_element_metadata_t) {
+        .next = &var_16,
+        .name = "ERROR_INTERNAL_ASSERTION_FAILURE",
+        .value = ERROR_INTERNAL_ASSERTION_FAILURE
+    };
+    static enum_element_metadata_t var_18 = (enum_element_metadata_t) {
+        .next = &var_17,
+        .name = "ERROR_BAD_ALLOCATION_SIZE",
+        .value = ERROR_BAD_ALLOCATION_SIZE
+    };
+    static enum_element_metadata_t var_19 = (enum_element_metadata_t) {
+        .next = &var_18,
+        .name = "ERROR_ILLEGAL_ARGUMENT",
+        .value = ERROR_ILLEGAL_ARGUMENT
+    };
+    static enum_element_metadata_t var_20 = (enum_element_metadata_t) {
+        .next = &var_19,
+        .name = "ERROR_MEMORY_START_PADDING_ERROR",
+        .value = ERROR_MEMORY_START_PADDING_ERROR
+    };
+    static enum_element_metadata_t var_21 = (enum_element_metadata_t) {
+        .next = &var_20,
+        .name = "ERROR_MEMORY_END_PADDING_ERROR",
+        .value = ERROR_MEMORY_END_PADDING_ERROR
+    };
+    static enum_element_metadata_t var_22 = (enum_element_metadata_t) {
+        .next = &var_21,
+        .name = "ERROR_FATAL",
+        .value = ERROR_FATAL
+    };
+    static enum_element_metadata_t var_23 = (enum_element_metadata_t) {
+        .next = &var_22,
+        .name = "ERROR_ILLEGAL_STATE",
+        .value = ERROR_ILLEGAL_STATE
+    };
+    static enum_element_metadata_t var_24 = (enum_element_metadata_t) {
+        .next = &var_23,
+        .name = "ERROR_ILLEGAL_INPUT",
+        .value = ERROR_ILLEGAL_INPUT
+    };
+    static enum_element_metadata_t var_25 = (enum_element_metadata_t) {
+        .next = &var_24,
+        .name = "ERROR_ILLEGAL_UTF_8_CODE_POINT",
+        .value = ERROR_ILLEGAL_UTF_8_CODE_POINT
+    };
+    static enum_element_metadata_t var_26 = (enum_element_metadata_t) {
+        .next = &var_25,
+        .name = "ERROR_ILLEGAL_TERMINAL_COORDINATES",
+        .value = ERROR_ILLEGAL_TERMINAL_COORDINATES
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "error_code_t",
+        .elements = &var_26
+    };
+    return &enum_metadata_result;
+}
+char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
+  switch (value) {
+    case NF_OK:
+    return "NF_OK";
+  case NF_ERROR_NOT_FOUND:
+    return "NF_ERROR_NOT_FOUND";
+  case NF_ERROR_NOT_PARSED_AS_NUMBER:
+    return "NF_ERROR_NOT_PARSED_AS_NUMBER";
+  case NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM:
+    return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
+  default:
+    return "<<unknown-non_fatal_error_code>>";
+  }
+}
+non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
+  if (strcmp(value, "NF_OK") == 0) {
+    return NF_OK;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_FOUND") == 0) {
+    return NF_ERROR_NOT_FOUND;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_NUMBER") == 0) {
+    return NF_ERROR_NOT_PARSED_AS_NUMBER;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM") == 0) {
+    return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
+  }
+  return 0;
+}
+enum_metadata_t* non_fatal_error_code_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "NF_OK",
+        .value = NF_OK
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "NF_ERROR_NOT_FOUND",
+        .value = NF_ERROR_NOT_FOUND
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "NF_ERROR_NOT_PARSED_AS_NUMBER",
+        .value = NF_ERROR_NOT_PARSED_AS_NUMBER
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM",
+        .value = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "non_fatal_error_code_t",
+        .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
+char* flag_type_to_string(flag_type_t value){
+  switch (value) {
+    case flag_type_none:
+    return "flag_type_none";
+  case flag_type_boolean:
+    return "flag_type_boolean";
+  case flag_type_string:
+    return "flag_type_string";
+  case flag_type_uint64:
+    return "flag_type_uint64";
+  case flag_type_int64:
+    return "flag_type_int64";
+  case flag_type_double:
+    return "flag_type_double";
+  case flag_type_enum:
+    return "flag_type_enum";
+  case flag_type_custom:
+    return "flag_type_custom";
+  default:
+    return "<<unknown-flag_type>>";
+  }
+}
+flag_type_t string_to_flag_type(char* value){
+  if (strcmp(value, "flag_type_none") == 0) {
+    return flag_type_none;
+  }
+  if (strcmp(value, "flag_type_boolean") == 0) {
+    return flag_type_boolean;
+  }
+  if (strcmp(value, "flag_type_string") == 0) {
+    return flag_type_string;
+  }
+  if (strcmp(value, "flag_type_uint64") == 0) {
+    return flag_type_uint64;
+  }
+  if (strcmp(value, "flag_type_int64") == 0) {
+    return flag_type_int64;
+  }
+  if (strcmp(value, "flag_type_double") == 0) {
+    return flag_type_double;
+  }
+  if (strcmp(value, "flag_type_enum") == 0) {
+    return flag_type_enum;
+  }
+  if (strcmp(value, "flag_type_custom") == 0) {
+    return flag_type_custom;
+  }
+  return 0;
+}
+enum_metadata_t* flag_type_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "flag_type_none",
+        .value = flag_type_none
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "flag_type_boolean",
+        .value = flag_type_boolean
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "flag_type_string",
+        .value = flag_type_string
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "flag_type_uint64",
+        .value = flag_type_uint64
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "flag_type_int64",
+        .value = flag_type_int64
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "flag_type_double",
+        .value = flag_type_double
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "flag_type_enum",
+        .value = flag_type_enum
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "flag_type_custom",
+        .value = flag_type_custom
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "flag_type_t",
+        .elements = &var_7
+    };
+    return &enum_metadata_result;
+}
+char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
+  switch (value) {
+    case EXIT_STATUS_UNKNOWN:
+    return "EXIT_STATUS_UNKNOWN";
+  case EXIT_STATUS_NORMAL_EXIT:
+    return "EXIT_STATUS_NORMAL_EXIT";
+  case EXIT_STATUS_SIGNAL:
+    return "EXIT_STATUS_SIGNAL";
+  case EXIT_STATUS_ABNORMAL:
+    return "EXIT_STATUS_ABNORMAL";
+  default:
+    return "<<unknown-sub_process_exit_status>>";
+  }
+}
+sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
+  if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
+    return EXIT_STATUS_UNKNOWN;
+  }
+  if (strcmp(value, "EXIT_STATUS_NORMAL_EXIT") == 0) {
+    return EXIT_STATUS_NORMAL_EXIT;
+  }
+  if (strcmp(value, "EXIT_STATUS_SIGNAL") == 0) {
+    return EXIT_STATUS_SIGNAL;
+  }
+  if (strcmp(value, "EXIT_STATUS_ABNORMAL") == 0) {
+    return EXIT_STATUS_ABNORMAL;
+  }
+  return 0;
+}
+enum_metadata_t* sub_process_exit_status_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "EXIT_STATUS_UNKNOWN",
+        .value = EXIT_STATUS_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "EXIT_STATUS_NORMAL_EXIT",
+        .value = EXIT_STATUS_NORMAL_EXIT
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "EXIT_STATUS_SIGNAL",
+        .value = EXIT_STATUS_SIGNAL
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "EXIT_STATUS_ABNORMAL",
+        .value = EXIT_STATUS_ABNORMAL
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "sub_process_exit_status_t",
+        .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
+char* input_mode_to_string(input_mode_t value){
+  switch (value) {
+    case INPUT_MODE_OMNI_C:
+    return "INPUT_MODE_OMNI_C";
+  case INPUT_MODE_STANDARD_C:
+    return "INPUT_MODE_STANDARD_C";
+  case INPUT_MODE_C_PLUS_PLUS:
+    return "INPUT_MODE_C_PLUS_PLUS";
+  default:
+    return "<<unknown-input_mode>>";
+  }
+}
+input_mode_t string_to_input_mode(char* value){
+  if (strcmp(value, "INPUT_MODE_OMNI_C") == 0) {
+    return INPUT_MODE_OMNI_C;
+  }
+  if (strcmp(value, "INPUT_MODE_STANDARD_C") == 0) {
+    return INPUT_MODE_STANDARD_C;
+  }
+  if (strcmp(value, "INPUT_MODE_C_PLUS_PLUS") == 0) {
+    return INPUT_MODE_C_PLUS_PLUS;
+  }
+  return 0;
+}
+enum_metadata_t* input_mode_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "INPUT_MODE_OMNI_C",
+        .value = INPUT_MODE_OMNI_C
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "INPUT_MODE_STANDARD_C",
+        .value = INPUT_MODE_STANDARD_C
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "INPUT_MODE_C_PLUS_PLUS",
+        .value = INPUT_MODE_C_PLUS_PLUS
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "input_mode_t",
+        .elements = &var_2
+    };
+    return &enum_metadata_result;
+}
+char* output_mode_to_string(output_mode_t value){
+  switch (value) {
+    case OUTPUT_MODE_STANDARD_C:
+    return "OUTPUT_MODE_STANDARD_C";
+  case OUTPUT_MODE_C_PLUS_PLUS:
+    return "OUTPUT_MODE_C_PLUS_PLUS";
+  default:
+    return "<<unknown-output_mode>>";
+  }
+}
+output_mode_t string_to_output_mode(char* value){
+  if (strcmp(value, "OUTPUT_MODE_STANDARD_C") == 0) {
+    return OUTPUT_MODE_STANDARD_C;
+  }
+  if (strcmp(value, "OUTPUT_MODE_C_PLUS_PLUS") == 0) {
+    return OUTPUT_MODE_C_PLUS_PLUS;
+  }
+  return 0;
+}
+enum_metadata_t* output_mode_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "OUTPUT_MODE_STANDARD_C",
+        .value = OUTPUT_MODE_STANDARD_C
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "OUTPUT_MODE_C_PLUS_PLUS",
+        .value = OUTPUT_MODE_C_PLUS_PLUS
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "output_mode_t",
+        .elements = &var_1
+    };
+    return &enum_metadata_result;
+}
+char* file_tag_to_string(file_tag_t value){
+  switch (value) {
+    case OMNI_C_SOURCE_FILE:
+    return "OMNI_C_SOURCE_FILE";
+  case STD_C_SOURCE_FILE:
+    return "STD_C_SOURCE_FILE";
+  case DATA_FILE:
+    return "DATA_FILE";
+  default:
+    return "<<unknown-file_tag>>";
+  }
+}
+file_tag_t string_to_file_tag(char* value){
+  if (strcmp(value, "OMNI_C_SOURCE_FILE") == 0) {
+    return OMNI_C_SOURCE_FILE;
+  }
+  if (strcmp(value, "STD_C_SOURCE_FILE") == 0) {
+    return STD_C_SOURCE_FILE;
+  }
+  if (strcmp(value, "DATA_FILE") == 0) {
+    return DATA_FILE;
+  }
+  return 0;
+}
+enum_metadata_t* file_tag_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "OMNI_C_SOURCE_FILE",
+        .value = OMNI_C_SOURCE_FILE
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "STD_C_SOURCE_FILE",
+        .value = STD_C_SOURCE_FILE
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "DATA_FILE",
+        .value = DATA_FILE
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "file_tag_t",
+        .elements = &var_2
+    };
+    return &enum_metadata_result;
+}
+char* tokenizer_error_to_string(tokenizer_error_t value){
+  switch (value) {
+    case TOKENIZER_ERROR_UNKNOWN:
+    return "TOKENIZER_ERROR_UNKNOWN";
+  case TOKENIZER_ERROR_UTF_DECODE_ERROR:
+    return "TOKENIZER_ERROR_UTF_DECODE_ERROR";
+  case TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION:
+    return "TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION";
+  case TOKENIZER_ERROR_UNTERMINATED_COMMENT:
+    return "TOKENIZER_ERROR_UNTERMINATED_COMMENT";
+  case TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL:
+    return "TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL";
+  case TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL:
+    return "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL";
+  default:
+    return "<<unknown-tokenizer_error>>";
+  }
+}
+tokenizer_error_t string_to_tokenizer_error(char* value){
+  if (strcmp(value, "TOKENIZER_ERROR_UNKNOWN") == 0) {
+    return TOKENIZER_ERROR_UNKNOWN;
+  }
+  if (strcmp(value, "TOKENIZER_ERROR_UTF_DECODE_ERROR") == 0) {
+    return TOKENIZER_ERROR_UTF_DECODE_ERROR;
+  }
+  if (strcmp(value, "TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION") == 0) {
+    return TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION;
+  }
+  if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_COMMENT") == 0) {
+    return TOKENIZER_ERROR_UNTERMINATED_COMMENT;
+  }
+  if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL") == 0) {
+    return TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL;
+  }
+  if (strcmp(value, "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL") == 0) {
+    return TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL;
+  }
+  return 0;
+}
+enum_metadata_t* tokenizer_error_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "TOKENIZER_ERROR_UNKNOWN",
+        .value = TOKENIZER_ERROR_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "TOKENIZER_ERROR_UTF_DECODE_ERROR",
+        .value = TOKENIZER_ERROR_UTF_DECODE_ERROR
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION",
+        .value = TOKENIZER_ERROR_UNRECOGNIZED_PUNCTUATION
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "TOKENIZER_ERROR_UNTERMINATED_COMMENT",
+        .value = TOKENIZER_ERROR_UNTERMINATED_COMMENT
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL",
+        .value = TOKENIZER_ERROR_UNTERMINATED_STRING_LITERAL
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL",
+        .value = TOKENIZER_ERROR_UNTERMINATED_CHARACTER_LITERAL
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "tokenizer_error_t",
+        .elements = &var_5
+    };
+    return &enum_metadata_result;
+}
+char* parse_error_code_to_string(parse_error_code_t value){
+  switch (value) {
+    case PARSE_ERROR_UNKNOWN:
+    return "PARSE_ERROR_UNKNOWN";
+  case PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED:
+    return "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED";
+  case PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON:
+    return "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON";
+  case PARSE_ERROR_EXPECTED_SEMICOLON:
+    return "PARSE_ERROR_EXPECTED_SEMICOLON";
+  case PARSE_ERROR_IDENTIFIER_EXPECTED:
+    return "PARSE_ERROR_IDENTIFIER_EXPECTED";
+  case PARSE_ERROR_NOT_LITERAL_NODE:
+    return "PARSE_ERROR_NOT_LITERAL_NODE";
+  case PARSE_ERROR_INTEGER_LITERAL_EXPECTED:
+    return "PARSE_ERROR_INTEGER_LITERAL_EXPECTED";
+  case PARSE_ERROR_OPEN_BRACE_EXPECTED:
+    return "PARSE_ERROR_OPEN_BRACE_EXPECTED";
+  case PARSE_ERROR_CLOSE_BRACKET_EXPECTED:
+    return "PARSE_ERROR_CLOSE_BRACKET_EXPECTED";
+  case PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION:
+    return "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION";
+  case PARSE_ERROR_SEMICOLON_EXPECTED:
+    return "PARSE_ERROR_SEMICOLON_EXPECTED";
+  case PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER:
+    return "PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER";
+  case PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER:
+    return "PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER";
+  case PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+    return "PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE";
+  case PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE:
+    return "PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE";
+  case PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL:
+    return "PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL";
+  case PARSE_ERROR_EXPECTED_STATEMENT:
+    return "PARSE_ERROR_EXPECTED_STATEMENT";
+  case PARSE_ERROR_EXPECTED_TOKEN:
+    return "PARSE_ERROR_EXPECTED_TOKEN";
+  case PARSE_ERROR_EXPECTED_TOKEN_TYPE:
+    return "PARSE_ERROR_EXPECTED_TOKEN_TYPE";
+  case PARSE_ERROR_EOF:
+    return "PARSE_ERROR_EOF";
+  case PARSE_ERROR_UNHANDLED_INSTRUCTION:
+    return "PARSE_ERROR_UNHANDLED_INSTRUCTION";
+  case PARSE_ERROR_BAD_INITIALIZER:
+    return "PARSE_ERROR_BAD_INITIALIZER";
+  default:
+    return "<<unknown-parse_error_code>>";
+  }
+}
+parse_error_code_t string_to_parse_error_code(char* value){
+  if (strcmp(value, "PARSE_ERROR_UNKNOWN") == 0) {
+    return PARSE_ERROR_UNKNOWN;
+  }
+  if (strcmp(value, "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED") == 0) {
+    return PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED;
+  }
+  if (strcmp(value, "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON") == 0) {
+    return PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON;
+  }
+  if (strcmp(value, "PARSE_ERROR_EXPECTED_SEMICOLON") == 0) {
+    return PARSE_ERROR_EXPECTED_SEMICOLON;
+  }
+  if (strcmp(value, "PARSE_ERROR_IDENTIFIER_EXPECTED") == 0) {
+    return PARSE_ERROR_IDENTIFIER_EXPECTED;
+  }
+  if (strcmp(value, "PARSE_ERROR_NOT_LITERAL_NODE") == 0) {
+    return PARSE_ERROR_NOT_LITERAL_NODE;
+  }
+  if (strcmp(value, "PARSE_ERROR_INTEGER_LITERAL_EXPECTED") == 0) {
+    return PARSE_ERROR_INTEGER_LITERAL_EXPECTED;
+  }
+  if (strcmp(value, "PARSE_ERROR_OPEN_BRACE_EXPECTED") == 0) {
+    return PARSE_ERROR_OPEN_BRACE_EXPECTED;
+  }
+  if (strcmp(value, "PARSE_ERROR_CLOSE_BRACKET_EXPECTED") == 0) {
+    return PARSE_ERROR_CLOSE_BRACKET_EXPECTED;
+  }
+  if (strcmp(value, "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION") == 0) {
+    return PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION;
+  }
+  if (strcmp(value, "PARSE_ERROR_SEMICOLON_EXPECTED") == 0) {
+    return PARSE_ERROR_SEMICOLON_EXPECTED;
+  }
+  if (strcmp(value, "PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER") == 0) {
+    return PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER;
+  }
+  if (strcmp(value, "PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER") == 0) {
+    return PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER;
+  }
+  if (strcmp(value, "PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE") == 0) {
+    return PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE;
+  }
+  if (strcmp(value, "PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE") == 0) {
+    return PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE;
+  }
+  if (strcmp(value, "PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL") == 0) {
+    return PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL;
+  }
+  if (strcmp(value, "PARSE_ERROR_EXPECTED_STATEMENT") == 0) {
+    return PARSE_ERROR_EXPECTED_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_ERROR_EXPECTED_TOKEN") == 0) {
+    return PARSE_ERROR_EXPECTED_TOKEN;
+  }
+  if (strcmp(value, "PARSE_ERROR_EXPECTED_TOKEN_TYPE") == 0) {
+    return PARSE_ERROR_EXPECTED_TOKEN_TYPE;
+  }
+  if (strcmp(value, "PARSE_ERROR_EOF") == 0) {
+    return PARSE_ERROR_EOF;
+  }
+  if (strcmp(value, "PARSE_ERROR_UNHANDLED_INSTRUCTION") == 0) {
+    return PARSE_ERROR_UNHANDLED_INSTRUCTION;
+  }
+  if (strcmp(value, "PARSE_ERROR_BAD_INITIALIZER") == 0) {
+    return PARSE_ERROR_BAD_INITIALIZER;
+  }
+  return 0;
+}
+enum_metadata_t* parse_error_code_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "PARSE_ERROR_UNKNOWN",
+        .value = PARSE_ERROR_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED",
+        .value = PARSE_ERROR_COMMA_OR_EQUAL_SIGN_EXPECTED
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON",
+        .value = PARSE_ERROR_EXPECTED_FIELD_WIDTH_OR_SEMICOLON
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "PARSE_ERROR_EXPECTED_SEMICOLON",
+        .value = PARSE_ERROR_EXPECTED_SEMICOLON
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "PARSE_ERROR_IDENTIFIER_EXPECTED",
+        .value = PARSE_ERROR_IDENTIFIER_EXPECTED
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "PARSE_ERROR_NOT_LITERAL_NODE",
+        .value = PARSE_ERROR_NOT_LITERAL_NODE
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "PARSE_ERROR_INTEGER_LITERAL_EXPECTED",
+        .value = PARSE_ERROR_INTEGER_LITERAL_EXPECTED
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "PARSE_ERROR_OPEN_BRACE_EXPECTED",
+        .value = PARSE_ERROR_OPEN_BRACE_EXPECTED
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "PARSE_ERROR_CLOSE_BRACKET_EXPECTED",
+        .value = PARSE_ERROR_CLOSE_BRACKET_EXPECTED
+    };
+    static enum_element_metadata_t var_9 = (enum_element_metadata_t) {
+        .next = &var_8,
+        .name = "PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION",
+        .value = PARSE_ERROR_UNRECOGNIZED_TOP_LEVEL_DECLARATION
+    };
+    static enum_element_metadata_t var_10 = (enum_element_metadata_t) {
+        .next = &var_9,
+        .name = "PARSE_ERROR_SEMICOLON_EXPECTED",
+        .value = PARSE_ERROR_SEMICOLON_EXPECTED
+    };
+    static enum_element_metadata_t var_11 = (enum_element_metadata_t) {
+        .next = &var_10,
+        .name = "PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER",
+        .value = PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER
+    };
+    static enum_element_metadata_t var_12 = (enum_element_metadata_t) {
+        .next = &var_11,
+        .name = "PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER",
+        .value = PARSE_ERROR_CONFLICTING_FUNCTION_SPECIFIER
+    };
+    static enum_element_metadata_t var_13 = (enum_element_metadata_t) {
+        .next = &var_12,
+        .name = "PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE",
+        .value = PARSE_ERROR_EXPECTED_OPEN_PAREN_AFTER_UNDERSCORE_ATTRIBUTE
+    };
+    static enum_element_metadata_t var_14 = (enum_element_metadata_t) {
+        .next = &var_13,
+        .name = "PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE",
+        .value = PARSE_ERROR_EXPECTED_MATCHING_CLOSE_PAREN_AFTER_UNDERSCORE_ATTRIBUTE
+    };
+    static enum_element_metadata_t var_15 = (enum_element_metadata_t) {
+        .next = &var_14,
+        .name = "PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL",
+        .value = PARSE_ERROR_EXPECTED_PREFIX_OPERATOR_OR_TERMINAL
+    };
+    static enum_element_metadata_t var_16 = (enum_element_metadata_t) {
+        .next = &var_15,
+        .name = "PARSE_ERROR_EXPECTED_STATEMENT",
+        .value = PARSE_ERROR_EXPECTED_STATEMENT
+    };
+    static enum_element_metadata_t var_17 = (enum_element_metadata_t) {
+        .next = &var_16,
+        .name = "PARSE_ERROR_EXPECTED_TOKEN",
+        .value = PARSE_ERROR_EXPECTED_TOKEN
+    };
+    static enum_element_metadata_t var_18 = (enum_element_metadata_t) {
+        .next = &var_17,
+        .name = "PARSE_ERROR_EXPECTED_TOKEN_TYPE",
+        .value = PARSE_ERROR_EXPECTED_TOKEN_TYPE
+    };
+    static enum_element_metadata_t var_19 = (enum_element_metadata_t) {
+        .next = &var_18,
+        .name = "PARSE_ERROR_EOF",
+        .value = PARSE_ERROR_EOF
+    };
+    static enum_element_metadata_t var_20 = (enum_element_metadata_t) {
+        .next = &var_19,
+        .name = "PARSE_ERROR_UNHANDLED_INSTRUCTION",
+        .value = PARSE_ERROR_UNHANDLED_INSTRUCTION
+    };
+    static enum_element_metadata_t var_21 = (enum_element_metadata_t) {
+        .next = &var_20,
+        .name = "PARSE_ERROR_BAD_INITIALIZER",
+        .value = PARSE_ERROR_BAD_INITIALIZER
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "parse_error_code_t",
+        .elements = &var_21
+    };
+    return &enum_metadata_result;
+}
+char* token_type_to_string(token_type_t value){
+  switch (value) {
+    case TOKEN_TYPE_UNKNOWN:
+    return "TOKEN_TYPE_UNKNOWN";
+  case TOKEN_TYPE_WHITESPACE:
+    return "TOKEN_TYPE_WHITESPACE";
+  case TOKEN_TYPE_COMMENT:
+    return "TOKEN_TYPE_COMMENT";
+  case TOKEN_TYPE_IDENTIFIER:
+    return "TOKEN_TYPE_IDENTIFIER";
+  case TOKEN_TYPE_PUNCTUATION:
+    return "TOKEN_TYPE_PUNCTUATION";
+  case TOKEN_TYPE_INTEGER_LITERAL:
+    return "TOKEN_TYPE_INTEGER_LITERAL";
+  case TOKEN_TYPE_FLOAT_LITERAL:
+    return "TOKEN_TYPE_FLOAT_LITERAL";
+  case TOKEN_TYPE_STRING_LITERAL:
+    return "TOKEN_TYPE_STRING_LITERAL";
+  case TOKEN_TYPE_CHARACTER_LITERAL:
+    return "TOKEN_TYPE_CHARACTER_LITERAL";
+  default:
+    return "<<unknown-token_type>>";
+  }
+}
+token_type_t string_to_token_type(char* value){
+  if (strcmp(value, "TOKEN_TYPE_UNKNOWN") == 0) {
+    return TOKEN_TYPE_UNKNOWN;
+  }
+  if (strcmp(value, "TOKEN_TYPE_WHITESPACE") == 0) {
+    return TOKEN_TYPE_WHITESPACE;
+  }
+  if (strcmp(value, "TOKEN_TYPE_COMMENT") == 0) {
+    return TOKEN_TYPE_COMMENT;
+  }
+  if (strcmp(value, "TOKEN_TYPE_IDENTIFIER") == 0) {
+    return TOKEN_TYPE_IDENTIFIER;
+  }
+  if (strcmp(value, "TOKEN_TYPE_PUNCTUATION") == 0) {
+    return TOKEN_TYPE_PUNCTUATION;
+  }
+  if (strcmp(value, "TOKEN_TYPE_INTEGER_LITERAL") == 0) {
+    return TOKEN_TYPE_INTEGER_LITERAL;
+  }
+  if (strcmp(value, "TOKEN_TYPE_FLOAT_LITERAL") == 0) {
+    return TOKEN_TYPE_FLOAT_LITERAL;
+  }
+  if (strcmp(value, "TOKEN_TYPE_STRING_LITERAL") == 0) {
+    return TOKEN_TYPE_STRING_LITERAL;
+  }
+  if (strcmp(value, "TOKEN_TYPE_CHARACTER_LITERAL") == 0) {
+    return TOKEN_TYPE_CHARACTER_LITERAL;
+  }
+  return 0;
+}
+enum_metadata_t* token_type_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "TOKEN_TYPE_UNKNOWN",
+        .value = TOKEN_TYPE_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "TOKEN_TYPE_WHITESPACE",
+        .value = TOKEN_TYPE_WHITESPACE
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "TOKEN_TYPE_COMMENT",
+        .value = TOKEN_TYPE_COMMENT
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "TOKEN_TYPE_IDENTIFIER",
+        .value = TOKEN_TYPE_IDENTIFIER
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "TOKEN_TYPE_PUNCTUATION",
+        .value = TOKEN_TYPE_PUNCTUATION
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "TOKEN_TYPE_INTEGER_LITERAL",
+        .value = TOKEN_TYPE_INTEGER_LITERAL
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "TOKEN_TYPE_FLOAT_LITERAL",
+        .value = TOKEN_TYPE_FLOAT_LITERAL
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "TOKEN_TYPE_STRING_LITERAL",
+        .value = TOKEN_TYPE_STRING_LITERAL
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "TOKEN_TYPE_CHARACTER_LITERAL",
+        .value = TOKEN_TYPE_CHARACTER_LITERAL
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "token_type_t",
+        .elements = &var_8
+    };
+    return &enum_metadata_result;
+}
+char* numeric_literal_encoding_to_string(numeric_literal_encoding_t value){
+  switch (value) {
+    case NUMERIC_LITERAL_ENCODING_UNDECIDED:
+    return "NUMERIC_LITERAL_ENCODING_UNDECIDED";
+  case NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL:
+    return "NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL";
+  case NUMERIC_LITERAL_ENCODING_BINARY:
+    return "NUMERIC_LITERAL_ENCODING_BINARY";
+  case NUMERIC_LITERAL_ENCODING_OCTAL:
+    return "NUMERIC_LITERAL_ENCODING_OCTAL";
+  case NUMERIC_LITERAL_ENCODING_HEX:
+    return "NUMERIC_LITERAL_ENCODING_HEX";
+  case NUMERIC_LITERAL_ENCODING_DECIMAL:
+    return "NUMERIC_LITERAL_ENCODING_DECIMAL";
+  case NUMERIC_LITERAL_ENCODING_FLOAT:
+    return "NUMERIC_LITERAL_ENCODING_FLOAT";
+  default:
+    return "<<unknown-numeric_literal_encoding>>";
+  }
+}
+numeric_literal_encoding_t string_to_numeric_literal_encoding(char* value){
+  if (strcmp(value, "NUMERIC_LITERAL_ENCODING_UNDECIDED") == 0) {
+    return NUMERIC_LITERAL_ENCODING_UNDECIDED;
+  }
+  if (strcmp(value, "NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL") == 0) {
+    return NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL;
+  }
+  if (strcmp(value, "NUMERIC_LITERAL_ENCODING_BINARY") == 0) {
+    return NUMERIC_LITERAL_ENCODING_BINARY;
+  }
+  if (strcmp(value, "NUMERIC_LITERAL_ENCODING_OCTAL") == 0) {
+    return NUMERIC_LITERAL_ENCODING_OCTAL;
+  }
+  if (strcmp(value, "NUMERIC_LITERAL_ENCODING_HEX") == 0) {
+    return NUMERIC_LITERAL_ENCODING_HEX;
+  }
+  if (strcmp(value, "NUMERIC_LITERAL_ENCODING_DECIMAL") == 0) {
+    return NUMERIC_LITERAL_ENCODING_DECIMAL;
+  }
+  if (strcmp(value, "NUMERIC_LITERAL_ENCODING_FLOAT") == 0) {
+    return NUMERIC_LITERAL_ENCODING_FLOAT;
+  }
+  return 0;
+}
+enum_metadata_t* numeric_literal_encoding_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "NUMERIC_LITERAL_ENCODING_UNDECIDED",
+        .value = NUMERIC_LITERAL_ENCODING_UNDECIDED
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL",
+        .value = NUMERIC_LITERAL_ENCODING_FLOAT_OR_DECIMAL
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "NUMERIC_LITERAL_ENCODING_BINARY",
+        .value = NUMERIC_LITERAL_ENCODING_BINARY
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "NUMERIC_LITERAL_ENCODING_OCTAL",
+        .value = NUMERIC_LITERAL_ENCODING_OCTAL
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "NUMERIC_LITERAL_ENCODING_HEX",
+        .value = NUMERIC_LITERAL_ENCODING_HEX
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "NUMERIC_LITERAL_ENCODING_DECIMAL",
+        .value = NUMERIC_LITERAL_ENCODING_DECIMAL
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "NUMERIC_LITERAL_ENCODING_FLOAT",
+        .value = NUMERIC_LITERAL_ENCODING_FLOAT
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "numeric_literal_encoding_t",
+        .elements = &var_6
+    };
+    return &enum_metadata_result;
+}
+char* parse_node_type_to_string(parse_node_type_t value){
+  switch (value) {
+    case PARSE_NODE_UNKNOWN:
+    return "PARSE_NODE_UNKNOWN";
+  case PARSE_NODE_DECLARATIONS:
+    return "PARSE_NODE_DECLARATIONS";
+  case PARSE_NODE_ENUM:
+    return "PARSE_NODE_ENUM";
+  case PARSE_NODE_ENUM_ELEMENT:
+    return "PARSE_NODE_ENUM_ELEMENT";
+  case PARSE_NODE_FIELD:
+    return "PARSE_NODE_FIELD";
+  case PARSE_NODE_GLOBAL_FUNCTION:
+    return "PARSE_NODE_GLOBAL_FUNCTION";
+  case PARSE_NODE_VARIABLE_DEFINITION:
+    return "PARSE_NODE_VARIABLE_DEFINITION";
+  case PARSE_NODE_LIST_OF_NODES:
+    return "PARSE_NODE_LIST_OF_NODES";
+  case PARSE_NODE_STRUCT:
+    return "PARSE_NODE_STRUCT";
+  case PARSE_NODE_UNION:
+    return "PARSE_NODE_UNION";
+  case PARSE_NODE_TYPE:
+    return "PARSE_NODE_TYPE";
+  case PARSE_NODE_LITERAL:
+    return "PARSE_NODE_LITERAL";
+  case PARSE_NODE_FUNCTION:
+    return "PARSE_NODE_FUNCTION";
+  case PARSE_NODE_FUNCTION_ARGUMENT:
+    return "PARSE_NODE_FUNCTION_ARGUMENT";
+  case PARSE_NODE_TYPEDEF:
+    return "PARSE_NODE_TYPEDEF";
+  case PARSE_NODE_UNPARSED_EXPRESSION:
+    return "PARSE_NODE_UNPARSED_EXPRESSION";
+  case PARSE_NODE_ATTRIBUTE:
+    return "PARSE_NODE_ATTRIBUTE";
+  case PARSE_NODE_CPP_INCLUDE:
+    return "PARSE_NODE_CPP_INCLUDE";
+  case PARSE_NODE_CPP_DEFINE:
+    return "PARSE_NODE_CPP_DEFINE";
+  case PARSE_NODE_OPERATOR:
+    return "PARSE_NODE_OPERATOR";
+  case PARSE_NODE_IDENTIFIER:
+    return "PARSE_NODE_IDENTIFIER";
+  case PARSE_NODE_IF_STATEMENT:
+    return "PARSE_NODE_IF_STATEMENT";
+  case PARSE_NODE_FOR_STATEMENT:
+    return "PARSE_NODE_FOR_STATEMENT";
+  case PARSE_NODE_DO_STATEMENT:
+    return "PARSE_NODE_DO_STATEMENT";
+  case PARSE_NODE_WHILE_STATEMENT:
+    return "PARSE_NODE_WHILE_STATEMENT";
+  case PARSE_NODE_EMPTY_STATEMENT:
+    return "PARSE_NODE_EMPTY_STATEMENT";
+  case PARSE_NODE_BLOCK:
+    return "PARSE_NODE_BLOCK";
+  case PARSE_NODE_RETURN_STATEMENT:
+    return "PARSE_NODE_RETURN_STATEMENT";
+  case PARSE_NODE_SWITCH_STATEMENT:
+    return "PARSE_NODE_SWITCH_STATEMENT";
+  case PARSE_NODE_CASE_LABEL:
+    return "PARSE_NODE_CASE_LABEL";
+  case PARSE_NODE_DEFAULT_LABEL:
+    return "PARSE_NODE_DEFAULT_LABEL";
+  case PARSE_NODE_GOTO_STATEMENT:
+    return "PARSE_NODE_GOTO_STATEMENT";
+  case PARSE_NODE_BREAK_STATEMENT:
+    return "PARSE_NODE_BREAK_STATEMENT";
+  case PARSE_NODE_CONTINUE_STATEMENT:
+    return "PARSE_NODE_CONTINUE_STATEMENT";
+  case PARSE_NODE_LABEL_STATEMENT:
+    return "PARSE_NODE_LABEL_STATEMENT";
+  case PARSE_NODE_VARIABLE_STATEMENT:
+    return "PARSE_NODE_VARIABLE_STATEMENT";
+  case PARSE_NODE_EXPRESSION_STATEMENT:
+    return "PARSE_NODE_EXPRESSION_STATEMENT";
+  case PARSE_NODE_BALANCED_CONSTRUCT:
+    return "PARSE_NODE_BALANCED_CONSTRUCT";
+  case PARSE_NODE_CALL:
+    return "PARSE_NODE_CALL";
+  case PARSE_NODE_CONDITIONAL:
+    return "PARSE_NODE_CONDITIONAL";
+  case PARSE_NODE_COMPOUND_LITERAL:
+    return "PARSE_NODE_COMPOUND_LITERAL";
+  case PARSE_NODE_DESIGNATED_INITIALIZER:
+    return "PARSE_NODE_DESIGNATED_INITIALIZER";
+  default:
+    return "<<unknown-parse_node_type>>";
+  }
+}
+parse_node_type_t string_to_parse_node_type(char* value){
+  if (strcmp(value, "PARSE_NODE_UNKNOWN") == 0) {
+    return PARSE_NODE_UNKNOWN;
+  }
+  if (strcmp(value, "PARSE_NODE_DECLARATIONS") == 0) {
+    return PARSE_NODE_DECLARATIONS;
+  }
+  if (strcmp(value, "PARSE_NODE_ENUM") == 0) {
+    return PARSE_NODE_ENUM;
+  }
+  if (strcmp(value, "PARSE_NODE_ENUM_ELEMENT") == 0) {
+    return PARSE_NODE_ENUM_ELEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_FIELD") == 0) {
+    return PARSE_NODE_FIELD;
+  }
+  if (strcmp(value, "PARSE_NODE_GLOBAL_FUNCTION") == 0) {
+    return PARSE_NODE_GLOBAL_FUNCTION;
+  }
+  if (strcmp(value, "PARSE_NODE_VARIABLE_DEFINITION") == 0) {
+    return PARSE_NODE_VARIABLE_DEFINITION;
+  }
+  if (strcmp(value, "PARSE_NODE_LIST_OF_NODES") == 0) {
+    return PARSE_NODE_LIST_OF_NODES;
+  }
+  if (strcmp(value, "PARSE_NODE_STRUCT") == 0) {
+    return PARSE_NODE_STRUCT;
+  }
+  if (strcmp(value, "PARSE_NODE_UNION") == 0) {
+    return PARSE_NODE_UNION;
+  }
+  if (strcmp(value, "PARSE_NODE_TYPE") == 0) {
+    return PARSE_NODE_TYPE;
+  }
+  if (strcmp(value, "PARSE_NODE_LITERAL") == 0) {
+    return PARSE_NODE_LITERAL;
+  }
+  if (strcmp(value, "PARSE_NODE_FUNCTION") == 0) {
+    return PARSE_NODE_FUNCTION;
+  }
+  if (strcmp(value, "PARSE_NODE_FUNCTION_ARGUMENT") == 0) {
+    return PARSE_NODE_FUNCTION_ARGUMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_TYPEDEF") == 0) {
+    return PARSE_NODE_TYPEDEF;
+  }
+  if (strcmp(value, "PARSE_NODE_UNPARSED_EXPRESSION") == 0) {
+    return PARSE_NODE_UNPARSED_EXPRESSION;
+  }
+  if (strcmp(value, "PARSE_NODE_ATTRIBUTE") == 0) {
+    return PARSE_NODE_ATTRIBUTE;
+  }
+  if (strcmp(value, "PARSE_NODE_CPP_INCLUDE") == 0) {
+    return PARSE_NODE_CPP_INCLUDE;
+  }
+  if (strcmp(value, "PARSE_NODE_CPP_DEFINE") == 0) {
+    return PARSE_NODE_CPP_DEFINE;
+  }
+  if (strcmp(value, "PARSE_NODE_OPERATOR") == 0) {
+    return PARSE_NODE_OPERATOR;
+  }
+  if (strcmp(value, "PARSE_NODE_IDENTIFIER") == 0) {
+    return PARSE_NODE_IDENTIFIER;
+  }
+  if (strcmp(value, "PARSE_NODE_IF_STATEMENT") == 0) {
+    return PARSE_NODE_IF_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_FOR_STATEMENT") == 0) {
+    return PARSE_NODE_FOR_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_DO_STATEMENT") == 0) {
+    return PARSE_NODE_DO_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_WHILE_STATEMENT") == 0) {
+    return PARSE_NODE_WHILE_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_EMPTY_STATEMENT") == 0) {
+    return PARSE_NODE_EMPTY_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_BLOCK") == 0) {
+    return PARSE_NODE_BLOCK;
+  }
+  if (strcmp(value, "PARSE_NODE_RETURN_STATEMENT") == 0) {
+    return PARSE_NODE_RETURN_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_SWITCH_STATEMENT") == 0) {
+    return PARSE_NODE_SWITCH_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_CASE_LABEL") == 0) {
+    return PARSE_NODE_CASE_LABEL;
+  }
+  if (strcmp(value, "PARSE_NODE_DEFAULT_LABEL") == 0) {
+    return PARSE_NODE_DEFAULT_LABEL;
+  }
+  if (strcmp(value, "PARSE_NODE_GOTO_STATEMENT") == 0) {
+    return PARSE_NODE_GOTO_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_BREAK_STATEMENT") == 0) {
+    return PARSE_NODE_BREAK_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_CONTINUE_STATEMENT") == 0) {
+    return PARSE_NODE_CONTINUE_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_LABEL_STATEMENT") == 0) {
+    return PARSE_NODE_LABEL_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_VARIABLE_STATEMENT") == 0) {
+    return PARSE_NODE_VARIABLE_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_EXPRESSION_STATEMENT") == 0) {
+    return PARSE_NODE_EXPRESSION_STATEMENT;
+  }
+  if (strcmp(value, "PARSE_NODE_BALANCED_CONSTRUCT") == 0) {
+    return PARSE_NODE_BALANCED_CONSTRUCT;
+  }
+  if (strcmp(value, "PARSE_NODE_CALL") == 0) {
+    return PARSE_NODE_CALL;
+  }
+  if (strcmp(value, "PARSE_NODE_CONDITIONAL") == 0) {
+    return PARSE_NODE_CONDITIONAL;
+  }
+  if (strcmp(value, "PARSE_NODE_COMPOUND_LITERAL") == 0) {
+    return PARSE_NODE_COMPOUND_LITERAL;
+  }
+  if (strcmp(value, "PARSE_NODE_DESIGNATED_INITIALIZER") == 0) {
+    return PARSE_NODE_DESIGNATED_INITIALIZER;
+  }
+  return 0;
+}
+enum_metadata_t* parse_node_type_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "PARSE_NODE_UNKNOWN",
+        .value = PARSE_NODE_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "PARSE_NODE_DECLARATIONS",
+        .value = PARSE_NODE_DECLARATIONS
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "PARSE_NODE_ENUM",
+        .value = PARSE_NODE_ENUM
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "PARSE_NODE_ENUM_ELEMENT",
+        .value = PARSE_NODE_ENUM_ELEMENT
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "PARSE_NODE_FIELD",
+        .value = PARSE_NODE_FIELD
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "PARSE_NODE_GLOBAL_FUNCTION",
+        .value = PARSE_NODE_GLOBAL_FUNCTION
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "PARSE_NODE_VARIABLE_DEFINITION",
+        .value = PARSE_NODE_VARIABLE_DEFINITION
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "PARSE_NODE_LIST_OF_NODES",
+        .value = PARSE_NODE_LIST_OF_NODES
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "PARSE_NODE_STRUCT",
+        .value = PARSE_NODE_STRUCT
+    };
+    static enum_element_metadata_t var_9 = (enum_element_metadata_t) {
+        .next = &var_8,
+        .name = "PARSE_NODE_UNION",
+        .value = PARSE_NODE_UNION
+    };
+    static enum_element_metadata_t var_10 = (enum_element_metadata_t) {
+        .next = &var_9,
+        .name = "PARSE_NODE_TYPE",
+        .value = PARSE_NODE_TYPE
+    };
+    static enum_element_metadata_t var_11 = (enum_element_metadata_t) {
+        .next = &var_10,
+        .name = "PARSE_NODE_LITERAL",
+        .value = PARSE_NODE_LITERAL
+    };
+    static enum_element_metadata_t var_12 = (enum_element_metadata_t) {
+        .next = &var_11,
+        .name = "PARSE_NODE_FUNCTION",
+        .value = PARSE_NODE_FUNCTION
+    };
+    static enum_element_metadata_t var_13 = (enum_element_metadata_t) {
+        .next = &var_12,
+        .name = "PARSE_NODE_FUNCTION_ARGUMENT",
+        .value = PARSE_NODE_FUNCTION_ARGUMENT
+    };
+    static enum_element_metadata_t var_14 = (enum_element_metadata_t) {
+        .next = &var_13,
+        .name = "PARSE_NODE_TYPEDEF",
+        .value = PARSE_NODE_TYPEDEF
+    };
+    static enum_element_metadata_t var_15 = (enum_element_metadata_t) {
+        .next = &var_14,
+        .name = "PARSE_NODE_UNPARSED_EXPRESSION",
+        .value = PARSE_NODE_UNPARSED_EXPRESSION
+    };
+    static enum_element_metadata_t var_16 = (enum_element_metadata_t) {
+        .next = &var_15,
+        .name = "PARSE_NODE_ATTRIBUTE",
+        .value = PARSE_NODE_ATTRIBUTE
+    };
+    static enum_element_metadata_t var_17 = (enum_element_metadata_t) {
+        .next = &var_16,
+        .name = "PARSE_NODE_CPP_INCLUDE",
+        .value = PARSE_NODE_CPP_INCLUDE
+    };
+    static enum_element_metadata_t var_18 = (enum_element_metadata_t) {
+        .next = &var_17,
+        .name = "PARSE_NODE_CPP_DEFINE",
+        .value = PARSE_NODE_CPP_DEFINE
+    };
+    static enum_element_metadata_t var_19 = (enum_element_metadata_t) {
+        .next = &var_18,
+        .name = "PARSE_NODE_OPERATOR",
+        .value = PARSE_NODE_OPERATOR
+    };
+    static enum_element_metadata_t var_20 = (enum_element_metadata_t) {
+        .next = &var_19,
+        .name = "PARSE_NODE_IDENTIFIER",
+        .value = PARSE_NODE_IDENTIFIER
+    };
+    static enum_element_metadata_t var_21 = (enum_element_metadata_t) {
+        .next = &var_20,
+        .name = "PARSE_NODE_IF_STATEMENT",
+        .value = PARSE_NODE_IF_STATEMENT
+    };
+    static enum_element_metadata_t var_22 = (enum_element_metadata_t) {
+        .next = &var_21,
+        .name = "PARSE_NODE_FOR_STATEMENT",
+        .value = PARSE_NODE_FOR_STATEMENT
+    };
+    static enum_element_metadata_t var_23 = (enum_element_metadata_t) {
+        .next = &var_22,
+        .name = "PARSE_NODE_DO_STATEMENT",
+        .value = PARSE_NODE_DO_STATEMENT
+    };
+    static enum_element_metadata_t var_24 = (enum_element_metadata_t) {
+        .next = &var_23,
+        .name = "PARSE_NODE_WHILE_STATEMENT",
+        .value = PARSE_NODE_WHILE_STATEMENT
+    };
+    static enum_element_metadata_t var_25 = (enum_element_metadata_t) {
+        .next = &var_24,
+        .name = "PARSE_NODE_EMPTY_STATEMENT",
+        .value = PARSE_NODE_EMPTY_STATEMENT
+    };
+    static enum_element_metadata_t var_26 = (enum_element_metadata_t) {
+        .next = &var_25,
+        .name = "PARSE_NODE_BLOCK",
+        .value = PARSE_NODE_BLOCK
+    };
+    static enum_element_metadata_t var_27 = (enum_element_metadata_t) {
+        .next = &var_26,
+        .name = "PARSE_NODE_RETURN_STATEMENT",
+        .value = PARSE_NODE_RETURN_STATEMENT
+    };
+    static enum_element_metadata_t var_28 = (enum_element_metadata_t) {
+        .next = &var_27,
+        .name = "PARSE_NODE_SWITCH_STATEMENT",
+        .value = PARSE_NODE_SWITCH_STATEMENT
+    };
+    static enum_element_metadata_t var_29 = (enum_element_metadata_t) {
+        .next = &var_28,
+        .name = "PARSE_NODE_CASE_LABEL",
+        .value = PARSE_NODE_CASE_LABEL
+    };
+    static enum_element_metadata_t var_30 = (enum_element_metadata_t) {
+        .next = &var_29,
+        .name = "PARSE_NODE_DEFAULT_LABEL",
+        .value = PARSE_NODE_DEFAULT_LABEL
+    };
+    static enum_element_metadata_t var_31 = (enum_element_metadata_t) {
+        .next = &var_30,
+        .name = "PARSE_NODE_GOTO_STATEMENT",
+        .value = PARSE_NODE_GOTO_STATEMENT
+    };
+    static enum_element_metadata_t var_32 = (enum_element_metadata_t) {
+        .next = &var_31,
+        .name = "PARSE_NODE_BREAK_STATEMENT",
+        .value = PARSE_NODE_BREAK_STATEMENT
+    };
+    static enum_element_metadata_t var_33 = (enum_element_metadata_t) {
+        .next = &var_32,
+        .name = "PARSE_NODE_CONTINUE_STATEMENT",
+        .value = PARSE_NODE_CONTINUE_STATEMENT
+    };
+    static enum_element_metadata_t var_34 = (enum_element_metadata_t) {
+        .next = &var_33,
+        .name = "PARSE_NODE_LABEL_STATEMENT",
+        .value = PARSE_NODE_LABEL_STATEMENT
+    };
+    static enum_element_metadata_t var_35 = (enum_element_metadata_t) {
+        .next = &var_34,
+        .name = "PARSE_NODE_VARIABLE_STATEMENT",
+        .value = PARSE_NODE_VARIABLE_STATEMENT
+    };
+    static enum_element_metadata_t var_36 = (enum_element_metadata_t) {
+        .next = &var_35,
+        .name = "PARSE_NODE_EXPRESSION_STATEMENT",
+        .value = PARSE_NODE_EXPRESSION_STATEMENT
+    };
+    static enum_element_metadata_t var_37 = (enum_element_metadata_t) {
+        .next = &var_36,
+        .name = "PARSE_NODE_BALANCED_CONSTRUCT",
+        .value = PARSE_NODE_BALANCED_CONSTRUCT
+    };
+    static enum_element_metadata_t var_38 = (enum_element_metadata_t) {
+        .next = &var_37,
+        .name = "PARSE_NODE_CALL",
+        .value = PARSE_NODE_CALL
+    };
+    static enum_element_metadata_t var_39 = (enum_element_metadata_t) {
+        .next = &var_38,
+        .name = "PARSE_NODE_CONDITIONAL",
+        .value = PARSE_NODE_CONDITIONAL
+    };
+    static enum_element_metadata_t var_40 = (enum_element_metadata_t) {
+        .next = &var_39,
+        .name = "PARSE_NODE_COMPOUND_LITERAL",
+        .value = PARSE_NODE_COMPOUND_LITERAL
+    };
+    static enum_element_metadata_t var_41 = (enum_element_metadata_t) {
+        .next = &var_40,
+        .name = "PARSE_NODE_DESIGNATED_INITIALIZER",
+        .value = PARSE_NODE_DESIGNATED_INITIALIZER
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "parse_node_type_t",
+        .elements = &var_41
+    };
+    return &enum_metadata_result;
+}
+char* pratt_parser_operation_to_string(pratt_parser_operation_t value){
+  switch (value) {
+    case PRATT_PARSE_UNKNOWN:
+    return "PRATT_PARSE_UNKNOWN";
+  case PRATT_PARSE_PREFIX_OPERATOR:
+    return "PRATT_PARSE_PREFIX_OPERATOR";
+  case PRATT_PARSE_BINARY_OPERATOR:
+    return "PRATT_PARSE_BINARY_OPERATOR";
+  case PRATT_PARSE_POSTFIX_OPERATOR:
+    return "PRATT_PARSE_POSTFIX_OPERATOR";
+  case PRATT_PARSE_CONDITIONAL:
+    return "PRATT_PARSE_CONDITIONAL";
+  case PRATT_PARSE_IDENTIFIER:
+    return "PRATT_PARSE_IDENTIFIER";
+  case PRATT_PARSE_LITERAL:
+    return "PRATT_PARSE_LITERAL";
+  case PRATT_PARSE_SUB_EXPRESSION:
+    return "PRATT_PARSE_SUB_EXPRESSION";
+  case PRATT_PARSE_INDEX_EXPRESSION:
+    return "PRATT_PARSE_INDEX_EXPRESSION";
+  case PRATT_PARSE_SIZEOF:
+    return "PRATT_PARSE_SIZEOF";
+  case PRATT_PARSE_CAST_MACRO:
+    return "PRATT_PARSE_CAST_MACRO";
+  case PRATT_PARSE_TYPE_OF:
+    return "PRATT_PARSE_TYPE_OF";
+  case PRATT_PARSE_BLOCK_EXPR:
+    return "PRATT_PARSE_BLOCK_EXPR";
+  case PRATT_PARSE_CALL:
+    return "PRATT_PARSE_CALL";
+  default:
+    return "<<unknown-pratt_parser_operation>>";
+  }
+}
+pratt_parser_operation_t string_to_pratt_parser_operation(char* value){
+  if (strcmp(value, "PRATT_PARSE_UNKNOWN") == 0) {
+    return PRATT_PARSE_UNKNOWN;
+  }
+  if (strcmp(value, "PRATT_PARSE_PREFIX_OPERATOR") == 0) {
+    return PRATT_PARSE_PREFIX_OPERATOR;
+  }
+  if (strcmp(value, "PRATT_PARSE_BINARY_OPERATOR") == 0) {
+    return PRATT_PARSE_BINARY_OPERATOR;
+  }
+  if (strcmp(value, "PRATT_PARSE_POSTFIX_OPERATOR") == 0) {
+    return PRATT_PARSE_POSTFIX_OPERATOR;
+  }
+  if (strcmp(value, "PRATT_PARSE_CONDITIONAL") == 0) {
+    return PRATT_PARSE_CONDITIONAL;
+  }
+  if (strcmp(value, "PRATT_PARSE_IDENTIFIER") == 0) {
+    return PRATT_PARSE_IDENTIFIER;
+  }
+  if (strcmp(value, "PRATT_PARSE_LITERAL") == 0) {
+    return PRATT_PARSE_LITERAL;
+  }
+  if (strcmp(value, "PRATT_PARSE_SUB_EXPRESSION") == 0) {
+    return PRATT_PARSE_SUB_EXPRESSION;
+  }
+  if (strcmp(value, "PRATT_PARSE_INDEX_EXPRESSION") == 0) {
+    return PRATT_PARSE_INDEX_EXPRESSION;
+  }
+  if (strcmp(value, "PRATT_PARSE_SIZEOF") == 0) {
+    return PRATT_PARSE_SIZEOF;
+  }
+  if (strcmp(value, "PRATT_PARSE_CAST_MACRO") == 0) {
+    return PRATT_PARSE_CAST_MACRO;
+  }
+  if (strcmp(value, "PRATT_PARSE_TYPE_OF") == 0) {
+    return PRATT_PARSE_TYPE_OF;
+  }
+  if (strcmp(value, "PRATT_PARSE_BLOCK_EXPR") == 0) {
+    return PRATT_PARSE_BLOCK_EXPR;
+  }
+  if (strcmp(value, "PRATT_PARSE_CALL") == 0) {
+    return PRATT_PARSE_CALL;
+  }
+  return 0;
+}
+enum_metadata_t* pratt_parser_operation_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "PRATT_PARSE_UNKNOWN",
+        .value = PRATT_PARSE_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "PRATT_PARSE_PREFIX_OPERATOR",
+        .value = PRATT_PARSE_PREFIX_OPERATOR
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "PRATT_PARSE_BINARY_OPERATOR",
+        .value = PRATT_PARSE_BINARY_OPERATOR
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "PRATT_PARSE_POSTFIX_OPERATOR",
+        .value = PRATT_PARSE_POSTFIX_OPERATOR
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "PRATT_PARSE_CONDITIONAL",
+        .value = PRATT_PARSE_CONDITIONAL
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "PRATT_PARSE_IDENTIFIER",
+        .value = PRATT_PARSE_IDENTIFIER
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "PRATT_PARSE_LITERAL",
+        .value = PRATT_PARSE_LITERAL
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "PRATT_PARSE_SUB_EXPRESSION",
+        .value = PRATT_PARSE_SUB_EXPRESSION
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "PRATT_PARSE_INDEX_EXPRESSION",
+        .value = PRATT_PARSE_INDEX_EXPRESSION
+    };
+    static enum_element_metadata_t var_9 = (enum_element_metadata_t) {
+        .next = &var_8,
+        .name = "PRATT_PARSE_SIZEOF",
+        .value = PRATT_PARSE_SIZEOF
+    };
+    static enum_element_metadata_t var_10 = (enum_element_metadata_t) {
+        .next = &var_9,
+        .name = "PRATT_PARSE_CAST_MACRO",
+        .value = PRATT_PARSE_CAST_MACRO
+    };
+    static enum_element_metadata_t var_11 = (enum_element_metadata_t) {
+        .next = &var_10,
+        .name = "PRATT_PARSE_TYPE_OF",
+        .value = PRATT_PARSE_TYPE_OF
+    };
+    static enum_element_metadata_t var_12 = (enum_element_metadata_t) {
+        .next = &var_11,
+        .name = "PRATT_PARSE_BLOCK_EXPR",
+        .value = PRATT_PARSE_BLOCK_EXPR
+    };
+    static enum_element_metadata_t var_13 = (enum_element_metadata_t) {
+        .next = &var_12,
+        .name = "PRATT_PARSE_CALL",
+        .value = PRATT_PARSE_CALL
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "pratt_parser_operation_t",
+        .elements = &var_13
+    };
+    return &enum_metadata_result;
+}
+char* associativity_to_string(associativity_t value){
+  switch (value) {
+    case LEFT_TO_RIGHT:
+    return "LEFT_TO_RIGHT";
+  case RIGHT_TO_LEFT:
+    return "RIGHT_TO_LEFT";
+  default:
+    return "<<unknown-associativity>>";
+  }
+}
+associativity_t string_to_associativity(char* value){
+  if (strcmp(value, "LEFT_TO_RIGHT") == 0) {
+    return LEFT_TO_RIGHT;
+  }
+  if (strcmp(value, "RIGHT_TO_LEFT") == 0) {
+    return RIGHT_TO_LEFT;
+  }
+  return 0;
+}
+enum_metadata_t* associativity_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "LEFT_TO_RIGHT",
+        .value = LEFT_TO_RIGHT
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "RIGHT_TO_LEFT",
+        .value = RIGHT_TO_LEFT
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "associativity_t",
+        .elements = &var_1
+    };
+    return &enum_metadata_result;
+}
+char* precedence_to_string(precedence_t value){
+  switch (value) {
+    case PRECEDENCE_UNKNOWN:
+    return "PRECEDENCE_UNKNOWN";
+  case PRECEDENCE_COMMA:
+    return "PRECEDENCE_COMMA";
+  case PRECEDENCE_ASSIGNMENT:
+    return "PRECEDENCE_ASSIGNMENT";
+  case PRECEDENCE_CONDITIONAL:
+    return "PRECEDENCE_CONDITIONAL";
+  case PRECEDENCE_LOGICAL_OR:
+    return "PRECEDENCE_LOGICAL_OR";
+  case PRECEDENCE_LOGICAL_AND:
+    return "PRECEDENCE_LOGICAL_AND";
+  case PRECEDENCE_OR:
+    return "PRECEDENCE_OR";
+  case PRECEDENCE_XOR:
+    return "PRECEDENCE_XOR";
+  case PRECEDENCE_AND:
+    return "PRECEDENCE_AND";
+  case PRECEDENCE_EQUALITY:
+    return "PRECEDENCE_EQUALITY";
+  case PRECEDENCE_RELATIONAL:
+    return "PRECEDENCE_RELATIONAL";
+  case PRECEDENCE_SHIFT:
+    return "PRECEDENCE_SHIFT";
+  case PRECEDENCE_ADDITIVE:
+    return "PRECEDENCE_ADDITIVE";
+  case PRECEDENCE_MULTIPICITIVE:
+    return "PRECEDENCE_MULTIPICITIVE";
+  case PRECEDENCE_UNARY:
+    return "PRECEDENCE_UNARY";
+  case PRECEDENCE_POSTFIX:
+    return "PRECEDENCE_POSTFIX";
+  case PRECEDENCE_PRIMARY:
+    return "PRECEDENCE_PRIMARY";
+  default:
+    return "<<unknown-precedence>>";
+  }
+}
+precedence_t string_to_precedence(char* value){
+  if (strcmp(value, "PRECEDENCE_UNKNOWN") == 0) {
+    return PRECEDENCE_UNKNOWN;
+  }
+  if (strcmp(value, "PRECEDENCE_COMMA") == 0) {
+    return PRECEDENCE_COMMA;
+  }
+  if (strcmp(value, "PRECEDENCE_ASSIGNMENT") == 0) {
+    return PRECEDENCE_ASSIGNMENT;
+  }
+  if (strcmp(value, "PRECEDENCE_CONDITIONAL") == 0) {
+    return PRECEDENCE_CONDITIONAL;
+  }
+  if (strcmp(value, "PRECEDENCE_LOGICAL_OR") == 0) {
+    return PRECEDENCE_LOGICAL_OR;
+  }
+  if (strcmp(value, "PRECEDENCE_LOGICAL_AND") == 0) {
+    return PRECEDENCE_LOGICAL_AND;
+  }
+  if (strcmp(value, "PRECEDENCE_OR") == 0) {
+    return PRECEDENCE_OR;
+  }
+  if (strcmp(value, "PRECEDENCE_XOR") == 0) {
+    return PRECEDENCE_XOR;
+  }
+  if (strcmp(value, "PRECEDENCE_AND") == 0) {
+    return PRECEDENCE_AND;
+  }
+  if (strcmp(value, "PRECEDENCE_EQUALITY") == 0) {
+    return PRECEDENCE_EQUALITY;
+  }
+  if (strcmp(value, "PRECEDENCE_RELATIONAL") == 0) {
+    return PRECEDENCE_RELATIONAL;
+  }
+  if (strcmp(value, "PRECEDENCE_SHIFT") == 0) {
+    return PRECEDENCE_SHIFT;
+  }
+  if (strcmp(value, "PRECEDENCE_ADDITIVE") == 0) {
+    return PRECEDENCE_ADDITIVE;
+  }
+  if (strcmp(value, "PRECEDENCE_MULTIPICITIVE") == 0) {
+    return PRECEDENCE_MULTIPICITIVE;
+  }
+  if (strcmp(value, "PRECEDENCE_UNARY") == 0) {
+    return PRECEDENCE_UNARY;
+  }
+  if (strcmp(value, "PRECEDENCE_POSTFIX") == 0) {
+    return PRECEDENCE_POSTFIX;
+  }
+  if (strcmp(value, "PRECEDENCE_PRIMARY") == 0) {
+    return PRECEDENCE_PRIMARY;
+  }
+  return 0;
+}
+enum_metadata_t* precedence_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "PRECEDENCE_UNKNOWN",
+        .value = PRECEDENCE_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "PRECEDENCE_COMMA",
+        .value = PRECEDENCE_COMMA
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "PRECEDENCE_ASSIGNMENT",
+        .value = PRECEDENCE_ASSIGNMENT
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "PRECEDENCE_CONDITIONAL",
+        .value = PRECEDENCE_CONDITIONAL
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "PRECEDENCE_LOGICAL_OR",
+        .value = PRECEDENCE_LOGICAL_OR
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "PRECEDENCE_LOGICAL_AND",
+        .value = PRECEDENCE_LOGICAL_AND
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "PRECEDENCE_OR",
+        .value = PRECEDENCE_OR
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "PRECEDENCE_XOR",
+        .value = PRECEDENCE_XOR
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "PRECEDENCE_AND",
+        .value = PRECEDENCE_AND
+    };
+    static enum_element_metadata_t var_9 = (enum_element_metadata_t) {
+        .next = &var_8,
+        .name = "PRECEDENCE_EQUALITY",
+        .value = PRECEDENCE_EQUALITY
+    };
+    static enum_element_metadata_t var_10 = (enum_element_metadata_t) {
+        .next = &var_9,
+        .name = "PRECEDENCE_RELATIONAL",
+        .value = PRECEDENCE_RELATIONAL
+    };
+    static enum_element_metadata_t var_11 = (enum_element_metadata_t) {
+        .next = &var_10,
+        .name = "PRECEDENCE_SHIFT",
+        .value = PRECEDENCE_SHIFT
+    };
+    static enum_element_metadata_t var_12 = (enum_element_metadata_t) {
+        .next = &var_11,
+        .name = "PRECEDENCE_ADDITIVE",
+        .value = PRECEDENCE_ADDITIVE
+    };
+    static enum_element_metadata_t var_13 = (enum_element_metadata_t) {
+        .next = &var_12,
+        .name = "PRECEDENCE_MULTIPICITIVE",
+        .value = PRECEDENCE_MULTIPICITIVE
+    };
+    static enum_element_metadata_t var_14 = (enum_element_metadata_t) {
+        .next = &var_13,
+        .name = "PRECEDENCE_UNARY",
+        .value = PRECEDENCE_UNARY
+    };
+    static enum_element_metadata_t var_15 = (enum_element_metadata_t) {
+        .next = &var_14,
+        .name = "PRECEDENCE_POSTFIX",
+        .value = PRECEDENCE_POSTFIX
+    };
+    static enum_element_metadata_t var_16 = (enum_element_metadata_t) {
+        .next = &var_15,
+        .name = "PRECEDENCE_PRIMARY",
+        .value = PRECEDENCE_PRIMARY
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "precedence_t",
+        .elements = &var_16
+    };
+    return &enum_metadata_result;
+}
+char* type_qualifier_to_string(type_qualifier_t value){
+  switch (value) {
+    case TYPE_QUALIFIER_NONE:
+    return "TYPE_QUALIFIER_NONE";
+  case TYPE_QUALIFIER_CONST:
+    return "TYPE_QUALIFIER_CONST";
+  case TYPE_QUALIFIER_VOLATILE:
+    return "TYPE_QUALIFIER_VOLATILE";
+  case TYPE_QUALIFIER_RESTRICT:
+    return "TYPE_QUALIFIER_RESTRICT";
+  default:
+    return "<<unknown-type_qualifier>>";
+  }
+}
+type_qualifier_t string_to_type_qualifier(char* value){
+  if (strcmp(value, "TYPE_QUALIFIER_NONE") == 0) {
+    return TYPE_QUALIFIER_NONE;
+  }
+  if (strcmp(value, "TYPE_QUALIFIER_CONST") == 0) {
+    return TYPE_QUALIFIER_CONST;
+  }
+  if (strcmp(value, "TYPE_QUALIFIER_VOLATILE") == 0) {
+    return TYPE_QUALIFIER_VOLATILE;
+  }
+  if (strcmp(value, "TYPE_QUALIFIER_RESTRICT") == 0) {
+    return TYPE_QUALIFIER_RESTRICT;
+  }
+  return 0;
+}
+enum_metadata_t* type_qualifier_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "TYPE_QUALIFIER_NONE",
+        .value = TYPE_QUALIFIER_NONE
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "TYPE_QUALIFIER_CONST",
+        .value = TYPE_QUALIFIER_CONST
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "TYPE_QUALIFIER_VOLATILE",
+        .value = TYPE_QUALIFIER_VOLATILE
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "TYPE_QUALIFIER_RESTRICT",
+        .value = TYPE_QUALIFIER_RESTRICT
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "type_qualifier_t",
+        .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
+char* type_node_kind_to_string(type_node_kind_t value){
+  switch (value) {
+    case TYPE_NODE_KIND_UNKNOWN:
+    return "TYPE_NODE_KIND_UNKNOWN";
+  case TYPE_NODE_KIND_POINTER:
+    return "TYPE_NODE_KIND_POINTER";
+  case TYPE_NODE_KIND_ARRAY:
+    return "TYPE_NODE_KIND_ARRAY";
+  case TYPE_NODE_KIND_SIZED_ARRAY:
+    return "TYPE_NODE_KIND_SIZED_ARRAY";
+  case TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY:
+    return "TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY";
+  case TYPE_NODE_KIND_PRIMITIVE_TYPENAME:
+    return "TYPE_NODE_KIND_PRIMITIVE_TYPENAME";
+  case TYPE_NODE_KIND_TYPENAME:
+    return "TYPE_NODE_KIND_TYPENAME";
+  case TYPE_NODE_KIND_TYPE_EXPRESSION:
+    return "TYPE_NODE_KIND_TYPE_EXPRESSION";
+  case TYPE_NODE_KIND_TYPEOF:
+    return "TYPE_NODE_KIND_TYPEOF";
+  default:
+    return "<<unknown-type_node_kind>>";
+  }
+}
+type_node_kind_t string_to_type_node_kind(char* value){
+  if (strcmp(value, "TYPE_NODE_KIND_UNKNOWN") == 0) {
+    return TYPE_NODE_KIND_UNKNOWN;
+  }
+  if (strcmp(value, "TYPE_NODE_KIND_POINTER") == 0) {
+    return TYPE_NODE_KIND_POINTER;
+  }
+  if (strcmp(value, "TYPE_NODE_KIND_ARRAY") == 0) {
+    return TYPE_NODE_KIND_ARRAY;
+  }
+  if (strcmp(value, "TYPE_NODE_KIND_SIZED_ARRAY") == 0) {
+    return TYPE_NODE_KIND_SIZED_ARRAY;
+  }
+  if (strcmp(value, "TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY") == 0) {
+    return TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY;
+  }
+  if (strcmp(value, "TYPE_NODE_KIND_PRIMITIVE_TYPENAME") == 0) {
+    return TYPE_NODE_KIND_PRIMITIVE_TYPENAME;
+  }
+  if (strcmp(value, "TYPE_NODE_KIND_TYPENAME") == 0) {
+    return TYPE_NODE_KIND_TYPENAME;
+  }
+  if (strcmp(value, "TYPE_NODE_KIND_TYPE_EXPRESSION") == 0) {
+    return TYPE_NODE_KIND_TYPE_EXPRESSION;
+  }
+  if (strcmp(value, "TYPE_NODE_KIND_TYPEOF") == 0) {
+    return TYPE_NODE_KIND_TYPEOF;
+  }
+  return 0;
+}
+enum_metadata_t* type_node_kind_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "TYPE_NODE_KIND_UNKNOWN",
+        .value = TYPE_NODE_KIND_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "TYPE_NODE_KIND_POINTER",
+        .value = TYPE_NODE_KIND_POINTER
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "TYPE_NODE_KIND_ARRAY",
+        .value = TYPE_NODE_KIND_ARRAY
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "TYPE_NODE_KIND_SIZED_ARRAY",
+        .value = TYPE_NODE_KIND_SIZED_ARRAY
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY",
+        .value = TYPE_NODE_KIND_VARIABLE_SIZED_ARRAY
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "TYPE_NODE_KIND_PRIMITIVE_TYPENAME",
+        .value = TYPE_NODE_KIND_PRIMITIVE_TYPENAME
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "TYPE_NODE_KIND_TYPENAME",
+        .value = TYPE_NODE_KIND_TYPENAME
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "TYPE_NODE_KIND_TYPE_EXPRESSION",
+        .value = TYPE_NODE_KIND_TYPE_EXPRESSION
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "TYPE_NODE_KIND_TYPEOF",
+        .value = TYPE_NODE_KIND_TYPEOF
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "type_node_kind_t",
+        .elements = &var_8
+    };
+    return &enum_metadata_result;
+}
+char* output_file_type_to_string(output_file_type_t value){
+  switch (value) {
+    case OUTPUT_TYPE_UNKNOWN:
+    return "OUTPUT_TYPE_UNKNOWN";
+  case OUTPUT_TYPE_C_HEADER_FILE:
+    return "OUTPUT_TYPE_C_HEADER_FILE";
+  case OUTPUT_TYPE_C_LIBRARY_FILE:
+    return "OUTPUT_TYPE_C_LIBRARY_FILE";
+  case OUTPUT_TYPE_C_UNIT_TEST_FILE:
+    return "OUTPUT_TYPE_C_UNIT_TEST_FILE";
+  default:
+    return "<<unknown-output_file_type>>";
+  }
+}
+output_file_type_t string_to_output_file_type(char* value){
+  if (strcmp(value, "OUTPUT_TYPE_UNKNOWN") == 0) {
+    return OUTPUT_TYPE_UNKNOWN;
+  }
+  if (strcmp(value, "OUTPUT_TYPE_C_HEADER_FILE") == 0) {
+    return OUTPUT_TYPE_C_HEADER_FILE;
+  }
+  if (strcmp(value, "OUTPUT_TYPE_C_LIBRARY_FILE") == 0) {
+    return OUTPUT_TYPE_C_LIBRARY_FILE;
+  }
+  if (strcmp(value, "OUTPUT_TYPE_C_UNIT_TEST_FILE") == 0) {
+    return OUTPUT_TYPE_C_UNIT_TEST_FILE;
+  }
+  return 0;
+}
+enum_metadata_t* output_file_type_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "OUTPUT_TYPE_UNKNOWN",
+        .value = OUTPUT_TYPE_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "OUTPUT_TYPE_C_HEADER_FILE",
+        .value = OUTPUT_TYPE_C_HEADER_FILE
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "OUTPUT_TYPE_C_LIBRARY_FILE",
+        .value = OUTPUT_TYPE_C_LIBRARY_FILE
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "OUTPUT_TYPE_C_UNIT_TEST_FILE",
+        .value = OUTPUT_TYPE_C_UNIT_TEST_FILE
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "output_file_type_t",
+        .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
+char* roci_compile_time_error_to_string(roci_compile_time_error_t value){
+  switch (value) {
+    case ROCI_COMPILE_TIME_ERROR_NONE:
+    return "ROCI_COMPILE_TIME_ERROR_NONE";
+  case ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT:
+    return "ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT";
+  case ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION:
+    return "ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION";
+  default:
+    return "<<unknown-roci_compile_time_error>>";
+  }
+}
+roci_compile_time_error_t string_to_roci_compile_time_error(char* value){
+  if (strcmp(value, "ROCI_COMPILE_TIME_ERROR_NONE") == 0) {
+    return ROCI_COMPILE_TIME_ERROR_NONE;
+  }
+  if (strcmp(value, "ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT") == 0) {
+    return ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT;
+  }
+  if (strcmp(value, "ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION") == 0) {
+    return ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION;
+  }
+  return 0;
+}
+enum_metadata_t* roci_compile_time_error_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "ROCI_COMPILE_TIME_ERROR_NONE",
+        .value = ROCI_COMPILE_TIME_ERROR_NONE
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT",
+        .value = ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION",
+        .value = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "roci_compile_time_error_t",
+        .elements = &var_2
+    };
+    return &enum_metadata_result;
+}
+char* roci_tag_to_string(roci_tag_t value){
+  switch (value) {
+    case ROCI_TAG_UNKNOWN:
+    return "ROCI_TAG_UNKNOWN";
+  case ROCI_TAG_BOOLEAN:
+    return "ROCI_TAG_BOOLEAN";
+  case ROCI_TAG_INTEGER:
+    return "ROCI_TAG_INTEGER";
+  case ROCI_TAG_DOUBLE:
+    return "ROCI_TAG_DOUBLE";
+  case ROCI_TAG_STRING:
+    return "ROCI_TAG_STRING";
+  case ROCI_TAG_CLOSURE:
+    return "ROCI_TAG_CLOSURE";
+  case ROCI_TAG_C_PRIMITIVE:
+    return "ROCI_TAG_C_PRIMITIVE";
+  case ROCI_TAG_LIST:
+    return "ROCI_TAG_LIST";
+  case ROCI_TAG_STACK_MARKER:
+    return "ROCI_TAG_STACK_MARKER";
+  default:
+    return "<<unknown-roci_tag>>";
+  }
+}
+roci_tag_t string_to_roci_tag(char* value){
+  if (strcmp(value, "ROCI_TAG_UNKNOWN") == 0) {
+    return ROCI_TAG_UNKNOWN;
+  }
+  if (strcmp(value, "ROCI_TAG_BOOLEAN") == 0) {
+    return ROCI_TAG_BOOLEAN;
+  }
+  if (strcmp(value, "ROCI_TAG_INTEGER") == 0) {
+    return ROCI_TAG_INTEGER;
+  }
+  if (strcmp(value, "ROCI_TAG_DOUBLE") == 0) {
+    return ROCI_TAG_DOUBLE;
+  }
+  if (strcmp(value, "ROCI_TAG_STRING") == 0) {
+    return ROCI_TAG_STRING;
+  }
+  if (strcmp(value, "ROCI_TAG_CLOSURE") == 0) {
+    return ROCI_TAG_CLOSURE;
+  }
+  if (strcmp(value, "ROCI_TAG_C_PRIMITIVE") == 0) {
+    return ROCI_TAG_C_PRIMITIVE;
+  }
+  if (strcmp(value, "ROCI_TAG_LIST") == 0) {
+    return ROCI_TAG_LIST;
+  }
+  if (strcmp(value, "ROCI_TAG_STACK_MARKER") == 0) {
+    return ROCI_TAG_STACK_MARKER;
+  }
+  return 0;
+}
+enum_metadata_t* roci_tag_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "ROCI_TAG_UNKNOWN",
+        .value = ROCI_TAG_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "ROCI_TAG_BOOLEAN",
+        .value = ROCI_TAG_BOOLEAN
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "ROCI_TAG_INTEGER",
+        .value = ROCI_TAG_INTEGER
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "ROCI_TAG_DOUBLE",
+        .value = ROCI_TAG_DOUBLE
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "ROCI_TAG_STRING",
+        .value = ROCI_TAG_STRING
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "ROCI_TAG_CLOSURE",
+        .value = ROCI_TAG_CLOSURE
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "ROCI_TAG_C_PRIMITIVE",
+        .value = ROCI_TAG_C_PRIMITIVE
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "ROCI_TAG_LIST",
+        .value = ROCI_TAG_LIST
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "ROCI_TAG_STACK_MARKER",
+        .value = ROCI_TAG_STACK_MARKER
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "roci_tag_t",
+        .elements = &var_8
+    };
+    return &enum_metadata_result;
+}
+char* roci_opcode_to_string(roci_opcode_t value){
+  switch (value) {
+    case ROCI_OPCODE_TRAP:
+    return "ROCI_OPCODE_TRAP";
+  case ROCI_OPCODE_PUSH_FALSE:
+    return "ROCI_OPCODE_PUSH_FALSE";
+  case ROCI_OPCODE_PUSH_TRUE:
+    return "ROCI_OPCODE_PUSH_TRUE";
+  case ROCI_OPCODE_PUSH_INTEGER:
+    return "ROCI_OPCODE_PUSH_INTEGER";
+  case ROCI_OPCODE_PUSH_DOUBLE:
+    return "ROCI_OPCODE_PUSH_DOUBLE";
+  case ROCI_OPCODE_PUSH_STRING:
+    return "ROCI_OPCODE_PUSH_STRING";
+  case ROCI_OPCODE_DROP:
+    return "ROCI_OPCODE_DROP";
+  case ROCI_OPCODE_NEW_ENVIRONMENT:
+    return "ROCI_OPCODE_NEW_ENVIRONMENT";
+  case ROCI_OPCODE_DROP_ENVIRONMENT:
+    return "ROCI_OPCODE_DROP_ENVIRONMENT";
+  case ROCI_OPCODE_DEFINE_VAR:
+    return "ROCI_OPCODE_DEFINE_VAR";
+  case ROCI_OPCODE_GET_VAR:
+    return "ROCI_OPCODE_GET_VAR";
+  case ROCI_OPCODE_SET_VAR:
+    return "ROCI_OPCODE_SET_VAR";
+  case ROCI_OPCODE_BR_TRUE:
+    return "ROCI_OPCODE_BR_TRUE";
+  case ROCI_OPCODE_BR:
+    return "ROCI_OPCODE_BR";
+  case ROCI_OPCODE_MAKE_CLOSURE:
+    return "ROCI_OPCODE_MAKE_CLOSURE";
+  case ROCI_OPCODE_RETURN:
+    return "ROCI_OPCODE_RETURN";
+  case ROCI_OPCODE_CALL:
+    return "ROCI_OPCODE_CALL";
+  case ROCI_OPCODE_CHECK_ARGS:
+    return "ROCI_OPCODE_CHECK_ARGS";
+  case ROCI_OPCODE_DEBUG_INFO:
+    return "ROCI_OPCODE_DEBUG_INFO";
+  case ROCI_OPCODE_COMMENT:
+    return "ROCI_OPCODE_COMMENT";
+  default:
+    return "<<unknown-roci_opcode>>";
+  }
+}
+roci_opcode_t string_to_roci_opcode(char* value){
+  if (strcmp(value, "ROCI_OPCODE_TRAP") == 0) {
+    return ROCI_OPCODE_TRAP;
+  }
+  if (strcmp(value, "ROCI_OPCODE_PUSH_FALSE") == 0) {
+    return ROCI_OPCODE_PUSH_FALSE;
+  }
+  if (strcmp(value, "ROCI_OPCODE_PUSH_TRUE") == 0) {
+    return ROCI_OPCODE_PUSH_TRUE;
+  }
+  if (strcmp(value, "ROCI_OPCODE_PUSH_INTEGER") == 0) {
+    return ROCI_OPCODE_PUSH_INTEGER;
+  }
+  if (strcmp(value, "ROCI_OPCODE_PUSH_DOUBLE") == 0) {
+    return ROCI_OPCODE_PUSH_DOUBLE;
+  }
+  if (strcmp(value, "ROCI_OPCODE_PUSH_STRING") == 0) {
+    return ROCI_OPCODE_PUSH_STRING;
+  }
+  if (strcmp(value, "ROCI_OPCODE_DROP") == 0) {
+    return ROCI_OPCODE_DROP;
+  }
+  if (strcmp(value, "ROCI_OPCODE_NEW_ENVIRONMENT") == 0) {
+    return ROCI_OPCODE_NEW_ENVIRONMENT;
+  }
+  if (strcmp(value, "ROCI_OPCODE_DROP_ENVIRONMENT") == 0) {
+    return ROCI_OPCODE_DROP_ENVIRONMENT;
+  }
+  if (strcmp(value, "ROCI_OPCODE_DEFINE_VAR") == 0) {
+    return ROCI_OPCODE_DEFINE_VAR;
+  }
+  if (strcmp(value, "ROCI_OPCODE_GET_VAR") == 0) {
+    return ROCI_OPCODE_GET_VAR;
+  }
+  if (strcmp(value, "ROCI_OPCODE_SET_VAR") == 0) {
+    return ROCI_OPCODE_SET_VAR;
+  }
+  if (strcmp(value, "ROCI_OPCODE_BR_TRUE") == 0) {
+    return ROCI_OPCODE_BR_TRUE;
+  }
+  if (strcmp(value, "ROCI_OPCODE_BR") == 0) {
+    return ROCI_OPCODE_BR;
+  }
+  if (strcmp(value, "ROCI_OPCODE_MAKE_CLOSURE") == 0) {
+    return ROCI_OPCODE_MAKE_CLOSURE;
+  }
+  if (strcmp(value, "ROCI_OPCODE_RETURN") == 0) {
+    return ROCI_OPCODE_RETURN;
+  }
+  if (strcmp(value, "ROCI_OPCODE_CALL") == 0) {
+    return ROCI_OPCODE_CALL;
+  }
+  if (strcmp(value, "ROCI_OPCODE_CHECK_ARGS") == 0) {
+    return ROCI_OPCODE_CHECK_ARGS;
+  }
+  if (strcmp(value, "ROCI_OPCODE_DEBUG_INFO") == 0) {
+    return ROCI_OPCODE_DEBUG_INFO;
+  }
+  if (strcmp(value, "ROCI_OPCODE_COMMENT") == 0) {
+    return ROCI_OPCODE_COMMENT;
+  }
+  return 0;
+}
+enum_metadata_t* roci_opcode_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "ROCI_OPCODE_TRAP",
+        .value = ROCI_OPCODE_TRAP
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "ROCI_OPCODE_PUSH_FALSE",
+        .value = ROCI_OPCODE_PUSH_FALSE
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "ROCI_OPCODE_PUSH_TRUE",
+        .value = ROCI_OPCODE_PUSH_TRUE
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "ROCI_OPCODE_PUSH_INTEGER",
+        .value = ROCI_OPCODE_PUSH_INTEGER
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "ROCI_OPCODE_PUSH_DOUBLE",
+        .value = ROCI_OPCODE_PUSH_DOUBLE
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "ROCI_OPCODE_PUSH_STRING",
+        .value = ROCI_OPCODE_PUSH_STRING
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "ROCI_OPCODE_DROP",
+        .value = ROCI_OPCODE_DROP
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "ROCI_OPCODE_NEW_ENVIRONMENT",
+        .value = ROCI_OPCODE_NEW_ENVIRONMENT
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
+        .name = "ROCI_OPCODE_DROP_ENVIRONMENT",
+        .value = ROCI_OPCODE_DROP_ENVIRONMENT
+    };
+    static enum_element_metadata_t var_9 = (enum_element_metadata_t) {
+        .next = &var_8,
+        .name = "ROCI_OPCODE_DEFINE_VAR",
+        .value = ROCI_OPCODE_DEFINE_VAR
+    };
+    static enum_element_metadata_t var_10 = (enum_element_metadata_t) {
+        .next = &var_9,
+        .name = "ROCI_OPCODE_GET_VAR",
+        .value = ROCI_OPCODE_GET_VAR
+    };
+    static enum_element_metadata_t var_11 = (enum_element_metadata_t) {
+        .next = &var_10,
+        .name = "ROCI_OPCODE_SET_VAR",
+        .value = ROCI_OPCODE_SET_VAR
+    };
+    static enum_element_metadata_t var_12 = (enum_element_metadata_t) {
+        .next = &var_11,
+        .name = "ROCI_OPCODE_BR_TRUE",
+        .value = ROCI_OPCODE_BR_TRUE
+    };
+    static enum_element_metadata_t var_13 = (enum_element_metadata_t) {
+        .next = &var_12,
+        .name = "ROCI_OPCODE_BR",
+        .value = ROCI_OPCODE_BR
+    };
+    static enum_element_metadata_t var_14 = (enum_element_metadata_t) {
+        .next = &var_13,
+        .name = "ROCI_OPCODE_MAKE_CLOSURE",
+        .value = ROCI_OPCODE_MAKE_CLOSURE
+    };
+    static enum_element_metadata_t var_15 = (enum_element_metadata_t) {
+        .next = &var_14,
+        .name = "ROCI_OPCODE_RETURN",
+        .value = ROCI_OPCODE_RETURN
+    };
+    static enum_element_metadata_t var_16 = (enum_element_metadata_t) {
+        .next = &var_15,
+        .name = "ROCI_OPCODE_CALL",
+        .value = ROCI_OPCODE_CALL
+    };
+    static enum_element_metadata_t var_17 = (enum_element_metadata_t) {
+        .next = &var_16,
+        .name = "ROCI_OPCODE_CHECK_ARGS",
+        .value = ROCI_OPCODE_CHECK_ARGS
+    };
+    static enum_element_metadata_t var_18 = (enum_element_metadata_t) {
+        .next = &var_17,
+        .name = "ROCI_OPCODE_DEBUG_INFO",
+        .value = ROCI_OPCODE_DEBUG_INFO
+    };
+    static enum_element_metadata_t var_19 = (enum_element_metadata_t) {
+        .next = &var_18,
+        .name = "ROCI_OPCODE_COMMENT",
+        .value = ROCI_OPCODE_COMMENT
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "roci_opcode_t",
+        .elements = &var_19
+    };
+    return &enum_metadata_result;
+}
+char* roci_runtime_error_to_string(roci_runtime_error_t value){
+  switch (value) {
+    case ROCI_RUNTIME_ERROR_NONE:
+    return "ROCI_RUNTIME_ERROR_NONE";
+  case ROCI_RUNTIME_ERROR_TRAP:
+    return "ROCI_RUNTIME_ERROR_TRAP";
+  case ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE:
+    return "ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE";
+  case ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED:
+    return "ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED";
+  default:
+    return "<<unknown-roci_runtime_error>>";
+  }
+}
+roci_runtime_error_t string_to_roci_runtime_error(char* value){
+  if (strcmp(value, "ROCI_RUNTIME_ERROR_NONE") == 0) {
+    return ROCI_RUNTIME_ERROR_NONE;
+  }
+  if (strcmp(value, "ROCI_RUNTIME_ERROR_TRAP") == 0) {
+    return ROCI_RUNTIME_ERROR_TRAP;
+  }
+  if (strcmp(value, "ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE") == 0) {
+    return ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE;
+  }
+  if (strcmp(value, "ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED") == 0) {
+    return ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED;
+  }
+  return 0;
+}
+enum_metadata_t* roci_runtime_error_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "ROCI_RUNTIME_ERROR_NONE",
+        .value = ROCI_RUNTIME_ERROR_NONE
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "ROCI_RUNTIME_ERROR_TRAP",
+        .value = ROCI_RUNTIME_ERROR_TRAP
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE",
+        .value = ROCI_RUNTIME_ERROR_ILLEGAL_OPCODE
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED",
+        .value = ROCI_RUNTIME_ERROR_BOOLEAN_REQUIRED
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "roci_runtime_error_t",
+        .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
+
+// Full Compiler Command Line:
+//
+// /home/jawilson/src/omni-c/build-dir/bin/omni-c-stable
+//    generate-library
+//    --omit-c-armyknife-include=true
+//    --c-output-file=/home/jawilson/src/omni-c/build-dir/omni-c.c
+//    /home/jawilson/src/omni-c/build-dir/bin/lib.oar
+//    mode.c
+//    keywords.c
+//    file.c
+//    file-reader.c
+//    compiler-errors.c
+//    lexer.c
+//    token-list.c
+//    token-transformer.c
+//    parser.c
+//    pstate.c
+//    declaration-parser.c
+//    node-list.c
+//    debug-printer.c
+//    c-file-printer.c
+//    symbol-table.c
+//    source-to-source.c
+//    preprocessor.c
+//    header-file-extractor.c
+//    symbol-table-builder.c
+//    srcgen.c
+//    pratt-parser.c
+//    statement-parser.c
+//    type-parser.c
+//    user-type-parser.c
+//    variable-definition-parser.c
+//    literal-parser.c
+//    balanced-construct-parser.c
+//    printer.c
+//    global-includes.c
+//    linearizer.c
+//    main.c
+//    archive-command.c
+//    build-command.c
+//    generate-c-output-file.c
+//    generate-header-file-command.c
+//    generate-library-command.c
+//    c-compiler-backend.c
+//    git-hash-object.c
+//    print-tokens.c
+//    parse-test.c
+//    test-command.c
+//    test-assembler.c
+//    flags.c
+//    roci/roci-assembler.c
+//    roci/roci-bb-builder.c
+//    roci/roci-bb.c
+//    roci/roci-command.c
+//    roci/roci-compiler.c
+//    roci/roci-debugger.c
+//    roci/roci-disassembler.c
+//    roci/roci-env.c
+//    roci/roci-primitives.c
+//    roci/roci-repl.c
+//    roci/roci-stack.c
+//    roci/roci-value.c
+//    roci/roci.c
+//    /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
+
+// These checksums are currently easy to fake for example by using a
+// hacked git in the PATH at the time this compile was run.
+//
+// git cat-file -p ebcc90197262fe60009f0b3f54bbda358391217b > /home/jawilson/src/omni-c/build-dir/bin/lib.oar
+// git cat-file -p e4066229527451dabf7ddebeaa5c2becab2bb136 > mode.c
+// git cat-file -p 6c0a741ef33f143d100f562fbb6624a0e4b0bb39 > keywords.c
+// git cat-file -p 3c9874790e23604a9ac3637dad2d489b9da77adb > file.c
+// git cat-file -p 519bac76f7060874edf686e186bbd0127c492875 > file-reader.c
+// git cat-file -p b826e66adf47cc1bb8edf4e995bfe5eee16c0a48 > compiler-errors.c
+// git cat-file -p 917e001d2658287c2633b80671d3f618b326ca5d > lexer.c
+// git cat-file -p 0b1ed82677427f66828e3ccbad7c004541d0a0ca > token-list.c
+// git cat-file -p 570c78c6604478afa7842cdc1f7a1a03d88cb53c > token-transformer.c
+// git cat-file -p bc27a1fa5e0e46e5be7efb58913bf35141b3d84d > parser.c
+// git cat-file -p 49b13cd86350d1eb6328735ae29f83547a6a0bb6 > pstate.c
+// git cat-file -p 59daca2b0aa6f77689756a49fef16a9c7a125a6b > declaration-parser.c
+// git cat-file -p 9cadd0ec68236e71c10e779c1e4dd373420c1bde > node-list.c
+// git cat-file -p f339474879a81de7a5bbb77feb2ba22664c9aeb6 > debug-printer.c
+// git cat-file -p 4b863c6951265e8bdbd646b3d6746f6b426e84c9 > c-file-printer.c
+// git cat-file -p 47fe4a94a6ba151764cfb98f6d995a8c47fb3e01 > symbol-table.c
+// git cat-file -p 2c6810b4cf4949d8d850c1621506ea8c82690d72 > source-to-source.c
+// git cat-file -p 040136a4d86aa67bd622142500cecfcdbe582737 > preprocessor.c
+// git cat-file -p 52af4fa58ea28535587766f2912d174b3856816f > header-file-extractor.c
+// git cat-file -p 7e7f49598c2d9701253f09009d7012618ade9339 > symbol-table-builder.c
+// git cat-file -p 1ef0ccd414c4831d299ebfe679272b61dcc98699 > srcgen.c
+// git cat-file -p 9a607c9c85b417635448223383043e97bcb2d8c4 > pratt-parser.c
+// git cat-file -p 49394a81607fe626a9bce76b1ec01608939ae754 > statement-parser.c
+// git cat-file -p 8708088a67b78081debbcec70d30be8673fa3ed8 > type-parser.c
+// git cat-file -p bdbab4c2452bc63d7e339f13ab55065656672fce > user-type-parser.c
+// git cat-file -p 4409031c17808fc31d9570e290b10c42bbcc7983 > variable-definition-parser.c
+// git cat-file -p ab21ab7d3d9844da0379a8b65fff8f8254143e5e > literal-parser.c
+// git cat-file -p e4f518156c8f554c965a6e1312572f755c17bf47 > balanced-construct-parser.c
+// git cat-file -p a1246b1440b1757d6547a3b3f595d5bb0646849a > printer.c
+// git cat-file -p 1288af59af73f8a8551fafee2148ec2290e7347b > global-includes.c
+// git cat-file -p fce28a522e79bdfb5067438da1932144fa3435c0 > linearizer.c
+// git cat-file -p e3f5a00518b59961d3d5632aeba842875de9a391 > main.c
+// git cat-file -p 0454a5add5006737a0f3fca664fb707837742680 > archive-command.c
+// git cat-file -p 9894b0b701f73ede7de57c59052ef1a01d5d7f4f > build-command.c
+// git cat-file -p 97164d99bde2d7b0a6b5afffd0386ad209c6547c > generate-c-output-file.c
+// git cat-file -p 27f7c678152a252c8b32d08e069a98a2c2537840 > generate-header-file-command.c
+// git cat-file -p 2b99df738d6b7f0dd59d87d6befbb0a3bdcfc6bd > generate-library-command.c
+// git cat-file -p 96cf80aaffbbdd213ffeeda46411de2c8c1f986f > c-compiler-backend.c
+// git cat-file -p 42dadc0ee36e8cc16f36fd2d4d66751e09808097 > git-hash-object.c
+// git cat-file -p cfaccebe12df4a35e44380c7809ae428a7a72f2f > print-tokens.c
+// git cat-file -p da2c76b993b03e6a545a4402da4bedeffbc72f90 > parse-test.c
+// git cat-file -p 73de727b90c7c551e39b54ec604d7c25da6aa5ea > test-command.c
+// git cat-file -p 924ee3779e046e6eaf0b380c17b57a0d8348573f > test-assembler.c
+// git cat-file -p 48edba07fa67f606cb15eba0ecffb6d31cde97ec > flags.c
+// git cat-file -p ce583389be4e293f41e3f1c61cf7e1ec7ef6e3c0 > roci/roci-assembler.c
+// git cat-file -p e1308d4ab503baba610182aa47a8319a50584cd1 > roci/roci-bb-builder.c
+// git cat-file -p d1989e6150fdf6d2af29af5f8dd473fb56c82c79 > roci/roci-bb.c
+// git cat-file -p 4a79ad6d847971a3cc90321e063ff26038a88389 > roci/roci-command.c
+// git cat-file -p eaf9974bedcfcf22736957246d3f3c81f9170436 > roci/roci-compiler.c
+// git cat-file -p 8e8a1cc599cd8bf5129d59218fde0b8550fcdde2 > roci/roci-debugger.c
+// git cat-file -p db2362be1481cb03cdc26f5d4df25eb22aea46d9 > roci/roci-disassembler.c
+// git cat-file -p a00098cb28a56f33d6bd96b0e6849b0a5eb4c02f > roci/roci-env.c
+// git cat-file -p 197139567f1ff00284805b27151c80b3c8bc0000 > roci/roci-primitives.c
+// git cat-file -p 05a653a69ce239da562d7362f256a8fcb69b3394 > roci/roci-repl.c
+// git cat-file -p 7299d06db0406931b671279692c1b089c13834b9 > roci/roci-stack.c
+// git cat-file -p 4b558e9c5c3302a52efcfff0069e494093141bd5 > roci/roci-value.c
+// git cat-file -p 043a62ceaed5a8fc45f7fcc69631ec941372ea82 > roci/roci.c
+// git cat-file -p e314fb330c5d942edccfda1502a992afca1fb3b2 > /home/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c

@@ -63,7 +63,7 @@ fi
 echo "Just a second, now we are going to build the boot-strap compiler..."
 echo "    ${STABLE}"
 echo
-${CC} -o "${STABLE}" "${DIR}/src/omni-c-stable.c" -lgc
+${CC} -o "${STABLE}" "${DIR}/src/omni-c-stable-linux.c" -lgc
 
 if [ $? -ne 0 ]; then
     echo "FAILURE: Building omni-c-stable failed. This must be resolved to continue."
