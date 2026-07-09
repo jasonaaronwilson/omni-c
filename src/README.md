@@ -4,32 +4,85 @@ This is the Omni C transpiler source code.
 
 ## Compiling Omni C
 
-If you just want to use Omni C, currently just do this:
+### OS-X
+
+Literally just added! I'm expecting you to add gcc or clang via brew.
+
+So first install brew: https://brew.sh/
+
+Once brew is working,
+
+```
+brew install bdw-gc
+```
+
+TODO(jawilson): install gcc and clang and such via brew?
+
+Now do this:
+
+```
+cd ~
+mkdir -p ~/src/
+cd ~/src/
+git clone https://github.com/jasonaaronwilson/omni-c.git
+cd omni-c
+./configure-darwin.sh
+```
+
+Then follow the directions at the end to build the most recent
+reversion.
+
+### Linux
+
+#### Install Prerequisites
 
 1. sudo apt install <prerequisites> (including gcc, tcc, clang and
    lua5.4, lua-filesystem). Obviously this is specific to your linux
    flavor.
+
+#### Install Boehm GC
+
+Method 1 - build and install from source
+
 1. cd ~
 1. mkdir src
 1. cd src
 1. download and unpack https://hboehm.info/gc/gc_source/gc.tar.gz
 1. cd gc-8.2.8 ; ./configure && make && make install
-1. `git clone https://github.com/jasonaaronwilson/omni-c.git`
-1. `(cd omni-c/src/ ; make && make test)`
 
-There's no "install" for omni-c yet because it's mostly only
-appropriate for compiling itself.
+Method 2:
+
+Many distro's provide the Boehm GC collector:
+
+Debian/Ubuntu: sudo apt-get install libgc-dev
+Fedora/RHEL:   sudo dnf install gc-devel
+
+### Now Do Configure and Build
+
+1. cd ~/src/
+1. `git clone https://github.com/jasonaaronwilson/omni-c.git`
+1. src/
+1. ./configure-linux.sh
+
+1. Use the command line provided at the end to build
+   build-dir/bin/omni-c (and build-dir/bin/omni-c-self (a decent proxy
+   for a global test).
 
 ## Developing Omni C
 
 Now that omni-c is self-hosting via omni-c-stable.c, you can pretty
-much just start modifying files and run make.
+much just start modifying files and run the complicated looking
+command once you've run configure-linux.sh (or configure-darwin.sh).
 
-Occasionally we will want to update omni-c-stable.c. The key is to
-never add a feature and use it within omni-c until you've checked in
-sufficient tests for a new feature.
+In order to update omni-c-stable-linux.c and omni-c-darwin-linux.c,
+the key is to never add a feature and use it within omni-c until
+you've checked in sufficient tests for a new feature.
 
 ## Automatically Testing Omni C
+
+THIS IS ONLY APPLICABLE TO LINUX. WE ARE REDOING OUR TEST FRAMEWORK to
+use roci instead of Lua and make sure it works perfectly with linux
+and darwin.
 
 `make test` should be all you need though you may want to add more
 tests (or debug a broken test). Currently I'm not tracking test
