@@ -140,6 +140,10 @@ readable names.
 
 ## Status
 
+* (2026-07-08) Our first builds with OS-X (darwin/ARM) are now
+  working! Most of the recent work has been on cleanup plus the roci
+  project, a built-in dynamic language (similar to Scheme or Lua with
+  a more C syntax) that now drive builds (but not tests).
 * (2025-03-07) I haven't updated status for a while so there is a lot
   here, some of it's user visible and kind of cool though the vast
   amount of work was moving towards a mono-repo where *everything* is
