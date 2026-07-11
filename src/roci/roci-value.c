@@ -66,6 +66,11 @@ void roci_append_value(buffer_t* buffer, roci_value_t value) {
     break;
   }
 
+  case ROCI_TAG_BUFFER: {
+    buffer_printf(buffer, "buffer<fixme>");
+    break;
+  }
+
   default:
     log_fatal("unhandled tag %s", roci_tag_to_string(value.tag));
     fatal_error(ERROR_ILLEGAL_STATE);

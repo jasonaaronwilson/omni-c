@@ -63,10 +63,11 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_cd, "cd");
   roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
   roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
-  // roci_add_primitive(env, &roci_primitive_file_to_buffer, "file_to_buffer");
-  // roci_add_primitive(env, &roci_primitive_is_buffer, "is_buffer");
-  // roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_get");
-  // roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_length");
+  // Buffers
+  roci_add_primitive(env, &roci_primitive_is_buffer, "is_buffer");
+  roci_add_primitive(env, &roci_primitive_file_to_buffer, "file_to_buffer");
+  roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_get");
+  roci_add_primitive(env, &roci_primitive_buffer_length, "buffer_length");
 
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
 }
@@ -694,4 +695,42 @@ void roci_primitive_command_line_args(roci_vm_state_t* state) {
   roci_push_list(state, list);
 }
 
+// Buffers
 
+void roci_primitive_is_buffer(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_buffer expects 1 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  if (value.tag == ROCI_TAG_BUFFER) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
+}
+
+void roci_primitive_file_to_buffer(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "roci_load expects 1 argument");
+  }
+  char* filename = roci_pop_string(state);
+  buffer_t* buffer = buffer_read_file(filename);
+  roci_push_buffer(state, buffer);
+}
+
+void roci_primitive_buffer_get(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "buffer_get expects 2 argument");
+  }
+  int64_t position = roci_pop_integer(state);
+  buffer_t* buffer = roci_pop_buffer(state);
+  roci_push_integer(state, buffer_get(buffer, position));
+}
+
+void roci_primitive_buffer_length(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "buffer_length expects 1 argument");
+  }
+  buffer_t* buffer = roci_pop_buffer(state);
+  roci_push_integer(state, buffer->length);
+}

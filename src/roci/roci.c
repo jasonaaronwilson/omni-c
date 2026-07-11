@@ -20,6 +20,7 @@ typedef roci_tag_t = enum {
   ROCI_TAG_CLOSURE,
   ROCI_TAG_C_PRIMITIVE,
   ROCI_TAG_LIST,
+  ROCI_TAG_BUFFER,
   // Temporary (for a while) hack so we can find the top of stack
   // while debugging.
   ROCI_TAG_STACK_MARKER,
