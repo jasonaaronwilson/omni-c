@@ -30,7 +30,7 @@ cd omni-c
 ```
 
 Then follow the directions at the end to build the most recent
-reversion.
+version.
 
 ### Linux
 
