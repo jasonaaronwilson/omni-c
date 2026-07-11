@@ -30,6 +30,15 @@ char* FLAG_c_compiler = "clang";
 boolean_t FLAG_roci_debug = false;
 boolean_t FLAG_roci_print_bbs = false;
 
+char* FLAG_roci_arg_1 = nullptr;
+char* FLAG_roci_arg_2 = nullptr;
+char* FLAG_roci_arg_3 = nullptr;
+char* FLAG_roci_arg_4 = nullptr;
+char* FLAG_roci_arg_5 = nullptr;
+char* FLAG_roci_arg_6 = nullptr;
+char* FLAG_roci_arg_7 = nullptr;
+char* FLAG_roci_arg_8 = nullptr;
+
 void configure_flags(void) {
   flag_program_name("omni-c");
   flag_description(
@@ -133,9 +142,25 @@ void configure_regular_commands(void) {
   flag_description("run the roci interpreter on the files in order");
   flag_boolean("--debug", &FLAG_roci_debug);
   flag_boolean("--print-bbs", &FLAG_roci_print_bbs);
+  flag_string("--arg1", &FLAG_roci_arg_1);
+  flag_string("--arg2", &FLAG_roci_arg_2);
+  flag_string("--arg3", &FLAG_roci_arg_3);
+  flag_string("--arg4", &FLAG_roci_arg_4);
+  flag_string("--arg5", &FLAG_roci_arg_5);
+  flag_string("--arg6", &FLAG_roci_arg_6);
+  flag_string("--arg7", &FLAG_roci_arg_7);
+  flag_string("--arg8", &FLAG_roci_arg_8);
   flag_file_args(&FLAG_files);
 
   flag_command("repl", &FLAG_command);
   flag_description("enter the roci repl");
   flag_boolean("--debug", &FLAG_roci_debug);
+  flag_string("--arg1", &FLAG_roci_arg_1);
+  flag_string("--arg2", &FLAG_roci_arg_2);
+  flag_string("--arg3", &FLAG_roci_arg_3);
+  flag_string("--arg4", &FLAG_roci_arg_4);
+  flag_string("--arg5", &FLAG_roci_arg_5);
+  flag_string("--arg6", &FLAG_roci_arg_6);
+  flag_string("--arg7", &FLAG_roci_arg_7);
+  flag_string("--arg8", &FLAG_roci_arg_8);
 }
