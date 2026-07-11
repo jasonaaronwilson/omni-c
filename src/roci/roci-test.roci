@@ -238,6 +238,17 @@ add_test("int_relations_test",
 	   pass_test();
 	 });
 
+add_test("bitwise_test",
+	 fn() {
+	   if (not(iequal(16, bit_shr(32, 1)))) {
+	     fail_test();
+	   }
+	   if (not(iequal(64, bit_shl(32, 1)))) {
+	     fail_test();
+	   }
+	   pass_test();
+	 });
+
 // println(ROCI_TESTS);
 
 run_tests();

@@ -45,10 +45,17 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_iequal, "iequal");
   roci_add_primitive(env, &roci_primitive_igte, "igte");
   roci_add_primitive(env, &roci_primitive_igt, "igt");
-  //
-  roci_add_primitive(env, &roci_primitive_not, "not");
-  roci_add_primitive(env, &roci_primitive_getenv, "getenv");
+  // Bitwise operations
+  roci_add_primitive(env, &roci_primitive_bit_not, "bit_not");
+  roci_add_primitive(env, &roci_primitive_bit_and, "bit_and");
+  roci_add_primitive(env, &roci_primitive_bit_or, "bit_or");
+  roci_add_primitive(env, &roci_primitive_bit_or, "bit_shr");
+  roci_add_primitive(env, &roci_primitive_bit_or, "bit_shl");
+  // Bolean operations
   roci_add_primitive(env, &roci_primitive_is_boolean, "is_boolean");
+  roci_add_primitive(env, &roci_primitive_not, "not");
+
+  roci_add_primitive(env, &roci_primitive_getenv, "getenv");
   roci_add_primitive(env, &roci_primitive_is_string, "is_string");
   roci_add_primitive(env, &roci_primitive_is_list, "is_list");
   roci_add_primitive(env, &roci_primitive_is_double, "is_double");
@@ -501,6 +508,52 @@ void roci_primitive_igt(roci_vm_state_t* state) {
   int64_t arg1 = roci_pop_integer(state);
   int64_t arg0 = roci_pop_integer(state);
   roci_push_boolean(state, arg0 > arg1);
+}
+
+// Bitwise operations
+
+void roci_primitive_bit_not(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "bit_not expects 1 argument");
+  }
+  uint64_t arg1 = roci_pop_integer(state);
+  roci_push_integer(state, ~arg1);
+}
+
+void roci_primitive_bit_and(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "bit_and expects two integer arguments");
+  }
+  uint64_t arg1 = roci_pop_integer(state);
+  uint64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 & arg1);
+}
+
+void roci_primitive_bit_or(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "bit_or expects two integer arguments");
+  }
+  uint64_t arg1 = roci_pop_integer(state);
+  uint64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 | arg1);
+}
+
+void roci_primitive_bit_shl(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "bit_shl expects two integer arguments");
+  }
+  uint64_t arg1 = roci_pop_integer(state);
+  uint64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 << arg1);
+}
+
+void roci_primitive_bit_shr(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "bit_shr expects two integer arguments");
+  }
+  uint64_t arg1 = roci_pop_integer(state);
+  uint64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 >> arg1);
 }
 
 // Boolean not
