@@ -32,21 +32,34 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_shell, "shell");
   roci_add_primitive(env, &roci_primitive_platform, "platform");
   roci_add_primitive(env, &roci_primitive_glob, "glob");
-  roci_add_primitive(env, &roci_primitive_iadd, "iadd");
-  roci_add_primitive(env, &roci_primitive_igte, "igte");
-  roci_add_primitive(env, &roci_primitive_iequal, "iequal");
+  // Integer Operations
+  roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
   roci_add_primitive(env, &roci_primitive_neg, "neg");
+  roci_add_primitive(env, &roci_primitive_iadd, "iadd");
+  roci_add_primitive(env, &roci_primitive_isub, "isub");
+  roci_add_primitive(env, &roci_primitive_imul, "imul");
+  roci_add_primitive(env, &roci_primitive_idiv, "idiv");
+  roci_add_primitive(env, &roci_primitive_irem, "irem");
+  roci_add_primitive(env, &roci_primitive_ilt, "ilt");
+  roci_add_primitive(env, &roci_primitive_ilte, "ilte");
+  roci_add_primitive(env, &roci_primitive_iequal, "iequal");
+  roci_add_primitive(env, &roci_primitive_igte, "igte");
+  roci_add_primitive(env, &roci_primitive_igt, "igt");
+  //
   roci_add_primitive(env, &roci_primitive_not, "not");
   roci_add_primitive(env, &roci_primitive_getenv, "getenv");
   roci_add_primitive(env, &roci_primitive_is_boolean, "is_boolean");
   roci_add_primitive(env, &roci_primitive_is_string, "is_string");
-  roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
   roci_add_primitive(env, &roci_primitive_is_list, "is_list");
   roci_add_primitive(env, &roci_primitive_is_double, "is_double");
   roci_add_primitive(env, &roci_primitive_pwd, "pwd");
   roci_add_primitive(env, &roci_primitive_cd, "cd");
   roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
   roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
+  // roci_add_primitive(env, &roci_primitive_file_to_buffer, "file_to_buffer");
+  // roci_add_primitive(env, &roci_primitive_is_buffer, "is_buffer");
+  // roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_get");
+  // roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_length");
 }
 
 /**
@@ -276,11 +289,11 @@ void roci_primitive_timestamp(roci_vm_state_t* state) {
 /**
  * @function shell
  *
- * Excepts a list where the first element is the command and the reset
+ * Excepts a list where the first element is the command and the rest
  * of the elements are arguments to that command.
  *
- * (This function is under flux, for example, it only returns stdout,
- * no error codes, etc.)
+ * Currently returns a list of the exit code stdout mixed in with
+ * stdout.
  */
 void roci_primitive_shell(roci_vm_state_t* state) {
   if (state->n_args != 1) {
@@ -375,21 +388,96 @@ void roci_primitive_glob(roci_vm_state_t* state) {
   roci_push_list(state, result);
 }
 
+// Integer Operations
+
+void roci_primitive_is_integer(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_integer expects 1 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  if (value.tag == ROCI_TAG_INTEGER) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
+}
+
+void roci_primitive_neg(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "neg expects 1 argument");
+  }
+  roci_push_integer(state, -roci_pop_integer(state));
+}
+
 void roci_primitive_iadd(roci_vm_state_t* state) {
   if (state->n_args != 2) {
     roci_debug_error(state, "iadd expects two integer arguments");
   }
-  uint64_t arg1 = roci_pop_integer(state);
-  uint64_t arg0 = roci_pop_integer(state);
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
   roci_push_integer(state, arg1 + arg0);
+}
+
+void roci_primitive_isub(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "isub expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg1 - arg0);
+}
+
+void roci_primitive_imul(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "imul expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg1 * arg0);
+}
+
+void roci_primitive_idiv(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "idiv expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg1 / arg0);
+}
+
+void roci_primitive_irem(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "irem expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg1 % arg0);
+}
+
+void roci_primitive_ilt(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "ilt expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 < arg1);
+}
+
+void roci_primitive_ilte(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "ilte expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 <= arg1);
 }
 
 void roci_primitive_iequal(roci_vm_state_t* state) {
   if (state->n_args != 2) {
     roci_debug_error(state, "iequal expects two integer arguments");
   }
-  uint64_t arg1 = roci_pop_integer(state);
-  uint64_t arg0 = roci_pop_integer(state);
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
   if (arg0 == arg1) {
     roci_push_true(state);
   } else {
@@ -397,6 +485,25 @@ void roci_primitive_iequal(roci_vm_state_t* state) {
   }
 }
 
+void roci_primitive_igte(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "igte expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 >= arg1);
+}
+
+void roci_primitive_igt(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "igt expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 > arg1);
+}
+
+// Boolean not
 void roci_primitive_not(roci_vm_state_t* state) {
   if (state->n_args != 1) {
     roci_debug_error(state, "roci_exit expects 1 argument");
@@ -440,18 +547,6 @@ void roci_primitive_is_string(roci_vm_state_t* state) {
   }
   roci_value_t value = roci_pop_value(state);
   if (value.tag == ROCI_TAG_STRING) {
-    roci_push_true(state);
-  } else {
-    roci_push_false(state);
-  }
-}
-
-void roci_primitive_is_integer(roci_vm_state_t* state) {
-  if (state->n_args != 1) {
-    roci_debug_error(state, "is_integer expects 1 argument");
-  }
-  roci_value_t value = roci_pop_value(state);
-  if (value.tag == ROCI_TAG_INTEGER) {
     roci_push_true(state);
   } else {
     roci_push_false(state);
@@ -505,18 +600,4 @@ void roci_primitive_cd(roci_vm_state_t* state) {
   }
 }
 
-void roci_primitive_igte(roci_vm_state_t* state) {
-  if (state->n_args != 2) {
-    roci_debug_error(state, "igte expects two integer arguments");
-  }
-  uint64_t arg1 = roci_pop_integer(state);
-  uint64_t arg0 = roci_pop_integer(state);
-  roci_push_boolean(state, arg0 >= arg1);
-}
 
-void roci_primitive_neg(roci_vm_state_t* state) {
-  if (state->n_args != 1) {
-    roci_debug_error(state, "neg expects 1 argument");
-  }
-  roci_push_integer(state, -roci_pop_integer(state));
-}

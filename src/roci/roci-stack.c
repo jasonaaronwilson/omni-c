@@ -63,7 +63,7 @@ static inline boolean_t roci_pop_boolean(roci_vm_state_t* state) {
 
 static inline int64_t roci_pop_integer(roci_vm_state_t* state) {
   roci_tag_t tag = *(--state->stack_tags);
-  uint64_t tos = *(--state->stack);
+  int64_t tos = *(--state->stack);
   if (tag != ROCI_TAG_INTEGER) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }

@@ -200,6 +200,44 @@ add_test("return_closure_test",
 	   }
 	 });
 
+add_test("int_relations_test",
+	 fn() {
+	   if (not(ilt(10, 20))) {
+	     fail_test();
+	   }
+	   if (ilt(11, 10)) {
+	     fail_test();
+	   }
+	   if (not(ilte(20, 20))) {
+	     fail_test();
+	   }
+	   if (ilte(30, 20)) {
+	     fail_test();
+	   }
+	   if (not(iequal(30, 30))) {
+	     fail_test();
+	   }
+	   if (iequal(30, 31)) {
+	     fail_test();
+	   }
+	   if (not(igte(30, 10))) {
+	     fail_test();
+	   }
+	   if (not(igte(10, 10))) {
+	     fail_test();
+	   }
+	   if (not(igt(30, 10))) {
+	     fail_test();
+	   }
+	   if (igt(30, 30)) {
+	     fail_test();
+	   }
+	   if (igt(30, 35)) {
+	     fail_test();
+	   }
+	   pass_test();
+	 });
+
 // println(ROCI_TESTS);
 
 run_tests();
