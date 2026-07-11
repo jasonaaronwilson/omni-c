@@ -70,6 +70,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_buffer_length, "buffer_length");
 
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
+  roci_add_primitive(env, &roci_primitive_for_each_integer, "for_each_integer");
 }
 
 /**
@@ -275,6 +276,7 @@ void roci_primitive_list_for_each(roci_vm_state_t* state) {
     roci_value_t* element = cast(roci_value_t*, value_array_get(list, i).ptr);
     roci_push_value(state, *element);
     roci_call(state, proc, 1);
+    roci_pop_value(state);
   }
   roci_push_false(state);
 }
@@ -733,4 +735,19 @@ void roci_primitive_buffer_length(roci_vm_state_t* state) {
   }
   buffer_t* buffer = roci_pop_buffer(state);
   roci_push_integer(state, buffer->length);
+}
+
+void roci_primitive_for_each_integer(roci_vm_state_t* state) {
+  if (state->n_args != 3) {
+    roci_debug_error(state, "for_each_integer expects 3 arguments");
+  }
+  roci_value_t proc = roci_pop_value(state);
+  int64_t limit = roci_pop_integer(state);
+  int64_t start = roci_pop_integer(state);
+  for (int i = 0; i < limit; i++) {
+    roci_push_integer(state, i);
+    roci_call(state, proc, 1);
+    roci_pop_value(state);
+  }
+  roci_push_false(state);
 }
