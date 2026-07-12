@@ -71,6 +71,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
 
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
   roci_add_primitive(env, &roci_primitive_for_each_integer, "for_each_integer");
+  roci_add_primitive(env, &roci_primitive_ascii_to_string, "ascii_to_string");
 }
 
 /**
@@ -750,4 +751,16 @@ void roci_primitive_for_each_integer(roci_vm_state_t* state) {
     roci_pop_value(state);
   }
   roci_push_false(state);
+}
+
+void roci_primitive_ascii_to_string(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "ascii_to_string expects a single string argument");
+  }
+  uint64_t arg = roci_pop_integer(state);
+  char* result = cast(char*, malloc_bytes(2));
+  result[0] = arg & 0xff;
+  result[1] = 0;
+
+  roci_push_string(state, result);
 }

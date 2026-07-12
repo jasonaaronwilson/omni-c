@@ -71,6 +71,13 @@ let run_tests = fn() {
     });
 };
 
+let string_equal_or_fail = fn(expected, computed) {
+  if (string_equal(expected, computed)) {
+    println(string_append("Expected '", expected, "' but got '", computed, "'"));
+    fail_test();
+  }
+};
+
 add_test("empty_test",
 	 fn() {
 	   pass_test();
@@ -246,6 +253,31 @@ add_test("bitwise_test",
 	   if (not(iequal(64, bit_shl(32, 1)))) {
 	     fail_test();
 	   }
+	   pass_test();
+	 });
+
+add_test("hex_encoding_test",
+	 fn() {
+
+	   let nibble_to_hex_digit = fn(nibble) {
+	     if (ilt(nibble, 10)) {
+	       return ascii_to_string(iadd(nibble, 48)); // 48 is ASCII '0'
+	     } else {
+	       return ascii_to_string(iadd(97, isub(nibble, 10))); // 97 for 'a'
+	     }
+	   };
+
+	   let byte_to_hex_digits = fn(byte) {
+	     return string_append(nibble_to_hex_digit(bit_shr(byte, 4)),
+				  nibble_to_hex_digit(bit_and(byte, 15)));
+	   };
+
+	   string_equal_or_fail("00", byte_to_hex_digits(0));
+	   string_equal_or_fail("09", byte_to_hex_digits(9));
+	   string_equal_or_fail("0a", byte_to_hex_digits(10));
+	   string_equal_or_fail("0f", byte_to_hex_digits(15));
+	   string_equal_or_fail("ff", byte_to_hex_digits(255));
+
 	   pass_test();
 	 });
 
