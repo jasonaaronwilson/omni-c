@@ -146,15 +146,13 @@ token_t* make_derived_token(token_t* source_token) {
  *
  * type: TOKEN_TYPE_IDENTIFIER start: 10 end: 15 str: asdf
  */
-__attribute__((warn_unused_result)) buffer_t*
-    append_token_debug_string(buffer_t* buffer, token_t token) {
+void append_token_debug_string(buffer_t* buffer, token_t token) {
   char* str = token_to_string(&token);
   buffer = buffer_printf(
       buffer, "type: %s start: %d end: %d line=%d column=%d str: %s",
       token_type_to_string(token.type), token.start, token.end,
       token.line_number, token.column_number, str);
   free_bytes(str);
-  return buffer;
 }
 
 /**

@@ -6,7 +6,7 @@ void do_print_tokens(value_array_t* tokens, char* message) {
     buffer_t* buffer = make_buffer(tokens->length * 60);
     for (int j = 0; j < tokens->length; j++) {
       token_t* token = token_at(tokens, j);
-      buffer = append_token_debug_string(buffer, *token);
+      append_token_debug_string(buffer, *token);
       buffer = buffer_append_string(buffer, "\n");
     }
     fprintf(stdout, "** %s **\n%s\n", message, buffer_to_c_string(buffer));

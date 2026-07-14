@@ -1,4 +1,15 @@
+/**
+ * @file roci-test.roci
+ *
+ * This is both the frame-work for roci tests and *all* of the tests
+ * themselves which I'll refactor when that seems important.
+ */
+
 // A tiny abstraction for a named test
+
+//// I'm strongly considering a struct style declaration with the
+//// first "slot" being some kind of type marker that can't be forged
+//// by roci itself.
 
 let make_test = fn(name, thunk) {
   return make_list(name, thunk);
@@ -17,6 +28,8 @@ let test_thunk = fn(test) {
 
 // Global State
 
+let CURRENT_TEST = false;
+
 let ROCI_TESTS = make_list();
 let ROCI_LAST_TEST_PASSED = false;
 let ROCI_NUM_PASS = 0;
@@ -27,6 +40,7 @@ let add_test = fn(name, thunk) {
 };
 
 let pass_test = fn() {
+  print_string(string_append("TEST PASSED: ", test_name(CURRENT_TEST), "\n"));
   ROCI_LAST_TEST_PASSED = true;
   ROCI_NUM_PASS = iadd(ROCI_NUM_PASS, 1);
 };
@@ -34,6 +48,12 @@ let pass_test = fn() {
 let fail_test = fn() {
   ROCI_LAST_TEST_PASSED = false;
   ROCI_NUM_FAIL = iadd(ROCI_NUM_FAIL, 1);
+  // We don't have call/cc, exceptions, or threads. So instead we fail
+  // fast. All of the above was dumb.
+  print_string(string_append("TEST FAILED: ", test_name(CURRENT_TEST), "\n"));
+  invoke_debugger("test failure");
+  println("(Exiting without running further tests....)");
+  exit(1);
 };
 
 // ----------------------------------------------------------------------
@@ -58,21 +78,30 @@ let list_add_all = fn(lst0, lst1) {
 let run_tests = fn() {
   print_string("Running tests...\n");
   list_for_each(ROCI_TESTS, fn(test) {
+      CURRENT_TEST = test;
       ROCI_LAST_TEST_PASSED = false;
       let thunk = test_thunk(test);
       thunk();
       // The current bug is that we seem to have the wrong envrionment
       // here since "test" is no longer defined.
-      if (ROCI_LAST_TEST_PASSED) {
-	print_string(string_append("TEST PASSED: ", test_name(test), "\n"));
-      } else {
+      if (not(ROCI_LAST_TEST_PASSED)) {
+	// This only happens with test_fail() which is now 
 	print_string(string_append("TEST FAILED: ", test_name(test), "\n"));
       }
     });
 };
 
+let int_equal_or_fail = fn(expected, computed) {
+  if (not(iequal(expected, computed))) {
+    // println(string_append("Expected '", to(string), "' but got '", to_string(computed), "'"));
+    prinlnt("FIXME");
+    fail_test();
+  }
+};
+
+
 let string_equal_or_fail = fn(expected, computed) {
-  if (string_equal(expected, computed)) {
+  if (not(string_equal(expected, computed))) {
     println(string_append("Expected '", expected, "' but got '", computed, "'"));
     fail_test();
   }
@@ -275,13 +304,15 @@ add_test("hex_encoding_test",
 	   string_equal_or_fail("00", byte_to_hex_digits(0));
 	   string_equal_or_fail("09", byte_to_hex_digits(9));
 	   string_equal_or_fail("0a", byte_to_hex_digits(10));
+	   string_equal_or_fail("0b", byte_to_hex_digits(11));
 	   string_equal_or_fail("0f", byte_to_hex_digits(15));
+	   string_equal_or_fail("80", byte_to_hex_digits(0x80));
+	   string_equal_or_fail("90", byte_to_hex_digits(0x90));
+	   string_equal_or_fail("a0", byte_to_hex_digits(0xa0));
 	   string_equal_or_fail("ff", byte_to_hex_digits(255));
 
 	   pass_test();
 	 });
-
-// println(ROCI_TESTS);
 
 run_tests();
 

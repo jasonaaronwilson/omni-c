@@ -143,6 +143,11 @@ void roci_compile_statement(roci_compiler_state_t* state) {
       roci_compile_function_call(state);
       roci_expect_token(state, ";");
       roci_emit_opcode(state, ROCI_OPCODE_DROP);
+    } else {
+      buffer_t* buffer = make_buffer(5);
+      append_token_debug_string(buffer, *token);
+      log_fatal("roci_compile_statement is unhappy! %s", buffer_to_c_string(buffer));
+      fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
 }

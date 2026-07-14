@@ -49,8 +49,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_bit_not, "bit_not");
   roci_add_primitive(env, &roci_primitive_bit_and, "bit_and");
   roci_add_primitive(env, &roci_primitive_bit_or, "bit_or");
-  roci_add_primitive(env, &roci_primitive_bit_or, "bit_shr");
-  roci_add_primitive(env, &roci_primitive_bit_or, "bit_shl");
+  roci_add_primitive(env, &roci_primitive_bit_shr, "bit_shr");
+  roci_add_primitive(env, &roci_primitive_bit_shl, "bit_shl");
   // Bolean operations
   roci_add_primitive(env, &roci_primitive_is_boolean, "is_boolean");
   roci_add_primitive(env, &roci_primitive_not, "not");
@@ -72,6 +72,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
   roci_add_primitive(env, &roci_primitive_for_each_integer, "for_each_integer");
   roci_add_primitive(env, &roci_primitive_ascii_to_string, "ascii_to_string");
+
+  roci_add_primitive(env, &roci_primitive_invoke_debugger, "invoke_debugger");
 }
 
 /**
@@ -428,7 +430,7 @@ void roci_primitive_iadd(roci_vm_state_t* state) {
   }
   int64_t arg1 = roci_pop_integer(state);
   int64_t arg0 = roci_pop_integer(state);
-  roci_push_integer(state, arg1 + arg0);
+  roci_push_integer(state, arg0 + arg1);
 }
 
 void roci_primitive_isub(roci_vm_state_t* state) {
@@ -437,7 +439,7 @@ void roci_primitive_isub(roci_vm_state_t* state) {
   }
   int64_t arg1 = roci_pop_integer(state);
   int64_t arg0 = roci_pop_integer(state);
-  roci_push_integer(state, arg1 - arg0);
+  roci_push_integer(state, arg0 - arg1);
 }
 
 void roci_primitive_imul(roci_vm_state_t* state) {
@@ -446,7 +448,7 @@ void roci_primitive_imul(roci_vm_state_t* state) {
   }
   int64_t arg1 = roci_pop_integer(state);
   int64_t arg0 = roci_pop_integer(state);
-  roci_push_integer(state, arg1 * arg0);
+  roci_push_integer(state, arg0 * arg1);
 }
 
 void roci_primitive_idiv(roci_vm_state_t* state) {
@@ -455,7 +457,7 @@ void roci_primitive_idiv(roci_vm_state_t* state) {
   }
   int64_t arg1 = roci_pop_integer(state);
   int64_t arg0 = roci_pop_integer(state);
-  roci_push_integer(state, arg1 / arg0);
+  roci_push_integer(state, arg0 / arg1);
 }
 
 void roci_primitive_irem(roci_vm_state_t* state) {
@@ -464,7 +466,7 @@ void roci_primitive_irem(roci_vm_state_t* state) {
   }
   int64_t arg1 = roci_pop_integer(state);
   int64_t arg0 = roci_pop_integer(state);
-  roci_push_integer(state, arg1 % arg0);
+  roci_push_integer(state, arg0 % arg1);
 }
 
 void roci_primitive_ilt(roci_vm_state_t* state) {
@@ -727,7 +729,7 @@ void roci_primitive_buffer_get(roci_vm_state_t* state) {
   }
   int64_t position = roci_pop_integer(state);
   buffer_t* buffer = roci_pop_buffer(state);
-  roci_push_integer(state, buffer_get(buffer, position));
+  roci_push_integer(state, buffer_get(buffer, position) & 0xff);
 }
 
 void roci_primitive_buffer_length(roci_vm_state_t* state) {
@@ -745,7 +747,7 @@ void roci_primitive_for_each_integer(roci_vm_state_t* state) {
   roci_value_t proc = roci_pop_value(state);
   int64_t limit = roci_pop_integer(state);
   int64_t start = roci_pop_integer(state);
-  for (int i = 0; i < limit; i++) {
+  for (int i = start; i < limit; i++) {
     roci_push_integer(state, i);
     roci_call(state, proc, 1);
     roci_pop_value(state);
@@ -763,4 +765,12 @@ void roci_primitive_ascii_to_string(roci_vm_state_t* state) {
   result[1] = 0;
 
   roci_push_string(state, result);
+}
+
+void roci_primitive_invoke_debugger(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "invoke_debugger expects a single string argument");
+  }
+  roci_debug_error(state, roci_pop_string(state));
+  roci_push_false(state);
 }
