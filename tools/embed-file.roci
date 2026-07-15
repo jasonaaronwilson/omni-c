@@ -25,51 +25,37 @@ let byte_to_hex_digits = fn(byte) {
 
 let file_to_c_code = fn() {
 
-  let input_buffer = file_to_buffer(INPUT_FILENAME);
+  let input_buffer = read_file(INPUT_FILENAME);
+  let c_code = make_buffer();
 
-  let c_code_prefix = string_append("buffer_t* get_", VARNAME, "_buffer(void) {\n");
-  c_code_prefix = string_append(c_code_prefix, "  static uint8_t ", VARNAME, "[] = {");
+  let write = fn(x) {
+    buffer_append_string(c_code, x);
+  };
 
-  let c_code_lines = make_list(c_code_prefix);
-  let c_code = "";
-  let line_comment = "";
+  write(string_append("buffer_t* get_", VARNAME, "_buffer(void) {\n"));
+  write(string_append("  static uint8_t ", VARNAME, "[] = {"));
+
   let num_bytes = buffer_length(input_buffer);
 
   for_each_integer(0, num_bytes, fn(i) {
-
       if (iequal(0, bit_and(0xf, i))) {
-	c_code = string_append(c_code, "\n");
-	list_push(c_code_lines, c_code);
-	c_code = "";
+	write("\n  ");
       }
-
       let byte_val = buffer_get(input_buffer, i);
-      let hex_val = string_append("0x", byte_to_hex_digits(byte_val));
-      c_code = string_append(c_code, hex_val, ", ");
-
-      // if byte_val >= 32 and byte_val <= 126 then
-      // line_comment = line_comment .. string.char(byte_val)
-      // else
-      // line_comment = line_comment .. '.' -- Use '.' for non-printable characters
-      // end
+      write(string_append("0x", byte_to_hex_digits(byte_val), ", "));
     });
+  write("\n");
 
-  if (not(string_equal("", c_code))) {
-    c_code = string_append(c_code, "\n");
-    list_push(c_code_lines, c_code);
-  }
+  write("  };\n");
+  write(string_append("  buffer_t* result = make_buffer(", to_string(num_bytes), ");\n"));
+  write(string_append("  for (int i = 0; i < ", to_string(num_bytes), "; i++) {\n"));
+  write(string_append("    buffer_append_byte(result, ", VARNAME, "[i]);\n"));
+  write("  }\n");
+  write("  return result;\n");
+  write("}\n");
 
-  list_push(c_code_lines, "};\n");
-  list_push(c_code_lines, string_append("  buffer_t* result = make_buffer(", to_string(num_bytes), ");\n"));
-  list_push(c_code_lines, string_append("  for (int i = 0; i < ", to_string(num_bytes), "; i++) {\n"));
-  list_push(c_code_lines, string_append("    buffer_append_byte(result, ", VARNAME, "[i]);\n"));
-  list_push(c_code_lines, "  }\n");
-  list_push(c_code_lines, "  return result;\n");
-  list_push(c_code_lines, "}\n");
-
-  return c_code_lines;
+  return c_code;
 };
 
-list_for_each(file_to_c_code(), fn(line) {
-    print_string(line);
-  });
+let code = file_to_c_code();
+write_file(code, OUTPUT_FILENAME);
