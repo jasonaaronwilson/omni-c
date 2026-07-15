@@ -65,9 +65,12 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
   // Buffers
   roci_add_primitive(env, &roci_primitive_is_buffer, "is_buffer");
-  roci_add_primitive(env, &roci_primitive_file_to_buffer, "file_to_buffer");
+  roci_add_primitive(env, &roci_primitive_make_buffer, "make_buffer");
+  roci_add_primitive(env, &roci_primitive_read_file, "read_file");
+  roci_add_primitive(env, &roci_primitive_write_file, "write_file");
   roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_get");
   roci_add_primitive(env, &roci_primitive_buffer_length, "buffer_length");
+  roci_add_primitive(env, &roci_primitive_buffer_append_string, "buffer_append_string");
 
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
   roci_add_primitive(env, &roci_primitive_for_each_integer, "for_each_integer");
@@ -714,14 +717,33 @@ void roci_primitive_is_buffer(roci_vm_state_t* state) {
   }
 }
 
-void roci_primitive_file_to_buffer(roci_vm_state_t* state) {
+void roci_primitive_make_buffer(roci_vm_state_t* state) {
+  if (state->n_args != 0) {
+    roci_debug_error(state, "make_buffer expects 0 arguments");
+  }
+  roci_push_buffer(state, make_buffer(8));
+}
+
+
+void roci_primitive_read_file(roci_vm_state_t* state) {
   if (state->n_args != 1) {
-    roci_debug_error(state, "roci_load expects 1 argument");
+    roci_debug_error(state, "read_file expects 1 argument");
   }
   char* filename = roci_pop_string(state);
   buffer_t* buffer = buffer_read_file(filename);
   roci_push_buffer(state, buffer);
 }
+
+void roci_primitive_write_file(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "write_file expects 2 argument");
+  }
+  char* filename = roci_pop_string(state);
+  buffer_t* buffer = roci_pop_buffer(state);
+  buffer_write_file(buffer, filename);
+  roci_push_false(state);
+}
+
 
 void roci_primitive_buffer_get(roci_vm_state_t* state) {
   if (state->n_args != 2) {
@@ -730,6 +752,16 @@ void roci_primitive_buffer_get(roci_vm_state_t* state) {
   int64_t position = roci_pop_integer(state);
   buffer_t* buffer = roci_pop_buffer(state);
   roci_push_integer(state, buffer_get(buffer, position) & 0xff);
+}
+
+void roci_primitive_buffer_append_string(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "buffer_append_string expects 2 argument");
+  }
+  char* str = roci_pop_string(state);
+  buffer_t* buffer = roci_pop_buffer(state);
+  buffer_append_string(buffer, str);
+  roci_push_false(state);
 }
 
 void roci_primitive_buffer_length(roci_vm_state_t* state) {
