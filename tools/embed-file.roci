@@ -1,0 +1,75 @@
+// This script converts a binary input file into a C program that
+// can be compiled into C programs.
+
+let ARGS = command_line_args();
+let VARNAME = list_get(ARGS, 0);
+let INPUT_FILENAME = list_get(ARGS, 1);
+let OUTPUT_FILENAME = list_get(ARGS, 2);
+
+let nibble_to_hex_digit = fn(nibble) {
+  if (ilt(nibble, 0)) {
+    print_string("negative nibble");
+    exit(1);
+  }
+  if (ilt(nibble, 10)) {
+    return ascii_to_string(iadd(nibble, 48)); // 48 is ASCII '0'
+  } else {
+    return ascii_to_string(iadd(97, isub(nibble, 10))); // 97 for 'a'
+  }
+};
+
+let byte_to_hex_digits = fn(byte) {
+  return string_append(nibble_to_hex_digit(bit_and(bit_shr(byte, 4), 0xf)),
+		       nibble_to_hex_digit(bit_and(byte, 0xf)));
+};
+
+let file_to_c_code = fn() {
+
+  let input_buffer = file_to_buffer(INPUT_FILENAME);
+
+  let c_code_prefix = string_append("buffer_t* get_", VARNAME, "_buffer(void) {\n");
+  c_code_prefix = string_append(c_code_prefix, "  static uint8_t ", VARNAME, "[] = {");
+
+  let c_code_lines = make_list(c_code_prefix);
+  let c_code = "";
+  let line_comment = "";
+  let num_bytes = buffer_length(input_buffer);
+
+  for_each_integer(0, num_bytes, fn(i) {
+
+      if (iequal(0, bit_and(0xf, i))) {
+	c_code = string_append(c_code, "\n");
+	list_push(c_code_lines, c_code);
+	c_code = "";
+      }
+
+      let byte_val = buffer_get(input_buffer, i);
+      let hex_val = string_append("0x", byte_to_hex_digits(byte_val));
+      c_code = string_append(c_code, hex_val, ", ");
+
+      // if byte_val >= 32 and byte_val <= 126 then
+      // line_comment = line_comment .. string.char(byte_val)
+      // else
+      // line_comment = line_comment .. '.' -- Use '.' for non-printable characters
+      // end
+    });
+
+  if (not(string_equal("", c_code))) {
+    c_code = string_append(c_code, "\n");
+    list_push(c_code_lines, c_code);
+  }
+
+  list_push(c_code_lines, "};\n");
+  list_push(c_code_lines, string_append("  buffer_t* result = make_buffer(", to_string(num_bytes), ");\n"));
+  list_push(c_code_lines, string_append("  for (int i = 0; i < ", to_string(num_bytes), "; i++) {\n"));
+  list_push(c_code_lines, string_append("    buffer_append_byte(result, ", VARNAME, "[i]);\n"));
+  list_push(c_code_lines, "  }\n");
+  list_push(c_code_lines, "  return result;\n");
+  list_push(c_code_lines, "}\n");
+
+  return c_code_lines;
+};
+
+list_for_each(file_to_c_code(), fn(line) {
+    print_string(line);
+  });
