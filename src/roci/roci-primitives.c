@@ -17,12 +17,15 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_to_string, "to_string");
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
   roci_add_primitive(env, &roci_primitive_println, "println");
+  // String Functions
   roci_add_primitive(env, &roci_primitive_string_append, "string_append");
   roci_add_primitive(env, &roci_primitive_string_equal, "string_equal");
   roci_add_primitive(env, &roci_primitive_string_starts_with,
                      "string_starts_with");
-  roci_add_primitive(env, &roci_primitive_string_ends_with, "string_ends_with");
   roci_add_primitive(env, &roci_primitive_string_substring, "string_substring");
+  roci_add_primitive(env, &roci_primitive_string_ends_with, "string_ends_with");
+  roci_add_primitive(env, &roci_primitive_string_contains, "string_contains");
+  // List Functions
   roci_add_primitive(env, &roci_primitive_make_list, "make_list");
   roci_add_primitive(env, &roci_primitive_list_get, "list_get");
   roci_add_primitive(env, &roci_primitive_list_set, "list_set");
@@ -188,6 +191,19 @@ void roci_primitive_string_ends_with(roci_vm_state_t* state) {
   char* arg1 = roci_pop_string(state);
   char* arg0 = roci_pop_string(state);
   if (string_ends_with(arg0, arg1)) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
+}
+
+void roci_primitive_string_contains(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "string_contains expects two string arguments");
+  }
+  char* arg1 = roci_pop_string(state);
+  char* arg0 = roci_pop_string(state);
+  if (string_contains(arg0, arg1)) {
     roci_push_true(state);
   } else {
     roci_push_false(state);
