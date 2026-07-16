@@ -201,7 +201,7 @@ list_push(ALL_OMNI_C_SRC, RHEADER);
 
 let build_reflection_header = fn() {
   let input = string_append(TOP_DIR, "src/embed/reflection.h");
-  let script = string_append(TOP_DIR, "tools/embed-file.lua");
+  let script = string_append(TOP_DIR, "tools/embed-file.roci");
   let deps = make_list(input, script);
 
   if (all_older_than(RHEADER, deps)) {
@@ -209,17 +209,18 @@ let build_reflection_header = fn() {
     return;
   }
 
-  let command_line = make_list(script, "reflection_header", input, RHEADER);
+  let command_line = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"), 
+			       "roci",
+			       script,
+			       "--arg1",
+			       "reflection_header", 
+			       "--arg2",
+			       input,
+			       "--arg3",
+			       RHEADER);
   let result = shell(command_line);
   check_shell_command(result);
 };
-
-/*
-${BUILD_DIR}/gen-files/reflection-header.c: embed/reflection.h ${OMNI_C_ROOT}/tools/embed-file.lua
-	${OMNI_C_ROOT}/tools/embed-file.lua reflection_header embed/reflection.h > ${BUILD_DIR}/gen-files/reflection-header.c
-*/
-
-/* println(ALL_OMNI_C_SRC); */
 
 let is_platform_file = fn(src) {
   if (string_ends_with(src, "-linux.c")) {
