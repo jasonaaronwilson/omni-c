@@ -61,10 +61,6 @@ int main(int argc, char** argv) {
     test_assembler_command();
   } else if (string_equal("roci", FLAG_command)) {
     roci_command();
-  } else if (string_equal("repl", FLAG_command)) {
-    roci_env_t* env = roci_new_env(nullptr);
-    roci_add_primitives_to_env(env);
-    roci_repl(env);
   } else {
     fprintf(stderr, "Unknown command: %s\n", FLAG_command);
   }

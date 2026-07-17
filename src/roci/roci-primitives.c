@@ -684,36 +684,9 @@ void roci_primitive_command_line_args(roci_vm_state_t* state) {
   value_array_t* list = make_value_array(8);
   roci_value_t value = compound_literal(roci_value_t, {0});
   value.tag = ROCI_TAG_STRING;
-  if (FLAG_roci_arg_1 != nullptr) {
-    value.raw = cast(uint64_t, FLAG_roci_arg_1);
-    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
-  }
-  if (FLAG_roci_arg_2 != nullptr) {
-    value.raw = cast(uint64_t, FLAG_roci_arg_2);
-    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
-  }
-  if (FLAG_roci_arg_3 != nullptr) {
-    value.raw = cast(uint64_t, FLAG_roci_arg_3);
-    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
-  }
-  if (FLAG_roci_arg_4 != nullptr) {
-    value.raw = cast(uint64_t, FLAG_roci_arg_4);
-    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
-  }
-  if (FLAG_roci_arg_5 != nullptr) {
-    value.raw = cast(uint64_t, FLAG_roci_arg_5);
-    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
-  }
-  if (FLAG_roci_arg_6 != nullptr) {
-    value.raw = cast(uint64_t, FLAG_roci_arg_6);
-    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
-  }
-  if (FLAG_roci_arg_7 != nullptr) {
-    value.raw = cast(uint64_t, FLAG_roci_arg_7);
-    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
-  }
-  if (FLAG_roci_arg_8 != nullptr) {
-    value.raw = cast(uint64_t, FLAG_roci_arg_8);
+  for (int i = 0; i < FLAG_files->length; i++) {
+    char* arg = value_array_get(FLAG_files, i).str;
+    value.raw = cast(uint64_t, arg);
     value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
   }
   roci_push_list(state, list);
