@@ -1,16 +1,9 @@
-// This is a rough draft!!!
-
-
-// Test Types
-
-// First fix command line args.
-
-// OMNI_C_ROOT=/home/jawilson/src/omni-c BUILD_DIR=HERE
+// OMNI_C_ROOT=/home/jawilson/src/omni-c BUILD_DIR=/home/jawilson/src/omni-c/build-dir /home/jawilson/src/omni-c/build-dir/bin/omni-c roci --script /home/jawilson/src/omni-c/tools/run-tests.roci
 
 let omni_c_root = getenv("OMNI_C_ROOT");
 let build_dir = getenv("BUILD_DIR");
 
-check_environment_variables = fn() {
+let check_environment_variables = fn() {
 
   if (is_string(omni_c_root)) {
     println(string_append("OMNI_C_ROOT = ", omni_c_root));
@@ -42,7 +35,7 @@ let test_success = fn(filename) {
 
 let test_fail = fn(filename) {
   failure = iadd(failure, 1);
-  list_add(failed_tests, failure);
+  list_push(failed_tests, filename);
 };
 
 /*
@@ -140,7 +133,7 @@ let run_tests = fn() {
       println(string_append("Running: ", arg));
       println("------------------------------------------------------------------------");
       let runner = get_test_executor(arg);
-      runner();
+      runner(arg);
     });
 };
 
@@ -153,7 +146,7 @@ let show_summary = fn() {
     println(string_append("Passed ", to_string(success), " tests."));
   }
   
-  if (ieq(failure, 0)) {
+  if (iequal(failure, 0)) {
     exit(0);
   } else {
     list_for_each(failed_tests, fn(failed_test) {
