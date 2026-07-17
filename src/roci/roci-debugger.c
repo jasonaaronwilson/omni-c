@@ -30,6 +30,11 @@ static inline uint64_t roci_src_line_number(roci_src_info_t info) {
 /** ================================================================ */
 
 void roci_debug_error(roci_vm_state_t* state, char* error_message) {
+  buffer_t* buffer = make_buffer(100);
+  if (state->debug_info) {
+    roci_source_code_to_buffer(buffer, state->debug_info);
+  }
+  fprintf(stderr, "%s", buffer_to_c_string(buffer));
   log_fatal(error_message);
   roci_repl(state->env);
   fatal_error(ERROR_ILLEGAL_STATE);
