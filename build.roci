@@ -211,12 +211,10 @@ let build_reflection_header = fn() {
 
   let command_line = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"), 
 			       "roci",
+			       "--script",
 			       script,
-			       "--arg1",
 			       "reflection_header", 
-			       "--arg2",
 			       input,
-			       "--arg3",
 			       RHEADER);
   let result = shell(command_line);
   check_shell_command(result);

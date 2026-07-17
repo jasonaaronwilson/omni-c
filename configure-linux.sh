@@ -74,4 +74,4 @@ echo "SUCCESS: building ${STABLE}!"
 echo
 echo "From now on you can just run: "
 echo
-echo "==>    BUILD_DIR=${DIR}/build-dir CC=${CC} ${STABLE} roci build.roci"
+echo "==>    BUILD_DIR=${DIR}/build-dir CC=${CC} ${STABLE} roci --script build.roci"
