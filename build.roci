@@ -181,6 +181,10 @@ let all_older_than = fn(target, deps) {
   return result;
 };
 
+let announce_build = fn(target) {
+  println(string_append("[Building ", target, "]"));
+};
+
 let TOP_DIR = string_append(pwd(), "/");
 let BUILD_DIR = string_append(TOP_DIR, "build-dir/");
 let STABLE_BINARY_PATH = string_append(BUILD_DIR, "bin/omni-c-stable");
@@ -207,6 +211,8 @@ let build_reflection_header = fn() {
   if (all_older_than(RHEADER, deps)) {
     println(string_append(RHEADER, " is up to date"));
     return;
+  } else {
+    announce_build(RHEADER);
   }
 
   let command_line = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"), 
@@ -267,6 +273,8 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
   if (all_older_than(target_name, ALL_OMNI_C_SRC)) {
     println(string_append(target_name, " is up to date"));
     return;
+  } else {
+    announce_build(target_name);
   }
 
   // let COMMAND_LINE = make_list("echo");
