@@ -18,14 +18,14 @@ let check_environment_variables = fn() {
   if (is_string(omni_c_root)) {
     println(string_append("OMNI_C_ROOT = ", omni_c_root));
   } else {
-    print("ERROR: OMNI_C_ROOT environment variable not set.");
+    println("ERROR: OMNI_C_ROOT environment variable not set.");
     exit(1);
   }
 
   if (is_string(build_dir)) {
     println(string_append("BUILD_DIR = ", build_dir));
   } else  {
-    print("ERROR: BUILD_DIR environment variable not set.");
+    println("ERROR: BUILD_DIR environment variable not set.");
     exit(1);
   }
 };

@@ -28,6 +28,15 @@ let check_shell_command = fn(shell_result) {
   }
 };
 
+let noisy_shell = fn(command_line) {
+  println("About to execute:");
+  println(command_line);
+  let result = shell(command_line);
+  println("Finished executing:");
+  println(command_line);
+  return result;
+};
+
 /**
  * @function get_c_compiler
  *
@@ -317,3 +326,41 @@ build_omni_c(string_append(BUILD_DIR, "bin/omni-c"),
 build_omni_c(string_append(BUILD_DIR, "bin/self"),
 	     string_append(BUILD_DIR, "omni-c-self.c"),
 	     string_append(BUILD_DIR, "bin/omni-c"));
+
+let TESTS = make_list();
+list_push(TESTS, "tests/always-passing-test.sh");
+// list_push(TESTS, "tests/lib/buffer-test.c");
+// list_push(TESTS, "tests/lib/cdl-printer-test.c");
+
+let run_tests = fn(omni_c) {
+  let command_line = make_list(omni_c);
+  list_push(command_line, "roci");
+  list_push(command_line, "--script");
+  list_push(command_line, "tools/run-tests.roci");
+  list_push_all(command_line, TESTS);
+
+  let test_result = noisy_shell(command_line);
+  check_shell_command(test_result);
+};
+
+// run_tests(string_append(BUILD_DIR, "bin/omni-c"));
+
+/*
+LIB_TESTS := \
+	${OMNI_C_ROOT}/tests/lib/random-test.c \
+	${OMNI_C_ROOT}/tests/lib/quote-util-test.c \
+	${OMNI_C_ROOT}/tests/lib/splitjoin-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-alist-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-hashtable-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-tokenizer-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-tree-test.c \
+	${OMNI_C_ROOT}/tests/lib/string-util-test.c \
+	${OMNI_C_ROOT}/tests/lib/sub-process-test.c \
+	${OMNI_C_ROOT}/tests/lib/terminal-test.c \
+	${OMNI_C_ROOT}/tests/lib/uint64-test.c \
+	${OMNI_C_ROOT}/tests/lib/value-alist-test.c \
+	${OMNI_C_ROOT}/tests/lib/value-array-test.c \
+	${OMNI_C_ROOT}/tests/lib/value-tree-test.c \
+	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
+	${OMNI_C_ROOT}/tests/lib/io-test.sh
+*/
