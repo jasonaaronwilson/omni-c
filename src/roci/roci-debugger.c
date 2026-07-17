@@ -36,7 +36,9 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message) {
   }
   fprintf(stderr, "%s", buffer_to_c_string(buffer));
   log_fatal(error_message);
-  roci_repl(state->env);
+  if (FLAG_roci_repl_on_error) {
+    roci_repl(state->env);
+  }
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 

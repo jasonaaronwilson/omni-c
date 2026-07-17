@@ -31,6 +31,7 @@ char* FLAG_c_compiler = "clang";
 char* FLAG_roci_script = nullptr;
 boolean_t FLAG_roci_debug = false;
 boolean_t FLAG_roci_print_bbs = false;
+boolean_t FLAG_roci_repl_on_error = false;
 
 void configure_flags(void) {
   flag_program_name("omni-c");
@@ -136,5 +137,6 @@ void configure_regular_commands(void) {
   flag_string("--script", &FLAG_roci_script);
   flag_boolean("--debug", &FLAG_roci_debug);
   flag_boolean("--print-bbs", &FLAG_roci_print_bbs);
+  flag_boolean("--repl_on_error", &FLAG_roci_repl_on_error);
   flag_file_args(&FLAG_files);
 }
