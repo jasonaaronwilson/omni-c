@@ -1,4 +1,14 @@
-// OMNI_C_ROOT=/home/jawilson/src/omni-c BUILD_DIR=/home/jawilson/src/omni-c/build-dir /home/jawilson/src/omni-c/build-dir/bin/omni-c roci --script /home/jawilson/src/omni-c/tools/run-tests.roci
+//
+// This is the tree wide test runner for roci. In this case, each test
+// is essentially at least one executable invocation, however, in many
+// cases, that one executable may itself run many "unit tests".
+// 
+
+//
+// This is how I'm testing the test runner right now!
+//
+// OMNI_C_ROOT=/home/jawilson/src/omni-c BUILD_DIR=/home/jawilson/src/omni-c/build-dir /home/jawilson/src/omni-c/build-dir/bin/omni-c roci --script /home/jawilson/src/omni-c/tools/run-tests.roci /home/jawilson/src/omni-c/tests/always-passing-test.sh /home/jawilson/src/omni-c/tests/always-failing-test.sh
+//
 
 let omni_c_root = getenv("OMNI_C_ROOT");
 let build_dir = getenv("BUILD_DIR");
@@ -87,25 +97,27 @@ let get_test_executor = fn(filename) {
   }
 };
 
+let check_shell_command = fn(shell_result, filename) {
+  if (not(iequal(shell_exit_code(shell_result), 0))) {
+    println(shell_stdout(shell_result));
+    println("A shell command returned a non-zero exit code.");
+    test_fail(filename);
+  } else {
+    test_success(filename);
+  }
+};
+
 let script_test_executor = fn(filename) {
   let command_line = make_list(filename);
-  let result = shell(command_line);
-  if (iequal(shell_exit_code(result), 0)) {
-    test_success(filename);
-  } else {
-    test_fail(filename);
-  }
+  let shell_result = shell(command_line);
+  check_shell_command(shell_result, filename);
 };
 
 let lib_unit_test_executor = fn(filename) {
   let lib_archive = string_append(build_dir, "/bin/lib.oar");
   let command_line = make_list(omni_c_exec, "test", lib_archive, arg);
-  let result = shell(command_line);
-  if (iequal(shell_exit_code(result), 0)) {
-    test_success(filename);
-  } else {
-    test_fail(filename);
-  }
+  let shell_result = shell(command_line);
+  check_shell_command(shell_result, filename);
 };
 
 let expr_test_executor = fn(filename) {
@@ -142,16 +154,20 @@ run_tests();
 println("======================================================================");
 
 let show_summary = fn() {
-  if (igt(success, 0)){ 
-    println(string_append("Passed ", to_string(success), " tests."));
+  if (igt(success, 0)) { 
+    if (iequal(failure, 0)) {
+      println(string_append("\nPassed ", to_string(success), " tests."));
+    }
   }
-  
+
   if (iequal(failure, 0)) {
     exit(0);
   } else {
     list_for_each(failed_tests, fn(failed_test) {
 	println(string_append("FAILURE: ", failed_test));
       });
+    println(string_append("\nPassed ", to_string(success), " tests."));
+    println(string_append("Failed ", to_string(failure), " tests."));
     exit(1);
   }
 };
