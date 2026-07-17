@@ -1,0 +1,165 @@
+// This is a rough draft!!!
+
+
+// Test Types
+
+// First fix command line args.
+
+// OMNI_C_ROOT=/home/jawilson/src/omni-c BUILD_DIR=HERE
+
+let omni_c_root = getenv("OMNI_C_ROOT");
+let build_dir = getenv("BUILD_DIR");
+
+check_environment_variables = fn() {
+
+  if (is_string(omni_c_root)) {
+    println(string_append("OMNI_C_ROOT = ", omni_c_root));
+  } else {
+    print("ERROR: OMNI_C_ROOT environment variable not set.");
+    exit(1);
+  }
+
+  if (is_string(build_dir)) {
+    println(string_append("BUILD_DIR = ", build_dir));
+  } else  {
+    print("ERROR: BUILD_DIR environment variable not set.");
+    exit(1);
+  }
+};
+
+check_environment_variables();
+
+// ======================================================================
+
+let success = 0;
+let failure = 0;
+let failed_tests = make_list();
+let no_golden_tests = make_list();
+
+let test_success = fn(filename) {
+  success = iadd(success, 1);
+};
+
+let test_fail = fn(filename) {
+  failure = iadd(failure, 1);
+  list_add(failed_tests, failure);
+};
+
+/*
+  if test_type == TestType.LIB_UNIT_TEST then
+     print("TestType.LIB_UNIT_TEST:", arg)
+     local lib_archive = build_dir .. "/bin/lib.oar"
+     exit_status = os.execute(omni_c_exec .. " test " .. lib_archive .. " " .. arg)
+  elseif test_type == TestType.SCRIPT then
+     print("TestType.SCRIPT:", arg)
+     exit_status = os.execute(arg)
+  elseif test_type == TestType.PARSE_TEST then
+     print("TestType.PARSE_TEST:", arg)
+     exit_status = os.execute(omni_c_root .. "/tools/generate-header-file-test.sh " .. arg)
+  elseif test_type == TestType.EXECUTE_TEST then
+     print("TestType.EXECUTE_TEST:", arg)
+     exit_status = os.execute(omni_c_root .. "/tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
+  elseif test_type == TestType.PARSE_PRINT_TEST then
+     print("TestType.PARSE_PRINT_TEST(*):", arg)
+     local golden_file = arg .. ".golden"
+     local output_file = arg .. ".out"
+     exit_status = os.execute(omni_c_exec .. " test " .. arg .. " >" .. output_file)
+     if exit_status and file_exists(golden_file) then
+          exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
+     else
+        table.insert(no_golden_tests, arg)
+	print(read_file(output_file))
+     end
+*/
+
+let get_test_executor = fn(filename) {
+  if (string_ends_with(filename, ".sh")) {
+    return script_test_executor;
+  }
+  // TODO(jawilson): be more specific
+  if (string_contains(filename, "lib/")) {
+    return lib_unit_test_executor;
+  }
+  if (string_ends_with(filename, ".expr")) {
+    return expr_test_executor;
+  }
+  if (string_ends_with(filename, ".stmt")) {
+    return stmt_test_executor;
+  }
+  let contents = read_file(filename);
+  if (buffer_contains(contents, "main(")) {
+    return execute_test_executor;
+  } else {
+    return parse_test_executor;
+  }
+};
+
+let script_test_executor = fn(filename) {
+  let command_line = make_list(filename);
+  let result = shell(command_line);
+  if (iequal(shell_exit_code(result), 0)) {
+    test_success(filename);
+  } else {
+    test_fail(filename);
+  }
+};
+
+let lib_unit_test_executor = fn(filename) {
+  let lib_archive = string_append(build_dir, "/bin/lib.oar");
+  let command_line = make_list(omni_c_exec, "test", lib_archive, arg);
+  let result = shell(command_line);
+  if (iequal(shell_exit_code(result), 0)) {
+    test_success(filename);
+  } else {
+    test_fail(filename);
+  }
+};
+
+let expr_test_executor = fn(filename) {
+  test_fail();
+};
+
+let stmt_test_executor = fn(filename) {
+  test_fail();
+};
+
+let get_omni_c_executable = fn() {
+  let exe = getenv("OMNI_C_EXECUTABLE");
+  if (is_string(exe)) {
+    return exe;
+  } else {
+    return string_append(build_dir, "/bin/omni-c");
+  }
+};
+
+// local start_time = get_timestamp()
+
+let run_tests = fn() {
+  list_for_each(command_line_args(), fn(arg) {
+      println("------------------------------------------------------------------------");
+      println(string_append("Running: ", arg));
+      println("------------------------------------------------------------------------");
+      let runner = get_test_executor(arg);
+      runner();
+    });
+};
+
+run_tests();
+
+println("======================================================================");
+
+let show_summary = fn() {
+  if (igt(success, 0)){ 
+    println(string_append("Passed ", to_string(success), " tests."));
+  }
+  
+  if (ieq(failure, 0)) {
+    exit(0);
+  } else {
+    list_for_each(failed_tests, fn(failed_test) {
+	println(string_append("FAILURE: ", failed_test));
+      });
+    exit(1);
+  }
+};
+show_summary();
