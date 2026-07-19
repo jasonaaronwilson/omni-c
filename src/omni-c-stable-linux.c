@@ -2049,6 +2049,10 @@ boolean_t FLAG_roci_debug = false;
 boolean_t FLAG_roci_print_bbs = false;
 
 
+# 34 "/home/jawilson/src/omni-c/src/flags.c"
+boolean_t FLAG_roci_repl_on_error = false;
+
+
 # 66 "/home/jawilson/src/omni-c/src/lib/fatal-error.c"
 fatal_error_config_t fatal_error_config = {0};
 
@@ -20360,245 +20364,248 @@ void test_assembler_command()
 }
 
 
-# 35 "/home/jawilson/src/omni-c/src/flags.c"
+# 36 "/home/jawilson/src/omni-c/src/flags.c"
 void configure_flags(void)
-# 35 "/home/jawilson/src/omni-c/src/flags.c"
+# 36 "/home/jawilson/src/omni-c/src/flags.c"
 {
 
-# 36 "/home/jawilson/src/omni-c/src/flags.c"
+# 37 "/home/jawilson/src/omni-c/src/flags.c"
   flag_program_name("omni-c");
 
-# 37 "/home/jawilson/src/omni-c/src/flags.c"
+# 38 "/home/jawilson/src/omni-c/src/flags.c"
   flag_description("omni-c is a transpiler for the omni-c language as well as a code " "generation tool for ISO C.");
 
-# 42 "/home/jawilson/src/omni-c/src/flags.c"
+# 43 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--print-command-line", (&FLAG_print_command_line));
 
-# 43 "/home/jawilson/src/omni-c/src/flags.c"
+# 44 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
 
-# 45 "/home/jawilson/src/omni-c/src/flags.c"
+# 46 "/home/jawilson/src/omni-c/src/flags.c"
   configure_regular_commands();
 
-# 47 "/home/jawilson/src/omni-c/src/flags.c"
+# 48 "/home/jawilson/src/omni-c/src/flags.c"
   configure_print_tokens_command();
 
-# 48 "/home/jawilson/src/omni-c/src/flags.c"
+# 49 "/home/jawilson/src/omni-c/src/flags.c"
   configure_parse_expression();
 
-# 49 "/home/jawilson/src/omni-c/src/flags.c"
+# 50 "/home/jawilson/src/omni-c/src/flags.c"
   configure_parse_statement();
 
-# 50 "/home/jawilson/src/omni-c/src/flags.c"
+# 51 "/home/jawilson/src/omni-c/src/flags.c"
   configure_test_assembler_command();
 }
 
 
-# 53 "/home/jawilson/src/omni-c/src/flags.c"
+# 54 "/home/jawilson/src/omni-c/src/flags.c"
 void configure_parse_expression(void)
-# 53 "/home/jawilson/src/omni-c/src/flags.c"
+# 54 "/home/jawilson/src/omni-c/src/flags.c"
 {
 
-# 54 "/home/jawilson/src/omni-c/src/flags.c"
+# 55 "/home/jawilson/src/omni-c/src/flags.c"
   flag_command("parse-expression", (&FLAG_command));
 
-# 55 "/home/jawilson/src/omni-c/src/flags.c"
+# 56 "/home/jawilson/src/omni-c/src/flags.c"
   flag_description("** UNIT TESTING **");
 
-# 56 "/home/jawilson/src/omni-c/src/flags.c"
+# 57 "/home/jawilson/src/omni-c/src/flags.c"
   flag_string("--expression", (&FLAG_expression));
 
-# 57 "/home/jawilson/src/omni-c/src/flags.c"
+# 58 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--to-c", (&FLAG_to_c));
 }
 
 
-# 60 "/home/jawilson/src/omni-c/src/flags.c"
+# 61 "/home/jawilson/src/omni-c/src/flags.c"
 void configure_parse_statement(void)
-# 60 "/home/jawilson/src/omni-c/src/flags.c"
+# 61 "/home/jawilson/src/omni-c/src/flags.c"
 {
 
-# 61 "/home/jawilson/src/omni-c/src/flags.c"
+# 62 "/home/jawilson/src/omni-c/src/flags.c"
   flag_command("parse-statement", (&FLAG_command));
 
-# 62 "/home/jawilson/src/omni-c/src/flags.c"
+# 63 "/home/jawilson/src/omni-c/src/flags.c"
   flag_description("** UNIT TESTING **");
 
-# 63 "/home/jawilson/src/omni-c/src/flags.c"
+# 64 "/home/jawilson/src/omni-c/src/flags.c"
   flag_string("--statement", (&FLAG_statement));
 }
 
 
-# 66 "/home/jawilson/src/omni-c/src/flags.c"
-void configure_test_assembler_command(void)
-# 66 "/home/jawilson/src/omni-c/src/flags.c"
-{
-
 # 67 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_command("test-assembler", (&FLAG_command));
+void configure_test_assembler_command(void)
+# 67 "/home/jawilson/src/omni-c/src/flags.c"
+{
 
 # 68 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_description("Tests the assembler");
+  flag_command("test-assembler", (&FLAG_command));
 
 # 69 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_description("Tests the assembler");
+
+# 70 "/home/jawilson/src/omni-c/src/flags.c"
   flag_file_args((&FLAG_files));
 }
 
-
-# 73 "/home/jawilson/src/omni-c/src/flags.c"
-void configure_print_tokens_command(void)
-# 73 "/home/jawilson/src/omni-c/src/flags.c"
-{
 
 # 74 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_command("print-tokens", (&FLAG_command));
+void configure_print_tokens_command(void)
+# 74 "/home/jawilson/src/omni-c/src/flags.c"
+{
 
 # 75 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_description("** UNIT TESTING **");
+  flag_command("print-tokens", (&FLAG_command));
 
 # 76 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
+  flag_description("** UNIT TESTING **");
 
 # 77 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
+  flag_boolean("--show-tokens", (&FLAG_print_tokens_show_tokens));
 
 # 78 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
+  flag_boolean("--include-whitespace", (&FLAG_print_tokens_include_whitespace));
 
 # 79 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
+  flag_boolean("--include-comments", (&FLAG_print_tokens_include_comments));
 
 # 80 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_boolean("--parse-and-print", (&FLAG_print_tokens_parse_and_print));
+
+# 81 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--show-appended-tokens", (&FLAG_print_tokens_show_appended_tokens));
 
-# 82 "/home/jawilson/src/omni-c/src/flags.c"
+# 83 "/home/jawilson/src/omni-c/src/flags.c"
   flag_file_args((&FLAG_files));
 }
 
 
-# 85 "/home/jawilson/src/omni-c/src/flags.c"
+# 86 "/home/jawilson/src/omni-c/src/flags.c"
 void configure_regular_commands(void)
-# 85 "/home/jawilson/src/omni-c/src/flags.c"
+# 86 "/home/jawilson/src/omni-c/src/flags.c"
 {
 
-# 86 "/home/jawilson/src/omni-c/src/flags.c"
+# 87 "/home/jawilson/src/omni-c/src/flags.c"
   flag_command("generate-header-file", (&FLAG_command));
 
-# 87 "/home/jawilson/src/omni-c/src/flags.c"
+# 88 "/home/jawilson/src/omni-c/src/flags.c"
   flag_description("create a single C file 'library header file'; most users will prefer " "'build'");
 
-# 90 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
 # 91 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+  flag_string("--c-output-file", (&FLAG_c_output_file));
 
 # 92 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
 
 # 93 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
 
 # 94 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
+# 95 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
 
-# 96 "/home/jawilson/src/omni-c/src/flags.c"
+# 97 "/home/jawilson/src/omni-c/src/flags.c"
   flag_file_args((&FLAG_files));
-
-# 98 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_command("generate-library", (&FLAG_command));
 
 # 99 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_command("generate-library", (&FLAG_command));
+
+# 100 "/home/jawilson/src/omni-c/src/flags.c"
   flag_description("create a single C file 'library' of C99 code; most users will prefer " "'build'");
 
-# 102 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
 # 103 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+  flag_string("--c-output-file", (&FLAG_c_output_file));
 
 # 104 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
-
-# 105 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
-
-# 106 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
-
-# 107 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_file_args((&FLAG_files));
-
-# 109 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_command("build", (&FLAG_command));
-
-# 110 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_description("build an executable by generating the C code and invoking the C " "compiler");
-
-# 113 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_string("--c-output-file", (&FLAG_c_output_file));
-
-# 114 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_string("--binary-output-file", (&FLAG_binary_output_file));
-
-# 115 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
 
-# 116 "/home/jawilson/src/omni-c/src/flags.c"
+# 105 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
 
-# 117 "/home/jawilson/src/omni-c/src/flags.c"
+# 106 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
 
-# 118 "/home/jawilson/src/omni-c/src/flags.c"
+# 107 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
 
+# 108 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_file_args((&FLAG_files));
+
+# 110 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_command("build", (&FLAG_command));
+
+# 111 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_description("build an executable by generating the C code and invoking the C " "compiler");
+
+# 114 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_string("--c-output-file", (&FLAG_c_output_file));
+
+# 115 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_string("--binary-output-file", (&FLAG_binary_output_file));
+
+# 116 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_boolean("--generate-enum-convertors", (&FLAG_generate_enum_convertors));
+
+# 117 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_boolean("--dump-symbol-table", (&FLAG_dump_symbol_table));
+
+# 118 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_boolean("--use-statement-parser", (&FLAG_use_statement_parser));
+
 # 119 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_string("--c-compiler", (&FLAG_c_compiler));
+  flag_boolean("--omit-c-armyknife-include", (&FLAG_omit_c_armyknife_include));
 
 # 120 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_file_args((&FLAG_files));
+  flag_string("--c-compiler", (&FLAG_c_compiler));
 
-# 122 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_command("archive", (&FLAG_command));
+# 121 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_file_args((&FLAG_files));
 
 # 123 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_description("create an archive of unprocessed source files");
+  flag_command("archive", (&FLAG_command));
 
 # 124 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_string("--archive-output-file", (&FLAG_archive_output_file));
+  flag_description("create an archive of unprocessed source files");
 
 # 125 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_description("the target path of the output archive");
+  flag_string("--archive-output-file", (&FLAG_archive_output_file));
 
 # 126 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_file_args((&FLAG_files));
+  flag_description("the target path of the output archive");
 
-# 128 "/home/jawilson/src/omni-c/src/flags.c"
-  flag_command("test", (&FLAG_command));
+# 127 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_file_args((&FLAG_files));
 
 # 129 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_command("test", (&FLAG_command));
+
+# 130 "/home/jawilson/src/omni-c/src/flags.c"
   flag_description("compile and run all unit tests in the input files");
 
-# 132 "/home/jawilson/src/omni-c/src/flags.c"
+# 133 "/home/jawilson/src/omni-c/src/flags.c"
   flag_file_args((&FLAG_files));
 
-# 134 "/home/jawilson/src/omni-c/src/flags.c"
+# 135 "/home/jawilson/src/omni-c/src/flags.c"
   flag_command("roci", (&FLAG_command));
 
-# 135 "/home/jawilson/src/omni-c/src/flags.c"
+# 136 "/home/jawilson/src/omni-c/src/flags.c"
   flag_description("run the roci interpreter on the files in order");
 
-# 136 "/home/jawilson/src/omni-c/src/flags.c"
+# 137 "/home/jawilson/src/omni-c/src/flags.c"
   flag_string("--script", (&FLAG_roci_script));
 
-# 137 "/home/jawilson/src/omni-c/src/flags.c"
+# 138 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--debug", (&FLAG_roci_debug));
 
-# 138 "/home/jawilson/src/omni-c/src/flags.c"
+# 139 "/home/jawilson/src/omni-c/src/flags.c"
   flag_boolean("--print-bbs", (&FLAG_roci_print_bbs));
 
-# 139 "/home/jawilson/src/omni-c/src/flags.c"
+# 140 "/home/jawilson/src/omni-c/src/flags.c"
+  flag_boolean("--repl_on_error", (&FLAG_roci_repl_on_error));
+
+# 141 "/home/jawilson/src/omni-c/src/flags.c"
   flag_file_args((&FLAG_files));
 }
 
@@ -27459,255 +27466,269 @@ boolean_t sub_process_launch(sub_process_t* sub_process)
     close((stderr_pipe[1]));
 
 # 111 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-    int exec_exit_status = execvp((argv[0]), argv);
+    int offset = 0;
+
+# 112 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+    while ((((argv[offset])!=NULL)&&(strchr((argv[offset]), '=')!=NULL)))
+
+# 112 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+    {
 
 # 113 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
+      char* env_str = (argv[offset]);
 
 # 114 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+      char* equals = strchr(env_str, '=');
+
+# 116 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+      if (((*(equals+1))=='\0'))
+
+# 116 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+      {
+
+# 117 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+        ((*equals)='\0');
+
+# 118 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+        unsetenv(env_str);
+      }
+      else
+
+# 119 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+      {
+
+# 120 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+        putenv(env_str);
+      }
+
+# 122 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+      (offset++);
+    }
+
+# 125 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+    if (((argv[offset])==NULL))
+
+# 125 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+    {
+
+# 126 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+      log_fatal("No executable specified after environment variables");
+
+# 127 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 131 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+    int exec_exit_status = execvp((argv[offset]), (argv+offset));
+
+# 134 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
+
+# 135 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     fatal_error(ERROR_ILLEGAL_STATE);
 
-# 115 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 136 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     return false;
   }
   else
 
-# 116 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 137 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 123 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 144 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     close((stdin_pipe[0]));
 
-# 124 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 145 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     close((stdout_pipe[1]));
 
-# 125 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 146 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     close((stderr_pipe[1]));
 
-# 128 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 149 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->pid)=pid);
 
-# 129 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 150 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->stdin)=(stdin_pipe[1]));
 
-# 130 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 151 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->stdout)=(stdout_pipe[0]));
 
-# 131 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 152 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->stderr)=(stderr_pipe[0]));
 
-# 133 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 154 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     free_bytes(argv);
 
-# 135 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 156 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     return true;
   }
 }
 
 
-# 139 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 160 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position)
-# 140 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 161 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 {
 
-# 141 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 162 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   int stdin_fd = (sub_process->stdin);
 
-# 144 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 165 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   int flags = fcntl(stdin_fd, F_GETFL, 0);
 
-# 145 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 166 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
 
-# 147 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 168 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
 
-# 150 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 171 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   if ((bytes_written==(-1)))
 
-# 150 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 171 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 151 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 172 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     if (((errno==EAGAIN)||(errno==EWOULDBLOCK)))
 
-# 151 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 172 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     {
 
-# 152 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 173 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
       return 0;
     }
     else
 
-# 153 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 174 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     {
 
-# 155 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 176 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
       log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
 
-# 156 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 177 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
 
-# 160 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 181 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   return bytes_written;
 }
 
 
-# 163 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 184 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 void sub_process_close_stdin(sub_process_t* sub_process)
-# 163 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 184 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 {
 
-# 164 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 185 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   if (((sub_process->stdin)!=(-1)))
 
-# 164 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 185 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 165 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 186 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     if ((close((sub_process->stdin))==(-1)))
 
-# 165 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 186 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     {
 
-# 166 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 187 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
       log_fatal("Error closing subprocess stdin: %s", strerror(errno));
 
-# 167 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 188 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-# 169 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 190 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->stdin)=(-1));
   }
 }
 
 
-# 173 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 194 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr)
-# 174 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 195 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 {
 
-# 175 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 196 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   if ((stdout!=NULL))
 
-# 175 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 196 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 176 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 197 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     buffer_read_ready_bytes_file_number(stdout, (sub_process->stdout), 0xffffffff);
   }
 
-# 179 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 200 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   if ((stderr!=NULL))
 
-# 179 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 200 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 180 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 201 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     buffer_read_ready_bytes_file_number(stderr, (sub_process->stderr), 0xffffffff);
   }
 }
 
 
-# 187 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 208 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status)
-# 188 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 209 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 {
 
-# 189 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 210 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   if ((pid==(-1)))
 
-# 189 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 210 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 190 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 211 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
 
-# 191 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 212 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     return;
   }
 
-# 195 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 216 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   if (WIFEXITED(status))
 
-# 195 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 216 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 196 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 217 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
 
-# 197 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 218 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->exit_code)=WEXITSTATUS(status));
   }
   else
 
-# 198 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 219 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   if (WIFSIGNALED(status))
 
-# 198 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 219 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 199 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 220 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
 
-# 200 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 221 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->exit_signal)=WTERMSIG(status));
   }
   else
 
-# 201 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 222 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 202 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 223 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
   }
 }
 
 
-# 213 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-boolean_t is_sub_process_running(sub_process_t* sub_process)
-# 213 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-{
-
-# 214 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
-
-# 214 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-  {
-
-# 215 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-    return false;
-  }
-
-# 218 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-  int status = 0;
-
-# 219 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
-
-# 220 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-  if ((result==0))
-
-# 220 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-  {
-
-# 221 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-    return true;
-  }
-
-# 223 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-  sub_process_record_exit_status(sub_process, result, status);
-
-# 224 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-  return false;
-}
-
-
 # 234 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
-void sub_process_wait(sub_process_t* sub_process)
+boolean_t is_sub_process_running(sub_process_t* sub_process)
 # 234 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 {
 
@@ -27718,65 +27739,104 @@ void sub_process_wait(sub_process_t* sub_process)
   {
 
 # 236 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+    return false;
+  }
+
+# 239 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+  int status = 0;
+
+# 240 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
+
+# 241 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+  if ((result==0))
+
+# 241 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+  {
+
+# 242 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+    return true;
+  }
+
+# 244 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+  sub_process_record_exit_status(sub_process, result, status);
+
+# 245 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+  return false;
+}
+
+
+# 255 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+void sub_process_wait(sub_process_t* sub_process)
+# 255 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+{
+
+# 256 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 256 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+  {
+
+# 257 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     int status = 0;
 
-# 237 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 258 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     pid_t result = waitpid((sub_process->pid), (&status), 0);
 
-# 238 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 259 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     sub_process_record_exit_status(sub_process, result, status);
   }
 }
 
 
-# 252 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 273 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr)
-# 254 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 275 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
 {
 
-# 255 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 276 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   sub_process_launch(sub_process);
 
-# 256 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 277 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   uint64_t written = 0;
 
-# 257 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 278 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   do
-# 257 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 278 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   {
 
-# 258 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 279 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     if (((child_stdin!=NULL)&&(written<(child_stdin->length))))
 
-# 258 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 279 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     {
 
-# 259 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 280 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
       (written+=sub_process_write(sub_process, child_stdin, written));
 
-# 260 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 281 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
       if ((written>=(child_stdin->length)))
 
-# 260 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 281 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
       {
 
-# 261 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 282 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
         sub_process_close_stdin(sub_process);
       }
     }
 
-# 264 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 285 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     sub_process_read(sub_process, child_stdout, child_stderr);
 
-# 265 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 286 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
     usleep(5);
   }
   while (is_sub_process_running(sub_process));
 
-# 267 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 288 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   sub_process_read(sub_process, child_stdout, child_stderr);
 
-# 268 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
+# 289 "/home/jawilson/src/omni-c/src/lib/sub-process.c"
   sub_process_wait(sub_process);
 }
 
@@ -30548,92 +30608,99 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message)
 {
 
 # 33 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  log_fatal(error_message);
+  buffer_t* buffer = make_buffer(100);
 
 # 34 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  roci_repl((state->env));
+  if ((state->debug_info))
+
+# 34 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  {
 
 # 35 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+    roci_source_code_to_buffer(buffer, (state->debug_info));
+  }
+
+# 37 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  fprintf(stderr, "%s", buffer_to_c_string(buffer));
+
+# 38 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  log_fatal(error_message);
+
+# 39 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  if (FLAG_roci_repl_on_error)
+
+# 39 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  {
+
+# 40 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+    roci_repl((state->env));
+  }
+
+# 42 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
 
-# 38 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 45 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer)
-# 38 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 45 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 {
 
-# 39 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 46 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   boolean_t is_tty = roci_is_tty();
 
-# 41 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 48 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   buffer_clear(buffer);
 
-# 43 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 50 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   if ((!is_tty))
 
-# 43 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 50 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   {
 
-# 44 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 51 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     buffer_printf(buffer, "--------------------------------------------------------------" "--------\n");
   }
   else
 
-# 48 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 55 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   {
 
-# 49 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 56 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     term_home(buffer);
 
-# 50 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 57 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     term_alt_buffer(buffer);
 
-# 51 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 58 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     term_clear_screen(buffer);
   }
 
-# 54 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 61 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   if (is_tty)
 
-# 54 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 61 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   {
 
-# 55 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 62 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     roci_debugger_banner(buffer, "*** Disassembly ***");
   }
 
-# 57 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 64 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   bblock_to_buffer(buffer, (state->current_bb), (state->opcode_ptr));
 
-# 59 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 66 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   if (is_tty)
 
-# 59 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 66 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   {
 
-# 60 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 67 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     roci_debugger_banner(buffer, "*** Source ***");
   }
 
-# 62 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  roci_source_code_to_buffer(buffer, (state->debug_info));
-
-# 64 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  if (is_tty)
-
-# 64 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  {
-
-# 65 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-    roci_debugger_instructions(buffer);
-  }
-
-# 68 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  buffer_write_all(stderr, buffer);
-
 # 69 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  fflush(stderr);
+  roci_source_code_to_buffer(buffer, (state->debug_info));
 
 # 71 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   if (is_tty)
@@ -30642,354 +30709,370 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer)
   {
 
 # 72 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-    buffer_t* input_buffer = make_buffer(10);
+    roci_debugger_instructions(buffer);
+  }
 
-# 74 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-    struct termios oldt = term_echo_off();
-
-# 76 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-    while (true)
+# 75 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  buffer_write_all(stderr, buffer);
 
 # 76 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-    {
-
-# 77 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-      buffer_clear(buffer);
+  fflush(stderr);
 
 # 78 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-      (buffer=buffer_read_ready_bytes(buffer, stdin, 10));
+  if (is_tty)
+
+# 78 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  {
 
 # 79 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-      if ((buffer_length(buffer)>0))
-
-# 79 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-      {
-
-# 80 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-        uint8_t byte = buffer_get(buffer, 0);
+    buffer_t* input_buffer = make_buffer(10);
 
 # 81 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-        if ((byte==' '))
-
-# 81 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-        {
-
-# 82 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-          term_echo_restore(oldt);
+    struct termios oldt = term_echo_off();
 
 # 83 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+    while (true)
+
+# 83 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+    {
+
+# 84 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+      buffer_clear(buffer);
+
+# 85 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+      (buffer=buffer_read_ready_bytes(buffer, stdin, 10));
+
+# 86 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+      if ((buffer_length(buffer)>0))
+
+# 86 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+      {
+
+# 87 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+        uint8_t byte = buffer_get(buffer, 0);
+
+# 88 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+        if ((byte==' '))
+
+# 88 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+        {
+
+# 89 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+          term_echo_restore(oldt);
+
+# 90 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           break;
         }
         else
 
-# 84 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 91 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
         if ((byte=='q'))
 
-# 84 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 91 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
         {
 
-# 85 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 92 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           term_echo_restore(oldt);
 
-# 86 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 93 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           term_main_buffer(buffer);
 
-# 87 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 94 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           fprintf(stderr, "\nExiting program from roci debugger.\n");
 
-# 88 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 95 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           exit(1);
         }
         else
 
-# 89 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 96 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
         if ((byte=='c'))
 
-# 89 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 96 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
         {
 
-# 90 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 97 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           term_echo_restore(oldt);
 
-# 91 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 98 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           (((state->debug)->n_instructions)=0xffffffffffffffff);
 
-# 92 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 99 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           (((state->debug)->break_on_call_target)=false);
 
-# 93 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 100 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           (((state->debug)->break_on_return)=false);
 
-# 94 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 101 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           (((state->debug)->break_on_next_statement)=false);
 
-# 95 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 102 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           (((state->debug)->trace)=false);
 
-# 96 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 103 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           break;
         }
         else
 
-# 97 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 104 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
         if ((byte=='e'))
 
-# 97 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 104 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
         {
 
-# 98 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 105 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           buffer_t* buffer = make_buffer(10);
 
-# 99 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 106 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           if (is_tty)
 
-# 99 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 106 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           {
 
-# 100 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 107 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
             roci_debugger_banner(buffer, "*** Environment ***");
           }
 
-# 102 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 109 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           roci_dump_env((state->env), buffer);
 
-# 103 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 110 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           fprintf(stdout, buffer_to_c_string(buffer));
 
-# 104 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 111 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           fflush(stdout);
         }
         else
 
-# 105 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 112 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
         if ((byte=='k'))
 
-# 105 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 112 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
         {
 
-# 106 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 113 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           buffer_t* buffer = make_buffer(10);
 
-# 107 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 114 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           if (is_tty)
 
-# 107 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 114 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           {
 
-# 108 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 115 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
             roci_debugger_banner(buffer, "*** Stack ***");
           }
 
-# 110 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 117 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           roci_dump_stack(state, buffer);
 
-# 111 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 118 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           fprintf(stdout, buffer_to_c_string(buffer));
 
-# 112 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 119 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
           fflush(stdout);
         }
       }
 
-# 115 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 122 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
       usleep(1000);
     }
 
-# 117 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 124 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     term_main_buffer(buffer);
   }
 }
 
 
-# 121 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 128 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 void roci_debug_breakpoint(void)
-# 121 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 128 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 {
 }
 
 
-# 123 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 130 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer)
-# 123 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 130 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 {
 
-# 125 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 132 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   for (
 
-# 125 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 132 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 
-# 125 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 132 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     int i = 1;
 
-# 125 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 132 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     (i<1024);
 
-# 125 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 132 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     (i++))
 
-# 125 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 132 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   {
 
-# 126 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 133 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     roci_value_t value = roci_debug_peek_value(state, i);
 
-# 127 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 134 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     if ((((value.tag)==ROCI_TAG_STACK_MARKER)||((value.tag)==ROCI_TAG_UNKNOWN)))
 
-# 127 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 134 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     {
 
-# 128 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 135 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
       break;
     }
 
-# 130 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 137 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     buffer_printf(buffer, "stack[%d] = %s\n", i, roci_value_to_c_string(value));
 
-# 131 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 138 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     if ((i==1023))
 
-# 131 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 138 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     {
 
-# 132 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 139 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
       log_fatal("ROCI_TAG_STACK_MARKER not found.");
 
-# 133 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 140 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
 }
 
 
-# 140 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 147 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 boolean_t roci_is_tty(void)
-# 140 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 147 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 {
 
-# 141 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 148 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   return (isatty(fileno(stdout))&&(!string_equal("dumb", getenv("TERM"))));
 }
 
 
-# 144 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 151 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 void roci_debugger_banner(buffer_t* buffer, char* text)
-# 144 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 151 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 {
 
-# 145 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 152 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   int width = term_width();
 
-# 146 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 153 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   term_set_background_color(buffer, 0xbfbfbf);
 
-# 147 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 154 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   term_set_foreground_color(buffer, 0xff0000);
 
-# 148 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 155 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   term_bold(buffer);
 
-# 149 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 156 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   buffer_printf(buffer, "               %s", text);
 
-# 150 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 157 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   buffer_append_repeated_byte(buffer, ' ', ((width-strlen(text))-15));
 
-# 151 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 158 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   buffer_printf(buffer, "\n", text);
 
-# 152 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 159 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   term_set_background_color(buffer, 0x000000);
 
-# 153 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 160 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   term_set_foreground_color(buffer, 0xffffff);
 
-# 154 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 161 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   term_reset_formatting(buffer);
 }
 
 
-# 157 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 164 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 void roci_debugger_instructions(buffer_t* buffer)
-# 157 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 164 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 {
 
-# 158 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 165 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   buffer_printf(buffer, "\n[Space] step instruction [n] next statement [c] continue " "[q] quit [e] dump environment [k] dump stack\n");
 }
 
 
-# 163 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 170 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 void roci_source_code_to_buffer(buffer_t* buffer, roci_src_info_t src_info)
-# 163 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 170 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
 {
 
-# 164 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 171 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   uint64_t buffer_number = roci_src_file_number(src_info);
 
-# 165 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 172 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   int64_t line_number = roci_src_line_number(src_info);
 
-# 167 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 174 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   if ((line_number==0))
 
-# 167 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 174 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   {
 
-# 168 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 175 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     buffer_printf(buffer, "<<< No Source Line Info >>>\n");
 
-# 169 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 176 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     return;
   }
 
-# 172 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 179 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   int adjacent_lines = 5;
 
-# 174 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 181 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   int64_t start_line_number = (line_number-adjacent_lines);
 
-# 175 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 182 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   if ((start_line_number<1))
 
-# 175 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 182 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   {
 
-# 176 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 183 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
     (start_line_number=1);
   }
 
-# 178 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 185 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   int64_t end_line_number = (line_number+adjacent_lines);
 
-# 180 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 187 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   roci_buffer_info_t* buffer_info = get_buffer_info_by_number(buffer_number);
 
-# 183 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+# 190 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   buffer_region_t region = buffer_line_region((buffer_info->buffer), start_line_number, line_number);
 
-# 185 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  buffer_copy_region(buffer, (buffer_info->buffer), region);
-
-# 188 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  (region=buffer_line_region((buffer_info->buffer), line_number, (line_number+1)));
-
-# 190 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  term_bold(buffer);
-
-# 191 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  buffer_copy_region(buffer, (buffer_info->buffer), region);
-
 # 192 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  term_reset_formatting(buffer);
+  buffer_copy_region(buffer, (buffer_info->buffer), region);
 
 # 195 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
-  (region=buffer_line_region((buffer_info->buffer), (line_number+1), end_line_number));
+  (region=buffer_line_region((buffer_info->buffer), line_number, (line_number+1)));
 
 # 197 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  term_bold(buffer);
+
+# 198 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   buffer_copy_region(buffer, (buffer_info->buffer), region);
 
 # 199 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  term_reset_formatting(buffer);
+
+# 202 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  (region=buffer_line_region((buffer_info->buffer), (line_number+1), end_line_number));
+
+# 204 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
+  buffer_copy_region(buffer, (buffer_info->buffer), region);
+
+# 206 "/home/jawilson/src/omni-c/src/roci/roci-debugger.c"
   buffer_printf(buffer, "\n\n<<< %s >>>\n", (buffer_info->filename));
 }
 
@@ -37705,7 +37788,7 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p da2c76b993b03e6a545a4402da4bedeffbc72f90 > /home/jawilson/src/omni-c/src/parse-test.c
 // git cat-file -p 73de727b90c7c551e39b54ec604d7c25da6aa5ea > /home/jawilson/src/omni-c/src/test-command.c
 // git cat-file -p 924ee3779e046e6eaf0b380c17b57a0d8348573f > /home/jawilson/src/omni-c/src/test-assembler.c
-// git cat-file -p 59f4517c21dc3038bde8880f58ebed2dfb47c1fc > /home/jawilson/src/omni-c/src/flags.c
+// git cat-file -p 6633e464753e8682319969001882b8960442c217 > /home/jawilson/src/omni-c/src/flags.c
 // git cat-file -p dc4e61d2890a741a9a516742d1539c3c52735a13 > /home/jawilson/src/omni-c/src/lib/includes.c
 // git cat-file -p fdeeb847cf945a6a55bcefc45bf55ec77e61accf > /home/jawilson/src/omni-c/src/lib/omni-c.c
 // git cat-file -p e4fc0d0a5e8d03a538897ec0a0654970bb7f3edd > /home/jawilson/src/omni-c/src/lib/min-max.c
@@ -37737,7 +37820,7 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p cb57000057b2c51c44bd076322ab884c2d2f4fdb > /home/jawilson/src/omni-c/src/lib/tokenizer.c
 // git cat-file -p d9cc1283b44a606474865a2c30a2a58bfbdb5163 > /home/jawilson/src/omni-c/src/lib/random.c
 // git cat-file -p a705b9173e8f1927adbdfa6c6e23e65d8587bf67 > /home/jawilson/src/omni-c/src/lib/cdl-printer.c
-// git cat-file -p 17e0d61602ce681dffde716fa6827a5b46f6b0df > /home/jawilson/src/omni-c/src/lib/sub-process.c
+// git cat-file -p a278cf8184aa9dc73f9373b6d2270eb145669bb0 > /home/jawilson/src/omni-c/src/lib/sub-process.c
 // git cat-file -p 25f99931e9abce6b5994a32cd7a6d0c388b5c608 > /home/jawilson/src/omni-c/src/lib/splitjoin.c
 // git cat-file -p fbc6df051ad9a1e3a0c09f1e2b07274607eefc28 > /home/jawilson/src/omni-c/src/lib/oarchive.c
 // git cat-file -p ca4602008803dda6c8e0a4861b59a7986ede290d > /home/jawilson/src/omni-c/src/lib/quote-util.c
@@ -37748,7 +37831,7 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p 514987c2f576469cbe427ee5fd1e13363d4fc132 > /home/jawilson/src/omni-c/src/roci/roci-buffer-registry.c
 // git cat-file -p 701cac58e8ac439335845a05b1cc1f593e0bcc0f > /home/jawilson/src/omni-c/src/roci/roci-command.c
 // git cat-file -p 3bf45e4e29e331cac3516517d7ae1644b4d4bee8 > /home/jawilson/src/omni-c/src/roci/roci-compiler.c
-// git cat-file -p 4ffb02a7489d1c1a6c2fdb4dfd1c17d0a8f84e55 > /home/jawilson/src/omni-c/src/roci/roci-debugger.c
+// git cat-file -p cef674908807b3d92c93e6dbd6bf89337bff23f2 > /home/jawilson/src/omni-c/src/roci/roci-debugger.c
 // git cat-file -p db2362be1481cb03cdc26f5d4df25eb22aea46d9 > /home/jawilson/src/omni-c/src/roci/roci-disassembler.c
 // git cat-file -p a00098cb28a56f33d6bd96b0e6849b0a5eb4c02f > /home/jawilson/src/omni-c/src/roci/roci-env.c
 // git cat-file -p 1844006141b748efb3db1f6ad4fccf003b1fb845 > /home/jawilson/src/omni-c/src/roci/roci-primitives-linux.c
