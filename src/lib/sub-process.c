@@ -107,8 +107,29 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
     close(stderr_pipe[0]);
     close(stderr_pipe[1]);
 
-    // 5. Final "exec" to the command
-    int exec_exit_status = execvp(argv[0], argv);
+    // Peel environment variables off the front of argv
+    int offset = 0;
+    while (argv[offset] != NULL && strchr(argv[offset], '=') != NULL) {
+      char* env_str = argv[offset];
+      char* equals = strchr(env_str, '=');
+
+      if (*(equals + 1) == '\0') {
+	*equals = '\0';
+	unsetenv(env_str); // e.g., "FOO=" unsets FOO
+      } else {
+	putenv(env_str);   // e.g., "FOO=bar" sets FOO
+      }
+      offset++;
+    }
+
+    if (argv[offset] == NULL) {
+      log_fatal("No executable specified after environment variables");
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+    // Final "exec" to the command, skipping the environment variables
+    int exec_exit_status = execvp(argv[offset], argv + offset);
+
     // execvp should not return!
     log_fatal("execvp returned non zero exit status %d", exec_exit_status);
     fatal_error(ERROR_ILLEGAL_STATE);
