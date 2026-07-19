@@ -122,11 +122,15 @@ let lib_unit_test_executor = fn(filename) {
 };
 
 let expr_test_executor = fn(filename) {
-  test_fail();
+  let command_line = make_list(omni_c_exec, "test", filename);
+  let shell_result = shell(command_line);
+  check_shell_command(shell_result, filename);
 };
 
 let stmt_test_executor = fn(filename) {
-  test_fail();
+  let command_line = make_list(omni_c_exec, "test", filename);
+  let shell_result = shell(command_line);
+  check_shell_command(shell_result, filename);
 };
 
 let get_omni_c_executable = fn() {

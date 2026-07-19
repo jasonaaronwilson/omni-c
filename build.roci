@@ -347,6 +347,12 @@ let build_lib_oar = fn() {
 build_lib_oar();
 
 let TESTS = make_list();
+let STATEMENT_TESTS = glob("tests/statements/*.stmt");
+let EXPRESSION_TESTS = glob("tests/expressions/*.expr");
+
+list_push_all(TESTS, STATEMENT_TESTS);
+list_push_all(TESTS, EXPRESSION_TESTS);
+
 list_push(TESTS, "tests/always-passing-test.sh");
 list_push(TESTS, "tests/lib/buffer-test.c");
 list_push(TESTS, "tests/lib/cdl-printer-test.c");
