@@ -1,13 +1,37 @@
 # Omni-C
 
+## Quick Start
+
+### OSX
+
+1. install brew: https://brew.sh/
+2. brew install bdw-gc
+3. cd ~ ; mkdir src
+4. cd src
+5. git clone https://github.com/jasonaaronwilson/omni-c.git
+6. cd omni-c
+7. ./configure-darwin.sh
+8. Follow the instructions printed at the end of configure.
+
+### Linux
+
+1. sudo apt-get install libgc-dev
+2. cd ~ ; mkdir src
+3. cd src
+4. git clone https://github.com/jasonaaronwilson/omni-c.git
+5. cd omni-c
+6. ./configure-linux.sh
+7. Follow the instructions printed at the end of configure.
+
 ## The Pitch
 
 1. Fast - omni-c is fundamentally C and compiles to C and can call C
    libraries (or even custom assembly). All of the hard work of the
    clang, gcc, msvc tool-chains are thus available when you choose one
-   of those as your backend. You could also use Fil-C or TrapC for
+   of those as your backend. You might also use Fil-C or TrapC for
    even more memory safety or even "zig cc" if you want to integrate
-   with zig.
+   with zig (though these compilers may not work with the Hans-Boehm
+   collector but the compiler itself is agnostic to GC vs. non-GC).
 
 2. Familiar - omni-c should be very familar to anyone that knows C. The
    code you write can look just like it would in C unless you want to
@@ -140,6 +164,8 @@ readable names.
 
 ## Status
 
+* (2026-07-19) we are now running some large tests on both OS-X and
+  Linux via "roci" build files.
 * (2026-07-08) Our first builds with OS-X (darwin/ARM) are now
   working! Most of the recent work has been on cleanup plus the roci
   project, a built-in dynamic language (similar to Scheme or Lua with
