@@ -83,6 +83,14 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
     return false;
   }
 
+  // Prevent fd leakage into subsequent unrelated child processes
+  fcntl(stdin_pipe[0], F_SETFD, FD_CLOEXEC);
+  fcntl(stdin_pipe[1], F_SETFD, FD_CLOEXEC);
+  fcntl(stdout_pipe[0], F_SETFD, FD_CLOEXEC);
+  fcntl(stdout_pipe[1], F_SETFD, FD_CLOEXEC);
+  fcntl(stderr_pipe[0], F_SETFD, FD_CLOEXEC);
+  fcntl(stderr_pipe[1], F_SETFD, FD_CLOEXEC);
+
   // 3. Fork the process
   pid_t pid = fork();
   if (pid == -1) {

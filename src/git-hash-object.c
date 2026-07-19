@@ -20,7 +20,7 @@
  * be very wrong.
  */
 buffer_t* git_hash_object(char* filename) {
-  value_array_t* argv = make_value_array(2);
+  value_array_t* argv = make_value_array(8);
   value_array_add(argv, str_to_value("git"));
   value_array_add(argv, str_to_value("hash-object"));
   value_array_add(argv, str_to_value(filename));
