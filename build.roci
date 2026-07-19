@@ -350,6 +350,20 @@ let TESTS = make_list();
 list_push(TESTS, "tests/always-passing-test.sh");
 list_push(TESTS, "tests/lib/buffer-test.c");
 list_push(TESTS, "tests/lib/cdl-printer-test.c");
+list_push(TESTS, "tests/lib/random-test.c");
+list_push(TESTS, "tests/lib/quote-util-test.c");
+list_push(TESTS, "tests/lib/splitjoin-test.c");
+list_push(TESTS, "tests/lib/string-alist-test.c");
+list_push(TESTS, "tests/lib/string-hashtable-test.c");
+list_push(TESTS, "tests/lib/string-tokenizer-test.c");
+list_push(TESTS, "tests/lib/string-tree-test.c");
+list_push(TESTS, "tests/lib/string-util-test.c");
+list_push(TESTS, "tests/lib/sub-process-test.c");
+list_push(TESTS, "tests/lib/terminal-test.c");
+list_push(TESTS, "tests/lib/uint64-test.c");
+list_push(TESTS, "tests/lib/value-alist-test.c");
+list_push(TESTS, "tests/lib/value-array-test.c");
+list_push(TESTS, "tests/lib/value-tree-test.c");
 
 let run_tests = fn(omni_c) {
   let command_line = make_list();
@@ -369,20 +383,6 @@ run_tests(string_append(BUILD_DIR, "bin/omni-c"));
 
 /*
 LIB_TESTS := \
-	${OMNI_C_ROOT}/tests/lib/random-test.c \
-	${OMNI_C_ROOT}/tests/lib/quote-util-test.c \
-	${OMNI_C_ROOT}/tests/lib/splitjoin-test.c \
-	${OMNI_C_ROOT}/tests/lib/string-alist-test.c \
-	${OMNI_C_ROOT}/tests/lib/string-hashtable-test.c \
-	${OMNI_C_ROOT}/tests/lib/string-tokenizer-test.c \
-	${OMNI_C_ROOT}/tests/lib/string-tree-test.c \
-	${OMNI_C_ROOT}/tests/lib/string-util-test.c \
-	${OMNI_C_ROOT}/tests/lib/sub-process-test.c \
-	${OMNI_C_ROOT}/tests/lib/terminal-test.c \
-	${OMNI_C_ROOT}/tests/lib/uint64-test.c \
-	${OMNI_C_ROOT}/tests/lib/value-alist-test.c \
-	${OMNI_C_ROOT}/tests/lib/value-array-test.c \
-	${OMNI_C_ROOT}/tests/lib/value-tree-test.c \
 	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
 	${OMNI_C_ROOT}/tests/lib/io-test.sh
 */
