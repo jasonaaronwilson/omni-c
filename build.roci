@@ -256,17 +256,17 @@ let is_matching_platform = fn(src) {
   return true;
 };
 
-let filter_files_by_platform = fn() {
+let filter_files_by_platform = fn(sources) {
     let filtered = make_list();
-    list_for_each(ALL_OMNI_C_SRC, fn(src) {
+    list_for_each(sources, fn(src) {
 	if (is_matching_platform(src)) {
 	  list_push(filtered, src);
 	}
       });
-    ALL_OMNI_C_SRC = filtered;
+    return filtered;
 };
 
-filter_files_by_platform();
+ALL_OMNI_C_SRC = filter_files_by_platform(ALL_OMNI_C_SRC);
 
 /**
  * @function build_omni_c
@@ -327,13 +327,35 @@ build_omni_c(string_append(BUILD_DIR, "bin/self"),
 	     string_append(BUILD_DIR, "omni-c-self.c"),
 	     string_append(BUILD_DIR, "bin/omni-c"));
 
+let build_lib_oar = fn() {
+  let target = string_append(BUILD_DIR, "bin/lib.oar");
+  let sources = filter_files_by_platform(SOURCE_LIB);
+
+  if (all_older_than(target, sources)) {
+    println(string_append(target, " is up to date"));
+    return;
+  } else {
+    announce_build(target);
+  }
+
+  let command = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"),
+			  "archive", "--archive-output-file", target);
+  list_push_all(command, sources);
+  let result = shell(command);
+  check_shell_command(result);
+};
+build_lib_oar();
+
 let TESTS = make_list();
 list_push(TESTS, "tests/always-passing-test.sh");
-// list_push(TESTS, "tests/lib/buffer-test.c");
-// list_push(TESTS, "tests/lib/cdl-printer-test.c");
+list_push(TESTS, "tests/lib/buffer-test.c");
+list_push(TESTS, "tests/lib/cdl-printer-test.c");
 
 let run_tests = fn(omni_c) {
-  let command_line = make_list(omni_c);
+  let command_line = make_list();
+  list_push(command_line, string_append("OMNI_C_ROOT=", TOP_DIR));
+  list_push(command_line, string_append("BUILD_DIR=", BUILD_DIR));
+  list_push(command_line, omni_c);
   list_push(command_line, "roci");
   list_push(command_line, "--script");
   list_push(command_line, "tools/run-tests.roci");
@@ -343,7 +365,7 @@ let run_tests = fn(omni_c) {
   check_shell_command(test_result);
 };
 
-// run_tests(string_append(BUILD_DIR, "bin/omni-c"));
+run_tests(string_append(BUILD_DIR, "bin/omni-c"));
 
 /*
 LIB_TESTS := \

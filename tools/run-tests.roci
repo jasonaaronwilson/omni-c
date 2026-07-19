@@ -12,6 +12,7 @@
 
 let omni_c_root = getenv("OMNI_C_ROOT");
 let build_dir = getenv("BUILD_DIR");
+let omni_c_exec = string_append(build_dir, "/bin/omni-c");
 
 let check_environment_variables = fn() {
 
@@ -115,7 +116,7 @@ let script_test_executor = fn(filename) {
 
 let lib_unit_test_executor = fn(filename) {
   let lib_archive = string_append(build_dir, "/bin/lib.oar");
-  let command_line = make_list(omni_c_exec, "test", lib_archive, arg);
+  let command_line = make_list(omni_c_exec, "test", lib_archive, filename);
   let shell_result = shell(command_line);
   check_shell_command(shell_result, filename);
 };
