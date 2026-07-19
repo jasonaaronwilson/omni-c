@@ -1,3 +1,3 @@
 char* platform(void) {
-  return "linux";
+  return "darwin";
 }
