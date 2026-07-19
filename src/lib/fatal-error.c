@@ -80,23 +80,6 @@ void print_fatal_error_banner();
 void print_backtrace();
 void print_error_code_name(int error_code);
 
-char* get_command_line() {
-  buffer_t* buffer
-      = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
-  buffer_replace_matching_byte(buffer, 0, ' ');
-  return buffer_to_c_string(buffer);
-}
-
-char* get_program_path() {
-  char buf[4096];
-  int n = readlink("/proc/self/exe", buf, sizeof(buf));
-  if (n > 0) {
-    return string_duplicate(buf);
-  } else {
-    return "<program-path-unknown>";
-  }
-}
-
 _Noreturn void fatal_error_impl(char* file, int line, int error_code) {
   print_fatal_error_banner();
   print_backtrace();

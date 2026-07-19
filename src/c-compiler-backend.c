@@ -30,7 +30,7 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file) {
     if (string_equal("zig", FLAG_c_compiler)) {
       value_array_add(argv, str_to_value("cc"));
     }
-    if (true /* string_equal(PLATFORM, "darwin") */) {
+    if (string_equal(platform(), "darwin")) {
       value_array_add(argv, str_to_value("-w")); // Turn off all warnings
       value_array_add(argv, str_to_value("-I/opt/homebrew/opt/bdw-gc/include"));
       value_array_add(argv, str_to_value("-L/opt/homebrew/opt/bdw-gc/lib"));

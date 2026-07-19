@@ -5,6 +5,8 @@
 // functions).
 
 let _LIB_SRC_ = make_list(
+   "platform-linux.c",
+   "platform-darwin.c",
    "includes.c",
    "omni-c.c",
    "min-max.c",
@@ -12,6 +14,8 @@ let _LIB_SRC_ = make_list(
    "compound-literal.c",
    "fn.c",
    "leb128.c",
+   "fatal-error-darwin.c",
+   "fatal-error-linux.c",
    "fatal-error.c",
    "value.c",
    "gc-allocate.c",
