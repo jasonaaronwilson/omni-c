@@ -38,6 +38,8 @@
 
 typedef roci_compile_time_error_t = enum {
   ROCI_COMPILE_TIME_ERROR_NONE,
+  ROCI_COMPILE_TIME_ERROR,
+  ROCI_COMPILE_TIME_TOKENIZER_ERROR,
   ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
   ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
 };
@@ -53,6 +55,13 @@ typedef roci_compiler_state_t = struct {
   uint32_t buffer_number;
 };
 
+jmp_buf roci_compiler_jmp_buf;
+
+void roci_compiler_error(roci_compiler_state_t* state, roci_compile_time_error_t error) {
+  state->compiler_error = error;
+  longjmp(roci_compiler_jmp_buf, 1);
+}
+
 /**
  * @function roci_compile_buffer
  *
@@ -66,10 +75,18 @@ typedef roci_compiler_state_t = struct {
  */
 void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
                          buffer_t* buffer) {
-  state->tokens = roci_tokenize_file(file_name, buffer);
-  state->position = 0;
-  state->current_bb = roci_new_bblock(state, "bb_file_start");
-  roci_compile_tokens(state);
+  int jump_result = setjmp(roci_compiler_jmp_buf);
+  if (jump_result == 0) {
+    state->position = 0;
+    state->current_bb = roci_new_bblock(state, "bb_file_start");
+    state->tokens = roci_tokenize_file(state, file_name, buffer);
+    roci_compile_tokens(state);
+  } else {
+    log_warn("roci compiler exited abnormally.");
+    if (state->compiler_error == ROCI_COMPILE_TIME_ERROR_NONE) {
+      state->compiler_error = ROCI_COMPILE_TIME_ERROR;
+    }
+  }
 }
 
 /**
@@ -78,13 +95,13 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
  * Since roci is meant to look like C, we simply reuse the omni-c
  * tokenizer.
  */
-value_array_t* roci_tokenize_file(char* file_name, buffer_t* buffer) {
+value_array_t* roci_tokenize_file(roci_compiler_state_t* state, char* file_name, buffer_t* buffer) {
   tokenizer_result_t tokenizer_result = tokenize(buffer);
   if (tokenizer_result.tokenizer_error_code) {
     log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name,
              tokenizer_result.tokenizer_error_position,
              tokenizer_result.tokenizer_error_code);
-    fatal_error(ERROR_ILLEGAL_INPUT);
+    roci_compiler_error(state, ROCI_COMPILE_TIME_TOKENIZER_ERROR);
   }
   return transform_tokens(
       tokenizer_result.tokens,
@@ -109,11 +126,6 @@ void roci_compile_tokens(roci_compiler_state_t* state) {
   log_info("roci_compile_tokens begin");
   while (state->position < state->tokens->length) {
     roci_compile_statement(state);
-    if (state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
-      log_fatal("compiler error %s",
-                roci_compile_time_error_to_string(state->compiler_error));
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
   }
   log_info("roci_compile_tokens end");
   roci_emit_opcode(state, ROCI_OPCODE_TRAP);
@@ -146,8 +158,8 @@ void roci_compile_statement(roci_compiler_state_t* state) {
     } else {
       buffer_t* buffer = make_buffer(5);
       append_token_debug_string(buffer, *token);
-      log_fatal("roci_compile_statement is unhappy! %s", buffer_to_c_string(buffer));
-      fatal_error(ERROR_ILLEGAL_STATE);
+      log_warn("roci_compile_statement is unhappy! %s", buffer_to_c_string(buffer));
+      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
     }
   }
 }
@@ -195,7 +207,7 @@ void roci_compile_let(roci_compiler_state_t* state) {
   roci_emit_debug_info(state, roci_peek_token(state));
   roci_expect_token(state, "let");
   token_t* varname = roci_next_token(state);
-  roci_verify_identifier(varname);
+  roci_verify_identifier(state, varname);
   roci_expect_token(state, "=");
   roci_compile_expression(state);
   roci_expect_token(state, ";");
@@ -283,8 +295,10 @@ roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state) {
       return result_bb;
     }
   }
-  log_fatal("closing brace not found!");
-  fatal_error(ERROR_ILLEGAL_INPUT);
+  log_warn("closing brace not found!");
+  roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
+  // Not reached...
+  return nullptr;
 }
 
 // This isn't quite right yet...
@@ -356,8 +370,8 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     case TOKEN_TYPE_INTEGER_LITERAL: {
       value_result_t parsed = string_parse_uint64(token_to_string(token));
       if (parsed.nf_error != NF_OK) {
-        log_fatal("failed to parse integer");
-        fatal_error(ERROR_ILLEGAL_INPUT);
+	log_warn("Failed to parse integer token %s", token_to_string(token));
+	roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
       }
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
       value_array_add(state->current_bb->data, parsed.val);
@@ -379,8 +393,8 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     }
 
     default:
-      log_fatal("unexpected token");
-      fatal_error(ERROR_ILLEGAL_INPUT);
+      log_warn("unexpected token");
+      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
     }
     roci_skip_token(state);
   } else {
@@ -405,8 +419,8 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
     if (token_matches(token, ",")) {
       roci_skip_token(state);
     } else if (!token_matches(token, ")")) {
-      log_fatal("Expected comma or close paren.");
-      fatal_error(ERROR_ILLEGAL_STATE);
+      log_warn("Expected comma or close paren.");
+      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
     }
   }
 
@@ -466,7 +480,7 @@ int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args) {
       roci_skip_token(state);
       break;
     }
-    roci_verify_identifier(token);
+    roci_verify_identifier(state, token);
     roci_skip_token(state);
 
     args[arg_num++] = token;
@@ -583,15 +597,15 @@ token_t* roci_next_token(roci_compiler_state_t* state) {
 void roci_expect_token(roci_compiler_state_t* state, char* token_string) {
   token_t* token = roci_next_token(state);
   if (!token_matches(token, token_string)) {
-    log_fatal("roci expected %s as the next token but got %s", token_string,
-              token_to_string(token));
-    fatal_error(ERROR_ILLEGAL_INPUT);
+    log_warn("roci expected %s as the next token but got %s", token_string,
+	     token_to_string(token));
+    roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
   }
 }
 
-void roci_verify_identifier(token_t* token) {
+void roci_verify_identifier(roci_compiler_state_t* state, token_t* token) {
   if (token->type != TOKEN_TYPE_IDENTIFIER) {
-    fatal_error(ERROR_ILLEGAL_INPUT);
+    roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
   }
   // Make sure our unique keywords don't match either.
 }

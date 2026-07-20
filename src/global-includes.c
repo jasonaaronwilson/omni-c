@@ -29,3 +29,4 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#include <setjmp.h>

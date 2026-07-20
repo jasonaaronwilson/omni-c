@@ -20,10 +20,15 @@ void roci_repl(roci_env_t* env) {
     roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
     state->bblocks = make_value_array(16);
     roci_compile_buffer(state, "*repl*", buffer);
-    value_array_t* bblocks = build_bblocks(state->bblocks);
-    roci_bb_t* entry_point
+    if (state->compiler_error == ROCI_COMPILE_TIME_ERROR_NONE) {
+      value_array_t* bblocks = build_bblocks(state->bblocks);
+      roci_bb_t* entry_point
         = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
-    roci_execute(env, entry_point);
+      roci_execute(env, entry_point);
+    } else {
+      log_warn("last input ignored because of a compiler error...");
+      state->compiler_error = ROCI_COMPILE_TIME_ERROR_NONE;
+    }
   }
 }
 

@@ -21,6 +21,10 @@ void roci_command(void) {
   file_t* file = read_file(FLAG_roci_script);
   state->buffer_number = roci_register_buffer(file->data, file->file_name);
   roci_compile_buffer(state, file->file_name, file->data);
+  if (state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
   value_array_t* bblocks = build_bblocks(state->bblocks);
 
   if (FLAG_roci_print_bbs) {
