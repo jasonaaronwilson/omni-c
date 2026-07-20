@@ -1,0 +1,21 @@
+/**
+ * @file roci-lib.roci
+ *
+ * These are built-in roci functions which can be written in roci
+ * instead of the lowest level primitives that are written in C.
+ */
+
+let list_map = fn(lst, func) {
+  let result = make_list();
+  list_for_each(lst, fn(x) {
+      list_push(result, func(x));
+    });
+  return result;
+};
+
+let list_push_all = fn(lst0, lst1) {
+  list_for_each(lst1, fn(x) {
+      list_push(lst0, x);
+    });
+};
+

@@ -4,6 +4,8 @@
  * This is the roci repl.
  */
 
+int64_t roci_repl_number = 0;
+
 void roci_repl(roci_env_t* env) {
   fprintf(stdout, "/// Wecome to the roci read-eval-print-loop\n");
   fprintf(stdout, "///\n");
@@ -17,18 +19,8 @@ void roci_repl(roci_env_t* env) {
     if (buffer == nullptr) {
       return;
     }
-    roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
-    state->bblocks = make_value_array(16);
-    roci_compile_buffer(state, "*repl*", buffer);
-    if (state->compiler_error == ROCI_COMPILE_TIME_ERROR_NONE) {
-      value_array_t* bblocks = build_bblocks(state->bblocks);
-      roci_bb_t* entry_point
-        = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
-      roci_execute(env, entry_point);
-    } else {
-      log_warn("last input ignored because of a compiler error...");
-      state->compiler_error = ROCI_COMPILE_TIME_ERROR_NONE;
-    }
+    char* repl_buffer_name = string_append("*repl*", int64_to_string(roci_repl_number++));
+    roci_eval_buffer(env, repl_buffer_name, buffer, false);
   }
 }
 

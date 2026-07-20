@@ -211,28 +211,39 @@ list_push_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
 
 let RHEADER = string_append(BUILD_DIR, "gen-files/reflection-header.c");
 list_push(ALL_OMNI_C_SRC, RHEADER);
+let ROCI_LIB = string_append(BUILD_DIR, "gen-files/roci-lib.c");
+list_push(ALL_OMNI_C_SRC, ROCI_LIB);
 
-let build_reflection_header = fn() {
-  let input = string_append(TOP_DIR, "src/embed/reflection.h");
+let generate_embedded_file = fn(variable, input, output) {
   let script = string_append(TOP_DIR, "tools/embed-file.roci");
   let deps = make_list(input, script);
 
-  if (all_older_than(RHEADER, deps)) {
-    println(string_append(RHEADER, " is up to date"));
+  if (all_older_than(output, deps)) {
+    println(string_append(output, " is up to date"));
     return;
   } else {
-    announce_build(RHEADER);
+    announce_build(output);
   }
 
-  let command_line = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"), 
+  let command_line = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"),
 			       "roci",
 			       "--script",
 			       script,
-			       "reflection_header", 
+			       variable,
 			       input,
-			       RHEADER);
+			       output);
   let result = shell(command_line);
   check_shell_command(result);
+};
+
+let build_reflection_header = fn() {
+  let input = string_append(TOP_DIR, "src/embed/reflection.h");
+  generate_embedded_file("reflection_header", input, RHEADER);
+};
+
+let build_roci_embedded_lib = fn() {
+  let input = string_append(TOP_DIR, "src/roci/roci-lib.roci");
+  generate_embedded_file("roci_lib", input, ROCI_LIB);
 };
 
 let is_platform_file = fn(src) {
@@ -278,6 +289,7 @@ ALL_OMNI_C_SRC = filter_files_by_platform(ALL_OMNI_C_SRC);
 let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
 
   build_reflection_header();
+  build_roci_embedded_lib();
 
   if (all_older_than(target_name, ALL_OMNI_C_SRC)) {
     println(string_append(target_name, " is up to date"));
