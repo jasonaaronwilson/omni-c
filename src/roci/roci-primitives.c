@@ -8,16 +8,32 @@
  */
 
 void roci_add_primitives_to_env(roci_env_t* env) {
+
+  // General
+  // TODO(jawilson): eval
+  roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
   roci_add_primitive(env, &roci_primitive_load, "load");
   roci_add_primitive(env, &roci_primitive_exit, "exit");
+  roci_add_primitive(env, &roci_primitive_getenv, "getenv");
+  roci_add_primitive(env, &roci_primitive_pwd, "pwd");
+  roci_add_primitive(env, &roci_primitive_cd, "cd");
+  roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
+  roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
+  roci_add_primitive(env, &roci_primitive_invoke_debugger, "invoke_debugger");
+
   // TODO(jawilson): remove once roci is looking pretty good since the
   // roci repl understands #env which does the same thing and I don't
   // think we need regularly using this though I'm a bit undecided...
   roci_add_primitive(env, &roci_primitive_print_env, "debug_print_env");
-  roci_add_primitive(env, &roci_primitive_to_string, "to_string");
+
+  // IO
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
   roci_add_primitive(env, &roci_primitive_println, "println");
+  roci_add_primitive(env, &roci_primitive_read_file, "read_file");
+  roci_add_primitive(env, &roci_primitive_write_file, "write_file");
+
   // String Functions
+  roci_add_primitive(env, &roci_primitive_is_string, "is_string");
   roci_add_primitive(env, &roci_primitive_string_append, "string_append");
   roci_add_primitive(env, &roci_primitive_string_equal, "string_equal");
   roci_add_primitive(env, &roci_primitive_string_starts_with,
@@ -25,7 +41,11 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_string_substring, "string_substring");
   roci_add_primitive(env, &roci_primitive_string_ends_with, "string_ends_with");
   roci_add_primitive(env, &roci_primitive_string_contains, "string_contains");
+  roci_add_primitive(env, &roci_primitive_to_string, "to_string");
+  roci_add_primitive(env, &roci_primitive_ascii_to_string, "ascii_to_string");
+
   // List Functions
+  roci_add_primitive(env, &roci_primitive_is_list, "is_list");
   roci_add_primitive(env, &roci_primitive_make_list, "make_list");
   roci_add_primitive(env, &roci_primitive_list_get, "list_get");
   roci_add_primitive(env, &roci_primitive_list_set, "list_set");
@@ -35,6 +55,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_shell, "shell");
   roci_add_primitive(env, &roci_primitive_platform, "platform");
   roci_add_primitive(env, &roci_primitive_glob, "glob");
+
   // Integer Operations
   roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
   roci_add_primitive(env, &roci_primitive_neg, "neg");
@@ -48,38 +69,30 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_iequal, "iequal");
   roci_add_primitive(env, &roci_primitive_igte, "igte");
   roci_add_primitive(env, &roci_primitive_igt, "igt");
+  // Not as powerful as Python's range
+  roci_add_primitive(env, &roci_primitive_for_each_integer, "for_each_integer");
+
   // Bitwise operations
   roci_add_primitive(env, &roci_primitive_bit_not, "bit_not");
   roci_add_primitive(env, &roci_primitive_bit_and, "bit_and");
   roci_add_primitive(env, &roci_primitive_bit_or, "bit_or");
   roci_add_primitive(env, &roci_primitive_bit_shr, "bit_shr");
   roci_add_primitive(env, &roci_primitive_bit_shl, "bit_shl");
-  // Bolean operations
+
+  // Boolean operations
   roci_add_primitive(env, &roci_primitive_is_boolean, "is_boolean");
   roci_add_primitive(env, &roci_primitive_not, "not");
+  /// non_empty?
 
-  roci_add_primitive(env, &roci_primitive_getenv, "getenv");
-  roci_add_primitive(env, &roci_primitive_is_string, "is_string");
-  roci_add_primitive(env, &roci_primitive_is_list, "is_list");
+  // Doubles
   roci_add_primitive(env, &roci_primitive_is_double, "is_double");
-  roci_add_primitive(env, &roci_primitive_pwd, "pwd");
-  roci_add_primitive(env, &roci_primitive_cd, "cd");
-  roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
-  roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
+
   // Buffers
   roci_add_primitive(env, &roci_primitive_is_buffer, "is_buffer");
   roci_add_primitive(env, &roci_primitive_make_buffer, "make_buffer");
-  roci_add_primitive(env, &roci_primitive_read_file, "read_file");
-  roci_add_primitive(env, &roci_primitive_write_file, "write_file");
   roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_get");
   roci_add_primitive(env, &roci_primitive_buffer_length, "buffer_length");
   roci_add_primitive(env, &roci_primitive_buffer_append_string, "buffer_append_string");
-
-  roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
-  roci_add_primitive(env, &roci_primitive_for_each_integer, "for_each_integer");
-  roci_add_primitive(env, &roci_primitive_ascii_to_string, "ascii_to_string");
-
-  roci_add_primitive(env, &roci_primitive_invoke_debugger, "invoke_debugger");
 }
 
 /**
