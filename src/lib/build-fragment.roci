@@ -17,6 +17,7 @@ let _LIB_SRC_ = make_list(
    "fatal-error-darwin.c",
    "fatal-error-linux.c",
    "fatal-error.c",
+   "time.c",
    "value.c",
    "gc-allocate.c",
    "uint64.c",
