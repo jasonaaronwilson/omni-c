@@ -36,6 +36,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
 
   // String Functions
   roci_add_primitive(env, &roci_primitive_is_string, "is_string");
+  roci_add_primitive(env, &roci_primitive_string_length_bytes, "string_length_bytes");
   roci_add_primitive(env, &roci_primitive_string_append, "string_append");
   roci_add_primitive(env, &roci_primitive_string_equal, "string_equal");
   roci_add_primitive(env, &roci_primitive_string_starts_with,
@@ -43,6 +44,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_string_substring, "string_substring");
   roci_add_primitive(env, &roci_primitive_string_ends_with, "string_ends_with");
   roci_add_primitive(env, &roci_primitive_string_contains, "string_contains");
+  roci_add_primitive(env, &roci_primitive_string_get_byte, "string_get_byte");
+
   roci_add_primitive(env, &roci_primitive_to_string, "to_string");
   roci_add_primitive(env, &roci_primitive_ascii_to_string, "ascii_to_string");
 
@@ -652,6 +655,28 @@ void roci_primitive_is_string(roci_vm_state_t* state) {
     roci_push_false(state);
   }
 }
+
+void roci_primitive_string_length_bytes(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_string expects 1 argument");
+  }
+  char* str = roci_pop_string(state);
+  roci_push_integer(state, strlen(str));
+}
+
+void roci_primitive_string_get_byte(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "string_get_byte expects 2 argument");
+  }
+  int64_t index = roci_pop_integer(state);
+  char* str = roci_pop_string(state);
+  int64_t limit = strlen(str);
+  if (index < 0 || index >= limit) {
+    roci_debug_error(state, "string_get_byte out of bounds");
+  }
+  roci_push_integer(state, (str[index]) & 0xff);
+}
+
 
 void roci_primitive_is_list(roci_vm_state_t* state) {
   if (state->n_args != 1) {
