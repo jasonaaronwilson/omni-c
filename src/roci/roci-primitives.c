@@ -17,6 +17,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_getenv, "getenv");
   roci_add_primitive(env, &roci_primitive_pwd, "pwd");
   roci_add_primitive(env, &roci_primitive_current_time_millis, "current_time_millis");
+  roci_add_primitive(env, &roci_primitive_random_int, "random_int");
   roci_add_primitive(env, &roci_primitive_cd, "cd");
   roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
   roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
@@ -682,6 +683,21 @@ void roci_primitive_current_time_millis(roci_vm_state_t* state) {
   }
   roci_push_integer(state, current_time_millis());
 }
+
+void roci_primitive_random_int(roci_vm_state_t* state) {
+  static random_state_t*  rand_state = nullptr;
+
+  if (state->n_args != 0) {
+    roci_debug_error(state, "random expects 0 argument");
+  }
+
+  if (rand_state == nullptr) {
+    rand_state = random_state();
+  }
+
+  roci_push_integer(state, random_next(rand_state));
+}
+
 
 void roci_primitive_pwd(roci_vm_state_t* state) {
   if (state->n_args != 0) {
