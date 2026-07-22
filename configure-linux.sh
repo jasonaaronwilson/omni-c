@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[ "$(uname)" = "Linux" ] || { echo "Error: This script requires linux." >&2; exit 1; }
+
 ### This is the bootstrap phase of the omni-c compiler for unix
 ### systems.
 
