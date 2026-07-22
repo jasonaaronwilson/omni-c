@@ -377,7 +377,7 @@ let run_roci_tests = fn(omni_c) {
 
 let run_tests = fn(omni_c) {
 
-  // run_roci_tests(omni_c);
+  run_roci_tests(omni_c);
 
   let command_line = make_list();
   list_push(command_line, string_append("OMNI_C_ROOT=", TOP_DIR));

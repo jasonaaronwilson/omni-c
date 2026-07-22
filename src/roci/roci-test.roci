@@ -58,23 +58,6 @@ let fail_test = fn() {
 
 // ----------------------------------------------------------------------
 
-// Move this somewhere else...
-let list_map = fn(lst, func) {
-  let result = make_list();
-  list_for_each(lst, fn(x) {
-      list_push(result, func(x));
-    });
-  return result;
-};
-
-let list_add_all = fn(lst0, lst1) {
-  list_for_each(lst1, fn(x) {
-      list_push(lst0, x);
-    });
-};
-
-// ----------------------------------------------------------------------
-
 let run_tests = fn() {
   print_string("Running tests...\n");
   list_for_each(ROCI_TESTS, fn(test) {
@@ -180,17 +163,17 @@ add_test("getenv_test",
 	   fail_test();
 	 });
 
-add_test("list_add_all_test",
+add_test("list_push_all_test",
 	 fn() {
 	   let lst1 = make_list("a", "b", "c");
 	   let lst2 = make_list("1", "2", "3");
 	   let lst3 = make_list("foo", "bar", "baz", "aa", "bb", "cc");
-	   list_add_all(lst1, lst2);
-	   list_add_all(lst1, lst3);
-	   list_add_all(lst1, lst3);
-	   list_add_all(lst1, lst3);
-	   list_add_all(lst1, lst3);
-	   list_add_all(lst1, lst3);
+	   list_push_all(lst1, lst2);
+	   list_push_all(lst1, lst3);
+	   list_push_all(lst1, lst3);
+	   list_push_all(lst1, lst3);
+	   list_push_all(lst1, lst3);
+	   list_push_all(lst1, lst3);
 	   pass_test();
 	 });
 
@@ -329,6 +312,13 @@ add_test("string_index_of_test",
 	   if (not(iequal(6, result))) {
 	     fail_test();
 	   }
+	   pass_test();
+	 });
+
+add_test("string_printf_list",
+	 fn() {
+	   let result = string_printf_list("a = %s, b = %s", make_list(1, 2));
+	   string_equal_or_fail("a = 1, b = 2", result);
 	   pass_test();
 	 });
 
