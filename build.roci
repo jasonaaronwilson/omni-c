@@ -139,21 +139,6 @@ let CC = get_c_compiler();
 let CC_FLAGS = make_list("-g", "-rdynamic");
 let WARN_FLAGS = get_warn_flags(CC);
 
-// Move this somewhere else...
-let list_map = fn(lst, func) {
-  let result = make_list();
-  list_for_each(lst, fn(x) {
-      list_push(result, func(x));
-    });
-  return result;
-};
-
-let list_push_all = fn(lst0, lst1) {
-  list_for_each(lst1, fn(x) {
-      list_push(lst0, x);
-    });
-};
-
 /**
  * @function all_older_than
  *
