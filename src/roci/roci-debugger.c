@@ -1,9 +1,13 @@
 /**
  * @file roci-debugger.c
  *
- * The Roci language has a debugger "interface" built in.
+ * The Roci VM has a source-level debugger built in though it is
+ * currently very rough.
  *
- * This is the crude first version.
+ * The plan is to eventually have a full "immediate mode GUI" for all
+ * aspect of the debugger which is partially implemented for single
+ * stepping right now (but not so much on debug error or inside the
+ * repl).
  */
 
 /** ================================================================ */

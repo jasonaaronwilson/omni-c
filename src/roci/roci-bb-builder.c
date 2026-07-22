@@ -6,6 +6,11 @@
  * "link" them via their real addresses in memory rather than labels.
  */
 
+/**
+ * @struct roci_bb_builder_t
+ *
+ * A growable version of a basic block.
+ */
 typedef roci_bb_builder_t = struct {
   char* bblock_label;
   roci_bb_t* bblock;

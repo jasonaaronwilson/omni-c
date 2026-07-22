@@ -1,8 +1,8 @@
 /**
  * @file roci-bb.c
  *
- * This abstraction is meant to be simple enough that real world
- * silicon (or more likely an FPGA) could implement it efficently.
+ * This abstraction is meant to be compatible with a conservative
+ * garbage collector which requires 8 byte alignment of all pointers.
  *
  * What we want is a stream of 8 bit opcodes and a stream of 64bit
  * aligned datums. For very small basic blocks, which I think I'm
