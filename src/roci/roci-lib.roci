@@ -19,3 +19,33 @@ let list_push_all = fn(lst0, lst1) {
     });
 };
 
+let to_display_string = fn(x) {
+  if (is_string(x)) {
+    return x;
+  }
+  if (is_buffer(x)) {
+    return buffer_to_string(x);
+  }
+  return to_string(x);
+};
+
+let buffer_printf_lst_loop = fn(buffer, format, lst, lst_start) {
+  let split_point = string_index_of(format, "%s");
+  if (ilt(split_point, 0)) {
+    // TODO(jawilson): warn or error if lst not consumed?
+    buffer_append_string(buffer, format);
+    return;
+  }
+  if (igt(split_point, 0)) {
+    buffer_append_string(buffer, string_substring(format, 0, split_point));
+  }
+  buffer_append_string(buffer, to_display_string(list_get(lst, lst_start)));
+  buffer_printf_lst_loop(buffer,
+			 string_substring(format, iadd(split_point, 2), string_length_bytes(format)),
+			 lst,
+			 iadd(lst_start, 1));
+};
+
+let buffer_printf_lst = fn(buffer, format, lst) {
+  buffer_printf_lst_loop(buffer, format, lst, 0);
+};
