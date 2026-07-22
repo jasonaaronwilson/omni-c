@@ -19,8 +19,6 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_current_time_millis, "current_time_millis");
   roci_add_primitive(env, &roci_primitive_random_int, "random_int");
   roci_add_primitive(env, &roci_primitive_cd, "cd");
-  roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
-  roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
   roci_add_primitive(env, &roci_primitive_invoke_debugger, "invoke_debugger");
 
   // TODO(jawilson): remove once roci is looking pretty good since the
@@ -28,11 +26,17 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   // think we need regularly using this though I'm a bit undecided...
   roci_add_primitive(env, &roci_primitive_print_env, "debug_print_env");
 
+  roci_add_primitive(env, &roci_primitive_platform, "platform");
+
   // IO
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
   roci_add_primitive(env, &roci_primitive_println, "println");
   roci_add_primitive(env, &roci_primitive_read_file, "read_file");
   roci_add_primitive(env, &roci_primitive_write_file, "write_file");
+  roci_add_primitive(env, &roci_primitive_glob, "glob");
+  roci_add_primitive(env, &roci_primitive_shell, "shell");
+  roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
+  roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
 
   // String Functions
   roci_add_primitive(env, &roci_primitive_is_string, "is_string");
@@ -57,9 +61,6 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
   roci_add_primitive(env, &roci_primitive_list_for_each, "list_for_each");
   roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
-  roci_add_primitive(env, &roci_primitive_shell, "shell");
-  roci_add_primitive(env, &roci_primitive_platform, "platform");
-  roci_add_primitive(env, &roci_primitive_glob, "glob");
 
   // Integer Operations
   roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
