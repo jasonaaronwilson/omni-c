@@ -90,8 +90,48 @@ let string_equal_or_fail = fn(expected, computed) {
   }
 };
 
+let expect_true = fn(computed) {
+    if (not(is_boolean(computed))) {
+      println("expect_true requires a boolean");
+      fail_test();
+    }
+    if (not(computed)) {
+      fail_test();
+    }
+};
+
+let expect_false = fn(computed) {
+    if (not(is_boolean(computed))) {
+      println("expect_false requires a boolean");
+      fail_test();
+    }
+    if (computed) {
+      fail_test();
+    }
+};
+
 add_test("empty_test",
 	 fn() {
+	   pass_test();
+	 });
+
+add_test("equal_test",
+	 fn() {
+	   expect_true(equal(1, 1));
+	   expect_true(equal("1", "1"));
+	   expect_false(equal(1, 2));
+	   expect_false(equal(1, "1"));
+	   expect_false(equal("1", "2"));
+
+	   expect_true(equal(1.0, 1.0));
+	   expect_false(equal(1.0, 1.1));
+	   expect_false(equal(1.0, 1));
+
+	   let fn1 = fn() {return;};
+	   let fn2 = fn() {return;};
+	   expect_true(equal(fn1, fn1));
+	   expect_false(equal(fn1, fn2));
+
 	   pass_test();
 	 });
 
@@ -128,6 +168,29 @@ add_test("list_test",
 	   }
 	   pass_test();
 	 });
+
+add_test("list_length",
+  fn() {
+    let lst = make_list("a", "b", "c");
+    expect_true(iequal(3, list_length(lst)));
+    pass_test();
+  });
+
+add_test("list_find_index",
+  fn() {
+    let lst = make_list(0, 1, "string");
+    expect_true(iequal(2, list_find_index(lst, is_string)));
+    expect_true(iequal(neg(1), list_find_index(lst, is_boolean)));
+    pass_test();
+  });
+
+add_test("list_index_of",
+  fn() {
+    let lst = make_list("a", "b", "c");
+    expect_true(iequal(2, list_index_of(lst, "c")));
+    expect_true(iequal(neg(1), list_index_of(lst, "d")));
+    pass_test();
+  });
 
 add_test("string_substring_test",
 	 fn() {

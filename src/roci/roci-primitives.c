@@ -10,6 +10,7 @@
 void roci_add_primitives_to_env(roci_env_t* env) {
 
   // General
+  roci_add_primitive(env, &roci_primitive_equal, "equal");
   // TODO(jawilson): eval
   roci_add_primitive(env, &roci_primitive_apply, "apply");
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
@@ -40,6 +41,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_shell, "shell");
   roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
   roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
+  roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
 
   // String Functions
   roci_add_primitive(env, &roci_primitive_is_string, "is_string");
@@ -64,7 +66,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_set, "list_set");
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
   roci_add_primitive(env, &roci_primitive_list_for_each, "list_for_each");
-  roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
+  roci_add_primitive(env, &roci_primitive_list_length, "list_length");
 
   // Integer Operations
   roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
@@ -116,6 +118,26 @@ void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
                         char* name) {
   roci_define_var(env, name, u64_to_value(cast(uint64_t, primitive)),
                   ROCI_TAG_C_PRIMITIVE);
+}
+
+void roci_primitive_equal(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "equal expects 2 argument");
+  }
+  roci_value_t arg2 = roci_pop_value(state);
+  roci_value_t arg1 = roci_pop_value(state);
+  roci_push_boolean(state, roci_values_equal(arg1, arg2));
+}
+
+boolean_t roci_values_equal(roci_value_t a, roci_value_t b) {
+  if (a.tag == b.tag && a.raw == b.raw) {
+    return true;
+  }
+  if (a.tag == ROCI_TAG_STRING && b.tag == ROCI_TAG_STRING) {
+    return string_equal(cast(char*, a.raw), cast(char*, b.raw));
+  }
+  // TODO(jawilson): ROCI_TAG_LIST, ROCI_TAG_BUFFER
+  return false;
 }
 
 void roci_primitive_apply(roci_vm_state_t* state) {
@@ -339,7 +361,6 @@ void roci_primitive_list_push(roci_vm_state_t* state) {
   roci_push_false(state);
 }
 
-
 void roci_primitive_list_for_each(roci_vm_state_t* state) {
   if (state->n_args != 2) {
     roci_debug_error(state, "list_for_each requires two arguments");
@@ -353,6 +374,14 @@ void roci_primitive_list_for_each(roci_vm_state_t* state) {
     roci_pop_value(state);
   }
   roci_push_false(state);
+}
+
+void roci_primitive_list_length(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "list_length expects 1 arguments");
+  }
+  value_array_t* list = roci_pop_list(state);
+  roci_push_integer(state, list->length);
 }
 
 void roci_primitive_to_string(roci_vm_state_t* state) {

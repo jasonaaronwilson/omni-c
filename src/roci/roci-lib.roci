@@ -19,6 +19,26 @@ let list_push_all = fn(lst0, lst1) {
     });
 };
 
+// This may fail for long lists since we aren't properly tail
+// recursive yet.
+let list_find_index = fn(lst, predicate) {
+  let next = fn(index) {
+    if (igte(index, list_length(lst))) {
+      return neg(1);
+    }
+    let list_item = list_get(lst, index);
+    if (predicate(list_item)) {
+      return index;
+    }
+    return next(iadd(index, 1));
+  };
+  return next(0);
+};
+
+let list_index_of = fn(lst, item) {
+  return list_find_index(lst, fn(x) { return equal(item, x); });
+};
+
 let to_display_string = fn(x) {
   if (is_string(x)) {
     return x;
