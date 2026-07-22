@@ -323,6 +323,15 @@ add_test("apply_test",
 	   pass_test();
 	   });
 
+add_test("string_index_of_test",
+	 fn() {
+	   let result = string_index_of("Hello World!", "World");
+	   if (not(iequal(6, result))) {
+	     fail_test();
+	   }
+	   pass_test();
+	 });
+
 run_tests();
 
 if (iequal(ROCI_NUM_FAIL, 0)) {

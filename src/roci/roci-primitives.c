@@ -50,6 +50,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
                      "string_starts_with");
   roci_add_primitive(env, &roci_primitive_string_substring, "string_substring");
   roci_add_primitive(env, &roci_primitive_string_ends_with, "string_ends_with");
+  roci_add_primitive(env, &roci_primitive_string_index_of, "string_index_of");
   roci_add_primitive(env, &roci_primitive_string_contains, "string_contains");
   roci_add_primitive(env, &roci_primitive_string_get_byte, "string_get_byte");
 
@@ -236,6 +237,15 @@ void roci_primitive_string_ends_with(roci_vm_state_t* state) {
   } else {
     roci_push_false(state);
   }
+}
+
+void roci_primitive_string_index_of(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "string_index_of expects two string arguments");
+  }
+  char* arg1 = roci_pop_string(state);
+  char* arg0 = roci_pop_string(state);
+  roci_push_integer(state, string_index_of(arg0, arg1));
 }
 
 void roci_primitive_string_contains(roci_vm_state_t* state) {

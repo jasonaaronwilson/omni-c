@@ -86,14 +86,21 @@ int string_index_of_char(const char* str, char ch) {
 }
 
 /**
- * Determine if a string contains a substring.
+ * Determine the first index of the substring in the given string.
  */
-boolean_t string_contains(const char* str, char* substring) {
+int string_index_of(const char* str, char* substring) {
   int64_t len = strlen(str);
   buffer_t* str_buffer = make_buffer(len);
   buffer_append_string(str_buffer, str);
-  int64_t index = buffer_index_of(str_buffer, substring);
-  return index >= 0;
+  return buffer_index_of(str_buffer, substring);
+}
+
+
+/**
+ * Determine if a string contains a substring.
+ */
+boolean_t string_contains(const char* str, char* substring) {
+  return string_index_of(str, substring) >= 0;
 }
 
 /**
