@@ -383,7 +383,17 @@ list_push(TESTS, "tests/lib/value-alist-test.c");
 list_push(TESTS, "tests/lib/value-array-test.c");
 list_push(TESTS, "tests/lib/value-tree-test.c");
 
+let run_roci_tests = fn(omni_c) {
+  let command_line =
+    make_list(omni_c, "roci", "--script", "src/roci/roci-test.roci");
+  let test_result = noisy_shell(command_line);
+  check_shell_command(test_result);
+};
+
 let run_tests = fn(omni_c) {
+
+  // run_roci_tests(omni_c);
+
   let command_line = make_list();
   list_push(command_line, string_append("OMNI_C_ROOT=", TOP_DIR));
   list_push(command_line, string_append("BUILD_DIR=", BUILD_DIR));

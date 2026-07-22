@@ -314,6 +314,15 @@ add_test("hex_encoding_test",
 	   pass_test();
 	 });
 
+add_test("apply_test",
+	 fn() {
+	   let result = apply(fn(x, y, z) { return z; }, make_list(1, 2, 4));
+	   if (not(iequal(4, result))) {
+	     fail_test();
+	   }
+	   pass_test();
+	   });
+
 run_tests();
 
 if (iequal(ROCI_NUM_FAIL, 0)) {

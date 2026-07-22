@@ -11,14 +11,10 @@ void roci_add_primitives_to_env(roci_env_t* env) {
 
   // General
   // TODO(jawilson): eval
+  roci_add_primitive(env, &roci_primitive_apply, "apply");
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
   roci_add_primitive(env, &roci_primitive_load, "load");
-  roci_add_primitive(env, &roci_primitive_exit, "exit");
-  roci_add_primitive(env, &roci_primitive_getenv, "getenv");
-  roci_add_primitive(env, &roci_primitive_pwd, "pwd");
-  roci_add_primitive(env, &roci_primitive_current_time_millis, "current_time_millis");
   roci_add_primitive(env, &roci_primitive_random_int, "random_int");
-  roci_add_primitive(env, &roci_primitive_cd, "cd");
   roci_add_primitive(env, &roci_primitive_invoke_debugger, "invoke_debugger");
 
   // TODO(jawilson): remove once roci is looking pretty good since the
@@ -27,6 +23,13 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_print_env, "debug_print_env");
 
   roci_add_primitive(env, &roci_primitive_platform, "platform");
+
+  // System
+  roci_add_primitive(env, &roci_primitive_exit, "exit");
+  roci_add_primitive(env, &roci_primitive_getenv, "getenv");
+  roci_add_primitive(env, &roci_primitive_pwd, "pwd");
+  roci_add_primitive(env, &roci_primitive_current_time_millis, "current_time_millis");
+  roci_add_primitive(env, &roci_primitive_cd, "cd");
 
   // IO
   roci_add_primitive(env, &roci_primitive_print_string, "print_string");
@@ -111,6 +114,20 @@ void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
                         char* name) {
   roci_define_var(env, name, u64_to_value(cast(uint64_t, primitive)),
                   ROCI_TAG_C_PRIMITIVE);
+}
+
+void roci_primitive_apply(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "apply expects 2 argument");
+  }
+  value_array_t* list = roci_pop_list(state);
+  roci_value_t proc = roci_pop_value(state);
+  for (int i = 0; i < list->length; i++) {
+    roci_value_t* element = cast(roci_value_t*, value_array_get(list, i).ptr);
+    roci_push_value(state, *element);
+  }
+  state->n_args = list->length;
+  roci_call(state, proc, list->length);
 }
 
 /**
