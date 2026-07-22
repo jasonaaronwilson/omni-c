@@ -103,6 +103,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_get");
   roci_add_primitive(env, &roci_primitive_buffer_length, "buffer_length");
   roci_add_primitive(env, &roci_primitive_buffer_append_string, "buffer_append_string");
+  roci_add_primitive(env, &roci_primitive_buffer_to_string, "buffer_to_string");
 }
 
 /**
@@ -808,6 +809,13 @@ void roci_primitive_make_buffer(roci_vm_state_t* state) {
   roci_push_buffer(state, make_buffer(8));
 }
 
+void roci_primitive_buffer_to_string(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "make_buffer expects 1 arguments");
+  }
+  buffer_t* buffer = roci_pop_buffer(state);
+  roci_push_string(state, buffer_to_c_string(buffer));
+}
 
 void roci_primitive_read_file(roci_vm_state_t* state) {
   if (state->n_args != 1) {
