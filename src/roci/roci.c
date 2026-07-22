@@ -127,6 +127,11 @@ roci_vm_state_t* roci_make_vm_state(roci_env_t* env) {
   // This is a hack so that we can print all of the value of the stack
   // while debugging.
   roci_push_value_parts(state, 0xCAFEBABE, ROCI_TAG_STACK_MARKER);
+
+  // Another hack to mark the bottom of the stack
+  roci_cont_t* continuation = malloc_struct(roci_cont_t);
+  *(state->continuations++) = continuation;
+
   return state;
 }
 

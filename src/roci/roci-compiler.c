@@ -403,7 +403,8 @@ void roci_compile_expression(roci_compiler_state_t* state) {
 }
 
 void roci_compile_function_call(roci_compiler_state_t* state) {
-  roci_emit_debug_info(state, roci_peek_token(state));
+  token_t* first_token = roci_peek_token(state);
+  roci_emit_debug_info(state, first_token);
   int num_args = 0;
   token_t* fn_name = roci_next_token(state);
   roci_expect_token(state, "(");
@@ -432,6 +433,8 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
   value_array_add(state->current_bb->data,
                   str_to_value(return_bb->bblock_label));
   state->current_bb = return_bb;
+
+  roci_emit_debug_info(state, first_token);
 }
 
 void roci_compile_closure(roci_compiler_state_t* state) {

@@ -34,6 +34,7 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message) {
   if (state->debug_info) {
     roci_source_code_to_buffer(buffer, state->debug_info);
   }
+  roci_backtrace(state, buffer);
   fprintf(stderr, "%s", buffer_to_c_string(buffer));
   log_fatal(error_message);
   if (FLAG_roci_repl_on_error) {
@@ -140,8 +141,46 @@ void roci_dump_stack(roci_vm_state_t* state, buffer_t* buffer) {
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
+}
 
-  // HERE figure out how to print out the continuation stack.
+void roci_backtrace(roci_vm_state_t* state, buffer_t* buffer) {
+  buffer_printf(buffer, "------ Backtrace ------\n");
+  roci_cont_t** continuations = state->continuations;
+  while (true) {
+    roci_cont_t* cont = *(--continuations);
+    if (cont->bb == 0) {
+      break;
+    }
+    // bblock_to_buffer(buffer, cont->bb, nullptr);
+    roci_src_info_t src_info = bblock_to_src_info(cont->bb);
+    if (src_info != -1) {
+      uint64_t buffer_number = roci_src_file_number(src_info);
+      int64_t line_number = roci_src_line_number(src_info);
+      roci_buffer_info_t* buffer_info = get_buffer_info_by_number(buffer_number);
+      if (buffer_info == nullptr) {
+	buffer_printf(buffer, " (NO BUFFER INFO)\n");
+      } else {
+	buffer_printf(buffer, "%s:%d\n", buffer_info->filename, line_number & 0xffffffff);
+      }
+    } else {
+      buffer_printf(buffer, " (NO SOURCE INFO)\n");
+    }
+  }
+}
+
+// Return the first source code debug info by scanning the bblock
+// (hopefully this is eventually always the first insruction).
+roci_src_info_t bblock_to_src_info(roci_bb_t* bb) {
+  uint8_t* opcodes = bblock_opcode_pointer(bb);
+  uint64_t* data_ptr = bblock_data_pointer(bb);
+  for (int i = 0; i < bb->num_opcodes; i++) {
+    uint8_t opcode = opcodes[i];
+    if (opcode == ROCI_OPCODE_DEBUG_INFO) {
+      return *data_ptr;
+    }
+    data_ptr += roci_instruction_data_length(opcode);
+  }
+  return -1;
 }
 
 boolean_t roci_is_tty(void) {

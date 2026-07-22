@@ -100,6 +100,41 @@ uint32_t roci_instruction_to_buffer(buffer_t* buffer, uint8_t* opcode_ptr,
   return 0;
 }
 
+int64_t roci_instruction_data_length(uint8_t opcode) {
+  switch (opcode) {
+
+  case ROCI_OPCODE_TRAP:
+  case ROCI_OPCODE_DROP:
+  case ROCI_OPCODE_RETURN:
+  case ROCI_OPCODE_PUSH_TRUE:
+  case ROCI_OPCODE_PUSH_FALSE:
+  case ROCI_OPCODE_NEW_ENVIRONMENT:
+  case ROCI_OPCODE_DROP_ENVIRONMENT:
+    return 0;
+
+  case ROCI_OPCODE_PUSH_INTEGER:
+  case ROCI_OPCODE_PUSH_DOUBLE:
+  case ROCI_OPCODE_PUSH_STRING:
+  case ROCI_OPCODE_BR:
+  case ROCI_OPCODE_BR_TRUE:
+  case ROCI_OPCODE_GET_VAR:
+  case ROCI_OPCODE_SET_VAR:
+  case ROCI_OPCODE_DEFINE_VAR:
+  case ROCI_OPCODE_COMMENT:
+  case ROCI_OPCODE_CHECK_ARGS:
+  case ROCI_OPCODE_DEBUG_INFO:
+  case ROCI_OPCODE_MAKE_CLOSURE:
+    return 1;
+
+  case ROCI_OPCODE_CALL:
+    return 2;
+
+  default:
+    return -1;
+  }
+  return 0;
+}
+
 double raw_double_to_double(uint64_t raw_bits) {
   double val = 0.0;
   memcpy(&val, &raw_bits, sizeof(val));
