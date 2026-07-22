@@ -40,12 +40,24 @@ let buffer_printf_lst_loop = fn(buffer, format, lst, lst_start) {
     buffer_append_string(buffer, string_substring(format, 0, split_point));
   }
   buffer_append_string(buffer, to_display_string(list_get(lst, lst_start)));
+  let format_len = string_length_bytes(format);
+  if (igte(split_point, isub(format_len, 2))) {
+    return;
+  }
   buffer_printf_lst_loop(buffer,
-			 string_substring(format, iadd(split_point, 2), string_length_bytes(format)),
+			 string_substring(format, iadd(split_point, 2), format_len),
 			 lst,
 			 iadd(lst_start, 1));
 };
 
 let buffer_printf_lst = fn(buffer, format, lst) {
   buffer_printf_lst_loop(buffer, format, lst, 0);
+};
+
+// TODO(jawilson): once we have rest arguments, implement buffer_printf
+
+let string_printf_list = fn(format, lst) {
+  let buffer = make_buffer();
+  buffer_printf_lst(buffer, format, lst);
+  return buffer_to_string(buffer);
 };
