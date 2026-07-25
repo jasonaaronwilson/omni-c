@@ -244,6 +244,10 @@ add_test("alist_insert/find/delete",
 	   int_equal_or_fail(1, alist_length(alist));
 	   int_equal_or_fail(1000, alist_find(alist, "a", 1000));
 	   int_equal_or_fail(2, alist_find(alist, "b", 1000));
+
+	   alist_insert(alist, "b", "hello");
+	   int_equal_or_fail(1, alist_length(alist));
+	   string_equal_or_fail("hello", alist_find(alist, "b", 1000));
 	 });
 
 add_test("getenv_test",
