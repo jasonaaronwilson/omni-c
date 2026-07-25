@@ -393,7 +393,7 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     }
 
     default:
-      log_warn("unexpected token");
+      log_warn("unexpected token line=%d column=%d", token->line_number, token->column_number);
       roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
     }
     roci_skip_token(state);
