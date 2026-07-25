@@ -222,6 +222,30 @@ add_test("list_map_test",
 	   }
 	 });
 
+add_test("make_alist_test",
+	 fn() {
+           let alist = make_alist(equal);
+	   int_equal_or_fail(0, alist_length(alist));
+	 });
+
+add_test("alist_insert/find/delete",
+	 fn() {
+           let alist = make_alist(equal);
+	   alist_insert(alist, "a", 1);
+	   int_equal_or_fail(1, alist_length(alist));
+	   int_equal_or_fail(1, alist_find(alist, "a", 1000));
+
+	   alist_insert(alist, "b", 2);
+	   int_equal_or_fail(2, alist_length(alist));
+	   int_equal_or_fail(1, alist_find(alist, "a", 1000));
+	   int_equal_or_fail(2, alist_find(alist, "b", 1000));
+
+	   alist_delete(alist, "a");
+	   int_equal_or_fail(1, alist_length(alist));
+	   int_equal_or_fail(1000, alist_find(alist, "a", 1000));
+	   int_equal_or_fail(2, alist_find(alist, "b", 1000));
+	 });
+
 add_test("getenv_test",
 	 fn() {
 	   let value = getenv("USER");

@@ -88,8 +88,6 @@ let make_alist = fn(equal_fn) {
   return make_list("record-tag:alist", equal_fn, make_list(), make_list());
 };
 
-/*
-
 let is_alist = fn(x) {
   if (not(is_list(x))) {
     return false;
@@ -97,14 +95,77 @@ let is_alist = fn(x) {
   return string_equal("record-tag:alist", list_get(x, 0));
 };
 
-let alist_equal_fn(alist) {
+let alist_equal_fn = fn(alist) {
   if (not(is_alist(alist))) {
+    debug_error("alist_keys expects an alist as the first argument");
   }
-  
+  return list_get(alist, 1);
 };
 
 let alist_keys = fn(alist) {
-  return 
+  if (not(is_alist(alist))) {
+    debug_error("alist_keys expects an alist as the first argument");
+  }
+  return list_get(alist, 2);
 };
 
-*/
+let alist_values = fn(alist) {
+  if (not(is_alist(alist))) {
+    debug_error("alist_values expects an alist as the first argument");
+  }
+  return list_get(alist, 3);
+};
+
+let alist_length = fn(alist) {
+  return list_length(alist_keys(alist));
+};
+
+let alist_for_each = fn(alist, func) {
+  for_each_integer(0, list_length(alist_keys(alist)),
+    fn(index) {
+      let key = list_get(alist_keys(alist), index);
+      let value = list_get(alist_values(alist), index);
+      func(key, value);
+    });
+};
+
+let alist_find_position = fn(alist, search_key) {
+  let position = 0;
+  let first_match = neg(1);
+  let eq_fn = alist_equal_fn(alist);
+  alist_for_each(alist, fn(key, value) {
+    if (ilt(first_match, 0)) {
+      if (eq_fn(search_key, key)) {
+        first_match = position;
+      }
+    }
+    position = iadd(position, 1);
+  });
+  return first_match;
+};
+
+let alist_find = fn(alist, key, not_found_value) {
+  let position = alist_find_position(alist, key);
+  if (igte(position, 0)) {
+    return list_get(alist_values(alist), position);
+  }
+  return not_found_value;
+};
+
+let alist_insert = fn(alist, key, value) {
+  let position = alist_find_position(alist, key);
+  if (igte(position, 0)) {
+    list_set(alist_values(alist), position, value);
+    return;
+  }
+  list_push(alist_keys(alist), key);
+  list_push(alist_values(alist), value);
+};
+
+let alist_delete = fn(alist, key) {
+  let position = alist_find_position(alist, key);
+  if (igte(position, 0)) {
+    list_delete_at(alist_keys(alist), position);
+    list_delete_at(alist_values(alist), position);
+  }
+};
