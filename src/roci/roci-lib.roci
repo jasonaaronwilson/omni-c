@@ -82,7 +82,9 @@ let string_printf_list = fn(format, lst) {
   return buffer_to_string(buffer);
 };
 
-// alists
+/* ====================================================================== */
+/* alists (association lists)                                             */
+/* ====================================================================== */
 
 let make_alist = fn(equal_fn) {
   return make_list("record-tag:alist", equal_fn, make_list(), make_list());
@@ -168,4 +170,80 @@ let alist_delete = fn(alist, key) {
     list_delete_at(alist_keys(alist), position);
     list_delete_at(alist_values(alist), position);
   }
+};
+
+/* ====================================================================== */
+/* hashtables                                                             */
+/* ====================================================================== */
+
+let make_ht = fn(hash_fn, equal_fn) {
+  let buckets = make_list(make_alist(), make_alist(), make_alist());
+  let result = make_list("record-tag:ht", hash_fn, equal_fn, 0, buckets);
+  return result;
+};
+
+let is_ht = fn(x) {
+  if (not(is_list(x))) {
+    return false;
+  }
+  return string_equal("record-tag:ht", list_get(x, 0));
+};
+
+let ht_hash_fn = fn(ht) {
+  if (not(is_ht(ht))) {
+    debug_error("ht_hash_fn expects an ht as the first argument");
+  }
+  return list_get(ht, 1);
+};
+
+let ht_equal_fn = fn(ht) {
+  if (not(is_ht(ht))) {
+    debug_error("ht_equal_fn expects an ht as the first argument");
+  }
+  return list_get(ht, 2);
+};
+
+let ht_get_num_entries = fn(ht) {
+  if (not(is_ht(ht))) {
+    debug_error("ht_get_num_entries expects an ht as the first argument");
+  }
+  return list_get(ht, 3);
+};
+
+let ht_get_buckets = fn(ht) {
+  if (not(is_ht(ht))) {
+    debug_error("ht_get_buckets expects an ht as the first argument");
+  }
+  return list_get(ht, 4);
+};
+
+let ht_for_each = fn(ht, func) {
+  let buckets = ht_get_buckets(ht);
+  for_each_integer(0, list_length(buckets),
+    fn(index) {
+      let bucket = list_get(buckets, index);
+      alist_for_each(bucket, func);
+  });
+};
+
+let ht_find = fn(ht, key, not_found_value) {
+  let buckets = ht_get_buckets(ht);
+  let hash = ht_hash_fn(key);
+  let bucket_number = irem(hash, list_length(buckets));
+  return alist_find(list_get(buckets, bucket_number), key, not_found_value);
+};
+
+let ht_insert = fn(ht, key, value) {
+  // TODO(jawilson): resize at the end if the load factor is exceeded.
+  let buckets = ht_get_buckets(ht);
+  let hash = ht_hash_fn(key);
+  let bucket_number = irem(hash, list_length(buckets));
+  alist_insert(list_get(buckets, bucket_number), key, value);
+};
+
+let ht_delete = fn(ht, key) {
+  let buckets = ht_get_buckets(ht);
+  let hash = ht_hash_fn(key);
+  let bucket_number = irem(hash, list_length(buckets));
+  alist_delete(list_get(buckets, bucket_number), key);
 };
