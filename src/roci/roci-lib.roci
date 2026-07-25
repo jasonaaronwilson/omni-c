@@ -81,3 +81,30 @@ let string_printf_list = fn(format, lst) {
   buffer_printf_lst(buffer, format, lst);
   return buffer_to_string(buffer);
 };
+
+// alists
+
+let make_alist = fn(equal_fn) {
+  return make_list("record-tag:alist", equal_fn, make_list(), make_list());
+};
+
+/*
+
+let is_alist = fn(x) {
+  if (not(is_list(x))) {
+    return false;
+  }
+  return string_equal("record-tag:alist", list_get(x, 0));
+};
+
+let alist_equal_fn(alist) {
+  if (not(is_alist(alist))) {
+  }
+  
+};
+
+let alist_keys = fn(alist) {
+  return 
+};
+
+*/

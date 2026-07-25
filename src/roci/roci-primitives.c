@@ -10,6 +10,7 @@
 void roci_add_primitives_to_env(roci_env_t* env) {
 
   // General
+  roci_add_primitive(env, &roci_primitive_debug_error, "debug_error");
   roci_add_primitive(env, &roci_primitive_equal, "equal");
   // TODO(jawilson): eval
   roci_add_primitive(env, &roci_primitive_apply, "apply");
@@ -106,6 +107,12 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_buffer_length, "buffer_length");
   roci_add_primitive(env, &roci_primitive_buffer_append_string, "buffer_append_string");
   roci_add_primitive(env, &roci_primitive_buffer_to_string, "buffer_to_string");
+
+  // Hash Tables
+
+  // is_hashtable, make_hashtable, hashtable_for_each,
+  // hashtable_insert, hashtable_delete, hashtable_find,
+  // hashtable_num_entries
 }
 
 /**
@@ -118,6 +125,25 @@ void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
                         char* name) {
   roci_define_var(env, name, u64_to_value(cast(uint64_t, primitive)),
                   ROCI_TAG_C_PRIMITIVE);
+}
+
+/**
+ * @function roci_primitive_debug_error
+ *
+ * Until we have try/catch (or continuations), this is about the best
+ * option for signaling errors from the part of the roci library
+ * written in roci.
+ *
+ * A single argument is required, roughly what the failure or reason
+ * is for calling the debugger.
+ *
+ * After the debugger is entered, we fail by exiting the entire
+ * process with an exit code of 1.
+ */
+void roci_primitive_debug_error(roci_vm_state_t* state) {
+  roci_debug_error(state, roci_pop_string(state));
+  fprintf(stderr, "Exiting after user signaled error (debug_error is not continuable.)");
+  exit(1);
 }
 
 void roci_primitive_equal(roci_vm_state_t* state) {
