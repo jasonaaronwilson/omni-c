@@ -600,8 +600,8 @@ token_t* roci_next_token(roci_compiler_state_t* state) {
 void roci_expect_token(roci_compiler_state_t* state, char* token_string) {
   token_t* token = roci_next_token(state);
   if (!token_matches(token, token_string)) {
-    log_warn("roci expected %s as the next token but got %s", token_string,
-	     token_to_string(token));
+    log_warn("roci expected %s as the next token but got %s at line %d col %d", token_string,
+	     token_to_string(token), token->line_number, token->column_number);
     roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
   }
 }
