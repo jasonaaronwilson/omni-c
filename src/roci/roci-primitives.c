@@ -63,11 +63,12 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   // List Functions
   roci_add_primitive(env, &roci_primitive_is_list, "is_list");
   roci_add_primitive(env, &roci_primitive_make_list, "make_list");
+  roci_add_primitive(env, &roci_primitive_list_length, "list_length");
   roci_add_primitive(env, &roci_primitive_list_get, "list_get");
   roci_add_primitive(env, &roci_primitive_list_set, "list_set");
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
+  roci_add_primitive(env, &roci_primitive_list_delete_at, "list_delete_at");
   roci_add_primitive(env, &roci_primitive_list_for_each, "list_for_each");
-  roci_add_primitive(env, &roci_primitive_list_length, "list_length");
 
   // Integer Operations
   roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
@@ -384,6 +385,16 @@ void roci_primitive_list_push(roci_vm_state_t* state) {
   roci_value_t element = roci_pop_value(state);
   value_array_t* list = roci_pop_list(state);
   value_array_push(list, ptr_to_value(roci_value_to_heap(element)));
+  roci_push_false(state);
+}
+
+void roci_primitive_list_delete_at(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "list_delete_at expects 2 arguments");
+  }
+  int64_t index = roci_pop_integer(state);
+  value_array_t* list = roci_pop_list(state);
+  value_array_delete_at(list, index);
   roci_push_false(state);
 }
 
