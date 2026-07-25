@@ -10,7 +10,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 STABLE="${DIR}/build-dir/bin/omni-c-stable"
 
 echo "======================================================================"
-echo "                 Welcome to omni-c unix configuation!"
+echo "                 Welcome to omni-c linux configuation!"
 echo "======================================================================"
 echo
 echo "We're going to put all of the build output in "
