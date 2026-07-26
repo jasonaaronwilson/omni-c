@@ -1,4 +1,13 @@
-//// This roci script will eventually build roci
+/**
+ * @file build.roci
+ *
+ * This is the main build for omni-c (and thus roci itself since it is
+ * currently part of omni-c).
+ *
+ * If you see a Makefile in this repository, it is either deprecated
+ * or obsolete (though might contains some interesting targets that
+ * need to get added here such as globabl clang-formatting).
+ */
 
 /**
  * @function exit_compilation
