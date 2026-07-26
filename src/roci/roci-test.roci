@@ -76,8 +76,7 @@ let run_tests = fn() {
 
 let int_equal_or_fail = fn(expected, computed) {
   if (not(iequal(expected, computed))) {
-    // println(string_append("Expected '", to(string), "' but got '", to_string(computed), "'"));
-    prinlnt("FIXME");
+    println(string_append("Expected '", to_string(expected), "' but got '", to_string(computed), "'"));
     fail_test();
   }
 };
@@ -248,6 +247,39 @@ add_test("alist_insert/find/delete",
 	   alist_insert(alist, "b", "hello");
 	   int_equal_or_fail(1, alist_length(alist));
 	   string_equal_or_fail("hello", alist_find(alist, "b", 1000));
+	 });
+
+add_test("make_ht_test",
+	 fn() {
+           let ht = make_ht(hash, equal);
+	   int_equal_or_fail(0, ht_length(ht));
+	 });
+
+add_test("ht_insert/find/delete",
+	 fn() {
+           let ht = make_ht(hash, equal);
+	   int_equal_or_fail(0, ht_length(ht));
+	   ht_insert(ht, "a", 1);
+	   int_equal_or_fail(1, ht_length(ht));
+	   int_equal_or_fail(1, ht_find(ht, "a", 1000));
+	   // Reinsertion should act like a nop
+	   ht_insert(ht, "a", 1);
+	   int_equal_or_fail(1, ht_length(ht));
+	   int_equal_or_fail(1, ht_find(ht, "a", 1000));
+
+	   ht_insert(ht, "b", 2);
+	   int_equal_or_fail(2, ht_length(ht));
+	   int_equal_or_fail(1, ht_find(ht, "a", 1000));
+	   int_equal_or_fail(2, ht_find(ht, "b", 1000));
+
+	   ht_delete(ht, "a");
+	   int_equal_or_fail(1, ht_length(ht));
+	   int_equal_or_fail(1000, ht_find(ht, "a", 1000));
+	   int_equal_or_fail(2, ht_find(ht, "b", 1000));
+
+	   ht_insert(ht, "b", "hello");
+	   int_equal_or_fail(1, ht_length(ht));
+	   string_equal_or_fail("hello", ht_find(ht, "b", 1000));
 	 });
 
 add_test("getenv_test",

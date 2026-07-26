@@ -12,6 +12,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   // General
   roci_add_primitive(env, &roci_primitive_debug_error, "debug_error");
   roci_add_primitive(env, &roci_primitive_equal, "equal");
+  roci_add_primitive(env, &roci_primitive_hash, "hash");
   // TODO(jawilson): eval
   roci_add_primitive(env, &roci_primitive_apply, "apply");
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
@@ -165,6 +166,56 @@ boolean_t roci_values_equal(roci_value_t a, roci_value_t b) {
   }
   // TODO(jawilson): ROCI_TAG_LIST, ROCI_TAG_BUFFER
   return false;
+}
+
+void roci_primitive_hash(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "hash expects 1 argument");
+  }
+  roci_value_t arg1 = roci_pop_value(state);
+  roci_push_integer(state, roci_hash_value(state, arg1));
+}
+
+int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
+  switch (value.tag) {
+
+  case ROCI_TAG_UNKNOWN:
+    break;
+
+  case ROCI_TAG_BOOLEAN:
+    return value.raw; // Either zero or 1
+
+  case ROCI_TAG_INTEGER:
+    return value.raw & 0x8fffffffffffffff;
+
+  case ROCI_TAG_DOUBLE:
+    return value.raw & 0x8fffffffffffffff;
+    
+  case ROCI_TAG_STRING:
+    return string_hash(cast(char*, value.raw)) & 0x8fffffffffffffff;
+
+  case ROCI_TAG_CLOSURE:
+    return value.raw & 0x8fffffffffffffff;
+
+  case ROCI_TAG_C_PRIMITIVE:
+    return value.raw & 0x8fffffffffffffff;
+
+  // Does it make sense to xor all of the hashcodes of the underlying
+  // values? Maybe we only need this for records?
+  case ROCI_TAG_LIST:
+    return value.raw & 0x8fffffffffffffff;
+
+  case ROCI_TAG_BUFFER:
+    return value.raw & 0x8fffffffffffffff;
+
+  case ROCI_TAG_STACK_MARKER:
+    break;
+
+  }
+
+  roci_debug_error(state, "unexpected value given to hash");
+
+  return 0;
 }
 
 void roci_primitive_apply(roci_vm_state_t* state) {
