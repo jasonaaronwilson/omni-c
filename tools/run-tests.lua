@@ -1,5 +1,9 @@
 #!/usr/bin/env lua
 
+----
+---- This has been replaced with run-tests.roci.
+----
+
 local TestType = {
     -- This is a unit test automatically linked with "lib"
     LIB_UNIT_TEST = 1,

@@ -4,7 +4,7 @@
  * A tool that reads stdin and compiles it using gcc, clang and tcc to
  * understand if it is valid as a "top-level" form.
  *
- * gcc -o syntax-c yntax-c.c
+ * gcc -o syntax-c syntax-c.c
  *
  * echo              | ./syntax-c
  * echo "int x = 0;" | ./syntax-c

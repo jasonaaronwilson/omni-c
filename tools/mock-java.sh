@@ -1,5 +1,10 @@
 #/bin/bash
 
+### This is part of a benchmark to test the cost of using omni-c for
+### unit tests, especially the low-level expression and statement
+### benchmarks which spin up a new omni-c for each expression or
+### statement in the test suite.
+
 cat <<EOF
 FAKE: java [options] <mainclass> [args...]
            (to execute a class)

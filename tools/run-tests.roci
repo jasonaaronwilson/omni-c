@@ -133,6 +133,8 @@ let stmt_test_executor = fn(filename) {
   check_shell_command(shell_result, filename);
 };
 
+// TODO(jawilson): execute_test_executor? or delete code above?
+
 let get_omni_c_executable = fn() {
   let exe = getenv("OMNI_C_EXECUTABLE");
   if (is_string(exe)) {

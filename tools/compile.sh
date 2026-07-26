@@ -1,5 +1,9 @@
 #!/bin/bash
 
+###
+### This is still used by run-tests.roci
+###
+
 readonly OMNI_C_PATH="${BUILD_DIR}/bin/omni-c"
 
 TARGET_C_FILE=${BUILD_DIR}/tmp/$(basename "$1")

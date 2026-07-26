@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# This is part of a unit test benchmark.
+
 for i in {1..100}
 do
     "$@" >/dev/null 2>&1

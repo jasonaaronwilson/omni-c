@@ -1,5 +1,12 @@
 #!/usr/bin/env lua
 
+----
+---- This has been replaced with embed-file.roci
+----
+---- I'm keeping this around a little longer in case I want to
+---- reference the ASCII text comments stuff.
+----
+
 -- Read file path from command line argument
 local var_name = arg[1]
 local file_path = arg[2]

@@ -1,3 +1,6 @@
+// This is mostly obsolete. If I were to take this up again, I would
+// probably use roci instead of omni-c.
+
 // This program will be written in "pure" Omni C itself despite the .c
 // extensions.
 
