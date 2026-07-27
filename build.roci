@@ -37,12 +37,36 @@ let check_shell_command = fn(shell_result) {
   }
 };
 
+/**
+ * @function time_thunk
+ *
+ * Measure the "runtime" of executing a thunk and print to stdout that
+ * run-time in milli-seconds.
+ */
+let time_thunk = fn(thunk) {
+  let start_time = current_time_millis();
+  let result = thunk();
+  let end_time = current_time_millis();
+  let run_time = isub(end_time, start_time);
+  println(string_append("  |>  ", to_string(run_time), "ms"));
+  return result;
+};
+
+let time_shell = fn(command_line) {
+  let result = time_thunk(fn() {
+      let resultx = time_thunk(fn () { shell(command_line); });
+      return resultx;
+    });
+  return result;
+};
+
 let noisy_shell = fn(command_line) {
   println("About to execute:");
   println(command_line);
-  let result = shell(command_line);
-  println("Finished executing:");
-  println(command_line);
+  let result = time_thunk(fn() {
+      let result = shell(command_line);
+      return result;
+    });
   return result;
 };
 

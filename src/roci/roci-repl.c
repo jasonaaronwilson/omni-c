@@ -7,7 +7,8 @@
 int64_t roci_repl_number = 0;
 
 void roci_repl(roci_env_t* env) {
-  fprintf(stdout, "/// Wecome to the roci read-eval-print-loop\n");
+  fprintf(stdout, "/// This is the roci \"repl\".\n");
+  fprintf(stdout, "///    use println(expr); to behave more like a \"real\" repl.\n");
   fprintf(stdout, "///\n");
   fprintf(stdout, "/// Special commands:\n");
   fprintf(stdout, "/// #exit to exit this repl\n");
