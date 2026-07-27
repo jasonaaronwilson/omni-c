@@ -110,11 +110,10 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_buffer_append_string, "buffer_append_string");
   roci_add_primitive(env, &roci_primitive_buffer_to_string, "buffer_to_string");
 
-  // Hash Tables
-
-  // is_hashtable, make_hashtable, hashtable_for_each,
-  // hashtable_insert, hashtable_delete, hashtable_find,
-  // hashtable_num_entries
+  // alists
+  // hashtables
+  // -- we implemented both in roci-lib.roci
+  // -- obviously this will be slower then a native C implementation
 }
 
 /**
@@ -177,6 +176,8 @@ void roci_primitive_hash(roci_vm_state_t* state) {
 }
 
 int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
+  uint64_t mask = 0x7fffffffffffffff;
+
   switch (value.tag) {
 
   case ROCI_TAG_UNKNOWN:
@@ -186,27 +187,27 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
     return value.raw; // Either zero or 1
 
   case ROCI_TAG_INTEGER:
-    return value.raw & 0x8fffffffffffffff;
+    return value.raw & mask;
 
   case ROCI_TAG_DOUBLE:
-    return value.raw & 0x8fffffffffffffff;
+    return value.raw & mask;
     
   case ROCI_TAG_STRING:
-    return string_hash(cast(char*, value.raw)) & 0x8fffffffffffffff;
+    return string_hash(cast(char*, value.raw)) & mask;
 
   case ROCI_TAG_CLOSURE:
-    return value.raw & 0x8fffffffffffffff;
+    return value.raw & mask;
 
   case ROCI_TAG_C_PRIMITIVE:
-    return value.raw & 0x8fffffffffffffff;
+    return value.raw & mask;
 
   // Does it make sense to xor all of the hashcodes of the underlying
   // values? Maybe we only need this for records?
   case ROCI_TAG_LIST:
-    return value.raw & 0x8fffffffffffffff;
+    return value.raw & mask;
 
   case ROCI_TAG_BUFFER:
-    return value.raw & 0x8fffffffffffffff;
+    return value.raw & mask;
 
   case ROCI_TAG_STACK_MARKER:
     break;
