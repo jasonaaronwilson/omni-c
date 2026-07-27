@@ -175,8 +175,21 @@ void roci_primitive_hash(roci_vm_state_t* state) {
   roci_push_integer(state, roci_hash_value(state, arg1));
 }
 
+static inline uint64_t roci_mix64(uint64_t x) {
+    x ^= x >> 30;
+    x *= 0xbf58476d1ce4e5b9ULL;
+    x ^= x >> 27;
+    x *= 0x94d049bb133111ebULL;
+    x ^= x >> 31;
+    return x;
+}
+
+// Gemni Flash thinks that by using roci_mix64, we can get away with
+// power of two growth which simplifies the slow code in the roci
+// hashtable implementation.
 int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
-  uint64_t mask = 0x7fffffffffffffff;
+  uint64_t mask = 0x7fffffffffffffffULL;
+  uint64_t tag_bits = cast(uint64_t, value.tag) << 56;
 
   switch (value.tag) {
 
@@ -184,37 +197,37 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
     break;
 
   case ROCI_TAG_BOOLEAN:
-    return value.raw; // Either zero or 1
+    return cast(int64_t, (roci_mix64(tag_bits | (value.raw ? 1 : 0)) & mask));
 
   case ROCI_TAG_INTEGER:
-    return value.raw & mask;
+    return cast(int64_t, (roci_mix64(tag_bits ^ value.raw) & mask));
 
-  case ROCI_TAG_DOUBLE:
-    return value.raw & mask;
+  case ROCI_TAG_DOUBLE: {
+    // TODO(jawilson): Gemini Flash suggests normalizing -0.0 to
+    // +0.0. For this to matter we must also normailize in the
+    // standard equal function. Honestly, it is kind of crazy to hash
+    // a double as a key to a hashtable so I'm not losing sleep right
+    // now.
+    uint64_t bits = double_as_uint64(value.raw);
+    return cast(int64_t, (roci_mix64(tag_bits ^ bits) & mask));
+  }
     
-  case ROCI_TAG_STRING:
-    return string_hash(cast(char*, value.raw)) & mask;
+  case ROCI_TAG_STRING: {
+    uint64_t str_hash = fasthash64(cast(char*, value.raw), strlen(cast(char*, value.raw)), 0);
+    return cast(int64_t, (roci_mix64(tag_bits ^ str_hash) & mask));
+  }
 
   case ROCI_TAG_CLOSURE:
-    return value.raw & mask;
-
   case ROCI_TAG_C_PRIMITIVE:
-    return value.raw & mask;
-
-  // Does it make sense to xor all of the hashcodes of the underlying
-  // values? Maybe we only need this for records?
   case ROCI_TAG_LIST:
-    return value.raw & mask;
-
   case ROCI_TAG_BUFFER:
-    return value.raw & mask;
+    return cast(int64_t, (roci_mix64(tag_bits ^ value.raw) & mask));
 
   case ROCI_TAG_STACK_MARKER:
     break;
-
   }
 
-  roci_debug_error(state, "unexpected value given to hash");
+  roci_debug_error(state, "unexpected roci value given to hash");
 
   return 0;
 }
