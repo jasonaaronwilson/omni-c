@@ -211,7 +211,7 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
     uint64_t bits = double_as_uint64(value.raw);
     return cast(int64_t, (roci_mix64(tag_bits ^ bits) & mask));
   }
-    
+
   case ROCI_TAG_STRING: {
     uint64_t str_hash = fasthash64(cast(char*, value.raw), strlen(cast(char*, value.raw)), 0);
     return cast(int64_t, (roci_mix64(tag_bits ^ str_hash) & mask));
