@@ -236,6 +236,13 @@ let ht_get_buckets = fn(ht) {
   return list_get(ht, 4);
 };
 
+let ht_set_buckets = fn(ht, buckets) {
+  if (not(is_ht(ht))) {
+    debug_error("ht_get_buckets expects an ht as the first argument");
+  }
+  return list_set(ht, 4, buckets);
+};
+
 let ht_for_each = fn(ht, func) {
   let buckets = ht_get_buckets(ht);
   for_each_integer(0, list_length(buckets),
@@ -255,10 +262,15 @@ let _ht_mutate = fn(ht, alist, thunk) {
   thunk();
   let length_after = alist_length(alist);
   ht_set_length(ht, iadd(ht_length(ht), isub(length_after, length_before)));
-  // TODO(jawilson): if the length exceeds what the load factor
-  // provides, then resize the hashtable so it retains O(1) access
-  // over time.
-
+  let new_length = imul(2, list_length(ht_get_buckets(ht)));
+  if (igt(length_after, new_length)) {
+    let new_ht = make_ht(ht_hash_fn(ht), ht_equal_fn(ht));
+    ht_set_buckets(ht, _make_array_of_empty_alists(ht_equal_fn(ht), new_length));
+    ht_for_each(ht, fn(key, value) {
+      ht_insert(new_ht, key, value);
+      });
+    ht_set_buckets(ht, ht_get_buckets(new_ht));
+  }
 };
 
 let ht_find = fn(ht, key, not_found_value) {

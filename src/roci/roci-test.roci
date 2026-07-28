@@ -282,6 +282,16 @@ add_test("ht_insert/find/delete",
 	   string_equal_or_fail("hello", ht_find(ht, "b", 1000));
 	 });
 
+add_test("ht growth",
+	 fn() {
+           let ht = make_ht(hash, equal);
+	   int_equal_or_fail(0, ht_length(ht));
+	   for_each_integer(10, 200, fn(key) {
+	     ht_insert(ht, key, iadd(key, 1000));
+	   });
+	   int_equal_or_fail(190, ht_length(ht));
+	 });
+
 add_test("getenv_test",
 	 fn() {
 	   let value = getenv("USER");
