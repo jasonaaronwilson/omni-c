@@ -10,8 +10,9 @@
 4. cd src
 5. git clone https://github.com/jasonaaronwilson/omni-c.git
 6. cd omni-c
-7. ./configure-darwin.sh
-8. Follow the instructions printed at the end of configure.
+7. ulimit -n 1024
+8. ./configure-darwin.sh
+0. Follow the instructions printed at the end of configure.
 
 ### Linux
 
