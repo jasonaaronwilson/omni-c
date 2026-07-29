@@ -74,3 +74,10 @@ void roci_dump_env(roci_env_t* env, buffer_t* buffer) {
   }));
   // clang-format on
 }
+
+roci_env_t* get_root_env(roci_env_t* env) {
+  while (env->parent != nullptr) {
+    env = env->parent;
+  }
+  return env;
+}

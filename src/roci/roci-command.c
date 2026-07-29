@@ -23,22 +23,30 @@ void roci_command(void) {
   exit(0);
 }
 
-void roci_eval_buffer(roci_env_t* env, 
-		      char* file_name,
-		      buffer_t* buffer, 
-		      boolean_t exit_on_failure) {
+typedef roci_eval_result_t = struct {
+  roci_compiler_state_t* compiler_state;
+};
+
+roci_eval_result_t roci_eval_buffer(roci_env_t* env,
+				  char* file_name,
+				  buffer_t* buffer,
+				  boolean_t exit_on_failure) {
+  roci_eval_result_t result = {0};
 
   roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
   state->bblocks = make_value_array(16);
   state->buffer_number = roci_register_buffer(buffer, file_name);
+  result.compiler_state = state;
 
   roci_compile_buffer(state, file_name, buffer);
   if (state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
     if (exit_on_failure) {
       fatal_error(ERROR_ILLEGAL_STATE);
+      // NOT REACHED.
+      return result;
     } else {
       log_warn("A compilation error occurred!");
-      return;
+      return result;
     }
   }
 
@@ -52,4 +60,6 @@ void roci_eval_buffer(roci_env_t* env,
 
   roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
   roci_execute(env, entry_point);
+
+  return result;
 }

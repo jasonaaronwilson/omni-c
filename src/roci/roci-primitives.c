@@ -13,7 +13,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_debug_error, "debug_error");
   roci_add_primitive(env, &roci_primitive_equal, "equal");
   roci_add_primitive(env, &roci_primitive_hash, "hash");
-  // TODO(jawilson): eval
+  roci_add_primitive(env, &roci_primitive_eval, "eval");
   roci_add_primitive(env, &roci_primitive_apply, "apply");
   roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
   roci_add_primitive(env, &roci_primitive_load, "load");
@@ -230,6 +230,27 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
   roci_debug_error(state, "unexpected roci value given to hash");
 
   return 0;
+}
+
+int eval_count = 0;
+
+void roci_primitive_eval(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "eval expects 1 argument");
+  }
+  char* arg1 = roci_pop_string(state);
+
+  roci_eval_result_t result =
+    roci_eval_buffer(get_root_env(state->env),
+		     string_printf("*eval*%d", eval_count++),
+		     buffer_from_string(arg1),
+		     false);
+
+  if (result.compiler_state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
+    roci_debug_error(state, "Compilation of a dynamically called eval failed");
+  }
+
+  roci_push_false(state);
 }
 
 void roci_primitive_apply(roci_vm_state_t* state) {
