@@ -114,6 +114,12 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   // hashtables
   // -- we implemented both in roci-lib.roci
   // -- obviously this will be slower then a native C implementation
+
+  // Records
+  roci_add_primitive(env, &roci_primitive_is_record, "is_record");
+  roci_add_primitive(env, &roci_primitive_make_record, "make_record");
+  roci_add_primitive(env, &roci_primitive_record_get, "record_get");
+  roci_add_primitive(env, &roci_primitive_record_set, "record_set");
 }
 
 /**
@@ -221,6 +227,7 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
   case ROCI_TAG_C_PRIMITIVE:
   case ROCI_TAG_LIST:
   case ROCI_TAG_BUFFER:
+  case ROCI_TAG_RECORD:
     return cast(int64_t, (roci_mix64(tag_bits ^ value.raw) & mask));
 
   case ROCI_TAG_STACK_MARKER:
@@ -1048,5 +1055,41 @@ void roci_primitive_invoke_debugger(roci_vm_state_t* state) {
     roci_debug_error(state, "invoke_debugger expects a single string argument");
   }
   roci_debug_error(state, roci_pop_string(state));
+  roci_push_false(state);
+}
+
+void roci_primitive_is_record(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "is_record expects 1 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  roci_push_boolean(state, value.tag == ROCI_TAG_RECORD);
+}
+
+void roci_primitive_make_record(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "make_record expects 1 argument");
+  }
+  char* record_tag = roci_pop_string(state);
+  roci_push_value(state, roci_make_record(record_tag));
+}
+
+void roci_primitive_record_get(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "record_get expects 2 argument");
+  }
+  int64_t index = roci_pop_integer(state);
+  roci_record_t* record = roci_pop_record(state);
+  roci_push_value(state, roci_record_get(record, index));
+}
+
+void roci_primitive_record_set(roci_vm_state_t* state) {
+  if (state->n_args != 3) {
+    roci_debug_error(state, "record_set expects 3 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  int64_t index = roci_pop_integer(state);
+  roci_record_t* record = roci_pop_record(state);
+  roci_record_set(record, index, value);
   roci_push_false(state);
 }

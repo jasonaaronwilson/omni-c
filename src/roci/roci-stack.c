@@ -121,6 +121,18 @@ static inline void roci_push_buffer(roci_vm_state_t* state, buffer_t* buffer) {
   roci_push_value_parts(state, cast(uint64_t, buffer), ROCI_TAG_BUFFER);
 }
 
+static inline roci_record_t* roci_pop_record(roci_vm_state_t* state) {
+  roci_value_t value = roci_pop_value(state);
+  if (value.tag != ROCI_TAG_RECORD) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  return cast(roci_record_t*, value.raw);
+}
+
+static inline void roci_push_record(roci_vm_state_t* state, roci_record_t* record) {
+  roci_push_value_parts(state, cast(uint64_t, record), ROCI_TAG_RECORD);
+}
+
 static inline roci_value_t roci_debug_peek_value(roci_vm_state_t* state,
                                                  int offset) {
   roci_value_t value;
