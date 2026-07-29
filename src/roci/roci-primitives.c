@@ -169,6 +169,22 @@ boolean_t roci_values_equal(roci_value_t a, roci_value_t b) {
   if (a.tag == ROCI_TAG_STRING && b.tag == ROCI_TAG_STRING) {
     return string_equal(cast(char*, a.raw), cast(char*, b.raw));
   }
+  if (a.tag == ROCI_TAG_RECORD && b.tag == ROCI_TAG_RECORD) {
+    roci_record_t* rec_a = cast(roci_record_t*, a.raw);
+    roci_record_t* rec_b = cast(roci_record_t*, b.raw);
+    if (!string_equal(rec_a->record_tag, rec_b->record_tag)) {
+      return false;
+    }
+    for (int i = 0; i < 8; i++) {
+      roci_value_t va = roci_record_get(rec_a, i);
+      roci_value_t vb = roci_record_get(rec_b, i);
+      if (!roci_values_equal(va, vb)) {
+	return false;
+      }
+    }
+    return true;
+  }
+
   // TODO(jawilson): ROCI_TAG_LIST, ROCI_TAG_BUFFER
   return false;
 }
@@ -227,8 +243,18 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
   case ROCI_TAG_C_PRIMITIVE:
   case ROCI_TAG_LIST:
   case ROCI_TAG_BUFFER:
-  case ROCI_TAG_RECORD:
     return cast(int64_t, (roci_mix64(tag_bits ^ value.raw) & mask));
+
+  case ROCI_TAG_RECORD: {
+    roci_record_t* rec = cast(roci_record_t*, value.raw);
+    int64_t hash = string_hash(rec->record_tag);
+    for (int i = 0; i < 8; i++) {
+      roci_value_t v = roci_record_get(rec, i);
+      hash ^= roci_hash_value(state, v);
+      hash = roci_mix64(hash);
+    }
+    return hash;
+  }
 
   case ROCI_TAG_STACK_MARKER:
     break;

@@ -68,7 +68,7 @@ let run_tests = fn() {
       // The current bug is that we seem to have the wrong envrionment
       // here since "test" is no longer defined.
       if (not(ROCI_LAST_TEST_PASSED)) {
-	// This only happens with test_fail() which is now 
+	// This only happens with test_fail() which is now
 	print_string(string_append("TEST FAILED: ", test_name(test), "\n"));
       }
     });
@@ -461,6 +461,39 @@ add_test("string_printf_list",
 	   string_equal_or_fail("a = 1, b = 2", result);
 	   pass_test();
 	 });
+
+add_test("record_test",
+  fn() {
+    let rec = make_record("test_record");
+    record_set(rec, 0, "a");
+    record_set(rec, 1, "b");
+
+    let str = to_string(rec);
+    let expected =
+      "record<test_record>[\"a\", \"b\", false, false, false, false, false, false]";
+
+    string_equal_or_fail(expected, str);
+
+    let h = hash(rec);
+
+    let rec2 = make_record("test_record");
+    record_set(rec2, 0, "a");
+    record_set(rec2, 1, "b");
+
+    let h2 = hash(rec2);
+
+    expect_true(equal(rec, rec2));
+    expect_true(equal(h, h2));
+
+    let rec3 = make_record("not_test_record");
+    record_set(rec3, 0, "a");
+    record_set(rec3, 1, "b");
+    let h3 = hash(rec3);
+    expect_false(equal(rec, rec3));
+    expect_false(equal(h, h3));
+
+    pass_test();
+  });
 
 run_tests();
 
