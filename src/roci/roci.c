@@ -74,6 +74,8 @@ typedef roci_cont_t = struct {
 };
 
 typedef roci_debug_state_t = struct {
+  uint64_t current_line_info;
+  uint64_t next_line_info;
   int64_t n_instructions; // Handles single stepping, etc.
   boolean_t break_on_call_target;
   boolean_t break_on_return;
@@ -215,13 +217,11 @@ start_bblock:
       goto start_bblock;
 
     case ROCI_OPCODE_MAKE_CLOSURE:
-      roci_debug_breakpoint();
       // DATUM: function entry point bblock
       roci_closure_t* closure = malloc_struct(roci_closure_t);
       closure->entry_point = cast(roci_bb_t*, *(state->data_ptr++));
       closure->env = roci_current_env(state);
       roci_push_value_parts(state, cast(uint64_t, closure), ROCI_TAG_CLOSURE);
-      roci_debug_breakpoint();
       break;
 
     case ROCI_OPCODE_CALL: {
@@ -301,6 +301,17 @@ start_bblock:
 
     case ROCI_OPCODE_DEBUG_INFO:
       state->debug_info = *(state->data_ptr++);
+      if (state->debug != nullptr 
+	  && state->debug->current_line_info != 0
+	  && state->debug->current_line_info != state->debug_info) {
+	state->debug->current_line_info = state->debug_info;
+	roci_debug_trace(state, buffer);
+      }
+      if (state->debug != nullptr 
+	  && state->debug->next_line_info != 0
+	  && state->debug->next_line_info == state->debug_info) {
+	roci_debug_trace(state, buffer);
+      }
       break;
 
     case ROCI_OPCODE_DROP_ENVIRONMENT:

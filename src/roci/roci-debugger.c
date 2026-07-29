@@ -31,6 +31,10 @@ static inline uint64_t roci_src_line_number(roci_src_info_t info) {
   return info >> 32;
 }
 
+roci_src_info_t roci_next_source_line(roci_src_info_t info) {
+  return cast(roci_src_info_t, roci_src_file_number(info) | (roci_src_line_number(info) + 1) << 32);
+}
+
 /** ================================================================ */
 
 void roci_debug_error(roci_vm_state_t* state, char* error_message) {
@@ -105,6 +109,17 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
           state->debug->break_on_return = false;
           state->debug->break_on_next_statement = false;
           state->debug->trace = false;
+	  state->debug->current_line_info = state->debug_info;
+          break;
+        } else if (byte == 'n') {
+          term_echo_restore(oldt);
+          state->debug->n_instructions = 0xffffffffffffffff;
+          state->debug->break_on_call_target = false;
+          state->debug->break_on_return = false;
+          state->debug->break_on_next_statement = false;
+          state->debug->trace = false;
+	  state->debug->current_line_info = 0;
+	  state->debug->next_line_info = roci_next_source_line(state->debug_info);
           break;
         } else if (byte == 'e') {
           buffer_t* buffer = make_buffer(10);
