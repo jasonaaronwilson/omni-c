@@ -459,7 +459,6 @@ add_target("test", fn() {
  });
 
 let build_target = fn(target_name) {
-  println(string_append("HERE 001 ", target_name));
   let target = get_target(target_name);
   if (is_boolean(target)) {
     println(string_append("The requested target was not found: ", target_name));
@@ -479,8 +478,6 @@ add_target("all", make_list(string_append(BUILD_DIR, "bin/omni-c"),
 
 let main = fn() {
   let args = command_line_args();
-
-  println("HERE 000");
 
   if (igt(list_length(args), 0)) {
     list_for_each(args, build_target);
