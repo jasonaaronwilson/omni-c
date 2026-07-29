@@ -172,6 +172,23 @@ let CC = get_c_compiler();
 let CC_FLAGS = make_list("-g", "-rdynamic");
 let WARN_FLAGS = get_warn_flags(CC);
 
+/* ====================================================================== */
+
+let TARGETS = make_ht(hash, equal);
+
+let add_target = fn(target_name, thunk_or_list) {
+  let target = make_list("record-tag:target", target_name, thunk_or_list);
+  ht_insert(TARGETS, target_name, target);
+};
+
+let get_target = fn(target_name) {
+  return ht_find(TARGETS, target_name, false);
+};
+
+let target_get_builder = fn(target) {
+  return list_get(target, 2);
+};
+
 /**
  * @function all_older_than
  *
@@ -349,13 +366,19 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
   check_shell_command(cc_result);
 };
 
-build_omni_c(string_append(BUILD_DIR, "bin/omni-c"),
-	     string_append(BUILD_DIR, "omni-c.c"),
-	     string_append(BUILD_DIR, "bin/omni-c-stable"));
+add_target(string_append(BUILD_DIR, "bin/omni-c"),
+	   fn() {
+	     build_omni_c(string_append(BUILD_DIR, "bin/omni-c"),
+			  string_append(BUILD_DIR, "omni-c.c"),
+			  string_append(BUILD_DIR, "bin/omni-c-stable"));
+	   });
 
-build_omni_c(string_append(BUILD_DIR, "bin/self"),
-	     string_append(BUILD_DIR, "omni-c-self.c"),
-	     string_append(BUILD_DIR, "bin/omni-c"));
+add_target(string_append(BUILD_DIR, "bin/self"),
+	   fn() {
+	     build_omni_c(string_append(BUILD_DIR, "bin/self"),
+			  string_append(BUILD_DIR, "omni-c-self.c"),
+			  string_append(BUILD_DIR, "bin/omni-c"));
+	   });
 
 let build_lib_oar = fn() {
   let target = string_append(BUILD_DIR, "bin/lib.oar");
@@ -374,7 +397,11 @@ let build_lib_oar = fn() {
   let result = shell(command);
   check_shell_command(result);
 };
-build_lib_oar();
+
+add_target(string_append(BUILD_DIR, "bin/lib.oar"),
+	   fn() {
+	     build_lib_oar();
+	   });
 
 let TESTS = make_list();
 let STATEMENT_TESTS = glob("tests/statements/*.stmt");
@@ -425,8 +452,44 @@ let run_tests = fn(omni_c) {
   check_shell_command(test_result);
 };
 
-run_tests(string_append(BUILD_DIR, "bin/omni-c"));
+add_target("test", fn() { 
+    build_target(string_append(BUILD_DIR, "bin/omni-c"));
+    build_target(string_append(BUILD_DIR, "bin/lib.oar"));
+    run_tests(string_append(BUILD_DIR, "bin/omni-c"));
+ });
 
+let build_target = fn(target_name) {
+  println(string_append("HERE 001 ", target_name));
+  let target = get_target(target_name);
+  if (is_boolean(target)) {
+    println(string_append("The requested target was not found: ", target_name));
+    exit_compilation();
+  }
+  let builder = target_get_builder(target);
+  if (is_list(builder)) {
+    list_for_each(builder, build_target);
+  } else {
+    builder();
+  }
+};
+
+add_target("all", make_list(string_append(BUILD_DIR, "bin/omni-c"),
+			    string_append(BUILD_DIR, "bin/self"),
+			    string_append(BUILD_DIR, "bin/lib.oar")));
+
+let main = fn() {
+  let args = command_line_args();
+
+  println("HERE 000");
+
+  if (igt(list_length(args), 0)) {
+    list_for_each(args, build_target);
+  } else {
+    build_target("all");
+  }
+};
+main();
+			    
 /*
 LIB_TESTS := \
 	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
