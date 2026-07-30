@@ -43,7 +43,8 @@ typedef roci_compile_time_error_t = enum {
   ROCI_COMPILE_TIME_TOKENIZER_ERROR,
   ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
   ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
-  ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS
+  ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS,
+  ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA,
 };
 
 typedef roci_compiler_state_t = struct {
@@ -447,7 +448,7 @@ void roci_compile_closure(roci_compiler_state_t* state) {
   roci_expect_token(state, "(");
 
   token_t* args[32];
-  int64_t arg_num = roci_collect_fn_args(state, args);
+  int64_t arg_count = roci_collect_fn_args(state, args);
 
   roci_bb_builder_t* current_bb = state->current_bb;
   int current_env_depth = state->env_depth;
@@ -458,11 +459,11 @@ void roci_compile_closure(roci_compiler_state_t* state) {
 
   roci_emit_debug_info(state, first_token);
   roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
-  roci_emit_int_datum(state, arg_num);
+  roci_emit_int_datum(state, arg_count);
 
   roci_emit_new_environment(state);
-  while (arg_num > 0) {
-    token_t* varname = args[--arg_num];
+  while (arg_count > 0) {
+    token_t* varname = args[--arg_count];
     roci_emit_token_string_datum(state, token_to_string(varname));
     roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
   }
@@ -479,24 +480,31 @@ void roci_compile_closure(roci_compiler_state_t* state) {
   roci_emit_opcode(state, ROCI_OPCODE_MAKE_CLOSURE);
 }
 
+// For a negative number means abs(x) -1 is the number of required
+// arguments.
 int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args) {
-  int64_t arg_num = 0;
+  int64_t arg_count = 0;
   while (true) {
-    token_t* token = roci_peek_token(state);
+    token_t* token = roci_next_token(state);
     if (token_matches(token, ")")) {
-      roci_skip_token(state);
       break;
     }
-    roci_verify_identifier(state, token);
-    roci_skip_token(state);
 
-    args[arg_num++] = token;
-    token = roci_peek_token(state);
-    if (token_matches(token, ",")) {
-      roci_skip_token(state);
+    if (arg_count > 0) {
+      if (token_matches(token, ",")) {
+	token = roci_next_token(state);
+      } else {
+	roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA);
+	fatal_error(ERROR_ILLEGAL_STATE);
+      }
     }
+
+    // Look for rest argument
+
+    roci_verify_identifier(state, token);
+    args[arg_count++] = token;
   }
-  return arg_num;
+  return arg_count;
 }
 
 /* ================================================================ */
