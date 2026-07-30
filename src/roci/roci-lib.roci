@@ -76,12 +76,24 @@ let buffer_printf_lst = fn(buffer, format, lst) {
   buffer_printf_lst_loop(buffer, format, lst, 0);
 };
 
-// TODO(jawilson): once we have rest arguments, implement buffer_printf
+let buffer_printf = fn(buffer, format, ...lst) {
+  return buffer_printf_lst(buffer, format, lst);
+};
+
+let sprintf = fn(format, ...lst) {
+  let buffer = make_buffer();
+  buffer_printf_lst(buffer, format, lst);
+  return buffer_to_string(buffer);
+};
 
 let string_printf_list = fn(format, lst) {
   let buffer = make_buffer();
   buffer_printf_lst(buffer, format, lst);
   return buffer_to_string(buffer);
+};
+
+let printf = fn(...lst) {
+  return print_string(apply(sprintf, lst));
 };
 
 /* ====================================================================== */
