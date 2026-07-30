@@ -61,17 +61,17 @@ let fail_test = fn() {
 let run_tests = fn() {
   print_string("Running tests...\n");
   list_for_each(ROCI_TESTS, fn(test) {
-      CURRENT_TEST = test;
-      ROCI_LAST_TEST_PASSED = false;
-      let thunk = test_thunk(test);
-      thunk();
-      // The current bug is that we seem to have the wrong envrionment
-      // here since "test" is no longer defined.
-      if (not(ROCI_LAST_TEST_PASSED)) {
-	// This only happens with test_fail() which is now
-	print_string(string_append("TEST FAILED: ", test_name(test), "\n"));
-      }
-    });
+    CURRENT_TEST = test;
+    ROCI_LAST_TEST_PASSED = false;
+    let thunk = test_thunk(test);
+    thunk();
+    // The current bug is that we seem to have the wrong envrionment
+    // here since "test" is no longer defined.
+    if (not(ROCI_LAST_TEST_PASSED)) {
+      // This only happens with test_fail() which is now
+      print_string(string_append("TEST FAILED: ", test_name(test), "\n"));
+    }
+  });
 };
 
 let int_equal_or_fail = fn(expected, computed) {
@@ -89,433 +89,439 @@ let string_equal_or_fail = fn(expected, computed) {
 };
 
 let expect_true = fn(computed) {
-    if (not(is_boolean(computed))) {
-      println("expect_true requires a boolean");
-      fail_test();
-    }
-    if (not(computed)) {
-      fail_test();
-    }
+  if (not(is_boolean(computed))) {
+    println("expect_true requires a boolean");
+    fail_test();
+  }
+  if (not(computed)) {
+    fail_test();
+  }
 };
 
 let expect_false = fn(computed) {
-    if (not(is_boolean(computed))) {
-      println("expect_false requires a boolean");
-      fail_test();
-    }
-    if (computed) {
-      fail_test();
-    }
+  if (not(is_boolean(computed))) {
+    println("expect_false requires a boolean");
+    fail_test();
+  }
+  if (computed) {
+    fail_test();
+  }
 };
 
 add_test("empty_test",
-	 fn() {
-	   pass_test();
-	 });
+  fn() {
+  pass_test();
+});
 
 add_test("equal_test",
-	 fn() {
-	   expect_true(equal(1, 1));
-	   expect_true(equal("1", "1"));
-	   expect_false(equal(1, 2));
-	   expect_false(equal(1, "1"));
-	   expect_false(equal("1", "2"));
+  fn() {
+  expect_true(equal(1, 1));
+  expect_true(equal("1", "1"));
+  expect_false(equal(1, 2));
+  expect_false(equal(1, "1"));
+  expect_false(equal("1", "2"));
 
-	   expect_true(equal(1.0, 1.0));
-	   expect_false(equal(1.0, 1.1));
-	   expect_false(equal(1.0, 1));
+  expect_true(equal(1.0, 1.0));
+  expect_false(equal(1.0, 1.1));
+  expect_false(equal(1.0, 1));
 
-	   let fn1 = fn() {return;};
-	   let fn2 = fn() {return;};
-	   expect_true(equal(fn1, fn1));
-	   expect_false(equal(fn1, fn2));
+  let fn1 = fn() {
+    return;
+  };
+  let fn2 = fn() {
+    return;
+  };
+  expect_true(equal(fn1, fn1));
+  expect_false(equal(fn1, fn2));
 
-	   pass_test();
-	 });
+  pass_test();
+});
 
 add_test("string_append_test",
-	 fn() {
-	   let str = string_append("abc", "123");
-	   if (string_equal("abc123", str)) {
-	     pass_test();
-	   } else {
-	     fail_test();
-	   }
-	 });
+  fn() {
+  let str = string_append("abc", "123");
+  if (string_equal("abc123", str)) {
+    pass_test();
+  } else {
+    fail_test();
+  }
+});
 
 add_test("string_not_equal_test",
-	 fn() {
-	   if (string_equal("abc123", "")) {
-	     fail_test();
-	   } else {
-	     pass_test();
-	   }
-	 });
+  fn() {
+  if (string_equal("abc123", "")) {
+    fail_test();
+  } else {
+    pass_test();
+  }
+});
 
 add_test("list_test",
-	 fn() {
-	   let lst = make_list("a", "b", "c", "d");
-	   let second = list_get(lst, 1);
-	   if (not(string_equal("b", second))) {
-	     fail_test();
-	   }
-	   list_push(lst, "e");
-	   let last = list_get(lst, 4);
-	   if (not(string_equal("e", last))) {
-	     fail_test();
-	   }
-	   pass_test();
-	 });
+  fn() {
+  let lst = make_list("a", "b", "c", "d");
+  let second = list_get(lst, 1);
+  if (not(string_equal("b", second))) {
+    fail_test();
+  }
+  list_push(lst, "e");
+  let last = list_get(lst, 4);
+  if (not(string_equal("e", last))) {
+    fail_test();
+  }
+  pass_test();
+});
 
 add_test("list_length",
   fn() {
-    let lst = make_list("a", "b", "c");
-    expect_true(iequal(3, list_length(lst)));
-    pass_test();
-  });
+  let lst = make_list("a", "b", "c");
+  expect_true(iequal(3, list_length(lst)));
+  pass_test();
+});
 
 add_test("list_delete_at",
   fn() {
-    let lst = make_list("a", "b", "c");
-    list_delete_at(lst, 0);
-    string_equal_or_fail("b", list_get(lst, 0));
-    pass_test();
-  });
+  let lst = make_list("a", "b", "c");
+  list_delete_at(lst, 0);
+  string_equal_or_fail("b", list_get(lst, 0));
+  pass_test();
+});
 
 add_test("list_find_index",
   fn() {
-    let lst = make_list(0, 1, "string");
-    expect_true(iequal(2, list_find_index(lst, is_string)));
-    expect_true(iequal(neg(1), list_find_index(lst, is_boolean)));
-    pass_test();
-  });
+  let lst = make_list(0, 1, "string");
+  expect_true(iequal(2, list_find_index(lst, is_string)));
+  expect_true(iequal(neg(1), list_find_index(lst, is_boolean)));
+  pass_test();
+});
 
 add_test("list_index_of",
   fn() {
-    let lst = make_list("a", "b", "c");
-    expect_true(iequal(2, list_index_of(lst, "c")));
-    expect_true(iequal(neg(1), list_index_of(lst, "d")));
-    pass_test();
-  });
+  let lst = make_list("a", "b", "c");
+  expect_true(iequal(2, list_index_of(lst, "c")));
+  expect_true(iequal(neg(1), list_index_of(lst, "d")));
+  pass_test();
+});
 
 add_test("string_substring_test",
-	 fn() {
-	   let substr = string_substring("0123456789", 1, 3);
-	   if (string_equal("12", substr)) {
-	     pass_test();
-	   } else {
-	     fail_test();
-	   }
-	 });
+  fn() {
+  let substr = string_substring("0123456789", 1, 3);
+  if (string_equal("12", substr)) {
+    pass_test();
+  } else {
+    fail_test();
+  }
+});
 
 add_test("list_map_test",
-	 fn() {
-	   let lst = make_list("a", "b", "c", "d");
-	   let xformed = list_map(lst, fn(x) {
-	       return string_append("letter=", x);
-	     });
-	   if (string_equal("letter=b", list_get(xformed, 1))) {
-	     pass_test();
-	   } else {
-	     fail_test();
-	   }
-	 });
+  fn() {
+  let lst = make_list("a", "b", "c", "d");
+  let xformed = list_map(lst, fn(x) {
+    return string_append("letter=", x);
+  });
+  if (string_equal("letter=b", list_get(xformed, 1))) {
+    pass_test();
+  } else {
+    fail_test();
+  }
+});
 
 add_test("make_alist_test",
-	 fn() {
-           let alist = make_alist(equal);
-	   int_equal_or_fail(0, alist_length(alist));
-	 });
+  fn() {
+  let alist = make_alist(equal);
+  int_equal_or_fail(0, alist_length(alist));
+});
 
 add_test("alist_insert/find/delete",
-	 fn() {
-           let alist = make_alist(equal);
-	   alist_insert(alist, "a", 1);
-	   int_equal_or_fail(1, alist_length(alist));
-	   int_equal_or_fail(1, alist_find(alist, "a", 1000));
+  fn() {
+  let alist = make_alist(equal);
+  alist_insert(alist, "a", 1);
+  int_equal_or_fail(1, alist_length(alist));
+  int_equal_or_fail(1, alist_find(alist, "a", 1000));
 
-	   alist_insert(alist, "b", 2);
-	   int_equal_or_fail(2, alist_length(alist));
-	   int_equal_or_fail(1, alist_find(alist, "a", 1000));
-	   int_equal_or_fail(2, alist_find(alist, "b", 1000));
+  alist_insert(alist, "b", 2);
+  int_equal_or_fail(2, alist_length(alist));
+  int_equal_or_fail(1, alist_find(alist, "a", 1000));
+  int_equal_or_fail(2, alist_find(alist, "b", 1000));
 
-	   alist_delete(alist, "a");
-	   int_equal_or_fail(1, alist_length(alist));
-	   int_equal_or_fail(1000, alist_find(alist, "a", 1000));
-	   int_equal_or_fail(2, alist_find(alist, "b", 1000));
+  alist_delete(alist, "a");
+  int_equal_or_fail(1, alist_length(alist));
+  int_equal_or_fail(1000, alist_find(alist, "a", 1000));
+  int_equal_or_fail(2, alist_find(alist, "b", 1000));
 
-	   alist_insert(alist, "b", "hello");
-	   int_equal_or_fail(1, alist_length(alist));
-	   string_equal_or_fail("hello", alist_find(alist, "b", 1000));
-	 });
+  alist_insert(alist, "b", "hello");
+  int_equal_or_fail(1, alist_length(alist));
+  string_equal_or_fail("hello", alist_find(alist, "b", 1000));
+});
 
 add_test("make_ht_test",
-	 fn() {
-           let ht = make_ht(hash, equal);
-	   int_equal_or_fail(0, ht_length(ht));
-	 });
+  fn() {
+  let ht = make_ht(hash, equal);
+  int_equal_or_fail(0, ht_length(ht));
+});
 
 add_test("ht_insert/find/delete",
-	 fn() {
-           let ht = make_ht(hash, equal);
-	   int_equal_or_fail(0, ht_length(ht));
-	   ht_insert(ht, "a", 1);
-	   int_equal_or_fail(1, ht_length(ht));
-	   int_equal_or_fail(1, ht_find(ht, "a", 1000));
-	   // Reinsertion should act like a nop
-	   ht_insert(ht, "a", 1);
-	   int_equal_or_fail(1, ht_length(ht));
-	   int_equal_or_fail(1, ht_find(ht, "a", 1000));
+  fn() {
+  let ht = make_ht(hash, equal);
+  int_equal_or_fail(0, ht_length(ht));
+  ht_insert(ht, "a", 1);
+  int_equal_or_fail(1, ht_length(ht));
+  int_equal_or_fail(1, ht_find(ht, "a", 1000));
+  // Reinsertion should act like a nop
+  ht_insert(ht, "a", 1);
+  int_equal_or_fail(1, ht_length(ht));
+  int_equal_or_fail(1, ht_find(ht, "a", 1000));
 
-	   ht_insert(ht, "b", 2);
-	   int_equal_or_fail(2, ht_length(ht));
-	   int_equal_or_fail(1, ht_find(ht, "a", 1000));
-	   int_equal_or_fail(2, ht_find(ht, "b", 1000));
+  ht_insert(ht, "b", 2);
+  int_equal_or_fail(2, ht_length(ht));
+  int_equal_or_fail(1, ht_find(ht, "a", 1000));
+  int_equal_or_fail(2, ht_find(ht, "b", 1000));
 
-	   ht_delete(ht, "a");
-	   int_equal_or_fail(1, ht_length(ht));
-	   int_equal_or_fail(1000, ht_find(ht, "a", 1000));
-	   int_equal_or_fail(2, ht_find(ht, "b", 1000));
+  ht_delete(ht, "a");
+  int_equal_or_fail(1, ht_length(ht));
+  int_equal_or_fail(1000, ht_find(ht, "a", 1000));
+  int_equal_or_fail(2, ht_find(ht, "b", 1000));
 
-	   ht_insert(ht, "b", "hello");
-	   int_equal_or_fail(1, ht_length(ht));
-	   string_equal_or_fail("hello", ht_find(ht, "b", 1000));
-	 });
+  ht_insert(ht, "b", "hello");
+  int_equal_or_fail(1, ht_length(ht));
+  string_equal_or_fail("hello", ht_find(ht, "b", 1000));
+});
 
 add_test("ht growth",
-	 fn() {
-           let ht = make_ht(hash, equal);
-	   int_equal_or_fail(0, ht_length(ht));
-	   for_each_integer(10, 200, fn(key) {
-	     ht_insert(ht, key, iadd(key, 1000));
-	   });
-	   int_equal_or_fail(190, ht_length(ht));
-	 });
+  fn() {
+  let ht = make_ht(hash, equal);
+  int_equal_or_fail(0, ht_length(ht));
+  for_each_integer(10, 200, fn(key) {
+    ht_insert(ht, key, iadd(key, 1000));
+  });
+  int_equal_or_fail(190, ht_length(ht));
+});
 
 add_test("getenv_test",
-	 fn() {
-	   let value = getenv("USER");
-	   println(value);
-	   if (is_string(value)) {
-	     pass_test();
-	     return;
-	   }
-	   fail_test();
-	 });
+  fn() {
+  let value = getenv("USER");
+  println(value);
+  if (is_string(value)) {
+    pass_test();
+    return;
+  }
+  fail_test();
+});
 
 add_test("list_push_all_test",
-	 fn() {
-	   let lst1 = make_list("a", "b", "c");
-	   let lst2 = make_list("1", "2", "3");
-	   let lst3 = make_list("foo", "bar", "baz", "aa", "bb", "cc");
-	   list_push_all(lst1, lst2);
-	   list_push_all(lst1, lst3);
-	   list_push_all(lst1, lst3);
-	   list_push_all(lst1, lst3);
-	   list_push_all(lst1, lst3);
-	   list_push_all(lst1, lst3);
-	   pass_test();
-	 });
+  fn() {
+  let lst1 = make_list("a", "b", "c");
+  let lst2 = make_list("1", "2", "3");
+  let lst3 = make_list("foo", "bar", "baz", "aa", "bb", "cc");
+  list_push_all(lst1, lst2);
+  list_push_all(lst1, lst3);
+  list_push_all(lst1, lst3);
+  list_push_all(lst1, lst3);
+  list_push_all(lst1, lst3);
+  list_push_all(lst1, lst3);
+  pass_test();
+});
 
 add_test("list_add_test",
-	 fn() {
-	   let str = "asdf";
-	   let lst1 = make_list("a");
-	   list_push(lst1, "b");
-	   list_push(lst1, string_append(str, "jkl"));
-	   pass_test();
-	 });
+  fn() {
+  let str = "asdf";
+  let lst1 = make_list("a");
+  list_push(lst1, "b");
+  list_push(lst1, string_append(str, "jkl"));
+  pass_test();
+});
 
 add_test("call_closure_test",
-	 fn() {
-	   let shared = "ASDF";
-	   let closure = fn() {
-	     return shared;
-	   };
-	   let result = closure();
-	   if (string_equal("ASDF", result)) {
-	     pass_test();
-	   } else {
-	     fail_test();
-	   }
-	 });
+  fn() {
+  let shared = "ASDF";
+  let closure = fn() {
+    return shared;
+  };
+  let result = closure();
+  if (string_equal("ASDF", result)) {
+    pass_test();
+  } else {
+    fail_test();
+  }
+});
 
 add_test("return_closure_test",
-	 fn() {
-	   let shared = "ASDF";
-	   let return_closure = fn() {
-	     return fn(y) {
-	       let x = string_append(y, shared);
-	       let z = string_append(x, "");
-	       return z;
-	     };
-	   };
-	   let closure = return_closure();
-	   let result = closure("FOO");
-	   if (string_equal("FOOASDF", result)) {
-	     pass_test();
-	   } else {
-	     fail_test();
-	   }
-	 });
+  fn() {
+  let shared = "ASDF";
+  let return_closure = fn() {
+    return fn(y) {
+      let x = string_append(y, shared);
+      let z = string_append(x, "");
+      return z;
+    };
+  };
+  let closure = return_closure();
+  let result = closure("FOO");
+  if (string_equal("FOOASDF", result)) {
+    pass_test();
+  } else {
+    fail_test();
+  }
+});
 
 add_test("int_relations_test",
-	 fn() {
-	   if (not(ilt(10, 20))) {
-	     fail_test();
-	   }
-	   if (ilt(11, 10)) {
-	     fail_test();
-	   }
-	   if (not(ilte(20, 20))) {
-	     fail_test();
-	   }
-	   if (ilte(30, 20)) {
-	     fail_test();
-	   }
-	   if (not(iequal(30, 30))) {
-	     fail_test();
-	   }
-	   if (iequal(30, 31)) {
-	     fail_test();
-	   }
-	   if (not(igte(30, 10))) {
-	     fail_test();
-	   }
-	   if (not(igte(10, 10))) {
-	     fail_test();
-	   }
-	   if (not(igt(30, 10))) {
-	     fail_test();
-	   }
-	   if (igt(30, 30)) {
-	     fail_test();
-	   }
-	   if (igt(30, 35)) {
-	     fail_test();
-	   }
-	   pass_test();
-	 });
+  fn() {
+  if (not(ilt(10, 20))) {
+    fail_test();
+  }
+  if (ilt(11, 10)) {
+    fail_test();
+  }
+  if (not(ilte(20, 20))) {
+    fail_test();
+  }
+  if (ilte(30, 20)) {
+    fail_test();
+  }
+  if (not(iequal(30, 30))) {
+    fail_test();
+  }
+  if (iequal(30, 31)) {
+    fail_test();
+  }
+  if (not(igte(30, 10))) {
+    fail_test();
+  }
+  if (not(igte(10, 10))) {
+    fail_test();
+  }
+  if (not(igt(30, 10))) {
+    fail_test();
+  }
+  if (igt(30, 30)) {
+    fail_test();
+  }
+  if (igt(30, 35)) {
+    fail_test();
+  }
+  pass_test();
+});
 
 add_test("bitwise_test",
-	 fn() {
-	   if (not(iequal(16, bit_shr(32, 1)))) {
-	     fail_test();
-	   }
-	   if (not(iequal(64, bit_shl(32, 1)))) {
-	     fail_test();
-	   }
-	   pass_test();
-	 });
+  fn() {
+  if (not(iequal(16, bit_shr(32, 1)))) {
+    fail_test();
+  }
+  if (not(iequal(64, bit_shl(32, 1)))) {
+    fail_test();
+  }
+  pass_test();
+});
 
 add_test("hex_encoding_test",
-	 fn() {
+  fn() {
 
-	   let nibble_to_hex_digit = fn(nibble) {
-	     if (ilt(nibble, 10)) {
-	       return ascii_to_string(iadd(nibble, 48)); // 48 is ASCII '0'
-	     } else {
-	       return ascii_to_string(iadd(97, isub(nibble, 10))); // 97 for 'a'
-	     }
-	   };
+  let nibble_to_hex_digit = fn(nibble) {
+    if (ilt(nibble, 10)) {
+      return ascii_to_string(iadd(nibble, 48));          // 48 is ASCII '0'
+    } else {
+      return ascii_to_string(iadd(97, isub(nibble, 10)));          // 97 for 'a'
+    }
+  };
 
-	   let byte_to_hex_digits = fn(byte) {
-	     return string_append(nibble_to_hex_digit(bit_shr(byte, 4)),
-				  nibble_to_hex_digit(bit_and(byte, 15)));
-	   };
+  let byte_to_hex_digits = fn(byte) {
+    return string_append(nibble_to_hex_digit(bit_shr(byte, 4)),
+      nibble_to_hex_digit(bit_and(byte, 15)));
+  };
 
-	   string_equal_or_fail("00", byte_to_hex_digits(0));
-	   string_equal_or_fail("09", byte_to_hex_digits(9));
-	   string_equal_or_fail("0a", byte_to_hex_digits(10));
-	   string_equal_or_fail("0b", byte_to_hex_digits(11));
-	   string_equal_or_fail("0f", byte_to_hex_digits(15));
-	   string_equal_or_fail("80", byte_to_hex_digits(0x80));
-	   string_equal_or_fail("90", byte_to_hex_digits(0x90));
-	   string_equal_or_fail("a0", byte_to_hex_digits(0xa0));
-	   string_equal_or_fail("ff", byte_to_hex_digits(255));
+  string_equal_or_fail("00", byte_to_hex_digits(0));
+  string_equal_or_fail("09", byte_to_hex_digits(9));
+  string_equal_or_fail("0a", byte_to_hex_digits(10));
+  string_equal_or_fail("0b", byte_to_hex_digits(11));
+  string_equal_or_fail("0f", byte_to_hex_digits(15));
+  string_equal_or_fail("80", byte_to_hex_digits(0x80));
+  string_equal_or_fail("90", byte_to_hex_digits(0x90));
+  string_equal_or_fail("a0", byte_to_hex_digits(0xa0));
+  string_equal_or_fail("ff", byte_to_hex_digits(255));
 
-	   pass_test();
-	 });
+  pass_test();
+});
 
 add_test("apply_test",
-	 fn() {
-	   let result = apply(fn(x, y, z) { return z; }, make_list(1, 2, 4));
-	   if (not(iequal(4, result))) {
-	     fail_test();
-	   }
-	   pass_test();
-	   });
+  fn() {
+  let result = apply(fn(x, y, z) {
+    return z;
+  }, make_list(1, 2, 4));
+  if (not(iequal(4, result))) {
+    fail_test();
+  }
+  pass_test();
+});
 
 add_test("string_index_of_test",
-	 fn() {
-	   let result = string_index_of("Hello World!", "World");
-	   if (not(iequal(6, result))) {
-	     fail_test();
-	   }
-	   pass_test();
-	 });
+  fn() {
+  let result = string_index_of("Hello World!", "World");
+  if (not(iequal(6, result))) {
+    fail_test();
+  }
+  pass_test();
+});
 
 add_test("string_printf_list",
-	 fn() {
-	   let result = string_printf_list("a = %s, b = %s", make_list(1, 2));
-	   string_equal_or_fail("a = 1, b = 2", result);
-	   pass_test();
-	 });
+  fn() {
+  let result = string_printf_list("a = %s, b = %s", make_list(1, 2));
+  string_equal_or_fail("a = 1, b = 2", result);
+  pass_test();
+});
 
 add_test("low_level_record_test",
   fn() {
-    let rec = make_record("test_record");
-    record_set(rec, 0, "a");
-    record_set(rec, 1, "b");
+  let rec = make_record("test_record");
+  record_set(rec, 0, "a");
+  record_set(rec, 1, "b");
 
-    let str = to_string(rec);
-    let expected =
-      "record<test_record>[\"a\", \"b\", false, false, false, false, false, false]";
+  let str = to_string(rec);
+  let expected =
+    "record<test_record>[\"a\", \"b\", false, false, false, false, false, false]";
 
-    string_equal_or_fail(expected, str);
+  string_equal_or_fail(expected, str);
 
-    let h = hash(rec);
+  let h = hash(rec);
 
-    let rec2 = make_record("test_record");
-    record_set(rec2, 0, "a");
-    record_set(rec2, 1, "b");
+  let rec2 = make_record("test_record");
+  record_set(rec2, 0, "a");
+  record_set(rec2, 1, "b");
 
-    let h2 = hash(rec2);
+  let h2 = hash(rec2);
 
-    expect_true(equal(rec, rec2));
-    expect_true(equal(h, h2));
+  expect_true(equal(rec, rec2));
+  expect_true(equal(h, h2));
 
-    let rec3 = make_record("not_test_record");
-    record_set(rec3, 0, "a");
-    record_set(rec3, 1, "b");
-    let h3 = hash(rec3);
-    expect_false(equal(rec, rec3));
-    expect_false(equal(h, h3));
+  let rec3 = make_record("not_test_record");
+  record_set(rec3, 0, "a");
+  record_set(rec3, 1, "b");
+  let h3 = hash(rec3);
+  expect_false(equal(rec, rec3));
+  expect_false(equal(h, h3));
 
-    pass_test();
-  });
+  pass_test();
+});
 
 add_test("high_level_record_test",
   fn() {
-    record pair { car, cdr }
+  record pair { car, cdr }
 
-    let p = make_pair(1, 2);
-    expect_true(is_pair(p));
-    expect_false(is_pair(500));
+  let p = make_pair(1, 2);
+  expect_true(is_pair(p));
+  expect_false(is_pair(500));
 
-    pair_set_car(p, "1");
-    pair_set_cdr(p, "2");
+  pair_set_car(p, "1");
+  pair_set_cdr(p, "2");
 
-    string_equal_or_fail("1", pair_get_car(p));
-    string_equal_or_fail("2", pair_get_cdr(p));
+  string_equal_or_fail("1", pair_get_car(p));
+  string_equal_or_fail("2", pair_get_cdr(p));
 
-    pass_test();
-  });
+  pass_test();
+});
 
 run_tests();
 
 if (iequal(ROCI_NUM_FAIL, 0)) {
   exit(0);
- } else {
+} else {
   exit(1);
- }
+}

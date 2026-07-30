@@ -20,7 +20,7 @@ let nibble_to_hex_digit = fn(nibble) {
 
 let byte_to_hex_digits = fn(byte) {
   return string_append(nibble_to_hex_digit(bit_and(bit_shr(byte, 4), 0xf)),
-		       nibble_to_hex_digit(bit_and(byte, 0xf)));
+    nibble_to_hex_digit(bit_and(byte, 0xf)));
 };
 
 let file_to_c_code = fn() {
@@ -38,12 +38,12 @@ let file_to_c_code = fn() {
   let num_bytes = buffer_length(input_buffer);
 
   for_each_integer(0, num_bytes, fn(i) {
-      if (iequal(0, bit_and(0xf, i))) {
-	write("\n  ");
-      }
-      let byte_val = buffer_get(input_buffer, i);
-      write(string_append("0x", byte_to_hex_digits(byte_val), ","));
-    });
+    if (iequal(0, bit_and(0xf, i))) {
+      write("\n  ");
+    }
+    let byte_val = buffer_get(input_buffer, i);
+    write(string_append("0x", byte_to_hex_digits(byte_val), ","));
+  });
   write("\n");
 
   write("  };\n");

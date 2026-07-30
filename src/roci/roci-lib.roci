@@ -8,15 +8,15 @@
 let list_map = fn(lst, func) {
   let result = make_list();
   list_for_each(lst, fn(x) {
-      list_push(result, func(x));
-    });
+    list_push(result, func(x));
+  });
   return result;
 };
 
 let list_push_all = fn(lst0, lst1) {
   list_for_each(lst1, fn(x) {
-      list_push(lst0, x);
-    });
+    list_push(lst0, x);
+  });
 };
 
 // This may fail for long lists since we aren't properly tail
@@ -36,7 +36,9 @@ let list_find_index = fn(lst, predicate) {
 };
 
 let list_index_of = fn(lst, item) {
-  return list_find_index(lst, fn(x) { return equal(item, x); });
+  return list_find_index(lst, fn(x) {
+    return equal(item, x);
+  });
 };
 
 let to_display_string = fn(x) {
@@ -65,9 +67,9 @@ let buffer_printf_lst_loop = fn(buffer, format, lst, lst_start) {
     return;
   }
   buffer_printf_lst_loop(buffer,
-			 string_substring(format, iadd(split_point, 2), format_len),
-			 lst,
-			 iadd(lst_start, 1));
+    string_substring(format, iadd(split_point, 2), format_len),
+    lst,
+    iadd(lst_start, 1));
 };
 
 let buffer_printf_lst = fn(buffer, format, lst) {
@@ -125,10 +127,10 @@ let alist_length = fn(alist) {
 let alist_for_each = fn(alist, func) {
   for_each_integer(0, list_length(alist_keys(alist)),
     fn(index) {
-      let key = list_get(alist_keys(alist), index);
-      let value = list_get(alist_values(alist), index);
-      func(key, value);
-    });
+    let key = list_get(alist_keys(alist), index);
+    let value = list_get(alist_values(alist), index);
+    func(key, value);
+  });
 };
 
 let alist_find_position = fn(alist, search_key) {
@@ -179,8 +181,8 @@ let alist_delete = fn(alist, key) {
 let _make_array_of_empty_alists = fn(equal_fn, length) {
   let lst = make_list();
   for_each_integer(0, length, fn(i) {
-      list_push(lst, make_alist(equal_fn));
-    });
+    list_push(lst, make_alist(equal_fn));
+  });
   return lst;
 };
 
@@ -247,8 +249,8 @@ let ht_for_each = fn(ht, func) {
   let buckets = ht_get_buckets(ht);
   for_each_integer(0, list_length(buckets),
     fn(index) {
-      let bucket = list_get(buckets, index);
-      alist_for_each(bucket, func);
+    let bucket = list_get(buckets, index);
+    alist_for_each(bucket, func);
   });
 };
 
@@ -268,7 +270,7 @@ let _ht_mutate = fn(ht, alist, thunk) {
     ht_set_buckets(ht, _make_array_of_empty_alists(ht_equal_fn(ht), new_length));
     ht_for_each(ht, fn(key, value) {
       ht_insert(new_ht, key, value);
-      });
+    });
     ht_set_buckets(ht, ht_get_buckets(new_ht));
   }
 };
@@ -287,8 +289,8 @@ let ht_insert = fn(ht, key, value) {
   let bucket_number = irem(hash, list_length(buckets));
   let alist = list_get(buckets, bucket_number);
   _ht_mutate(ht, alist, fn() {
-      alist_insert(alist, key, value);
-    });
+    alist_insert(alist, key, value);
+  });
 };
 
 let ht_delete = fn(ht, key) {
@@ -297,6 +299,6 @@ let ht_delete = fn(ht, key) {
   let bucket_number = irem(hash, list_length(buckets));
   let alist = list_get(buckets, bucket_number);
   _ht_mutate(ht, alist, fn() {
-      alist_delete(alist, key);
-    });
+    alist_delete(alist, key);
+  });
 };

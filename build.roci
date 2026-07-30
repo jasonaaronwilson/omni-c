@@ -57,6 +57,7 @@ let time_thunk = fn(thunk) {
 let time_shell = fn(command_line) {
   let result = time_thunk(fn() {
     let resultx = time_thunk(fn () {
+      // FIXME(jawilson): do we need return here?
       shell(command_line);
     });
     return resultx;
@@ -239,6 +240,10 @@ let STABLE_BINARY_PATH = string_append(BUILD_DIR, "bin/omni-c-stable");
 let OMNI_C = string_append(BUILD_DIR, "bin/omni-c");
 let OMNI_C_STABLE = string_append(BUILD_DIR, "bin/omni-c-stable");
 
+let source_file_location = fn(x) {
+  return string_append(TOP_DIR, x);
+};
+
 load("src/build-fragment.roci");
 load("src/lib/build-fragment.roci");
 load("src/roci/build-fragment.roci");
@@ -274,6 +279,30 @@ let generate_embedded_file = fn(variable, input, output) {
   let result = shell(command_line);
   check_shell_command(result);
 };
+
+let uncrustify_roci = fn(filename) {
+  let command_line = make_list("uncrustify",
+    "-c",
+    source_file_location("tools/uncrustify-roci.cfg"),
+    "--replace",
+    filename);
+  check_shell_command(shell(command_line));
+};
+
+let format_all_roci = fn() {
+  let files = glob("*.roci");
+  list_push_all(files, glob("src/roci/*.roci"));
+  list_push_all(files, glob("tools/*.roci"));
+  list_for_each(files, uncrustify_roci);
+};
+
+let format_all_c = fn() {
+  return false;
+};
+
+add_target("format", fn() {
+  format_all_roci(); format_all_c();
+});
 
 let build_reflection_header = fn() {
   let input = string_append(TOP_DIR, "src/embed/reflection.h");

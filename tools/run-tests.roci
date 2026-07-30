@@ -2,7 +2,7 @@
 // This is the tree wide test runner for roci. In this case, each test
 // is essentially at least one executable invocation, however, in many
 // cases, that one executable may itself run many "unit tests".
-// 
+//
 
 //
 // This is how I'm testing the test runner right now!
@@ -50,20 +50,20 @@ let test_fail = fn(filename) {
 };
 
 /*
-  if test_type == TestType.LIB_UNIT_TEST then
+   if test_type == TestType.LIB_UNIT_TEST then
      print("TestType.LIB_UNIT_TEST:", arg)
      local lib_archive = build_dir .. "/bin/lib.oar"
      exit_status = os.execute(omni_c_exec .. " test " .. lib_archive .. " " .. arg)
-  elseif test_type == TestType.SCRIPT then
+   elseif test_type == TestType.SCRIPT then
      print("TestType.SCRIPT:", arg)
      exit_status = os.execute(arg)
-  elseif test_type == TestType.PARSE_TEST then
+   elseif test_type == TestType.PARSE_TEST then
      print("TestType.PARSE_TEST:", arg)
      exit_status = os.execute(omni_c_root .. "/tools/generate-header-file-test.sh " .. arg)
-  elseif test_type == TestType.EXECUTE_TEST then
+   elseif test_type == TestType.EXECUTE_TEST then
      print("TestType.EXECUTE_TEST:", arg)
      exit_status = os.execute(omni_c_root .. "/tools/compile.sh " .. arg .. ".gen.c" .. " " .. arg)
-  elseif test_type == TestType.PARSE_PRINT_TEST then
+   elseif test_type == TestType.PARSE_PRINT_TEST then
      print("TestType.PARSE_PRINT_TEST(*):", arg)
      local golden_file = arg .. ".golden"
      local output_file = arg .. ".out"
@@ -72,9 +72,9 @@ let test_fail = fn(filename) {
           exit_status = os.execute("diff -B -y " .. golden_file .. " " .. output_file)
      else
         table.insert(no_golden_tests, arg)
-	print(read_file(output_file))
+        print(read_file(output_file))
      end
-*/
+ */
 
 let get_test_executor = fn(filename) {
   if (string_ends_with(filename, ".sh")) {
@@ -148,12 +148,12 @@ let get_omni_c_executable = fn() {
 
 let run_tests = fn() {
   list_for_each(command_line_args(), fn(arg) {
-      println("------------------------------------------------------------------------");
-      println(string_append("Running: ", arg));
-      println("------------------------------------------------------------------------");
-      let runner = get_test_executor(arg);
-      runner(arg);
-    });
+    println("------------------------------------------------------------------------");
+    println(string_append("Running: ", arg));
+    println("------------------------------------------------------------------------");
+    let runner = get_test_executor(arg);
+    runner(arg);
+  });
 };
 
 run_tests();
@@ -161,7 +161,7 @@ run_tests();
 println("======================================================================");
 
 let show_summary = fn() {
-  if (igt(success, 0)) { 
+  if (igt(success, 0)) {
     if (iequal(failure, 0)) {
       println(string_append("\nPassed ", to_string(success), " tests."));
     }
@@ -171,8 +171,8 @@ let show_summary = fn() {
     exit(0);
   } else {
     list_for_each(failed_tests, fn(failed_test) {
-	println(string_append("FAILURE: ", failed_test));
-      });
+      println(string_append("FAILURE: ", failed_test));
+    });
     println(string_append("\nPassed ", to_string(success), " tests."));
     println(string_append("Failed ", to_string(failure), " tests."));
     exit(1);

@@ -3,5 +3,5 @@
 let _SOURCE_ROCI_ = glob("src/roci/*.c");
 
 let SOURCE_ROCI = list_map(_SOURCE_ROCI_, fn(x) {
-    return string_append(TOP_DIR, x);
-  });
+  return string_append(TOP_DIR, x);
+});
