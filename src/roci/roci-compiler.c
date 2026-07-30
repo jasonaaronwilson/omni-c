@@ -45,6 +45,7 @@ typedef roci_compile_time_error_t = enum {
   ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
   ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS,
   ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA,
+  ROCI_COMPILE_TIME_ERROR_ARGUMENT_AFTER_REST,
 };
 
 typedef roci_compiler_state_t = struct {
@@ -443,12 +444,13 @@ void roci_compile_function_call(roci_compiler_state_t* state) {
 }
 
 void roci_compile_closure(roci_compiler_state_t* state) {
+  boolean_t rest_argument = false;
   token_t* first_token = roci_peek_token(state);
   roci_expect_token(state, "fn");
   roci_expect_token(state, "(");
 
   token_t* args[32];
-  int64_t arg_count = roci_collect_fn_args(state, args);
+  int64_t arg_count = roci_collect_fn_args(state, args, &rest_argument);
 
   roci_bb_builder_t* current_bb = state->current_bb;
   int current_env_depth = state->env_depth;
@@ -459,7 +461,11 @@ void roci_compile_closure(roci_compiler_state_t* state) {
 
   roci_emit_debug_info(state, first_token);
   roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
-  roci_emit_int_datum(state, arg_count);
+  if (rest_argument) {
+    roci_emit_int_datum(state, -arg_count);
+  } else {
+    roci_emit_int_datum(state, arg_count);
+  }
 
   roci_emit_new_environment(state);
   while (arg_count > 0) {
@@ -482,7 +488,7 @@ void roci_compile_closure(roci_compiler_state_t* state) {
 
 // For a negative number means abs(x) -1 is the number of required
 // arguments.
-int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args) {
+int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args, boolean_t* rest_argument) {
   int64_t arg_count = 0;
   while (true) {
     token_t* token = roci_next_token(state);
@@ -491,12 +497,21 @@ int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args) {
     }
 
     if (arg_count > 0) {
-      if (token_matches(token, ",")) {
-	token = roci_next_token(state);
-      } else {
-	roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA);
-	fatal_error(ERROR_ILLEGAL_STATE);
+      if (*rest_argument) {
+        roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_ARGUMENT_AFTER_REST);
+        fatal_error(ERROR_ILLEGAL_STATE);
       }
+      if (token_matches(token, ",")) {
+        token = roci_next_token(state);
+      } else {
+        roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA);
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+    }
+
+    if (token_matches(token, "...")) {
+      *rest_argument = true;
+      token = roci_next_token(state);
     }
 
     // Look for rest argument

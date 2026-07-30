@@ -94,7 +94,7 @@ typedef roci_vm_state_t = struct {
   roci_env_t* env;
   roci_cont_t** continuations;
   roci_debug_state_t* debug;
-  uint64_t n_args;
+  int64_t n_args;
   roci_src_info_t debug_info;
 };
 
@@ -320,8 +320,16 @@ start_bblock:
       break;
 
     case ROCI_OPCODE_CHECK_ARGS: {
-      uint64_t n_args = *(state->data_ptr++);
-      if (n_args != state->n_args) {
+      int64_t n_args = *(state->data_ptr++);
+      if (n_args < 0) {
+        n_args = -n_args - 1; // Subtract off the rest argument itself
+        if (state->n_args < n_args) {
+          roci_debug_error(state, "argument call mismatch");
+        }
+        state->n_args = state->n_args - n_args;
+        roci_primitive_make_list(state);
+        state->n_args = n_args + 1;
+      } else if (n_args != state->n_args) {
         roci_debug_error(state, "argument call mismatch");
       }
       break;

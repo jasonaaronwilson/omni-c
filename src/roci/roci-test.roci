@@ -518,6 +518,21 @@ add_test("high_level_record_test",
   pass_test();
 });
 
+add_test("variable_args",
+  fn() {
+  let foo = fn(... x) {
+    return x;
+  };
+  int_equal_or_fail(0, list_length(foo()));
+  int_equal_or_fail(1, list_length(foo("a")));
+  int_equal_or_fail(2, list_length(foo("a", "b")));
+  let bar = fn(ignored, ... x) {
+    return x;
+  };
+  int_equal_or_fail(0, list_length(bar("a")));
+  int_equal_or_fail(1, list_length(bar("a", "b")));
+});
+
 run_tests();
 
 if (iequal(ROCI_NUM_FAIL, 0)) {
