@@ -1,3 +1,5 @@
+// uncrustify -c tools/uncrustify-roci.cfg --replace ./build.roci
+
 /**
  * @file build.roci
  *
@@ -54,9 +56,11 @@ let time_thunk = fn(thunk) {
 
 let time_shell = fn(command_line) {
   let result = time_thunk(fn() {
-      let resultx = time_thunk(fn () { shell(command_line); });
-      return resultx;
+    let resultx = time_thunk(fn () {
+      shell(command_line);
     });
+    return resultx;
+  });
   return result;
 };
 
@@ -64,9 +68,9 @@ let noisy_shell = fn(command_line) {
   println("About to execute:");
   println(command_line);
   let result = time_thunk(fn() {
-      let result = shell(command_line);
-      return result;
-    });
+    let result = shell(command_line);
+    return result;
+  });
   return result;
 };
 
@@ -131,24 +135,24 @@ let get_warn_flags = fn(cc) {
 
   if (string_equal(cc, "gcc")) {
     return make_list("-Wall",
-		     "-Werror",
-		     "-Wno-error=format",
-		     "-Wno-format",
-		     "-Wno-error=return-local-addr",
-		     "-Wno-unused-function",
-		     "-Wno-unused-variable");
+      "-Werror",
+      "-Wno-error=format",
+      "-Wno-format",
+      "-Wno-error=return-local-addr",
+      "-Wno-unused-function",
+      "-Wno-unused-variable");
   }
 
   if (string_equal(cc, "clang")) {
     return make_list("-Wall",
-		     "-Werror",
-		     "-Wno-error=format",
-		     "-Wno-format",
-		     "-Wno-error=return-local-addr",
-		     "-Wno-unused-function",
-		     "-Wno-unused-variable",
-		     "-Wno-parentheses-equality",
-		     "-Wno-c23-extensions");
+      "-Werror",
+      "-Wno-error=format",
+      "-Wno-format",
+      "-Wno-error=return-local-addr",
+      "-Wno-unused-function",
+      "-Wno-unused-variable",
+      "-Wno-parentheses-equality",
+      "-Wno-c23-extensions");
   }
 
   return make_list();
@@ -208,20 +212,20 @@ let all_older_than = fn(target, deps) {
 
   let result = true;
   list_for_each(deps, fn(x) {
-      // No easy way to exit the loop but no reason to keep checking.
-      if (not(result)) {
-	return;
-      }
-      let dep_timestamp = timestamp(x);
-      if (iequal(dep_timestamp, NEGATIVE_ONE)) {
-	println(string_append("WARNING: ", x, " does not exist"));
-	result = false;
-      }
-      if (igte(dep_timestamp, target_timestamp)) {
-	println(string_append(x, " is newer than ", target));
-	result = false;
-      }
-    });
+    // No easy way to exit the loop but no reason to keep checking.
+    if (not(result)) {
+      return;
+    }
+    let dep_timestamp = timestamp(x);
+    if (iequal(dep_timestamp, NEGATIVE_ONE)) {
+      println(string_append("WARNING: ", x, " does not exist"));
+      result = false;
+    }
+    if (igte(dep_timestamp, target_timestamp)) {
+      println(string_append(x, " is newer than ", target));
+      result = false;
+    }
+  });
   return result;
 };
 
@@ -261,12 +265,12 @@ let generate_embedded_file = fn(variable, input, output) {
   }
 
   let command_line = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"),
-			       "roci",
-			       "--script",
-			       script,
-			       variable,
-			       input,
-			       output);
+    "roci",
+    "--script",
+    script,
+    variable,
+    input,
+    output);
   let result = shell(command_line);
   check_shell_command(result);
 };
@@ -303,13 +307,13 @@ let is_matching_platform = fn(src) {
 };
 
 let filter_files_by_platform = fn(sources) {
-    let filtered = make_list();
-    list_for_each(sources, fn(src) {
-	if (is_matching_platform(src)) {
-	  list_push(filtered, src);
-	}
-      });
-    return filtered;
+  let filtered = make_list();
+  list_for_each(sources, fn(src) {
+    if (is_matching_platform(src)) {
+      list_push(filtered, src);
+    }
+  });
+  return filtered;
 };
 
 ALL_OMNI_C_SRC = filter_files_by_platform(ALL_OMNI_C_SRC);
@@ -367,18 +371,18 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
 };
 
 add_target(string_append(BUILD_DIR, "bin/omni-c"),
-	   fn() {
-	     build_omni_c(string_append(BUILD_DIR, "bin/omni-c"),
-			  string_append(BUILD_DIR, "omni-c.c"),
-			  string_append(BUILD_DIR, "bin/omni-c-stable"));
-	   });
+  fn() {
+  build_omni_c(string_append(BUILD_DIR, "bin/omni-c"),
+    string_append(BUILD_DIR, "omni-c.c"),
+    string_append(BUILD_DIR, "bin/omni-c-stable"));
+});
 
 add_target(string_append(BUILD_DIR, "bin/self"),
-	   fn() {
-	     build_omni_c(string_append(BUILD_DIR, "bin/self"),
-			  string_append(BUILD_DIR, "omni-c-self.c"),
-			  string_append(BUILD_DIR, "bin/omni-c"));
-	   });
+  fn() {
+  build_omni_c(string_append(BUILD_DIR, "bin/self"),
+    string_append(BUILD_DIR, "omni-c-self.c"),
+    string_append(BUILD_DIR, "bin/omni-c"));
+});
 
 let build_lib_oar = fn() {
   let target = string_append(BUILD_DIR, "bin/lib.oar");
@@ -392,16 +396,16 @@ let build_lib_oar = fn() {
   }
 
   let command = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"),
-			  "archive", "--archive-output-file", target);
+    "archive", "--archive-output-file", target);
   list_push_all(command, sources);
   let result = shell(command);
   check_shell_command(result);
 };
 
 add_target(string_append(BUILD_DIR, "bin/lib.oar"),
-	   fn() {
-	     build_lib_oar();
-	   });
+  fn() {
+  build_lib_oar();
+});
 
 let TESTS = make_list();
 let STATEMENT_TESTS = glob("tests/statements/*.stmt");
@@ -452,11 +456,11 @@ let run_tests = fn(omni_c) {
   check_shell_command(test_result);
 };
 
-add_target("test", fn() { 
-    build_target(string_append(BUILD_DIR, "bin/omni-c"));
-    build_target(string_append(BUILD_DIR, "bin/lib.oar"));
-    run_tests(string_append(BUILD_DIR, "bin/omni-c"));
- });
+add_target("test", fn() {
+  build_target(string_append(BUILD_DIR, "bin/omni-c"));
+  build_target(string_append(BUILD_DIR, "bin/lib.oar"));
+  run_tests(string_append(BUILD_DIR, "bin/omni-c"));
+});
 
 let build_target = fn(target_name) {
   let target = get_target(target_name);
@@ -473,8 +477,8 @@ let build_target = fn(target_name) {
 };
 
 add_target("all", make_list(string_append(BUILD_DIR, "bin/omni-c"),
-			    string_append(BUILD_DIR, "bin/self"),
-			    string_append(BUILD_DIR, "bin/lib.oar")));
+  string_append(BUILD_DIR, "bin/self"),
+  string_append(BUILD_DIR, "bin/lib.oar")));
 
 let main = fn() {
   let args = command_line_args();
@@ -486,9 +490,9 @@ let main = fn() {
   }
 };
 main();
-			    
+
 /*
-LIB_TESTS := \
-	${OMNI_C_ROOT}/tests/lib/flag-test.sh \
-	${OMNI_C_ROOT}/tests/lib/io-test.sh
-*/
+   LIB_TESTS := \
+        ${OMNI_C_ROOT}/tests/lib/flag-test.sh \
+        ${OMNI_C_ROOT}/tests/lib/io-test.sh
+ */
