@@ -462,7 +462,7 @@ add_test("string_printf_list",
 	   pass_test();
 	 });
 
-add_test("record_test",
+add_test("low_level_record_test",
   fn() {
     let rec = make_record("test_record");
     record_set(rec, 0, "a");
@@ -491,6 +491,23 @@ add_test("record_test",
     let h3 = hash(rec3);
     expect_false(equal(rec, rec3));
     expect_false(equal(h, h3));
+
+    pass_test();
+  });
+
+add_test("high_level_record_test",
+  fn() {
+    record pair { car, cdr }
+
+    let p = make_pair(1, 2);
+    expect_true(is_pair(p));
+    expect_false(is_pair(500));
+
+    pair_set_car(p, "1");
+    pair_set_cdr(p, "2");
+
+    string_equal_or_fail("1", pair_get_car(p));
+    string_equal_or_fail("2", pair_get_cdr(p));
 
     pass_test();
   });

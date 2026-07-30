@@ -43,6 +43,7 @@ typedef roci_compile_time_error_t = enum {
   ROCI_COMPILE_TIME_TOKENIZER_ERROR,
   ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
   ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
+  ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS
 };
 
 typedef roci_compiler_state_t = struct {
@@ -525,6 +526,9 @@ void roci_compile_record(roci_compiler_state_t* state) {
     if (token_matches(field, "}")) {
       break;
     }
+    if (num_fields == 8) {
+      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS);
+    }
     roci_verify_identifier(state, field);
     fields[num_fields++] = token_to_string(field);
     token_t* punc = roci_peek_token(state);
@@ -563,7 +567,8 @@ void roci_compile_record(roci_compiler_state_t* state) {
   // Finally the getters/setters
 
   char* record_tag_check =
-    string_printf("if(not(string_equal(record_tag(record),\"%s\"))){debug_error(\"\");}", record_name);
+    string_printf("if(not(string_equal(record_tag(record),\"%s\"))){debug_error(\"\");}",
+		  record_name);
 
   for (int i = 0; i < num_fields; i++) {
     buffer_printf(buffer, "let %s_get_%s = fn(record){%sreturn record_get(record, %d);};",
