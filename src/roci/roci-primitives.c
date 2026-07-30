@@ -118,6 +118,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   // Records
   roci_add_primitive(env, &roci_primitive_is_record, "is_record");
   roci_add_primitive(env, &roci_primitive_make_record, "make_record");
+  roci_add_primitive(env, &roci_primitive_record_tag, "record_tag");
   roci_add_primitive(env, &roci_primitive_record_get, "record_get");
   roci_add_primitive(env, &roci_primitive_record_set, "record_set");
 }
@@ -1090,6 +1091,14 @@ void roci_primitive_is_record(roci_vm_state_t* state) {
   }
   roci_value_t value = roci_pop_value(state);
   roci_push_boolean(state, value.tag == ROCI_TAG_RECORD);
+}
+
+void roci_primitive_record_tag(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "record_tag expects 1 argument");
+  }
+  roci_record_t* record = roci_pop_record(state);
+  roci_push_string(state, record->record_tag);
 }
 
 void roci_primitive_make_record(roci_vm_state_t* state) {
