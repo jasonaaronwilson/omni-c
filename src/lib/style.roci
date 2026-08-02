@@ -12,24 +12,23 @@ record bitfield { name, start, width }
 let style_fields = 
   make_list(
     make_bitfield("background", 0, 24),
-    make_bitfield("background_red", 0, 8),
+    make_bitfield("background_blue", 0, 8),
     make_bitfield("background_green", 8, 8),
-    make_bitfield("background_blue", 16, 8),
+    make_bitfield("background_red", 16, 8),
     make_bitfield("foreground", 24, 24),
-    make_bitfield("foreground_red", 24, 8),
+    make_bitfield("foreground_blue", 24, 8),
     make_bitfield("foreground_green", 32, 8),
-    make_bitfield("foreground_blue", 40, 8),
-    make_bitfield("underline", 49, 1),
-    make_bitfield("bold", 50, 1),
-    make_bitfield("dim", 51, 1),
-    make_bitfield("italic", 52, 1),
-    make_bitfield("underline", 53, 1),
-    make_bitfield("overline", 54, 1),
-    make_bitfield("strikethrough", 55, 1),
-    make_bitfield("superscript", 56, 1),
-    make_bitfield("subscript", 57, 1),
-    make_bitfield("slow_blink", 58, 1),
-    make_bitfield("fast_blink", 59, 1));
+    make_bitfield("foreground_red", 40, 8),
+    make_bitfield("bold", 49, 1),
+    make_bitfield("dim", 50, 1),
+    make_bitfield("italic", 51, 1),
+    make_bitfield("underline", 52, 1),
+    make_bitfield("overline", 53, 1),
+    make_bitfield("strikethrough", 54, 1),
+    make_bitfield("superscript", 55, 1),
+    make_bitfield("subscript", 56, 1),
+    make_bitfield("slow_blink", 57, 1),
+    make_bitfield("fast_blink", 58, 1));
 
 let output = make_buffer();
 
@@ -52,15 +51,15 @@ let get_type = fn(width) {
 
 let get_mask = fn(width) {
   if (iequal(width, 1)) {
-    return "1";
+    return "1ULL";
   }
   if (iequal(width, 8)) {
-    return "0xff";
+    return "0xffULL";
   }
   if (iequal(width, 24)) {
-    return "0xffffff";
+    return "0xffffffULL";
   }
-  return sprintf("((1 << %s) - 1)", width);
+  return sprintf("((1ULL << %s) - 1)", width);
 };
 
 let output_field_inlines = fn(field) {
@@ -76,7 +75,7 @@ let output_field_inlines = fn(field) {
   buffer_printf(output, "}\n");
 
   buffer_printf(output, "static inline style_t set_%s(style_t style, %s x) {\n", name, type);
-  buffer_printf(output, "  return (style & ~(%s << %s)) | x << %s;\n", mask, start, start);
+  buffer_printf(output, "  return (style & ~(%s << %s)) | cast(uint64_t, x) << %s;\n", mask, start, start);
   buffer_printf(output, "}\n\n");
 };
 

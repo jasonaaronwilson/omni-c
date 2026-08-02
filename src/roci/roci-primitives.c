@@ -121,6 +121,10 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_record_tag, "record_tag");
   roci_add_primitive(env, &roci_primitive_record_get, "record_get");
   roci_add_primitive(env, &roci_primitive_record_set, "record_set");
+
+
+  // Random Testing Code
+  roci_add_primitive(env, &roci_primitive_draw_random_screen, "draw_random_screen");
 }
 
 /**
@@ -1126,5 +1130,11 @@ void roci_primitive_record_set(roci_vm_state_t* state) {
   int64_t index = roci_pop_integer(state);
   roci_record_t* record = roci_pop_record(state);
   roci_record_set(record, index, value);
+  roci_push_false(state);
+}
+
+void roci_primitive_draw_random_screen(roci_vm_state_t* state) {
+  boolean_t draw = roci_pop_boolean(state);
+  draw_random_screen(draw);
   roci_push_false(state);
 }

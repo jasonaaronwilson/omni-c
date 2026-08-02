@@ -46,6 +46,8 @@ let _LIB_SRC_ = make_list(
    "splitjoin.c",
    "oarchive.c",
    "quote-util.c",
+   "screen.c",
+   "style.c",
    "test.c");
 
 let SOURCE_LIB = list_map(_LIB_SRC_, fn(x) {
