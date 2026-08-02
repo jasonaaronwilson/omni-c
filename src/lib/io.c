@@ -95,9 +95,16 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
  * Writes the contents of the buffer to the FILE* output stream.
  */
 void buffer_write_all(FILE* output, buffer_t* buffer) {
-  size_t bytes_written = fwrite(buffer->elements, 1, buffer->length, output);
-  if (bytes_written != buffer->length) {
-    fatal_error(ERROR_ILLEGAL_STATE);
+  size_t total_written = 0;
+  while (total_written < buffer->length) {
+    size_t written = fwrite(buffer->elements + total_written, 1, buffer->length - total_written, output);
+    if (written == 0) {
+      if (ferror(output)) {
+	log_fatal("strerror(errno) = %s", strerror(errno));
+	fatal_error(ERROR_ILLEGAL_STATE);
+      }
+    }
+    total_written += written;
   }
 }
 
