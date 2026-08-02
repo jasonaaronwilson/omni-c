@@ -1,0 +1,88 @@
+/**
+ * @file style.roci
+ *
+ * This is a C code generator written in roci. It allows us to easily
+ * layout bit-fields on top of a uint64_t like a structure but we can
+ * also have overlapping fields (so we can refer either to entire 24
+ * bit color or each 8 bit red/gree/blue component separately).
+ */
+
+record bitfield { name, start, width }
+
+let style_fields = 
+  make_list(
+    make_bitfield("background", 0, 24),
+    make_bitfield("background_red", 0, 8),
+    make_bitfield("background_green", 8, 8),
+    make_bitfield("background_blue", 16, 8),
+    make_bitfield("foreground", 24, 24),
+    make_bitfield("foreground_red", 24, 8),
+    make_bitfield("foreground_green", 32, 8),
+    make_bitfield("foreground_blue", 40, 8),
+    make_bitfield("underline", 49, 1),
+    make_bitfield("bold", 50, 1),
+    make_bitfield("dim", 51, 1),
+    make_bitfield("italic", 52, 1),
+    make_bitfield("underline", 53, 1),
+    make_bitfield("overline", 54, 1),
+    make_bitfield("strikethrough", 55, 1),
+    make_bitfield("superscript", 56, 1),
+    make_bitfield("subscript", 57, 1),
+    make_bitfield("slow_blink", 58, 1),
+    make_bitfield("fast_blink", 59, 1));
+
+let output = make_buffer();
+
+let get_type = fn(width) {
+  let type = "uint64_t";
+  if (ilte(width, 32)) {
+    type = "uint32_t";
+  }
+  if (ilte(width, 16)) {
+    type = "uint16_t";
+  }
+  if (ilte(width, 8)) {
+    type = "uint8_t";
+  }
+  if (ilte(width, 1)) {
+    type = "boolean_t";
+  }
+  return type;
+};
+
+let get_mask = fn(width) {
+  if (iequal(width, 1)) {
+    return "1";
+  }
+  if (iequal(width, 8)) {
+    return "0xff";
+  }
+  if (iequal(width, 24)) {
+    return "0xffffff";
+  }
+  return sprintf("((1 << %s) - 1)", width);
+};
+
+let output_field_inlines = fn(field) {
+
+  let name = bitfield_get_name(field);
+  let start = bitfield_get_start(field);
+  let width = bitfield_get_width(field);
+  let type = get_type(width);
+  let mask = get_mask(width);
+
+  buffer_printf(output, "static inline %s get_%s(style_t style) {\n", type, name);
+  buffer_printf(output, "  return (style >> %s) & %s;\n", start, mask);
+  buffer_printf(output, "}\n");
+
+  buffer_printf(output, "static inline style_t set_%s(style_t style, %s x) {\n", name, type);
+  buffer_printf(output, "  return (style & ~(%s << %s)) | x << %s;\n", mask, start, start);
+  buffer_printf(output, "}\n\n");
+};
+
+buffer_printf(output, "// This is automatically generated code from the script style.roci\n\n");
+buffer_printf(output, "typedef style_t = uint64_t;\n\n");
+list_for_each(style_fields, output_field_inlines);
+
+
+println(buffer_to_string(output));
