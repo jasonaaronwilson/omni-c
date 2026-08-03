@@ -97,15 +97,52 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
 void buffer_write_all(FILE* output, buffer_t* buffer) {
   size_t total_written = 0;
   while (total_written < buffer->length) {
+    errno = 0; // Clear errno prior to call
     size_t written = fwrite(buffer->elements + total_written, 1, buffer->length - total_written, output);
     if (written == 0) {
+      if (errno == EINTR) {
+        // Interrupted by signal during flush, retry
+        continue;
+      }
       if (ferror(output)) {
 	log_fatal("strerror(errno) = %s", strerror(errno));
 	fatal_error(ERROR_ILLEGAL_STATE);
       }
+      // If written == 0 and no error, stream is closed/EOF
+      break;
     }
     total_written += written;
   }
+}
+
+void buffer_write_all_chunked(FILE* output, buffer_t* buffer) {
+  int PTY_CHUNK_SIZE = 1024;
+  size_t total_written = 0;
+
+  while (total_written < buffer->length) {
+    // sleep(1);
+    usleep(5);
+    fflush(output);
+    size_t remaining = buffer->length - total_written;
+    size_t chunk = (remaining > PTY_CHUNK_SIZE) ? PTY_CHUNK_SIZE : remaining;
+
+    errno = 0;
+    size_t written = fwrite(buffer->elements + total_written, 1, chunk, output);
+
+    if (written == 0) {
+      if (errno == EINTR) continue;
+      if (ferror(output)) {
+        log_fatal("fwrite failed: %s", strerror(errno));
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      break;
+    }
+
+    total_written += written;
+  }
+
+  // Always explicitly flush the libc stream to the pty file descriptor
+  fflush(output);
 }
 
 /**

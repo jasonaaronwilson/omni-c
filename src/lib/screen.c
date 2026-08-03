@@ -31,33 +31,41 @@ void screen_fill(screen_t* screen, uint32_t ch, style_t style) {
   }
 }
 
-void screen_set_char(screen_t* screen, uint32_t ch, style_t style, 
+void screen_set_char(screen_t* screen, uint32_t ch, style_t style,
 		     uint32_t row, uint32_t column) {
   int offset = (row * screen->width) + column;
   screen->chars[offset] = ch;
   screen->styles[offset] = style;
 }
 
-void screen_to_ansi_buffer(screen_t* screen, buffer_t* buffer) {
-  term_move_cursor_absolute(buffer, 0, 0);
+void screenline_to_ansi_buffer(screen_t* screen, buffer_t* buffer, int row) {
+  style_t prev_style = -1;
+
+  term_move_cursor_absolute(buffer, 0, row);
   // style_t previous_style = screen->styles[0];
   // style_to_buffer(buffer, previous_style);
-  for (int r = 0; r < screen->height - 1; r++) {
-    for (int c = 0; c < screen->width - 1; c++) {
-      uint32_t index = (r * screen->width) + c;
-      style_t style = screen->styles[index];
-      term_move_cursor_absolute(buffer, c, r);
+  // screen->height, screen->width
+  for (int c = 0; c < screen->width; c++) {
+    uint32_t index = (row * screen->width) + c;
+    style_t style = screen->styles[index];
+    if (style != prev_style) {
       style_to_buffer(buffer, style);
-      /*
-	if (previous_style != style) {
-	style_to_buffer(buffer, style);
-	previous_style = style;
-	}
-      */
-      uint32_t cp = screen->chars[index];
-      buffer_append_code_point(buffer, cp ? cp : '-');
+      prev_style = style;
     }
-    buffer_printf(buffer, "\n");
+    uint32_t cp = screen->chars[index];
+    buffer_append_code_point(buffer, cp ? cp : '-');
+  }
+  buffer_printf(buffer, "\n");
+}
+
+void write_screen(screen_t* screen) {
+  buffer_t* buffer = make_buffer(1000);
+  for (int row = 0; row < screen->height; row++) {
+    buffer_clear(buffer);
+    screenline_to_ansi_buffer(screen, buffer, row);
+    buffer_write_all_chunked(stdout, buffer);
+    fflush(stdout);
+    usleep(5);
   }
 }
 
@@ -84,32 +92,42 @@ screen_t* _test_screen = nullptr;
 random_state_t* _random = nullptr;
 
 void draw_random_screen(boolean_t output) {
+
   if (_test_screen == nullptr) {
     _test_screen = get_initial_screen();
     _random = random_state();
   }
 
-  int linenum = random_next(_random) & 0xf;
-  int start_column = random_next(_random) & 0xf;
+  screen_fill(_test_screen, 0, set_foreground(0LL, 0xff00ULL));
 
-  style_t style = 0;
-  style = set_foreground(style, 0xffffff & random_next(_random));
-  style = set_background(style, 0xffffff & random_next(_random));
-
-  // style = set_foreground(style, 0xffffff);
-  // style = set_background(style, 0xff0000);
-
-  for (int times = 0; times < 100; times++) {
+  for (int times = 0; times < 30; times++) {
+    style_t style = 0;
+    int linenum = random_next(_random) & 0xf;
+    linenum += random_next(_random) & 0xf;
+    int start_column = random_next(_random) & 0xf;
+    start_column += random_next(_random) & 0xf;
+    start_column += random_next(_random) & 0xf;
+    start_column += random_next(_random) & 0xf;
+    start_column += random_next(_random) & 0xf;
+    style = set_foreground(style, 0xffffff & random_next(_random));
+    style = set_background(style, 0xffffff & random_next(_random));
     for (int i = 0; i < 10; i++) {
       screen_set_char(_test_screen, 'A' + i, style, linenum, i + start_column);
     }
   }
 
   buffer_t* buffer = make_buffer(1000);
-  screen_to_ansi_buffer(_test_screen, buffer);
+  // screen_to_ansi_buffer(_test_screen, buffer);
 
   if (output) {
-    buffer_write_all(stdout, buffer);
+    write_screen(_test_screen);
+    sleep(2);
+    buffer_t* buffer = make_buffer(1000);
+    style_to_buffer(buffer, set_foreground(0LL, 0xff00ULL));
+    term_move_cursor_absolute(buffer, 0, _test_screen->height - 5);
+    buffer_write_all_chunked(stdout, buffer);
+    fprintf(stdout, "\nwidth = %d, height = %d, size = %d\n", _test_screen->width, _test_screen->height,
+	    buffer->length & 0xffffffff);
   } else {
     // buffer = make_buffer(1000);
     // style_to_buffer(buffer, style);
