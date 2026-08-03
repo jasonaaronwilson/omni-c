@@ -178,8 +178,8 @@ void term_set_foreground_color(buffer_t* buffer, uint32_t color) {
 
   // Escape sequence for setting foreground color (ESC [ 38; 2; r; g; b m)
   buffer_printf(buffer,
-		TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red,
-		green, blue);
+                TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red,
+                green, blue);
 }
 
 /**
@@ -198,8 +198,8 @@ void term_set_background_color(buffer_t* buffer, uint32_t color) {
 
   // Escape sequence for setting background color (ESC [ 48; 2; r; g; b m)
   buffer_printf(buffer,
-		TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red,
-		green, blue);
+                TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red,
+                green, blue);
 }
 
 /**
@@ -279,6 +279,30 @@ void term_italic(buffer_t* buffer) {
  */
 void term_underline(buffer_t* buffer) {
   buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
+}
+
+void term_strikethrough(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("9m"));
+}
+
+void term_overline(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("53m"));
+}
+
+void term_superscript(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("73m"));
+}
+
+void term_subscript(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("74m"));
+}
+
+void term_slow_blink(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("5m"));
+}
+
+void term_fast_blink(buffer_t* buffer) {
+  buffer_printf(buffer, TERM_ESCAPE_STRING("6m"));
 }
 
 /**
@@ -370,6 +394,14 @@ extern struct termios term_echo_off() {
 extern void term_echo_restore(struct termios oldt) {
   // Restore the original terminal settings
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+}
+
+void term_disable_autowrap(buffer_t* buffer) {
+  buffer_append_string(buffer, "\033[?7l");
+}
+
+void term_enable_autowrap(buffer_t* buffer) {
+  buffer_append_string(buffer, "\033[?7h");
 }
 
 // Set window title.
