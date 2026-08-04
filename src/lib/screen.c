@@ -1,7 +1,12 @@
 /**
  * @file screen.c
  *
- * An abstraction over a terminal screen.
+ * A high level abstraction over a terminal screen for (immediate
+ * mode) TUIs. While nothing prevents the user from writing to the
+ * virtual screen directory, higher level functions exist to divide
+ * the screen into overlapping and non-overlapping windows which with
+ * clipping plus drawing from lowest to highest z-order makes it easy
+ * to construct pretty and scalable TUIs.
  */
 
 /**
@@ -9,18 +14,25 @@
  *
  * This is an abstraction for the physical terminal screen. Rendering
  * to this screen is not immediate as changes should be written back
- * to front in case of things like pop-up dialog boxes. Typically you
- * render to a cheap abstract screen_window_t which represents only a
- * portion of the entire screen.
+ * to front in case of things like pop-up dialog boxes.
+ *
+ * Must rendering is actually done via screen_window_t (so first the
+ * physical screen width and height are diveded up into your
+ * layout). These are very cheap and meant to be thrown away.
  */
 typedef screen_t = struct {
   uint32_t width;
   uint32_t height;
-  // style_t current_style;
   style_t* styles;
   uint32_t* chars;
 };
 
+/**
+ * @struct screen_window_t
+ *
+ * Represents a recentangular view-port positioned on the virtual
+ * screen.
+ */
 typedef screen_window_t = struct {
   screen_t* screen;
   uint32_t x_offset;
@@ -45,6 +57,14 @@ void screen_fill(screen_t* screen, uint32_t ch, style_t style) {
   for (int i = 0; i < limit; i++) {
     screen->chars[i] = ch;
     screen->styles[i] = style;
+  }
+}
+
+void window_fill(screen_window_t* window, uint32_t ch, style_t style) {
+  for (int row = 0; row < window->height; row++) {
+    for (int column = 0; column < window->width; column++) {
+      screen_window_set_char(window, ch, style, row, column);
+    }
   }
 }
 
@@ -206,6 +226,14 @@ void write_screen(screen_t* screen) {
   // usleep(5);
 }
 
+void window_put_string(screen_window_t* window, style_t style, uint32_t row, uint32_t column, char* str) {
+  int len = strlen(str);
+  // Fix for unicode
+  for (int i = 0; i < len; i++) {
+    screen_window_set_char(window, str[i], style, row, column + i);
+  }
+}
+
 void style_to_buffer(buffer_t* buffer, style_t style) {
   term_reset_formatting(buffer);
   term_set_foreground_color(buffer, get_foreground(style));
@@ -261,7 +289,12 @@ void draw_random_chars_in_window(screen_window_t* window) {
   }
 }
 
-void draw_random_screen(boolean_t output) {
+void overlay_dimensions(screen_window_t* window, style_t style) {
+  char* str = string_printf(" [width = %d, height = %d] ", window->width, window->height);
+  window_put_string(window, style, 2, 5, str);
+}
+
+void draw_random_screen(boolean_t output_dimensions) {
 
   if (_test_screen == nullptr) {
     _test_screen = get_initial_screen();
@@ -269,6 +302,8 @@ void draw_random_screen(boolean_t output) {
   }
 
   screen_window_t* root = make_root_screen_window(_test_screen);
+
+  // screen_fill(_test_screen, 0, set_foreground(0LL, 0xff00ULL));
 
   screen_window_t* top = nullptr;
   screen_window_t* bottom = nullptr;
@@ -278,19 +313,30 @@ void draw_random_screen(boolean_t output) {
   screen_window_t* top_right = nullptr;
   screen_window_split_horizontally(top, 0.5, &top_left, &top_right);
 
+  window_fill(top_right, ' ', set_background(0, 0x808080));
+
   box_drawing_t* box = get_default_window_border_box();
+
   top_left = screen_window_draw_border(top_left, box);
   top_right = screen_window_draw_border(top_right, box);
   bottom = screen_window_draw_border(bottom, box);
 
   top_left->current_style = set_underline(set_foreground_red(0, 0xff), true);
   draw_random_chars_in_window(top_left);
-
-  top_right->current_style = set_fast_blink(set_foreground_blue(0, 0xff), true);
+  top_right->current_style = set_bold(set_background(set_foreground_blue(0, 0xff), 0x808080), true);
   draw_random_chars_in_window(top_right);
 
   bottom->current_style = set_foreground_green(0, 0xff);
   draw_random_chars_in_window(bottom);
+
+  if (output_dimensions) {
+    style_t style = 0;
+    style = set_background(style, 0x5c80bc);
+    style = set_foreground(style, 0xe8c547);
+    overlay_dimensions(top_left, style);
+    overlay_dimensions(top_right, style);
+    overlay_dimensions(bottom, style);
+  }
 
   write_screen(_test_screen);
   sleep(2);
@@ -300,47 +346,4 @@ void draw_random_screen(boolean_t output) {
   term_move_cursor_absolute(buffer, 0, _test_screen->height - 5);
   buffer_write_all_chunked(stdout, buffer);
   // fprintf(stdout, "X <-- The cursor ended up here!\n");
-
-  /*
-
-  screen_fill(_test_screen, 0, set_foreground(0LL, 0xff00ULL));
-
-  for (int times = 0; times < 30; times++) {
-    style_t style = 0;
-    int linenum = random_next(_random) & 0xf;
-    linenum += random_next(_random) & 0xf;
-    int start_column = random_next(_random) & 0xf;
-    start_column += random_next(_random) & 0xf;
-    start_column += random_next(_random) & 0xf;
-    start_column += random_next(_random) & 0xf;
-    start_column += random_next(_random) & 0xf;
-    style = set_foreground(style, 0xffffff & random_next(_random));
-    style = set_background(style, 0xffffff & random_next(_random));
-    for (int i = 0; i < 10; i++) {
-      hidden_screen_set_char(_test_screen, 'A' + i, style, linenum, i + start_column);
-    }
-  }
-
-  buffer_t* buffer = make_buffer(1000);
-  // screen_to_ansi_buffer(_test_screen, buffer);
-
-  if (output) {
-    write_screen(_test_screen);
-    sleep(2);
-    buffer_t* buffer = make_buffer(1000);
-    style_to_buffer(buffer, set_foreground(0LL, 0xff00ULL));
-    term_move_cursor_absolute(buffer, 0, _test_screen->height - 5);
-    buffer_write_all_chunked(stdout, buffer);
-    fprintf(stdout, "\nwidth = %d, height = %d, size = %d\n", _test_screen->width, _test_screen->height,
-	    buffer->length & 0xffffffff);
-  } else {
-    // buffer = make_buffer(1000);
-    // style_to_buffer(buffer, style);
-    // fprintf(stdout, "%s", buffer_to_c_string(buffer));
-    fprintf(stdout, "width = %d, height = %d, size = %d\n", _test_screen->width, _test_screen->height,
-	    buffer->length & 0xffffffff);
-    fprintf(stdout, "%s\n", quote_c_string(buffer_to_c_string(buffer)));
-  }
-
-  */
 }
