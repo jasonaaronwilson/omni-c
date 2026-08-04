@@ -39,7 +39,6 @@ typedef screen_window_t = struct {
   uint32_t y_offset;
   uint32_t width;
   uint32_t height;
-  style_t current_style;
 };
 
 screen_t* get_initial_screen(void) {
@@ -73,10 +72,6 @@ screen_window_t* make_root_screen_window(screen_t* screen) {
   window->screen = screen;
   window->width = screen->width;
   window->height = screen->height;
-  // Simple pure green on black, no text effects. The true default of
-  // black on black isn't user friendly when first coding something
-  // up.
-  window->current_style = set_foreground_green(0, 0xff);
   return window;
 }
 
@@ -152,28 +147,28 @@ box_drawing_t* get_default_window_border_box(void) {
   return box;
 }
 
-screen_window_t* screen_window_draw_border(screen_window_t* window, box_drawing_t* box) {
+screen_window_t* screen_window_draw_border(screen_window_t* window, box_drawing_t* box, style_t style) {
   // First the top
   for (int i = 0; i < window->width; i++) {
-    screen_window_set_char(window, box->top_edge, window->current_style, 0, i);
+    screen_window_set_char(window, box->top_edge, style, 0, i);
   }
   // Now the bottom
   for (int i = 0; i < window->width; i++) {
-    screen_window_set_char(window, box->top_edge, window->current_style, window->height-1, i);
+    screen_window_set_char(window, box->top_edge, style, window->height-1, i);
   }
   // Now the left
   for (int i = 0; i < window->height; i++) {
-    screen_window_set_char(window, box->left_edge, window->current_style, i, 0);
+    screen_window_set_char(window, box->left_edge, style, i, 0);
   }
   // Now the right
   for (int i = 0; i < window->height; i++) {
-    screen_window_set_char(window, box->left_edge, window->current_style, i, window->width-1);
+    screen_window_set_char(window, box->left_edge, style, i, window->width-1);
   }
   // Now the corners
-  screen_window_set_char(window, box->upper_left_corner, window->current_style, 0, 0);
-  screen_window_set_char(window, box->upper_right_corner, window->current_style, 0, window->width-1);
-  screen_window_set_char(window, box->lower_left_corner, window->current_style, window->height-1, 0);
-  screen_window_set_char(window, box->lower_right_corner, window->current_style, window->height-1, window->width-1);
+  screen_window_set_char(window, box->upper_left_corner, style, 0, 0);
+  screen_window_set_char(window, box->upper_right_corner, style, 0, window->width-1);
+  screen_window_set_char(window, box->lower_left_corner, style, window->height-1, 0);
+  screen_window_set_char(window, box->lower_right_corner, style, window->height-1, window->width-1);
 
 
   // TODO(jawilson): the sides and then the corners
@@ -280,12 +275,12 @@ void style_to_buffer(buffer_t* buffer, style_t style) {
 screen_t* _test_screen = nullptr;
 random_state_t* _random = nullptr;
 
-void draw_random_chars_in_window(screen_window_t* window) {
+void draw_random_chars_in_window(screen_window_t* window, style_t style) {
   for (int i = 0; i < 26; i++) {
     // Sometime write outside of the window
     uint32_t x = random_next_uint64_below(_random, window->width * 2);
     uint32_t y = random_next_uint64_below(_random, window->height * 2);
-    screen_window_set_char(window, 'A' + i, window->current_style, y, x);
+    screen_window_set_char(window, 'A' + i, style, y, x);
   }
 }
 
@@ -295,6 +290,9 @@ void overlay_dimensions(screen_window_t* window, style_t style) {
 }
 
 void draw_random_screen(boolean_t output_dimensions) {
+
+  style_t default_style = 0;
+  default_style = set_foreground_green(default_style, 0xff);
 
   if (_test_screen == nullptr) {
     _test_screen = get_initial_screen();
@@ -317,17 +315,18 @@ void draw_random_screen(boolean_t output_dimensions) {
 
   box_drawing_t* box = get_default_window_border_box();
 
-  top_left = screen_window_draw_border(top_left, box);
-  top_right = screen_window_draw_border(top_right, box);
-  bottom = screen_window_draw_border(bottom, box);
+  top_left = screen_window_draw_border(top_left, box, default_style);
+  top_right = screen_window_draw_border(top_right, box, default_style);
+  bottom = screen_window_draw_border(bottom, box, default_style);
 
-  top_left->current_style = set_underline(set_foreground_red(0, 0xff), true);
-  draw_random_chars_in_window(top_left);
-  top_right->current_style = set_bold(set_background(set_foreground_blue(0, 0xff), 0x808080), true);
-  draw_random_chars_in_window(top_right);
+  style_t top_left_random_style = set_underline(set_foreground_red(0, 0xff), true);
+  draw_random_chars_in_window(top_left, top_left_random_style);
 
-  bottom->current_style = set_foreground_green(0, 0xff);
-  draw_random_chars_in_window(bottom);
+  style_t top_right_random_style = set_bold(set_background(set_foreground_blue(0, 0xff), 0x808080), true);
+  draw_random_chars_in_window(top_right, top_right_random_style);
+
+  style_t bottom_random_style = set_foreground_green(0, 0xff);
+  draw_random_chars_in_window(bottom, bottom_random_style);
 
   if (output_dimensions) {
     style_t style = 0;
@@ -345,5 +344,4 @@ void draw_random_screen(boolean_t output_dimensions) {
   style_to_buffer(buffer, set_foreground(0LL, 0xff00ULL));
   term_move_cursor_absolute(buffer, 0, _test_screen->height - 5);
   buffer_write_all_chunked(stdout, buffer);
-  // fprintf(stdout, "X <-- The cursor ended up here!\n");
 }
