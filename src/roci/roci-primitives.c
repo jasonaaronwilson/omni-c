@@ -44,6 +44,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
   roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
   roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
+  roci_add_primitive(env, &roci_primitive_path_is_directory, "path_is_directory");
+  roci_add_primitive(env, &roci_primitive_path_is_file, "path_is_file");
 
   // String Functions
   roci_add_primitive(env, &roci_primitive_is_string, "is_string");
@@ -662,6 +664,22 @@ void roci_primitive_glob(roci_vm_state_t* state) {
     roci_debug_error(state, "An error occurred during globbing.");
   }
   roci_push_list(state, result);
+}
+
+void roci_primitive_path_is_directory(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "path_is_directory expects 1 argument");
+  }
+  char* path = roci_pop_string(state);
+  roci_push_boolean(state, path_is_directory(path));
+}
+
+void roci_primitive_path_is_file(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "path_is_file expects 1 argument");
+  }
+  char* path = roci_pop_string(state);
+  roci_push_boolean(state, path_is_file(path));
 }
 
 // Integer Operations
