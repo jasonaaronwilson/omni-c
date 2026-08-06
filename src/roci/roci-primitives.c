@@ -46,6 +46,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
   roci_add_primitive(env, &roci_primitive_path_is_directory, "path_is_directory");
   roci_add_primitive(env, &roci_primitive_path_is_file, "path_is_file");
+  roci_add_primitive(env, &roci_primitive_path_remove, "path_remove");
 
   // String Functions
   roci_add_primitive(env, &roci_primitive_is_string, "is_string");
@@ -680,6 +681,17 @@ void roci_primitive_path_is_file(roci_vm_state_t* state) {
   }
   char* path = roci_pop_string(state);
   roci_push_boolean(state, path_is_file(path));
+}
+
+void roci_primitive_path_remove(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "path_remove expects 1 argument");
+  }
+  char* path = roci_pop_string(state);
+  if (remove(path) != 0) {
+    roci_debug_error(state, string_append("File was not removed: ", path));
+  }
+  roci_push_false(state);
 }
 
 // Integer Operations

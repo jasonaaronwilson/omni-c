@@ -263,17 +263,60 @@ void style_to_buffer(buffer_t* buffer, style_t style) {
   if (get_fast_blink(style)) {
     term_fast_blink(buffer);
   }
-
   // slow_blink, fast_blink
 }
 
-/* ================================================================================ */
-// Gross testing code below
+void buffer_to_screen_window(screen_window_t* window,
+			     style_t style,
+			     style_t gutter_style,
+			     buffer_t* buffer,
+			     uint32_t buffer_start_line,
+			     uint32_t line_number_gutter_width) {
+  buffer_region_t region = 
+    buffer_line_region(buffer, buffer_start_line, buffer_start_line + 1);
 
-//
+  int current_line_number = buffer_start_line;
+  int window_line_number = 0;
+  int window_column_number = 0;
+
+  int index = region.start_position;
+  while (index < buffer->length 
+	 && ((current_line_number - buffer_start_line) < window->height)) {
+    if (window_column_number == 0 && line_number_gutter_width > 0) {
+      char* num_string = string_printf("%d", current_line_number + 1);
+      num_string = string_left_pad(num_string, line_number_gutter_width, ' ');
+      window_put_string(window, gutter_style, window_line_number, window_column_number, 
+			num_string);
+      window_column_number = line_number_gutter_width + 1;
+    }
+    while ((index < buffer->length) && (buffer_get(buffer, index) != '\n')) {
+      screen_window_set_char(window, buffer_get(buffer, index), style, 
+			     window_line_number, window_column_number++);
+      index++;
+    }
+    index++;
+    window_column_number = 0;
+    current_line_number++;
+    window_line_number++;
+  }
+}
+			     
+/* ================================================================================ */
+/* Testing Code */
+/* ================================================================================ */
+
+// Once the roci debugger is using screen.c we can probably remove
+// this (or make a better demo elsehwere).
 
 screen_t* _test_screen = nullptr;
 random_state_t* _random = nullptr;
+
+// This should be called last if you actually want to see the
+// dimesensions on top.
+void overlay_dimensions(screen_window_t* window, style_t style) {
+  char* str = string_printf(" [width = %d, height = %d] ", window->width, window->height);
+  window_put_string(window, style, 2, 5, str);
+}
 
 void draw_random_chars_in_window(screen_window_t* window, style_t style) {
   for (int i = 0; i < 26; i++) {
@@ -284,10 +327,7 @@ void draw_random_chars_in_window(screen_window_t* window, style_t style) {
   }
 }
 
-void overlay_dimensions(screen_window_t* window, style_t style) {
-  char* str = string_printf(" [width = %d, height = %d] ", window->width, window->height);
-  window_put_string(window, style, 2, 5, str);
-}
+char* sample_source_code = "one\ntwo\nthree\nfour\nfive\nThis is line six...\nline 7\n\nline 9";
 
 void draw_random_screen(boolean_t output_dimensions) {
 
@@ -300,7 +340,6 @@ void draw_random_screen(boolean_t output_dimensions) {
   }
 
   screen_window_t* root = make_root_screen_window(_test_screen);
-
   // screen_fill(_test_screen, 0, set_foreground(0LL, 0xff00ULL));
 
   screen_window_t* top = nullptr;
@@ -327,6 +366,9 @@ void draw_random_screen(boolean_t output_dimensions) {
 
   style_t bottom_random_style = set_foreground_green(0, 0xff);
   draw_random_chars_in_window(bottom, bottom_random_style);
+
+  buffer_to_screen_window(top_left, top_left_random_style, top_left_random_style,
+			  buffer_from_string(sample_source_code), 0, 4);
 
   if (output_dimensions) {
     style_t style = 0;

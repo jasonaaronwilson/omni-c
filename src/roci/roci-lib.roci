@@ -332,3 +332,21 @@ let ht_delete = fn(ht, key) {
     alist_delete(alist, key);
   });
 };
+
+/* ====================================================================== */
+/* Extra Path Functions */
+/* ====================================================================== */
+
+let walk_directory = fn(dir, include_dirs, callback) {
+  let files = glob(string_append(dir, "*"));
+  list_for_each(files, fn(x) {
+      if (path_is_directory(x)) {
+        walk_directory(string_append(x, "/"), include_dirs, callback);
+        if (include_dirs) {
+          callback(x);
+        }
+      } else {
+        callback(x);
+      }
+    });
+};

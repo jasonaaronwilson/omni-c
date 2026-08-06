@@ -236,7 +236,7 @@ void term_move_cursor_relative(buffer_t* buffer, int x, int y) {
   }
   if (y > 0) {
     buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
-  } else {
+  } else if (y < 0) {
     buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), -y);
   }
 }
@@ -381,6 +381,9 @@ extern struct termios term_echo_off() {
 
   // Disable canonical input mode and echo
   newt.c_lflag &= ~(ICANON | ECHO);
+  // TODO(jawilson): this is from a gemini code review...
+  // newt.c_cc[VMIN] = 1;  // Read blocks until at least 1 byte is available
+  // newt.c_cc[VTIME] = 0; // No timeout
   tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
   return oldt;
