@@ -1,9 +1,9 @@
 /**
  * @file roci-bb-builder.c
  *
- * This code is used by roci-assembler.c and in the future
- * roci-parser.c to build all of the low-level bblocks and eventually
- * "link" them via their real addresses in memory rather than labels.
+ * This code is used by the roci-parser.c to build all of the
+ * low-level bblocks and eventually "link" them via their real
+ * addresses in memory rather than labels.
  */
 
 /**
