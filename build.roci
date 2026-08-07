@@ -157,6 +157,21 @@ let get_warn_flags = fn(cc) {
   return make_list();
 };
 
+/**
+ * @function get_opt_flags
+ *
+ * Hopefully this doesn't need to be overly tweaked for compilers.
+ */
+let get_opt_flags = fn(cc) {
+  if (string_equal(cc, "gcc")) {
+    return make_list("-O3");
+  }
+  if (string_equal(cc, "clang")) {
+    return make_list("-O3");
+  }
+  return make_list();
+};
+
 // I don't think this much matters...
 let add_extra_flags = fn(cc) {
   if (string_equal(cc, "gcc")) {
@@ -174,6 +189,7 @@ let add_extra_flags = fn(cc) {
 let CC = get_c_compiler();
 let CC_FLAGS = make_list("-g", "-rdynamic");
 let WARN_FLAGS = get_warn_flags(CC);
+let OPT_FLAGS = get_opt_flags(CC);
 
 /* ====================================================================== */
 
@@ -363,7 +379,7 @@ ALL_OMNI_C_SRC = filter_files_by_platform(ALL_OMNI_C_SRC);
  * compiler which has a stable, current, and "self" version, this is
  * parameterized.
  */
-let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
+let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
 
   build_reflection_header();
   build_roci_embedded_lib();
@@ -394,6 +410,7 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary) {
   let CC_COMMAND_LINE = make_list(CC);
   list_push_all(CC_COMMAND_LINE, CC_FLAGS);
   list_push_all(CC_COMMAND_LINE, WARN_FLAGS);
+  list_push_all(CC_COMMAND_LINE, OPT_FLAGS);
   if (string_equal(PLATFORM, "darwin")) {
     list_push(CC_COMMAND_LINE, "-w"); // Turn off all warnings
     list_push(CC_COMMAND_LINE, "-I/opt/homebrew/opt/bdw-gc/include");
@@ -412,14 +429,24 @@ add_target(string_append(BUILD_DIR, "bin/omni-c"),
   fn() {
   build_omni_c(string_append(BUILD_DIR, "bin/omni-c"),
     string_append(BUILD_DIR, "omni-c.c"),
-    string_append(BUILD_DIR, "bin/omni-c-stable"));
+    string_append(BUILD_DIR, "bin/omni-c-stable"),
+    false);
 });
 
 add_target(string_append(BUILD_DIR, "bin/self"),
   fn() {
   build_omni_c(string_append(BUILD_DIR, "bin/self"),
     string_append(BUILD_DIR, "omni-c-self.c"),
-    string_append(BUILD_DIR, "bin/omni-c"));
+    string_append(BUILD_DIR, "bin/omni-c"),
+    true);
+});
+
+add_target(string_append(BUILD_DIR, "bin/self-no-opt"),
+  fn() {
+  build_omni_c(string_append(BUILD_DIR, "bin/self"),
+    string_append(BUILD_DIR, "omni-c-self.c"),
+    string_append(BUILD_DIR, "bin/omni-c"),
+    false);
 });
 
 let build_lib_oar = fn() {
