@@ -39,7 +39,6 @@ let _LIB_SRC_ = make_list(
    "io-linux.c",
    "io-darwin.c",
    "path.c",
-   "terminal.c",
    "tokenizer.c",
    "random.c",
    "cdl-printer.c",
@@ -47,9 +46,10 @@ let _LIB_SRC_ = make_list(
    "splitjoin.c",
    "oarchive.c",
    "quote-util.c",
-   "screen.c",
-   "style.c",
-   "test.c");
+   "test.c",
+   "tui/terminal.c",
+   "tui/screen.c",
+   "tui/style.c");
 
 let SOURCE_LIB = list_map(_LIB_SRC_, fn(x) {
     let prefix = string_append(TOP_DIR, "src/lib/");
