@@ -2,8 +2,7 @@
  * @function build_command
  *
  * This command is used to generate a C99 file which contains an
- * entire library. This is similar to build except that C compiler is
- * not invoked, only the C file is produced.
+ * entire application which is then turned into a binary output file.
  */
 void build_command(buffer_t* command_line_comment) {
   if (string_is_null_or_empty(FLAG_c_output_file)) {

@@ -1,3 +1,9 @@
+/**
+ * @file path.c
+ *
+ * IO Operations on paths (I think we should rename this).
+ */
+
 boolean_t path_is_directory(const char* path) {
   struct stat st;
   if (!path || stat(path, &st) != 0) {
