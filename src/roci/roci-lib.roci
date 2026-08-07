@@ -41,6 +41,24 @@ let list_index_of = fn(lst, item) {
   });
 };
 
+let list_shuffle = fn(lst) {
+
+  let list_swap = fn(lst, i, j) {
+    let element_i = list_get(lst, i);
+    let element_j = list_get(lst, j);
+    list_set(lst, i, element_j);
+    list_set(lst, j, element_i);
+  };
+
+  let len = list_length(lst);
+  for_each_integer(0, len, fn(i) {
+    let j = irem(bit_and(random_int(), 0xffffffff), len);
+    list_swap(lst, i, j);
+  });
+  return lst;
+};
+
+
 let to_display_string = fn(x) {
   if (is_string(x)) {
     return x;

@@ -4,6 +4,28 @@
 // don't don't topologically sort correctly (hopefully just inlined
 // functions).
 
+//
+// This is a copy of list_shuffle from roci-lib.roci. It won't be
+// needed once that file is in stable.
+//
+
+let list_shuffle = fn(lst) {
+
+  let list_swap = fn(lst, i, j) {
+    let element_i = list_get(lst, i);
+    let element_j = list_get(lst, j);
+    list_set(lst, i, element_j);
+    list_set(lst, j, element_i);
+  };
+
+  let len = list_length(lst);
+  for_each_integer(0, len, fn(i) {
+      let j = irem(bit_and(random_int(), 0xffffffff), len);
+      list_swap(lst, i, j);
+    });
+  return lst;
+};
+
 let _LIB_SRC_ = make_list(
    "platform-linux.c",
    "platform-darwin.c",
@@ -35,9 +57,6 @@ let _LIB_SRC_ = make_list(
    "value-tree.c",
    "string-tree.c",
    "flag.c",
-   "io.c",
-   "io-linux.c",
-   "io-darwin.c",
    "path.c",
    "tokenizer.c",
    "random.c",
@@ -47,9 +66,20 @@ let _LIB_SRC_ = make_list(
    "oarchive.c",
    "quote-util.c",
    "test.c",
-   "tui/terminal.c",
-   "tui/screen.c",
-   "tui/style.c");
+);
+
+let _PERMUTABLE_ = make_list();
+list_push_all(_PERMUTABLE_, make_list("io/io.c", "io/io-darwin.c", "io/io-linux.c"));
+list_push_all(_PERMUTABLE_, make_list("tui/terminal.c", "tui/screen.c", "tui/style.c"));
+
+// Let's randomly shuffle these to make sure we don't make the
+// ordering problem any worse. This is actually a terrible idea in too
+// many ways to count (so ideally should be used for a stable target
+// though in some ways it might end up being a source of confidence
+// that source order doesn't matter (it unforunately does with inline
+// functions that should be ordered).
+
+list_push_all(_LIB_SRC_, list_shuffle(_PERMUTABLE_));
 
 let SOURCE_LIB = list_map(_LIB_SRC_, fn(x) {
     let prefix = string_append(TOP_DIR, "src/lib/");
