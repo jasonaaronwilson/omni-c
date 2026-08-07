@@ -248,15 +248,21 @@ let announce_build = fn(target) {
   println(string_append("[Building ", target, "]"));
 };
 
-let TOP_DIR = string_append(pwd(), "/");
-let BUILD_DIR = string_append(TOP_DIR, "build-dir/");
-let STABLE_BINARY_PATH = string_append(BUILD_DIR, "bin/omni-c-stable");
-let OMNI_C = string_append(BUILD_DIR, "bin/omni-c");
-let OMNI_C_STABLE = string_append(BUILD_DIR, "bin/omni-c-stable");
+// Refer to a path relative to the root of the build dir.
+let build_dir_path = fn(path) {
+  return string_append(BUILD_DIR, path);
+};
 
+// Rename src_path
 let source_file_location = fn(x) {
   return string_append(TOP_DIR, x);
 };
+
+let TOP_DIR = string_append(pwd(), "/");
+let BUILD_DIR = string_append(TOP_DIR, "build-dir/");
+let STABLE_BINARY_PATH = build_dir_path("bin/omni-c-stable");
+let OMNI_C = build_dir_path("bin/omni-c");
+let OMNI_C_STABLE = build_dir_path("bin/omni-c-stable");
 
 load("src/build-fragment.roci");
 load("src/lib/build-fragment.roci");
@@ -267,9 +273,9 @@ list_push_all(ALL_OMNI_C_SRC, SOURCE_OMNI_C);
 list_push_all(ALL_OMNI_C_SRC, SOURCE_LIB);
 list_push_all(ALL_OMNI_C_SRC, SOURCE_ROCI);
 
-let RHEADER = string_append(BUILD_DIR, "gen-files/reflection-header.c");
+let RHEADER = build_dir_path("gen-files/reflection-header.c");
 list_push(ALL_OMNI_C_SRC, RHEADER);
-let ROCI_LIB = string_append(BUILD_DIR, "gen-files/roci-lib.c");
+let ROCI_LIB = build_dir_path("gen-files/roci-lib.c");
 list_push(ALL_OMNI_C_SRC, ROCI_LIB);
 
 let generate_embedded_file = fn(variable, input, output) {
@@ -283,7 +289,7 @@ let generate_embedded_file = fn(variable, input, output) {
     announce_build(output);
   }
 
-  let command_line = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"),
+  let command_line = make_list(build_dir_path("bin/omni-c-stable"),
     "roci",
     "--script",
     script,
@@ -316,7 +322,7 @@ let clang_format = fn(filename) {
 };
 
 let format_all_c = fn() {
-  let files = ALL_OMNI_C_SRC; // SOURCE_OMNI_C;
+  let files = ALL_OMNI_C_SRC;
   list_for_each(files, fn(x) {
     if (string_contains(x, "gen-files/")) {
       return;
@@ -425,32 +431,32 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
   check_shell_command(cc_result);
 };
 
-add_target(string_append(BUILD_DIR, "bin/omni-c"),
+add_target(build_dir_path("bin/omni-c"),
   fn() {
-  build_omni_c(string_append(BUILD_DIR, "bin/omni-c"),
-    string_append(BUILD_DIR, "omni-c.c"),
-    string_append(BUILD_DIR, "bin/omni-c-stable"),
+  build_omni_c(build_dir_path("bin/omni-c"),
+    build_dir_path("omni-c.c"),
+    build_dir_path("bin/omni-c-stable"),
     false);
 });
 
-add_target(string_append(BUILD_DIR, "bin/self"),
+add_target(build_dir_path("bin/self"),
   fn() {
-  build_omni_c(string_append(BUILD_DIR, "bin/self"),
-    string_append(BUILD_DIR, "omni-c-self.c"),
-    string_append(BUILD_DIR, "bin/omni-c"),
+  build_omni_c(build_dir_path("bin/self"),
+    build_dir_path("omni-c-self.c"),
+    build_dir_path("bin/omni-c"),
     true);
 });
 
-add_target(string_append(BUILD_DIR, "bin/self-no-opt"),
+add_target(build_dir_path("bin/self-no-opt"),
   fn() {
-  build_omni_c(string_append(BUILD_DIR, "bin/self"),
-    string_append(BUILD_DIR, "omni-c-self.c"),
-    string_append(BUILD_DIR, "bin/omni-c"),
+  build_omni_c(build_dir_path("bin/self"),
+    build_dir_path("omni-c-self.c"),
+    build_dir_path("bin/omni-c"),
     false);
 });
 
 let build_lib_oar = fn() {
-  let target = string_append(BUILD_DIR, "bin/lib.oar");
+  let target = build_dir_path("bin/lib.oar");
   let sources = filter_files_by_platform(SOURCE_LIB);
 
   if (all_older_than(target, sources)) {
@@ -460,14 +466,14 @@ let build_lib_oar = fn() {
     announce_build(target);
   }
 
-  let command = make_list(string_append(BUILD_DIR, "bin/omni-c-stable"),
+  let command = make_list(build_dir_path("bin/omni-c-stable"),
     "archive", "--archive-output-file", target);
   list_push_all(command, sources);
   let result = shell(command);
   check_shell_command(result);
 };
 
-add_target(string_append(BUILD_DIR, "bin/lib.oar"),
+add_target(build_dir_path("bin/lib.oar"),
   fn() {
   build_lib_oar();
 });
@@ -522,9 +528,9 @@ let run_tests = fn(omni_c) {
 };
 
 add_target("test", fn() {
-  build_target(string_append(BUILD_DIR, "bin/omni-c"));
-  build_target(string_append(BUILD_DIR, "bin/lib.oar"));
-  run_tests(string_append(BUILD_DIR, "bin/omni-c"));
+  build_target(build_dir_path("bin/omni-c"));
+  build_target(build_dir_path("bin/lib.oar"));
+  run_tests(build_dir_path("bin/omni-c"));
 });
 
 let build_target = fn(target_name) {
@@ -541,9 +547,9 @@ let build_target = fn(target_name) {
   }
 };
 
-add_target("all", make_list(string_append(BUILD_DIR, "bin/omni-c"),
-  string_append(BUILD_DIR, "bin/self"),
-  string_append(BUILD_DIR, "bin/lib.oar")));
+add_target("all", make_list(build_dir_path("bin/omni-c"),
+  build_dir_path("bin/self"),
+  build_dir_path("bin/lib.oar")));
 
 add_target("clean", fn() {
   walk_directory(BUILD_DIR, true, fn(name) {
@@ -582,6 +588,12 @@ add_target("cloc", fn() {
   // TODO(jawilson): string_replace_all(shell_result, "Java", "roci");
   println(shell_stdout(shell_result));
 });
+
+//
+// lib-examples:
+//	@$(MAKE) -C lib/lib/examples examples
+//
+
 
 /* ====================================================================== */
 
