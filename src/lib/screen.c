@@ -85,7 +85,7 @@ screen_window_t* screen_window_clone(screen_window_t* window) {
 }
 
 void hidden_screen_set_char(screen_t* screen, uint32_t ch, style_t style,
-			    uint32_t row, uint32_t column) {
+                            uint32_t row, uint32_t column) {
   // TODO(jawilson): silent clipping?
   int offset = (row * screen->width) + column;
   screen->chars[offset] = ch;
@@ -99,7 +99,7 @@ void hidden_screen_set_char(screen_t* screen, uint32_t ch, style_t style,
  * you don't have to worry about much.
  */
 void screen_window_set_char(screen_window_t* window, uint32_t ch, style_t style,
-			    uint32_t row, uint32_t column) {
+                            uint32_t row, uint32_t column) {
   if (row < 0 || row >= window->height) {
     return;
   }
@@ -107,11 +107,13 @@ void screen_window_set_char(screen_window_t* window, uint32_t ch, style_t style,
     return;
   }
 
-  hidden_screen_set_char(window->screen, ch, style, row + window->y_offset, column + window->x_offset);
+  hidden_screen_set_char(window->screen, ch, style, row + window->y_offset,
+                         column + window->x_offset);
 }
 
 void screen_window_split_vertically(screen_window_t* window, double fraction,
-				    screen_window_t** top_out, screen_window_t** bottom_out) {
+                                    screen_window_t** top_out,
+                                    screen_window_t** bottom_out) {
   screen_window_t* top = screen_window_clone(window);
   screen_window_t* bottom = screen_window_clone(window);
   uint32_t new_top_height = window->height * fraction;
@@ -123,7 +125,8 @@ void screen_window_split_vertically(screen_window_t* window, double fraction,
 }
 
 void screen_window_split_horizontally(screen_window_t* window, double fraction,
-				      screen_window_t** left_out, screen_window_t** right_out) {
+                                      screen_window_t** left_out,
+                                      screen_window_t** right_out) {
   screen_window_t* left = screen_window_clone(window);
   screen_window_t* right = screen_window_clone(window);
   uint32_t new_left_width = window->width * fraction;
@@ -147,14 +150,15 @@ box_drawing_t* get_default_window_border_box(void) {
   return box;
 }
 
-screen_window_t* screen_window_draw_border(screen_window_t* window, box_drawing_t* box, style_t style) {
+screen_window_t* screen_window_draw_border(screen_window_t* window,
+                                           box_drawing_t* box, style_t style) {
   // First the top
   for (int i = 0; i < window->width; i++) {
     screen_window_set_char(window, box->top_edge, style, 0, i);
   }
   // Now the bottom
   for (int i = 0; i < window->width; i++) {
-    screen_window_set_char(window, box->top_edge, style, window->height-1, i);
+    screen_window_set_char(window, box->top_edge, style, window->height - 1, i);
   }
   // Now the left
   for (int i = 0; i < window->height; i++) {
@@ -162,13 +166,16 @@ screen_window_t* screen_window_draw_border(screen_window_t* window, box_drawing_
   }
   // Now the right
   for (int i = 0; i < window->height; i++) {
-    screen_window_set_char(window, box->left_edge, style, i, window->width-1);
+    screen_window_set_char(window, box->left_edge, style, i, window->width - 1);
   }
   // Now the corners
   screen_window_set_char(window, box->upper_left_corner, style, 0, 0);
-  screen_window_set_char(window, box->upper_right_corner, style, 0, window->width-1);
-  screen_window_set_char(window, box->lower_left_corner, style, window->height-1, 0);
-  screen_window_set_char(window, box->lower_right_corner, style, window->height-1, window->width-1);
+  screen_window_set_char(window, box->upper_right_corner, style, 0,
+                         window->width - 1);
+  screen_window_set_char(window, box->lower_left_corner, style,
+                         window->height - 1, 0);
+  screen_window_set_char(window, box->lower_right_corner, style,
+                         window->height - 1, window->width - 1);
 
 
   // TODO(jawilson): the sides and then the corners
@@ -221,7 +228,8 @@ void write_screen(screen_t* screen) {
   // usleep(5);
 }
 
-void window_put_string(screen_window_t* window, style_t style, uint32_t row, uint32_t column, char* str) {
+void window_put_string(screen_window_t* window, style_t style, uint32_t row,
+                       uint32_t column, char* str) {
   int len = strlen(str);
   // Fix for unicode
   for (int i = 0; i < len; i++) {
@@ -266,32 +274,30 @@ void style_to_buffer(buffer_t* buffer, style_t style) {
   // slow_blink, fast_blink
 }
 
-void buffer_to_screen_window(screen_window_t* window,
-			     style_t style,
-			     style_t gutter_style,
-			     buffer_t* buffer,
-			     uint32_t buffer_start_line,
-			     uint32_t line_number_gutter_width) {
-  buffer_region_t region = 
-    buffer_line_region(buffer, buffer_start_line, buffer_start_line + 1);
+void buffer_to_screen_window(screen_window_t* window, style_t style,
+                             style_t gutter_style, buffer_t* buffer,
+                             uint32_t buffer_start_line,
+                             uint32_t line_number_gutter_width) {
+  buffer_region_t region
+      = buffer_line_region(buffer, buffer_start_line, buffer_start_line + 1);
 
   int current_line_number = buffer_start_line;
   int window_line_number = 0;
   int window_column_number = 0;
 
   int index = region.start_position;
-  while (index < buffer->length 
-	 && ((current_line_number - buffer_start_line) < window->height)) {
+  while (index < buffer->length
+         && ((current_line_number - buffer_start_line) < window->height)) {
     if (window_column_number == 0 && line_number_gutter_width > 0) {
       char* num_string = string_printf("%d", current_line_number + 1);
       num_string = string_left_pad(num_string, line_number_gutter_width, ' ');
-      window_put_string(window, gutter_style, window_line_number, window_column_number, 
-			num_string);
+      window_put_string(window, gutter_style, window_line_number,
+                        window_column_number, num_string);
       window_column_number = line_number_gutter_width + 1;
     }
     while ((index < buffer->length) && (buffer_get(buffer, index) != '\n')) {
-      screen_window_set_char(window, buffer_get(buffer, index), style, 
-			     window_line_number, window_column_number++);
+      screen_window_set_char(window, buffer_get(buffer, index), style,
+                             window_line_number, window_column_number++);
       index++;
     }
     index++;
@@ -300,10 +306,12 @@ void buffer_to_screen_window(screen_window_t* window,
     window_line_number++;
   }
 }
-			     
-/* ================================================================================ */
+
+/* ================================================================================
+ */
 /* Testing Code */
-/* ================================================================================ */
+/* ================================================================================
+ */
 
 // Once the roci debugger is using screen.c we can probably remove
 // this (or make a better demo elsehwere).
@@ -314,7 +322,8 @@ random_state_t* _random = nullptr;
 // This should be called last if you actually want to see the
 // dimesensions on top.
 void overlay_dimensions(screen_window_t* window, style_t style) {
-  char* str = string_printf(" [width = %d, height = %d] ", window->width, window->height);
+  char* str = string_printf(" [width = %d, height = %d] ", window->width,
+                            window->height);
   window_put_string(window, style, 2, 5, str);
 }
 
@@ -327,7 +336,8 @@ void draw_random_chars_in_window(screen_window_t* window, style_t style) {
   }
 }
 
-char* sample_source_code = "one\ntwo\nthree\nfour\nfive\nThis is line six...\nline 7\n\nline 9";
+char* sample_source_code
+    = "one\ntwo\nthree\nfour\nfive\nThis is line six...\nline 7\n\nline 9";
 
 void draw_random_screen(boolean_t output_dimensions) {
 
@@ -358,17 +368,20 @@ void draw_random_screen(boolean_t output_dimensions) {
   top_right = screen_window_draw_border(top_right, box, default_style);
   bottom = screen_window_draw_border(bottom, box, default_style);
 
-  style_t top_left_random_style = set_underline(set_foreground_red(0, 0xff), true);
+  style_t top_left_random_style
+      = set_underline(set_foreground_red(0, 0xff), true);
   draw_random_chars_in_window(top_left, top_left_random_style);
 
-  style_t top_right_random_style = set_bold(set_background(set_foreground_blue(0, 0xff), 0x808080), true);
+  style_t top_right_random_style
+      = set_bold(set_background(set_foreground_blue(0, 0xff), 0x808080), true);
   draw_random_chars_in_window(top_right, top_right_random_style);
 
   style_t bottom_random_style = set_foreground_green(0, 0xff);
   draw_random_chars_in_window(bottom, bottom_random_style);
 
-  buffer_to_screen_window(top_left, top_left_random_style, top_left_random_style,
-			  buffer_from_string(sample_source_code), 0, 4);
+  buffer_to_screen_window(top_left, top_left_random_style,
+                          top_left_random_style,
+                          buffer_from_string(sample_source_code), 0, 4);
 
   if (output_dimensions) {
     style_t style = 0;

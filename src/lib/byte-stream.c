@@ -17,7 +17,8 @@ typedef byte_stream_target_t = struct {
 byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer) {
   byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
   result->read_byte = &buffer_stream_source_read;
-  buffer_byte_stream_source_data_t* data = malloc_struct(buffer_byte_stream_source_data_t);
+  buffer_byte_stream_source_data_t* data
+      = malloc_struct(buffer_byte_stream_source_data_t);
   data->buffer = buffer;
   data->position = 0;
   result->data = cast(void*, data);
@@ -29,8 +30,10 @@ typedef buffer_byte_stream_source_data_t = struct {
   uint64_t position;
 };
 
-uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte) {
-  buffer_byte_stream_source_data_t* data = cast(buffer_byte_stream_source_data_t*, source->data);
+uint8_t buffer_stream_source_read(byte_stream_source_t* source,
+                                  boolean_t* has_byte) {
+  buffer_byte_stream_source_data_t* data
+      = cast(buffer_byte_stream_source_data_t*, source->data);
   uint8_t result = 0;
   if (data->position < buffer_length(data->buffer)) {
     result = buffer_get(data->buffer, data->position++);
@@ -46,7 +49,8 @@ uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_b
 byte_stream_source_t* cstring_to_byte_source(char* string) {
   byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
   result->read_byte = &cstring_stream_source_read;
-  cstring_byte_stream_source_data_t* data = malloc_struct(cstring_byte_stream_source_data_t);
+  cstring_byte_stream_source_data_t* data
+      = malloc_struct(cstring_byte_stream_source_data_t);
   data->string = string;
   data->length = strlen(string);
   data->position = 0;
@@ -60,8 +64,10 @@ typedef cstring_byte_stream_source_data_t = struct {
   uint64_t position;
 };
 
-uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte) {
-  cstring_byte_stream_source_data_t* data = cast(cstring_byte_stream_source_data_t*, source->data);
+uint8_t cstring_stream_source_read(byte_stream_source_t* source,
+                                   boolean_t* has_byte) {
+  cstring_byte_stream_source_data_t* data
+      = cast(cstring_byte_stream_source_data_t*, source->data);
   uint8_t result = 0;
   if (data->position < data->length) {
     result = data->string[data->position++];
@@ -81,7 +87,8 @@ byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer) {
   return result;
 }
 
-byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte) {
+byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target,
+                                                 uint8_t byte) {
   buffer_t* buffer = cast(buffer_t*, target->data);
   buffer_append_byte(buffer, byte);
   return target;

@@ -525,7 +525,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 }
 
 double string_parse_double(char* str) {
-  char *endptr = NULL;
+  char* endptr = NULL;
   errno = 0;
   double value = strtod(str, &endptr);
   if (str == endptr || errno == ERANGE) {
@@ -534,4 +534,3 @@ double string_parse_double(char* str) {
   log_info("string_parse_double = %f", value);
   return value;
 }
-

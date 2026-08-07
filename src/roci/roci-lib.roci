@@ -85,11 +85,11 @@ let buffer_printf_lst = fn(buffer, format, lst) {
  *
  * The formated string is appended to the given buffer.
  */
-let buffer_printf = fn(buffer, format, ...lst) {
+let buffer_printf = fn(buffer, format, ... lst) {
   return buffer_printf_lst(buffer, format, lst);
 };
 
-let sprintf = fn(format, ...lst) {
+let sprintf = fn(format, ... lst) {
   let buffer = make_buffer();
   buffer_printf_lst(buffer, format, lst);
   return buffer_to_string(buffer);
@@ -110,7 +110,7 @@ let string_printf_list = fn(format, lst) {
  *
  * The formated string is sent to stdout.
  */
-let printf = fn(...lst) {
+let printf = fn(... lst) {
   return print_string(apply(sprintf, lst));
 };
 
@@ -340,13 +340,13 @@ let ht_delete = fn(ht, key) {
 let walk_directory = fn(dir, include_dirs, callback) {
   let files = glob(string_append(dir, "*"));
   list_for_each(files, fn(x) {
-      if (path_is_directory(x)) {
-        walk_directory(string_append(x, "/"), include_dirs, callback);
-        if (include_dirs) {
-          callback(x);
-        }
-      } else {
+    if (path_is_directory(x)) {
+      walk_directory(string_append(x, "/"), include_dirs, callback);
+      if (include_dirs) {
         callback(x);
       }
-    });
+    } else {
+      callback(x);
+    }
+  });
 };

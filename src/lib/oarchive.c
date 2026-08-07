@@ -62,20 +62,19 @@ string_tree_t* oarchive_read_header(FILE* in) {
  * Defines the callback type signature for stream_members (which is
  * used for processing an archive while streaming it).
  */
-typedef oarchive_stream_headers_callback_t = 
-  fn_t(
-       // Return true if stream_members should skip to the next header
-       // or false if the entire size number of bytes have been read
-       // already.
-       boolean_t,
-       // input file stream
-       FILE*,
-       // The parsed metadata
-       string_tree_t*,
-       // The size in bytes of the member
-       int64_t,
-       // The user definable callback_data param
-       void*);
+typedef oarchive_stream_headers_callback_t = fn_t(
+    // Return true if stream_members should skip to the next header
+    // or false if the entire size number of bytes have been read
+    // already.
+    boolean_t,
+    // input file stream
+    FILE*,
+    // The parsed metadata
+    string_tree_t*,
+    // The size in bytes of the member
+    int64_t,
+    // The user definable callback_data param
+    void*);
 
 /**
  * @function oarchive_stream_members
@@ -83,9 +82,9 @@ typedef oarchive_stream_headers_callback_t =
  * Process all of the members of an archive invoking the callback for
  * each member.
  */
-void oarchive_stream_members(FILE* in, 
-			     oarchive_stream_headers_callback_t callback,
-			     void* callback_data) {
+void oarchive_stream_members(FILE* in,
+                             oarchive_stream_headers_callback_t callback,
+                             void* callback_data) {
   while (!file_eof(in)) {
     string_tree_t* metadata = oarchive_read_header(in);
     // log_metadata(metadata);

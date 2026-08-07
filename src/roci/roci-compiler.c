@@ -61,7 +61,8 @@ typedef roci_compiler_state_t = struct {
 
 jmp_buf roci_compiler_jmp_buf;
 
-void roci_compiler_error(roci_compiler_state_t* state, roci_compile_time_error_t error) {
+void roci_compiler_error(roci_compiler_state_t* state,
+                         roci_compile_time_error_t error) {
   state->compiler_error = error;
   longjmp(roci_compiler_jmp_buf, 1);
 }
@@ -99,7 +100,8 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
  * Since roci is meant to look like C, we simply reuse the omni-c
  * tokenizer.
  */
-value_array_t* roci_tokenize_file(roci_compiler_state_t* state, char* file_name, buffer_t* buffer) {
+value_array_t* roci_tokenize_file(roci_compiler_state_t* state, char* file_name,
+                                  buffer_t* buffer) {
   tokenizer_result_t tokenizer_result = tokenize(buffer);
   if (tokenizer_result.tokenizer_error_code) {
     log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name,
@@ -164,7 +166,8 @@ void roci_compile_statement(roci_compiler_state_t* state) {
     } else {
       buffer_t* buffer = make_buffer(5);
       append_token_debug_string(buffer, *token);
-      log_warn("roci_compile_statement is unhappy! %s", buffer_to_c_string(buffer));
+      log_warn("roci_compile_statement is unhappy! %s",
+               buffer_to_c_string(buffer));
       roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
     }
   }
@@ -376,8 +379,8 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     case TOKEN_TYPE_INTEGER_LITERAL: {
       value_result_t parsed = string_parse_uint64(token_to_string(token));
       if (parsed.nf_error != NF_OK) {
-	log_warn("Failed to parse integer token %s", token_to_string(token));
-	roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
+        log_warn("Failed to parse integer token %s", token_to_string(token));
+        roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
       }
       buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
       value_array_add(state->current_bb->data, parsed.val);
@@ -399,7 +402,8 @@ void roci_compile_expression(roci_compiler_state_t* state) {
     }
 
     default:
-      log_warn("unexpected token line=%d column=%d", token->line_number, token->column_number);
+      log_warn("unexpected token line=%d column=%d", token->line_number,
+               token->column_number);
       roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
     }
     roci_skip_token(state);
@@ -488,7 +492,8 @@ void roci_compile_closure(roci_compiler_state_t* state) {
 
 // For a negative number means abs(x) -1 is the number of required
 // arguments.
-int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args, boolean_t* rest_argument) {
+int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args,
+                             boolean_t* rest_argument) {
   int64_t arg_count = 0;
   while (true) {
     token_t* token = roci_next_token(state);
@@ -560,7 +565,7 @@ void roci_compile_record(roci_compiler_state_t* state) {
     } else if (!token_matches(punc, "}")) {
       roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
     }
-  } while(true);
+  } while (true);
 
   buffer_t* buffer = make_buffer(256);
 
@@ -583,30 +588,33 @@ void roci_compile_record(roci_compiler_state_t* state) {
   // Now the predicate
 
   buffer_printf(buffer,
-		"let is_%s = fn(record){if(is_record(record)){if(string_equal(record_tag(record), \"%s\")){return true;}}return false;};",
-		record_name,
-		record_name);
+                "let is_%s = "
+                "fn(record){if(is_record(record)){if(string_equal(record_tag("
+                "record), \"%s\")){return true;}}return false;};",
+                record_name, record_name);
 
   // Finally the getters/setters
 
-  char* record_tag_check =
-    string_printf("if(not(string_equal(record_tag(record),\"%s\"))){debug_error(\"\");}",
-		  record_name);
+  char* record_tag_check = string_printf(
+      "if(not(string_equal(record_tag(record),\"%s\"))){debug_error(\"\");}",
+      record_name);
 
   for (int i = 0; i < num_fields; i++) {
-    buffer_printf(buffer, "let %s_get_%s = fn(record){%sreturn record_get(record, %d);};",
-		  record_name, fields[i], record_tag_check, i);
-    buffer_printf(buffer, "let %s_set_%s = fn(record, value){%sreturn record_set(record, %d, value);};",
-		  record_name, fields[i], record_tag_check, i);
+    buffer_printf(
+        buffer, "let %s_get_%s = fn(record){%sreturn record_get(record, %d);};",
+        record_name, fields[i], record_tag_check, i);
+    buffer_printf(buffer,
+                  "let %s_set_%s = fn(record, value){%sreturn "
+                  "record_set(record, %d, value);};",
+                  record_name, fields[i], record_tag_check, i);
   }
 
-  value_array_t* tokens =
-    roci_tokenize_file(state,
-		       string_printf("*compile-record*%s", record_name),
-		       buffer);
+  value_array_t* tokens = roci_tokenize_file(
+      state, string_printf("*compile-record*%s", record_name), buffer);
   int position = state->position;
   for (int i = 0; i < tokens->length; i++) {
-    value_array_insert_at(state->tokens, position++, value_array_get(tokens, i));
+    value_array_insert_at(state->tokens, position++,
+                          value_array_get(tokens, i));
   }
 }
 
@@ -715,8 +723,9 @@ token_t* roci_next_token(roci_compiler_state_t* state) {
 void roci_expect_token(roci_compiler_state_t* state, char* token_string) {
   token_t* token = roci_next_token(state);
   if (!token_matches(token, token_string)) {
-    log_warn("roci expected %s as the next token but got %s at line %d col %d", token_string,
-	     token_to_string(token), token->line_number, token->column_number);
+    log_warn("roci expected %s as the next token but got %s at line %d col %d",
+             token_string, token_to_string(token), token->line_number,
+             token->column_number);
     roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
   }
 }

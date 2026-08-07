@@ -27,10 +27,9 @@ typedef roci_eval_result_t = struct {
   roci_compiler_state_t* compiler_state;
 };
 
-roci_eval_result_t roci_eval_buffer(roci_env_t* env,
-				  char* file_name,
-				  buffer_t* buffer,
-				  boolean_t exit_on_failure) {
+roci_eval_result_t roci_eval_buffer(roci_env_t* env, char* file_name,
+                                    buffer_t* buffer,
+                                    boolean_t exit_on_failure) {
   roci_eval_result_t result = {0};
 
   roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);

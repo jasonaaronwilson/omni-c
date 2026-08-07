@@ -589,7 +589,8 @@ void ensure_legal_region(buffer_region_t region) {
   }
 }
 
-buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64_t end_line) {
+buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line,
+                                   uint64_t end_line) {
 
   uint64_t line = 1;
   uint64_t start_position = 0;
@@ -600,22 +601,25 @@ buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64
     if (ch == '\n') {
       line++;
       if (line == start_line) {
-	start_position = position;
+        start_position = position;
       }
       if (line == end_line) {
-	end_position = position;
-	return compound_literal(buffer_region_t, { .start_position = start_position, .end_position = end_position});
+        end_position = position;
+        return compound_literal(
+            buffer_region_t,
+            {.start_position = start_position, .end_position = end_position});
       }
     }
   }
-  return compound_literal(buffer_region_t, { .start_position = start_position, .end_position = buffer->length});
+  return compound_literal(buffer_region_t, {.start_position = start_position,
+                                            .end_position = buffer->length});
 }
 
-void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer, buffer_region_t region) {
+void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer,
+                        buffer_region_t region) {
   ensure_legal_region(region);
   for (uint64_t position = region.start_position;
-       position < region.end_position;
-       position++) {
+       position < region.end_position; position++) {
     buffer_append_byte(dst_buffer, buffer_get(src_buffer, position));
   }
 }

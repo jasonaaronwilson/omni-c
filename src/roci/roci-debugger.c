@@ -32,7 +32,8 @@ static inline uint64_t roci_src_line_number(roci_src_info_t info) {
 }
 
 roci_src_info_t roci_next_source_line(roci_src_info_t info) {
-  return cast(roci_src_info_t, roci_src_file_number(info) | (roci_src_line_number(info) + 1) << 32);
+  return cast(roci_src_info_t, roci_src_file_number(info)
+                                   | (roci_src_line_number(info) + 1) << 32);
 }
 
 /** ================================================================ */
@@ -109,7 +110,7 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
           state->debug->break_on_return = false;
           state->debug->break_on_next_statement = false;
           state->debug->trace = false;
-	  state->debug->current_line_info = state->debug_info;
+          state->debug->current_line_info = state->debug_info;
           break;
         } else if (byte == 'n') {
           term_echo_restore(oldt);
@@ -118,8 +119,9 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
           state->debug->break_on_return = false;
           state->debug->break_on_next_statement = false;
           state->debug->trace = false;
-	  state->debug->current_line_info = 0;
-	  state->debug->next_line_info = roci_next_source_line(state->debug_info);
+          state->debug->current_line_info = 0;
+          state->debug->next_line_info
+              = roci_next_source_line(state->debug_info);
           break;
         } else if (byte == 'e') {
           buffer_t* buffer = make_buffer(10);
@@ -175,11 +177,13 @@ void roci_backtrace(roci_vm_state_t* state, buffer_t* buffer) {
     if (src_info != -1) {
       uint64_t buffer_number = roci_src_file_number(src_info);
       int64_t line_number = roci_src_line_number(src_info);
-      roci_buffer_info_t* buffer_info = get_buffer_info_by_number(buffer_number);
+      roci_buffer_info_t* buffer_info
+          = get_buffer_info_by_number(buffer_number);
       if (buffer_info == nullptr) {
-	buffer_printf(buffer, " (NO BUFFER INFO)\n");
+        buffer_printf(buffer, " (NO BUFFER INFO)\n");
       } else {
-	buffer_printf(buffer, "%s:%d\n", buffer_info->filename, line_number & 0xffffffff);
+        buffer_printf(buffer, "%s:%d\n", buffer_info->filename,
+                      line_number & 0xffffffff);
       }
     } else {
       buffer_printf(buffer, " (NO SOURCE INFO)\n");

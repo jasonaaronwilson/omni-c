@@ -177,8 +177,7 @@ void term_set_foreground_color(buffer_t* buffer, uint32_t color) {
   uint8_t red = (color >> 16) & 0xff;
 
   // Escape sequence for setting foreground color (ESC [ 38; 2; r; g; b m)
-  buffer_printf(buffer,
-                TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red,
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red,
                 green, blue);
 }
 
@@ -197,8 +196,7 @@ void term_set_background_color(buffer_t* buffer, uint32_t color) {
   uint8_t red = (color >> 16) & 0xff;
 
   // Escape sequence for setting background color (ESC [ 48; 2; r; g; b m)
-  buffer_printf(buffer,
-                TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red,
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red,
                 green, blue);
 }
 
@@ -332,7 +330,7 @@ void term_clear_screen(buffer_t* buffer) {
  * Append the terminal escape sequences to a buffer that draws a box.
  */
 void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
-		   uint16_t y1, box_drawing_t* box) {
+                   uint16_t y1, box_drawing_t* box) {
   // top
   term_move_cursor_absolute(buffer, x0, y0);
   buffer_append_code_point(buffer, box->upper_left_corner);
@@ -418,9 +416,7 @@ void term_enable_autowrap(buffer_t* buffer) {
  * Switch to the alternative buffer. This is a good place to hide a
  * debugger UI...
  */
-void term_alt_buffer(buffer_t* buffer) {
-  buffer_printf(buffer, "\033[?1049h");
-}
+void term_alt_buffer(buffer_t* buffer) { buffer_printf(buffer, "\033[?1049h"); }
 
 /**
  * @function term_main_buffer
@@ -432,9 +428,7 @@ void term_main_buffer(buffer_t* buffer) {
   buffer_printf(buffer, "\033[?1049l");
 }
 
-void term_home(buffer_t* buffer) {
-  buffer_printf(buffer, "\033[H");
-}
+void term_home(buffer_t* buffer) { buffer_printf(buffer, "\033[H"); }
 
 uint32_t term_width(void) {
   struct winsize w;

@@ -129,7 +129,8 @@ static inline roci_record_t* roci_pop_record(roci_vm_state_t* state) {
   return cast(roci_record_t*, value.raw);
 }
 
-static inline void roci_push_record(roci_vm_state_t* state, roci_record_t* record) {
+static inline void roci_push_record(roci_vm_state_t* state,
+                                    roci_record_t* record) {
   roci_push_value_parts(state, cast(uint64_t, record), ROCI_TAG_RECORD);
 }
 

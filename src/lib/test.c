@@ -55,7 +55,7 @@
     unsigned long long casted_b = (unsigned long long) (b);                    \
     if (a != b) {                                                              \
       test_fail(                                                               \
-          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "         \
           "But was:\n    ⟦%llu⟧\n",                                            \
           casted_a, casted_b);                                                 \
     }                                                                          \
@@ -66,20 +66,20 @@
  *
  * Assert that two c strings are the same.
  */
-#define test_assert_string_equal(a, b)                                          \
-  do {                                                                          \
-    if (!b) {                                                                   \
-      test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
-          "But was:\n    nullptr\n",                                            \
-          a);                                                                   \
-    }                                                                           \
-    if (!string_equal(a, b)) {                                                  \
-      test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
-          "But was:\n    ⟦%s⟧\n",                                               \
-          a, b);                                                                \
-    }                                                                           \
+#define test_assert_string_equal(a, b)                                         \
+  do {                                                                         \
+    if (!b) {                                                                  \
+      test_fail(                                                               \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
+          "But was:\n    nullptr\n",                                           \
+          a);                                                                  \
+    }                                                                          \
+    if (!string_equal(a, b)) {                                                 \
+      test_fail(                                                               \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
+          "But was:\n    ⟦%s⟧\n",                                              \
+          a, b);                                                               \
+    }                                                                          \
   } while (0)
 
 /**

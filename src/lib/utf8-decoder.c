@@ -9,7 +9,7 @@
  *
  * Holds the result of utf8_decode.
  */
-typedef utf8_decode_result_t =  struct {
+typedef utf8_decode_result_t = struct {
   uint32_t code_point;
   uint8_t num_bytes;
   boolean_t error;

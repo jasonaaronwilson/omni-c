@@ -302,16 +302,14 @@ start_bblock:
 
     case ROCI_OPCODE_DEBUG_INFO:
       state->debug_info = *(state->data_ptr++);
-      if (state->debug != nullptr 
-	  && state->debug->current_line_info != 0
-	  && state->debug->current_line_info != state->debug_info) {
-	state->debug->current_line_info = state->debug_info;
-	roci_debug_trace(state, buffer);
+      if (state->debug != nullptr && state->debug->current_line_info != 0
+          && state->debug->current_line_info != state->debug_info) {
+        state->debug->current_line_info = state->debug_info;
+        roci_debug_trace(state, buffer);
       }
-      if (state->debug != nullptr 
-	  && state->debug->next_line_info != 0
-	  && state->debug->next_line_info == state->debug_info) {
-	roci_debug_trace(state, buffer);
+      if (state->debug != nullptr && state->debug->next_line_info != 0
+          && state->debug->next_line_info == state->debug_info) {
+        roci_debug_trace(state, buffer);
       }
       break;
 

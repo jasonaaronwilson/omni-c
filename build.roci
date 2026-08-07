@@ -296,8 +296,19 @@ let format_all_roci = fn() {
   list_for_each(files, uncrustify_roci);
 };
 
+let clang_format = fn(filename) {
+  let command_line = make_list("clang-format", "-style=file", "-i", filename);
+  check_shell_command(noisy_shell(command_line));
+};
+
 let format_all_c = fn() {
-  return false;
+  let files = ALL_OMNI_C_SRC; // SOURCE_OMNI_C;
+  list_for_each(files, fn(x) {
+    if (string_contains(x, "gen-files/")) {
+      return;
+    }
+    clang_format(x);
+  });
 };
 
 add_target("format", fn() {
@@ -510,12 +521,12 @@ add_target("all", make_list(string_append(BUILD_DIR, "bin/omni-c"),
   string_append(BUILD_DIR, "bin/lib.oar")));
 
 add_target("clean", fn() {
-   walk_directory(BUILD_DIR, true, fn(name) {
-      if (and(not (string_ends_with(name, "omni-c-stable")),
-              not (string_ends_with(name, "build-dir/bin")))) {
-        path_remove(name);
-      }
-   });
+  walk_directory(BUILD_DIR, true, fn(name) {
+    if (and(not (string_ends_with(name, "omni-c-stable")),
+      not (string_ends_with(name, "build-dir/bin")))) {
+      path_remove(name);
+    }
+  });
 });
 
 let main = fn() {

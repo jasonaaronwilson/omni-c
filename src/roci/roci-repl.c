@@ -8,7 +8,8 @@ int64_t roci_repl_number = 0;
 
 void roci_repl(roci_env_t* env) {
   fprintf(stdout, "/// This is the roci \"repl\".\n");
-  fprintf(stdout, "///    use println(expr); to behave more like a \"real\" repl.\n");
+  fprintf(stdout,
+          "///    use println(expr); to behave more like a \"real\" repl.\n");
   fprintf(stdout, "///\n");
   fprintf(stdout, "/// Special commands:\n");
   fprintf(stdout, "/// #exit to exit this repl\n");
@@ -20,7 +21,8 @@ void roci_repl(roci_env_t* env) {
     if (buffer == nullptr) {
       return;
     }
-    char* repl_buffer_name = string_append("*repl*", int64_to_string(roci_repl_number++));
+    char* repl_buffer_name
+        = string_append("*repl*", int64_to_string(roci_repl_number++));
     roci_eval_buffer(env, repl_buffer_name, buffer, false);
   }
 }

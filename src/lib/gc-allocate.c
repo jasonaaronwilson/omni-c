@@ -9,11 +9,11 @@
  * and that checked_free is effectively a NOP.
  */
 
+#include <gc.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gc.h>
 
 /**
  * @macro malloc_bytes
@@ -111,6 +111,4 @@ uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
  * for an easier to use interface. Those macros simply call
  * checked_malloc.
  */
-void checked_free(char* file, int line, void* pointer) {
-  return;
-}
+void checked_free(char* file, int line, void* pointer) { return; }

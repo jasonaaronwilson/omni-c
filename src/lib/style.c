@@ -65,16 +65,12 @@ static inline style_t set_underline(style_t style, boolean_t x) {
   return (style & ~(1ULL << 49)) | cast(uint64_t, x) << 49;
 }
 
-static inline boolean_t get_bold(style_t style) {
-  return (style >> 50) & 1ULL;
-}
+static inline boolean_t get_bold(style_t style) { return (style >> 50) & 1ULL; }
 static inline style_t set_bold(style_t style, boolean_t x) {
   return (style & ~(1ULL << 50)) | cast(uint64_t, x) << 50;
 }
 
-static inline boolean_t get_dim(style_t style) {
-  return (style >> 51) & 1ULL;
-}
+static inline boolean_t get_dim(style_t style) { return (style >> 51) & 1ULL; }
 static inline style_t set_dim(style_t style, boolean_t x) {
   return (style & ~(1ULL << 51)) | cast(uint64_t, x) << 51;
 }

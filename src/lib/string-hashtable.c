@@ -32,8 +32,8 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  *
  * Insert an association into the hashtable.
  */
-static inline string_hashtable_t*
-    string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
+static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht,
+                                                   char* key, value_t value) {
   return cast(string_hashtable_t*,
               value_ht_insert(to_value_hashtable(ht), hash_string_value,
                               cmp_string_values, str_to_value(key), value));
@@ -45,8 +45,8 @@ static inline string_hashtable_t*
  * Delete an association from the hashtable. It is not an error to
  * delete a key that doesn't exist in the hashtable.
  */
-static inline string_hashtable_t*
-    string_ht_delete(string_hashtable_t* ht, char* key) {
+static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht,
+                                                   char* key) {
   return cast(string_hashtable_t*,
               value_ht_delete(to_value_hashtable(ht), hash_string_value,
                               cmp_string_values, str_to_value(key)));

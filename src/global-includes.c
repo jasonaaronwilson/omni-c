@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <glob.h>
 #include <limits.h>
+#include <setjmp.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -29,4 +30,3 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
-#include <setjmp.h>

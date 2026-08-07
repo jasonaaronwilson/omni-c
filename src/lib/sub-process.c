@@ -122,10 +122,10 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
       char* equals = strchr(env_str, '=');
 
       if (*(equals + 1) == '\0') {
-	*equals = '\0';
-	unsetenv(env_str); // e.g., "FOO=" unsets FOO
+        *equals = '\0';
+        unsetenv(env_str); // e.g., "FOO=" unsets FOO
       } else {
-	putenv(env_str);   // e.g., "FOO=bar" sets FOO
+        putenv(env_str); // e.g., "FOO=bar" sets FOO
       }
       offset++;
     }

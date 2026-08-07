@@ -15,7 +15,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_hash, "hash");
   roci_add_primitive(env, &roci_primitive_eval, "eval");
   roci_add_primitive(env, &roci_primitive_apply, "apply");
-  roci_add_primitive(env, &roci_primitive_command_line_args, "command_line_args");
+  roci_add_primitive(env, &roci_primitive_command_line_args,
+                     "command_line_args");
   roci_add_primitive(env, &roci_primitive_load, "load");
   roci_add_primitive(env, &roci_primitive_random_int, "random_int");
   roci_add_primitive(env, &roci_primitive_invoke_debugger, "invoke_debugger");
@@ -31,7 +32,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_exit, "exit");
   roci_add_primitive(env, &roci_primitive_getenv, "getenv");
   roci_add_primitive(env, &roci_primitive_pwd, "pwd");
-  roci_add_primitive(env, &roci_primitive_current_time_millis, "current_time_millis");
+  roci_add_primitive(env, &roci_primitive_current_time_millis,
+                     "current_time_millis");
   roci_add_primitive(env, &roci_primitive_cd, "cd");
 
   // IO
@@ -44,13 +46,15 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
   roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
   roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
-  roci_add_primitive(env, &roci_primitive_path_is_directory, "path_is_directory");
+  roci_add_primitive(env, &roci_primitive_path_is_directory,
+                     "path_is_directory");
   roci_add_primitive(env, &roci_primitive_path_is_file, "path_is_file");
   roci_add_primitive(env, &roci_primitive_path_remove, "path_remove");
 
   // String Functions
   roci_add_primitive(env, &roci_primitive_is_string, "is_string");
-  roci_add_primitive(env, &roci_primitive_string_length_bytes, "string_length_bytes");
+  roci_add_primitive(env, &roci_primitive_string_length_bytes,
+                     "string_length_bytes");
   roci_add_primitive(env, &roci_primitive_string_append, "string_append");
   roci_add_primitive(env, &roci_primitive_string_equal, "string_equal");
   roci_add_primitive(env, &roci_primitive_string_starts_with,
@@ -110,7 +114,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_make_buffer, "make_buffer");
   roci_add_primitive(env, &roci_primitive_buffer_get, "buffer_get");
   roci_add_primitive(env, &roci_primitive_buffer_length, "buffer_length");
-  roci_add_primitive(env, &roci_primitive_buffer_append_string, "buffer_append_string");
+  roci_add_primitive(env, &roci_primitive_buffer_append_string,
+                     "buffer_append_string");
   roci_add_primitive(env, &roci_primitive_buffer_to_string, "buffer_to_string");
 
   // alists
@@ -127,7 +132,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
 
 
   // Random Testing Code
-  roci_add_primitive(env, &roci_primitive_draw_random_screen, "draw_random_screen");
+  roci_add_primitive(env, &roci_primitive_draw_random_screen,
+                     "draw_random_screen");
 }
 
 /**
@@ -157,7 +163,9 @@ void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive,
  */
 void roci_primitive_debug_error(roci_vm_state_t* state) {
   roci_debug_error(state, roci_pop_string(state));
-  fprintf(stderr, "Exiting after user signaled error (debug_error is not continuable.)");
+  fprintf(
+      stderr,
+      "Exiting after user signaled error (debug_error is not continuable.)");
   exit(1);
 }
 
@@ -187,7 +195,7 @@ boolean_t roci_values_equal(roci_value_t a, roci_value_t b) {
       roci_value_t va = roci_record_get(rec_a, i);
       roci_value_t vb = roci_record_get(rec_b, i);
       if (!roci_values_equal(va, vb)) {
-	return false;
+        return false;
       }
     }
     return true;
@@ -206,12 +214,12 @@ void roci_primitive_hash(roci_vm_state_t* state) {
 }
 
 static inline uint64_t roci_mix64(uint64_t x) {
-    x ^= x >> 30;
-    x *= 0xbf58476d1ce4e5b9ULL;
-    x ^= x >> 27;
-    x *= 0x94d049bb133111ebULL;
-    x ^= x >> 31;
-    return x;
+  x ^= x >> 30;
+  x *= 0xbf58476d1ce4e5b9ULL;
+  x ^= x >> 27;
+  x *= 0x94d049bb133111ebULL;
+  x ^= x >> 31;
+  return x;
 }
 
 // Gemni Flash thinks that by using roci_mix64, we can get away with
@@ -243,7 +251,8 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
   }
 
   case ROCI_TAG_STRING: {
-    uint64_t str_hash = fasthash64(cast(char*, value.raw), strlen(cast(char*, value.raw)), 0);
+    uint64_t str_hash
+        = fasthash64(cast(char*, value.raw), strlen(cast(char*, value.raw)), 0);
     return cast(int64_t, (roci_mix64(tag_bits ^ str_hash) & mask));
   }
 
@@ -281,11 +290,9 @@ void roci_primitive_eval(roci_vm_state_t* state) {
   }
   char* arg1 = roci_pop_string(state);
 
-  roci_eval_result_t result =
-    roci_eval_buffer(get_root_env(state->env),
-		     string_printf("*eval*%d", eval_count++),
-		     buffer_from_string(arg1),
-		     false);
+  roci_eval_result_t result = roci_eval_buffer(
+      get_root_env(state->env), string_printf("*eval*%d", eval_count++),
+      buffer_from_string(arg1), false);
 
   if (result.compiler_state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
     roci_debug_error(state, "Compilation of a dynamically called eval failed");
@@ -959,7 +966,7 @@ void roci_primitive_current_time_millis(roci_vm_state_t* state) {
 }
 
 void roci_primitive_random_int(roci_vm_state_t* state) {
-  static random_state_t*  rand_state = nullptr;
+  static random_state_t* rand_state = nullptr;
 
   if (state->n_args != 0) {
     roci_debug_error(state, "random expects 0 argument");

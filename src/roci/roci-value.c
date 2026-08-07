@@ -78,7 +78,7 @@ void roci_append_value(buffer_t* buffer, roci_value_t value) {
       roci_value_t slot = roci_record_get(record, i);
       roci_append_value(buffer, slot);
       if (i != 7) {
-	buffer_printf(buffer, ", ");
+        buffer_printf(buffer, ", ");
       }
     }
     buffer_printf(buffer, "]");
