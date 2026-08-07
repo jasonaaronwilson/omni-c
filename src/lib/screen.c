@@ -25,6 +25,15 @@ typedef screen_t = struct {
   uint32_t height;
   style_t* styles;
   uint32_t* chars;
+
+  // This is used to have a non-full screen TUI, for example if you
+  // were writing a debugger and want the bottom 10 lines for the user
+  // previous output to stdout (though simply using this is enough all
+  // by itself but it makes it easier).
+  uint32_t top_offset;
+  uint32_t bottom_offset;
+  uint32_t left_offset;
+  uint32_t right_offset;
 };
 
 /**
@@ -42,12 +51,28 @@ typedef screen_window_t = struct {
 };
 
 screen_t* get_initial_screen(void) {
+  return get_initial_screen_with_limits(0, 0, 0, 0);
+}
+
+screen_t* get_initial_screen_with_limits(uint32_t top_offset,
+                                         uint32_t bottom_offset,
+                                         uint32_t left_offset,
+                                         uint32_t right_offset) {
+  uint32_t real_width = term_width();
+  uint32_t real_height = term_height();
+
+  // TODO(jawilson): error check offsets
+
   screen_t* screen = malloc_struct(screen_t);
-  screen->width = term_width();
-  screen->height = term_height();
+  screen->width = real_width - left_offset - right_offset;
+  screen->height = real_height - top_offset - bottom_offset;
   uint32_t num = screen->width * screen->height;
   screen->styles = cast(style_t*, malloc_bytes(sizeof(style_t) * num));
   screen->chars = cast(uint32_t*, malloc_bytes(sizeof(uint32_t) * num));
+  screen->top_offset = top_offset;
+  screen->bottom_offset = bottom_offset;
+  screen->left_offset = left_offset;
+  screen->right_offset = right_offset;
   return screen;
 }
 
@@ -193,7 +218,8 @@ void screenline_to_ansi_buffer(screen_t* screen, buffer_t* buffer, int row) {
   style_t prev_style = -1;
 
   // term_reset_formatting(buffer);
-  term_move_cursor_absolute(buffer, 0, row);
+  term_move_cursor_absolute(buffer, screen->left_offset,
+                            screen->top_offset + row);
   // style_t previous_style = screen->styles[0];
   // style_to_buffer(buffer, previous_style);
   // screen->height, screen->width
@@ -210,10 +236,8 @@ void screenline_to_ansi_buffer(screen_t* screen, buffer_t* buffer, int row) {
   // buffer_printf(buffer, "\n");
 }
 
-void write_screen(screen_t* screen) {
+void term_write_screen(screen_t* screen) {
   buffer_t* buffer = make_buffer(1000);
-  // term_disable_autowrap(buffer);
-  // -1 is a kludge for sure...
   for (int row = 0; row < screen->height; row++) {
     buffer_clear(buffer);
     screenline_to_ansi_buffer(screen, buffer, row);
@@ -221,11 +245,6 @@ void write_screen(screen_t* screen) {
     fflush(stdout);
     usleep(5);
   }
-  // buffer_clear(buffer);
-  // term_enable_autowrap(buffer);
-  // buffer_write_all_chunked(stdout, buffer);
-  // fflush(stdout);
-  // usleep(5);
 }
 
 void window_put_string(screen_window_t* window, style_t style, uint32_t row,
@@ -271,7 +290,6 @@ void style_to_buffer(buffer_t* buffer, style_t style) {
   if (get_fast_blink(style)) {
     term_fast_blink(buffer);
   }
-  // slow_blink, fast_blink
 }
 
 void buffer_to_screen_window(screen_window_t* window, style_t style,
@@ -345,7 +363,7 @@ void draw_random_screen(boolean_t output_dimensions) {
   default_style = set_foreground_green(default_style, 0xff);
 
   if (_test_screen == nullptr) {
-    _test_screen = get_initial_screen();
+    _test_screen = get_initial_screen_with_limits(5, 5, 5, 5);
     _random = random_state();
   }
 
@@ -383,7 +401,7 @@ void draw_random_screen(boolean_t output_dimensions) {
                           top_left_random_style,
                           buffer_from_string(sample_source_code), 0, 4);
 
-  if (output_dimensions) {
+  if (output_dimensions || true) {
     style_t style = 0;
     style = set_background(style, 0x5c80bc);
     style = set_foreground(style, 0xe8c547);
@@ -392,11 +410,13 @@ void draw_random_screen(boolean_t output_dimensions) {
     overlay_dimensions(bottom, style);
   }
 
-  write_screen(_test_screen);
-  sleep(2);
+  term_write_screen(_test_screen);
 
-  buffer_t* buffer = make_buffer(100);
-  style_to_buffer(buffer, set_foreground(0LL, 0xff00ULL));
-  term_move_cursor_absolute(buffer, 0, _test_screen->height - 5);
-  buffer_write_all_chunked(stdout, buffer);
+  if (output_dimensions) {
+    sleep(2);
+    buffer_t* buffer = make_buffer(100);
+    style_to_buffer(buffer, set_foreground(0LL, 0xff00ULL));
+    term_move_cursor_absolute(buffer, 0, _test_screen->height - 5);
+    buffer_write_all_chunked(stdout, buffer);
+  }
 }
