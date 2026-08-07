@@ -9,23 +9,6 @@
 // needed once that file is in stable.
 //
 
-let list_shuffle = fn(lst) {
-
-  let list_swap = fn(lst, i, j) {
-    let element_i = list_get(lst, i);
-    let element_j = list_get(lst, j);
-    list_set(lst, i, element_j);
-    list_set(lst, j, element_i);
-  };
-
-  let len = list_length(lst);
-  for_each_integer(0, len, fn(i) {
-      let j = irem(bit_and(random_int(), 0xffffffff), len);
-      list_swap(lst, i, j);
-    });
-  return lst;
-};
-
 let _LIB_SRC_ = make_list(
    "platform-linux.c",
    "platform-darwin.c",
@@ -57,11 +40,9 @@ let _LIB_SRC_ = make_list(
    "value-tree.c",
    "string-tree.c",
    "flag.c",
-   // "path.c",
    "tokenizer.c",
    "random.c",
    "cdl-printer.c",
-   // "sub-process.c",
    "splitjoin.c",
    "oarchive.c",
    "quote-util.c",
@@ -69,7 +50,25 @@ let _LIB_SRC_ = make_list(
 );
 
 let _PERMUTABLE_ = make_list();
-list_push_all(_PERMUTABLE_, make_list("io/io.c", "io/io-darwin.c", "io/io-linux.c", "io/sub-process.c", "io/path.c"));
+
+// When false...
+// ["src/lib/io/io-darwin.c", "src/lib/io/io-linux.c", "src/lib/io/io.c", "src/lib/io/path.c", "src/lib/io/sub-process.c"]
+// When true...
+// ["io/io.c", "io/io-darwin.c", "io/io-linux.c", "io/sub-process.c", "io/path.c"]
+
+if (true) {
+  list_push_all(_PERMUTABLE_, make_list("io/io.c", "io/io-darwin.c", "io/io-linux.c", "io/sub-process.c", "io/path.c"));
+} else {
+  let the_glob = glob("src/lib/io/*.c");
+  list_map(the_glob, fn(path) {
+      return string_replace_all(path, "src/lib/", "");
+    });
+  println(the_glob);
+  list_push_all(_PERMUTABLE_, the_glob);
+}
+
+println(_PERMUTABLE_);
+
 list_push_all(_PERMUTABLE_, make_list("tui/terminal.c", "tui/screen.c", "tui/style.c"));
 
 // Let's randomly shuffle these to make sure we don't make the
