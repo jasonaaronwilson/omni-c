@@ -57,11 +57,11 @@ let _LIB_SRC_ = make_list(
    "value-tree.c",
    "string-tree.c",
    "flag.c",
-   "path.c",
+   // "path.c",
    "tokenizer.c",
    "random.c",
    "cdl-printer.c",
-   "sub-process.c",
+   // "sub-process.c",
    "splitjoin.c",
    "oarchive.c",
    "quote-util.c",
@@ -69,7 +69,7 @@ let _LIB_SRC_ = make_list(
 );
 
 let _PERMUTABLE_ = make_list();
-list_push_all(_PERMUTABLE_, make_list("io/io.c", "io/io-darwin.c", "io/io-linux.c"));
+list_push_all(_PERMUTABLE_, make_list("io/io.c", "io/io-darwin.c", "io/io-linux.c", "io/sub-process.c", "io/path.c"));
 list_push_all(_PERMUTABLE_, make_list("tui/terminal.c", "tui/screen.c", "tui/style.c"));
 
 // Let's randomly shuffle these to make sure we don't make the
