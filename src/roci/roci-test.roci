@@ -531,6 +531,14 @@ add_test("variable_args",
   };
   int_equal_or_fail(0, list_length(bar("a")));
   int_equal_or_fail(1, list_length(bar("a", "b")));
+  pass_test();
+});
+
+add_test("string_replace_all",
+  fn() {
+  let text = "foo bar baz foobar";
+  string_equal_or_fail("FOO bar baz FOObar", string_replace_all(text, "foo", "FOO"));
+  pass_test();
 });
 
 run_tests();

@@ -63,8 +63,9 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_string_ends_with, "string_ends_with");
   roci_add_primitive(env, &roci_primitive_string_index_of, "string_index_of");
   roci_add_primitive(env, &roci_primitive_string_contains, "string_contains");
+  roci_add_primitive(env, &roci_primitive_string_replace_all,
+                     "string_replace_all");
   roci_add_primitive(env, &roci_primitive_string_get_byte, "string_get_byte");
-
   roci_add_primitive(env, &roci_primitive_to_string, "to_string");
   roci_add_primitive(env, &roci_primitive_ascii_to_string, "ascii_to_string");
 
@@ -445,9 +446,19 @@ void roci_primitive_string_contains(roci_vm_state_t* state) {
   }
 }
 
+void roci_primitive_string_replace_all(roci_vm_state_t* state) {
+  if (state->n_args != 3) {
+    roci_debug_error(state, "string_replace_all expects two three arguments");
+  }
+  char* arg2 = roci_pop_string(state);
+  char* arg1 = roci_pop_string(state);
+  char* arg0 = roci_pop_string(state);
+  roci_push_string(state, string_replace_all(arg0, arg1, arg2));
+}
+
 void roci_primitive_string_substring(roci_vm_state_t* state) {
   if (state->n_args != 3) {
-    roci_debug_error(state, "string_substring expectds 3 arguments");
+    roci_debug_error(state, "string_substring expects 3 arguments");
   }
   int64_t end = roci_pop_integer(state);
   int64_t start = roci_pop_integer(state);

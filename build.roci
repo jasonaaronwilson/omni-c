@@ -554,6 +554,37 @@ add_target("clean", fn() {
   });
 });
 
+add_target("cloc", fn() {
+
+  let files = make_list();
+  list_push_all(files, glob("src/*.c"));
+  list_push_all(files, glob("src/lib/*.c"));
+  list_push_all(files, glob("src/roci/*.c"));
+  list_push_all(files, glob("src/roci/*.roci"));
+
+  // This can also be useful... --by-file
+  let command_line = make_list("cloc", "--force-lang=Java,roci");
+  list_for_each(files, fn(filename) {
+    if (string_ends_with(filename, "omni-c-stable.c")) {
+      return;
+    }
+    if (string_ends_with(filename, "omni-c-stable-darwin.c")) {
+      return;
+    }
+    if (string_ends_with(filename, "omni-c-stable-linux.c")) {
+      return;
+    }
+    list_push(command_line, filename);
+  });
+  // println(command_line);
+  let shell_result = shell(command_line);
+  let out = shell_stdout(shell_result);
+  // TODO(jawilson): string_replace_all(shell_result, "Java", "roci");
+  println(shell_stdout(shell_result));
+});
+
+/* ====================================================================== */
+
 let main = fn() {
   let args = command_line_args();
 

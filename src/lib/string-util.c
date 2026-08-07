@@ -95,12 +95,24 @@ int string_index_of(const char* str, char* substring) {
   return buffer_index_of(str_buffer, substring);
 }
 
-
 /**
  * Determine if a string contains a substring.
  */
 boolean_t string_contains(const char* str, char* substring) {
   return string_index_of(str, substring) >= 0;
+}
+
+/**
+ * Returns a copy of the given string where all occurences of
+ * 'original_text' are replaced with 'replacement_text'.
+ */
+char* string_replace_all(char* str, char* original_text,
+                         char* replacement_text) {
+  int64_t len = strlen(str);
+  buffer_t* str_buffer = make_buffer(len);
+  buffer_append_string(str_buffer, str);
+  buffer_replace_all(str_buffer, original_text, replacement_text);
+  return buffer_to_c_string(str_buffer);
 }
 
 /**
