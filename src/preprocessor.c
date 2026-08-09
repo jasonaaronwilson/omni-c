@@ -34,8 +34,10 @@ typedef struct {
  * conditional compilation be limited to files that are not actually
  * processed by Omni C and compiled with the normal C toolchain and
  * linked with the Omni C processed files. (The Omni C source itself
- * currently has no platform dependent code or other need of advanced
- * C preprocessor stuff so something simple is a good first step.)
+ * has only a small amount of platform dependent code which is
+ * actually handled by isolating that code into files that end in
+ * "-linux.c" or "-darwin.c" and compiling the right version in the
+ * build system).
  */
 
 /**
