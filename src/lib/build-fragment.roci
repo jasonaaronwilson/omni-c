@@ -49,34 +49,19 @@ let _LIB_SRC_ = make_list(
    "test.c",
 );
 
+let glob_without_src_lib = fn(pattern) {
+  // Remove src/lib/ since we tack back on src/lib below
+  return list_map(glob(pattern), fn(path) { return string_replace_all(path, "src/lib/", ""); });
+};
+
 let _PERMUTABLE_ = make_list();
 
-// When false...
-// ["src/lib/io/io-darwin.c", "src/lib/io/io-linux.c", "src/lib/io/io.c", "src/lib/io/path.c", "src/lib/io/sub-process.c"]
-// When true...
-// ["io/io.c", "io/io-darwin.c", "io/io-linux.c", "io/sub-process.c", "io/path.c"]
-
-if (true) {
-  list_push_all(_PERMUTABLE_, make_list("io/io.c", "io/io-darwin.c", "io/io-linux.c", "io/sub-process.c", "io/path.c"));
-} else {
-  let the_glob = glob("src/lib/io/*.c");
-  list_map(the_glob, fn(path) {
-      return string_replace_all(path, "src/lib/", "");
-    });
-  println(the_glob);
-  list_push_all(_PERMUTABLE_, the_glob);
-}
-
-println(_PERMUTABLE_);
-
-list_push_all(_PERMUTABLE_, make_list("tui/terminal.c", "tui/screen.c", "tui/style.c"));
+list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/io/*.c"));
+list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/tui/*.c"));
 
 // Let's randomly shuffle these to make sure we don't make the
-// ordering problem any worse. This is actually a terrible idea in too
-// many ways to count (so ideally should be used for a stable target
-// though in some ways it might end up being a source of confidence
-// that source order doesn't matter (it unforunately does with inline
-// functions that should be ordered).
+// ordering problem any worse though this is not a good long term
+// strategy.
 
 list_push_all(_LIB_SRC_, list_shuffle(_PERMUTABLE_));
 
