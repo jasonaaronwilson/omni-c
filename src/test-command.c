@@ -2,8 +2,8 @@
  * @function test_command
  *
  * The source files are read and processed like an ordinary build but
- * an additional main() * routine is automatically generated for all
- * functions that have a * signature like `void test_*(void);`.
+ * an additional main() routine is automatically generated for all
+ * functions that have a signature like `void test_*(void);`.
  *
  * If the only input are files with .expr or .stmt, then internal test
  * behavior is used instead (lexing + parsing + parse tree printing +
