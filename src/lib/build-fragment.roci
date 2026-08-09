@@ -28,7 +28,6 @@ let _LIB_SRC_ = make_list(
    "uint64.c",
    "double.c",
    "string-util.c",
-   "logger.c",
    "utf8-decoder.c",
    "buffer.c",
    "byte-stream.c",
