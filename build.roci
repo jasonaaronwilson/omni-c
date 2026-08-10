@@ -241,6 +241,7 @@ let all_older_than = fn(target, deps) {
       result = false;
     }
     if (igte(dep_timestamp, target_timestamp)) {
+      announce_dependency(x, target);
       println(string_append(x, " is newer than ", target));
       result = false;
     }
@@ -255,6 +256,11 @@ let announce_build = fn(target) {
 let announce_no_build = fn(target) {
   let checkmark = "+ "; // "\u2714 "
   println(string_append(checkmark, target, " is up to date"));
+};
+
+let announce_dependency = fn(dep, target) {
+  let icon = "> "; // "\u2714 "
+  println(string_append(icon, dep, " is newer than ", target));
 };
 
 // Refer to a path relative to the root of the build dir.
