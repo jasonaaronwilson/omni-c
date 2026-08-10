@@ -4,6 +4,10 @@
  * This is the main build for omni-c (and thus roci itself since it is
  * currently part of omni-c).
  *
+ * Before trying to build, run the appropriate configure-*.sh script
+ * and follow the directions the are printed at the end to do
+ * subsequent builds.
+ *
  * If you see a Makefile in this repository, it is either deprecated
  * or obsolete (though might contains some interesting targets that
  * need to get added here such as globabl clang-formatting).
