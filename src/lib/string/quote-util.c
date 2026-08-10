@@ -96,6 +96,20 @@ char* string_unquote_c_string(char* input) {
         buffer_append_byte(buf, result.u64);
         break;
       }
+      case 'u': {
+        buffer_t* hex = make_buffer(5);
+        buffer_append_byte(hex, input[i++]);
+        buffer_append_byte(hex, input[i++]);
+        buffer_append_byte(hex, input[i++]);
+        buffer_append_byte(hex, input[i++]);
+        value_result_t result
+            = string_parse_uint64_hex(buffer_to_c_string(hex));
+        if (!is_ok(result)) {
+          fatal_error(ERROR_ILLEGAL_INPUT);
+        }
+        buffer_append_code_point(buf, result.u64);
+        break;
+      }
       default:
         fatal_error(ERROR_ILLEGAL_INPUT);
         break;
