@@ -252,6 +252,11 @@ let announce_build = fn(target) {
   println(string_append("[Building ", target, "]"));
 };
 
+let announce_no_build = fn(target) {
+  let checkmark = "+ "; // "\u2714 "
+  println(string_append(checkmark, target, " is up to date"));
+};
+
 // Refer to a path relative to the root of the build dir.
 let build_dir_path = fn(path) {
   return string_append(BUILD_DIR, path);
@@ -287,7 +292,7 @@ let generate_embedded_file = fn(variable, input, output) {
   let deps = make_list(input, script);
 
   if (all_older_than(output, deps)) {
-    println(string_append(output, " is up to date"));
+    announce_no_build(output);
     return;
   } else {
     announce_build(output);
@@ -395,7 +400,7 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
   build_roci_embedded_lib();
 
   if (all_older_than(target_name, ALL_OMNI_C_SRC)) {
-    println(string_append(target_name, " is up to date"));
+    announce_no_build(target_name);
     return;
   } else {
     announce_build(target_name);
@@ -464,7 +469,7 @@ let build_lib_oar = fn() {
   let sources = filter_files_by_platform(SOURCE_LIB);
 
   if (all_older_than(target, sources)) {
-    println(string_append(target, " is up to date"));
+    announce_no_build(target);
     return;
   } else {
     announce_build(target);
