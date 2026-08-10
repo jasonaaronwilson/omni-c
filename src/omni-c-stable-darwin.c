@@ -180,80 +180,6 @@ typedef struct {
 
 #define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
 
-#define LOGGER_OFF 0
-
-#define LOGGER_TRACE 1
-
-#define LOGGER_DEBUG 2
-
-#define LOGGER_INFO 3
-
-#define LOGGER_WARN 4
-
-#define LOGGER_FATAL 5
-
-#define LOGGER_TEST 6
-
-#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
-
-#define log_none(format, ...)                                                  \
-  do {                                                                         \
-  } while (0);
-
-#define log_off(format, ...)                                                   \
-  do {                                                                         \
-    if (0) {                                                                   \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-#define log_trace(format, ...)                                                 \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_TRACE) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-#define log_debug(format, ...)                                                 \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-#define log_info(format, ...)                                                  \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_INFO) {                            \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-#define log_warn(format, ...)                                                  \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_WARN) {                            \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-#define log_fatal(format, ...)                                                 \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_FATAL) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-#define log_test(format, ...)                                                  \
-  do {                                                                         \
-    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
-                ##__VA_ARGS__);                                                \
-  } while (0)
-
 #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
 
 #define value_array_get_ptr(array, index_expression, cast_type)                \
@@ -367,6 +293,82 @@ typedef struct {
           a, b);                                                               \
     }                                                                          \
   } while (0)
+
+#define LOGGER_OFF 0
+
+#define LOGGER_TRACE 1
+
+#define LOGGER_DEBUG 2
+
+#define LOGGER_INFO 3
+
+#define LOGGER_WARN 4
+
+#define LOGGER_FATAL 5
+
+#define LOGGER_TEST 6
+
+#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
+
+#define log_none(format, ...)                                                  \
+  do {                                                                         \
+  } while (0);
+
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
+    if (0) {                                                                   \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_trace(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_TRACE) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_debug(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_info(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_INFO) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_warn(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_WARN) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_fatal(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_FATAL) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_test(format, ...)                                                  \
+  do {                                                                         \
+    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
+                ##__VA_ARGS__);                                                \
+  } while (0)
+
+#define FILE_COPY_STREAM_BUFFER_SIZE 1024
 
 #define KEY_DOWN 1      /* down-arrow key */
 
@@ -582,8 +584,6 @@ typedef struct {
   (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
 
 #define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
-
-#define FILE_COPY_STREAM_BUFFER_SIZE 1024
 
 // ========== enums ==========
 
@@ -952,8 +952,6 @@ typedef fn_t(int, value_t, value_t) value_comparison_fn;
 
 typedef fn_t(uint64_t, value_t) value_hash_fn;
 
-typedef struct logger_state_t__generated_S logger_state_t;
-
 typedef struct utf8_decode_result_t__generated_S utf8_decode_result_t;
 
 typedef struct buffer_t__generated_S buffer_t;
@@ -1009,15 +1007,13 @@ typedef struct cdl_printer_t__generated_S cdl_printer_t;
 
 typedef fn_t(boolean_t, FILE*, string_tree_t*, int64_t, void*) oarchive_stream_headers_callback_t;
 
-typedef uint64_t style_t;
+typedef struct logger_state_t__generated_S logger_state_t;
 
 typedef struct box_drawing_t__generated_S box_drawing_t;
 
 typedef struct term_keypress_t__generated_S term_keypress_t;
 
-typedef struct screen_t__generated_S screen_t;
-
-typedef struct screen_window_t__generated_S screen_window_t;
+typedef uint64_t style_t;
 
 typedef enum {
   EXIT_STATUS_UNKNOWN,
@@ -1027,6 +1023,10 @@ typedef enum {
 } sub_process_exit_status_t;
 
 typedef struct sub_process_t__generated_S sub_process_t;
+
+typedef struct screen_t__generated_S screen_t;
+
+typedef struct screen_window_t__generated_S screen_window_t;
 
 typedef struct roci_bb_builder_t__generated_S roci_bb_builder_t;
 
@@ -1532,13 +1532,6 @@ struct value_result_t__generated_S {
   non_fatal_error_code_t nf_error;
 };
 
-struct logger_state_t__generated_S {
-  boolean_t initialized;
-  int level;
-  char* logger_output_filename;
-  FILE* output;
-};
-
 struct utf8_decode_result_t__generated_S {
   uint32_t code_point;
   uint8_t num_bytes;
@@ -1651,6 +1644,13 @@ struct cdl_printer_t__generated_S {
   int indention_level;
 };
 
+struct logger_state_t__generated_S {
+  boolean_t initialized;
+  int level;
+  char* logger_output_filename;
+  FILE* output;
+};
+
 struct box_drawing_t__generated_S {
   uint32_t upper_left_corner;
   uint32_t upper_right_corner;
@@ -1673,6 +1673,17 @@ struct term_keypress_t__generated_S {
   uint8_t hyper;
 };
 
+struct sub_process_t__generated_S {
+  value_array_t* argv;
+  pid_t pid;
+  int stdin;
+  int stdout;
+  int stderr;
+  sub_process_exit_status_t exit_status;
+  int exit_code;
+  int exit_signal;
+};
+
 struct screen_t__generated_S {
   uint32_t width;
   uint32_t height;
@@ -1690,17 +1701,6 @@ struct screen_window_t__generated_S {
   uint32_t y_offset;
   uint32_t width;
   uint32_t height;
-};
-
-struct sub_process_t__generated_S {
-  value_array_t* argv;
-  pid_t pid;
-  int stdin;
-  int stdout;
-  int stderr;
-  sub_process_exit_status_t exit_status;
-  int exit_code;
-  int exit_signal;
 };
 
 struct roci_bb_builder_t__generated_S {
@@ -2105,10 +2105,6 @@ boolean_t FLAG_roci_repl_on_error = false;
 fatal_error_config_t fatal_error_config = {0};
 
 
-# 205 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-logger_state_t global_logger_state = ((logger_state_t) {.level = LOGGER_DEFAULT_LEVEL});
-
-
 # 145 "/Users/jawilson/src/omni-c/src/lib/flag.c"
 program_descriptor_t* current_program;
 
@@ -2123,6 +2119,10 @@ flag_descriptor_t* current_flag;
 
 # 29 "/Users/jawilson/src/omni-c/src/lib/random.c"
 random_state_t shared_random_state = {0};
+
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+logger_state_t global_logger_state = ((logger_state_t) {.level = LOGGER_DEFAULT_LEVEL});
 
 
 # 337 "/Users/jawilson/src/omni-c/src/lib/tui/screen.c"
@@ -2307,7 +2307,8 @@ void buffer_append_dgb_symbol_table(cdl_printer_t* printer, symbol_table_t* symb
 token_t* generate_struct_name_from_typedef_name(token_t* name);
 void split_structure_typedefs(symbol_table_t* symbol_table);
 void reorder_symbol_table_typedefs(symbol_table_t* symbol_table);
-void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings);
+void process_dependent_type_node(symbol_table_t* symbol_table, symbol_table_map_t* typedefs, value_array_t* reordered_bindings, type_node_t* type_node);
+void reorder_symbol_table_typedefs__process_binding(symbol_table_t* symbol_table, symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings);
 struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* binding);
 symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* symbol_table, type_node_t* type_node);
 void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_table, symbol_table_binding_t* binding, value_array_t* reordered_bindings);
@@ -2486,10 +2487,6 @@ char* string_right_pad(const char* str, int n, char ch);
 char* string_truncate(char* str, int limit, char* at_limit_suffix);
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...);
 double string_parse_double(char* str);
-value_result_t parse_log_level_enum(char* str);
-void logger_init(void);
-char* logger_level_to_string(int level);
-__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
 utf8_decode_result_t utf8_decode(const uint8_t* array);
 buffer_t* make_buffer(uint64_t initial_capacity);
 uint64_t buffer_length(buffer_t* array);
@@ -2610,6 +2607,25 @@ void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callba
 char* quote_c_string(char* input);
 char* string_unquote_c_string(char* input);
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
+value_result_t parse_log_level_enum(char* str);
+void logger_init(void);
+char* logger_level_to_string(int level);
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
+buffer_t* buffer_read_file(char* file_name);
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
+__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input);
+void buffer_write_file(buffer_t* bytes, char* file_name);
+void buffer_write_all(FILE* output, buffer_t* buffer);
+void buffer_write_all_chunked(FILE* output, buffer_t* buffer);
+void make_file_read_only(char* file_name);
+void make_writable_if_exists(const char* file_name);
+buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
+int file_peek_byte(FILE* input);
+boolean_t file_eof(FILE* input);
+void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
+void file_skip_bytes(FILE* input, uint64_t n_bytes);
 void term_set_foreground_color(buffer_t* buffer, uint32_t color);
 void term_set_background_color(buffer_t* buffer, uint32_t color);
 void term_move_cursor_absolute(buffer_t* buffer, int x, int y);
@@ -2636,21 +2652,16 @@ void term_main_buffer(buffer_t* buffer);
 void term_home(buffer_t* buffer);
 uint32_t term_width(void);
 uint32_t term_height(void);
-buffer_t* buffer_read_file(char* file_name);
-buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
-__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input);
-void buffer_write_file(buffer_t* bytes, char* file_name);
-void buffer_write_all(FILE* output, buffer_t* buffer);
-void buffer_write_all_chunked(FILE* output, buffer_t* buffer);
-void make_file_read_only(char* file_name);
-void make_writable_if_exists(const char* file_name);
-buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
-extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
-extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
-int file_peek_byte(FILE* input);
-boolean_t file_eof(FILE* input);
-void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
-void file_skip_bytes(FILE* input, uint64_t n_bytes);
+sub_process_t* make_sub_process(value_array_t* argv);
+boolean_t sub_process_launch(sub_process_t* sub_process);
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
+void sub_process_close_stdin(sub_process_t* sub_process);
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
+boolean_t is_sub_process_running(sub_process_t* sub_process);
+void sub_process_wait(sub_process_t* sub_process);
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
+int64_t get_file_modification_time(const char* filename);
 screen_t* get_initial_screen(void);
 screen_t* get_initial_screen_with_limits(uint32_t top_offset, uint32_t bottom_offset, uint32_t left_offset, uint32_t right_offset);
 void screen_fill(screen_t* screen, uint32_t ch, style_t style);
@@ -2673,16 +2684,6 @@ void draw_random_chars_in_window(screen_window_t* window, style_t style);
 void draw_random_screen(boolean_t output_dimensions);
 boolean_t path_is_directory(const char* path);
 boolean_t path_is_file(const char* path);
-sub_process_t* make_sub_process(value_array_t* argv);
-boolean_t sub_process_launch(sub_process_t* sub_process);
-uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
-void sub_process_close_stdin(sub_process_t* sub_process);
-void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
-void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
-boolean_t is_sub_process_running(sub_process_t* sub_process);
-void sub_process_wait(sub_process_t* sub_process);
-void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
-int64_t get_file_modification_time(const char* filename);
 uint64_t skip_whitespace_and_comments(buffer_t* buffer, uint64_t position);
 uint64_t read_roci_token(buffer_t* buffer, uint64_t position, buffer_t* token);
 boolean_t token_is_double(buffer_t* token);
@@ -4219,16 +4220,6 @@ static inline uint64_t mix(uint64_t h)
 }
 
 
-# 158 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-static inline boolean_t should_log_info()
-# 158 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-{
-
-# 159 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  return ((global_logger_state.level)<=LOGGER_INFO);
-}
-
-
 # 20 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
 static inline value_result_t alist_find(string_alist_t* list, char* key)
 # 20 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
@@ -4396,6 +4387,16 @@ static inline uint64_t rotl(uint64_t x, int k)
 
 # 48 "/Users/jawilson/src/omni-c/src/lib/random.c"
   return ((x<<k)|(x>>(64-k)));
+}
+
+
+# 158 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+static inline boolean_t should_log_info()
+# 158 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+{
+
+# 159 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  return ((global_logger_state.level)<=LOGGER_INFO);
 }
 
 
@@ -13108,7 +13109,7 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table)
     symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (value_array_get(bindings, i).ptr));
 
 # 135 "/Users/jawilson/src/omni-c/src/source-to-source.c"
-    reorder_symbol_table_typedefs__process_binding((symbol_table->typedefs), binding, reordered_bindings);
+    reorder_symbol_table_typedefs__process_binding(symbol_table, (symbol_table->typedefs), binding, reordered_bindings);
   }
 
 # 138 "/Users/jawilson/src/omni-c/src/source-to-source.c"
@@ -13117,566 +13118,661 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table)
 
 
 # 141 "/Users/jawilson/src/omni-c/src/source-to-source.c"
-void reorder_symbol_table_typedefs__process_binding(symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings)
-# 143 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+void process_dependent_type_node(symbol_table_t* symbol_table, symbol_table_map_t* typedefs, value_array_t* reordered_bindings, type_node_t* type_node)
+# 144 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 {
 
-# 144 "/Users/jawilson/src/omni-c/src/source-to-source.c"
-  log_debug("processing binding %s", (binding->key_string));
-
 # 145 "/Users/jawilson/src/omni-c/src/source-to-source.c"
-  if ((!(binding->visited)))
+  while (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
 
 # 145 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   {
 
 # 146 "/Users/jawilson/src/omni-c/src/source-to-source.c"
-    if ((((binding->definition_nodes)->length)!=1))
+    (type_node=to_type_node(node_list_get((type_node->type_args), 0)));
+  }
 
-# 146 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 148 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+  char* type_name = token_to_string((type_node->type_name));
+
+# 149 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+  if ((type_name!=((void *)0)))
+
+# 149 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+  {
+
+# 150 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+    symbol_table_binding_t* dependent_binding = symbol_table_map_get(typedefs, type_name);
+
+# 152 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+    if ((dependent_binding!=((void *)0)))
+
+# 152 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 147 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 153 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+      reorder_symbol_table_typedefs__process_binding(symbol_table, typedefs, dependent_binding, reordered_bindings);
+    }
+  }
+}
+
+
+# 159 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+void reorder_symbol_table_typedefs__process_binding(symbol_table_t* symbol_table, symbol_table_map_t* typedefs, symbol_table_binding_t* binding, value_array_t* reordered_bindings)
+# 161 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+{
+
+# 162 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+  log_debug("processing binding %s", (binding->key_string));
+
+# 163 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+  if ((!(binding->visited)))
+
+# 163 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+  {
+
+# 164 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+    if ((((binding->definition_nodes)->length)!=1))
+
+# 164 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+    {
+
+# 165 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-# 149 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 167 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     parse_node_t* node = (/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), 0).ptr));
 
-# 151 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 169 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     typedef_node_t* typedef_node = to_typedef_node(node);
 
-# 152 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 170 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     type_node_t* type_node = (typedef_node->type_node);
 
-# 154 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 172 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     while (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
 
-# 154 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 172 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 155 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 173 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       (type_node=to_type_node(node_list_get((type_node->type_args), 0)));
     }
 
-# 157 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 175 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     if (((type_node->type_node_kind)==TYPE_NODE_KIND_TYPENAME))
 
-# 157 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 175 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 158 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 176 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       char* type_name = token_to_string((type_node->type_name));
 
-# 159 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 177 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       symbol_table_binding_t* dependent_binding = symbol_table_map_get(typedefs, type_name);
 
-# 161 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 179 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       if ((dependent_binding!=((void *)0)))
 
-# 161 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 179 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       {
 
-# 162 "/Users/jawilson/src/omni-c/src/source-to-source.c"
-        reorder_symbol_table_typedefs__process_binding(typedefs, dependent_binding, reordered_bindings);
+# 180 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+        reorder_symbol_table_typedefs__process_binding(symbol_table, typedefs, dependent_binding, reordered_bindings);
       }
     }
     else
 
-# 165 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 183 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     if (((type_node->type_node_kind)==TYPE_NODE_KIND_TYPE_EXPRESSION))
 
-# 165 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 183 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
+
+# 184 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+      if (token_matches((type_node->type_name), "fn_t"))
+
+# 184 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+      {
+
+# 185 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+        buffer_t* buf = make_buffer(10);
+
+# 186 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+        printer_t* printer = make_printer(buf, symbol_table, 4);
+
+# 187 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+        append_type_node(printer, type_node);
+
+# 188 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+        log_fatal("JASON %s", buffer_to_c_string(buf));
+
+# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+        for (
+
+# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+
+# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          int i = 0;
+
+# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          (i<node_list_length((type_node->type_args)));
+
+# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          (i++))
+
+# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+        {
+
+# 190 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          log_fatal("INDEX IS %d", i);
+
+# 191 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          parse_node_t* child = node_list_get((type_node->type_args), i);
+
+# 192 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          log_fatal("CHILD IS %d", (child==((void *)0)));
+
+# 193 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          type_node_t* child_type_node = to_type_node(child);
+
+# 194 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          log_fatal("CHILD TYPE NODE IS %d", (child_type_node==((void *)0)));
+
+# 195 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+          process_dependent_type_node(symbol_table, typedefs, reordered_bindings, child_type_node);
+        }
+      }
     }
     else
 
-# 171 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 204 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     if (((type_node->type_node_kind)!=TYPE_NODE_KIND_PRIMITIVE_TYPENAME))
 
-# 171 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 204 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 172 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 205 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-# 175 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 208 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     log_debug("adding binding %s at position %d", (binding->key_string), (reordered_bindings->length));
 
-# 178 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 211 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     value_array_add(reordered_bindings, ptr_to_value(binding));
 
-# 179 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 212 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     ((binding->visited)=true);
   }
 }
 
 
-# 188 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 221 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 struct_node_t* get_full_structure_definition_node(symbol_table_binding_t* binding)
-# 188 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 221 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 {
 
-# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 222 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   for (
 
-# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 222 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 
-# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 222 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     uint64_t i = 0;
 
-# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 222 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     (i<((binding->definition_nodes)->length));
 
-# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 222 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     (i++))
 
-# 189 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 222 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   {
 
-# 190 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 223 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     parse_node_t* node = (/*CAST*/(parse_node_t*) (value_array_get((binding->definition_nodes), i).ptr));
 
-# 192 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 225 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     struct_node_t* structure_node = to_struct_node(node);
 
-# 193 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 226 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     if ((!(structure_node->partial_definition)))
 
-# 193 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 226 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 194 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 227 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       return structure_node;
     }
   }
 
-# 197 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 230 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   return ((void *)0);
 }
 
 
-# 201 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 234 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 symbol_table_binding_t* resolve_typename_to_structure_binding(symbol_table_t* symbol_table, type_node_t* type_node)
-# 202 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 235 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 {
 
-# 203 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 236 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   if (((type_node->type_node_kind)==TYPE_NODE_KIND_POINTER))
 
-# 203 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 236 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   {
 
-# 204 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 237 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     log_debug("resolve_typename_to_structure_binding -- not looking through pointers " "%p", type_node);
 
-# 208 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 241 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     return ((void *)0);
   }
 
-# 211 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 244 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   if (((type_node->type_node_kind)==TYPE_NODE_KIND_TYPE_EXPRESSION))
 
-# 211 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 244 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   {
 
-# 212 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 245 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     parse_node_t* user_type = (type_node->user_type);
 
-# 213 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 246 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     if (is_struct_node(user_type))
 
-# 213 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 246 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 214 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 247 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       struct_node_t* struct_node = to_struct_node(user_type);
 
-# 215 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 248 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       if (((struct_node->name)!=((void *)0)))
 
-# 215 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 248 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       {
 
-# 216 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 249 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         char* key_name = token_to_string((struct_node->name));
 
-# 217 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 250 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         symbol_table_binding_t* binding = symbol_table_map_get((symbol_table->structures), key_name);
 
-# 219 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 252 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         buffer_t* buffer = make_buffer(10);
 
-# 220 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 253 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         buffer_append_dgb_binding(make_cdl_printer(buffer), binding);
 
-# 221 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 254 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         char* dbg_binding = buffer_to_c_string(buffer);
 
-# 222 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 255 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         log_debug("resolve_typename_to_structure_binding -- returning binding %p %s", binding, dbg_binding);
 
-# 225 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 258 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         return binding;
       }
     }
 
-# 229 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 262 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     return ((void *)0);
   }
 
-# 233 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 266 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   char* key_string = token_to_string((type_node->type_name));
 
-# 234 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 267 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   log_debug("resolve_typename_to_structure_binding -- %d %s", (type_node->tag), key_string);
 
-# 236 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 269 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   symbol_table_binding_t* typedef_binding = symbol_table_map_get((symbol_table->typedefs), key_string);
 
-# 238 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 271 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   if ((typedef_binding!=((void *)0)))
 
-# 238 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 271 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   {
 
-# 239 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 272 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     if ((((typedef_binding->definition_nodes)->length)!=1))
 
-# 239 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 272 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 240 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 273 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-# 242 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 275 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr((typedef_binding->definition_nodes), 0, typeof(parse_node_t*)));
 
-# 244 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 277 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     return resolve_typename_to_structure_binding(symbol_table, (typedef_node->type_node));
   }
   else
 
-# 246 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 279 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   {
 
-# 247 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 280 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     return symbol_table_map_get((symbol_table->structures), key_string);
   }
 }
 
 
-# 251 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 284 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 void reorder_symbol_table_structures_process_binding(symbol_table_t* symbol_table, symbol_table_binding_t* binding, value_array_t* reordered_bindings)
-# 253 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 286 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 {
 
-# 254 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 287 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   log_debug("processing %s", (binding->key_string));
 
-# 255 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 288 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   if ((!(binding->visited)))
 
-# 255 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 288 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   {
 
-# 256 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 289 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     ((binding->visited)=true);
 
-# 257 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 290 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     struct_node_t* structure_node = get_full_structure_definition_node(binding);
 
-# 258 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 291 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     if ((structure_node==((void *)0)))
 
-# 258 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 291 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 261 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 294 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       return;
     }
 
-# 263 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 296 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     uint64_t length = node_list_length((structure_node->fields));
 
-# 264 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 297 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     for (
 
-# 264 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 297 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 
-# 264 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 297 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       uint64_t i = 0;
 
-# 264 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 297 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       (i<length);
 
-# 264 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 297 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       (i++))
 
-# 264 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 297 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     {
 
-# 265 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 298 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       field_node_t* field = to_field_node(node_list_get((structure_node->fields), i));
 
-# 267 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 300 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       type_node_t* type_node = (field->type);
 
-# 268 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 301 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       if ((type_node!=((void *)0)))
 
-# 268 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 301 "/Users/jawilson/src/omni-c/src/source-to-source.c"
       {
 
-# 269 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 302 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         symbol_table_binding_t* field_type_binding = resolve_typename_to_structure_binding(symbol_table, type_node);
 
-# 271 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 304 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         if (((field_type_binding!=((void *)0))&&(!(field_type_binding->visited))))
 
-# 271 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 304 "/Users/jawilson/src/omni-c/src/source-to-source.c"
         {
 
-# 272 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 305 "/Users/jawilson/src/omni-c/src/source-to-source.c"
           reorder_symbol_table_structures_process_binding(symbol_table, field_type_binding, reordered_bindings);
         }
       }
     }
 
-# 277 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 310 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     value_array_add(reordered_bindings, ptr_to_value(binding));
   }
 }
 
 
-# 292 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 325 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 void reorder_symbol_table_structures(symbol_table_t* symbol_table)
-# 292 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 325 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 {
 
-# 293 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 326 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   value_array_t* bindings = ((symbol_table->structures)->ordered_bindings);
 
-# 294 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 327 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   value_array_t* reordered_bindings = make_value_array((bindings->length));
 
-# 295 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 328 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   for (
 
-# 295 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 328 "/Users/jawilson/src/omni-c/src/source-to-source.c"
 
-# 295 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 328 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     int i = 0;
 
-# 295 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 328 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     (i<(bindings->length));
 
-# 295 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 328 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     (i++))
 
-# 295 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 328 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   {
 
-# 296 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 329 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     symbol_table_binding_t* binding = (/*CAST*/(symbol_table_binding_t*) (value_array_get(bindings, i).ptr));
 
-# 298 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 331 "/Users/jawilson/src/omni-c/src/source-to-source.c"
     reorder_symbol_table_structures_process_binding(symbol_table, binding, reordered_bindings);
   }
 
-# 301 "/Users/jawilson/src/omni-c/src/source-to-source.c"
+# 334 "/Users/jawilson/src/omni-c/src/source-to-source.c"
   (((symbol_table->structures)->ordered_bindings)=reordered_bindings);
 }
 
 
-# 48 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position)
 # 50 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+c_preprocessor_directive_range_t mark_c_preprocessor_directive(c_preprocess_options_t options, value_array_t* tokens, uint64_t start_position)
+# 52 "/Users/jawilson/src/omni-c/src/preprocessor.c"
 {
 
-# 52 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 54 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   c_preprocessor_directive_range_t result = {0};
 
-# 59 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 61 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   uint64_t position = start_position;
 
-# 60 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 62 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   for (
 
-# 60 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-
-# 60 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-    ;
-
-# 60 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-    (position<(tokens->length));
-
-# 60 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-    (position++))
-
-# 60 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-  {
-
-# 61 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-    token_t* token = token_at(tokens, position);
+# 62 "/Users/jawilson/src/omni-c/src/preprocessor.c"
 
 # 62 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-    ((token->is_cpp_token)=true);
+    ;
+
+# 62 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+    (position<(tokens->length));
+
+# 62 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+    (position++))
+
+# 62 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+  {
 
 # 63 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-    if ((position==start_position))
-
-# 63 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-    {
+    token_t* token = token_at(tokens, position);
 
 # 64 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-      ((result.token_start_position)=start_position);
+    ((token->is_cpp_token)=true);
 
 # 65 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-      ((result.buffer_start_position)=(token->start));
+    if ((position==start_position))
+
+# 65 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+    {
 
 # 66 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+      ((result.token_start_position)=start_position);
+
+# 67 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+      ((result.buffer_start_position)=(token->start));
+
+# 68 "/Users/jawilson/src/omni-c/src/preprocessor.c"
       ((result.buffer)=(token->buffer));
     }
 
-# 68 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 70 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     if (((result.buffer)!=(token->buffer)))
 
-# 68 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 70 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     {
 
-# 69 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 71 "/Users/jawilson/src/omni-c/src/preprocessor.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
 
-# 71 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 73 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     ((result.token_end_position)=(position+1));
 
-# 72 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 74 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     ((result.buffer_end_position)=(token->end));
 
-# 73 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 75 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     if ((((token->type)==TOKEN_TYPE_WHITESPACE)&&token_contains(token, "\n")))
 
-# 73 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 75 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     {
 
-# 74 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 76 "/Users/jawilson/src/omni-c/src/preprocessor.c"
       break;
     }
   }
 
-# 77 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 79 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   return result;
 }
 
 
-# 80 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 82 "/Users/jawilson/src/omni-c/src/preprocessor.c"
 uint64_t handle_c_preprocessor_directive(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens, uint64_t start_position)
-# 83 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 85 "/Users/jawilson/src/omni-c/src/preprocessor.c"
 {
 
-# 84 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 86 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   c_preprocessor_directive_range_t range = mark_c_preprocessor_directive(options, tokens, start_position);
 
-# 86 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 88 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   token_t* directive_name = token_at(tokens, (start_position+1));
 
-# 88 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 90 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   if (token_matches(directive_name, "include"))
 
-# 88 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 90 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   {
 
-# 89 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 91 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     cpp_include_node_t* node = make_cpp_include_node();
 
-# 90 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 92 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     ((node->text)=buffer_c_substring((range.buffer), (range.buffer_start_position), (range.buffer_end_position)));
 
-# 92 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 94 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     if (string_contains_char((node->text), '<'))
-
-# 92 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-    {
-
-# 93 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-      value_array_add((symbol_table->system_includes), ptr_to_value(node));
-    }
-    else
 
 # 94 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     {
 
 # 95 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+      value_array_add((symbol_table->system_includes), ptr_to_value(node));
+    }
+    else
+
+# 96 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+    {
+
+# 97 "/Users/jawilson/src/omni-c/src/preprocessor.c"
       value_array_add((symbol_table->user_includes), ptr_to_value(node));
     }
   }
   else
 
-# 97 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 99 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   if (token_matches(directive_name, "define"))
 
-# 97 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 99 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   {
 
-# 98 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 100 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     cpp_define_node_t* node = make_cpp_define_node();
 
-# 99 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 101 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     ((node->text)=buffer_c_substring((range.buffer), (range.buffer_start_position), (range.buffer_end_position)));
 
-# 101 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 103 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     value_array_add((symbol_table->defines), ptr_to_value(node));
   }
 
-# 103 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 105 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   return (range.token_end_position);
 }
 
 
-# 106 "/Users/jawilson/src/omni-c/src/preprocessor.c"
-void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens)
 # 108 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+void handle_c_preprocessor_directives(c_preprocess_options_t options, symbol_table_t* symbol_table, value_array_t* tokens)
+# 110 "/Users/jawilson/src/omni-c/src/preprocessor.c"
 {
 
-# 109 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 111 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   for (
 
-# 109 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 111 "/Users/jawilson/src/omni-c/src/preprocessor.c"
 
-# 109 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 111 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     uint64_t position = 0;
 
-# 109 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 111 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     (position<(tokens->length));
 
-# 109 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 111 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     )
 
-# 109 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 111 "/Users/jawilson/src/omni-c/src/preprocessor.c"
   {
 
-# 110 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 112 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     token_t* token = token_at(tokens, position);
 
-# 111 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 113 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     if (token_matches(token, "#"))
 
-# 111 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 113 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     {
 
-# 112 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 114 "/Users/jawilson/src/omni-c/src/preprocessor.c"
       (position=handle_c_preprocessor_directive(options, symbol_table, tokens, position));
     }
     else
 
-# 114 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 116 "/Users/jawilson/src/omni-c/src/preprocessor.c"
     {
 
-# 115 "/Users/jawilson/src/omni-c/src/preprocessor.c"
+# 117 "/Users/jawilson/src/omni-c/src/preprocessor.c"
       (position++);
     }
   }
@@ -22785,286 +22881,6 @@ double string_parse_double(char* str)
 }
 
 
-# 208 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-value_result_t parse_log_level_enum(char* str)
-# 208 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-{
-
-# 209 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if (((strcmp("FATAL", str)==0)||(strcmp("fatal", str)==0)))
-
-# 209 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 210 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_FATAL});
-  }
-  else
-
-# 211 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if (((strcmp("WARN", str)==0)||(strcmp("warn", str)==0)))
-
-# 211 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 212 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_WARN});
-  }
-  else
-
-# 213 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if (((strcmp("INFO", str)==0)||(strcmp("info", str)==0)))
-
-# 213 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 214 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_INFO});
-  }
-  else
-
-# 215 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if (((strcmp("DEBUG", str)==0)||(strcmp("debug", str)==0)))
-
-# 215 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 216 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_DEBUG});
-  }
-  else
-
-# 217 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if (((strcmp("TRACE", str)==0)||(strcmp("trace", str)==0)))
-
-# 217 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 218 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_TRACE});
-  }
-  else
-
-# 219 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if (((strcmp("OFF", str)==0)||(strcmp("off", str)==0)))
-
-# 219 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 220 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_OFF});
-  }
-  else
-
-# 221 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 222 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return ((value_result_t) {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
-  }
-}
-
-
-# 239 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-void logger_init(void)
-# 239 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-{
-
-# 240 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
-
-# 241 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if ((level_string!=NULL))
-
-# 241 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 242 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    value_result_t parsed = string_parse_uint64(level_string);
-
-# 243 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    if (is_ok(parsed))
-
-# 243 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    {
-
-# 244 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-      ((global_logger_state.level)=(parsed.u64));
-    }
-    else
-
-# 245 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    {
-
-# 246 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-      value_result_t parsed = parse_log_level_enum(level_string);
-
-# 247 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-      if (is_ok(parsed))
-
-# 247 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-      {
-
-# 248 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-        ((global_logger_state.level)=(parsed.u64));
-      }
-      else
-
-# 249 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-      {
-
-# 250 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-        log_warn("%s could not be converted to a log level.", level_string);
-      }
-    }
-  }
-
-# 255 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
-
-# 259 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
-
-# 266 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if ((output_file_name!=NULL))
-
-# 266 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 267 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    ((global_logger_state.output)=fopen(output_file_name, "w"));
-
-# 268 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    if ((!(global_logger_state.output)))
-
-# 268 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    {
-
-# 269 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-      fatal_error(ERROR_OPEN_LOG_FILE);
-    }
-
-# 276 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    ((global_logger_state.logger_output_filename)=output_file_name);
-  }
-  else
-
-# 277 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 278 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    ((global_logger_state.output)=stderr);
-
-# 279 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    ((global_logger_state.initialized)=true);
-  }
-}
-
-
-# 285 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-char* logger_level_to_string(int level)
-# 285 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-{
-
-# 286 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  switch (level)
-
-# 286 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 287 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    case LOGGER_OFF:
-
-# 288 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return "LOGGER_OFF";
-
-# 289 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    case LOGGER_TRACE:
-
-# 290 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return "TRACE";
-
-# 291 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    case LOGGER_DEBUG:
-
-# 292 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return "DEBUG";
-
-# 293 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    case LOGGER_INFO:
-
-# 294 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return "INFO";
-
-# 295 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    case LOGGER_WARN:
-
-# 296 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return "WARN";
-
-# 297 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    case LOGGER_FATAL:
-
-# 298 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return "FATAL";
-
-# 299 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    default:
-
-# 300 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    return "LEVEL_UNKNOWN";
-  }
-}
-
-
-# 312 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...)
-# 313 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-{
-
-# 315 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  FILE* output = (global_logger_state.output);
-
-# 319 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if ((output==NULL))
-
-# 319 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 320 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    (output=stderr);
-  }
-
-# 323 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  if ((level>=(global_logger_state.level)))
-
-# 323 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-  {
-
-# 324 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    fprintf(output, "%s ", logger_level_to_string(level));
-
-# 325 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    va_list args;
-
-# 326 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    fprintf(output, "%s:%d %s | ", file, line_number, function);
-
-# 328 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    va_start(args, format);
-
-# 329 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    vfprintf(output, format, args);
-
-# 330 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    va_end(args);
-
-# 332 "/Users/jawilson/src/omni-c/src/lib/logger.c"
-    fprintf(output, "\n");
-  }
-}
-
-
 # 23 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
 utf8_decode_result_t utf8_decode(const uint8_t* array)
 # 23 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
@@ -27551,461 +27367,283 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
 }
 
 
-# 174 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_set_foreground_color(buffer_t* buffer, uint32_t color)
-# 174 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 208 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+value_result_t parse_log_level_enum(char* str)
+# 208 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
 {
 
-# 175 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t blue = (color&0xff);
+# 209 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("FATAL", str)==0)||(strcmp("fatal", str)==0)))
 
-# 176 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t green = ((color>>8)&0xff);
-
-# 177 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t red = ((color>>16)&0xff);
-
-# 180 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
-}
-
-
-# 193 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_set_background_color(buffer_t* buffer, uint32_t color)
-# 193 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 194 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t blue = (color&0xff);
-
-# 195 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t green = ((color>>8)&0xff);
-
-# 196 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t red = ((color>>16)&0xff);
-
-# 199 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
-}
-
-
-# 214 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_move_cursor_absolute(buffer_t* buffer, int x, int y)
-# 214 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 216 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
-}
-
-
-# 228 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_move_cursor_relative(buffer_t* buffer, int x, int y)
-# 228 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 230 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  if ((x>0))
-
-# 230 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 209 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
   {
 
-# 231 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
+# 210 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_FATAL});
   }
   else
 
-# 232 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  if ((x<0))
+# 211 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("WARN", str)==0)||(strcmp("warn", str)==0)))
 
-# 232 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 211 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
   {
 
-# 233 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), (-x));
-  }
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  if ((y>0))
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-# 236 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
+# 212 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_WARN});
   }
   else
 
-# 237 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  if ((y<0))
+# 213 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("INFO", str)==0)||(strcmp("info", str)==0)))
 
-# 237 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 213 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
   {
 
-# 238 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), (-y));
+# 214 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_INFO});
+  }
+  else
+
+# 215 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("DEBUG", str)==0)||(strcmp("debug", str)==0)))
+
+# 215 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+# 216 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_DEBUG});
+  }
+  else
+
+# 217 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("TRACE", str)==0)||(strcmp("trace", str)==0)))
+
+# 217 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+# 218 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_TRACE});
+  }
+  else
+
+# 219 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("OFF", str)==0)||(strcmp("off", str)==0)))
+
+# 219 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+# 220 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_OFF});
+  }
+  else
+
+# 221 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+# 222 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
   }
 }
 
 
-# 248 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_bold(buffer_t* buffer)
-# 248 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 239 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+void logger_init(void)
+# 239 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
 {
 
-# 249 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
-}
+# 240 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
 
+# 241 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if ((level_string!=NULL))
 
-# 258 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_dim(buffer_t* buffer)
-# 258 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 259 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
-}
-
-
-# 268 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_italic(buffer_t* buffer)
-# 268 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 269 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
-}
-
-
-# 278 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_underline(buffer_t* buffer)
-# 278 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 279 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
-}
-
-
-# 282 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_strikethrough(buffer_t* buffer)
-# 282 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 283 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("9m"));
-}
-
-
-# 286 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_overline(buffer_t* buffer)
-# 286 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 287 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("53m"));
-}
-
-
-# 290 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_superscript(buffer_t* buffer)
-# 290 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 291 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("73m"));
-}
-
-
-# 294 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_subscript(buffer_t* buffer)
-# 294 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 295 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("74m"));
-}
-
-
-# 298 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_slow_blink(buffer_t* buffer)
-# 298 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 299 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("5m"));
-}
-
-
-# 302 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_fast_blink(buffer_t* buffer)
-# 302 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 303 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("6m"));
-}
-
-
-# 313 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_reset_formatting(buffer_t* buffer)
-# 313 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 314 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
-}
-
-
-# 323 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_clear_screen(buffer_t* buffer)
-# 323 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 324 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
-}
-
-
-# 332 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box)
-# 333 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 335 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  term_move_cursor_absolute(buffer, x0, y0);
-
-# 336 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_code_point(buffer, (box->upper_left_corner));
-
-# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  for (
-
-# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-
-# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    uint64_t x = (x0+1);
-
-# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    (x<x1);
-
-# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    (x++))
-
-# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 241 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
   {
 
-# 338 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_append_code_point(buffer, (box->top_edge));
-  }
+# 242 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    value_result_t parsed = string_parse_uint64(level_string);
 
-# 340 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_code_point(buffer, (box->upper_right_corner));
+# 243 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    if (is_ok(parsed))
 
-# 343 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  term_move_cursor_absolute(buffer, x0, y1);
-
-# 344 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_code_point(buffer, (box->lower_left_corner));
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  for (
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    uint64_t x = (x0+1);
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    (x<x1);
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    (x++))
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-# 346 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_append_code_point(buffer, (box->bottom_edge));
-  }
-
-# 348 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_code_point(buffer, (box->lower_right_corner));
-
-# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  for (
-
-# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-
-# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    int y = (y0+1);
-
-# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    (y<y1);
-
-# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    (y++))
-
-# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-# 352 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    term_move_cursor_absolute(buffer, x0, y);
-
-# 353 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_append_code_point(buffer, (box->left_edge));
-
-# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    for (
-
-# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-
-# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-      int x = (x0+1);
-
-# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-      (x<x1);
-
-# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-      (x++))
-
-# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 243 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
     {
 
-# 356 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-      buffer_append_code_point(buffer, ' ');
+# 244 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+      ((global_logger_state.level)=(parsed.u64));
+    }
+    else
+
+# 245 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    {
+
+# 246 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+      value_result_t parsed = parse_log_level_enum(level_string);
+
+# 247 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+      if (is_ok(parsed))
+
+# 247 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+      {
+
+# 248 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+        ((global_logger_state.level)=(parsed.u64));
+      }
+      else
+
+# 249 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+      {
+
+# 250 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+        log_warn("%s could not be converted to a log level.", level_string);
+      }
+    }
+  }
+
+# 255 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
+
+# 259 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
+
+# 266 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if ((output_file_name!=NULL))
+
+# 266 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+# 267 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    ((global_logger_state.output)=fopen(output_file_name, "w"));
+
+# 268 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    if ((!(global_logger_state.output)))
+
+# 268 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    {
+
+# 269 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+      fatal_error(ERROR_OPEN_LOG_FILE);
     }
 
-# 360 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_append_code_point(buffer, (box->right_edge));
+# 276 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    ((global_logger_state.logger_output_filename)=output_file_name);
+  }
+  else
+
+# 277 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+# 278 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    ((global_logger_state.output)=stderr);
+
+# 279 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    ((global_logger_state.initialized)=true);
   }
 }
 
 
-# 370 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-extern struct termios term_echo_off()
-# 370 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 285 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+char* logger_level_to_string(int level)
+# 285 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
 {
 
-# 371 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  struct termios oldt;
+# 286 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  switch (level)
 
-# 372 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  struct termios newt;
+# 286 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
 
-# 373 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  tcgetattr(STDIN_FILENO, (&oldt));
+# 287 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_OFF:
 
-# 374 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  (newt=oldt);
+# 288 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return "LOGGER_OFF";
 
-# 377 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  tcgetattr(STDIN_FILENO, (&oldt));
+# 289 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_TRACE:
 
-# 378 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  (newt=oldt);
+# 290 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return "TRACE";
 
-# 381 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  ((newt.c_lflag)&=(~(ICANON|ECHO)));
+# 291 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_DEBUG:
 
-# 385 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  tcsetattr(STDIN_FILENO, TCSANOW, (&newt));
+# 292 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return "DEBUG";
 
-# 387 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  return oldt;
+# 293 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_INFO:
+
+# 294 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return "INFO";
+
+# 295 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_WARN:
+
+# 296 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return "WARN";
+
+# 297 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_FATAL:
+
+# 298 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return "FATAL";
+
+# 299 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    default:
+
+# 300 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    return "LEVEL_UNKNOWN";
+  }
 }
 
 
-# 395 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-extern void term_echo_restore(struct termios oldt)
-# 395 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+# 312 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...)
+# 313 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
 {
 
-# 397 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  tcsetattr(STDIN_FILENO, TCSANOW, (&oldt));
-}
+# 315 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  FILE* output = (global_logger_state.output);
 
+# 319 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if ((output==NULL))
 
-# 400 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_disable_autowrap(buffer_t* buffer)
-# 400 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
+# 319 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
 
-# 401 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_string(buffer, "\033[?7l");
-}
+# 320 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    (output=stderr);
+  }
 
+# 323 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  if ((level>=(global_logger_state.level)))
 
-# 404 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_enable_autowrap(buffer_t* buffer)
-# 404 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
+# 323 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  {
 
-# 405 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_string(buffer, "\033[?7h");
-}
+# 324 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    fprintf(output, "%s ", logger_level_to_string(level));
 
+# 325 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    va_list args;
 
-# 419 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_alt_buffer(buffer_t* buffer)
-# 419 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
+# 326 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    fprintf(output, "%s:%d %s | ", file, line_number, function);
 
-# 419 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, "\033[?1049h");
-}
+# 328 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    va_start(args, format);
 
+# 329 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    vfprintf(output, format, args);
 
-# 427 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_main_buffer(buffer_t* buffer)
-# 427 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
+# 330 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    va_end(args);
 
-# 428 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, "\033[?1049l");
-}
-
-
-# 431 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-void term_home(buffer_t* buffer)
-# 431 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 431 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, "\033[H");
-}
-
-
-# 433 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-uint32_t term_width(void)
-# 433 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 434 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  struct winsize w;
-
-# 435 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, (&w));
-
-# 436 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  return (w.ws_col);
-}
-
-
-# 439 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-uint32_t term_height(void)
-# 439 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-# 440 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  struct winsize w;
-
-# 441 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, (&w));
-
-# 442 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
-  return (w.ws_row);
+# 332 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+    fprintf(output, "\n");
+  }
 }
 
 
@@ -28648,6 +28286,1031 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes)
 # 367 "/Users/jawilson/src/omni-c/src/lib/io/io.c"
     (n_bytes--);
   }
+}
+
+
+# 174 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_set_foreground_color(buffer_t* buffer, uint32_t color)
+# 174 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 175 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t blue = (color&0xff);
+
+# 176 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t green = ((color>>8)&0xff);
+
+# 177 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t red = ((color>>16)&0xff);
+
+# 180 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
+}
+
+
+# 193 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_set_background_color(buffer_t* buffer, uint32_t color)
+# 193 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 194 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t blue = (color&0xff);
+
+# 195 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t green = ((color>>8)&0xff);
+
+# 196 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t red = ((color>>16)&0xff);
+
+# 199 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
+}
+
+
+# 214 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_move_cursor_absolute(buffer_t* buffer, int x, int y)
+# 214 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 216 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
+}
+
+
+# 228 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_move_cursor_relative(buffer_t* buffer, int x, int y)
+# 228 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 230 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  if ((x>0))
+
+# 230 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+# 231 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
+  }
+  else
+
+# 232 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  if ((x<0))
+
+# 232 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+# 233 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), (-x));
+  }
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  if ((y>0))
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+# 236 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
+  }
+  else
+
+# 237 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  if ((y<0))
+
+# 237 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+# 238 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), (-y));
+  }
+}
+
+
+# 248 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_bold(buffer_t* buffer)
+# 248 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 249 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
+}
+
+
+# 258 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_dim(buffer_t* buffer)
+# 258 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 259 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
+}
+
+
+# 268 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_italic(buffer_t* buffer)
+# 268 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 269 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
+}
+
+
+# 278 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_underline(buffer_t* buffer)
+# 278 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 279 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
+}
+
+
+# 282 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_strikethrough(buffer_t* buffer)
+# 282 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 283 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("9m"));
+}
+
+
+# 286 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_overline(buffer_t* buffer)
+# 286 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 287 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("53m"));
+}
+
+
+# 290 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_superscript(buffer_t* buffer)
+# 290 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 291 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("73m"));
+}
+
+
+# 294 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_subscript(buffer_t* buffer)
+# 294 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 295 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("74m"));
+}
+
+
+# 298 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_slow_blink(buffer_t* buffer)
+# 298 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 299 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("5m"));
+}
+
+
+# 302 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_fast_blink(buffer_t* buffer)
+# 302 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 303 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("6m"));
+}
+
+
+# 313 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_reset_formatting(buffer_t* buffer)
+# 313 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 314 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
+}
+
+
+# 323 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_clear_screen(buffer_t* buffer)
+# 323 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 324 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
+}
+
+
+# 332 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box)
+# 333 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 335 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  term_move_cursor_absolute(buffer, x0, y0);
+
+# 336 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_code_point(buffer, (box->upper_left_corner));
+
+# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  for (
+
+# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+
+# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    uint64_t x = (x0+1);
+
+# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    (x<x1);
+
+# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    (x++))
+
+# 337 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+# 338 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_append_code_point(buffer, (box->top_edge));
+  }
+
+# 340 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_code_point(buffer, (box->upper_right_corner));
+
+# 343 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  term_move_cursor_absolute(buffer, x0, y1);
+
+# 344 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_code_point(buffer, (box->lower_left_corner));
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  for (
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    uint64_t x = (x0+1);
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    (x<x1);
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    (x++))
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+# 346 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_append_code_point(buffer, (box->bottom_edge));
+  }
+
+# 348 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_code_point(buffer, (box->lower_right_corner));
+
+# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  for (
+
+# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+
+# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    int y = (y0+1);
+
+# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    (y<y1);
+
+# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    (y++))
+
+# 351 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+# 352 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    term_move_cursor_absolute(buffer, x0, y);
+
+# 353 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_append_code_point(buffer, (box->left_edge));
+
+# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    for (
+
+# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+
+# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+      int x = (x0+1);
+
+# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+      (x<x1);
+
+# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+      (x++))
+
+# 355 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    {
+
+# 356 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+      buffer_append_code_point(buffer, ' ');
+    }
+
+# 360 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_append_code_point(buffer, (box->right_edge));
+  }
+}
+
+
+# 370 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+extern struct termios term_echo_off()
+# 370 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 371 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  struct termios oldt;
+
+# 372 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  struct termios newt;
+
+# 373 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  tcgetattr(STDIN_FILENO, (&oldt));
+
+# 374 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  (newt=oldt);
+
+# 377 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  tcgetattr(STDIN_FILENO, (&oldt));
+
+# 378 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  (newt=oldt);
+
+# 381 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  ((newt.c_lflag)&=(~(ICANON|ECHO)));
+
+# 385 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  tcsetattr(STDIN_FILENO, TCSANOW, (&newt));
+
+# 387 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  return oldt;
+}
+
+
+# 395 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+extern void term_echo_restore(struct termios oldt)
+# 395 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 397 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  tcsetattr(STDIN_FILENO, TCSANOW, (&oldt));
+}
+
+
+# 400 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_disable_autowrap(buffer_t* buffer)
+# 400 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_string(buffer, "\033[?7l");
+}
+
+
+# 404 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_enable_autowrap(buffer_t* buffer)
+# 404 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 405 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_string(buffer, "\033[?7h");
+}
+
+
+# 419 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_alt_buffer(buffer_t* buffer)
+# 419 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 419 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, "\033[?1049h");
+}
+
+
+# 427 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_main_buffer(buffer_t* buffer)
+# 427 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 428 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, "\033[?1049l");
+}
+
+
+# 431 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+void term_home(buffer_t* buffer)
+# 431 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 431 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, "\033[H");
+}
+
+
+# 433 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+uint32_t term_width(void)
+# 433 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 434 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  struct winsize w;
+
+# 435 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, (&w));
+
+# 436 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  return (w.ws_col);
+}
+
+
+# 439 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+uint32_t term_height(void)
+# 439 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+# 440 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  struct winsize w;
+
+# 441 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, (&w));
+
+# 442 "/Users/jawilson/src/omni-c/src/lib/tui/terminal.c"
+  return (w.ws_row);
+}
+
+
+# 43 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+sub_process_t* make_sub_process(value_array_t* argv)
+# 43 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 44 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_t* result = malloc_struct(sub_process_t);
+
+# 45 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  ((result->argv)=argv);
+
+# 46 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  ((result->exit_code)=(-1));
+
+# 47 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  return result;
+}
+
+
+# 56 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+boolean_t sub_process_launch(sub_process_t* sub_process)
+# 56 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 57 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  uint64_t length = ((sub_process->argv)->length);
+
+# 58 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((length<1))
+
+# 58 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 59 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    log_fatal("Expected at least the program path in argv");
+
+# 60 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 64 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  char** argv = (/*CAST*/(typeof(char**)) malloc_bytes(((length+1)*(sizeof(typeof(char*))))));
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  for (
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    int i = 0;
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    (i<length);
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    (i++))
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 67 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((argv[i])=value_array_get_ptr((sub_process->argv), i, typeof(char*)));
+  }
+
+# 71 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  ((argv[length])=NULL);
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int stdin_pipe[2] = {0};
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int stdout_pipe[2] = {0};
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int stderr_pipe[2] = {0};
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((((pipe(stdin_pipe)==(-1))||(pipe(stdout_pipe)==(-1)))||(pipe(stderr_pipe)==(-1))))
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    log_fatal("Failed to create pipe for stdin, stdout or stderr");
+
+# 82 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 83 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return false;
+  }
+
+# 87 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stdin_pipe[0]), F_SETFD, FD_CLOEXEC);
+
+# 88 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stdin_pipe[1]), F_SETFD, FD_CLOEXEC);
+
+# 89 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stdout_pipe[0]), F_SETFD, FD_CLOEXEC);
+
+# 90 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stdout_pipe[1]), F_SETFD, FD_CLOEXEC);
+
+# 91 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stderr_pipe[0]), F_SETFD, FD_CLOEXEC);
+
+# 92 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stderr_pipe[1]), F_SETFD, FD_CLOEXEC);
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  pid_t pid = fork();
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((pid==(-1)))
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    log_fatal("fork() failed.");
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return false;
+  }
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((pid==0))
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 108 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    dup2((stdin_pipe[0]), STDIN_FILENO);
+
+# 109 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    dup2((stdout_pipe[1]), STDOUT_FILENO);
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    dup2((stderr_pipe[1]), STDERR_FILENO);
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdin_pipe[0]));
+
+# 112 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdin_pipe[1]));
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdout_pipe[0]));
+
+# 114 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdout_pipe[1]));
+
+# 115 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stderr_pipe[0]));
+
+# 116 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stderr_pipe[1]));
+
+# 119 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    int offset = 0;
+
+# 120 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    while ((((argv[offset])!=NULL)&&(strchr((argv[offset]), '=')!=NULL)))
+
+# 120 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 121 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      char* env_str = (argv[offset]);
+
+# 122 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      char* equals = strchr(env_str, '=');
+
+# 124 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      if (((*(equals+1))=='\0'))
+
+# 124 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      {
+
+# 125 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+        ((*equals)='\0');
+
+# 126 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+        unsetenv(env_str);
+      }
+      else
+
+# 127 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      {
+
+# 128 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+        putenv(env_str);
+      }
+
+# 130 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      (offset++);
+    }
+
+# 133 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    if (((argv[offset])==NULL))
+
+# 133 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      log_fatal("No executable specified after environment variables");
+
+# 135 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 139 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    int exec_exit_status = execvp((argv[offset]), (argv+offset));
+
+# 142 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
+
+# 143 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 144 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return false;
+  }
+  else
+
+# 145 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 152 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdin_pipe[0]));
+
+# 153 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdout_pipe[1]));
+
+# 154 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stderr_pipe[1]));
+
+# 157 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->pid)=pid);
+
+# 158 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->stdin)=(stdin_pipe[1]));
+
+# 159 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->stdout)=(stdout_pipe[0]));
+
+# 160 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->stderr)=(stderr_pipe[0]));
+
+# 162 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    free_bytes(argv);
+
+# 164 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return true;
+  }
+}
+
+
+# 168 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position)
+# 169 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 170 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int stdin_fd = (sub_process->stdin);
+
+# 173 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int flags = fcntl(stdin_fd, F_GETFL, 0);
+
+# 174 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
+
+# 176 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((bytes_written==(-1)))
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 180 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    if (((errno==EAGAIN)||(errno==EWOULDBLOCK)))
+
+# 180 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 181 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      return 0;
+    }
+    else
+
+# 182 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
+
+# 185 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 189 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  return bytes_written;
+}
+
+
+# 192 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_close_stdin(sub_process_t* sub_process)
+# 192 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 193 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (((sub_process->stdin)!=(-1)))
+
+# 193 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 194 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    if ((close((sub_process->stdin))==(-1)))
+
+# 194 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 195 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      log_fatal("Error closing subprocess stdin: %s", strerror(errno));
+
+# 196 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 198 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->stdin)=(-1));
+  }
+}
+
+
+# 202 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr)
+# 203 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 204 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((stdout!=NULL))
+
+# 204 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    buffer_read_ready_bytes_file_number(stdout, (sub_process->stdout), 0xffffffff);
+  }
+
+# 208 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((stderr!=NULL))
+
+# 208 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 209 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    buffer_read_ready_bytes_file_number(stderr, (sub_process->stderr), 0xffffffff);
+  }
+}
+
+
+# 216 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status)
+# 217 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 218 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((pid==(-1)))
+
+# 218 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 219 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
+
+# 220 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return;
+  }
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (WIFEXITED(status))
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 225 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
+
+# 226 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_code)=WEXITSTATUS(status));
+  }
+  else
+
+# 227 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (WIFSIGNALED(status))
+
+# 227 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 228 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
+
+# 229 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_signal)=WTERMSIG(status));
+  }
+  else
+
+# 230 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 231 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
+  }
+}
+
+
+# 242 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+boolean_t is_sub_process_running(sub_process_t* sub_process)
+# 242 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 243 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 243 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 244 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return false;
+  }
+
+# 247 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int status = 0;
+
+# 248 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
+
+# 249 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((result==0))
+
+# 249 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 250 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return true;
+  }
+
+# 252 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_record_exit_status(sub_process, result, status);
+
+# 253 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  return false;
+}
+
+
+# 263 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_wait(sub_process_t* sub_process)
+# 263 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 264 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 264 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 265 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    int status = 0;
+
+# 266 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    pid_t result = waitpid((sub_process->pid), (&status), 0);
+
+# 267 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    sub_process_record_exit_status(sub_process, result, status);
+  }
+}
+
+
+# 281 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr)
+# 283 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 284 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_launch(sub_process);
+
+# 285 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  uint64_t written = 0;
+
+# 286 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  do
+# 286 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 287 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    if (((child_stdin!=NULL)&&(written<(child_stdin->length))))
+
+# 287 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 288 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      (written+=sub_process_write(sub_process, child_stdin, written));
+
+# 289 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      if ((written>=(child_stdin->length)))
+
+# 289 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      {
+
+# 290 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+        sub_process_close_stdin(sub_process);
+      }
+    }
+
+# 293 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    sub_process_read(sub_process, child_stdout, child_stderr);
+
+# 294 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 296 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_read(sub_process, child_stdout, child_stderr);
+
+# 297 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_wait(sub_process);
+}
+
+
+# 11 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+int64_t get_file_modification_time(const char* filename)
+# 11 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+{
+
+# 12 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+  struct stat result = ((struct stat) {0});
+
+# 14 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+  if ((stat(filename, (&result))!=0))
+
+# 14 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+  {
+
+# 16 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+    return (-1);
+  }
+
+# 19 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+  int64_t total_microseconds = 0;
+
+# 22 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+  (total_microseconds=(((/*CAST*/(int64_t) ((result.st_mtimespec).tv_sec))*1000000LL)+(((result.st_mtimespec).tv_nsec)/1000)));
+
+# 25 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
+  return total_microseconds;
 }
 
 
@@ -29643,573 +30306,6 @@ boolean_t path_is_file(const char* path)
 
 # 20 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
   return S_ISREG((st.st_mode));
-}
-
-
-# 43 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-sub_process_t* make_sub_process(value_array_t* argv)
-# 43 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 44 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_t* result = malloc_struct(sub_process_t);
-
-# 45 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  ((result->argv)=argv);
-
-# 46 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  ((result->exit_code)=(-1));
-
-# 47 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  return result;
-}
-
-
-# 56 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-boolean_t sub_process_launch(sub_process_t* sub_process)
-# 56 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 57 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  uint64_t length = ((sub_process->argv)->length);
-
-# 58 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((length<1))
-
-# 58 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 59 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    log_fatal("Expected at least the program path in argv");
-
-# 60 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-# 64 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  char** argv = (/*CAST*/(typeof(char**)) malloc_bytes(((length+1)*(sizeof(typeof(char*))))));
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  for (
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    int i = 0;
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    (i<length);
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    (i++))
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 67 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((argv[i])=value_array_get_ptr((sub_process->argv), i, typeof(char*)));
-  }
-
-# 71 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  ((argv[length])=NULL);
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int stdin_pipe[2] = {0};
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int stdout_pipe[2] = {0};
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int stderr_pipe[2] = {0};
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((((pipe(stdin_pipe)==(-1))||(pipe(stdout_pipe)==(-1)))||(pipe(stderr_pipe)==(-1))))
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    log_fatal("Failed to create pipe for stdin, stdout or stderr");
-
-# 82 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-
-# 83 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return false;
-  }
-
-# 87 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stdin_pipe[0]), F_SETFD, FD_CLOEXEC);
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stdin_pipe[1]), F_SETFD, FD_CLOEXEC);
-
-# 89 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stdout_pipe[0]), F_SETFD, FD_CLOEXEC);
-
-# 90 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stdout_pipe[1]), F_SETFD, FD_CLOEXEC);
-
-# 91 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stderr_pipe[0]), F_SETFD, FD_CLOEXEC);
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stderr_pipe[1]), F_SETFD, FD_CLOEXEC);
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  pid_t pid = fork();
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((pid==(-1)))
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    log_fatal("fork() failed.");
-
-# 98 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return false;
-  }
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((pid==0))
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 108 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    dup2((stdin_pipe[0]), STDIN_FILENO);
-
-# 109 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    dup2((stdout_pipe[1]), STDOUT_FILENO);
-
-# 110 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    dup2((stderr_pipe[1]), STDERR_FILENO);
-
-# 111 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdin_pipe[0]));
-
-# 112 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdin_pipe[1]));
-
-# 113 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdout_pipe[0]));
-
-# 114 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdout_pipe[1]));
-
-# 115 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stderr_pipe[0]));
-
-# 116 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stderr_pipe[1]));
-
-# 119 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    int offset = 0;
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    while ((((argv[offset])!=NULL)&&(strchr((argv[offset]), '=')!=NULL)))
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 121 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      char* env_str = (argv[offset]);
-
-# 122 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      char* equals = strchr(env_str, '=');
-
-# 124 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      if (((*(equals+1))=='\0'))
-
-# 124 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      {
-
-# 125 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-        ((*equals)='\0');
-
-# 126 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-        unsetenv(env_str);
-      }
-      else
-
-# 127 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      {
-
-# 128 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-        putenv(env_str);
-      }
-
-# 130 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      (offset++);
-    }
-
-# 133 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    if (((argv[offset])==NULL))
-
-# 133 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 134 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      log_fatal("No executable specified after environment variables");
-
-# 135 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-
-# 139 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    int exec_exit_status = execvp((argv[offset]), (argv+offset));
-
-# 142 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
-
-# 143 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-
-# 144 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return false;
-  }
-  else
-
-# 145 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 152 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdin_pipe[0]));
-
-# 153 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdout_pipe[1]));
-
-# 154 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stderr_pipe[1]));
-
-# 157 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->pid)=pid);
-
-# 158 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->stdin)=(stdin_pipe[1]));
-
-# 159 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->stdout)=(stdout_pipe[0]));
-
-# 160 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->stderr)=(stderr_pipe[0]));
-
-# 162 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    free_bytes(argv);
-
-# 164 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return true;
-  }
-}
-
-
-# 168 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position)
-# 169 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 170 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int stdin_fd = (sub_process->stdin);
-
-# 173 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int flags = fcntl(stdin_fd, F_GETFL, 0);
-
-# 174 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
-
-# 176 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((bytes_written==(-1)))
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 180 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    if (((errno==EAGAIN)||(errno==EWOULDBLOCK)))
-
-# 180 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 181 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      return 0;
-    }
-    else
-
-# 182 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
-
-# 185 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-  }
-
-# 189 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  return bytes_written;
-}
-
-
-# 192 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_close_stdin(sub_process_t* sub_process)
-# 192 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 193 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (((sub_process->stdin)!=(-1)))
-
-# 193 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 194 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    if ((close((sub_process->stdin))==(-1)))
-
-# 194 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 195 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      log_fatal("Error closing subprocess stdin: %s", strerror(errno));
-
-# 196 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-
-# 198 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->stdin)=(-1));
-  }
-}
-
-
-# 202 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr)
-# 203 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 204 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((stdout!=NULL))
-
-# 204 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    buffer_read_ready_bytes_file_number(stdout, (sub_process->stdout), 0xffffffff);
-  }
-
-# 208 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((stderr!=NULL))
-
-# 208 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 209 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    buffer_read_ready_bytes_file_number(stderr, (sub_process->stderr), 0xffffffff);
-  }
-}
-
-
-# 216 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status)
-# 217 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 218 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((pid==(-1)))
-
-# 218 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 219 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
-
-# 220 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return;
-  }
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (WIFEXITED(status))
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 225 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
-
-# 226 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_code)=WEXITSTATUS(status));
-  }
-  else
-
-# 227 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (WIFSIGNALED(status))
-
-# 227 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 228 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
-
-# 229 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_signal)=WTERMSIG(status));
-  }
-  else
-
-# 230 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 231 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
-  }
-}
-
-
-# 242 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-boolean_t is_sub_process_running(sub_process_t* sub_process)
-# 242 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 243 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
-
-# 243 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 244 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return false;
-  }
-
-# 247 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int status = 0;
-
-# 248 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
-
-# 249 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((result==0))
-
-# 249 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 250 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return true;
-  }
-
-# 252 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_record_exit_status(sub_process, result, status);
-
-# 253 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  return false;
-}
-
-
-# 263 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_wait(sub_process_t* sub_process)
-# 263 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 264 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
-
-# 264 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 265 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    int status = 0;
-
-# 266 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    pid_t result = waitpid((sub_process->pid), (&status), 0);
-
-# 267 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    sub_process_record_exit_status(sub_process, result, status);
-  }
-}
-
-
-# 281 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr)
-# 283 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 284 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_launch(sub_process);
-
-# 285 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  uint64_t written = 0;
-
-# 286 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  do
-# 286 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 287 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    if (((child_stdin!=NULL)&&(written<(child_stdin->length))))
-
-# 287 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 288 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      (written+=sub_process_write(sub_process, child_stdin, written));
-
-# 289 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      if ((written>=(child_stdin->length)))
-
-# 289 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      {
-
-# 290 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-        sub_process_close_stdin(sub_process);
-      }
-    }
-
-# 293 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    sub_process_read(sub_process, child_stdout, child_stderr);
-
-# 294 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    usleep(5);
-  }
-  while (is_sub_process_running(sub_process));
-
-# 296 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_read(sub_process, child_stdout, child_stderr);
-
-# 297 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_wait(sub_process);
-}
-
-
-# 11 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-int64_t get_file_modification_time(const char* filename)
-# 11 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-{
-
-# 12 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-  struct stat result = ((struct stat) {0});
-
-# 14 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-  if ((stat(filename, (&result))!=0))
-
-# 14 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-  {
-
-# 16 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-    return (-1);
-  }
-
-# 19 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-  int64_t total_microseconds = 0;
-
-# 22 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-  (total_microseconds=(((/*CAST*/(int64_t) ((result.st_mtimespec).tv_sec))*1000000LL)+(((result.st_mtimespec).tv_nsec)/1000)));
-
-# 25 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
-  return total_microseconds;
 }
 
 
@@ -41984,7 +42080,6 @@ enum_metadata_t* roci_runtime_error_metadata(){
 //    /Users/jawilson/src/omni-c/src/lib/uint64.c
 //    /Users/jawilson/src/omni-c/src/lib/double.c
 //    /Users/jawilson/src/omni-c/src/lib/string-util.c
-//    /Users/jawilson/src/omni-c/src/lib/logger.c
 //    /Users/jawilson/src/omni-c/src/lib/utf8-decoder.c
 //    /Users/jawilson/src/omni-c/src/lib/buffer.c
 //    /Users/jawilson/src/omni-c/src/lib/byte-stream.c
@@ -42003,13 +42098,14 @@ enum_metadata_t* roci_runtime_error_metadata(){
 //    /Users/jawilson/src/omni-c/src/lib/oarchive.c
 //    /Users/jawilson/src/omni-c/src/lib/quote-util.c
 //    /Users/jawilson/src/omni-c/src/lib/test.c
-//    /Users/jawilson/src/omni-c/src/lib/tui/style.c
-//    /Users/jawilson/src/omni-c/src/lib/tui/terminal.c
+//    /Users/jawilson/src/omni-c/src/lib/io/logger.c
 //    /Users/jawilson/src/omni-c/src/lib/io/io.c
-//    /Users/jawilson/src/omni-c/src/lib/tui/screen.c
-//    /Users/jawilson/src/omni-c/src/lib/io/path.c
+//    /Users/jawilson/src/omni-c/src/lib/tui/terminal.c
+//    /Users/jawilson/src/omni-c/src/lib/tui/style.c
 //    /Users/jawilson/src/omni-c/src/lib/io/sub-process.c
 //    /Users/jawilson/src/omni-c/src/lib/io/io-darwin.c
+//    /Users/jawilson/src/omni-c/src/lib/tui/screen.c
+//    /Users/jawilson/src/omni-c/src/lib/io/path.c
 //    /Users/jawilson/src/omni-c/src/roci/roci-assembler.c
 //    /Users/jawilson/src/omni-c/src/roci/roci-bb-builder.c
 //    /Users/jawilson/src/omni-c/src/roci/roci-bb.c
@@ -42047,8 +42143,8 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p f339474879a81de7a5bbb77feb2ba22664c9aeb6 > /Users/jawilson/src/omni-c/src/debug-printer.c
 // git cat-file -p 4b863c6951265e8bdbd646b3d6746f6b426e84c9 > /Users/jawilson/src/omni-c/src/c-file-printer.c
 // git cat-file -p 47fe4a94a6ba151764cfb98f6d995a8c47fb3e01 > /Users/jawilson/src/omni-c/src/symbol-table.c
-// git cat-file -p 2c6810b4cf4949d8d850c1621506ea8c82690d72 > /Users/jawilson/src/omni-c/src/source-to-source.c
-// git cat-file -p 040136a4d86aa67bd622142500cecfcdbe582737 > /Users/jawilson/src/omni-c/src/preprocessor.c
+// git cat-file -p 3c8376c4bb90b31ab65603233dd014f51413e7fc > /Users/jawilson/src/omni-c/src/source-to-source.c
+// git cat-file -p 583e41810c41fd6e774db2e3c295301eb2f30523 > /Users/jawilson/src/omni-c/src/preprocessor.c
 // git cat-file -p 52af4fa58ea28535587766f2912d174b3856816f > /Users/jawilson/src/omni-c/src/header-file-extractor.c
 // git cat-file -p 7e7f49598c2d9701253f09009d7012618ade9339 > /Users/jawilson/src/omni-c/src/symbol-table-builder.c
 // git cat-file -p 1ef0ccd414c4831d299ebfe679272b61dcc98699 > /Users/jawilson/src/omni-c/src/srcgen.c
@@ -42072,7 +42168,7 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p 8a8d4844b38a8700fd9db87fc8c56b075e4bd55d > /Users/jawilson/src/omni-c/src/git-hash-object.c
 // git cat-file -p f98c9559fd4495e4b0433d147e7c74c47be17887 > /Users/jawilson/src/omni-c/src/print-tokens.c
 // git cat-file -p da2c76b993b03e6a545a4402da4bedeffbc72f90 > /Users/jawilson/src/omni-c/src/parse-test.c
-// git cat-file -p 73de727b90c7c551e39b54ec604d7c25da6aa5ea > /Users/jawilson/src/omni-c/src/test-command.c
+// git cat-file -p 4c16c4fbc2199b4849fda9307a32efe648882105 > /Users/jawilson/src/omni-c/src/test-command.c
 // git cat-file -p 924ee3779e046e6eaf0b380c17b57a0d8348573f > /Users/jawilson/src/omni-c/src/test-assembler.c
 // git cat-file -p 6633e464753e8682319969001882b8960442c217 > /Users/jawilson/src/omni-c/src/flags.c
 // git cat-file -p e8bdf95d91ff849ad2a59f7408a520e6a676032f > /Users/jawilson/src/omni-c/src/lib/platform-darwin.c
@@ -42091,7 +42187,6 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p 6e52f33c7760c7f20e6729e3c8a02ccf21dd4a00 > /Users/jawilson/src/omni-c/src/lib/uint64.c
 // git cat-file -p c25b527e6f0fbdeaf953acaa0d74c6758f50bdca > /Users/jawilson/src/omni-c/src/lib/double.c
 // git cat-file -p 56cd1026bb08c5f9cd12ff77ae73a0af02b4d0e3 > /Users/jawilson/src/omni-c/src/lib/string-util.c
-// git cat-file -p 6ef41027a6eafbe51a35cf74824f677e388b3d0a > /Users/jawilson/src/omni-c/src/lib/logger.c
 // git cat-file -p df23a997c6f15122baabb028967c934d455677b6 > /Users/jawilson/src/omni-c/src/lib/utf8-decoder.c
 // git cat-file -p 7f7e2ac8a1fbce3c3b374969c1be14b5ff3cfc13 > /Users/jawilson/src/omni-c/src/lib/buffer.c
 // git cat-file -p 79d38aecc73b2a55d285054e82a034e0c12e155e > /Users/jawilson/src/omni-c/src/lib/byte-stream.c
@@ -42110,13 +42205,14 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p 306eb57dbc5d8bc2cffd54be1059e1b7aa49164c > /Users/jawilson/src/omni-c/src/lib/oarchive.c
 // git cat-file -p ad14e433b3d68adf49dfaca6a0be405096673fcd > /Users/jawilson/src/omni-c/src/lib/quote-util.c
 // git cat-file -p 6a98294a0ed3069606bfa8a4bbb7f9e667b76555 > /Users/jawilson/src/omni-c/src/lib/test.c
-// git cat-file -p 0d5d7372caf6c3a78cee3b1d53aeeaf143f5967d > /Users/jawilson/src/omni-c/src/lib/tui/style.c
-// git cat-file -p a8398b927d8918cc24c5580137a0692c3e706496 > /Users/jawilson/src/omni-c/src/lib/tui/terminal.c
+// git cat-file -p 6ef41027a6eafbe51a35cf74824f677e388b3d0a > /Users/jawilson/src/omni-c/src/lib/io/logger.c
 // git cat-file -p 4d8c3ff1b676b66c5fad6f9e3b51231da9ab66eb > /Users/jawilson/src/omni-c/src/lib/io/io.c
-// git cat-file -p 0fd688e37ba07790d363754435dac17989d7c32b > /Users/jawilson/src/omni-c/src/lib/tui/screen.c
-// git cat-file -p 0faf2bda18ea5ff3af64d7c327d6c00b1c493f30 > /Users/jawilson/src/omni-c/src/lib/io/path.c
+// git cat-file -p a8398b927d8918cc24c5580137a0692c3e706496 > /Users/jawilson/src/omni-c/src/lib/tui/terminal.c
+// git cat-file -p 0d5d7372caf6c3a78cee3b1d53aeeaf143f5967d > /Users/jawilson/src/omni-c/src/lib/tui/style.c
 // git cat-file -p 3dd9fe9e2756790e5a8e2e865f35fe53ca662732 > /Users/jawilson/src/omni-c/src/lib/io/sub-process.c
 // git cat-file -p 4d375e4e8b70d94c09477178dec91cfdb8b75263 > /Users/jawilson/src/omni-c/src/lib/io/io-darwin.c
+// git cat-file -p 0fd688e37ba07790d363754435dac17989d7c32b > /Users/jawilson/src/omni-c/src/lib/tui/screen.c
+// git cat-file -p 0faf2bda18ea5ff3af64d7c327d6c00b1c493f30 > /Users/jawilson/src/omni-c/src/lib/io/path.c
 // git cat-file -p ce583389be4e293f41e3f1c61cf7e1ec7ef6e3c0 > /Users/jawilson/src/omni-c/src/roci/roci-assembler.c
 // git cat-file -p 21832eb37a0ce67d68af103d108233e9624e50af > /Users/jawilson/src/omni-c/src/roci/roci-bb-builder.c
 // git cat-file -p 425cbc84a114d3e46dc1c2e5add5cf5609504bab > /Users/jawilson/src/omni-c/src/roci/roci-bb.c
