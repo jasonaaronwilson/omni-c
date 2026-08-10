@@ -557,8 +557,9 @@ add_target("all", make_list(build_dir_path("bin/omni-c"),
 
 add_target("clean", fn() {
   walk_directory(BUILD_DIR, true, fn(name) {
-    if (and(not (string_ends_with(name, "omni-c-stable")),
-      not (string_ends_with(name, "build-dir/bin")))) {
+    if (boolean_and(
+      not(string_ends_with(name, "omni-c-stable")),
+      not(string_ends_with(name, "build-dir/bin")))) {
       path_remove(name);
     }
   });

@@ -8,7 +8,8 @@
 
 typedef string_hashtable_t = value_hashtable_t;
 
-/* static inline */ value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
+/* static inline */ value_hashtable_t*
+    to_value_hashtable(string_hashtable_t* ht) {
   return cast(value_hashtable_t*, ht);
 }
 
@@ -21,7 +22,8 @@ typedef string_hashtable_t = value_hashtable_t;
  * we run into some resize loop depending on the values of
  * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
  */
-/* static inline */ string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
+/* static inline */ string_hashtable_t*
+    make_string_hashtable(uint64_t n_buckets) {
   return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
 }
 
@@ -30,8 +32,8 @@ typedef string_hashtable_t = value_hashtable_t;
  *
  * Insert an association into the hashtable.
  */
-/* static inline */ string_hashtable_t* string_ht_insert(string_hashtable_t* ht,
-                                                   char* key, value_t value) {
+/* static inline */ string_hashtable_t*
+    string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
   return cast(string_hashtable_t*,
               value_ht_insert(to_value_hashtable(ht), hash_string_value,
                               cmp_string_values, str_to_value(key), value));
@@ -44,7 +46,7 @@ typedef string_hashtable_t = value_hashtable_t;
  * delete a key that doesn't exist in the hashtable.
  */
 /* static inline */ string_hashtable_t* string_ht_delete(string_hashtable_t* ht,
-                                                   char* key) {
+                                                         char* key) {
   return cast(string_hashtable_t*,
               value_ht_delete(to_value_hashtable(ht), hash_string_value,
                               cmp_string_values, str_to_value(key)));
@@ -55,7 +57,8 @@ typedef string_hashtable_t = value_hashtable_t;
  *
  * Find an association in the hashtable.
  */
-/* static inline */ value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
+/* static inline */ value_result_t string_ht_find(string_hashtable_t* ht,
+                                                  char* key) {
   return value_ht_find(to_value_hashtable(ht), hash_string_value,
                        cmp_string_values, str_to_value(key));
 }

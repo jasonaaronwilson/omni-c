@@ -541,6 +541,20 @@ add_test("string_replace_all",
   pass_test();
 });
 
+add_test("boolean and/or",
+  fn() {
+  expect_true(boolean_and(true, true));
+  expect_false(boolean_and(true, false));
+  expect_false(boolean_and(false, true));
+  expect_false(boolean_and(false, false));
+
+  expect_true(boolean_or(true, true));
+  expect_true(boolean_or(true, false));
+  expect_true(boolean_or(false, true));
+  expect_false(boolean_or(false, false));
+  pass_test();
+});
+
 run_tests();
 
 if (iequal(ROCI_NUM_FAIL, 0)) {

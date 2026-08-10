@@ -12,7 +12,8 @@ typedef string_tree_t = value_tree_t;
  *
  * Find the value associate with the key in the tree.
  */
-/* static inline */ value_result_t string_tree_find(string_tree_t* t, char* key) {
+/* static inline */ value_result_t string_tree_find(string_tree_t* t,
+                                                    char* key) {
   return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
                          str_to_value(key));
 }
@@ -36,8 +37,8 @@ typedef string_tree_t = value_tree_t;
  * Delete the association of key (if it exists in the tree). It is not
  * an error to delete a key that isn't present in the table.
  */
-/* static inline */ string_tree_t*
-    string_tree_delete(string_tree_t* t, char* key) {
+/* static inline */ string_tree_t* string_tree_delete(string_tree_t* t,
+                                                      char* key) {
   return cast(string_tree_t*,
               value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
                                 str_to_value(key)));

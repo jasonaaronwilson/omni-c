@@ -105,6 +105,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   // Boolean operations
   roci_add_primitive(env, &roci_primitive_is_boolean, "is_boolean");
   roci_add_primitive(env, &roci_primitive_not, "not");
+  roci_add_primitive(env, &roci_primitive_boolean_and, "boolean_and");
+  roci_add_primitive(env, &roci_primitive_boolean_or, "boolean_or");
   /// non_empty?
 
   // Doubles
@@ -883,6 +885,32 @@ void roci_primitive_not(roci_vm_state_t* state) {
     roci_push_false(state);
   } else {
     roci_push_true(state);
+  }
+}
+
+void roci_primitive_boolean_and(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "boolean_and expects 2 argument");
+  }
+  boolean_t arg2 = roci_pop_boolean(state);
+  boolean_t arg1 = roci_pop_boolean(state);
+  if (arg1 && arg2) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
+  }
+}
+
+void roci_primitive_boolean_or(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "boolean_or expects 2 argument");
+  }
+  boolean_t arg2 = roci_pop_boolean(state);
+  boolean_t arg1 = roci_pop_boolean(state);
+  if (arg1 || arg2) {
+    roci_push_true(state);
+  } else {
+    roci_push_false(state);
   }
 }
 
