@@ -132,15 +132,33 @@ void reorder_symbol_table_typedefs(symbol_table_t* symbol_table) {
   for (int i = 0; i < bindings->length; i++) {
     symbol_table_binding_t* binding
         = cast(symbol_table_binding_t*, value_array_get(bindings, i).ptr);
-    reorder_symbol_table_typedefs__process_binding(symbol_table->typedefs,
-                                                   binding, reordered_bindings);
+    reorder_symbol_table_typedefs__process_binding(
+        symbol_table, symbol_table->typedefs, binding, reordered_bindings);
   }
   symbol_table->typedefs->ordered_bindings = reordered_bindings;
 }
 
+void process_dependent_type_node(symbol_table_t* symbol_table,
+                                 symbol_table_map_t* typedefs,
+                                 value_array_t* reordered_bindings,
+                                 type_node_t* type_node) {
+  while (type_node->type_node_kind == TYPE_NODE_KIND_POINTER) {
+    type_node = to_type_node(node_list_get(type_node->type_args, 0));
+  }
+  char* type_name = token_to_string(type_node->type_name);
+  if (type_name != nullptr) {
+    symbol_table_binding_t* dependent_binding
+        = symbol_table_map_get(typedefs, type_name);
+    if (dependent_binding != nullptr) {
+      reorder_symbol_table_typedefs__process_binding(
+          symbol_table, typedefs, dependent_binding, reordered_bindings);
+    }
+  }
+}
+
 void reorder_symbol_table_typedefs__process_binding(
-    symbol_table_map_t* typedefs, symbol_table_binding_t* binding,
-    value_array_t* reordered_bindings) {
+    symbol_table_t* symbol_table, symbol_table_map_t* typedefs,
+    symbol_table_binding_t* binding, value_array_t* reordered_bindings) {
   log_debug("processing binding %s", binding->key_string);
   if (!binding->visited) {
     if (binding->definition_nodes->length != 1) {
@@ -160,9 +178,24 @@ void reorder_symbol_table_typedefs__process_binding(
           = symbol_table_map_get(typedefs, type_name);
       if (dependent_binding != nullptr) {
         reorder_symbol_table_typedefs__process_binding(
-            typedefs, dependent_binding, reordered_bindings);
+            symbol_table, typedefs, dependent_binding, reordered_bindings);
       }
     } else if (type_node->type_node_kind == TYPE_NODE_KIND_TYPE_EXPRESSION) {
+      if (token_matches(type_node->type_name, "fn_t")) {
+        buffer_t* buf = make_buffer(10);
+        printer_t* printer = make_printer(buf, symbol_table, 4);
+        append_type_node(printer, type_node);
+        log_fatal("JASON %s", buffer_to_c_string(buf));
+        for (int i = 0; i < node_list_length(type_node->type_args); i++) {
+          log_fatal("INDEX IS %d", i);
+          parse_node_t* child = node_list_get(type_node->type_args, i);
+          log_fatal("CHILD IS %d", child == nullptr);
+          type_node_t* child_type_node = to_type_node(child);
+          log_fatal("CHILD TYPE NODE IS %d", child_type_node == nullptr);
+          process_dependent_type_node(symbol_table, typedefs,
+                                      reordered_bindings, child_type_node);
+        }
+      }
       // I think there is nothing to do for this case since either
       // enum, struct, or union. enum's will come first anyways and
       // struct or unions should have been split by
