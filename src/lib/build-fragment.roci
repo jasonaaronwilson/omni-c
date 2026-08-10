@@ -14,7 +14,6 @@ let _LIB_SRC_ = make_list(
    "platform-darwin.c",
    "includes.c",
    "omni-c.c",
-   "min-max.c",
    "fatal-error-darwin.c",
    "fatal-error-linux.c",
    "fatal-error.c",
@@ -22,10 +21,8 @@ let _LIB_SRC_ = make_list(
    "gc-allocate.c",
    "string-util.c",
    "flag.c",
-   "random.c",
    "cdl-printer.c",
    "oarchive.c",
-   "quote-util.c",
    "test.c",
 );
 
