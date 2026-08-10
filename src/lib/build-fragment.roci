@@ -16,20 +16,17 @@ let _LIB_SRC_ = make_list(
 );
 */
 
-let glob_without_src_lib = fn(pattern) {
-  // Remove src/lib/ since we tack back on src/lib below
-  return list_map(glob(pattern), fn(path) { return string_replace_all(path, "src/lib/", ""); });
-};
+let __start_time = current_time_millis();
 
 let _PERMUTABLE_ = make_list();
 
-list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/*.c"));
-list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/io/*.c"));
-list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/tui/*.c"));
-list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/collections/*.c"));
-list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/lang/*.c"));
-list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/string/*.c"));
-list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/runtime/*.c"));
+list_push_all(_PERMUTABLE_, glob("src/lib/*.c"));
+list_push_all(_PERMUTABLE_, glob("src/lib/io/*.c"));
+list_push_all(_PERMUTABLE_, glob("src/lib/tui/*.c"));
+list_push_all(_PERMUTABLE_, glob("src/lib/collections/*.c"));
+list_push_all(_PERMUTABLE_, glob("src/lib/lang/*.c"));
+list_push_all(_PERMUTABLE_, glob("src/lib/string/*.c"));
+list_push_all(_PERMUTABLE_, glob("src/lib/runtime/*.c"));
 
 // Let's randomly shuffle these to make sure we don't make the
 // ordering problem any worse though this is not a good long term
@@ -37,7 +34,10 @@ list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/runtime/*.c"));
 
 let _LIB_SRC_ = list_shuffle(_PERMUTABLE_);
 
+let __end_time = current_time_millis();
+
+printf("Total millis was %s\n", isub(__end_time, __start_time));
+
 let SOURCE_LIB = list_map(_LIB_SRC_, fn(x) {
-    let prefix = string_append(TOP_DIR, "src/lib/");
-    return string_append(prefix, x);
+    return string_append(TOP_DIR, x);
   });
