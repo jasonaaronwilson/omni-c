@@ -482,10 +482,7 @@ let build_lib_oar = fn() {
   check_shell_command(result);
 };
 
-add_target(build_dir_path("bin/lib.oar"),
-  fn() {
-  build_lib_oar();
-});
+add_target(build_dir_path("bin/lib.oar"), build_lib_oar);
 
 let TESTS = make_list();
 let STATEMENT_TESTS = glob("tests/statements/*.stmt");
