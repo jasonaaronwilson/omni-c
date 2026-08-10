@@ -12,22 +12,17 @@
  * skills.
  */
 
+// ./build-dir/bin/self build --c-output-file=/tmp/code-points.c --binary-output-file=/tmp/code-points src/lib/examples/code-points.c ./build-dir/bin/lib.oar
+
 #include <stdlib.h>
 
 int main(int argc, char** argv) {
-  value_array_t* FLAG_files = nullptr;
 
   flag_program_name(argv[0]);
-  flag_description("Reads utf8 encoded files and outputs the code-points");
-  flag_file_args(&FLAG_files);
+  flag_description("Reads utf8 from stdin and outputs the code-points");
 
   char* error = flag_parse_command_line(argc, argv);
   if (error) {
-    flag_print_help(stderr, error);
-    exit(1);
-  }
-
-  if (FLAG_files->length > 0) {
     flag_print_help(stderr, error);
     exit(1);
   }

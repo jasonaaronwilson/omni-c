@@ -594,9 +594,10 @@ void flag_print_help(FILE* out, char* message) {
     return;
   }
 
+  char* has_files = (current_program->write_back_file_args_ptr == nullptr) ? "" : " <files>";
+
   if (current_program->commands != NULL) {
-    fprintf(out, "\nUsage: %s <command> <flags> <files>\n",
-            current_program->name);
+    fprintf(out, "\nUsage: %s <command> <flags>%s\n", current_program->name, has_files);
     fprintf(out, "\nDescription: %s\n\n", current_program->description);
 
     flag_print_flags(out, "Global flags:", current_program->flags);
@@ -609,7 +610,7 @@ void flag_print_help(FILE* out, char* message) {
     }));
     // clang-format on
   } else {
-    fprintf(out, "\nUsage: %s <flags> <files>\n", current_program->name);
+    fprintf(out, "\nUsage: %s <flags>%s\n", current_program->name, has_files);
     fprintf(out, "\nDescription: %s\n\n", current_program->description);
     flag_print_flags(out, "Flags:", current_program->flags);
   }
