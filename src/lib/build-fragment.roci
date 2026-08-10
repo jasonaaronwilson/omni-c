@@ -9,18 +9,12 @@
 // needed once that file is in stable.
 //
 
+/*
 let _LIB_SRC_ = make_list(
-   "platform-linux.c",
-   "platform-darwin.c",
    "includes.c",
-   "fatal-error-darwin.c",
-   "fatal-error-linux.c",
-   "fatal-error.c",
-   "time.c",
-   "gc-allocate.c",
-   "flag.c",
    "test.c",
 );
+*/
 
 let glob_without_src_lib = fn(pattern) {
   // Remove src/lib/ since we tack back on src/lib below
@@ -29,17 +23,19 @@ let glob_without_src_lib = fn(pattern) {
 
 let _PERMUTABLE_ = make_list();
 
+list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/io/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/tui/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/collections/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/lang/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/string/*.c"));
+list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/runtime/*.c"));
 
 // Let's randomly shuffle these to make sure we don't make the
 // ordering problem any worse though this is not a good long term
 // strategy.
 
-list_push_all(_LIB_SRC_, list_shuffle(_PERMUTABLE_));
+let _LIB_SRC_ = list_shuffle(_PERMUTABLE_);
 
 let SOURCE_LIB = list_map(_LIB_SRC_, fn(x) {
     let prefix = string_append(TOP_DIR, "src/lib/");
