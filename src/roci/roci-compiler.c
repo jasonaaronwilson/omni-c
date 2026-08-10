@@ -39,6 +39,7 @@
 
 typedef roci_compile_time_error_t = enum {
   ROCI_COMPILE_TIME_ERROR_NONE,
+  ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR,
   ROCI_COMPILE_TIME_ERROR,
   ROCI_COMPILE_TIME_TOKENIZER_ERROR,
   ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
@@ -67,6 +68,32 @@ void roci_compiler_error(roci_compiler_state_t* state,
   longjmp(roci_compiler_jmp_buf, 1);
 }
 
+typedef roci_compile_buffer_error_callback_data_t = struct {
+  roci_compiler_state_t* state;
+  char* file_name;
+  buffer_t* buffer;
+};
+
+roci_compile_buffer_error_callback_data_t*
+    make_compile_error_callback_data(roci_compiler_state_t* state,
+                                     char* file_name, buffer_t* buffer) {
+  roci_compile_buffer_error_callback_data_t* result
+      = malloc_struct(roci_compile_buffer_error_callback_data_t);
+  result->state = state;
+  result->file_name = file_name;
+  result->buffer = buffer;
+  return result;
+}
+
+void roci_compile_buffer_error_callback(char* file, int line, int error_code,
+                                        void* data_in) {
+  roci_compile_buffer_error_callback_data_t* data
+      = cast(roci_compile_buffer_error_callback_data_t*, data_in);
+  log_fatal("An internal error occurred compiling %s", data->file_name);
+  log_fatal("The last known position was %d", data->state->position);
+  roci_compiler_error(data->state, ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR);
+}
+
 /**
  * @function roci_compile_buffer
  *
@@ -80,6 +107,11 @@ void roci_compiler_error(roci_compiler_state_t* state,
  */
 void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
                          buffer_t* buffer) {
+
+  set_fatal_error_callback(
+      &roci_compile_buffer_error_callback,
+      make_compile_error_callback_data(state, file_name, buffer));
+
   int jump_result = setjmp(roci_compiler_jmp_buf);
   if (jump_result == 0) {
     state->position = 0;
@@ -92,6 +124,8 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
       state->compiler_error = ROCI_COMPILE_TIME_ERROR;
     }
   }
+
+  set_fatal_error_callback(nullptr, nullptr);
 }
 
 /**

@@ -76,11 +76,25 @@ void configure_fatal_errors(fatal_error_config_t config) {
   }
 }
 
+typedef fatal_error_callback_t
+    = fn_t(void, char* file, int line, int error_code, void* data);
+
+fatal_error_callback_t fatal_error_callback = nullptr;
+void* fatal_error_callback_data = nullptr;
+
+void set_fatal_error_callback(fatal_error_callback_t callback, void* data) {
+  fatal_error_callback = callback;
+  fatal_error_callback_data = data;
+}
+
 void print_fatal_error_banner();
 void print_backtrace();
 void print_error_code_name(int error_code);
 
 _Noreturn void fatal_error_impl(char* file, int line, int error_code) {
+  if (fatal_error_callback != nullptr) {
+    fatal_error_callback(file, line, error_code, fatal_error_callback_data);
+  }
   print_fatal_error_banner();
   print_backtrace();
   fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
