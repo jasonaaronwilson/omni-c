@@ -15,20 +15,15 @@ let _LIB_SRC_ = make_list(
    "includes.c",
    "omni-c.c",
    "min-max.c",
-   "leb128.c",
    "fatal-error-darwin.c",
    "fatal-error-linux.c",
    "fatal-error.c",
    "time.c",
    "gc-allocate.c",
    "string-util.c",
-   "utf8-decoder.c",
-   "buffer.c",
    "flag.c",
-   "tokenizer.c",
    "random.c",
    "cdl-printer.c",
-   "splitjoin.c",
    "oarchive.c",
    "quote-util.c",
    "test.c",
@@ -45,6 +40,7 @@ list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/io/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/tui/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/collections/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/lang/*.c"));
+list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/string/*.c"));
 
 // Let's randomly shuffle these to make sure we don't make the
 // ordering problem any worse though this is not a good long term
