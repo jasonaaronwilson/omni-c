@@ -24,7 +24,6 @@ let _LIB_SRC_ = make_list(
    "string-util.c",
    "utf8-decoder.c",
    "buffer.c",
-   "byte-stream.c",
    "flag.c",
    "tokenizer.c",
    "random.c",
