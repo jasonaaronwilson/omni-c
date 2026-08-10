@@ -6,9 +6,7 @@
  * This simply wraps value-alist.c.
  */
 
-struct string_alist_S {};
-
-typedef struct string_alist_S string_alist_t;
+typedef string_alist_t = value_alist_t;
 
 /**
  * @function alist_find

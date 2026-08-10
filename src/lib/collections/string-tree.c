@@ -5,16 +5,14 @@
  * using an underlying value-tree.c.
  */
 
-struct string_tree_S {};
-
-typedef struct string_tree_S string_tree_t;
+typedef string_tree_t = value_tree_t;
 
 /**
  * @function string_tree_find
  *
  * Find the value associate with the key in the tree.
  */
-static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
+/* static inline */ value_result_t string_tree_find(string_tree_t* t, char* key) {
   return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
                          str_to_value(key));
 }
@@ -25,7 +23,7 @@ static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
  * Insert an association of key and a value (or update the current
  * value stored in the tree).
  */
-__attribute__((warn_unused_result)) static inline string_tree_t*
+/* static inline */ string_tree_t*
     string_tree_insert(string_tree_t* t, char* key, value_t value) {
   return cast(string_tree_t*,
               value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
@@ -38,7 +36,7 @@ __attribute__((warn_unused_result)) static inline string_tree_t*
  * Delete the association of key (if it exists in the tree). It is not
  * an error to delete a key that isn't present in the table.
  */
-__attribute__((warn_unused_result)) static inline string_tree_t*
+/* static inline */ string_tree_t*
     string_tree_delete(string_tree_t* t, char* key) {
   return cast(string_tree_t*,
               value_tree_delete(cast(value_tree_t*, t), cmp_string_values,

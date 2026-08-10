@@ -23,7 +23,6 @@ let _LIB_SRC_ = make_list(
    "fatal-error-linux.c",
    "fatal-error.c",
    "time.c",
-   "value.c",
    "gc-allocate.c",
    "uint64.c",
    "double.c",
@@ -31,13 +30,6 @@ let _LIB_SRC_ = make_list(
    "utf8-decoder.c",
    "buffer.c",
    "byte-stream.c",
-   "value-array.c",
-   "value-alist.c",
-   "string-alist.c",
-   "value-hashtable.c",
-   "string-hashtable.c",
-   "value-tree.c",
-   "string-tree.c",
    "flag.c",
    "tokenizer.c",
    "random.c",
@@ -57,6 +49,7 @@ let _PERMUTABLE_ = make_list();
 
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/io/*.c"));
 list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/tui/*.c"));
+list_push_all(_PERMUTABLE_, glob_without_src_lib("src/lib/collections/*.c"));
 
 // Let's randomly shuffle these to make sure we don't make the
 // ordering problem any worse though this is not a good long term
