@@ -13,16 +13,12 @@ let _LIB_SRC_ = make_list(
    "platform-linux.c",
    "platform-darwin.c",
    "includes.c",
-   "omni-c.c",
    "fatal-error-darwin.c",
    "fatal-error-linux.c",
    "fatal-error.c",
    "time.c",
    "gc-allocate.c",
-   "string-util.c",
    "flag.c",
-   "cdl-printer.c",
-   "oarchive.c",
    "test.c",
 );
 
