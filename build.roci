@@ -242,7 +242,6 @@ let all_older_than = fn(target, deps) {
     }
     if (igte(dep_timestamp, target_timestamp)) {
       announce_dependency(x, target);
-      println(string_append(x, " is newer than ", target));
       result = false;
     }
   });
@@ -254,13 +253,14 @@ let announce_build = fn(target) {
 };
 
 let announce_no_build = fn(target) {
-  let checkmark = "+ "; // "\u2714 "
+  let checkmark = "\u2714 "; // bold checkmark
   println(string_append(checkmark, target, " is up to date"));
 };
 
 let announce_dependency = fn(dep, target) {
-  let icon = "> "; // "\u2714 "
-  println(string_append(icon, dep, " is newer than ", target));
+  let icon = "\u2716 "; // Heavy multiplication symbol (aka an X).
+  println(string_append(icon, target, " is stale"));
+  println(string_append("  \u2514\u2500\u2500 ", dep, " is newer"));
 };
 
 // Refer to a path relative to the root of the build dir.
@@ -565,9 +565,11 @@ add_target("all", make_list(build_dir_path("bin/omni-c"),
 
 add_target("clean", fn() {
   walk_directory(BUILD_DIR, true, fn(name) {
-    if (boolean_and(
-      not(string_ends_with(name, "omni-c-stable")),
-      not(string_ends_with(name, "build-dir/bin")))) {
+    let can_remove = true;
+    can_remove = boolean_and(can_remove, not(string_ends_with(name, "omni-c-stable")));
+    can_remove = boolean_and(can_remove, not(string_ends_with(name, "build-dir/bin")));
+    can_remove = boolean_and(can_remove, not(string_ends_with(name, "build-dir/gen-files")));
+    if (can_remove) {
       path_remove(name);
     }
   });
