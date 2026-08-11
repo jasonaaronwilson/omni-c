@@ -4,7 +4,6 @@
  */
 #include <ctype.h>
 #include <errno.h>
-#include <execinfo.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
@@ -22,4 +21,4 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <time.h>
-#include <unistd.h>
+

@@ -34,6 +34,8 @@ let _SOURCE_OMNI_C_ = make_list(
     "balanced-construct-parser.c",
     "printer.c",
     "global-includes.c",
+    "global-includes-darwin.c",
+    "global-includes-linux.c",
     "linearizer.c",
     "main.c",
     "archive-command.c",
