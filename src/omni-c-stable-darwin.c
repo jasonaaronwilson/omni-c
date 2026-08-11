@@ -136,74 +136,11 @@ typedef struct {
     pos = token_or_error.token.end;                                            \
   } while (0)
 
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
 #define cast(type, expr) ((type) (expr))
 
 #define block_expr(block) block
-
-#define min(a, b) ((a) < (b) ? (a) : (b))
-
-#define max(a, b) ((a) > (b) ? (a) : (b))
-
-#define compound_literal(type, ...) ((type) __VA_ARGS__)
-
-#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
-
-#define ERROR_INSUFFICIENT_INPUT -1
-
-#define ERROR_TOO_BIG -2
-
-#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
-
-#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
-
-#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
-
-#define str_to_value(x) compound_literal(value_t, {.str = x})
-
-#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
-
-#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
-
-#define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
-
-#define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
-
-#define malloc_struct(struct_name)                                             \
-  ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
-
-#define malloc_copy_of(source, number_of_bytes)                                \
-  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
-
-#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
-
-#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
-
-#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
-
-#define value_array_get_ptr(array, index_expression, cast_type)                \
-  (cast(cast_type, value_array_get(array, index_expression).ptr))
-
-#define value_alist_foreach(alist, key_var, value_var, statements)             \
-  do {                                                                         \
-    value_alist_t* head = alist;                                               \
-    while (head) {                                                             \
-      value_t key_var = head->key;                                             \
-      value_t value_var = head->value;                                         \
-      statements;                                                              \
-      head = head->next;                                                       \
-    }                                                                          \
-  } while (0)
-
-#define string_alist_foreach(alist, key_var, value_var, statements)            \
-  do {                                                                         \
-    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
-                        value_var, {                                           \
-                          char* key_var = (key_var##_value).str;               \
-                          statements;                                          \
-                        });                                                    \
-  } while (0)
 
 #define ARMYKNIFE_HT_LOAD_FACTOR 0.75
 
@@ -216,81 +153,6 @@ typedef struct {
       if (alist != NULL) {                                                     \
         value_alist_foreach(alist, key_var, value_var, statements);            \
       }                                                                        \
-    }                                                                          \
-  } while (0)
-
-#define string_ht_foreach(ht, key_var, value_var, statements)                  \
-  do {                                                                         \
-    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
-      char* key_var = (key_var##_value).str;                                   \
-      statements;                                                              \
-    });                                                                        \
-  } while (0)
-
-#define value_tree_foreach(tree, key_var, value_var, statements)               \
-  do {                                                                         \
-    int stack_n_elements = 0;                                                  \
-    value_tree_t* stack[64];                                                   \
-    value_tree_t* current = tree;                                              \
-    while (current != NULL || stack_n_elements > 0) {                          \
-      while (current != NULL) {                                                \
-        stack[stack_n_elements++] = current;                                   \
-        current = current->left;                                               \
-      }                                                                        \
-      current = stack[--stack_n_elements];                                     \
-      value_t key_var = current->key;                                          \
-      value_t value_var = current->value;                                      \
-      statements;                                                              \
-      current = current->right;                                                \
-    }                                                                          \
-  } while (0)
-
-#define string_tree_foreach(tree, key_var, value_var, statements)              \
-  do {                                                                         \
-    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
-                       {                                                       \
-                         char* key_var = (key_var##_value).str;                \
-                         statements;                                           \
-                       });                                                     \
-  } while (0)
-
-#define test_fail(format, ...)                                                 \
-  do {                                                                         \
-    test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
-  } while (0)
-
-#define test_assert(condition)                                                 \
-  do {                                                                         \
-    if (!(condition))                                                          \
-      test_fail("A test assertion failed. Condition expression was: %s",       \
-                #condition);                                                   \
-  } while (0)
-
-#define test_assert_integer_equal(a, b)                                        \
-  do {                                                                         \
-    unsigned long long casted_a = (unsigned long long) (a);                    \
-    unsigned long long casted_b = (unsigned long long) (b);                    \
-    if (a != b) {                                                              \
-      test_fail(                                                               \
-          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "         \
-          "But was:\n    ⟦%llu⟧\n",                                            \
-          casted_a, casted_b);                                                 \
-    }                                                                          \
-  } while (0)
-
-#define test_assert_string_equal(a, b)                                         \
-  do {                                                                         \
-    if (!b) {                                                                  \
-      test_fail(                                                               \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
-          "But was:\n    nullptr\n",                                           \
-          a);                                                                  \
-    }                                                                          \
-    if (!string_equal(a, b)) {                                                 \
-      test_fail(                                                               \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
-          "But was:\n    ⟦%s⟧\n",                                              \
-          a, b);                                                               \
     }                                                                          \
   } while (0)
 
@@ -367,6 +229,126 @@ typedef struct {
     logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
                 ##__VA_ARGS__);                                                \
   } while (0)
+
+#define ERROR_INSUFFICIENT_INPUT -1
+
+#define ERROR_TOO_BIG -2
+
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
+
+#define string_tree_foreach(tree, key_var, value_var, statements)              \
+  do {                                                                         \
+    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
+                       {                                                       \
+                         char* key_var = (key_var##_value).str;                \
+                         statements;                                           \
+                       });                                                     \
+  } while (0)
+
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
+
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+
+#define value_tree_foreach(tree, key_var, value_var, statements)               \
+  do {                                                                         \
+    int stack_n_elements = 0;                                                  \
+    value_tree_t* stack[64];                                                   \
+    value_tree_t* current = tree;                                              \
+    while (current != NULL || stack_n_elements > 0) {                          \
+      while (current != NULL) {                                                \
+        stack[stack_n_elements++] = current;                                   \
+        current = current->left;                                               \
+      }                                                                        \
+      current = stack[--stack_n_elements];                                     \
+      value_t key_var = current->key;                                          \
+      value_t value_var = current->value;                                      \
+      statements;                                                              \
+      current = current->right;                                                \
+    }                                                                          \
+  } while (0)
+
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
+  do {                                                                         \
+    value_alist_t* head = alist;                                               \
+    while (head) {                                                             \
+      value_t key_var = head->key;                                             \
+      value_t value_var = head->value;                                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
+
+#define test_fail(format, ...)                                                 \
+  do {                                                                         \
+    test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
+  } while (0)
+
+#define test_assert(condition)                                                 \
+  do {                                                                         \
+    if (!(condition))                                                          \
+      test_fail("A test assertion failed. Condition expression was: %s",       \
+                #condition);                                                   \
+  } while (0)
+
+#define test_assert_integer_equal(a, b)                                        \
+  do {                                                                         \
+    unsigned long long casted_a = (unsigned long long) (a);                    \
+    unsigned long long casted_b = (unsigned long long) (b);                    \
+    if (a != b) {                                                              \
+      test_fail(                                                               \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "         \
+          "But was:\n    ⟦%llu⟧\n",                                            \
+          casted_a, casted_b);                                                 \
+    }                                                                          \
+  } while (0)
+
+#define test_assert_string_equal(a, b)                                         \
+  do {                                                                         \
+    if (!b) {                                                                  \
+      test_fail(                                                               \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
+          "But was:\n    nullptr\n",                                           \
+          a);                                                                  \
+    }                                                                          \
+    if (!string_equal(a, b)) {                                                 \
+      test_fail(                                                               \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
+          "But was:\n    ⟦%s⟧\n",                                              \
+          a, b);                                                               \
+    }                                                                          \
+  } while (0)
+
+#define string_ht_foreach(ht, key_var, value_var, statements)                  \
+  do {                                                                         \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
+    });                                                                        \
+  } while (0)
+
+#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
+
+#define string_alist_foreach(alist, key_var, value_var, statements)            \
+  do {                                                                         \
+    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
+                        value_var, {                                           \
+                          char* key_var = (key_var##_value).str;               \
+                          statements;                                          \
+                        });                                                    \
+  } while (0)
+
+#define value_array_get_ptr(array, index_expression, cast_type)                \
+  (cast(cast_type, value_array_get(array, index_expression).ptr))
 
 #define FILE_COPY_STREAM_BUFFER_SIZE 1024
 
@@ -584,6 +566,24 @@ typedef struct {
   (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
 
 #define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
+
+#define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
+
+#define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
+
+#define malloc_struct(struct_name)                                             \
+  ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
+
+#define malloc_copy_of(source, number_of_bytes)                                \
+  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
+
+#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 
 // ========== enums ==========
 
@@ -895,9 +895,106 @@ typedef enum {
   OUTPUT_TYPE_C_UNIT_TEST_FILE,
 } output_file_type_t;
 
+typedef struct byte_stream_source_t__generated_S byte_stream_source_t;
+
+typedef struct byte_stream_target_t__generated_S byte_stream_target_t;
+
+typedef struct buffer_byte_stream_source_data_t__generated_S buffer_byte_stream_source_data_t;
+
+typedef struct cstring_byte_stream_source_data_t__generated_S cstring_byte_stream_source_data_t;
+
+typedef enum {
+  flag_type_none,
+  flag_type_boolean,
+  flag_type_string,
+  flag_type_uint64,
+  flag_type_int64,
+  flag_type_double,
+  flag_type_enum,
+  flag_type_custom,
+} flag_type_t;
+
+typedef struct program_descriptor_t__generated_S program_descriptor_t;
+
+typedef struct command_descriptor_t__generated_S command_descriptor_t;
+
+typedef struct flag_descriptor_t__generated_S flag_descriptor_t;
+
+typedef struct flag_key_value_S flag_key_value_t;
+
+typedef struct cdl_printer_t__generated_S cdl_printer_t;
+
+typedef struct value_hashtable_t__generated_S value_hashtable_t;
+
+typedef uint64_t style_t;
+
+typedef struct logger_state_t__generated_S logger_state_t;
+
 typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
 
 typedef struct signed_decode_result__generated_S signed_decode_result;
+
+typedef union  {
+  uint64_t u64;
+  uint64_t i64;
+  char* str;
+  void* ptr;
+  double dbl;
+} value_t;
+
+typedef enum {
+  NF_OK,
+  NF_ERROR_NOT_FOUND,
+  NF_ERROR_NOT_PARSED_AS_NUMBER,
+  NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM,
+} non_fatal_error_code_t;
+
+typedef struct value_result_t__generated_S value_result_t;
+
+typedef fn_t(int, value_t, value_t) value_comparison_fn;
+
+typedef fn_t(uint64_t, value_t) value_hash_fn;
+
+typedef struct value_tree_t__generated_S value_tree_t;
+
+typedef value_tree_t string_tree_t;
+
+typedef struct random_state_t__generated_S random_state_t;
+
+typedef struct value_alist_t__generated_S value_alist_t;
+
+typedef value_hashtable_t string_hashtable_t;
+
+typedef struct utf8_decode_result_t__generated_S utf8_decode_result_t;
+
+typedef struct buffer_t__generated_S buffer_t;
+
+typedef struct line_and_column_t__generated_S line_and_column_t;
+
+typedef struct buffer_region_t__generated_S buffer_region_t;
+
+typedef value_alist_t string_alist_t;
+
+typedef struct value_array_t__generated_S value_array_t;
+
+typedef struct box_drawing_t__generated_S box_drawing_t;
+
+typedef struct term_keypress_t__generated_S term_keypress_t;
+
+typedef struct screen_t__generated_S screen_t;
+
+typedef struct screen_window_t__generated_S screen_window_t;
+
+typedef enum {
+  EXIT_STATUS_UNKNOWN,
+  EXIT_STATUS_NORMAL_EXIT,
+  EXIT_STATUS_SIGNAL,
+  EXIT_STATUS_ABNORMAL,
+} sub_process_exit_status_t;
+
+typedef struct sub_process_t__generated_S sub_process_t;
+
+typedef fn_t(boolean_t, FILE*, string_tree_t*, int64_t, void*) oarchive_stream_headers_callback_t;
 
 typedef struct fatal_error_config_t__generated_S fatal_error_config_t;
 
@@ -931,102 +1028,7 @@ typedef enum {
   ERROR_ILLEGAL_TERMINAL_COORDINATES,
 } error_code_t;
 
-typedef union  {
-  uint64_t u64;
-  uint64_t i64;
-  char* str;
-  void* ptr;
-  double dbl;
-} value_t;
-
-typedef enum {
-  NF_OK,
-  NF_ERROR_NOT_FOUND,
-  NF_ERROR_NOT_PARSED_AS_NUMBER,
-  NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM,
-} non_fatal_error_code_t;
-
-typedef struct value_result_t__generated_S value_result_t;
-
-typedef fn_t(int, value_t, value_t) value_comparison_fn;
-
-typedef fn_t(uint64_t, value_t) value_hash_fn;
-
-typedef struct utf8_decode_result_t__generated_S utf8_decode_result_t;
-
-typedef struct buffer_t__generated_S buffer_t;
-
-typedef struct line_and_column_t__generated_S line_and_column_t;
-
-typedef struct buffer_region_t__generated_S buffer_region_t;
-
-typedef struct byte_stream_source_t__generated_S byte_stream_source_t;
-
-typedef struct byte_stream_target_t__generated_S byte_stream_target_t;
-
-typedef struct buffer_byte_stream_source_data_t__generated_S buffer_byte_stream_source_data_t;
-
-typedef struct cstring_byte_stream_source_data_t__generated_S cstring_byte_stream_source_data_t;
-
-typedef struct value_array_t__generated_S value_array_t;
-
-typedef struct value_alist_t__generated_S value_alist_t;
-
-typedef struct string_alist_S string_alist_t;
-
-typedef struct value_hashtable_t__generated_S value_hashtable_t;
-
-typedef struct string_hashtable_S string_hashtable_t;
-
-typedef struct value_tree_t__generated_S value_tree_t;
-
-typedef struct string_tree_S string_tree_t;
-
-typedef enum {
-  flag_type_none,
-  flag_type_boolean,
-  flag_type_string,
-  flag_type_uint64,
-  flag_type_int64,
-  flag_type_double,
-  flag_type_enum,
-  flag_type_custom,
-} flag_type_t;
-
-typedef struct program_descriptor_t__generated_S program_descriptor_t;
-
-typedef struct command_descriptor_t__generated_S command_descriptor_t;
-
-typedef struct flag_descriptor_t__generated_S flag_descriptor_t;
-
-typedef struct flag_key_value_S flag_key_value_t;
-
-typedef struct random_state_t__generated_S random_state_t;
-
-typedef struct cdl_printer_t__generated_S cdl_printer_t;
-
-typedef fn_t(boolean_t, FILE*, string_tree_t*, int64_t, void*) oarchive_stream_headers_callback_t;
-
-typedef struct logger_state_t__generated_S logger_state_t;
-
-typedef struct box_drawing_t__generated_S box_drawing_t;
-
-typedef struct term_keypress_t__generated_S term_keypress_t;
-
-typedef uint64_t style_t;
-
-typedef enum {
-  EXIT_STATUS_UNKNOWN,
-  EXIT_STATUS_NORMAL_EXIT,
-  EXIT_STATUS_SIGNAL,
-  EXIT_STATUS_ABNORMAL,
-} sub_process_exit_status_t;
-
-typedef struct sub_process_t__generated_S sub_process_t;
-
-typedef struct screen_t__generated_S screen_t;
-
-typedef struct screen_window_t__generated_S screen_window_t;
+typedef fn_t(void, char*, int, int, void*) fatal_error_callback_t;
 
 typedef struct roci_bb_builder_t__generated_S roci_bb_builder_t;
 
@@ -1038,8 +1040,11 @@ typedef struct roci_buffer_info_t__generated_S roci_buffer_info_t;
 
 typedef struct roci_eval_result_t__generated_S roci_eval_result_t;
 
+typedef struct roci_eval_error_callback_data_t__generated_S roci_eval_error_callback_data_t;
+
 typedef enum {
   ROCI_COMPILE_TIME_ERROR_NONE,
+  ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR,
   ROCI_COMPILE_TIME_ERROR,
   ROCI_COMPILE_TIME_TOKENIZER_ERROR,
   ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
@@ -1050,6 +1055,8 @@ typedef enum {
 } roci_compile_time_error_t;
 
 typedef struct roci_compiler_state_t__generated_S roci_compiler_state_t;
+
+typedef struct roci_compile_buffer_error_callback_data_t__generated_S roci_compile_buffer_error_callback_data_t;
 
 typedef uint64_t roci_src_info_t;
 
@@ -1129,15 +1136,6 @@ struct token_or_error_S {
   token_t token;
   tokenizer_error_t error_code;
   uint64_t error_position;
-};
-
-struct string_alist_S {
-};
-
-struct string_hashtable_S {
-};
-
-struct string_tree_S {
 };
 
 struct file_S {
@@ -1506,54 +1504,6 @@ struct tmp_provider_t__generated_S {
   uint32_t count;
 };
 
-struct unsigned_decode_result__generated_S {
-  uint64_t number;
-  int size;
-};
-
-struct signed_decode_result__generated_S {
-  uint64_t number;
-  int size;
-};
-
-struct fatal_error_config_t__generated_S {
-  boolean_t catch_sigsegv;
-};
-
-struct value_result_t__generated_S {
-  union  {
-    uint64_t u64;
-    int64_t i64;
-    double dbl;
-    char* str;
-    void* ptr;
-    value_t val;
-} ;
-  non_fatal_error_code_t nf_error;
-};
-
-struct utf8_decode_result_t__generated_S {
-  uint32_t code_point;
-  uint8_t num_bytes;
-  boolean_t error;
-};
-
-struct buffer_t__generated_S {
-  uint32_t length;
-  uint32_t capacity;
-  uint8_t* elements;
-};
-
-struct line_and_column_t__generated_S {
-  uint64_t line;
-  uint64_t column;
-};
-
-struct buffer_region_t__generated_S {
-  uint64_t start_position;
-  uint64_t end_position;
-};
-
 struct byte_stream_source_t__generated_S {
   fn_t(uint8_t, byte_stream_source_t*, boolean_t*) read_byte;
   void* data;
@@ -1573,32 +1523,6 @@ struct cstring_byte_stream_source_data_t__generated_S {
   char* string;
   uint64_t length;
   uint64_t position;
-};
-
-struct value_array_t__generated_S {
-  uint32_t length;
-  uint32_t capacity;
-  value_t* elements;
-};
-
-struct value_alist_t__generated_S {
-  value_alist_t* next;
-  value_t key;
-  value_t value;
-};
-
-struct value_hashtable_t__generated_S {
-  uint64_t n_buckets;
-  uint64_t n_entries;
-  value_alist_t** buckets;
-};
-
-struct value_tree_t__generated_S {
-  value_t key;
-  value_t value;
-  uint32_t level;
-  value_tree_t* left;
-  value_tree_t* right;
 };
 
 struct program_descriptor_t__generated_S {
@@ -1633,15 +1557,16 @@ struct flag_key_value_S {
   char* value;
 };
 
-struct random_state_t__generated_S {
-  uint64_t a;
-  uint64_t b;
-};
-
 struct cdl_printer_t__generated_S {
   buffer_t* buffer;
   char* key_token;
   int indention_level;
+};
+
+struct value_hashtable_t__generated_S {
+  uint64_t n_buckets;
+  uint64_t n_entries;
+  value_alist_t** buckets;
 };
 
 struct logger_state_t__generated_S {
@@ -1649,6 +1574,75 @@ struct logger_state_t__generated_S {
   int level;
   char* logger_output_filename;
   FILE* output;
+};
+
+struct unsigned_decode_result__generated_S {
+  uint64_t number;
+  int size;
+};
+
+struct signed_decode_result__generated_S {
+  uint64_t number;
+  int size;
+};
+
+struct value_result_t__generated_S {
+  union  {
+    uint64_t u64;
+    int64_t i64;
+    double dbl;
+    char* str;
+    void* ptr;
+    value_t val;
+} ;
+  non_fatal_error_code_t nf_error;
+};
+
+struct value_tree_t__generated_S {
+  value_t key;
+  value_t value;
+  uint32_t level;
+  value_tree_t* left;
+  value_tree_t* right;
+};
+
+struct random_state_t__generated_S {
+  uint64_t a;
+  uint64_t b;
+};
+
+struct value_alist_t__generated_S {
+  value_alist_t* next;
+  value_t key;
+  value_t value;
+};
+
+struct utf8_decode_result_t__generated_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+struct buffer_t__generated_S {
+  uint32_t length;
+  uint32_t capacity;
+  uint8_t* elements;
+};
+
+struct line_and_column_t__generated_S {
+  uint64_t line;
+  uint64_t column;
+};
+
+struct buffer_region_t__generated_S {
+  uint64_t start_position;
+  uint64_t end_position;
+};
+
+struct value_array_t__generated_S {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
 };
 
 struct box_drawing_t__generated_S {
@@ -1673,17 +1667,6 @@ struct term_keypress_t__generated_S {
   uint8_t hyper;
 };
 
-struct sub_process_t__generated_S {
-  value_array_t* argv;
-  pid_t pid;
-  int stdin;
-  int stdout;
-  int stderr;
-  sub_process_exit_status_t exit_status;
-  int exit_code;
-  int exit_signal;
-};
-
 struct screen_t__generated_S {
   uint32_t width;
   uint32_t height;
@@ -1701,6 +1684,21 @@ struct screen_window_t__generated_S {
   uint32_t y_offset;
   uint32_t width;
   uint32_t height;
+};
+
+struct sub_process_t__generated_S {
+  value_array_t* argv;
+  pid_t pid;
+  int stdin;
+  int stdout;
+  int stderr;
+  sub_process_exit_status_t exit_status;
+  int exit_code;
+  int exit_signal;
+};
+
+struct fatal_error_config_t__generated_S {
+  boolean_t catch_sigsegv;
 };
 
 struct roci_bb_builder_t__generated_S {
@@ -1725,6 +1723,13 @@ struct roci_eval_result_t__generated_S {
   roci_compiler_state_t* compiler_state;
 };
 
+struct roci_eval_error_callback_data_t__generated_S {
+  roci_vm_state_t* state;
+  char* file_name;
+  buffer_t* buffer;
+  boolean_t exit_on_failure;
+};
+
 struct roci_compiler_state_t__generated_S {
   roci_compile_time_error_t compiler_error;
   long bb_label_count;
@@ -1734,6 +1739,12 @@ struct roci_compiler_state_t__generated_S {
   long position;
   long env_depth;
   uint32_t buffer_number;
+};
+
+struct roci_compile_buffer_error_callback_data_t__generated_S {
+  roci_compiler_state_t* state;
+  char* file_name;
+  buffer_t* buffer;
 };
 
 struct roci_env_t__generated_S {
@@ -2101,28 +2112,24 @@ boolean_t FLAG_roci_print_bbs = false;
 boolean_t FLAG_roci_repl_on_error = false;
 
 
-# 66 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-fatal_error_config_t fatal_error_config = {0};
-
-
-# 145 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 145 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 program_descriptor_t* current_program;
 
 
-# 146 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 146 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 command_descriptor_t* current_command;
 
 
-# 147 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 147 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 flag_descriptor_t* current_flag;
-
-
-# 29 "/Users/jawilson/src/omni-c/src/lib/random.c"
-random_state_t shared_random_state = {0};
 
 
 # 205 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
 logger_state_t global_logger_state = ((logger_state_t) {.level = LOGGER_DEFAULT_LEVEL});
+
+
+# 29 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+random_state_t shared_random_state = {0};
 
 
 # 337 "/Users/jawilson/src/omni-c/src/lib/tui/screen.c"
@@ -2137,15 +2144,27 @@ random_state_t* _random = ((void *)0);
 char* sample_source_code = "one\ntwo\nthree\nfour\nfive\nThis is line six...\nline 7\n\nline 9";
 
 
+# 66 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+fatal_error_config_t fatal_error_config = {0};
+
+
+# 82 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+fatal_error_callback_t fatal_error_callback = ((void *)0);
+
+
+# 83 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void* fatal_error_callback_data = ((void *)0);
+
+
 # 18 "/Users/jawilson/src/omni-c/src/roci/roci-buffer-registry.c"
 value_array_t* roci_buffers = ((void *)0);
 
 
-# 62 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 63 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 jmp_buf roci_compiler_jmp_buf;
 
 
-# 286 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 289 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 int eval_count = 0;
 
 
@@ -2440,28 +2459,79 @@ void configure_parse_statement(void);
 void configure_test_assembler_command(void);
 void configure_print_tokens_command(void);
 void configure_regular_commands(void);
-char* platform(void);
+char* get_command_line();
+char* get_program_path();
+byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer);
+uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
+byte_stream_source_t* cstring_to_byte_source(char* string);
+uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
+byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer);
+byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte);
+void flag_program_name(char* name);
+void flag_command(char* name, char** write_back_ptr);
+void flag_description(char* description);
+void flag_file_args(value_array_t** write_back_file_args_ptr);
+void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type);
+void flag_boolean(char* name, boolean_t* write_back_ptr);
+void flag_string(char* name, char** write_back_ptr);
+void flag_uint64(char* name, uint64_t* write_back_ptr);
+void flag_int64(char* name, int64_t* write_back_ptr);
+void flag_double(char* name, double* write_back_ptr);
+void flag_enum(char* name, int* write_back_ptr);
+void flag_enum_64(char* name, uint64_t* write_back_ptr);
+void flag_enum_value(char* name, uint64_t value);
+void flag_alias(char* alias);
+char* flag_parse_command_line(int argc, char** argv);
+command_descriptor_t* flag_find_command_descriptor(char* name);
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name);
+flag_key_value_t flag_split_argument(char* arg);
+char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
+char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value);
+char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value);
+char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
+void flag_print_flags(FILE* out, char* header, string_tree_t* flags);
+void flag_print_help(FILE* out, char* message);
+cdl_printer_t* make_cdl_printer(buffer_t* buffer);
+void cdl_indent(cdl_printer_t* printer);
+boolean_t is_safe_string(char* string);
+void cdl_output_token(cdl_printer_t* printer, char* string);
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean);
+void cdl_string(cdl_printer_t* printer, char* string);
+void cdl_int64(cdl_printer_t* printer, int64_t number);
+void cdl_uint64(cdl_printer_t* printer, uint64_t number);
+void cdl_double(cdl_printer_t* printer, double number);
+void cdl_start_array(cdl_printer_t* printer);
+void cdl_end_array(cdl_printer_t* printer);
+void cdl_start_table(cdl_printer_t* printer);
+void cdl_key(cdl_printer_t* printer, char* key);
+void cdl_end_table(cdl_printer_t* printer);
+char* quote_c_string(char* input);
+char* string_unquote_c_string(char* input);
+void add_duplicate(value_array_t* token_array, const char* data);
+value_array_t* string_tokenize(const char* str, const char* delimiters);
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters);
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
+value_result_t parse_log_level_enum(char* str);
+void logger_init(void);
+char* logger_level_to_string(int level);
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
 unsigned encode_sleb_128(int64_t Value, uint8_t* p);
 unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
 unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end);
 signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end);
-char* get_command_line();
-char* get_program_path();
-void segmentation_fault_handler(int signal_number);
-void configure_fatal_errors(fatal_error_config_t config);
-void print_fatal_error_banner();
-void print_backtrace();
-void print_error_code_name(int error_code);
-_Noreturn void fatal_error_impl(char* file, int line, int error_code);
-uint64_t current_time_millis(void);
 int cmp_string_values(value_t value1, value_t value2);
 uint64_t hash_string_value(value_t value1);
-uint8_t* checked_malloc(char* file, int line, uint64_t amount);
-uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
-void checked_free(char* file, int line, void* pointer);
+char* platform(void);
+uint64_t current_time_millis(void);
+value_result_t string_tree_find(string_tree_t* t, char* key);
+string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value);
+string_tree_t* string_tree_delete(string_tree_t* t, char* key);
 int uint64_highest_bit_set(uint64_t n);
-uint64_t double_as_uint64(double d);
-uint64_t uint64_as_double(uint64_t u);
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 int string_is_null_or_empty(const char* str);
 int string_equal(const char* str1, const char* str2);
@@ -2487,6 +2557,33 @@ char* string_right_pad(const char* str, int n, char ch);
 char* string_truncate(char* str, int limit, char* at_limit_suffix);
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...);
 double string_parse_double(char* str);
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+value_tree_t* value_tree_skew(value_tree_t* t);
+value_tree_t* value_tree_split(value_tree_t* t);
+value_tree_t* make_value_tree_leaf(value_t key, value_t value);
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_tree_t* value_tree_decrease_level(value_tree_t* t);
+value_tree_t* value_tree_predecessor(value_tree_t* t);
+value_tree_t* value_tree_successor(value_tree_t* t);
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+random_state_t random_state_for_test(void);
+random_state_t* random_state(void);
+uint64_t random_next(random_state_t* state);
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
+boolean_t path_is_directory(const char* path);
+boolean_t path_is_file(const char* path);
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
+buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
+__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
+value_hashtable_t* to_value_hashtable(string_hashtable_t* ht);
+string_hashtable_t* make_string_hashtable(uint64_t n_buckets);
+string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value);
+string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
+value_result_t string_ht_find(string_hashtable_t* ht, char* key);
+uint64_t string_ht_num_entries(string_hashtable_t* ht);
 utf8_decode_result_t utf8_decode(const uint8_t* array);
 buffer_t* make_buffer(uint64_t initial_capacity);
 uint64_t buffer_length(buffer_t* array);
@@ -2521,12 +2618,8 @@ boolean_t buffer_equal(buffer_t* buffer, char* str);
 void ensure_legal_region(buffer_region_t region);
 buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64_t end_line);
 void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer, buffer_region_t region);
-byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer);
-uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
-byte_stream_source_t* cstring_to_byte_source(char* string);
-uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
-byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer);
-byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte);
+uint64_t double_as_uint64(double d);
+uint64_t uint64_as_double(uint64_t u);
 value_array_t* make_value_array(uint64_t initial_capacity);
 void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
 value_t value_array_get(value_array_t* array, uint32_t index);
@@ -2536,81 +2629,6 @@ void value_array_push(value_array_t* array, value_t element);
 value_t value_array_pop(value_array_t* array);
 void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
 value_t value_array_delete_at(value_array_t* array, uint32_t position);
-value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
-value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
-value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
-value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
-value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
-value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-value_tree_t* value_tree_skew(value_tree_t* t);
-value_tree_t* value_tree_split(value_tree_t* t);
-value_tree_t* make_value_tree_leaf(value_t key, value_t value);
-value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
-value_tree_t* value_tree_decrease_level(value_tree_t* t);
-value_tree_t* value_tree_predecessor(value_tree_t* t);
-value_tree_t* value_tree_successor(value_tree_t* t);
-value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-void flag_program_name(char* name);
-void flag_command(char* name, char** write_back_ptr);
-void flag_description(char* description);
-void flag_file_args(value_array_t** write_back_file_args_ptr);
-void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type);
-void flag_boolean(char* name, boolean_t* write_back_ptr);
-void flag_string(char* name, char** write_back_ptr);
-void flag_uint64(char* name, uint64_t* write_back_ptr);
-void flag_int64(char* name, int64_t* write_back_ptr);
-void flag_double(char* name, double* write_back_ptr);
-void flag_enum(char* name, int* write_back_ptr);
-void flag_enum_64(char* name, uint64_t* write_back_ptr);
-void flag_enum_value(char* name, uint64_t value);
-void flag_alias(char* alias);
-char* flag_parse_command_line(int argc, char** argv);
-command_descriptor_t* flag_find_command_descriptor(char* name);
-flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name);
-flag_key_value_t flag_split_argument(char* arg);
-char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
-char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value);
-char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value);
-char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
-void flag_print_flags(FILE* out, char* header, string_tree_t* flags);
-void flag_print_help(FILE* out, char* message);
-void add_duplicate(value_array_t* token_array, const char* data);
-value_array_t* string_tokenize(const char* str, const char* delimiters);
-value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
-value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters);
-random_state_t random_state_for_test(void);
-random_state_t* random_state(void);
-uint64_t random_next(random_state_t* state);
-uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
-cdl_printer_t* make_cdl_printer(buffer_t* buffer);
-void cdl_indent(cdl_printer_t* printer);
-boolean_t is_safe_string(char* string);
-void cdl_output_token(cdl_printer_t* printer, char* string);
-void cdl_boolean(cdl_printer_t* printer, boolean_t boolean);
-void cdl_string(cdl_printer_t* printer, char* string);
-void cdl_int64(cdl_printer_t* printer, int64_t number);
-void cdl_uint64(cdl_printer_t* printer, uint64_t number);
-void cdl_double(cdl_printer_t* printer, double number);
-void cdl_start_array(cdl_printer_t* printer);
-void cdl_end_array(cdl_printer_t* printer);
-void cdl_start_table(cdl_printer_t* printer);
-void cdl_key(cdl_printer_t* printer, char* key);
-void cdl_end_table(cdl_printer_t* printer);
-buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
-void oarchive_append_header_and_file_contents(FILE* out, char* filename);
-string_tree_t* oarchive_read_header(FILE* in);
-void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data);
-char* quote_c_string(char* input);
-char* string_unquote_c_string(char* input);
-__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
-value_result_t parse_log_level_enum(char* str);
-void logger_init(void);
-char* logger_level_to_string(int level);
-__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
 buffer_t* buffer_read_file(char* file_name);
 buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input);
@@ -2652,15 +2670,6 @@ void term_main_buffer(buffer_t* buffer);
 void term_home(buffer_t* buffer);
 uint32_t term_width(void);
 uint32_t term_height(void);
-sub_process_t* make_sub_process(value_array_t* argv);
-boolean_t sub_process_launch(sub_process_t* sub_process);
-uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
-void sub_process_close_stdin(sub_process_t* sub_process);
-void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
-void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
-boolean_t is_sub_process_running(sub_process_t* sub_process);
-void sub_process_wait(sub_process_t* sub_process);
-void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
 int64_t get_file_modification_time(const char* filename);
 screen_t* get_initial_screen(void);
 screen_t* get_initial_screen_with_limits(uint32_t top_offset, uint32_t bottom_offset, uint32_t left_offset, uint32_t right_offset);
@@ -2682,8 +2691,28 @@ void buffer_to_screen_window(screen_window_t* window, style_t style, style_t gut
 void overlay_dimensions(screen_window_t* window, style_t style);
 void draw_random_chars_in_window(screen_window_t* window, style_t style);
 void draw_random_screen(boolean_t output_dimensions);
-boolean_t path_is_directory(const char* path);
-boolean_t path_is_file(const char* path);
+sub_process_t* make_sub_process(value_array_t* argv);
+boolean_t sub_process_launch(sub_process_t* sub_process);
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
+void sub_process_close_stdin(sub_process_t* sub_process);
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
+boolean_t is_sub_process_running(sub_process_t* sub_process);
+void sub_process_wait(sub_process_t* sub_process);
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
+void oarchive_append_header_and_file_contents(FILE* out, char* filename);
+string_tree_t* oarchive_read_header(FILE* in);
+void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data);
+uint8_t* checked_malloc(char* file, int line, uint64_t amount);
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
+void checked_free(char* file, int line, void* pointer);
+void segmentation_fault_handler(int signal_number);
+void configure_fatal_errors(fatal_error_config_t config);
+void set_fatal_error_callback(fatal_error_callback_t callback, void* data);
+void print_fatal_error_banner();
+void print_backtrace();
+void print_error_code_name(int error_code);
+_Noreturn void fatal_error_impl(char* file, int line, int error_code);
 uint64_t skip_whitespace_and_comments(buffer_t* buffer, uint64_t position);
 uint64_t read_roci_token(buffer_t* buffer, uint64_t position, buffer_t* token);
 boolean_t token_is_double(buffer_t* token);
@@ -2697,7 +2726,11 @@ roci_buffer_info_t* get_buffer_info_by_filename(char* filename);
 roci_buffer_info_t* get_buffer_info_by_number(uint32_t buffer_number);
 void roci_command(void);
 roci_eval_result_t roci_eval_buffer(roci_env_t* env, char* file_name, buffer_t* buffer, boolean_t exit_on_failure);
+roci_eval_error_callback_data_t* make_eval_error_callback_data(roci_vm_state_t* state, char* file_name, buffer_t* buffer, boolean_t exit_on_failure);
+void roci_eval_error_callback(char* file, int line, int error_code, void* data_in);
 void roci_compiler_error(roci_compiler_state_t* state, roci_compile_time_error_t error);
+roci_compile_buffer_error_callback_data_t* make_compile_error_callback_data(roci_compiler_state_t* state, char* file_name, buffer_t* buffer);
+void roci_compile_buffer_error_callback(char* file, int line, int error_code, void* data_in);
 void roci_compile_buffer(roci_compiler_state_t* state, char* file_name, buffer_t* buffer);
 value_array_t* roci_tokenize_file(roci_compiler_state_t* state, char* file_name, buffer_t* buffer);
 void roci_compile_tokens(roci_compiler_state_t* state);
@@ -2811,6 +2844,8 @@ void roci_primitive_bit_or(roci_vm_state_t* state);
 void roci_primitive_bit_shl(roci_vm_state_t* state);
 void roci_primitive_bit_shr(roci_vm_state_t* state);
 void roci_primitive_not(roci_vm_state_t* state);
+void roci_primitive_boolean_and(roci_vm_state_t* state);
+void roci_primitive_boolean_or(roci_vm_state_t* state);
 void roci_primitive_getenv(roci_vm_state_t* state);
 void roci_primitive_is_boolean(roci_vm_state_t* state);
 void roci_primitive_is_string(roci_vm_state_t* state);
@@ -2840,6 +2875,7 @@ void roci_primitive_make_record(roci_vm_state_t* state);
 void roci_primitive_record_get(roci_vm_state_t* state);
 void roci_primitive_record_set(roci_vm_state_t* state);
 void roci_primitive_draw_random_screen(roci_vm_state_t* state);
+void roci_primitive_fatal_error(roci_vm_state_t* state);
 roci_value_t roci_make_record(char* record_tag);
 roci_value_t roci_record_get(roci_record_t* record, int index);
 void roci_record_set(roci_record_t* record, int index, roci_value_t value);
@@ -2850,7 +2886,7 @@ void roci_append_value(buffer_t* buffer, roci_value_t value);
 char* roci_value_to_c_string(roci_value_t value);
 roci_value_t* roci_value_to_heap(roci_value_t value);
 roci_value_t* string_to_roci_string(char* str);
-roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point);
+roci_runtime_error_t roci_execute(roci_vm_state_t* state, roci_bb_t* entry_point);
 roci_vm_state_t* roci_make_vm_state(roci_env_t* env);
 void roci_runtime_error(roci_runtime_error_t runtime_error);
 roci_runtime_error_t roci_execute_bblock(roci_bb_t* bb, roci_vm_state_t* state);
@@ -2899,18 +2935,18 @@ enum_metadata_t* type_node_kind_metadata();
 char* output_file_type_to_string(output_file_type_t value);
 output_file_type_t string_to_output_file_type(char* value);
 enum_metadata_t* output_file_type_metadata();
-char* error_code_to_string(error_code_t value);
-error_code_t string_to_error_code(char* value);
-enum_metadata_t* error_code_metadata();
-char* non_fatal_error_code_to_string(non_fatal_error_code_t value);
-non_fatal_error_code_t string_to_non_fatal_error_code(char* value);
-enum_metadata_t* non_fatal_error_code_metadata();
 char* flag_type_to_string(flag_type_t value);
 flag_type_t string_to_flag_type(char* value);
 enum_metadata_t* flag_type_metadata();
+char* non_fatal_error_code_to_string(non_fatal_error_code_t value);
+non_fatal_error_code_t string_to_non_fatal_error_code(char* value);
+enum_metadata_t* non_fatal_error_code_metadata();
 char* sub_process_exit_status_to_string(sub_process_exit_status_t value);
 sub_process_exit_status_t string_to_sub_process_exit_status(char* value);
 enum_metadata_t* sub_process_exit_status_metadata();
+char* error_code_to_string(error_code_t value);
+error_code_t string_to_error_code(char* value);
+enum_metadata_t* error_code_metadata();
 char* roci_compile_time_error_to_string(roci_compile_time_error_t value);
 roci_compile_time_error_t string_to_roci_compile_time_error(char* value);
 enum_metadata_t* roci_compile_time_error_metadata();
@@ -4146,257 +4182,13 @@ static inline balanced_construct_node_t* make_balanced_construct_node()
 }
 
 
-# 139 "/Users/jawilson/src/omni-c/src/lib/value.c"
-static inline boolean_t is_ok(value_result_t value)
-# 139 "/Users/jawilson/src/omni-c/src/lib/value.c"
-{
-
-# 140 "/Users/jawilson/src/omni-c/src/lib/value.c"
-  return ((value.nf_error)==NF_OK);
-}
-
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/value.c"
-static inline boolean_t is_not_ok(value_result_t value)
-# 149 "/Users/jawilson/src/omni-c/src/lib/value.c"
-{
-
-# 150 "/Users/jawilson/src/omni-c/src/lib/value.c"
-  return ((value.nf_error)!=NF_OK);
-}
-
-
-# 198 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-static inline boolean_t is_hex_digit(char ch)
-# 198 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 199 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return (((ch>='0')&&(ch<='9'))||((ch>='a')&&(ch<='f')));
-}
-
-
-# 202 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-static inline uint64_t hex_digit_to_value(char ch)
-# 202 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 203 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if (((ch>='0')&&(ch<='9')))
-
-# 203 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 204 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return (ch-'0');
-  }
-  else
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 206 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return ((ch-'a')+10);
-  }
-}
-
-
-# 491 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-static inline uint64_t mix(uint64_t h)
-# 491 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 492 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  (h^=(h>>23));
-
-# 493 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  (h*=0x2127599bf4325c37ULL);
-
-# 494 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  (h^=(h>>47));
-
-# 495 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return h;
-}
-
-
-# 20 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-static inline value_result_t alist_find(string_alist_t* list, char* key)
-# 20 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-{
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-  return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
-}
-
-
-# 31 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-__attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value)
-# 31 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-{
-
-# 32 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-  return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
-}
-
-
-# 45 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-__attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key)
-# 45 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-{
-
-# 46 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-  return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
-}
-
-
-# 59 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-__attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list)
-# 59 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-{
-
-# 60 "/Users/jawilson/src/omni-c/src/lib/string-alist.c"
-  return value_alist_length((/*CAST*/(value_alist_t*) list));
-}
-
-
-# 45 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
+# 45 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
 static inline uint64_t value_ht_num_entries(value_hashtable_t* ht)
-# 45 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
+# 45 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
 {
 
-# 46 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
+# 46 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
   return (ht->n_entries);
-}
-
-
-# 13 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht)
-# 13 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-{
-
-# 14 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-  return (/*CAST*/(value_hashtable_t*) ht);
-}
-
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets)
-# 26 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-{
-
-# 27 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-  return (/*CAST*/(string_hashtable_t*) make_value_hashtable(n_buckets));
-}
-
-
-# 35 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value)
-# 36 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-{
-
-# 37 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-  return (/*CAST*/(string_hashtable_t*) value_ht_insert(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key), value));
-}
-
-
-# 48 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key)
-# 49 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-{
-
-# 50 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-  return (/*CAST*/(string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key)));
-}
-
-
-# 60 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key)
-# 60 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-{
-
-# 61 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-  return value_ht_find(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key));
-}
-
-
-# 70 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-static inline uint64_t string_ht_num_entries(string_hashtable_t* ht)
-# 70 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-{
-
-# 71 "/Users/jawilson/src/omni-c/src/lib/string-hashtable.c"
-  return value_ht_num_entries(to_value_hashtable(ht));
-}
-
-
-# 164 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b)
-# 164 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 165 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return ((a<b) ? a : b);
-}
-
-
-# 198 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-static inline boolean_t value_tree_is_leaf(value_tree_t* t)
-# 198 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 199 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return (((t->left)==NULL)&&((t->right)==NULL));
-}
-
-
-# 17 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-static inline value_result_t string_tree_find(string_tree_t* t, char* key)
-# 17 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-{
-
-# 18 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-  return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
-}
-
-
-# 29 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-__attribute__((warn_unused_result)) static inline string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value)
-# 29 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-{
-
-# 30 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-  return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
-}
-
-
-# 42 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-__attribute__((warn_unused_result)) static inline string_tree_t* string_tree_delete(string_tree_t* t, char* key)
-# 42 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-{
-
-# 43 "/Users/jawilson/src/omni-c/src/lib/string-tree.c"
-  return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
-}
-
-
-# 47 "/Users/jawilson/src/omni-c/src/lib/random.c"
-static inline uint64_t rotl(uint64_t x, int k)
-# 47 "/Users/jawilson/src/omni-c/src/lib/random.c"
-{
-
-# 48 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  return ((x<<k)|(x>>(64-k)));
-}
-
-
-# 158 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
-static inline boolean_t should_log_info()
-# 158 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
-{
-
-# 159 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
-  return ((global_logger_state.level)<=LOGGER_INFO);
 }
 
 
@@ -4760,6 +4552,160 @@ static inline style_t set_fast_blink(style_t style, boolean_t x)
 }
 
 
+# 158 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+static inline boolean_t should_log_info()
+# 158 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+{
+
+# 159 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
+  return ((global_logger_state.level)<=LOGGER_INFO);
+}
+
+
+# 139 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+static inline boolean_t is_ok(value_result_t value)
+# 139 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+{
+
+# 140 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+  return ((value.nf_error)==NF_OK);
+}
+
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+static inline boolean_t is_not_ok(value_result_t value)
+# 149 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+{
+
+# 150 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+  return ((value.nf_error)!=NF_OK);
+}
+
+
+# 198 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+static inline boolean_t is_hex_digit(char ch)
+# 198 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 199 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return (((ch>='0')&&(ch<='9'))||((ch>='a')&&(ch<='f')));
+}
+
+
+# 202 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+static inline uint64_t hex_digit_to_value(char ch)
+# 202 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 203 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if (((ch>='0')&&(ch<='9')))
+
+# 203 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 204 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return (ch-'0');
+  }
+  else
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 206 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return ((ch-'a')+10);
+  }
+}
+
+
+# 491 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+static inline uint64_t mix(uint64_t h)
+# 491 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 492 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  (h^=(h>>23));
+
+# 493 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  (h*=0x2127599bf4325c37ULL);
+
+# 494 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  (h^=(h>>47));
+
+# 495 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return h;
+}
+
+
+# 164 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b)
+# 164 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 165 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return ((a<b) ? a : b);
+}
+
+
+# 198 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+static inline boolean_t value_tree_is_leaf(value_tree_t* t)
+# 198 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 199 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return (((t->left)==NULL)&&((t->right)==NULL));
+}
+
+
+# 47 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+static inline uint64_t rotl(uint64_t x, int k)
+# 47 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+{
+
+# 48 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  return ((x<<k)|(x>>(64-k)));
+}
+
+
+# 18 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+static inline value_result_t alist_find(string_alist_t* list, char* key)
+# 18 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+{
+
+# 19 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+  return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
+}
+
+
+# 29 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+__attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value)
+# 29 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+{
+
+# 30 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+  return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
+}
+
+
+# 43 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+__attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key)
+# 43 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+{
+
+# 44 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+  return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
+}
+
+
+# 57 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+__attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list)
+# 57 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+{
+
+# 58 "/Users/jawilson/src/omni-c/src/lib/collections/string-alist.c"
+  return value_alist_length((/*CAST*/(value_alist_t*) list));
+}
+
+
 # 28 "/Users/jawilson/src/omni-c/src/roci/roci-bb.c"
 static inline uint8_t* bblock_opcode_pointer(roci_bb_t* bb)
 # 28 "/Users/jawilson/src/omni-c/src/roci/roci-bb.c"
@@ -4813,27 +4759,27 @@ static inline uint64_t roci_src_line_number(roci_src_info_t info)
 }
 
 
-# 217 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 220 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 static inline uint64_t roci_mix64(uint64_t x)
-# 217 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 220 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 218 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 221 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   (x^=(x>>30));
 
-# 219 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 222 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   (x*=0xbf58476d1ce4e5b9ULL);
 
-# 220 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 223 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   (x^=(x>>27));
 
-# 221 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 224 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   (x*=0x94d049bb133111ebULL);
 
-# 222 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 225 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   (x^=(x>>31));
 
-# 223 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 226 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   return x;
 }
 
@@ -21284,6086 +21230,2054 @@ void configure_regular_commands(void)
 }
 
 
-# 1 "/Users/jawilson/src/omni-c/src/lib/platform-darwin.c"
-char* platform(void)
-# 1 "/Users/jawilson/src/omni-c/src/lib/platform-darwin.c"
-{
-
-# 2 "/Users/jawilson/src/omni-c/src/lib/platform-darwin.c"
-  return "darwin";
-}
-
-
-# 64 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-unsigned encode_sleb_128(int64_t Value, uint8_t* p)
-# 64 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-{
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  uint8_t* orig_p = p;
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  int More;
-
-# 67 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  do
-# 67 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  {
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    uint8_t Byte = (Value&0x7f);
-
-# 70 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Value>>=7);
-
-# 71 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (More=(!(((Value==0)&&((Byte&0x40)==0))||((Value==(-1))&&((Byte&0x40)!=0)))));
-
-# 73 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    if (More)
-
-# 74 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Byte|=0x80);
-
-# 75 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    ((*(p++))=Byte);
-  }
-  while (More);
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  return (/*CAST*/(unsigned) (p-orig_p));
-}
-
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-unsigned encode_uleb_128(uint64_t Value, uint8_t* p)
-# 88 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-{
-
-# 89 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  uint8_t* orig_p = p;
-
-# 90 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  do
-# 90 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  {
-
-# 91 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    uint8_t Byte = (Value&0x7f);
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Value>>=7);
-
-# 93 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    if ((Value!=0))
-
-# 94 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Byte|=0x80);
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    ((*(p++))=Byte);
-  }
-  while ((Value!=0));
-
-# 98 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  return (/*CAST*/(unsigned) (p-orig_p));
-}
-
-
-# 106 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
-# 106 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-{
-
-# 107 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  const uint8_t* orig_p = p;
-
-# 108 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  uint64_t Value = 0;
-
-# 109 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  unsigned Shift = 0;
-
-# 110 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  do
-# 110 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  {
-
-# 111 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    if ((p==end))
-
-# 111 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    {
-
-# 112 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
-
-# 114 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-      return result;
-    }
-
-# 116 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    uint64_t Slice = ((*p)&0x7f);
-
-# 117 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    if ((((Shift>=64)&&(Slice!=0))||(((Slice<<Shift)>>Shift)!=Slice)))
-
-# 117 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    {
-
-# 118 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_TOO_BIG});
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-      return result;
-    }
-
-# 122 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Value+=(Slice<<Shift));
-
-# 123 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Shift+=7);
-  }
-  while (((*(p++))>=128));
-
-# 125 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  unsigned_decode_result result = ((unsigned_decode_result) {Value, cast(unsigned, p - orig_p)});
-
-# 127 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  return result;
-}
-
-
-# 135 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
-# 135 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-{
-
-# 136 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  const uint8_t* orig_p = p;
-
-# 137 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  int64_t Value = 0;
-
-# 138 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  unsigned Shift = 0;
-
-# 139 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  uint8_t Byte;
-
-# 140 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  do
-# 140 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  {
-
-# 141 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    if ((p==end))
-
-# 141 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    {
-
-# 142 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-      signed_decode_result result = ((signed_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
-
-# 144 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-      return result;
-    }
-
-# 146 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Byte=(*p));
-
-# 147 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    uint64_t Slice = (Byte&0x7f);
-
-# 150 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    if ((((Shift>=64)&&(Slice!=((Value<0) ? 0x7f : 0x00)))||(((Shift==63)&&(Slice!=0))&&(Slice!=0x7f))))
-
-# 151 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    {
-
-# 152 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-      signed_decode_result result = ((signed_decode_result) {0, ERROR_TOO_BIG});
-
-# 154 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-      return result;
-    }
-
-# 156 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Value|=(Slice<<Shift));
-
-# 157 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (Shift+=7);
-
-# 158 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-    (++p);
-  }
-  while ((Byte>=128));
-
-# 161 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  if (((Shift<64)&&(Byte&0x40)))
-
-# 162 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  (Value|=((-1ULL)<<Shift));
-
-# 163 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  signed_decode_result result = ((signed_decode_result) {Value, (p - orig_p)});
-
-# 165 "/Users/jawilson/src/omni-c/src/lib/leb128.c"
-  return result;
-}
-
-
-# 1 "/Users/jawilson/src/omni-c/src/lib/fatal-error-darwin.c"
+# 1 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error-darwin.c"
 char* get_command_line()
-# 1 "/Users/jawilson/src/omni-c/src/lib/fatal-error-darwin.c"
+# 1 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error-darwin.c"
 {
 
-# 2 "/Users/jawilson/src/omni-c/src/lib/fatal-error-darwin.c"
+# 2 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error-darwin.c"
   return "<command-line-unavailable>";
 }
 
 
-# 5 "/Users/jawilson/src/omni-c/src/lib/fatal-error-darwin.c"
+# 5 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error-darwin.c"
 char* get_program_path()
-# 5 "/Users/jawilson/src/omni-c/src/lib/fatal-error-darwin.c"
+# 5 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error-darwin.c"
 {
 
-# 6 "/Users/jawilson/src/omni-c/src/lib/fatal-error-darwin.c"
+# 6 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error-darwin.c"
   return "<program-path-line-unavailable>";
 }
 
 
-# 68 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-void segmentation_fault_handler(int signal_number)
-# 68 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-{
-
-# 69 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fatal_error(ERROR_SIGSEGV);
-}
-
-
-# 72 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-void configure_fatal_errors(fatal_error_config_t config)
-# 72 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-{
-
-# 73 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  (fatal_error_config=config);
-
-# 74 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  if ((config.catch_sigsegv))
-
-# 74 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  {
-
-# 75 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    signal(SIGSEGV, segmentation_fault_handler);
-  }
-}
-
-
-# 106 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-void print_fatal_error_banner()
-# 106 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-{
-
-# 109 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
-}
-
-
-# 112 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-void print_backtrace()
-# 112 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-{
-
-# 114 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  do
-# 114 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  {
-
-# 115 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    void* array[10];
-
-# 116 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    int size = backtrace(array, 10);
-
-# 117 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    char** strings = backtrace_symbols(array, size);
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    for (
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-      int i = 0;
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-      (i<size);
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-      (i++))
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    {
-
-# 121 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-      printf("#%d %s\n", i, (strings[i]));
-    }
-  }
-  while (0);
-}
-
-
-# 127 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-void print_error_code_name(int error_code)
-# 127 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-{
-
-# 128 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fprintf(stderr, " ");
-
-# 129 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fprintf(stderr, "*** ");
-
-# 130 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fprintf(stderr, "%s", error_code_to_string(error_code));
-
-# 131 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fprintf(stderr, " ***\n");
-}
-
-
-# 83 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-_Noreturn void fatal_error_impl(char* file, int line, int error_code)
-# 83 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-{
-
-# 84 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  print_fatal_error_banner();
-
-# 85 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  print_backtrace();
-
-# 86 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
-
-# 87 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  print_error_code_name(error_code);
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
-
-# 89 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
-
-# 90 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  if ((sleep_str!=NULL))
-
-# 90 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  {
-
-# 91 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    value_result_t sleep_time = string_parse_uint64(sleep_str);
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    if (is_ok(sleep_time))
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    {
-
-# 93 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-      fprintf(stderr, "Sleeping for %lu seconds so you can attach a debugger.\n", (sleep_time.u64));
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-      sleep((sleep_time.u64));
-    }
-  }
-  else
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  {
-
-# 100 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
-  }
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  fprintf(stderr, "Necessaria Morte Mori...\n");
-
-# 103 "/Users/jawilson/src/omni-c/src/lib/fatal-error.c"
-  exit((-(error_code+100)));
-}
-
-
-# 6 "/Users/jawilson/src/omni-c/src/lib/time.c"
-uint64_t current_time_millis(void)
-# 6 "/Users/jawilson/src/omni-c/src/lib/time.c"
-{
-
-# 7 "/Users/jawilson/src/omni-c/src/lib/time.c"
-  struct timespec ts = {0};
-
-# 8 "/Users/jawilson/src/omni-c/src/lib/time.c"
-  clock_gettime(CLOCK_REALTIME, (&ts));
-
-# 9 "/Users/jawilson/src/omni-c/src/lib/time.c"
-  return (((/*CAST*/(uint64_t) (ts.tv_sec))*1000ULL)+((/*CAST*/(uint64_t) (ts.tv_nsec))/1000000ULL));
-
-# 11 "/Users/jawilson/src/omni-c/src/lib/time.c"
-  return 0;
-}
-
-
-# 182 "/Users/jawilson/src/omni-c/src/lib/value.c"
-int cmp_string_values(value_t value1, value_t value2)
-# 182 "/Users/jawilson/src/omni-c/src/lib/value.c"
-{
-
-# 183 "/Users/jawilson/src/omni-c/src/lib/value.c"
-  return strcmp((value1.str), (value2.str));
-}
-
-
-# 191 "/Users/jawilson/src/omni-c/src/lib/value.c"
-uint64_t hash_string_value(value_t value1)
-# 191 "/Users/jawilson/src/omni-c/src/lib/value.c"
-{
-
-# 191 "/Users/jawilson/src/omni-c/src/lib/value.c"
-  return string_hash((value1.str));
-}
-
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-uint8_t* checked_malloc(char* file, int line, uint64_t amount)
-# 76 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-{
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  if (((amount==0)||(amount>ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT)))
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  {
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-    fatal_error(ERROR_BAD_ALLOCATION_SIZE);
-  }
-
-# 82 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  uint8_t* result = GC_malloc(amount);
-
-# 84 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  if ((result==((void *)0)))
-
-# 84 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  {
-
-# 85 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-    fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
-  }
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  return result;
-}
-
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount)
-# 98 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-{
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  uint8_t* result = checked_malloc(file, line, amount);
-
-# 100 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  memcpy(result, source, amount);
-
-# 101 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  return result;
-}
-
-
-# 114 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-void checked_free(char* file, int line, void* pointer)
-# 114 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-{
-
-# 114 "/Users/jawilson/src/omni-c/src/lib/gc-allocate.c"
-  return;
-}
-
-
-# 12 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-int uint64_highest_bit_set(uint64_t n)
-# 12 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-{
-
-# 13 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  if ((n>=(1ULL<<32)))
-
-# 13 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  {
-
-# 14 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-    return (uint64_highest_bit_set((n>>32))+32);
-  }
-  else
-
-# 15 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  if ((n>=(1ULL<<16)))
-
-# 15 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  {
-
-# 16 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-    return (uint64_highest_bit_set((n>>16))+16);
-  }
-  else
-
-# 17 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  if ((n>=(1ULL<<8)))
-
-# 17 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  {
-
-# 18 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-    return (uint64_highest_bit_set((n>>8))+8);
-  }
-  else
-
-# 19 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  if ((n>=(1ULL<<4)))
-
-# 19 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  {
-
-# 20 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-    return (uint64_highest_bit_set((n>>4))+4);
-  }
-  else
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  if ((n>=(1ULL<<2)))
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  {
-
-# 22 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-    return (uint64_highest_bit_set((n>>2))+2);
-  }
-  else
-
-# 23 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  if ((n>=(1ULL<<1)))
-
-# 23 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  {
-
-# 24 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-    return (uint64_highest_bit_set((n>>1))+1);
-  }
-  else
-
-# 25 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-  {
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/uint64.c"
-    return 0;
-  }
-}
-
-
-# 4 "/Users/jawilson/src/omni-c/src/lib/double.c"
-uint64_t double_as_uint64(double d)
-# 4 "/Users/jawilson/src/omni-c/src/lib/double.c"
-{
-
-# 5 "/Users/jawilson/src/omni-c/src/lib/double.c"
-  uint64_t u;
-
-# 6 "/Users/jawilson/src/omni-c/src/lib/double.c"
-  memcpy((&u), (&d), (sizeof(d)));
-
-# 7 "/Users/jawilson/src/omni-c/src/lib/double.c"
-  return u;
-}
-
-
-# 13 "/Users/jawilson/src/omni-c/src/lib/double.c"
-uint64_t uint64_as_double(uint64_t u)
-# 13 "/Users/jawilson/src/omni-c/src/lib/double.c"
-{
-
-# 14 "/Users/jawilson/src/omni-c/src/lib/double.c"
-  double d;
-
-# 15 "/Users/jawilson/src/omni-c/src/lib/double.c"
-  memcpy((&d), (&u), (sizeof(u)));
-
-# 16 "/Users/jawilson/src/omni-c/src/lib/double.c"
-  return d;
-}
-
-
-# 500 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-uint64_t fasthash64(const void* buf, size_t len, uint64_t seed)
-# 500 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 501 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  const uint64_t m = 0x880355f21e6d1965ULL;
-
-# 502 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
-
-# 503 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  const uint64_t* end = (pos+(len/8));
-
-# 504 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  const unsigned char* pos2;
-
-# 505 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t h = (seed^(len*m));
-
-# 506 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t v;
-
-# 508 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  while ((pos!=end))
-
-# 508 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 509 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (v=(*(pos++)));
-
-# 510 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (h^=mix(v));
-
-# 511 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (h*=m);
-  }
-
-# 514 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  (pos2=(/*CAST*/(const unsigned char*) pos));
-
-# 515 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  (v=0);
-
-# 517 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  switch ((len&7))
-
-# 517 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 518 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    case 7:
-
-# 519 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[6]))<<48));
-
-# 520 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    case 6:
-
-# 521 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[5]))<<40));
-
-# 522 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    case 5:
-
-# 523 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[4]))<<32));
-
-# 524 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    case 4:
-
-# 525 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[3]))<<24));
-
-# 526 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    case 3:
-
-# 527 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[2]))<<16));
-
-# 528 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    case 2:
-
-# 529 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (v^=((/*CAST*/(uint64_t) (pos2[1]))<<8));
-
-# 530 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    case 1:
-
-# 531 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (v^=(/*CAST*/(uint64_t) (pos2[0])));
-
-# 532 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (h^=mix(v));
-
-# 533 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (h*=m);
-  }
-
-# 536 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return mix(h);
-}
-
-
-# 15 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-int string_is_null_or_empty(const char* str)
-# 15 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 16 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return ((str==((void *)0))||(strlen(str)==0));
-}
-
-
-# 24 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-int string_equal(const char* str1, const char* str2)
-# 24 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 25 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if (string_is_null_or_empty(str1))
-
-# 25 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return string_is_null_or_empty(str2);
-  }
-
-# 28 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return (strcmp(str1, str2)==0);
-}
-
-
-# 36 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-int string_starts_with(const char* str1, const char* str2)
-# 36 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 37 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return (strncmp(str1, str2, strlen(str2))==0);
-}
-
-
-# 45 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-int string_ends_with(const char* str1, const char* str2)
-# 45 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 46 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  size_t len1 = strlen(str1);
-
-# 47 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  size_t len2 = strlen(str2);
-
-# 49 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((len2>len1))
-
-# 49 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 50 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return 0;
-  }
-
-# 53 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return (strcmp((str1+(len1-len2)), str2)==0);
-}
-
-
-# 61 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-boolean_t string_contains_char(const char* str, char ch)
-# 61 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 62 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return (string_index_of_char(str, ch)>=0);
-}
-
-
-# 75 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-int string_index_of_char(const char* str, char ch)
-# 75 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if (string_is_null_or_empty(str))
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return (-1);
-  }
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int str_length = strlen(str);
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  for (
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int i = 0;
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i<str_length);
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i++))
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    if (((str[i])==ch))
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    {
-
-# 82 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-      return i;
-    }
-  }
-
-# 85 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return (-1);
-}
-
-
-# 91 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-int string_index_of(const char* str, char* substring)
-# 91 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int64_t len = strlen(str);
-
-# 93 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  buffer_t* str_buffer = make_buffer(len);
-
-# 94 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  buffer_append_string(str_buffer, str);
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return buffer_index_of(str_buffer, substring);
-}
-
-
-# 101 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-boolean_t string_contains(const char* str, char* substring)
-# 101 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return (string_index_of(str, substring)>=0);
-}
-
-
-# 109 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* string_replace_all(char* str, char* original_text, char* replacement_text)
-# 110 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 111 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int64_t len = strlen(str);
-
-# 112 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  buffer_t* str_buffer = make_buffer(len);
-
-# 113 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  buffer_append_string(str_buffer, str);
-
-# 114 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  buffer_replace_all(str_buffer, original_text, replacement_text);
-
-# 115 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return buffer_to_c_string(str_buffer);
-}
-
-
-# 124 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-uint64_t string_hash(const char* str)
-# 124 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 125 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return fasthash64(str, strlen(str), 0);
-}
-
-
-# 133 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* string_substring(const char* str, int start, int end)
-# 133 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 134 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t len = strlen(str);
-
-# 135 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((((start>=len)||(start>=end))||(end<start)))
-
-# 135 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 136 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    fatal_error(ERROR_ILLEGAL_ARGUMENT);
-  }
-
-# 138 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int result_size = ((end-start)+1);
-
-# 139 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char* result = (/*CAST*/(char*) malloc_bytes(result_size));
-
-# 140 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  for (
-
-# 140 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-
-# 140 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int i = start;
-
-# 140 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i<end);
-
-# 140 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i++))
-
-# 140 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 141 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    ((result[(i-start)])=(str[i]));
-  }
-
-# 143 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  ((result[(result_size-1)])='\0');
-
-# 144 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return result;
-}
-
-
-# 147 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-value_result_t string_parse_uint64_dec(const char* string)
-# 147 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 148 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t len = strlen(string);
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t integer = 0;
-
-# 151 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((len==0))
-
-# 151 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 152 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-# 156 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  for (
-
-# 156 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-
-# 156 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int i = 0;
-
-# 156 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i<len);
-
-# 156 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i++))
-
-# 156 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 157 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    char ch = (string[i]);
-
-# 158 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    if (((ch<'0')||(ch>'9')))
-
-# 158 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    {
-
-# 159 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-
-# 163 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    uint64_t digit = ((string[i])-'0');
-
-# 164 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (integer=((integer*10)+digit));
-  }
-
-# 167 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
-}
-
-
-# 175 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-value_result_t string_parse_uint64_bin(const char* string)
-# 175 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 176 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t len = strlen(string);
-
-# 177 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t integer = 0;
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((len==0))
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 180 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  for (
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int i = 0;
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i<len);
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i++))
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 185 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    char ch = (string[i]);
-
-# 186 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    if (((ch<'0')||(ch>'1')))
-
-# 186 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    {
-
-# 187 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-
-# 191 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    uint64_t digit = ((string[i])-'0');
-
-# 192 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (integer=((integer<<1)|digit));
-  }
-
-# 195 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
-}
-
-
-# 215 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-value_result_t string_parse_uint64_hex(const char* string)
-# 215 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 216 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t len = strlen(string);
-
-# 217 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  uint64_t integer = 0;
-
-# 219 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((len==0))
-
-# 219 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 220 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  for (
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int i = 0;
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i<len);
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i++))
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 225 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    char ch = (string[i]);
-
-# 226 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    if ((!is_hex_digit(ch)))
-
-# 226 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    {
-
-# 227 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-
-# 231 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    uint64_t digit = hex_digit_to_value(ch);
-
-# 232 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (integer=((integer<<4)|digit));
-  }
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
-}
-
-
-# 254 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-value_result_t string_parse_uint64(const char* string)
-# 254 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 255 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if (string_starts_with(string, "0x"))
-
-# 255 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 256 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return string_parse_uint64_hex((&(string[2])));
-  }
-  else
-
-# 257 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if (string_starts_with(string, "0b"))
-
-# 257 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 258 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return string_parse_uint64_bin((&(string[2])));
-  }
-  else
-
-# 259 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 260 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return string_parse_uint64_dec(string);
-  }
-}
-
-
-# 270 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* string_duplicate(const char* src)
-# 270 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 271 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((src==NULL))
-
-# 271 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 272 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return NULL;
-  }
-
-# 274 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int len = (strlen(src)+1);
-
-# 275 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char* result = (/*CAST*/(char*) malloc_bytes(len));
-
-# 276 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  memcpy(result, src, len);
-
-# 278 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return result;
-}
-
-
-# 287 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* string_append(const char* a, const char* b)
-# 287 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 288 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if (((a==NULL)||(b==NULL)))
-
-# 288 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 289 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
-  }
-
-# 291 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int total_length = ((strlen(a)+strlen(b))+1);
-
-# 292 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char* result = (/*CAST*/(char*) malloc_bytes(total_length));
-
-# 293 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  strcat(result, a);
-
-# 294 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  strcat(result, b);
-
-# 295 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return result;
-}
-
-
-# 303 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* uint64_to_string(uint64_t number)
-# 303 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 304 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char buffer[32];
-
-# 305 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  sprintf(buffer, "%lu", number);
-
-# 306 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return string_duplicate(buffer);
-}
-
-
-# 314 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* int64_to_string(int64_t number)
-# 314 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 315 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char buffer[32];
-
-# 316 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  sprintf(buffer, "%ld", number);
-
-# 317 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return string_duplicate(buffer);
-}
-
-
-# 326 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* string_left_pad(const char* str, int n, char ch)
-# 326 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 327 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((n<0))
-
-# 327 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 328 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-# 331 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int input_length = strlen(str);
-
-# 334 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int padding_needed = (n-input_length);
-
-# 342 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int len = 1;
-
-# 344 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  buffer_t* buffer = make_buffer(len);
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  for (
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int i = 0;
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i<padding_needed);
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i++))
-
-# 345 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 346 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (buffer=buffer_append_byte(buffer, ch));
-  }
-
-# 348 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  (buffer=buffer_append_string(buffer, str));
-
-# 349 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char* result = buffer_to_c_string(buffer);
-
-# 350 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  free_bytes(buffer);
-
-# 351 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return result;
-}
-
-
-# 360 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* string_right_pad(const char* str, int n, char ch)
-# 360 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 361 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((n<0))
-
-# 361 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 362 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-# 365 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int input_length = strlen(str);
-
-# 368 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int padding_needed = (n-input_length);
-
-# 376 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int len = 1;
-
-# 378 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  buffer_t* buffer = make_buffer(len);
-
-# 379 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  (buffer=buffer_append_string(buffer, str));
-
-# 380 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  for (
-
-# 380 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-
-# 380 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int i = 0;
-
-# 380 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i<padding_needed);
-
-# 380 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i++))
-
-# 380 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 381 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (buffer=buffer_append_byte(buffer, ch));
-  }
-
-# 383 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char* result = buffer_to_c_string(buffer);
-
-# 384 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  free_bytes(buffer);
-
-# 385 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return result;
-}
-
-
-# 398 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-char* string_truncate(char* str, int limit, char* at_limit_suffix)
-# 398 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 400 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  buffer_t* buffer = make_buffer(limit);
-
-# 401 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  for (
-
-# 401 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-
-# 401 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int i = 0;
-
-# 401 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    ;
-
-# 401 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (i++))
-
-# 401 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 402 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    char ch = (str[i]);
-
-# 403 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    if ((ch=='\0'))
-
-# 403 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    {
-
-# 404 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-      char* result = buffer_to_c_string(buffer);
-
-# 405 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-      free_bytes(buffer);
-
-# 406 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-      return result;
-    }
-
-# 408 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (buffer=buffer_append_byte(buffer, ch));
-  }
-
-# 410 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if (at_limit_suffix)
-
-# 410 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 411 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (buffer=buffer_append_string(buffer, at_limit_suffix));
-  }
-
-# 413 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char* result = buffer_to_c_string(buffer);
-
-# 414 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  free_bytes(buffer);
-
-# 415 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return result;
-}
-
-
-# 432 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
-# 432 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 433 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
-
-# 434 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  int n_bytes = 0;
-
-# 435 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  do
-# 435 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 436 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    va_list args;
-
-# 437 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    va_start(args, format);
-
-# 438 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    (n_bytes=vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args));
-
-# 440 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    va_end(args);
-  }
-  while (0);
-
-# 443 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if ((n_bytes<STRING_PRINTF_INITIAL_BUFFER_SIZE))
-
-# 443 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 444 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
-
-# 445 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    strcat(result, buffer);
-
-# 446 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return result;
-  }
-  else
-
-# 447 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 448 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
-
-# 449 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    va_list args;
-
-# 450 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    va_start(args, format);
-
-# 451 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
-
-# 452 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    va_end(args);
-
-# 453 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    if ((n_bytes_second!=n_bytes))
-
-# 453 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    {
-
-# 454 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
-    }
-
-# 456 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    return result;
-  }
-}
-
-
-# 539 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-double string_parse_double(char* str)
-# 539 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-{
-
-# 540 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  char* endptr = NULL;
-
-# 541 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  (errno=0);
-
-# 542 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  double value = strtod(str, (&endptr));
-
-# 543 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  if (((str==endptr)||(errno==ERANGE)))
-
-# 543 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  {
-
-# 544 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-# 546 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  log_info("string_parse_double = %f", value);
-
-# 547 "/Users/jawilson/src/omni-c/src/lib/string-util.c"
-  return value;
-}
-
-
-# 23 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-utf8_decode_result_t utf8_decode(const uint8_t* array)
-# 23 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-{
-
-# 24 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  uint8_t firstByte = (array[0]);
-
-# 25 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  if (((firstByte&0x80)==0))
-
-# 25 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  {
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.code_point = firstByte, .num_bytes = 1});
-  }
-  else
-
-# 28 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  if (((firstByte&0xE0)==0xC0))
-
-# 28 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  {
-
-# 29 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
-         .num_bytes = 2});
-  }
-  else
-
-# 33 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  if (((firstByte&0xF0)==0xE0))
-
-# 33 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  {
-
-# 34 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x0F) << 12)
-                                           | ((array[1] & 0x3F) << 6)
-                                           | (array[2] & 0x3F),
-                             .num_bytes = 3});
-  }
-  else
-
-# 39 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  if (((firstByte&0xF8)==0xF0))
-
-# 39 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  {
-
-# 40 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
-                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
-         .num_bytes = 4});
-  }
-  else
-
-# 45 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-  {
-
-# 46 "/Users/jawilson/src/omni-c/src/lib/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.error = true});
-  }
-}
-
-
-# 40 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* make_buffer(uint64_t initial_capacity)
-# 40 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 41 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  buffer_t* result = malloc_struct(buffer_t);
-
-# 42 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((initial_capacity<16))
-
-# 42 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 43 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (initial_capacity=16);
-  }
-
-# 45 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((initial_capacity>0))
-
-# 45 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 46 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    ((result->capacity)=initial_capacity);
-
-# 47 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    ((result->elements)=malloc_bytes(initial_capacity));
-  }
-
-# 49 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return result;
-}
-
-
-# 57 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-uint64_t buffer_length(buffer_t* array)
-# 57 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 57 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return (array->length);
-}
-
-
-# 64 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-void buffer_clear(buffer_t* buffer)
-# 64 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    int i = 0;
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i<(buffer->capacity));
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i++))
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (((buffer->elements)[i])=0);
-  }
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  ((buffer->length)=0);
-}
-
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-uint8_t buffer_get(buffer_t* buffer, uint64_t position)
-# 76 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((position<(buffer->length)))
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return ((buffer->elements)[position]);
-  }
-  else
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-
-# 83 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return 0;
-  }
-}
-
-
-# 94 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end)
-# 94 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((buffer==((void *)0)))
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
-  }
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((start>end))
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 100 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-# 103 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((end>(buffer->length)))
-
-# 103 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 104 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-# 107 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t copy_length = (end-start);
-
-# 108 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
-
-# 109 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((copy_length>0))
-
-# 109 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 110 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    memcpy(result, (&((buffer->elements)[start])), copy_length);
-  }
-
-# 112 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  ((result[copy_length])='\0');
-
-# 113 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return result;
-}
-
-
-# 122 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-char* buffer_to_c_string(buffer_t* buffer)
-# 122 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 123 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer_c_substring(buffer, 0, (buffer->length));
-}
-
-
-# 131 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element)
-# 131 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 132 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if (((buffer->length)<(buffer->capacity)))
-
-# 132 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 133 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (((buffer->elements)[(buffer->length)])=element);
-
-# 134 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    ((buffer->length)++);
-
-# 135 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return buffer;
-  }
-
-# 137 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
-
-# 138 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer_append_byte(buffer, element);
-}
-
-
-# 146 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes)
-# 147 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    int i = 0;
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i<n_bytes);
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i++))
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 150 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (bytes[i])));
-  }
-
-# 152 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 161 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_append_string(buffer_t* buffer, const char* str)
-# 161 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 162 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
-}
-
-
-# 173 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity)
-# 173 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 174 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if (((buffer->capacity)<capacity))
-
-# 174 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 175 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint8_t* new_elements = malloc_bytes(capacity);
-
-# 176 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    memcpy(new_elements, (buffer->elements), (buffer->length));
-
-# 177 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    free_bytes((buffer->elements));
-
-# 178 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    ((buffer->elements)=new_elements);
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    ((buffer->capacity)=capacity);
-  }
-
-# 181 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 195 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-__attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...)
-# 195 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 196 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
-
-# 197 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  int n_bytes = 0;
-
-# 198 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  do
-# 198 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 199 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    va_list args;
-
-# 200 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    va_start(args, format);
-
-# 201 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (n_bytes=vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args));
-
-# 203 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    va_end(args);
-  }
-  while (0);
-
-# 206 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((n_bytes<BUFFER_PRINTF_INITIAL_BUFFER_SIZE))
-
-# 206 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 207 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return buffer_append_string(buffer, cbuffer);
-  }
-  else
-
-# 208 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 212 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
-
-# 213 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    va_list args;
-
-# 214 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    va_start(args, format);
-
-# 215 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
-
-# 216 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    va_end(args);
-
-# 217 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if ((n_bytes_second!=n_bytes))
-
-# 217 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 218 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
-    }
-
-# 220 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_string(buffer, result));
-
-# 221 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    free_bytes(result);
-
-# 222 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return buffer;
-  }
-}
-
-
-# 233 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count)
-# 234 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    int i = 0;
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i<count);
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i++))
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 236 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, byte));
-  }
-
-# 238 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 247 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position)
-# 247 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 248 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((position>=(buffer->length)))
-
-# 248 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 249 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return ((utf8_decode_result_t) {.error = true});
-  }
-
-# 251 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
-
-# 252 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((result.error))
-
-# 252 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 253 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return result;
-  }
-
-# 255 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if (((position+(result.num_bytes))>(buffer->length)))
-
-# 255 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 256 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return ((utf8_decode_result_t) {.error = true});
-  }
-
-# 258 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return result;
-}
-
-
-# 273 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
-# 274 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 275 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((code_point<0x80))
-
-# 275 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 277 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, code_point));
-
-# 278 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return buffer;
-  }
-  else
-
-# 279 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((code_point<0x800))
-
-# 279 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 281 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
-
-# 282 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
-
-# 283 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return buffer;
-  }
-  else
-
-# 284 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((code_point<0x10000))
-
-# 284 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 286 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
-
-# 287 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
-
-# 288 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
-
-# 289 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return buffer;
-  }
-  else
-
-# 290 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((code_point<=0x10FFFF))
-
-# 290 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 292 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
-
-# 293 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
-
-# 294 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
-
-# 295 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
-
-# 296 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return buffer;
-  }
-  else
-
-# 297 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 299 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
-
-# 300 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    return 0;
-  }
-}
-
-
-# 308 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str)
-# 309 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 310 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 310 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 310 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t pos = start_position;
-
-# 310 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    true;
-
-# 310 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (pos++))
-
-# 310 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 311 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint8_t byte_str = ((/*CAST*/(uint8_t*) str)[(pos-start_position)]);
-
-# 312 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if ((byte_str==0))
-
-# 312 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 313 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      return true;
-    }
-
-# 315 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if ((pos>=buffer_length(buffer)))
-
-# 315 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 316 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      return false;
-    }
-
-# 318 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint8_t byte_buf = buffer_get(buffer, pos);
-
-# 319 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if ((byte_str!=byte_buf))
-
-# 319 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 320 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      return false;
-    }
-  }
-
-# 324 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return false;
-}
-
-
-# 332 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-int64_t buffer_index_of(buffer_t* buffer, char* str)
-# 332 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 333 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 333 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 333 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t i = 0;
-
-# 333 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i<(buffer->length));
-
-# 333 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i++))
-
-# 333 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 334 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if (buffer_match_string_at(buffer, i, str))
-
-# 334 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 335 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      return i;
-    }
-  }
-
-# 338 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return (-1);
-}
-
-
-# 348 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_from_string(char* string)
-# 348 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 349 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  buffer_t* result = make_buffer(strlen(string));
-
-# 350 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  (result=buffer_append_string(result, string));
-
-# 351 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return result;
-}
-
-
-# 361 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width)
-# 362 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 364 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((start>end))
-
-# 364 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 365 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-# 367 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t original_width = (end-start);
-
-# 368 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((original_width>new_width))
-
-# 368 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 371 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t difference = (original_width-new_width);
-
-# 372 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t tail_length = ((buffer->length)-end);
-
-# 373 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    memmove((&((buffer->elements)[(end-difference)])), (&((buffer->elements)[end])), tail_length);
-
-# 375 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    ((buffer->length)-=difference);
-  }
-  else
-
-# 376 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((original_width<new_width))
-
-# 376 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 379 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t difference = (new_width-original_width);
-
-# 380 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t tail_length = ((buffer->length)-end);
-
-# 381 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_increase_capacity(buffer, ((buffer->length)+difference)));
-
-# 382 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    memmove((&((buffer->elements)[(end+difference)])), (&((buffer->elements)[end])), tail_length);
-
-# 384 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    ((buffer->length)+=difference);
-  }
-
-# 386 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 395 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text)
-# 396 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 397 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  int len_original = strlen(original_text);
-
-# 398 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  int len_replacement = strlen(replacement_text);
-
-# 399 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((len_original<(buffer->length)))
-
-# 399 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 400 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t pos = 0;
-
-# 401 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    while ((pos<=((buffer->length)-len_original)))
-
-# 401 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 402 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      if (buffer_match_string_at(buffer, pos, original_text))
-
-# 402 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      {
-
-# 403 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-        (buffer=buffer_adjust_region(buffer, pos, (pos+len_original), len_replacement));
-
-# 405 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-        memmove((&((buffer->elements)[pos])), replacement_text, len_replacement);
-
-# 406 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-        (pos+=len_replacement);
-      }
-      else
-
-# 407 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      {
-
-# 408 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-        (pos++);
-      }
-    }
-  }
-
-# 412 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 415 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position)
-# 416 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 417 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t line = 1;
-
-# 418 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t column = 1;
-
-# 422 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 422 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 422 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t pos = 0;
-
-# 422 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (pos<position);
-
-# 422 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (pos++))
-
-# 422 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 423 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint8_t ch = buffer_get(buffer, pos);
-
-# 424 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if ((ch=='\n'))
-
-# 424 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 425 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      (line++);
-
-# 426 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      (column=1);
-    }
-    else
-
-# 427 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 428 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      (column++);
-    }
-  }
-
-# 431 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return ((line_and_column_t) {
-                                                 .line = line,
-                                                 .column = column,
-                                             });
-}
-
-
-# 442 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text)
-# 443 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 444 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 444 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 444 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    int i = start;
-
-# 444 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i<end);
-
-# 444 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i++))
-
-# 444 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 445 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if (buffer_match_string_at(buffer, i, text))
-
-# 445 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 446 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      return true;
-    }
-  }
-
-# 449 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return false;
-}
-
-
-# 460 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement)
-# 461 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 462 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 462 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 462 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    int i = 0;
-
-# 462 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i<(buffer->length));
-
-# 462 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i++))
-
-# 462 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 463 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if ((((buffer->elements)[i])==original))
-
-# 463 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 464 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      (((buffer->elements)[i])=replacement);
-    }
-  }
-
-# 467 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 477 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
-# 477 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 478 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t position = start;
-
-# 479 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  while ((position>0))
-
-# 479 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 480 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (position--);
-
-# 481 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if ((buffer_get(buffer, position)=='\n'))
-
-# 481 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 482 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      return (position+1);
-    }
-  }
-
-# 485 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return position;
-}
-
-
-# 496 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start)
-# 496 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 497 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t position = start;
-
-# 498 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
-
-# 498 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 499 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (position++);
-  }
-
-# 501 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return position;
-}
-
-
-# 511 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer)
-# 511 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 512 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
-}
-
-
-# 523 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer)
-# 526 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 527 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if ((buffer==src_buffer))
-
-# 527 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 528 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-# 530 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 530 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 530 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t position = start_position;
-
-# 530 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (position<end_position);
-
-# 530 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (position++))
-
-# 531 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 532 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
-  }
-
-# 534 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 546 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_to_uppercase(buffer_t* buffer)
-# 546 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 547 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 547 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 547 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t i = 0;
-
-# 547 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i<(buffer->length));
-
-# 547 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i++))
-
-# 547 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 548 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
-  }
-
-# 550 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 562 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_t* buffer_to_lowercase(buffer_t* buffer)
-# 562 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 563 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 563 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 563 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t i = 0;
-
-# 563 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i<(buffer->length));
-
-# 563 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (i++))
-
-# 563 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 564 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
-  }
-
-# 566 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return buffer;
-}
-
-
-# 569 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-boolean_t buffer_ends_with(buffer_t* buffer, char* str)
-# 569 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 571 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  char* cstring = buffer_to_c_string(buffer);
-
-# 572 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return string_ends_with(cstring, str);
-}
-
-
-# 575 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-boolean_t buffer_equal(buffer_t* buffer, char* str)
-# 575 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 577 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  char* cstring = buffer_to_c_string(buffer);
-
-# 578 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return string_equal(cstring, str);
-}
-
-
-# 586 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-void ensure_legal_region(buffer_region_t region)
-# 586 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 587 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  if (((region.start_position)>(region.end_position)))
-
-# 587 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 588 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-
-# 592 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64_t end_line)
-# 593 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 595 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t line = 1;
-
-# 596 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t start_position = 0;
-
-# 597 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  uint64_t end_position = 0;
-
-# 599 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 599 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 599 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t position = 0;
-
-# 599 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (position<(buffer->length));
-
-# 599 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (position++))
-
-# 599 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 600 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint8_t ch = buffer_get(buffer, position);
-
-# 601 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    if ((ch=='\n'))
-
-# 601 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    {
-
-# 602 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      (line++);
-
-# 603 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      if ((line==start_line))
-
-# 603 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      {
-
-# 604 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-        (start_position=position);
-      }
-
-# 606 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      if ((line==end_line))
-
-# 606 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-      {
-
-# 607 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-        (end_position=position);
-
-# 608 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-        return ((buffer_region_t) {.start_position = start_position, .end_position = end_position});
-      }
-    }
-  }
-
-# 614 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  return ((buffer_region_t) {.start_position = start_position,
-                                            .end_position = buffer->length});
-}
-
-
-# 618 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer, buffer_region_t region)
-# 619 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-{
-
-# 620 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  ensure_legal_region(region);
-
-# 621 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  for (
-
-# 621 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-
-# 621 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    uint64_t position = (region.start_position);
-
-# 621 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (position<(region.end_position));
-
-# 621 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    (position++))
-
-# 622 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-  {
-
-# 623 "/Users/jawilson/src/omni-c/src/lib/buffer.c"
-    buffer_append_byte(dst_buffer, buffer_get(src_buffer, position));
-  }
-}
-
-
-# 17 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 17 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer)
-# 17 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 17 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 {
 
-# 18 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 18 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
 
-# 19 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 19 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((result->read_byte)=(&buffer_stream_source_read));
 
-# 20 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 20 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   buffer_byte_stream_source_data_t* data = malloc_struct(buffer_byte_stream_source_data_t);
 
-# 22 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 22 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((data->buffer)=buffer);
 
-# 23 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 23 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((data->position)=0);
 
-# 24 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 24 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((result->data)=(/*CAST*/(void*) data));
 
-# 25 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 25 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   return result;
 }
 
 
-# 33 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 33 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
-# 34 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 34 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 {
 
-# 35 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 35 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   buffer_byte_stream_source_data_t* data = (/*CAST*/(buffer_byte_stream_source_data_t*) (source->data));
 
-# 37 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 37 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   uint8_t result = 0;
 
-# 38 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 38 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   if (((data->position)<buffer_length((data->buffer))))
 
-# 38 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 38 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   {
 
-# 39 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 39 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
     (result=buffer_get((data->buffer), ((data->position)++)));
 
-# 40 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 40 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
     ((*has_byte)=true);
   }
   else
 
-# 41 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 41 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   {
 
-# 42 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 42 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
     ((*has_byte)=false);
   }
 
-# 44 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 44 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   return result;
 }
 
 
-# 49 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 49 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 byte_stream_source_t* cstring_to_byte_source(char* string)
-# 49 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 49 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 {
 
-# 50 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 50 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
 
-# 51 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 51 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((result->read_byte)=(&cstring_stream_source_read));
 
-# 52 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 52 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   cstring_byte_stream_source_data_t* data = malloc_struct(cstring_byte_stream_source_data_t);
 
-# 54 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 54 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((data->string)=string);
 
-# 55 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 55 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((data->length)=strlen(string));
 
-# 56 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 56 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((data->position)=0);
 
-# 57 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 57 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((result->data)=(/*CAST*/(void*) data));
 
-# 58 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 58 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   return result;
 }
 
 
-# 67 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 67 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
-# 68 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 68 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 {
 
-# 69 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 69 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   cstring_byte_stream_source_data_t* data = (/*CAST*/(cstring_byte_stream_source_data_t*) (source->data));
 
-# 71 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 71 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   uint8_t result = 0;
 
-# 72 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 72 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   if (((data->position)<(data->length)))
 
-# 72 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 72 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   {
 
-# 73 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 73 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
     (result=((data->string)[((data->position)++)]));
 
-# 74 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 74 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
     ((*has_byte)=true);
   }
   else
 
-# 75 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 75 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   {
 
-# 76 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 76 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
     ((*has_byte)=false);
   }
 
-# 78 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 78 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   return result;
 }
 
 
-# 83 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 83 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer)
-# 83 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 83 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 {
 
-# 84 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 84 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   byte_stream_target_t* result = malloc_struct(byte_stream_target_t);
 
-# 85 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 85 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((result->write_byte)=(&buffer_stream_target_write));
 
-# 86 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 86 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   ((result->data)=(/*CAST*/(void*) buffer));
 
-# 87 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 87 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   return result;
 }
 
 
-# 90 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 90 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte)
-# 91 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 91 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
 {
 
-# 92 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 92 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   buffer_t* buffer = (/*CAST*/(buffer_t*) (target->data));
 
-# 93 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 93 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   buffer_append_byte(buffer, byte);
 
-# 94 "/Users/jawilson/src/omni-c/src/lib/byte-stream.c"
+# 94 "/Users/jawilson/src/omni-c/src/lib/io/byte-stream.c"
   return target;
 }
 
 
-# 46 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-value_array_t* make_value_array(uint64_t initial_capacity)
-# 46 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 47 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  if ((initial_capacity==0))
-
-# 47 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 48 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    (initial_capacity=1);
-  }
-
-# 51 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  value_array_t* result = malloc_struct(value_array_t);
-
-# 52 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  ((result->capacity)=initial_capacity);
-
-# 53 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  ((result->elements)=(/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*initial_capacity))));
-
-# 56 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  return result;
-}
-
-
-# 59 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity)
-# 60 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 61 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  if (((array->capacity)<required_capacity))
-
-# 61 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 62 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    uint32_t new_capacity = ((array->capacity)*2);
-
-# 63 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    if ((new_capacity<required_capacity))
-
-# 63 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    {
-
-# 64 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-      (new_capacity=required_capacity);
-    }
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    for (
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-      int i = 0;
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-      (i<(array->length));
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-      (i++))
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    {
-
-# 69 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-      ((new_elements[i])=((array->elements)[i]));
-    }
-
-# 71 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    ((array->capacity)=new_capacity);
-
-# 72 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    free_bytes((array->elements));
-
-# 73 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    ((array->elements)=new_elements);
-
-# 74 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    return;
-  }
-}
-
-
-# 84 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-value_t value_array_get(value_array_t* array, uint32_t index)
-# 84 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 85 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  if ((index<(array->length)))
-
-# 85 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 86 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    return ((array->elements)[index]);
-  }
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-
-# 90 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  return ((value_t) {0});
-}
-
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-void value_array_replace(value_array_t* array, uint32_t index, value_t element)
-# 100 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 101 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  if ((index<(array->length)))
-
-# 101 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    (((array->elements)[index])=element);
-
-# 103 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    return;
-  }
-
-# 105 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-}
-
-
-# 116 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-void value_array_add(value_array_t* array, value_t element)
-# 116 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 117 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  value_array_ensure_capacity(array, ((array->length)+1));
-
-# 118 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  (((array->elements)[((array->length)++)])=element);
-}
-
-
-# 127 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-void value_array_push(value_array_t* array, value_t element)
-# 127 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 128 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  value_array_add(array, element);
-}
-
-
-# 142 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-value_t value_array_pop(value_array_t* array)
-# 142 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 143 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  if (((array->length)==0))
-
-# 143 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 144 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-  }
-
-# 146 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  uint32_t last_index = ((array->length)-1);
-
-# 147 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  value_t result = value_array_get(array, last_index);
-
-# 148 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  (((array->elements)[last_index])=u64_to_value(0));
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  ((array->length)--);
-
-# 150 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  return result;
-}
-
-
-# 170 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-void value_array_insert_at(value_array_t* array, uint32_t position, value_t element)
-# 171 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 172 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  if ((position==(array->length)))
-
-# 172 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 173 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    value_array_add(array, element);
-
-# 174 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    return;
-  }
-
-# 177 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  if ((position>(array->length)))
-
-# 177 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 178 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    return;
-  }
-
-# 182 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  value_array_ensure_capacity(array, ((array->length)+1));
-
-# 187 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  for (
-
-# 187 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-
-# 187 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    int64_t i = ((array->length)-1);
-
-# 187 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    (i>=position);
-
-# 187 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    (i--))
-
-# 187 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 188 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    (((array->elements)[(i+1)])=((array->elements)[i]));
-  }
-
-# 190 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  ((array->length)++);
-
-# 191 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  (((array->elements)[position])=element);
-}
-
-
-# 203 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-value_t value_array_delete_at(value_array_t* array, uint32_t position)
-# 203 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-{
-
-# 204 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  value_t result = value_array_get(array, position);
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  for (
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    int i = position;
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    (i<((array->length)-1));
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    (i++))
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  {
-
-# 206 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-    (((array->elements)[i])=((array->elements)[(i+1)]));
-  }
-
-# 208 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  ((array->length)--);
-
-# 209 "/Users/jawilson/src/omni-c/src/lib/value-array.c"
-  return result;
-}
-
-
-# 35 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value)
-# 37 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-{
-
-# 38 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  value_alist_t* result = malloc_struct(value_alist_t);
-
-# 39 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  ((result->next)=value_alist_delete(list, cmp_fn, key));
-
-# 40 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  ((result->key)=key);
-
-# 41 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  ((result->value)=value);
-
-# 42 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  return result;
-}
-
-
-# 52 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
-# 53 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-{
-
-# 56 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  if ((list==NULL))
-
-# 56 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  {
-
-# 57 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    return list;
-  }
-
-# 59 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  if (((*cmp_fn)(key, (list->key))==0))
-
-# 59 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  {
-
-# 60 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    value_alist_t* result = (list->next);
-
-# 61 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    free_bytes(list);
-
-# 62 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    return result;
-  }
-
-# 64 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  ((list->next)=value_alist_delete((list->next), cmp_fn, key));
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  return list;
-}
-
-
-# 75 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
-# 76 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-{
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  while (list)
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  {
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    if ((cmp_fn(key, (list->key))==0))
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    {
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-      return ((value_result_t) {.val = list->value});
-    }
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    (list=(list->next));
-  }
-
-# 83 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
-}
-
-
-# 94 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list)
-# 94 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-{
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  uint64_t result = 0;
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  while (list)
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  {
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    (result++);
-
-# 98 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-    (list=(list->next));
-  }
-
-# 100 "/Users/jawilson/src/omni-c/src/lib/value-alist.c"
-  return result;
-}
-
-
-# 75 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-value_hashtable_t* make_value_hashtable(uint64_t n_buckets)
-# 75 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-{
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  if ((n_buckets<2))
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  {
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-    (n_buckets=2);
-  }
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  value_hashtable_t* result = malloc_struct(value_hashtable_t);
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  ((result->n_buckets)=n_buckets);
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  ((result->buckets)=(/*CAST*/(value_alist_t**) malloc_bytes(((sizeof(typeof(value_alist_t*)))*n_buckets))));
-
-# 84 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  return result;
-}
-
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value)
-# 94 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-{
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  uint64_t hashcode = hash_fn(key);
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  int bucket = (hashcode%(ht->n_buckets));
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  value_alist_t* list = ((ht->buckets)[bucket]);
-
-# 98 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  uint64_t len = value_alist_length(list);
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  (list=value_alist_insert(list, cmp_fn, key, value));
-
-# 100 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  (((ht->buckets)[bucket])=list);
-
-# 101 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  uint64_t len_after = value_alist_length(list);
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  if ((len_after>len))
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  {
-
-# 103 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-    ((ht->n_entries)++);
-
-# 108 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-    if (((ht->n_entries)>=((ht->n_buckets)*ARMYKNIFE_HT_LOAD_FACTOR)))
-
-# 108 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-    {
-
-# 109 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
-    }
-  }
-
-# 112 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  return ht;
-}
-
-
-# 121 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
-# 122 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-{
-
-# 123 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  uint64_t hashcode = hash_fn(key);
-
-# 124 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  int bucket = (hashcode%(ht->n_buckets));
-
-# 125 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  value_alist_t* list = ((ht->buckets)[bucket]);
-
-# 126 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  uint64_t len = value_alist_length(list);
-
-# 127 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  (list=value_alist_delete(list, cmp_fn, key));
-
-# 128 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  (((ht->buckets)[bucket])=list);
-
-# 129 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  uint64_t len_after = value_alist_length(list);
-
-# 130 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  if ((len_after<len))
-
-# 130 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  {
-
-# 131 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-    ((ht->n_entries)--);
-  }
-
-# 133 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  return ht;
-}
-
-
-# 141 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
-# 142 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-{
-
-# 143 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  uint64_t hashcode = hash_fn(key);
-
-# 144 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  int bucket = (hashcode%(ht->n_buckets));
-
-# 145 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  value_alist_t* list = ((ht->buckets)[bucket]);
-
-# 146 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  return value_alist_find(list, cmp_fn, key);
-}
-
-
-# 163 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn)
-# 165 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-{
-
-# 166 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
-
-# 167 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
-
-# 169 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  value_ht_foreach(ht, key, value, 
-# 169 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  {
-
-# 170 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-    value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
-
-# 176 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-    if ((new_ht!=should_be_result))
-
-# 176 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-    {
-
-# 177 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-  }
-);
-
-# 181 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  value_alist_t** old_buckets = (ht->buckets);
-
-# 182 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  ((ht->buckets)=(new_ht->buckets));
-
-# 183 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  ((ht->n_buckets)=(new_ht->n_buckets));
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  ((ht->n_entries)=(new_ht->n_entries));
-
-# 185 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  free_bytes(old_buckets);
-
-# 186 "/Users/jawilson/src/omni-c/src/lib/value-hashtable.c"
-  free_bytes(new_ht);
-}
-
-
-# 72 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
-# 73 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 74 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((t==NULL))
-
-# 74 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 75 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
-  }
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  int cmp_result = cmp_fn(key, (t->key));
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((cmp_result<0))
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return value_tree_find((t->left), cmp_fn, key);
-  }
-  else
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((cmp_result>0))
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 82 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return value_tree_find((t->right), cmp_fn, key);
-  }
-  else
-
-# 83 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 84 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return ((value_result_t) {
-                                                .val = t->value,
-                                            });
-  }
-}
-
-
-# 90 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_tree_t* value_tree_skew(value_tree_t* t)
-# 90 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 91 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((t==NULL))
-
-# 91 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return NULL;
-  }
-
-# 94 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if (((t->left)==NULL))
-
-# 94 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return t;
-  }
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((((t->left)->level)==(t->level)))
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 98 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    value_tree_t* L = (t->left);
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((t->left)=(L->right));
-
-# 100 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((L->right)=t);
-
-# 101 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return L;
-  }
-
-# 103 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return t;
-}
-
-
-# 106 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_tree_t* value_tree_split(value_tree_t* t)
-# 106 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 107 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((t==NULL))
-
-# 107 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 108 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return NULL;
-  }
-
-# 110 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((((t->right)==NULL)||(((t->right)->right)==NULL)))
-
-# 110 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 111 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return t;
-  }
-
-# 113 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if (((t->level)==(((t->right)->right)->level)))
-
-# 113 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 116 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    value_tree_t* R = (t->right);
-
-# 117 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((t->right)=(R->left));
-
-# 118 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((R->left)=t);
-
-# 119 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((R->level)++);
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return R;
-  }
-
-# 122 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return t;
-}
-
-
-# 125 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_tree_t* make_value_tree_leaf(value_t key, value_t value)
-# 125 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 126 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  value_tree_t* result = malloc_struct(value_tree_t);
-
-# 127 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  ((result->level)=1);
-
-# 128 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  ((result->key)=key);
-
-# 129 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  ((result->value)=value);
-
-# 130 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return result;
-}
-
-
-# 139 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value)
-# 140 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 141 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((t==NULL))
-
-# 141 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 143 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return make_value_tree_leaf(key, value);
-  }
-
-# 145 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  int cmp_result = cmp_fn(key, (t->key));
-
-# 146 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((cmp_result<0))
-
-# 146 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 147 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((t->left)=value_tree_insert((t->left), cmp_fn, key, value));
-  }
-  else
-
-# 148 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((cmp_result>0))
-
-# 148 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 149 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((t->right)=value_tree_insert((t->right), cmp_fn, key, value));
-  }
-  else
-
-# 150 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 154 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((t->value)=value);
-
-# 155 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return t;
-  }
-
-# 158 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  (t=value_tree_skew(t));
-
-# 159 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  (t=value_tree_split(t));
-
-# 161 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return t;
-}
-
-
-# 168 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_tree_t* value_tree_decrease_level(value_tree_t* t)
-# 168 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 169 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if (((t->left)&&(t->right)))
-
-# 169 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 170 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    uint32_t should_be = (value_tree_min_level(((t->left)->level), ((t->right)->level))+1);
-
-# 172 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    if ((should_be<(t->level)))
-
-# 172 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    {
-
-# 173 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      ((t->level)=should_be);
-
-# 174 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      if ((should_be<((t->right)->level)))
-
-# 174 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      {
-
-# 175 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-        (((t->right)->level)=should_be);
-      }
-    }
-  }
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return t;
-}
-
-
-# 182 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_tree_t* value_tree_predecessor(value_tree_t* t)
-# 182 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 183 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  (t=(t->left));
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  while (((t->right)!=NULL))
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 185 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    (t=(t->right));
-  }
-
-# 187 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return t;
-}
-
-
-# 190 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_tree_t* value_tree_successor(value_tree_t* t)
-# 190 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 191 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  (t=(t->right));
-
-# 192 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  while (((t->left)!=NULL))
-
-# 192 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 193 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    (t=(t->left));
-  }
-
-# 195 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return t;
-}
-
-
-# 208 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
-# 209 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-{
-
-# 211 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((t==NULL))
-
-# 211 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 212 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    return t;
-  }
-
-# 215 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  int cmp_result = cmp_fn(key, (t->key));
-
-# 216 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((cmp_result<0))
-
-# 216 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 217 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((t->left)=value_tree_delete((t->left), cmp_fn, key));
-  }
-  else
-
-# 218 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if ((cmp_result>0))
-
-# 218 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 219 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    ((t->right)=value_tree_delete((t->right), cmp_fn, key));
-  }
-  else
-
-# 220 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 221 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    if (value_tree_is_leaf(t))
-
-# 221 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    {
-
-# 226 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      return NULL;
-    }
-    else
-
-# 227 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    if (((t->left)==NULL))
-
-# 227 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    {
-
-# 228 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      value_tree_t* L = value_tree_successor(t);
-
-# 232 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      ((t->key)=(L->key));
-
-# 233 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      ((t->value)=(L->value));
-
-# 234 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      ((t->right)=value_tree_delete((t->right), cmp_fn, (L->key)));
-    }
-    else
-
-# 235 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    {
-
-# 236 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      value_tree_t* L = value_tree_predecessor(t);
-
-# 240 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      ((t->key)=(L->key));
-
-# 241 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      ((t->value)=(L->value));
-
-# 242 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-      ((t->left)=value_tree_delete((t->left), cmp_fn, (L->key)));
-    }
-  }
-
-# 249 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  (t=value_tree_decrease_level(t));
-
-# 250 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  (t=value_tree_skew(t));
-
-# 251 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  ((t->right)=value_tree_skew((t->right)));
-
-# 252 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  if (((t->right)!=NULL))
-
-# 252 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  {
-
-# 253 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-    (((t->right)->right)=value_tree_skew(((t->right)->right)));
-  }
-
-# 255 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  (t=value_tree_split(t));
-
-# 256 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  ((t->right)=value_tree_split((t->right)));
-
-# 257 "/Users/jawilson/src/omni-c/src/lib/value-tree.c"
-  return t;
-}
-
-
-# 155 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 155 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_program_name(char* name)
-# 155 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 155 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 156 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 156 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   (current_program=malloc_struct(program_descriptor_t));
 
-# 157 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 157 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_program->name)=name);
 
-# 158 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 158 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   (current_command=NULL);
 
-# 159 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 159 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   (current_flag=NULL);
 }
 
 
-# 168 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 168 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_command(char* name, char** write_back_ptr)
-# 168 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 168 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 169 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 169 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   (current_command=malloc_struct(command_descriptor_t));
 
-# 170 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 170 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_command->name)=name);
 
-# 171 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 171 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_command->write_back_ptr)=write_back_ptr);
 
-# 172 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 172 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   (current_flag=NULL);
 
-# 173 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 173 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_program->commands)=string_tree_insert((current_program->commands), name, ptr_to_value(current_command)));
 }
 
 
-# 182 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 182 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_description(char* description)
-# 182 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 182 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 183 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 183 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_flag!=NULL))
 
-# 183 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 183 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 184 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 184 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((current_flag->description)=description);
   }
   else
 
-# 185 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 185 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_command!=NULL))
 
-# 185 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 185 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 186 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 186 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((current_command->description)=description);
   }
   else
 
-# 187 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 187 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_program!=NULL))
 
-# 187 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 187 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 188 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 188 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((current_program->description)=description);
   }
   else
 
-# 189 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 189 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 190 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 190 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     log_fatal("A current flag, program or command must be executed first");
 
-# 191 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 191 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 208 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 208 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_file_args(value_array_t** write_back_file_args_ptr)
-# 208 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 208 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 209 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 209 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_command!=NULL))
 
-# 209 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 209 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 210 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 210 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((current_command->write_back_file_args_ptr)=write_back_file_args_ptr);
   }
   else
 
-# 211 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 211 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_program!=NULL))
 
-# 211 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 211 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 212 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 212 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((current_program->write_back_file_args_ptr)=write_back_file_args_ptr);
   }
   else
 
-# 213 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 213 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 214 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 214 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     log_fatal("A current program or command must be executed first");
 
-# 215 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 215 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 221 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 221 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type)
-# 221 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 221 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 222 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 222 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   (current_flag=malloc_struct(flag_descriptor_t));
 
-# 223 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 223 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_flag->flag_type)=flag_type);
 
-# 224 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 224 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_flag->name)=name);
 
-# 225 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 225 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_flag->write_back_ptr)=write_back_ptr);
 
-# 228 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 228 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_command!=NULL))
 
-# 228 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 228 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 229 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 229 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((current_command->flags)=string_tree_insert((current_command->flags), name, ptr_to_value(current_flag)));
   }
   else
 
-# 231 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 231 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_program!=NULL))
 
-# 231 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 231 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 232 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 232 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((current_program->flags)=string_tree_insert((current_program->flags), name, ptr_to_value(current_flag)));
   }
   else
 
-# 234 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 234 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 235 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 235 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     log_fatal("A current program or command must be executed first");
 
-# 236 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 236 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 240 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 240 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_boolean(char* name, boolean_t* write_back_ptr)
-# 240 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 240 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 241 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 241 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   add_flag(name, write_back_ptr, flag_type_boolean);
 }
 
 
-# 244 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 244 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_string(char* name, char** write_back_ptr)
-# 244 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 244 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 245 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 245 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   add_flag(name, write_back_ptr, flag_type_string);
 }
 
 
-# 248 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 248 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_uint64(char* name, uint64_t* write_back_ptr)
-# 248 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 248 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 249 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 249 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   add_flag(name, write_back_ptr, flag_type_uint64);
 }
 
 
-# 252 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 252 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_int64(char* name, int64_t* write_back_ptr)
-# 252 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 252 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 253 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 253 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   add_flag(name, write_back_ptr, flag_type_int64);
 }
 
 
-# 256 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 256 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_double(char* name, double* write_back_ptr)
-# 256 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 256 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 257 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 257 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   add_flag(name, write_back_ptr, flag_type_double);
 }
 
 
-# 277 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 277 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_enum(char* name, int* write_back_ptr)
-# 277 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 277 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 278 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 278 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   add_flag(name, write_back_ptr, flag_type_enum);
 
-# 279 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 279 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_flag->enum_size)=((sizeof(int))*8));
 }
 
 
-# 282 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 282 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_enum_64(char* name, uint64_t* write_back_ptr)
-# 282 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 282 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 283 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 283 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   add_flag(name, write_back_ptr, flag_type_enum);
 
-# 284 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 284 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_flag->enum_size)=64);
 }
 
 
-# 287 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 287 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_enum_value(char* name, uint64_t value)
-# 287 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 287 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 288 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 288 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (((!current_flag)||((current_flag->flag_type)!=flag_type_enum)))
 
-# 288 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 288 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 289 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 289 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     log_fatal("The current flag is not an enum type");
 
-# 290 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 290 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 293 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 293 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   ((current_flag->enum_values)=string_tree_insert((current_flag->enum_values), name, u64_to_value(value)));
 }
 
 
-# 297 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 297 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_alias(char* alias)
-# 297 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 297 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 298 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 298 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_flag!=NULL))
 
-# 298 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 298 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 300 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 300 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     if ((current_command!=NULL))
 
-# 300 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 300 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 301 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 301 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       ((current_command->flags)=string_tree_insert((current_command->flags), alias, ptr_to_value(current_flag)));
     }
     else
 
-# 303 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 303 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     if ((current_program!=NULL))
 
-# 303 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 303 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 304 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 304 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       ((current_program->flags)=string_tree_insert((current_program->flags), alias, ptr_to_value(current_flag)));
     }
     else
 
-# 306 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 306 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 307 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 307 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       log_fatal("A current program or command must exist first");
 
-# 308 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 308 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
   else
 
-# 310 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 310 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 311 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 311 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     log_fatal("A current flag must present to use flag_alias");
 
-# 312 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 312 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
 
 
-# 328 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 328 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 char* flag_parse_command_line(int argc, char** argv)
-# 328 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 328 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 329 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 329 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_program==NULL))
 
-# 329 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 329 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 330 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 330 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     log_fatal("flag_parse_command_line can't be called unless flag_program_name() is " "first called.");
 
-# 333 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 333 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 336 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 336 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   int start = 1;
 
-# 337 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 337 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   command_descriptor_t* command = NULL;
 
-# 338 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 338 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_program->commands))
 
-# 338 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 338 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 339 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 339 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     if ((argc<=1))
 
-# 339 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 339 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 340 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 340 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       return "This program requires a command but not enough arguments were " "given";
     }
 
-# 343 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 343 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     char* name = (argv[1]);
 
-# 344 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 344 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     (command=flag_find_command_descriptor(name));
 
-# 345 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 345 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     if ((command==NULL))
 
-# 345 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 345 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 346 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 346 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       return string_printf("The first command line argument is not a known command: %s", name);
     }
     else
 
-# 348 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 348 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 349 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 349 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       ((*(command->write_back_ptr))=(command->name));
     }
 
-# 351 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 351 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     (start=2);
   }
 
-# 354 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 354 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   value_array_t* files = make_value_array(argc);
 
-# 355 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 355 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   boolean_t parse_flags = true;
 
-# 357 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 357 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   for (
 
-# 357 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 357 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 
-# 357 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 357 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     int i = start;
 
-# 357 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 357 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     (i<argc);
 
-# 357 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 357 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     (i++))
 
-# 357 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 357 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 358 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 358 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     char* arg = (argv[i]);
 
-# 359 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 359 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     if (parse_flags)
 
-# 359 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 359 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 360 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 360 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       if (string_equal(arg, "--"))
 
-# 360 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 360 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       {
 
-# 361 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 361 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         (parse_flags=false);
 
-# 362 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 362 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         continue;
       }
 
-# 365 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 365 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       if (string_starts_with(arg, "-"))
 
-# 365 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 365 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       {
 
-# 366 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 366 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         flag_key_value_t key_value = flag_split_argument(arg);
 
-# 367 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 367 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         if (((key_value.key)==NULL))
 
-# 367 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 367 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         {
 
-# 368 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 368 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
           return string_printf("This argument is not a well formed flag: %s", arg);
         }
 
-# 371 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 371 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         flag_descriptor_t* flag = flag_find_flag_descriptor(command, (key_value.key));
 
-# 373 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 373 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         if ((flag==NULL))
 
-# 373 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 373 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         {
 
-# 374 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 374 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
           return string_printf("The argument looks like a flag but was not found: '%s'\n\n" "(You may want to use ' -- ' to seperate flags from non flag " "arguments (aka file arguments).)", arg);
         }
 
-# 385 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 385 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         if (((key_value.value)==NULL))
 
-# 385 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 385 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         {
 
-# 387 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 387 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
           (i++);
 
-# 388 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 388 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
           ((key_value.value)=(argv[i]));
         }
 
-# 390 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 390 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         char* error = parse_and_write_value(flag, key_value);
 
-# 391 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 391 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         if (error)
 
-# 391 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 391 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         {
 
-# 392 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 392 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
           return error;
         }
 
-# 394 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 394 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
         continue;
       }
     }
 
-# 399 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 399 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     value_array_add(files, str_to_value(arg));
   }
 
-# 403 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 403 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (((command!=NULL)&&((command->write_back_file_args_ptr)!=NULL)))
 
-# 403 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 403 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 404 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 404 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((*(command->write_back_file_args_ptr))=files);
   }
 
-# 406 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 406 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (((current_program->write_back_file_args_ptr)!=NULL))
 
-# 406 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 406 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 407 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 407 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((*(current_program->write_back_file_args_ptr))=files);
   }
 
-# 409 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 409 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   return NULL;
 }
 
 
-# 414 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 414 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 command_descriptor_t* flag_find_command_descriptor(char* name)
-# 414 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 414 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 415 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 415 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (((current_program->commands)==NULL))
 
-# 415 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 415 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 416 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 416 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     log_fatal("flag_get_command() shouldn't not be called when we don't have any " "defined commands.");
 
-# 419 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 419 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-# 421 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 421 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   value_result_t command_value = string_tree_find((current_program->commands), name);
 
-# 423 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 423 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (is_ok(command_value))
 
-# 423 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 423 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 424 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 424 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return (/*CAST*/(command_descriptor_t*) (command_value.ptr));
   }
   else
 
-# 425 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 425 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 426 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 426 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return NULL;
   }
 }
 
 
-# 434 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 434 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name)
-# 436 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 436 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 437 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 437 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((command!=NULL))
 
-# 437 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 437 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 438 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 438 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     value_result_t command_flag_value = string_tree_find((command->flags), name);
 
-# 439 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 439 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     if (is_ok(command_flag_value))
 
-# 439 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 439 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 440 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 440 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       return (/*CAST*/(flag_descriptor_t*) (command_flag_value.ptr));
     }
   }
 
-# 444 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 444 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   value_result_t program_flag_value = string_tree_find((current_program->flags), name);
 
-# 446 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 446 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (is_ok(program_flag_value))
 
-# 446 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 446 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 447 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 447 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return (/*CAST*/(flag_descriptor_t*) (program_flag_value.ptr));
   }
 
-# 450 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 450 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   return NULL;
 }
 
 
-# 470 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 470 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 flag_key_value_t flag_split_argument(char* arg)
-# 470 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 470 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 471 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 471 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   int equal_sign_index = string_index_of_char(arg, '=');
 
-# 472 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 472 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((equal_sign_index>=0))
 
-# 472 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 472 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 473 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 473 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     char* key = string_substring(arg, 0, equal_sign_index);
 
-# 478 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 478 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     char* value = string_substring(arg, (equal_sign_index+1), strlen(arg));
 
-# 479 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 479 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return ((flag_key_value_t) {.key = key, .value = value});
   }
 
-# 481 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 481 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   return ((flag_key_value_t) {.key = arg, .value = NULL});
 }
 
 
-# 487 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 487 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value)
-# 488 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 488 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 489 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 489 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   switch ((flag->flag_type))
 
-# 489 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 489 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 490 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 490 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     case flag_type_boolean:
 
-# 491 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 491 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return parse_and_write_boolean(flag, key_value);
 
-# 493 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 493 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     case flag_type_string:
 
-# 494 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 494 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((*(/*CAST*/(char**) (flag->write_back_ptr)))=(key_value.value));
 
-# 495 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 495 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return NULL;
 
-# 497 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 497 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     case flag_type_uint64:
 
-# 498 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 498 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return parse_and_write_uint64(flag, key_value);
 
-# 500 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 500 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     case flag_type_enum:
 
-# 501 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 501 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return parse_and_write_enum(flag, key_value);
 
-# 503 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 503 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     default:
 
-# 504 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 504 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fatal_error(ERROR_ILLEGAL_STATE);
 
-# 505 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 505 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     break;
   }
 
-# 507 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 507 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   return "<ILLEGAL-STATE-NOT-REACHED>";
 }
 
 
-# 510 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 510 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value)
-# 511 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 511 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 512 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 512 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   char* val = (key_value.value);
 
-# 513 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 513 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (((string_equal("true", val)||string_equal("t", val))||string_equal("1", val)))
 
-# 514 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 514 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 515 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 515 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((*(/*CAST*/(boolean_t*) (flag->write_back_ptr)))=true);
   }
   else
 
-# 516 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 516 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (((string_equal("false", val)||string_equal("f", val))||string_equal("0", val)))
 
-# 517 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 517 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 518 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 518 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((*(/*CAST*/(boolean_t*) (flag->write_back_ptr)))=false);
   }
   else
 
-# 519 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 519 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 520 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 520 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return string_printf("boolean flag %s does not accept value %s", (key_value.key), (key_value.value));
   }
 
-# 523 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 523 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   return NULL;
 }
 
 
-# 526 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 526 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value)
-# 527 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 527 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 528 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 528 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   value_result_t val_result = string_parse_uint64((key_value.value));
 
-# 529 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 529 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (is_ok(val_result))
 
-# 529 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 529 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 530 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 530 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     ((*(/*CAST*/(uint64_t*) (flag->write_back_ptr)))=(val_result.u64));
   }
   else
 
-# 531 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 531 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 532 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 532 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return string_printf("uint64_t flag %s does not accept value %s", (key_value.key), (key_value.value));
   }
 
-# 535 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 535 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   return NULL;
 }
 
 
-# 538 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 538 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value)
-# 539 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 539 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 540 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 540 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   value_result_t val_result = string_tree_find((flag->enum_values), (key_value.value));
 
-# 542 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 542 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (is_ok(val_result))
 
-# 542 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 542 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 543 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 543 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     switch ((flag->enum_size))
 
-# 543 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 543 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 544 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 544 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       case 64:
 
-# 546 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 546 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       ((*(/*CAST*/(uint64_t*) (flag->write_back_ptr)))=(val_result.u64));
 
-# 547 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 547 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       return NULL;
 
-# 548 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 548 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       case 32:
 
-# 550 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 550 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       ((*(/*CAST*/(uint32_t*) (flag->write_back_ptr)))=(val_result.u64));
 
-# 551 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 551 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       return NULL;
 
-# 553 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 553 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       default:
 
-# 554 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 554 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       fatal_error(ERROR_ILLEGAL_STATE);
 
-# 555 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 555 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       break;
     }
   }
 
-# 558 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 558 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   return string_printf("Flag %s does not accept the argument value %s", (key_value.key), (key_value.value));
 }
 
 
-# 572 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 572 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags)
-# 572 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 572 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 573 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 573 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   fprintf(out, "%s\n", header);
 
-# 575 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 575 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   string_tree_foreach(flags, key, value, 
-# 575 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 575 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 576 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 576 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fprintf(out, "      %s\t%s\n", key, ((/*CAST*/(flag_descriptor_t*) (value.ptr))->description));
   }
 );
 }
 
 
-# 587 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 587 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 void flag_print_help(FILE* out, char* message)
-# 587 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 587 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
 {
 
-# 588 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 588 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   fprintf(out, "\nMessage: %s\n", message);
 
-# 590 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 590 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if ((current_program==NULL))
 
-# 590 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 590 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 591 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 591 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fprintf(out, "Command line parsing was not configured so help can not be " "provided.");
 
-# 594 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 594 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     return;
   }
 
-# 597 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 597 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
+  char* has_files = (((current_program->write_back_file_args_ptr)==((void *)0)) ? "" : " <files>");
+
+# 601 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   if (((current_program->commands)!=NULL))
 
-# 597 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 601 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 598 "/Users/jawilson/src/omni-c/src/lib/flag.c"
-    fprintf(out, "\nUsage: %s <command> <flags> <files>\n", (current_program->name));
+# 602 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
+    fprintf(out, "\nUsage: %s <command> <flags>%s\n", (current_program->name), has_files);
 
-# 600 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 604 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fprintf(out, "\nDescription: %s\n\n", (current_program->description));
 
-# 602 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 606 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     flag_print_flags(out, "Global flags:", (current_program->flags));
 
-# 604 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 608 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fprintf(out, "\nCommands:\n");
 
-# 606 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 610 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     string_tree_foreach((current_program->commands), key, value, 
-# 606 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 610 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     {
 
-# 607 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 611 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       fprintf(out, "\n    %s\t%s\n", key, ((/*CAST*/(command_descriptor_t*) (value.ptr))->description));
 
-# 608 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 612 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
       flag_print_flags(out, "      Flags:", ((/*CAST*/(command_descriptor_t*) (value.ptr))->flags));
     }
 );
   }
   else
 
-# 611 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 615 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
   {
 
-# 612 "/Users/jawilson/src/omni-c/src/lib/flag.c"
-    fprintf(out, "\nUsage: %s <flags> <files>\n", (current_program->name));
+# 616 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
+    fprintf(out, "\nUsage: %s <flags>%s\n", (current_program->name), has_files);
 
-# 613 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 617 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     fprintf(out, "\nDescription: %s\n\n", (current_program->description));
 
-# 614 "/Users/jawilson/src/omni-c/src/lib/flag.c"
+# 618 "/Users/jawilson/src/omni-c/src/lib/runtime/flag.c"
     flag_print_flags(out, "Flags:", (current_program->flags));
   }
 }
 
 
-# 72 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-void add_duplicate(value_array_t* token_array, const char* data)
-# 72 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-{
-
-# 73 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  value_array_add(token_array, str_to_value(string_duplicate(data)));
-}
-
-
-# 19 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-value_array_t* string_tokenize(const char* str, const char* delimiters)
-# 19 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-{
-
-# 20 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
-}
-
-
-# 33 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters)
-# 33 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-{
-
-# 34 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
-}
-
-
-# 46 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters)
-# 47 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-{
-
-# 48 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  value_array_t* result = make_value_array(1);
-
-# 49 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  char token_data[1024];
-
-# 50 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  int cpos = 0;
-
-# 51 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  for (
-
-# 51 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-
-# 51 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-    int i = 0;
-
-# 51 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-    (i<length);
-
-# 51 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-    (i++))
-
-# 51 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  {
-
-# 52 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-    uint8_t ch = (str[i]);
-
-# 53 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-    if (((ch==0)||string_contains_char(delimiters, ch)))
-
-# 53 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-    {
-
-# 54 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-      ((token_data[(cpos++)])='\0');
-
-# 55 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-      if ((strlen(token_data)>0))
-
-# 55 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-      {
-
-# 56 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-        add_duplicate(result, token_data);
-      }
-
-# 58 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-      (cpos=0);
-    }
-    else
-
-# 59 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-    {
-
-# 60 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-      ((token_data[(cpos++)])=ch);
-    }
-  }
-
-# 63 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  ((token_data[(cpos++)])='\0');
-
-# 64 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  if ((strlen(token_data)>0))
-
-# 64 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  {
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-    add_duplicate(result, token_data);
-  }
-
-# 68 "/Users/jawilson/src/omni-c/src/lib/tokenizer.c"
-  return result;
-}
-
-
-# 24 "/Users/jawilson/src/omni-c/src/lib/random.c"
-random_state_t random_state_for_test(void)
-# 24 "/Users/jawilson/src/omni-c/src/lib/random.c"
-{
-
-# 25 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  return ((random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
-}
-
-
-# 37 "/Users/jawilson/src/omni-c/src/lib/random.c"
-random_state_t* random_state(void)
-# 37 "/Users/jawilson/src/omni-c/src/lib/random.c"
-{
-
-# 38 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  if (((shared_random_state.a)==0))
-
-# 38 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  {
-
-# 39 "/Users/jawilson/src/omni-c/src/lib/random.c"
-    ((shared_random_state.a)=(0x1E1D43C2CA44B1F5^(/*CAST*/(uint64_t) time(NULL))));
-
-# 40 "/Users/jawilson/src/omni-c/src/lib/random.c"
-    ((shared_random_state.b)=(0x4FDD267452CEDBAC^(/*CAST*/(uint64_t) time(NULL))));
-  }
-
-# 43 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  return (&shared_random_state);
-}
-
-
-# 57 "/Users/jawilson/src/omni-c/src/lib/random.c"
-uint64_t random_next(random_state_t* state)
-# 57 "/Users/jawilson/src/omni-c/src/lib/random.c"
-{
-
-# 58 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  uint64_t s0 = (state->a);
-
-# 59 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  uint64_t s1 = (state->b);
-
-# 60 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  uint64_t result = (rotl((s0*5), 7)*9);
-
-# 61 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  (s1^=s0);
-
-# 62 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  ((state->a)=((rotl(s0, 24)^s1)^(s1<<16)));
-
-# 63 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  ((state->b)=rotl(s1, 37));
-
-# 65 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  return result;
-}
-
-
-# 75 "/Users/jawilson/src/omni-c/src/lib/random.c"
-uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
-# 75 "/Users/jawilson/src/omni-c/src/lib/random.c"
-{
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  if ((maximum==0))
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  {
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/random.c"
-    fatal_error(ERROR_ILLEGAL_ARGUMENT);
-  }
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  return (random_next(state)%maximum);
-
-# 85 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
-
-# 86 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  while (1)
-
-# 86 "/Users/jawilson/src/omni-c/src/lib/random.c"
-  {
-
-# 87 "/Users/jawilson/src/omni-c/src/lib/random.c"
-    uint64_t n = random_next(state);
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/random.c"
-    (n&=mask);
-
-# 89 "/Users/jawilson/src/omni-c/src/lib/random.c"
-    if ((n<maximum))
-
-# 89 "/Users/jawilson/src/omni-c/src/lib/random.c"
-    {
-
-# 90 "/Users/jawilson/src/omni-c/src/lib/random.c"
-      return n;
-    }
-  }
-}
-
-
-# 38 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 38 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 cdl_printer_t* make_cdl_printer(buffer_t* buffer)
-# 38 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 38 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 39 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 39 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_printer_t* result = malloc_struct(cdl_printer_t);
 
-# 40 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 40 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   ((result->buffer)=buffer);
 
-# 41 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 41 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   return result;
 }
 
 
-# 44 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 44 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_indent(cdl_printer_t* printer)
-# 44 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 44 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 45 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 45 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   buffer_append_repeated_byte((printer->buffer), ' ', (4*(printer->indention_level)));
 }
 
 
-# 49 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 49 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 boolean_t is_safe_string(char* string)
-# 49 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 49 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 50 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 50 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   buffer_t* buffer = buffer_from_string(string);
 
-# 51 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 51 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   for (
 
-# 51 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 51 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 
-# 51 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 51 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     int pos = 0;
 
-# 51 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 51 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     (pos<buffer_length(buffer));
 
-# 51 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 51 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     )
 
-# 51 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 51 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   {
 
-# 52 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 52 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
 
-# 53 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 53 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     if ((decode_result.error))
 
-# 53 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 53 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     {
 
-# 54 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 54 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
     }
 
-# 56 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 56 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     uint32_t code_point = (decode_result.code_point);
 
-# 57 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 57 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     if ((code_point<=32))
 
-# 57 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 57 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     {
 
-# 58 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 58 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       return false;
     }
 
-# 60 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 60 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     switch (code_point)
 
-# 60 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 60 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     {
 
-# 61 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 61 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '"':
 
-# 62 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 62 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '#':
 
-# 63 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 63 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '(':
 
-# 64 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 64 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case ')':
 
-# 65 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 65 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case ',':
 
-# 66 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case ':':
 
-# 67 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 67 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '=':
 
-# 68 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 68 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '[':
 
-# 69 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 69 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '\'':
 
-# 70 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 70 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case ']':
 
-# 71 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 71 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '`':
 
-# 72 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 72 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '{':
 
-# 73 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 73 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       case '}':
 
-# 74 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 74 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
       return false;
     }
 
-# 76 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 76 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     (pos+=(decode_result.num_bytes));
   }
 
-# 78 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 78 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   return true;
 }
 
 
-# 81 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 81 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_output_token(cdl_printer_t* printer, char* string)
-# 81 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 81 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 82 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 82 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_indent(printer);
 
-# 83 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 83 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   if (((printer->key_token)!=NULL))
 
-# 83 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 83 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   {
 
-# 84 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 84 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     buffer_printf((printer->buffer), "%s = %s\n", (printer->key_token), string);
 
-# 85 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 85 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     ((printer->key_token)=NULL);
   }
   else
 
-# 86 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 86 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   {
 
-# 87 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 87 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     buffer_printf((printer->buffer), "%s\n", string);
   }
 }
 
 
-# 91 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 91 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_boolean(cdl_printer_t* printer, boolean_t boolean)
-# 91 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 91 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 92 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 92 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_output_token(printer, (boolean ? "true" : "false"));
 }
 
 
-# 95 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 95 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_string(cdl_printer_t* printer, char* string)
-# 95 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 95 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 96 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 96 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   if ((!is_safe_string(string)))
 
-# 96 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 96 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   {
 
-# 97 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 97 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     cdl_output_token(printer, string_printf("\"%s\"", string));
   }
   else
 
-# 98 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 98 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   {
 
-# 99 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 99 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
     cdl_output_token(printer, string);
   }
 }
 
 
-# 103 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 103 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_int64(cdl_printer_t* printer, int64_t number)
-# 103 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 103 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 104 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 104 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_output_token(printer, string_printf("%ld", number));
 }
 
 
-# 107 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 107 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_uint64(cdl_printer_t* printer, uint64_t number)
-# 107 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 107 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 108 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 108 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_output_token(printer, uint64_to_string(number));
 }
 
 
-# 111 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 111 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_double(cdl_printer_t* printer, double number)
-# 111 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 111 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 112 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 112 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_output_token(printer, string_printf("%lf", number));
 }
 
 
-# 115 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 115 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_start_array(cdl_printer_t* printer)
-# 115 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 115 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 116 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 116 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_output_token(printer, "[");
 
-# 117 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 117 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   ((printer->indention_level)+=1);
 }
 
 
-# 120 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 120 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_end_array(cdl_printer_t* printer)
-# 120 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 120 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 121 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 121 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   ((printer->indention_level)-=1);
 
-# 122 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 122 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_output_token(printer, "]");
 }
 
 
-# 125 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 125 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_start_table(cdl_printer_t* printer)
-# 125 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 125 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 126 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 126 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_output_token(printer, "{");
 
-# 127 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 127 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   ((printer->indention_level)+=1);
 }
 
 
-# 130 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 130 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_key(cdl_printer_t* printer, char* key)
-# 130 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 130 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 130 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 130 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   ((printer->key_token)=key);
 }
 
 
-# 132 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 132 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 void cdl_end_table(cdl_printer_t* printer)
-# 132 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 132 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
 {
 
-# 133 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 133 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   ((printer->indention_level)-=1);
 
-# 134 "/Users/jawilson/src/omni-c/src/lib/cdl-printer.c"
+# 134 "/Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c"
   cdl_output_token(printer, "}");
 }
 
 
-# 18 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator)
-# 19 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-{
-
-# 20 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-  buffer_t* result = make_buffer(1);
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-  for (
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-    int i = 0;
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-    (i<(array_of_strings->length));
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-    (i++))
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-  {
-
-# 22 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-    if ((i>0))
-
-# 22 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-    {
-
-# 23 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-      buffer_append_string(result, separator);
-    }
-
-# 25 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-    buffer_append_string(result, (value_array_get(array_of_strings, i).str));
-  }
-
-# 27 "/Users/jawilson/src/omni-c/src/lib/splitjoin.c"
-  return result;
-}
-
-
-# 17 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-void oarchive_append_header_and_file_contents(FILE* out, char* filename)
-# 17 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-{
-
-# 18 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  buffer_t* contents = make_buffer(1);
-
-# 19 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  (contents=buffer_append_file_contents(contents, filename));
-
-# 20 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  fprintf(out, "filename=%s", filename);
-
-# 21 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  fputc(0, out);
-
-# 22 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  fprintf(out, "size=%d", (contents->length));
-
-# 23 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  fputc(0, out);
-
-# 24 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  fputc(0, out);
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  for (
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    uint64_t i = 0;
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    (i<(contents->length));
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    (i++))
-
-# 26 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  {
-
-# 27 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    fputc(buffer_get(contents, i), out);
-  }
-}
-
-
-# 37 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-string_tree_t* oarchive_read_header(FILE* in)
-# 37 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-{
-
-# 38 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  string_tree_t* metadata = NULL;
-
-# 39 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  while ((!feof(in)))
-
-# 39 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  {
-
-# 40 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    if ((file_peek_byte(in)=='\0'))
-
-# 40 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    {
-
-# 41 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      fgetc(in);
-
-# 42 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      break;
-    }
-
-# 46 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    buffer_t* key = make_buffer(8);
-
-# 47 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    (key=buffer_read_until(key, in, '='));
-
-# 48 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    buffer_t* value = make_buffer(8);
-
-# 49 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    (value=buffer_read_until(value, in, '\0'));
-
-# 50 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    if ((((key->length)==0)&&((value->length)==0)))
-
-# 50 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    {
-
-# 51 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      return metadata;
-    }
-
-# 53 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    (metadata=string_tree_insert(metadata, buffer_to_c_string(key), str_to_value(buffer_to_c_string(value))));
-  }
-
-# 56 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  return metadata;
-}
-
-
-# 85 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data)
-# 87 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-{
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  while ((!file_eof(in)))
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-  {
-
-# 89 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    string_tree_t* metadata = oarchive_read_header(in);
-
-# 91 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    int64_t size = 0;
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    value_result_t size_value = string_tree_find(metadata, "size");
-
-# 93 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    if ((!is_ok(size_value)))
-
-# 93 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    {
-
-# 94 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      log_warn("Encounterd a header without an explicit size.");
-    }
-    else
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    {
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      value_result_t data_size = string_parse_uint64_dec((size_value.str));
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      if ((!is_ok(data_size)))
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      {
-
-# 98 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-        log_fatal("Encounterd a header with an unparseable size %s", (size_value.str));
-
-# 100 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-        fatal_error(ERROR_FATAL);
-      }
-      else
-
-# 101 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      {
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-        (size=(data_size.u64));
-      }
-    }
-
-# 107 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    boolean_t skip_data = callback(in, metadata, size, callback_data);
-
-# 110 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    if ((skip_data&&(size>0)))
-
-# 110 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-    {
-
-# 111 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      log_none("Skipping %lu\n", size);
-
-# 113 "/Users/jawilson/src/omni-c/src/lib/oarchive.c"
-      file_skip_bytes(in, size);
-    }
-  }
-}
-
-
-# 7 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 7 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
 char* quote_c_string(char* input)
-# 7 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 7 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
 {
 
-# 8 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 8 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   if ((input==((void *)0)))
 
-# 9 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 9 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   return ((void *)0);
 
-# 11 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 11 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   buffer_t* buf = make_buffer((strlen(input)+10));
 
-# 12 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 12 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   buffer_append_byte(buf, '"');
 
-# 14 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 14 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   for (
 
-# 14 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 14 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
 
-# 14 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 14 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     size_t i = 0;
 
-# 14 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 14 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     ((input[i])!=0);
 
-# 14 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 14 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     (i++))
 
-# 14 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 14 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   {
 
-# 15 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 15 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     uint8_t c = (/*CAST*/(uint8_t) (input[i]));
 
-# 17 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 17 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     switch (c)
 
-# 17 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 17 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     {
 
-# 18 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 18 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       case '"':
 
-# 19 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 19 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, '\\');
 
-# 20 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 20 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, '"');
 
-# 21 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 21 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       break;
 
-# 22 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 22 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       case '\\':
 
-# 23 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 23 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, '\\');
 
-# 24 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 24 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, '\\');
 
-# 25 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 25 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       break;
 
-# 26 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 26 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       case '\n':
 
-# 27 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 27 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, '\\');
 
-# 28 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 28 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, 'n');
 
-# 29 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 29 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       break;
 
-# 30 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 30 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       case '\t':
 
-# 31 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 31 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, '\\');
 
-# 32 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 32 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, 't');
 
-# 33 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 33 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       break;
 
-# 34 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 34 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       case '\r':
 
-# 35 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 35 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, '\\');
 
-# 36 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 36 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, 'r');
 
-# 37 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 37 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       break;
 
-# 41 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 41 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       default:
 
-# 42 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 42 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       if (((c>=32)&&(c<126)))
 
-# 42 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 42 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       {
 
-# 44 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 44 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         buffer_append_byte(buf, c);
       }
       else
 
-# 45 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 45 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       {
 
-# 46 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 46 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         buffer_printf(buf, "\\x%02x", c);
       }
 
-# 48 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 48 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       break;
     }
   }
 
-# 52 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 52 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   buffer_append_byte(buf, '"');
 
-# 53 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 53 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   return buffer_to_c_string(buf);
 }
 
 
-# 56 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 56 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
 char* string_unquote_c_string(char* input)
-# 56 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 56 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
 {
 
-# 57 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 57 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   if ((input==((void *)0)))
 
-# 58 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 58 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   return ((void *)0);
 
-# 60 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 60 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   int limit = (strlen(input)-1);
 
-# 61 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 61 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   buffer_t* buf = make_buffer((limit+10));
 
-# 62 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 62 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   for (
 
-# 62 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 62 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
 
-# 62 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 62 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     size_t i = 1;
 
-# 62 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 62 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     (i<limit);
 
-# 62 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 62 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     )
 
-# 62 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 62 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   {
 
-# 63 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 63 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     uint8_t c = (/*CAST*/(uint8_t) (input[(i++)]));
 
-# 65 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     if ((c=='\\'))
 
-# 65 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     {
 
-# 66 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 66 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       uint8_t c2 = (/*CAST*/(uint8_t) (input[(i++)]));
 
-# 68 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 68 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       switch (c2)
 
-# 68 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 68 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       {
 
-# 69 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 69 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         case '"':
 
-# 70 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 70 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         buffer_append_byte(buf, '\"');
 
-# 71 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 71 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         break;
 
-# 72 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 72 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         case '\\':
 
-# 72 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 72 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         ;
 
-# 73 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 73 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         buffer_append_byte(buf, '\\');
 
-# 74 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 74 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         break;
 
-# 75 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 75 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         case 'n':
 
-# 76 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 76 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         buffer_append_byte(buf, '\n');
 
-# 77 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 77 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         break;
 
-# 78 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 78 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         case 't':
 
-# 79 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 79 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         buffer_append_byte(buf, '\t');
 
-# 80 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 80 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         break;
 
-# 81 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 81 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         case 'r':
 
-# 82 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 82 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         buffer_append_byte(buf, '\r');
 
-# 83 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 83 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         break;
 
-# 87 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 87 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         case 'x':
 
-# 87 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 87 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         {
 
-# 88 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 88 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
           buffer_t* hex = make_buffer(3);
 
-# 89 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 89 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
           buffer_append_byte(hex, (input[(i++)]));
 
-# 90 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 90 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
           buffer_append_byte(hex, (input[(i++)]));
 
-# 91 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 91 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
           value_result_t result = string_parse_uint64_hex(buffer_to_c_string(hex));
 
-# 93 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 93 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
           if ((!is_ok(result)))
 
-# 93 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 93 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
           {
 
-# 94 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 94 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
             fatal_error(ERROR_ILLEGAL_INPUT);
           }
 
-# 96 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 96 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
           buffer_append_byte(buf, (result.u64));
 
-# 97 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 97 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
           break;
         }
 
-# 99 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 99 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+        case 'u':
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+        {
+
+# 100 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_t* hex = make_buffer(5);
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+# 103 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+# 104 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+# 105 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          value_result_t result = string_parse_uint64_hex(buffer_to_c_string(hex));
+
+# 107 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          if ((!is_ok(result)))
+
+# 107 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          {
+
+# 108 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+            fatal_error(ERROR_ILLEGAL_INPUT);
+          }
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_code_point(buf, (result.u64));
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
+          break;
+        }
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         default:
 
-# 100 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 114 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         fatal_error(ERROR_ILLEGAL_INPUT);
 
-# 101 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 115 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
         break;
       }
     }
     else
 
-# 103 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 117 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
     {
 
-# 104 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 118 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
       buffer_append_byte(buf, c);
     }
   }
 
-# 108 "/Users/jawilson/src/omni-c/src/lib/quote-util.c"
+# 122 "/Users/jawilson/src/omni-c/src/lib/string/quote-util.c"
   return buffer_to_c_string(buf);
 }
 
 
-# 92 "/Users/jawilson/src/omni-c/src/lib/test.c"
-__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...)
-# 92 "/Users/jawilson/src/omni-c/src/lib/test.c"
+# 72 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+void add_duplicate(value_array_t* token_array, const char* data)
+# 72 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
 {
 
-# 93 "/Users/jawilson/src/omni-c/src/lib/test.c"
-  va_list args;
+# 73 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  value_array_add(token_array, str_to_value(string_duplicate(data)));
+}
 
-# 94 "/Users/jawilson/src/omni-c/src/lib/test.c"
-  fprintf(stdout, "%s:%d: ", file_name, line_number);
 
-# 95 "/Users/jawilson/src/omni-c/src/lib/test.c"
-  va_start(args, format);
+# 19 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+value_array_t* string_tokenize(const char* str, const char* delimiters)
+# 19 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+{
 
-# 96 "/Users/jawilson/src/omni-c/src/lib/test.c"
-  vfprintf(stdout, format, args);
+# 20 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
+}
 
-# 97 "/Users/jawilson/src/omni-c/src/lib/test.c"
-  fprintf(stdout, "\n");
 
-# 98 "/Users/jawilson/src/omni-c/src/lib/test.c"
-  va_end(args);
+# 33 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters)
+# 33 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+{
 
-# 99 "/Users/jawilson/src/omni-c/src/lib/test.c"
-  exit(1);
+# 34 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
+}
+
+
+# 46 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters)
+# 47 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+{
+
+# 48 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  value_array_t* result = make_value_array(1);
+
+# 49 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  char token_data[1024];
+
+# 50 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  int cpos = 0;
+
+# 51 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  for (
+
+# 51 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+
+# 51 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+    int i = 0;
+
+# 51 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+    (i<length);
+
+# 51 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+    (i++))
+
+# 51 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  {
+
+# 52 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+    uint8_t ch = (str[i]);
+
+# 53 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+    if (((ch==0)||string_contains_char(delimiters, ch)))
+
+# 53 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+    {
+
+# 54 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+      ((token_data[(cpos++)])='\0');
+
+# 55 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+      if ((strlen(token_data)>0))
+
+# 55 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+      {
+
+# 56 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+        add_duplicate(result, token_data);
+      }
+
+# 58 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+      (cpos=0);
+    }
+    else
+
+# 59 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+    {
+
+# 60 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+      ((token_data[(cpos++)])=ch);
+    }
+  }
+
+# 63 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  ((token_data[(cpos++)])='\0');
+
+# 64 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  if ((strlen(token_data)>0))
+
+# 64 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  {
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+    add_duplicate(result, token_data);
+  }
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/string/tokenizer.c"
+  return result;
+}
+
+
+# 75 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets)
+# 75 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  if ((n_buckets<2))
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  {
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    (n_buckets=2);
+  }
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_hashtable_t* result = malloc_struct(value_hashtable_t);
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((result->n_buckets)=n_buckets);
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((result->buckets)=(/*CAST*/(value_alist_t**) malloc_bytes(((sizeof(typeof(value_alist_t*)))*n_buckets))));
+
+# 84 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return result;
+}
+
+
+# 92 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value)
+# 94 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t len = value_alist_length(list);
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  (list=value_alist_insert(list, cmp_fn, key, value));
+
+# 100 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  (((ht->buckets)[bucket])=list);
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t len_after = value_alist_length(list);
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  if ((len_after>len))
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  {
+
+# 103 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    ((ht->n_entries)++);
+
+# 108 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    if (((ht->n_entries)>=((ht->n_buckets)*ARMYKNIFE_HT_LOAD_FACTOR)))
+
+# 108 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    {
+
+# 109 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
+    }
+  }
+
+# 112 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return ht;
+}
+
+
+# 121 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
+# 122 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+# 123 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+# 124 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+# 125 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+# 126 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t len = value_alist_length(list);
+
+# 127 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  (list=value_alist_delete(list, cmp_fn, key));
+
+# 128 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  (((ht->buckets)[bucket])=list);
+
+# 129 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t len_after = value_alist_length(list);
+
+# 130 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  if ((len_after<len))
+
+# 130 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  {
+
+# 131 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    ((ht->n_entries)--);
+  }
+
+# 133 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return ht;
+}
+
+
+# 141 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
+# 142 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+# 143 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+# 144 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+# 145 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+# 146 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return value_alist_find(list, cmp_fn, key);
+}
+
+
+# 163 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn)
+# 165 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+# 166 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
+
+# 167 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
+
+# 169 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_ht_foreach(ht, key, value, 
+# 169 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  {
+
+# 170 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
+
+# 176 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    if ((new_ht!=should_be_result))
+
+# 176 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    {
+
+# 177 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+);
+
+# 181 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_alist_t** old_buckets = (ht->buckets);
+
+# 182 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((ht->buckets)=(new_ht->buckets));
+
+# 183 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((ht->n_buckets)=(new_ht->n_buckets));
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((ht->n_entries)=(new_ht->n_entries));
+
+# 185 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  free_bytes(old_buckets);
+
+# 186 "/Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  free_bytes(new_ht);
 }
 
 
@@ -27644,6 +23558,3806 @@ __attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_numb
 # 332 "/Users/jawilson/src/omni-c/src/lib/io/logger.c"
     fprintf(output, "\n");
   }
+}
+
+
+# 64 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+unsigned encode_sleb_128(int64_t Value, uint8_t* p)
+# 64 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+{
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  uint8_t* orig_p = p;
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  int More;
+
+# 67 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  do
+# 67 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  {
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    uint8_t Byte = (Value&0x7f);
+
+# 70 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Value>>=7);
+
+# 71 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (More=(!(((Value==0)&&((Byte&0x40)==0))||((Value==(-1))&&((Byte&0x40)!=0)))));
+
+# 73 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    if (More)
+
+# 74 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Byte|=0x80);
+
+# 75 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    ((*(p++))=Byte);
+  }
+  while (More);
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  return (/*CAST*/(unsigned) (p-orig_p));
+}
+
+
+# 88 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p)
+# 88 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+{
+
+# 89 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  uint8_t* orig_p = p;
+
+# 90 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  do
+# 90 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  {
+
+# 91 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    uint8_t Byte = (Value&0x7f);
+
+# 92 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Value>>=7);
+
+# 93 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((Value!=0))
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Byte|=0x80);
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    ((*(p++))=Byte);
+  }
+  while ((Value!=0));
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  return (/*CAST*/(unsigned) (p-orig_p));
+}
+
+
+# 106 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
+# 106 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+{
+
+# 107 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  const uint8_t* orig_p = p;
+
+# 108 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  uint64_t Value = 0;
+
+# 109 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  unsigned Shift = 0;
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  do
+# 110 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  {
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((p==end))
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    {
+
+# 112 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
+
+# 114 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+      return result;
+    }
+
+# 116 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    uint64_t Slice = ((*p)&0x7f);
+
+# 117 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((((Shift>=64)&&(Slice!=0))||(((Slice<<Shift)>>Shift)!=Slice)))
+
+# 117 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    {
+
+# 118 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_TOO_BIG});
+
+# 120 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+      return result;
+    }
+
+# 122 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Value+=(Slice<<Shift));
+
+# 123 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Shift+=7);
+  }
+  while (((*(p++))>=128));
+
+# 125 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  unsigned_decode_result result = ((unsigned_decode_result) {Value, cast(unsigned, p - orig_p)});
+
+# 127 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  return result;
+}
+
+
+# 135 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
+# 135 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+{
+
+# 136 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  const uint8_t* orig_p = p;
+
+# 137 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  int64_t Value = 0;
+
+# 138 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  unsigned Shift = 0;
+
+# 139 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  uint8_t Byte;
+
+# 140 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  do
+# 140 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  {
+
+# 141 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((p==end))
+
+# 141 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    {
+
+# 142 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+      signed_decode_result result = ((signed_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
+
+# 144 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+      return result;
+    }
+
+# 146 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Byte=(*p));
+
+# 147 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    uint64_t Slice = (Byte&0x7f);
+
+# 150 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((((Shift>=64)&&(Slice!=((Value<0) ? 0x7f : 0x00)))||(((Shift==63)&&(Slice!=0))&&(Slice!=0x7f))))
+
+# 151 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    {
+
+# 152 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+      signed_decode_result result = ((signed_decode_result) {0, ERROR_TOO_BIG});
+
+# 154 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+      return result;
+    }
+
+# 156 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Value|=(Slice<<Shift));
+
+# 157 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (Shift+=7);
+
+# 158 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+    (++p);
+  }
+  while ((Byte>=128));
+
+# 161 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  if (((Shift<64)&&(Byte&0x40)))
+
+# 162 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  (Value|=((-1ULL)<<Shift));
+
+# 163 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  signed_decode_result result = ((signed_decode_result) {Value, (p - orig_p)});
+
+# 165 "/Users/jawilson/src/omni-c/src/lib/lang/leb128.c"
+  return result;
+}
+
+
+# 182 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+int cmp_string_values(value_t value1, value_t value2)
+# 182 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+{
+
+# 183 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+  return strcmp((value1.str), (value2.str));
+}
+
+
+# 191 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+uint64_t hash_string_value(value_t value1)
+# 191 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+{
+
+# 191 "/Users/jawilson/src/omni-c/src/lib/collections/value.c"
+  return string_hash((value1.str));
+}
+
+
+# 1 "/Users/jawilson/src/omni-c/src/lib/runtime/platform-darwin.c"
+char* platform(void)
+# 1 "/Users/jawilson/src/omni-c/src/lib/runtime/platform-darwin.c"
+{
+
+# 2 "/Users/jawilson/src/omni-c/src/lib/runtime/platform-darwin.c"
+  return "darwin";
+}
+
+
+# 6 "/Users/jawilson/src/omni-c/src/lib/runtime/time.c"
+uint64_t current_time_millis(void)
+# 6 "/Users/jawilson/src/omni-c/src/lib/runtime/time.c"
+{
+
+# 7 "/Users/jawilson/src/omni-c/src/lib/runtime/time.c"
+  struct timespec ts = {0};
+
+# 8 "/Users/jawilson/src/omni-c/src/lib/runtime/time.c"
+  clock_gettime(CLOCK_REALTIME, (&ts));
+
+# 9 "/Users/jawilson/src/omni-c/src/lib/runtime/time.c"
+  return (((/*CAST*/(uint64_t) (ts.tv_sec))*1000ULL)+((/*CAST*/(uint64_t) (ts.tv_nsec))/1000000ULL));
+
+# 11 "/Users/jawilson/src/omni-c/src/lib/runtime/time.c"
+  return 0;
+}
+
+
+# 15 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+value_result_t string_tree_find(string_tree_t* t, char* key)
+# 16 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+{
+
+# 17 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+  return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
+}
+
+
+# 28 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value)
+# 28 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+{
+
+# 29 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+  return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
+}
+
+
+# 40 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+string_tree_t* string_tree_delete(string_tree_t* t, char* key)
+# 41 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+{
+
+# 42 "/Users/jawilson/src/omni-c/src/lib/collections/string-tree.c"
+  return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
+}
+
+
+# 12 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+int uint64_highest_bit_set(uint64_t n)
+# 12 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+{
+
+# 13 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<32)))
+
+# 13 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+# 14 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>32))+32);
+  }
+  else
+
+# 15 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<16)))
+
+# 15 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+# 16 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>16))+16);
+  }
+  else
+
+# 17 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<8)))
+
+# 17 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+# 18 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>8))+8);
+  }
+  else
+
+# 19 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<4)))
+
+# 19 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+# 20 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>4))+4);
+  }
+  else
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<2)))
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+# 22 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>2))+2);
+  }
+  else
+
+# 23 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<1)))
+
+# 23 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+# 24 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>1))+1);
+  }
+  else
+
+# 25 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/lang/uint64.c"
+    return 0;
+  }
+}
+
+
+# 500 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed)
+# 500 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 501 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  const uint64_t m = 0x880355f21e6d1965ULL;
+
+# 502 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
+
+# 503 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  const uint64_t* end = (pos+(len/8));
+
+# 504 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  const unsigned char* pos2;
+
+# 505 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t h = (seed^(len*m));
+
+# 506 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t v;
+
+# 508 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  while ((pos!=end))
+
+# 508 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 509 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (v=(*(pos++)));
+
+# 510 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (h^=mix(v));
+
+# 511 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (h*=m);
+  }
+
+# 514 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  (pos2=(/*CAST*/(const unsigned char*) pos));
+
+# 515 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  (v=0);
+
+# 517 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  switch ((len&7))
+
+# 517 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 518 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    case 7:
+
+# 519 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[6]))<<48));
+
+# 520 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    case 6:
+
+# 521 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[5]))<<40));
+
+# 522 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    case 5:
+
+# 523 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[4]))<<32));
+
+# 524 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    case 4:
+
+# 525 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[3]))<<24));
+
+# 526 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    case 3:
+
+# 527 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[2]))<<16));
+
+# 528 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    case 2:
+
+# 529 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (v^=((/*CAST*/(uint64_t) (pos2[1]))<<8));
+
+# 530 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    case 1:
+
+# 531 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (v^=(/*CAST*/(uint64_t) (pos2[0])));
+
+# 532 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (h^=mix(v));
+
+# 533 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (h*=m);
+  }
+
+# 536 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return mix(h);
+}
+
+
+# 15 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+int string_is_null_or_empty(const char* str)
+# 15 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 16 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return ((str==((void *)0))||(strlen(str)==0));
+}
+
+
+# 24 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+int string_equal(const char* str1, const char* str2)
+# 24 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 25 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if (string_is_null_or_empty(str1))
+
+# 25 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return string_is_null_or_empty(str2);
+  }
+
+# 28 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return (strcmp(str1, str2)==0);
+}
+
+
+# 36 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+int string_starts_with(const char* str1, const char* str2)
+# 36 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 37 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return (strncmp(str1, str2, strlen(str2))==0);
+}
+
+
+# 45 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+int string_ends_with(const char* str1, const char* str2)
+# 45 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 46 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  size_t len1 = strlen(str1);
+
+# 47 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  size_t len2 = strlen(str2);
+
+# 49 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((len2>len1))
+
+# 49 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 50 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return 0;
+  }
+
+# 53 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return (strcmp((str1+(len1-len2)), str2)==0);
+}
+
+
+# 61 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+boolean_t string_contains_char(const char* str, char ch)
+# 61 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 62 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return (string_index_of_char(str, ch)>=0);
+}
+
+
+# 75 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+int string_index_of_char(const char* str, char ch)
+# 75 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if (string_is_null_or_empty(str))
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return (-1);
+  }
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int str_length = strlen(str);
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  for (
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int i = 0;
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i<str_length);
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i++))
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    if (((str[i])==ch))
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    {
+
+# 82 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+      return i;
+    }
+  }
+
+# 85 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return (-1);
+}
+
+
+# 91 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+int string_index_of(const char* str, char* substring)
+# 91 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 92 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int64_t len = strlen(str);
+
+# 93 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  buffer_t* str_buffer = make_buffer(len);
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  buffer_append_string(str_buffer, str);
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return buffer_index_of(str_buffer, substring);
+}
+
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+boolean_t string_contains(const char* str, char* substring)
+# 101 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return (string_index_of(str, substring)>=0);
+}
+
+
+# 109 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* string_replace_all(char* str, char* original_text, char* replacement_text)
+# 110 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int64_t len = strlen(str);
+
+# 112 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  buffer_t* str_buffer = make_buffer(len);
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  buffer_append_string(str_buffer, str);
+
+# 114 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  buffer_replace_all(str_buffer, original_text, replacement_text);
+
+# 115 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return buffer_to_c_string(str_buffer);
+}
+
+
+# 124 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+uint64_t string_hash(const char* str)
+# 124 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 125 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return fasthash64(str, strlen(str), 0);
+}
+
+
+# 133 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* string_substring(const char* str, int start, int end)
+# 133 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t len = strlen(str);
+
+# 135 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((((start>=len)||(start>=end))||(end<start)))
+
+# 135 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 136 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+
+# 138 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int result_size = ((end-start)+1);
+
+# 139 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char* result = (/*CAST*/(char*) malloc_bytes(result_size));
+
+# 140 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  for (
+
+# 140 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+
+# 140 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int i = start;
+
+# 140 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i<end);
+
+# 140 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i++))
+
+# 140 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 141 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    ((result[(i-start)])=(str[i]));
+  }
+
+# 143 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  ((result[(result_size-1)])='\0');
+
+# 144 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return result;
+}
+
+
+# 147 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+value_result_t string_parse_uint64_dec(const char* string)
+# 147 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 148 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t len = strlen(string);
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t integer = 0;
+
+# 151 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((len==0))
+
+# 151 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 152 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 156 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  for (
+
+# 156 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+
+# 156 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int i = 0;
+
+# 156 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i<len);
+
+# 156 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i++))
+
+# 156 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 157 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    char ch = (string[i]);
+
+# 158 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    if (((ch<'0')||(ch>'9')))
+
+# 158 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    {
+
+# 159 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 163 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    uint64_t digit = ((string[i])-'0');
+
+# 164 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (integer=((integer*10)+digit));
+  }
+
+# 167 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 175 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+value_result_t string_parse_uint64_bin(const char* string)
+# 175 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 176 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t len = strlen(string);
+
+# 177 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t integer = 0;
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((len==0))
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 180 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  for (
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int i = 0;
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i<len);
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i++))
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 185 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    char ch = (string[i]);
+
+# 186 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    if (((ch<'0')||(ch>'1')))
+
+# 186 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    {
+
+# 187 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 191 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    uint64_t digit = ((string[i])-'0');
+
+# 192 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (integer=((integer<<1)|digit));
+  }
+
+# 195 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 215 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+value_result_t string_parse_uint64_hex(const char* string)
+# 215 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 216 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t len = strlen(string);
+
+# 217 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  uint64_t integer = 0;
+
+# 219 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((len==0))
+
+# 219 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 220 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  for (
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int i = 0;
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i<len);
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i++))
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 225 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    char ch = (string[i]);
+
+# 226 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    if ((!is_hex_digit(ch)))
+
+# 226 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    {
+
+# 227 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+
+# 231 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    uint64_t digit = hex_digit_to_value(ch);
+
+# 232 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (integer=((integer<<4)|digit));
+  }
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
+}
+
+
+# 254 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+value_result_t string_parse_uint64(const char* string)
+# 254 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 255 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if (string_starts_with(string, "0x"))
+
+# 255 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 256 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return string_parse_uint64_hex((&(string[2])));
+  }
+  else
+
+# 257 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if (string_starts_with(string, "0b"))
+
+# 257 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 258 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return string_parse_uint64_bin((&(string[2])));
+  }
+  else
+
+# 259 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 260 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return string_parse_uint64_dec(string);
+  }
+}
+
+
+# 270 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* string_duplicate(const char* src)
+# 270 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 271 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((src==NULL))
+
+# 271 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 272 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return NULL;
+  }
+
+# 274 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int len = (strlen(src)+1);
+
+# 275 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char* result = (/*CAST*/(char*) malloc_bytes(len));
+
+# 276 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  memcpy(result, src, len);
+
+# 278 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return result;
+}
+
+
+# 287 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* string_append(const char* a, const char* b)
+# 287 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 288 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if (((a==NULL)||(b==NULL)))
+
+# 288 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 289 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+
+# 291 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int total_length = ((strlen(a)+strlen(b))+1);
+
+# 292 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char* result = (/*CAST*/(char*) malloc_bytes(total_length));
+
+# 293 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  strcat(result, a);
+
+# 294 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  strcat(result, b);
+
+# 295 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return result;
+}
+
+
+# 303 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* uint64_to_string(uint64_t number)
+# 303 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 304 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char buffer[32];
+
+# 305 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  sprintf(buffer, "%lu", number);
+
+# 306 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return string_duplicate(buffer);
+}
+
+
+# 314 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* int64_to_string(int64_t number)
+# 314 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 315 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char buffer[32];
+
+# 316 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  sprintf(buffer, "%ld", number);
+
+# 317 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return string_duplicate(buffer);
+}
+
+
+# 326 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* string_left_pad(const char* str, int n, char ch)
+# 326 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 327 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((n<0))
+
+# 327 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 328 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 331 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int input_length = strlen(str);
+
+# 334 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int padding_needed = (n-input_length);
+
+# 342 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int len = 1;
+
+# 344 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  buffer_t* buffer = make_buffer(len);
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  for (
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int i = 0;
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i<padding_needed);
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i++))
+
+# 345 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 346 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 348 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  (buffer=buffer_append_string(buffer, str));
+
+# 349 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char* result = buffer_to_c_string(buffer);
+
+# 350 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  free_bytes(buffer);
+
+# 351 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return result;
+}
+
+
+# 360 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* string_right_pad(const char* str, int n, char ch)
+# 360 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 361 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((n<0))
+
+# 361 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 362 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 365 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int input_length = strlen(str);
+
+# 368 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int padding_needed = (n-input_length);
+
+# 376 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int len = 1;
+
+# 378 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  buffer_t* buffer = make_buffer(len);
+
+# 379 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  (buffer=buffer_append_string(buffer, str));
+
+# 380 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  for (
+
+# 380 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+
+# 380 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int i = 0;
+
+# 380 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i<padding_needed);
+
+# 380 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i++))
+
+# 380 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 381 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 383 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char* result = buffer_to_c_string(buffer);
+
+# 384 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  free_bytes(buffer);
+
+# 385 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return result;
+}
+
+
+# 398 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+char* string_truncate(char* str, int limit, char* at_limit_suffix)
+# 398 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 400 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  buffer_t* buffer = make_buffer(limit);
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  for (
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int i = 0;
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    ;
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (i++))
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 402 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    char ch = (str[i]);
+
+# 403 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    if ((ch=='\0'))
+
+# 403 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    {
+
+# 404 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+      char* result = buffer_to_c_string(buffer);
+
+# 405 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+      free_bytes(buffer);
+
+# 406 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+      return result;
+    }
+
+# 408 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+# 410 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if (at_limit_suffix)
+
+# 410 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 411 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (buffer=buffer_append_string(buffer, at_limit_suffix));
+  }
+
+# 413 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char* result = buffer_to_c_string(buffer);
+
+# 414 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  free_bytes(buffer);
+
+# 415 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return result;
+}
+
+
+# 432 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...)
+# 432 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 433 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+
+# 434 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  int n_bytes = 0;
+
+# 435 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  do
+# 435 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 436 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    va_list args;
+
+# 437 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    va_start(args, format);
+
+# 438 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    (n_bytes=vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args));
+
+# 440 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    va_end(args);
+  }
+  while (0);
+
+# 443 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if ((n_bytes<STRING_PRINTF_INITIAL_BUFFER_SIZE))
+
+# 443 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 444 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
+
+# 445 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    strcat(result, buffer);
+
+# 446 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return result;
+  }
+  else
+
+# 447 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 448 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
+
+# 449 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    va_list args;
+
+# 450 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    va_start(args, format);
+
+# 451 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
+
+# 452 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    va_end(args);
+
+# 453 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    if ((n_bytes_second!=n_bytes))
+
+# 453 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    {
+
+# 454 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+
+# 456 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    return result;
+  }
+}
+
+
+# 539 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+double string_parse_double(char* str)
+# 539 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+{
+
+# 540 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  char* endptr = NULL;
+
+# 541 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  (errno=0);
+
+# 542 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  double value = strtod(str, (&endptr));
+
+# 543 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  if (((str==endptr)||(errno==ERANGE)))
+
+# 543 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  {
+
+# 544 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 546 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  log_info("string_parse_double = %f", value);
+
+# 547 "/Users/jawilson/src/omni-c/src/lib/string/string-util.c"
+  return value;
+}
+
+
+# 72 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
+# 73 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 74 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+# 74 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 75 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
+  }
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result<0))
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return value_tree_find((t->left), cmp_fn, key);
+  }
+  else
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result>0))
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 82 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return value_tree_find((t->right), cmp_fn, key);
+  }
+  else
+
+# 83 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 84 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return ((value_result_t) {
+                                                .val = t->value,
+                                            });
+  }
+}
+
+
+# 90 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_skew(value_tree_t* t)
+# 90 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 91 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+# 91 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 92 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return NULL;
+  }
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if (((t->left)==NULL))
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return t;
+  }
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((((t->left)->level)==(t->level)))
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    value_tree_t* L = (t->left);
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->left)=(L->right));
+
+# 100 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((L->right)=t);
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return L;
+  }
+
+# 103 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+# 106 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_split(value_tree_t* t)
+# 106 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 107 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+# 107 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 108 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return NULL;
+  }
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((((t->right)==NULL)||(((t->right)->right)==NULL)))
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return t;
+  }
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if (((t->level)==(((t->right)->right)->level)))
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 116 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    value_tree_t* R = (t->right);
+
+# 117 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->right)=(R->left));
+
+# 118 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((R->left)=t);
+
+# 119 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((R->level)++);
+
+# 120 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return R;
+  }
+
+# 122 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+# 125 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* make_value_tree_leaf(value_t key, value_t value)
+# 125 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 126 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  value_tree_t* result = malloc_struct(value_tree_t);
+
+# 127 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((result->level)=1);
+
+# 128 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((result->key)=key);
+
+# 129 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((result->value)=value);
+
+# 130 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return result;
+}
+
+
+# 139 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value)
+# 140 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 141 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+# 141 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 143 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return make_value_tree_leaf(key, value);
+  }
+
+# 145 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+# 146 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result<0))
+
+# 146 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 147 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->left)=value_tree_insert((t->left), cmp_fn, key, value));
+  }
+  else
+
+# 148 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result>0))
+
+# 148 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->right)=value_tree_insert((t->right), cmp_fn, key, value));
+  }
+  else
+
+# 150 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 154 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->value)=value);
+
+# 155 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return t;
+  }
+
+# 158 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_skew(t));
+
+# 159 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_split(t));
+
+# 161 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+# 168 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_decrease_level(value_tree_t* t)
+# 168 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 169 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if (((t->left)&&(t->right)))
+
+# 169 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 170 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    uint32_t should_be = (value_tree_min_level(((t->left)->level), ((t->right)->level))+1);
+
+# 172 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    if ((should_be<(t->level)))
+
+# 172 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    {
+
+# 173 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->level)=should_be);
+
+# 174 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      if ((should_be<((t->right)->level)))
+
+# 174 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      {
+
+# 175 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+        (((t->right)->level)=should_be);
+      }
+    }
+  }
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+# 182 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_predecessor(value_tree_t* t)
+# 182 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 183 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=(t->left));
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  while (((t->right)!=NULL))
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 185 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    (t=(t->right));
+  }
+
+# 187 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+# 190 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_successor(value_tree_t* t)
+# 190 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 191 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=(t->right));
+
+# 192 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  while (((t->left)!=NULL))
+
+# 192 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 193 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    (t=(t->left));
+  }
+
+# 195 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+# 208 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
+# 209 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+# 211 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+# 211 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 212 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    return t;
+  }
+
+# 215 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+# 216 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result<0))
+
+# 216 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 217 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->left)=value_tree_delete((t->left), cmp_fn, key));
+  }
+  else
+
+# 218 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result>0))
+
+# 218 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 219 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->right)=value_tree_delete((t->right), cmp_fn, key));
+  }
+  else
+
+# 220 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 221 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    if (value_tree_is_leaf(t))
+
+# 221 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    {
+
+# 226 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      return NULL;
+    }
+    else
+
+# 227 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    if (((t->left)==NULL))
+
+# 227 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    {
+
+# 228 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      value_tree_t* L = value_tree_successor(t);
+
+# 232 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->key)=(L->key));
+
+# 233 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->value)=(L->value));
+
+# 234 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->right)=value_tree_delete((t->right), cmp_fn, (L->key)));
+    }
+    else
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    {
+
+# 236 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      value_tree_t* L = value_tree_predecessor(t);
+
+# 240 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->key)=(L->key));
+
+# 241 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->value)=(L->value));
+
+# 242 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->left)=value_tree_delete((t->left), cmp_fn, (L->key)));
+    }
+  }
+
+# 249 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_decrease_level(t));
+
+# 250 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_skew(t));
+
+# 251 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((t->right)=value_tree_skew((t->right)));
+
+# 252 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  if (((t->right)!=NULL))
+
+# 252 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+# 253 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+    (((t->right)->right)=value_tree_skew(((t->right)->right)));
+  }
+
+# 255 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_split(t));
+
+# 256 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((t->right)=value_tree_split((t->right)));
+
+# 257 "/Users/jawilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+# 24 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+random_state_t random_state_for_test(void)
+# 24 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+{
+
+# 25 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  return ((random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
+}
+
+
+# 37 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+random_state_t* random_state(void)
+# 37 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+{
+
+# 38 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  if (((shared_random_state.a)==0))
+
+# 38 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  {
+
+# 39 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+    ((shared_random_state.a)=(0x1E1D43C2CA44B1F5^(/*CAST*/(uint64_t) time(NULL))));
+
+# 40 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+    ((shared_random_state.b)=(0x4FDD267452CEDBAC^(/*CAST*/(uint64_t) time(NULL))));
+  }
+
+# 43 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  return (&shared_random_state);
+}
+
+
+# 57 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+uint64_t random_next(random_state_t* state)
+# 57 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+{
+
+# 58 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  uint64_t s0 = (state->a);
+
+# 59 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  uint64_t s1 = (state->b);
+
+# 60 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  uint64_t result = (rotl((s0*5), 7)*9);
+
+# 61 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  (s1^=s0);
+
+# 62 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  ((state->a)=((rotl(s0, 24)^s1)^(s1<<16)));
+
+# 63 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  ((state->b)=rotl(s1, 37));
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  return result;
+}
+
+
+# 75 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
+# 75 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+{
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  if ((maximum==0))
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  {
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  return (random_next(state)%maximum);
+
+# 85 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
+
+# 86 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  while (1)
+
+# 86 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+  {
+
+# 87 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+    uint64_t n = random_next(state);
+
+# 88 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+    (n&=mask);
+
+# 89 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+    if ((n<maximum))
+
+# 89 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+    {
+
+# 90 "/Users/jawilson/src/omni-c/src/lib/lang/random.c"
+      return n;
+    }
+  }
+}
+
+
+# 7 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+boolean_t path_is_directory(const char* path)
+# 7 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+{
+
+# 8 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+  struct stat st;
+
+# 9 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+  if (((!path)||(stat(path, (&st))!=0)))
+
+# 9 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+  {
+
+# 10 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+    return false;
+  }
+
+# 12 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+  return S_ISDIR((st.st_mode));
+}
+
+
+# 15 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+boolean_t path_is_file(const char* path)
+# 15 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+{
+
+# 16 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+  struct stat st;
+
+# 17 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+  if (((!path)||(stat(path, (&st))!=0)))
+
+# 17 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+  {
+
+# 18 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+    return false;
+  }
+
+# 20 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+  return S_ISREG((st.st_mode));
+}
+
+
+# 35 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value)
+# 37 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+{
+
+# 38 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  value_alist_t* result = malloc_struct(value_alist_t);
+
+# 39 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  ((result->next)=value_alist_delete(list, cmp_fn, key));
+
+# 40 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  ((result->key)=key);
+
+# 41 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  ((result->value)=value);
+
+# 42 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  return result;
+}
+
+
+# 52 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
+# 53 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+{
+
+# 56 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  if ((list==NULL))
+
+# 56 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  {
+
+# 57 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    return list;
+  }
+
+# 59 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  if (((*cmp_fn)(key, (list->key))==0))
+
+# 59 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  {
+
+# 60 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    value_alist_t* result = (list->next);
+
+# 61 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    free_bytes(list);
+
+# 62 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    return result;
+  }
+
+# 64 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  ((list->next)=value_alist_delete((list->next), cmp_fn, key));
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  return list;
+}
+
+
+# 75 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
+# 76 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+{
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  while (list)
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  {
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    if ((cmp_fn(key, (list->key))==0))
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    {
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+      return ((value_result_t) {.val = list->value});
+    }
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    (list=(list->next));
+  }
+
+# 83 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
+}
+
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list)
+# 94 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+{
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  uint64_t result = 0;
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  while (list)
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  {
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    (result++);
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+    (list=(list->next));
+  }
+
+# 100 "/Users/jawilson/src/omni-c/src/lib/collections/value-alist.c"
+  return result;
+}
+
+
+# 18 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator)
+# 19 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+{
+
+# 20 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+  buffer_t* result = make_buffer(1);
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+  for (
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+    int i = 0;
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+    (i<(array_of_strings->length));
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+    (i++))
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+  {
+
+# 22 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+    if ((i>0))
+
+# 22 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+    {
+
+# 23 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+      buffer_append_string(result, separator);
+    }
+
+# 25 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+    buffer_append_string(result, (value_array_get(array_of_strings, i).str));
+  }
+
+# 27 "/Users/jawilson/src/omni-c/src/lib/string/splitjoin.c"
+  return result;
+}
+
+
+# 92 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...)
+# 92 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+{
+
+# 93 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+  va_list args;
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+  fprintf(stdout, "%s:%d: ", file_name, line_number);
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+  va_start(args, format);
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+  vfprintf(stdout, format, args);
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+  fprintf(stdout, "\n");
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+  va_end(args);
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/test-framework.c"
+  exit(1);
+}
+
+
+# 12 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+value_hashtable_t* to_value_hashtable(string_hashtable_t* ht)
+# 12 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+{
+
+# 13 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+  return (/*CAST*/(value_hashtable_t*) ht);
+}
+
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+string_hashtable_t* make_string_hashtable(uint64_t n_buckets)
+# 26 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+{
+
+# 27 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+  return (/*CAST*/(string_hashtable_t*) make_value_hashtable(n_buckets));
+}
+
+
+# 36 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value)
+# 36 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+{
+
+# 37 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+  return (/*CAST*/(string_hashtable_t*) value_ht_insert(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key), value));
+}
+
+
+# 48 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key)
+# 49 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+{
+
+# 50 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+  return (/*CAST*/(string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key)));
+}
+
+
+# 60 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+value_result_t string_ht_find(string_hashtable_t* ht, char* key)
+# 61 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+{
+
+# 62 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+  return value_ht_find(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key));
+}
+
+
+# 71 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+uint64_t string_ht_num_entries(string_hashtable_t* ht)
+# 71 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+{
+
+# 72 "/Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c"
+  return value_ht_num_entries(to_value_hashtable(ht));
+}
+
+
+# 23 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+utf8_decode_result_t utf8_decode(const uint8_t* array)
+# 23 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+{
+
+# 24 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  uint8_t firstByte = (array[0]);
+
+# 25 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  if (((firstByte&0x80)==0))
+
+# 25 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = firstByte, .num_bytes = 1});
+  }
+  else
+
+# 28 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  if (((firstByte&0xE0)==0xC0))
+
+# 28 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+# 29 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
+         .num_bytes = 2});
+  }
+  else
+
+# 33 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  if (((firstByte&0xF0)==0xE0))
+
+# 33 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+# 34 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x0F) << 12)
+                                           | ((array[1] & 0x3F) << 6)
+                                           | (array[2] & 0x3F),
+                             .num_bytes = 3});
+  }
+  else
+
+# 39 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  if (((firstByte&0xF8)==0xF0))
+
+# 39 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+# 40 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+         .num_bytes = 4});
+  }
+  else
+
+# 45 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+# 46 "/Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.error = true});
+  }
+}
+
+
+# 40 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* make_buffer(uint64_t initial_capacity)
+# 40 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 41 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  buffer_t* result = malloc_struct(buffer_t);
+
+# 42 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((initial_capacity<16))
+
+# 42 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 43 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (initial_capacity=16);
+  }
+
+# 45 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((initial_capacity>0))
+
+# 45 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 46 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    ((result->capacity)=initial_capacity);
+
+# 47 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    ((result->elements)=malloc_bytes(initial_capacity));
+  }
+
+# 49 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return result;
+}
+
+
+# 57 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+uint64_t buffer_length(buffer_t* array)
+# 57 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 57 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return (array->length);
+}
+
+
+# 64 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+void buffer_clear(buffer_t* buffer)
+# 64 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    int i = 0;
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i<(buffer->capacity));
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i++))
+
+# 65 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (((buffer->elements)[i])=0);
+  }
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  ((buffer->length)=0);
+}
+
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+uint8_t buffer_get(buffer_t* buffer, uint64_t position)
+# 76 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((position<(buffer->length)))
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return ((buffer->elements)[position]);
+  }
+  else
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+
+# 83 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return 0;
+  }
+}
+
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end)
+# 94 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((buffer==((void *)0)))
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((start>end))
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 100 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 103 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((end>(buffer->length)))
+
+# 103 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 104 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 107 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t copy_length = (end-start);
+
+# 108 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
+
+# 109 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((copy_length>0))
+
+# 109 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    memcpy(result, (&((buffer->elements)[start])), copy_length);
+  }
+
+# 112 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  ((result[copy_length])='\0');
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return result;
+}
+
+
+# 122 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+char* buffer_to_c_string(buffer_t* buffer)
+# 122 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 123 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer_c_substring(buffer, 0, (buffer->length));
+}
+
+
+# 131 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element)
+# 131 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 132 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if (((buffer->length)<(buffer->capacity)))
+
+# 132 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 133 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (((buffer->elements)[(buffer->length)])=element);
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    ((buffer->length)++);
+
+# 135 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return buffer;
+  }
+
+# 137 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
+
+# 138 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer_append_byte(buffer, element);
+}
+
+
+# 146 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes)
+# 147 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    int i = 0;
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i<n_bytes);
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i++))
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 150 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (bytes[i])));
+  }
+
+# 152 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 161 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_append_string(buffer_t* buffer, const char* str)
+# 161 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 162 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
+}
+
+
+# 173 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity)
+# 173 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 174 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if (((buffer->capacity)<capacity))
+
+# 174 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 175 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint8_t* new_elements = malloc_bytes(capacity);
+
+# 176 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    memcpy(new_elements, (buffer->elements), (buffer->length));
+
+# 177 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    free_bytes((buffer->elements));
+
+# 178 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    ((buffer->elements)=new_elements);
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    ((buffer->capacity)=capacity);
+  }
+
+# 181 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 195 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+__attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...)
+# 195 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 196 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
+
+# 197 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  int n_bytes = 0;
+
+# 198 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  do
+# 198 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 199 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    va_list args;
+
+# 200 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    va_start(args, format);
+
+# 201 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (n_bytes=vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args));
+
+# 203 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    va_end(args);
+  }
+  while (0);
+
+# 206 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((n_bytes<BUFFER_PRINTF_INITIAL_BUFFER_SIZE))
+
+# 206 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 207 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return buffer_append_string(buffer, cbuffer);
+  }
+  else
+
+# 208 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 212 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
+
+# 213 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    va_list args;
+
+# 214 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    va_start(args, format);
+
+# 215 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
+
+# 216 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    va_end(args);
+
+# 217 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if ((n_bytes_second!=n_bytes))
+
+# 217 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 218 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+
+# 220 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_string(buffer, result));
+
+# 221 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    free_bytes(result);
+
+# 222 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return buffer;
+  }
+}
+
+
+# 233 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count)
+# 234 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    int i = 0;
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i<count);
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i++))
+
+# 235 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 236 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, byte));
+  }
+
+# 238 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 247 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position)
+# 247 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 248 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((position>=(buffer->length)))
+
+# 248 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 249 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return ((utf8_decode_result_t) {.error = true});
+  }
+
+# 251 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
+
+# 252 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((result.error))
+
+# 252 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 253 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return result;
+  }
+
+# 255 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if (((position+(result.num_bytes))>(buffer->length)))
+
+# 255 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 256 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return ((utf8_decode_result_t) {.error = true});
+  }
+
+# 258 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return result;
+}
+
+
+# 273 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
+# 274 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 275 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((code_point<0x80))
+
+# 275 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 277 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, code_point));
+
+# 278 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return buffer;
+  }
+  else
+
+# 279 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((code_point<0x800))
+
+# 279 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 281 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
+
+# 282 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+
+# 283 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return buffer;
+  }
+  else
+
+# 284 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((code_point<0x10000))
+
+# 284 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 286 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
+
+# 287 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+
+# 288 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+
+# 289 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return buffer;
+  }
+  else
+
+# 290 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((code_point<=0x10FFFF))
+
+# 290 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 292 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
+
+# 293 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
+
+# 294 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+
+# 295 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
+
+# 296 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return buffer;
+  }
+  else
+
+# 297 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 299 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
+
+# 300 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    return 0;
+  }
+}
+
+
+# 308 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str)
+# 309 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 310 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 310 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 310 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t pos = start_position;
+
+# 310 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    true;
+
+# 310 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (pos++))
+
+# 310 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 311 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint8_t byte_str = ((/*CAST*/(uint8_t*) str)[(pos-start_position)]);
+
+# 312 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if ((byte_str==0))
+
+# 312 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 313 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      return true;
+    }
+
+# 315 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if ((pos>=buffer_length(buffer)))
+
+# 315 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 316 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      return false;
+    }
+
+# 318 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint8_t byte_buf = buffer_get(buffer, pos);
+
+# 319 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if ((byte_str!=byte_buf))
+
+# 319 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 320 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      return false;
+    }
+  }
+
+# 324 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return false;
+}
+
+
+# 332 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+int64_t buffer_index_of(buffer_t* buffer, char* str)
+# 332 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 333 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 333 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 333 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t i = 0;
+
+# 333 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i<(buffer->length));
+
+# 333 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i++))
+
+# 333 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 334 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if (buffer_match_string_at(buffer, i, str))
+
+# 334 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 335 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      return i;
+    }
+  }
+
+# 338 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return (-1);
+}
+
+
+# 348 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_from_string(char* string)
+# 348 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 349 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  buffer_t* result = make_buffer(strlen(string));
+
+# 350 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  (result=buffer_append_string(result, string));
+
+# 351 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return result;
+}
+
+
+# 361 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width)
+# 362 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 364 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((start>end))
+
+# 364 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 365 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+# 367 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t original_width = (end-start);
+
+# 368 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((original_width>new_width))
+
+# 368 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 371 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t difference = (original_width-new_width);
+
+# 372 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t tail_length = ((buffer->length)-end);
+
+# 373 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    memmove((&((buffer->elements)[(end-difference)])), (&((buffer->elements)[end])), tail_length);
+
+# 375 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    ((buffer->length)-=difference);
+  }
+  else
+
+# 376 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((original_width<new_width))
+
+# 376 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 379 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t difference = (new_width-original_width);
+
+# 380 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t tail_length = ((buffer->length)-end);
+
+# 381 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_increase_capacity(buffer, ((buffer->length)+difference)));
+
+# 382 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    memmove((&((buffer->elements)[(end+difference)])), (&((buffer->elements)[end])), tail_length);
+
+# 384 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    ((buffer->length)+=difference);
+  }
+
+# 386 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 395 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text)
+# 396 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 397 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  int len_original = strlen(original_text);
+
+# 398 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  int len_replacement = strlen(replacement_text);
+
+# 399 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((len_original<(buffer->length)))
+
+# 399 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 400 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t pos = 0;
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    while ((pos<=((buffer->length)-len_original)))
+
+# 401 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 402 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      if (buffer_match_string_at(buffer, pos, original_text))
+
+# 402 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      {
+
+# 403 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+        (buffer=buffer_adjust_region(buffer, pos, (pos+len_original), len_replacement));
+
+# 405 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+        memmove((&((buffer->elements)[pos])), replacement_text, len_replacement);
+
+# 406 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+        (pos+=len_replacement);
+      }
+      else
+
+# 407 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      {
+
+# 408 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+        (pos++);
+      }
+    }
+  }
+
+# 412 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 415 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position)
+# 416 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 417 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t line = 1;
+
+# 418 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t column = 1;
+
+# 422 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 422 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 422 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t pos = 0;
+
+# 422 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (pos<position);
+
+# 422 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (pos++))
+
+# 422 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 423 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint8_t ch = buffer_get(buffer, pos);
+
+# 424 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if ((ch=='\n'))
+
+# 424 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 425 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      (line++);
+
+# 426 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      (column=1);
+    }
+    else
+
+# 427 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 428 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      (column++);
+    }
+  }
+
+# 431 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return ((line_and_column_t) {
+                                                 .line = line,
+                                                 .column = column,
+                                             });
+}
+
+
+# 442 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text)
+# 443 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 444 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 444 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 444 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    int i = start;
+
+# 444 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i<end);
+
+# 444 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i++))
+
+# 444 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 445 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if (buffer_match_string_at(buffer, i, text))
+
+# 445 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 446 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      return true;
+    }
+  }
+
+# 449 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return false;
+}
+
+
+# 460 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement)
+# 461 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 462 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 462 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 462 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    int i = 0;
+
+# 462 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i<(buffer->length));
+
+# 462 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i++))
+
+# 462 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 463 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if ((((buffer->elements)[i])==original))
+
+# 463 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 464 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      (((buffer->elements)[i])=replacement);
+    }
+  }
+
+# 467 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 477 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start)
+# 477 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 478 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t position = start;
+
+# 479 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  while ((position>0))
+
+# 479 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 480 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (position--);
+
+# 481 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if ((buffer_get(buffer, position)=='\n'))
+
+# 481 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 482 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      return (position+1);
+    }
+  }
+
+# 485 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return position;
+}
+
+
+# 496 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start)
+# 496 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 497 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t position = start;
+
+# 498 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
+
+# 498 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 499 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (position++);
+  }
+
+# 501 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return position;
+}
+
+
+# 511 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer)
+# 511 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 512 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
+}
+
+
+# 523 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer)
+# 526 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 527 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if ((buffer==src_buffer))
+
+# 527 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 528 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 530 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 530 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 530 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t position = start_position;
+
+# 530 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (position<end_position);
+
+# 530 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (position++))
+
+# 531 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 532 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
+  }
+
+# 534 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 546 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_to_uppercase(buffer_t* buffer)
+# 546 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 547 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 547 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 547 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t i = 0;
+
+# 547 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i<(buffer->length));
+
+# 547 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i++))
+
+# 547 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 548 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
+  }
+
+# 550 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 562 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_t* buffer_to_lowercase(buffer_t* buffer)
+# 562 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 563 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 563 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 563 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t i = 0;
+
+# 563 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i<(buffer->length));
+
+# 563 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (i++))
+
+# 563 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 564 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
+  }
+
+# 566 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return buffer;
+}
+
+
+# 569 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+boolean_t buffer_ends_with(buffer_t* buffer, char* str)
+# 569 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 571 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  char* cstring = buffer_to_c_string(buffer);
+
+# 572 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return string_ends_with(cstring, str);
+}
+
+
+# 575 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+boolean_t buffer_equal(buffer_t* buffer, char* str)
+# 575 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 577 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  char* cstring = buffer_to_c_string(buffer);
+
+# 578 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return string_equal(cstring, str);
+}
+
+
+# 586 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+void ensure_legal_region(buffer_region_t region)
+# 586 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 587 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  if (((region.start_position)>(region.end_position)))
+
+# 587 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 588 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+# 592 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64_t end_line)
+# 593 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 595 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t line = 1;
+
+# 596 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t start_position = 0;
+
+# 597 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  uint64_t end_position = 0;
+
+# 599 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 599 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 599 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t position = 0;
+
+# 599 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (position<(buffer->length));
+
+# 599 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (position++))
+
+# 599 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 600 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint8_t ch = buffer_get(buffer, position);
+
+# 601 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    if ((ch=='\n'))
+
+# 601 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    {
+
+# 602 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      (line++);
+
+# 603 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      if ((line==start_line))
+
+# 603 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      {
+
+# 604 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+        (start_position=position);
+      }
+
+# 606 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      if ((line==end_line))
+
+# 606 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+      {
+
+# 607 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+        (end_position=position);
+
+# 608 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+        return ((buffer_region_t) {.start_position = start_position, .end_position = end_position});
+      }
+    }
+  }
+
+# 614 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  return ((buffer_region_t) {.start_position = start_position,
+                                            .end_position = buffer->length});
+}
+
+
+# 618 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer, buffer_region_t region)
+# 619 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+{
+
+# 620 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  ensure_legal_region(region);
+
+# 621 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  for (
+
+# 621 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+
+# 621 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    uint64_t position = (region.start_position);
+
+# 621 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (position<(region.end_position));
+
+# 621 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    (position++))
+
+# 622 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+  {
+
+# 623 "/Users/jawilson/src/omni-c/src/lib/string/buffer.c"
+    buffer_append_byte(dst_buffer, buffer_get(src_buffer, position));
+  }
+}
+
+
+# 4 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+uint64_t double_as_uint64(double d)
+# 4 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+{
+
+# 5 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+  uint64_t u;
+
+# 6 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+  memcpy((&u), (&d), (sizeof(d)));
+
+# 7 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+  return u;
+}
+
+
+# 13 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+uint64_t uint64_as_double(uint64_t u)
+# 13 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+{
+
+# 14 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+  double d;
+
+# 15 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+  memcpy((&d), (&u), (sizeof(u)));
+
+# 16 "/Users/jawilson/src/omni-c/src/lib/lang/double.c"
+  return d;
+}
+
+
+# 46 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+value_array_t* make_value_array(uint64_t initial_capacity)
+# 46 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 47 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((initial_capacity==0))
+
+# 47 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 48 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    (initial_capacity=1);
+  }
+
+# 51 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  value_array_t* result = malloc_struct(value_array_t);
+
+# 52 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  ((result->capacity)=initial_capacity);
+
+# 53 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  ((result->elements)=(/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*initial_capacity))));
+
+# 56 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  return result;
+}
+
+
+# 59 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity)
+# 60 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 61 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  if (((array->capacity)<required_capacity))
+
+# 61 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 62 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    uint32_t new_capacity = ((array->capacity)*2);
+
+# 63 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    if ((new_capacity<required_capacity))
+
+# 63 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    {
+
+# 64 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+      (new_capacity=required_capacity);
+    }
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    for (
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+      int i = 0;
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+      (i<(array->length));
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+      (i++))
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    {
+
+# 69 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+      ((new_elements[i])=((array->elements)[i]));
+    }
+
+# 71 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    ((array->capacity)=new_capacity);
+
+# 72 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    free_bytes((array->elements));
+
+# 73 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    ((array->elements)=new_elements);
+
+# 74 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    return;
+  }
+}
+
+
+# 84 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+value_t value_array_get(value_array_t* array, uint32_t index)
+# 84 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 85 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((index<(array->length)))
+
+# 85 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 86 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    return ((array->elements)[index]);
+  }
+
+# 88 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+
+# 90 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  return ((value_t) {0});
+}
+
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_replace(value_array_t* array, uint32_t index, value_t element)
+# 100 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((index<(array->length)))
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    (((array->elements)[index])=element);
+
+# 103 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    return;
+  }
+
+# 105 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+
+# 116 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_add(value_array_t* array, value_t element)
+# 116 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 117 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  value_array_ensure_capacity(array, ((array->length)+1));
+
+# 118 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  (((array->elements)[((array->length)++)])=element);
+}
+
+
+# 127 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_push(value_array_t* array, value_t element)
+# 127 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 128 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  value_array_add(array, element);
+}
+
+
+# 142 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+value_t value_array_pop(value_array_t* array)
+# 142 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 143 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  if (((array->length)==0))
+
+# 143 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 144 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+  }
+
+# 146 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  uint32_t last_index = ((array->length)-1);
+
+# 147 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  value_t result = value_array_get(array, last_index);
+
+# 148 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  (((array->elements)[last_index])=u64_to_value(0));
+
+# 149 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  ((array->length)--);
+
+# 150 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  return result;
+}
+
+
+# 170 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_insert_at(value_array_t* array, uint32_t position, value_t element)
+# 171 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 172 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((position==(array->length)))
+
+# 172 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 173 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    value_array_add(array, element);
+
+# 174 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    return;
+  }
+
+# 177 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((position>(array->length)))
+
+# 177 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 178 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    return;
+  }
+
+# 182 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  value_array_ensure_capacity(array, ((array->length)+1));
+
+# 187 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  for (
+
+# 187 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+
+# 187 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    int64_t i = ((array->length)-1);
+
+# 187 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    (i>=position);
+
+# 187 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    (i--))
+
+# 187 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 188 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    (((array->elements)[(i+1)])=((array->elements)[i]));
+  }
+
+# 190 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  ((array->length)++);
+
+# 191 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  (((array->elements)[position])=element);
+}
+
+
+# 203 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+value_t value_array_delete_at(value_array_t* array, uint32_t position)
+# 203 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+# 204 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  value_t result = value_array_get(array, position);
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  for (
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    int i = position;
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    (i<((array->length)-1));
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    (i++))
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+# 206 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+    (((array->elements)[i])=((array->elements)[(i+1)]));
+  }
+
+# 208 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  ((array->length)--);
+
+# 209 "/Users/jawilson/src/omni-c/src/lib/collections/value-array.c"
+  return result;
 }
 
 
@@ -28747,544 +28461,6 @@ uint32_t term_height(void)
 }
 
 
-# 43 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-sub_process_t* make_sub_process(value_array_t* argv)
-# 43 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 44 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_t* result = malloc_struct(sub_process_t);
-
-# 45 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  ((result->argv)=argv);
-
-# 46 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  ((result->exit_code)=(-1));
-
-# 47 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  return result;
-}
-
-
-# 56 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-boolean_t sub_process_launch(sub_process_t* sub_process)
-# 56 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 57 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  uint64_t length = ((sub_process->argv)->length);
-
-# 58 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((length<1))
-
-# 58 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 59 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    log_fatal("Expected at least the program path in argv");
-
-# 60 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-# 64 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  char** argv = (/*CAST*/(typeof(char**)) malloc_bytes(((length+1)*(sizeof(typeof(char*))))));
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  for (
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    int i = 0;
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    (i<length);
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    (i++))
-
-# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 67 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((argv[i])=value_array_get_ptr((sub_process->argv), i, typeof(char*)));
-  }
-
-# 71 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  ((argv[length])=NULL);
-
-# 76 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int stdin_pipe[2] = {0};
-
-# 77 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int stdout_pipe[2] = {0};
-
-# 78 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int stderr_pipe[2] = {0};
-
-# 79 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((((pipe(stdin_pipe)==(-1))||(pipe(stdout_pipe)==(-1)))||(pipe(stderr_pipe)==(-1))))
-
-# 80 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 81 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    log_fatal("Failed to create pipe for stdin, stdout or stderr");
-
-# 82 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-
-# 83 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return false;
-  }
-
-# 87 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stdin_pipe[0]), F_SETFD, FD_CLOEXEC);
-
-# 88 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stdin_pipe[1]), F_SETFD, FD_CLOEXEC);
-
-# 89 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stdout_pipe[0]), F_SETFD, FD_CLOEXEC);
-
-# 90 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stdout_pipe[1]), F_SETFD, FD_CLOEXEC);
-
-# 91 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stderr_pipe[0]), F_SETFD, FD_CLOEXEC);
-
-# 92 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl((stderr_pipe[1]), F_SETFD, FD_CLOEXEC);
-
-# 95 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  pid_t pid = fork();
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((pid==(-1)))
-
-# 96 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 97 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    log_fatal("fork() failed.");
-
-# 98 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-
-# 99 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return false;
-  }
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((pid==0))
-
-# 102 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 108 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    dup2((stdin_pipe[0]), STDIN_FILENO);
-
-# 109 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    dup2((stdout_pipe[1]), STDOUT_FILENO);
-
-# 110 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    dup2((stderr_pipe[1]), STDERR_FILENO);
-
-# 111 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdin_pipe[0]));
-
-# 112 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdin_pipe[1]));
-
-# 113 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdout_pipe[0]));
-
-# 114 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdout_pipe[1]));
-
-# 115 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stderr_pipe[0]));
-
-# 116 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stderr_pipe[1]));
-
-# 119 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    int offset = 0;
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    while ((((argv[offset])!=NULL)&&(strchr((argv[offset]), '=')!=NULL)))
-
-# 120 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 121 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      char* env_str = (argv[offset]);
-
-# 122 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      char* equals = strchr(env_str, '=');
-
-# 124 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      if (((*(equals+1))=='\0'))
-
-# 124 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      {
-
-# 125 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-        ((*equals)='\0');
-
-# 126 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-        unsetenv(env_str);
-      }
-      else
-
-# 127 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      {
-
-# 128 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-        putenv(env_str);
-      }
-
-# 130 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      (offset++);
-    }
-
-# 133 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    if (((argv[offset])==NULL))
-
-# 133 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 134 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      log_fatal("No executable specified after environment variables");
-
-# 135 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-
-# 139 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    int exec_exit_status = execvp((argv[offset]), (argv+offset));
-
-# 142 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
-
-# 143 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-
-# 144 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return false;
-  }
-  else
-
-# 145 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 152 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdin_pipe[0]));
-
-# 153 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stdout_pipe[1]));
-
-# 154 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    close((stderr_pipe[1]));
-
-# 157 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->pid)=pid);
-
-# 158 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->stdin)=(stdin_pipe[1]));
-
-# 159 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->stdout)=(stdout_pipe[0]));
-
-# 160 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->stderr)=(stderr_pipe[0]));
-
-# 162 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    free_bytes(argv);
-
-# 164 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return true;
-  }
-}
-
-
-# 168 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position)
-# 169 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 170 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int stdin_fd = (sub_process->stdin);
-
-# 173 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int flags = fcntl(stdin_fd, F_GETFL, 0);
-
-# 174 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
-
-# 176 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((bytes_written==(-1)))
-
-# 179 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 180 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    if (((errno==EAGAIN)||(errno==EWOULDBLOCK)))
-
-# 180 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 181 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      return 0;
-    }
-    else
-
-# 182 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 184 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
-
-# 185 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-  }
-
-# 189 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  return bytes_written;
-}
-
-
-# 192 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_close_stdin(sub_process_t* sub_process)
-# 192 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 193 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (((sub_process->stdin)!=(-1)))
-
-# 193 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 194 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    if ((close((sub_process->stdin))==(-1)))
-
-# 194 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 195 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      log_fatal("Error closing subprocess stdin: %s", strerror(errno));
-
-# 196 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-
-# 198 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->stdin)=(-1));
-  }
-}
-
-
-# 202 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr)
-# 203 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 204 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((stdout!=NULL))
-
-# 204 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 205 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    buffer_read_ready_bytes_file_number(stdout, (sub_process->stdout), 0xffffffff);
-  }
-
-# 208 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((stderr!=NULL))
-
-# 208 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 209 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    buffer_read_ready_bytes_file_number(stderr, (sub_process->stderr), 0xffffffff);
-  }
-}
-
-
-# 216 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status)
-# 217 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 218 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((pid==(-1)))
-
-# 218 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 219 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
-
-# 220 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return;
-  }
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (WIFEXITED(status))
-
-# 224 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 225 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
-
-# 226 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_code)=WEXITSTATUS(status));
-  }
-  else
-
-# 227 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (WIFSIGNALED(status))
-
-# 227 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 228 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
-
-# 229 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_signal)=WTERMSIG(status));
-  }
-  else
-
-# 230 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 231 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
-  }
-}
-
-
-# 242 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-boolean_t is_sub_process_running(sub_process_t* sub_process)
-# 242 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 243 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
-
-# 243 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 244 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return false;
-  }
-
-# 247 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  int status = 0;
-
-# 248 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
-
-# 249 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if ((result==0))
-
-# 249 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 250 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    return true;
-  }
-
-# 252 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_record_exit_status(sub_process, result, status);
-
-# 253 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  return false;
-}
-
-
-# 263 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_wait(sub_process_t* sub_process)
-# 263 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 264 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
-
-# 264 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 265 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    int status = 0;
-
-# 266 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    pid_t result = waitpid((sub_process->pid), (&status), 0);
-
-# 267 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    sub_process_record_exit_status(sub_process, result, status);
-  }
-}
-
-
-# 281 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr)
-# 283 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-{
-
-# 284 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_launch(sub_process);
-
-# 285 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  uint64_t written = 0;
-
-# 286 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  do
-# 286 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  {
-
-# 287 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    if (((child_stdin!=NULL)&&(written<(child_stdin->length))))
-
-# 287 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    {
-
-# 288 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      (written+=sub_process_write(sub_process, child_stdin, written));
-
-# 289 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      if ((written>=(child_stdin->length)))
-
-# 289 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-      {
-
-# 290 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-        sub_process_close_stdin(sub_process);
-      }
-    }
-
-# 293 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    sub_process_read(sub_process, child_stdout, child_stderr);
-
-# 294 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-    usleep(5);
-  }
-  while (is_sub_process_running(sub_process));
-
-# 296 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_read(sub_process, child_stdout, child_stderr);
-
-# 297 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
-  sub_process_wait(sub_process);
-}
-
-
 # 11 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
 int64_t get_file_modification_time(const char* filename)
 # 11 "/Users/jawilson/src/omni-c/src/lib/io/io-darwin.c"
@@ -30263,49 +29439,976 @@ void draw_random_screen(boolean_t output_dimensions)
 }
 
 
-# 7 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-boolean_t path_is_directory(const char* path)
-# 7 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+# 43 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+sub_process_t* make_sub_process(value_array_t* argv)
+# 43 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
 {
 
-# 8 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-  struct stat st;
+# 44 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_t* result = malloc_struct(sub_process_t);
 
-# 9 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-  if (((!path)||(stat(path, (&st))!=0)))
+# 45 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  ((result->argv)=argv);
 
-# 9 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-  {
+# 46 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  ((result->exit_code)=(-1));
 
-# 10 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-    return false;
-  }
-
-# 12 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-  return S_ISDIR((st.st_mode));
+# 47 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  return result;
 }
 
 
-# 15 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-boolean_t path_is_file(const char* path)
-# 15 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+# 56 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+boolean_t sub_process_launch(sub_process_t* sub_process)
+# 56 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
 {
 
-# 16 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-  struct stat st;
+# 57 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  uint64_t length = ((sub_process->argv)->length);
 
-# 17 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-  if (((!path)||(stat(path, (&st))!=0)))
+# 58 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((length<1))
 
-# 17 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+# 58 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
   {
 
-# 18 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
+# 59 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    log_fatal("Expected at least the program path in argv");
+
+# 60 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+# 64 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  char** argv = (/*CAST*/(typeof(char**)) malloc_bytes(((length+1)*(sizeof(typeof(char*))))));
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  for (
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    int i = 0;
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    (i<length);
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    (i++))
+
+# 66 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 67 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((argv[i])=value_array_get_ptr((sub_process->argv), i, typeof(char*)));
+  }
+
+# 71 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  ((argv[length])=NULL);
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int stdin_pipe[2] = {0};
+
+# 77 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int stdout_pipe[2] = {0};
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int stderr_pipe[2] = {0};
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((((pipe(stdin_pipe)==(-1))||(pipe(stdout_pipe)==(-1)))||(pipe(stderr_pipe)==(-1))))
+
+# 80 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 81 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    log_fatal("Failed to create pipe for stdin, stdout or stderr");
+
+# 82 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 83 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
     return false;
   }
 
-# 20 "/Users/jawilson/src/omni-c/src/lib/io/path.c"
-  return S_ISREG((st.st_mode));
+# 87 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stdin_pipe[0]), F_SETFD, FD_CLOEXEC);
+
+# 88 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stdin_pipe[1]), F_SETFD, FD_CLOEXEC);
+
+# 89 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stdout_pipe[0]), F_SETFD, FD_CLOEXEC);
+
+# 90 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stdout_pipe[1]), F_SETFD, FD_CLOEXEC);
+
+# 91 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stderr_pipe[0]), F_SETFD, FD_CLOEXEC);
+
+# 92 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl((stderr_pipe[1]), F_SETFD, FD_CLOEXEC);
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  pid_t pid = fork();
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((pid==(-1)))
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    log_fatal("fork() failed.");
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return false;
+  }
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((pid==0))
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 108 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    dup2((stdin_pipe[0]), STDIN_FILENO);
+
+# 109 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    dup2((stdout_pipe[1]), STDOUT_FILENO);
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    dup2((stderr_pipe[1]), STDERR_FILENO);
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdin_pipe[0]));
+
+# 112 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdin_pipe[1]));
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdout_pipe[0]));
+
+# 114 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdout_pipe[1]));
+
+# 115 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stderr_pipe[0]));
+
+# 116 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stderr_pipe[1]));
+
+# 119 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    int offset = 0;
+
+# 120 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    while ((((argv[offset])!=NULL)&&(strchr((argv[offset]), '=')!=NULL)))
+
+# 120 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 121 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      char* env_str = (argv[offset]);
+
+# 122 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      char* equals = strchr(env_str, '=');
+
+# 124 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      if (((*(equals+1))=='\0'))
+
+# 124 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      {
+
+# 125 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+        ((*equals)='\0');
+
+# 126 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+        unsetenv(env_str);
+      }
+      else
+
+# 127 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      {
+
+# 128 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+        putenv(env_str);
+      }
+
+# 130 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      (offset++);
+    }
+
+# 133 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    if (((argv[offset])==NULL))
+
+# 133 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      log_fatal("No executable specified after environment variables");
+
+# 135 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 139 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    int exec_exit_status = execvp((argv[offset]), (argv+offset));
+
+# 142 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
+
+# 143 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+
+# 144 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return false;
+  }
+  else
+
+# 145 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 152 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdin_pipe[0]));
+
+# 153 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stdout_pipe[1]));
+
+# 154 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    close((stderr_pipe[1]));
+
+# 157 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->pid)=pid);
+
+# 158 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->stdin)=(stdin_pipe[1]));
+
+# 159 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->stdout)=(stdout_pipe[0]));
+
+# 160 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->stderr)=(stderr_pipe[0]));
+
+# 162 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    free_bytes(argv);
+
+# 164 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return true;
+  }
+}
+
+
+# 168 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position)
+# 169 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 170 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int stdin_fd = (sub_process->stdin);
+
+# 173 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int flags = fcntl(stdin_fd, F_GETFL, 0);
+
+# 174 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
+
+# 176 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((bytes_written==(-1)))
+
+# 179 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 180 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    if (((errno==EAGAIN)||(errno==EWOULDBLOCK)))
+
+# 180 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 181 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      return 0;
+    }
+    else
+
+# 182 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 184 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
+
+# 185 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+# 189 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  return bytes_written;
+}
+
+
+# 192 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_close_stdin(sub_process_t* sub_process)
+# 192 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 193 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (((sub_process->stdin)!=(-1)))
+
+# 193 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 194 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    if ((close((sub_process->stdin))==(-1)))
+
+# 194 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 195 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      log_fatal("Error closing subprocess stdin: %s", strerror(errno));
+
+# 196 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+# 198 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->stdin)=(-1));
+  }
+}
+
+
+# 202 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr)
+# 203 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 204 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((stdout!=NULL))
+
+# 204 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 205 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    buffer_read_ready_bytes_file_number(stdout, (sub_process->stdout), 0xffffffff);
+  }
+
+# 208 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((stderr!=NULL))
+
+# 208 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 209 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    buffer_read_ready_bytes_file_number(stderr, (sub_process->stderr), 0xffffffff);
+  }
+}
+
+
+# 216 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status)
+# 217 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 218 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((pid==(-1)))
+
+# 218 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 219 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
+
+# 220 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return;
+  }
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (WIFEXITED(status))
+
+# 224 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 225 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
+
+# 226 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_code)=WEXITSTATUS(status));
+  }
+  else
+
+# 227 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (WIFSIGNALED(status))
+
+# 227 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 228 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
+
+# 229 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_signal)=WTERMSIG(status));
+  }
+  else
+
+# 230 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 231 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
+  }
+}
+
+
+# 242 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+boolean_t is_sub_process_running(sub_process_t* sub_process)
+# 242 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 243 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 243 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 244 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return false;
+  }
+
+# 247 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  int status = 0;
+
+# 248 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
+
+# 249 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if ((result==0))
+
+# 249 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 250 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    return true;
+  }
+
+# 252 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_record_exit_status(sub_process, result, status);
+
+# 253 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  return false;
+}
+
+
+# 263 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_wait(sub_process_t* sub_process)
+# 263 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 264 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+
+# 264 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 265 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    int status = 0;
+
+# 266 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    pid_t result = waitpid((sub_process->pid), (&status), 0);
+
+# 267 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    sub_process_record_exit_status(sub_process, result, status);
+  }
+}
+
+
+# 281 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr)
+# 283 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+{
+
+# 284 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_launch(sub_process);
+
+# 285 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  uint64_t written = 0;
+
+# 286 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  do
+# 286 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  {
+
+# 287 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    if (((child_stdin!=NULL)&&(written<(child_stdin->length))))
+
+# 287 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    {
+
+# 288 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      (written+=sub_process_write(sub_process, child_stdin, written));
+
+# 289 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      if ((written>=(child_stdin->length)))
+
+# 289 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+      {
+
+# 290 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+        sub_process_close_stdin(sub_process);
+      }
+    }
+
+# 293 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    sub_process_read(sub_process, child_stdout, child_stderr);
+
+# 294 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+    usleep(5);
+  }
+  while (is_sub_process_running(sub_process));
+
+# 296 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_read(sub_process, child_stdout, child_stderr);
+
+# 297 "/Users/jawilson/src/omni-c/src/lib/io/sub-process.c"
+  sub_process_wait(sub_process);
+}
+
+
+# 17 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+void oarchive_append_header_and_file_contents(FILE* out, char* filename)
+# 17 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+{
+
+# 18 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  buffer_t* contents = make_buffer(1);
+
+# 19 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  (contents=buffer_append_file_contents(contents, filename));
+
+# 20 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  fprintf(out, "filename=%s", filename);
+
+# 21 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  fputc(0, out);
+
+# 22 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  fprintf(out, "size=%d", (contents->length));
+
+# 23 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  fputc(0, out);
+
+# 24 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  fputc(0, out);
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  for (
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    uint64_t i = 0;
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    (i<(contents->length));
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    (i++))
+
+# 26 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  {
+
+# 27 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    fputc(buffer_get(contents, i), out);
+  }
+}
+
+
+# 37 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+string_tree_t* oarchive_read_header(FILE* in)
+# 37 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+{
+
+# 38 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  string_tree_t* metadata = NULL;
+
+# 39 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  while ((!feof(in)))
+
+# 39 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  {
+
+# 40 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    if ((file_peek_byte(in)=='\0'))
+
+# 40 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    {
+
+# 41 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      fgetc(in);
+
+# 42 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      break;
+    }
+
+# 46 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    buffer_t* key = make_buffer(8);
+
+# 47 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    (key=buffer_read_until(key, in, '='));
+
+# 48 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    buffer_t* value = make_buffer(8);
+
+# 49 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    (value=buffer_read_until(value, in, '\0'));
+
+# 50 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    if ((((key->length)==0)&&((value->length)==0)))
+
+# 50 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    {
+
+# 51 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      return metadata;
+    }
+
+# 53 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    (metadata=string_tree_insert(metadata, buffer_to_c_string(key), str_to_value(buffer_to_c_string(value))));
+  }
+
+# 56 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  return metadata;
+}
+
+
+# 85 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data)
+# 87 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+{
+
+# 88 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  while ((!file_eof(in)))
+
+# 88 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+  {
+
+# 89 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    string_tree_t* metadata = oarchive_read_header(in);
+
+# 91 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    int64_t size = 0;
+
+# 92 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    value_result_t size_value = string_tree_find(metadata, "size");
+
+# 93 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    if ((!is_ok(size_value)))
+
+# 93 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    {
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      log_warn("Encounterd a header without an explicit size.");
+    }
+    else
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    {
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      value_result_t data_size = string_parse_uint64_dec((size_value.str));
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      if ((!is_ok(data_size)))
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      {
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+        log_fatal("Encounterd a header with an unparseable size %s", (size_value.str));
+
+# 100 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+        fatal_error(ERROR_FATAL);
+      }
+      else
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      {
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+        (size=(data_size.u64));
+      }
+    }
+
+# 107 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    boolean_t skip_data = callback(in, metadata, size, callback_data);
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    if ((skip_data&&(size>0)))
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+    {
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      log_none("Skipping %lu\n", size);
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/io/oarchive.c"
+      file_skip_bytes(in, size);
+    }
+  }
+}
+
+
+# 76 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+uint8_t* checked_malloc(char* file, int line, uint64_t amount)
+# 76 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+{
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  if (((amount==0)||(amount>ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT)))
+
+# 78 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  {
+
+# 79 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+    fatal_error(ERROR_BAD_ALLOCATION_SIZE);
+  }
+
+# 82 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  uint8_t* result = GC_malloc(amount);
+
+# 84 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  if ((result==((void *)0)))
+
+# 84 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  {
+
+# 85 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+    fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
+  }
+
+# 88 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  return result;
+}
+
+
+# 97 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount)
+# 98 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+{
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  uint8_t* result = checked_malloc(file, line, amount);
+
+# 100 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  memcpy(result, source, amount);
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  return result;
+}
+
+
+# 114 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+void checked_free(char* file, int line, void* pointer)
+# 114 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+{
+
+# 114 "/Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  return;
+}
+
+
+# 68 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void segmentation_fault_handler(int signal_number)
+# 68 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+# 69 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fatal_error(ERROR_SIGSEGV);
+}
+
+
+# 72 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void configure_fatal_errors(fatal_error_config_t config)
+# 72 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+# 73 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  (fatal_error_config=config);
+
+# 74 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  if ((config.catch_sigsegv))
+
+# 74 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+# 75 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    signal(SIGSEGV, segmentation_fault_handler);
+  }
+}
+
+
+# 85 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void set_fatal_error_callback(fatal_error_callback_t callback, void* data)
+# 85 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+# 86 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  (fatal_error_callback=callback);
+
+# 87 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  (fatal_error_callback_data=data);
+}
+
+
+# 120 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void print_fatal_error_banner()
+# 120 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+# 123 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
+}
+
+
+# 126 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void print_backtrace()
+# 126 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+# 128 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  do
+# 128 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+# 129 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    void* array[10];
+
+# 130 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    int size = backtrace(array, 10);
+
+# 131 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    char** strings = backtrace_symbols(array, size);
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    for (
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      int i = 0;
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      (i<size);
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      (i++))
+
+# 134 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    {
+
+# 135 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      printf("#%d %s\n", i, (strings[i]));
+    }
+  }
+  while (0);
+}
+
+
+# 141 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void print_error_code_name(int error_code)
+# 141 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+# 142 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, " ");
+
+# 143 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "*** ");
+
+# 144 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "%s", error_code_to_string(error_code));
+
+# 145 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, " ***\n");
+}
+
+
+# 94 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+_Noreturn void fatal_error_impl(char* file, int line, int error_code)
+# 94 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  if ((fatal_error_callback!=((void *)0)))
+
+# 95 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+# 96 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    fatal_error_callback(file, line, error_code, fatal_error_callback_data);
+  }
+
+# 98 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  print_fatal_error_banner();
+
+# 99 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  print_backtrace();
+
+# 100 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
+
+# 101 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  print_error_code_name(error_code);
+
+# 102 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
+
+# 103 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
+
+# 104 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  if ((sleep_str!=NULL))
+
+# 104 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+# 105 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    value_result_t sleep_time = string_parse_uint64(sleep_str);
+
+# 106 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    if (is_ok(sleep_time))
+
+# 106 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    {
+
+# 107 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      fprintf(stderr, "Sleeping for %lu seconds so you can attach a debugger.\n", (sleep_time.u64));
+
+# 110 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
+
+# 111 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      sleep((sleep_time.u64));
+    }
+  }
+  else
+
+# 113 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+# 114 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
+  }
+
+# 116 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "Necessaria Morte Mori...\n");
+
+# 117 "/Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  exit((-(error_code+100)));
 }
 
 
@@ -31366,95 +31469,202 @@ roci_eval_result_t roci_eval_buffer(roci_env_t* env, char* file_name, buffer_t* 
   roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
 
 # 61 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
-  roci_execute(env, entry_point);
+  roci_vm_state_t* vm_state = roci_make_vm_state(env);
 
-# 63 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+# 62 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  set_fatal_error_callback((&roci_eval_error_callback), make_eval_error_callback_data(vm_state, file_name, buffer, exit_on_failure));
+
+# 65 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  roci_execute(vm_state, entry_point);
+
+# 66 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  set_fatal_error_callback(((void *)0), ((void *)0));
+
+# 68 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
   return result;
 }
 
 
-# 64 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_compiler_error(roci_compiler_state_t* state, roci_compile_time_error_t error)
-# 65 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 79 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+roci_eval_error_callback_data_t* make_eval_error_callback_data(roci_vm_state_t* state, char* file_name, buffer_t* buffer, boolean_t exit_on_failure)
+# 80 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
 {
 
+# 81 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  roci_eval_error_callback_data_t* result = malloc_struct(roci_eval_error_callback_data_t);
+
+# 83 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  ((result->state)=state);
+
+# 84 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  ((result->file_name)=file_name);
+
+# 85 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  ((result->buffer)=buffer);
+
+# 86 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  ((result->exit_on_failure)=exit_on_failure);
+
+# 87 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  return result;
+}
+
+
+# 90 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+void roci_eval_error_callback(char* file, int line, int error_code, void* data_in)
+# 91 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+{
+
+# 92 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  roci_eval_error_callback_data_t* data = (/*CAST*/(roci_eval_error_callback_data_t*) data_in);
+
+# 94 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  log_fatal("An internal error occurred evaluating %s", (data->file_name));
+
+# 95 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  if ((!(data->exit_on_failure)))
+
+# 95 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+  {
+
+# 97 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+    ((data->exit_on_failure)=true);
+
+# 98 "/Users/jawilson/src/omni-c/src/roci/roci-command.c"
+    roci_debug_error((data->state), "Entering roci debugger after a fatal error was signaled.");
+  }
+}
+
+
+# 65 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_compiler_error(roci_compiler_state_t* state, roci_compile_time_error_t error)
 # 66 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  ((state->compiler_error)=error);
+{
 
 # 67 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  ((state->compiler_error)=error);
+
+# 68 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   longjmp(roci_compiler_jmp_buf, 1);
 }
 
 
-# 81 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_compile_buffer(roci_compiler_state_t* state, char* file_name, buffer_t* buffer)
-# 82 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 78 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+roci_compile_buffer_error_callback_data_t* make_compile_error_callback_data(roci_compiler_state_t* state, char* file_name, buffer_t* buffer)
+# 79 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
+# 80 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_compile_buffer_error_callback_data_t* result = malloc_struct(roci_compile_buffer_error_callback_data_t);
+
+# 82 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  ((result->state)=state);
+
 # 83 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  int jump_result = setjmp(roci_compiler_jmp_buf);
+  ((result->file_name)=file_name);
 
 # 84 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  if ((jump_result==0))
-
-# 84 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  {
+  ((result->buffer)=buffer);
 
 # 85 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    ((state->position)=0);
+  return result;
+}
 
-# 86 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    ((state->current_bb)=roci_new_bblock(state, "bb_file_start"));
-
-# 87 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    ((state->tokens)=roci_tokenize_file(state, file_name, buffer));
 
 # 88 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_compile_buffer_error_callback(char* file, int line, int error_code, void* data_in)
+# 89 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 90 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_compile_buffer_error_callback_data_t* data = (/*CAST*/(roci_compile_buffer_error_callback_data_t*) data_in);
+
+# 92 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  log_fatal("An internal error occurred compiling %s", (data->file_name));
+
+# 93 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  log_fatal("The last known position was %d", ((data->state)->position));
+
+# 94 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_compiler_error((data->state), ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR);
+}
+
+
+# 108 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_compile_buffer(roci_compiler_state_t* state, char* file_name, buffer_t* buffer)
+# 109 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 111 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  set_fatal_error_callback((&roci_compile_buffer_error_callback), make_compile_error_callback_data(state, file_name, buffer));
+
+# 115 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  int jump_result = setjmp(roci_compiler_jmp_buf);
+
+# 116 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  if ((jump_result==0))
+
+# 116 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  {
+
+# 117 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    ((state->position)=0);
+
+# 118 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    ((state->current_bb)=roci_new_bblock(state, "bb_file_start"));
+
+# 119 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    ((state->tokens)=roci_tokenize_file(state, file_name, buffer));
+
+# 120 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_tokens(state);
   }
   else
 
-# 89 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 121 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 90 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 122 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     log_warn("roci compiler exited abnormally.");
 
-# 91 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 123 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if (((state->compiler_error)==ROCI_COMPILE_TIME_ERROR_NONE))
 
-# 91 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 123 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 92 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 124 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       ((state->compiler_error)=ROCI_COMPILE_TIME_ERROR);
     }
   }
+
+# 128 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  set_fatal_error_callback(((void *)0), ((void *)0));
 }
 
 
-# 103 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 137 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 value_array_t* roci_tokenize_file(roci_compiler_state_t* state, char* file_name, buffer_t* buffer)
-# 104 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 138 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 105 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 139 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   tokenizer_result_t tokenizer_result = tokenize(buffer);
 
-# 106 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 140 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if ((tokenizer_result.tokenizer_error_code))
 
-# 106 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 140 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 107 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 141 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     log_warn("Tokenizer error: \"%s\"::%d -- %d", file_name, (tokenizer_result.tokenizer_error_position), (tokenizer_result.tokenizer_error_code));
 
-# 110 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 144 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compiler_error(state, ROCI_COMPILE_TIME_TOKENIZER_ERROR);
   }
 
-# 112 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 146 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   return transform_tokens((tokenizer_result.tokens), ((token_transformer_options_t) {
                            .keep_whitespace = false,
                            .keep_comments = false,
@@ -31464,1384 +31674,1384 @@ value_array_t* roci_tokenize_file(roci_compiler_state_t* state, char* file_name,
 }
 
 
-# 129 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 163 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_tokens(roci_compiler_state_t* state)
-# 129 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 163 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 132 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 166 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   log_info("roci_compile_tokens begin");
 
-# 133 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 167 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   while (((state->position)<((state->tokens)->length)))
 
-# 133 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 167 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 134 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 168 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_statement(state);
   }
 
-# 136 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 170 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   log_info("roci_compile_tokens end");
 
-# 137 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 171 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_TRAP);
 }
 
 
-# 145 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 179 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_statement(roci_compiler_state_t* state)
-# 145 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 179 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 146 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 180 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* token = roci_peek_token(state);
 
-# 147 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 181 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   log_info("CURRENT TOKEN IS %s", token_to_string(token));
 
-# 148 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 182 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(token, "return"))
 
-# 148 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 182 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 149 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 183 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_return(state);
   }
   else
 
-# 150 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 184 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(token, "if"))
 
-# 150 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 184 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 151 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 185 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_if(state);
   }
   else
 
-# 152 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 186 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(token, "let"))
 
-# 152 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 186 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 153 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 187 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_let(state);
   }
   else
 
-# 154 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 188 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(token, "while"))
 
-# 154 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 188 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 155 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 189 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_while(state);
   }
   else
 
-# 156 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 190 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(token, "record"))
 
-# 156 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 190 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 157 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 191 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_record(state);
   }
   else
-
-# 158 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  {
-
-# 159 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    (token=token_at((state->tokens), ((state->position)+1)));
-
-# 160 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    if (token_matches(token, "="))
-
-# 160 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    {
-
-# 161 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      roci_compile_assignment(state);
-    }
-    else
-
-# 162 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    if (token_matches(token, "("))
-
-# 162 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    {
-
-# 163 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      roci_compile_function_call(state);
-
-# 164 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      roci_expect_token(state, ";");
-
-# 165 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      roci_emit_opcode(state, ROCI_OPCODE_DROP);
-    }
-    else
-
-# 166 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    {
-
-# 167 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      buffer_t* buffer = make_buffer(5);
-
-# 168 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      append_token_debug_string(buffer, (*token));
-
-# 169 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      log_warn("roci_compile_statement is unhappy! %s", buffer_to_c_string(buffer));
-
-# 171 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
-    }
-  }
-}
-
-
-# 188 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_compile_return(roci_compiler_state_t* state)
-# 188 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-{
-
-# 189 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_debug_info(state, roci_peek_token(state));
-
-# 190 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_expect_token(state, "return");
-
-# 191 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  token_t* token = roci_peek_token(state);
-
-# 192 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  if (token_matches(token, ";"))
 
 # 192 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
 # 193 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    roci_skip_token(state);
+    (token=token_at((state->tokens), ((state->position)+1)));
 
 # 194 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    if (token_matches(token, "="))
+
+# 194 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    {
+
+# 195 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      roci_compile_assignment(state);
+    }
+    else
+
+# 196 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    if (token_matches(token, "("))
+
+# 196 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    {
+
+# 197 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      roci_compile_function_call(state);
+
+# 198 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      roci_expect_token(state, ";");
+
+# 199 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      roci_emit_opcode(state, ROCI_OPCODE_DROP);
+    }
+    else
+
+# 200 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    {
+
+# 201 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      buffer_t* buffer = make_buffer(5);
+
+# 202 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      append_token_debug_string(buffer, (*token));
+
+# 203 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      log_warn("roci_compile_statement is unhappy! %s", buffer_to_c_string(buffer));
+
+# 205 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
+    }
+  }
+}
+
+
+# 222 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_compile_return(roci_compiler_state_t* state)
+# 222 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 223 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_emit_debug_info(state, roci_peek_token(state));
+
+# 224 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_expect_token(state, "return");
+
+# 225 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  token_t* token = roci_peek_token(state);
+
+# 226 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  if (token_matches(token, ";"))
+
+# 226 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  {
+
+# 227 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    roci_skip_token(state);
+
+# 228 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
   }
   else
 
-# 195 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 229 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 196 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 230 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_expression(state);
 
-# 197 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 231 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_expect_token(state, ";");
   }
 
-# 199 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 233 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_return(state);
 }
 
 
-# 215 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 249 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_let(roci_compiler_state_t* state)
-# 215 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 249 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 216 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 250 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_debug_info(state, roci_peek_token(state));
 
-# 217 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 251 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "let");
 
-# 218 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 252 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* varname = roci_next_token(state);
 
-# 219 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 253 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_verify_identifier(state, varname);
 
-# 220 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 254 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "=");
 
-# 221 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 255 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_compile_expression(state);
 
-# 222 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 256 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, ";");
 
-# 223 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 257 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_token_string_datum(state, token_to_string(varname));
 
-# 224 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 258 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
 }
 
 
-# 234 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 268 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_assignment(roci_compiler_state_t* state)
-# 234 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 268 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 235 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 269 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_debug_info(state, roci_peek_token(state));
 
-# 236 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 270 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* varname = roci_next_token(state);
 
-# 238 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 272 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "=");
 
-# 239 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 273 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_compile_expression(state);
 
-# 240 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 274 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, ";");
 
-# 241 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 275 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_token_string_datum(state, token_to_string(varname));
 
-# 242 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 276 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_SET_VAR);
 }
 
 
-# 250 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 284 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_if(roci_compiler_state_t* state)
-# 250 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 284 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 251 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 285 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_debug_info(state, roci_peek_token(state));
 
-# 252 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 286 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "if");
 
-# 253 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 287 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "(");
 
-# 254 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 288 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_compile_expression(state);
 
-# 255 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 289 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, ")");
 
-# 257 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 291 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* if_bb = (state->current_bb);
 
-# 259 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 293 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* true_bb = roci_compile_block(state);
 
-# 260 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 294 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* end_of_true_bb = (state->current_bb);
 
-# 262 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 296 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_br_true(if_bb, true_bb);
 
-# 264 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 298 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* peek_token = roci_peek_token(state);
 
-# 265 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 299 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(peek_token, "else"))
 
-# 265 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 299 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 266 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 300 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_skip_token(state);
 
-# 267 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 301 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_bb_builder_t* false_bb = roci_compile_block(state);
 
-# 268 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 302 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_bb_builder_t* after_bb = roci_new_bblock(state, "if_after_bb");
 
-# 269 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 303 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_branch(if_bb, false_bb);
 
-# 270 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 304 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_branch((state->current_bb), after_bb);
 
-# 271 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 305 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_branch(end_of_true_bb, after_bb);
 
-# 272 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 306 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     ((state->current_bb)=after_bb);
   }
   else
 
-# 273 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 307 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 274 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 308 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_bb_builder_t* after_bb = roci_new_bblock(state, "if_after_bb");
 
-# 275 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 309 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_branch(end_of_true_bb, after_bb);
 
-# 276 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 310 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_branch(if_bb, after_bb);
 
-# 277 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 311 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     ((state->current_bb)=after_bb);
   }
 }
 
 
-# 290 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 324 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 roci_bb_builder_t* roci_compile_block(roci_compiler_state_t* state)
-# 290 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 324 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 291 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 325 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* result_bb = roci_new_bblock(state, "block_bb_");
 
-# 292 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 326 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   ((state->current_bb)=result_bb);
 
-# 294 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 328 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_debug_info(state, roci_peek_token(state));
 
-# 295 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 329 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_new_environment(state);
 
-# 296 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 330 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "{");
 
-# 298 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 332 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   while (((state->position)<((state->tokens)->length)))
 
-# 298 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 332 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 299 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 333 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_statement(state);
 
-# 300 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 334 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     token_t* close_b = roci_peek_token(state);
 
-# 301 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 335 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if (token_matches(close_b, "}"))
 
-# 301 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 335 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 302 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 336 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       roci_skip_token(state);
 
-# 303 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 337 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       roci_emit_drop_environment(state);
 
-# 304 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 338 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       return result_bb;
     }
   }
 
-# 307 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 341 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   log_warn("closing brace not found!");
 
-# 308 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 342 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
 
-# 310 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 344 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   return ((void *)0);
 }
 
 
-# 314 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 348 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_while(roci_compiler_state_t* state)
-# 314 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 348 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 315 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 349 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_debug_info(state, roci_peek_token(state));
 
-# 316 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 350 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "while");
 
-# 317 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 351 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "(");
 
-# 320 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 354 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* cond_bb = roci_new_bblock(state, "while_cond_bb");
 
-# 321 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 355 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_branch((state->current_bb), cond_bb);
 
-# 322 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 356 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   ((state->current_bb)=cond_bb);
 
-# 325 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 359 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_compile_expression(state);
 
-# 326 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 360 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, ")");
 
-# 329 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 363 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* body_bb = roci_compile_block(state);
 
-# 330 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 364 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* end_of_body_bb = (state->current_bb);
 
-# 333 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 367 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* after_bb = roci_new_bblock(state, "while_after_bb");
 
-# 336 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 370 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_branch(end_of_body_bb, cond_bb);
 
-# 339 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 373 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_br_true(cond_bb, body_bb);
 
-# 340 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 374 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_branch(cond_bb, after_bb);
 
-# 342 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 376 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   ((state->current_bb)=after_bb);
 }
 
 
-# 352 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 386 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_expression(roci_compiler_state_t* state)
-# 352 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 386 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 353 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 387 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* token = roci_peek_token(state);
 
-# 354 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 388 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(token, "fn"))
 
-# 354 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 388 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 355 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 389 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_closure(state);
 
-# 356 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 390 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     return;
   }
   else
 
-# 357 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 391 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(token, "("))
 
-# 357 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 391 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
   }
 
-# 361 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 395 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* token_next = token_at((state->tokens), ((state->position)+1));
 
-# 362 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 396 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (token_matches(token_next, "("))
 
-# 362 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 396 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 363 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 397 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compile_function_call(state);
   }
   else
 
-# 364 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 398 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (((token_matches(token_next, ";")||token_matches(token_next, ","))||token_matches(token_next, ")")))
 
-# 365 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 399 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 366 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 400 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     switch ((token->type))
 
-# 366 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 400 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 367 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 401 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       case TOKEN_TYPE_IDENTIFIER:
 
-# 367 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 401 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       {
 
-# 368 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 402 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         char* varname = token_to_string(token);
 
-# 369 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 403 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         if (string_equal(varname, "true"))
 
-# 369 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 403 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         {
 
-# 370 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 404 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
           roci_emit_opcode(state, ROCI_OPCODE_PUSH_TRUE);
         }
         else
 
-# 371 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 405 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         if (string_equal(varname, "false"))
 
-# 371 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 405 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         {
 
-# 372 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 406 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
           roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
         }
         else
 
-# 373 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 407 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         {
 
-# 374 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 408 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
           roci_emit_get_var((state->current_bb), varname);
         }
 
-# 376 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 410 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         break;
       }
 
-# 379 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 413 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       case TOKEN_TYPE_INTEGER_LITERAL:
 
-# 379 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 413 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       {
 
-# 380 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 414 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         value_result_t parsed = string_parse_uint64(token_to_string(token));
 
-# 381 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 415 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         if (((parsed.nf_error)!=NF_OK))
 
-# 381 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 415 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         {
 
-# 382 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 416 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
           log_warn("Failed to parse integer token %s", token_to_string(token));
 
-# 383 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 417 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
           roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
         }
 
-# 385 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 419 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_INTEGER);
 
-# 386 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 420 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         value_array_add(((state->current_bb)->data), (parsed.val));
 
-# 387 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 421 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         break;
       }
 
-# 390 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 424 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       case TOKEN_TYPE_FLOAT_LITERAL:
 
-# 390 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 424 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       {
 
-# 391 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 425 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         double dbl = string_parse_double(token_to_string(token));
 
-# 392 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 426 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_DOUBLE);
 
-# 393 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 427 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         value_array_add(((state->current_bb)->data), dbl_to_value(dbl));
 
-# 394 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 428 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         break;
       }
 
-# 397 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 431 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       case TOKEN_TYPE_STRING_LITERAL:
 
-# 397 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 431 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       {
 
-# 398 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 432 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         char* str = string_unquote_c_string(token_to_string(token));
 
-# 399 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 433 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_PUSH_STRING);
 
-# 400 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 434 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         value_array_add(((state->current_bb)->data), str_to_value(str));
 
-# 401 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 435 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         break;
       }
 
-# 404 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 438 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       default:
 
-# 405 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 439 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       log_warn("unexpected token line=%d column=%d", (token->line_number), (token->column_number));
 
-# 407 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 441 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
     }
 
-# 409 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 443 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_skip_token(state);
   }
   else
 
-# 410 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 444 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 411 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 445 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     ((state->compiler_error)=ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION);
   }
 }
 
 
-# 415 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 449 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_function_call(roci_compiler_state_t* state)
-# 415 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 449 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 416 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 450 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* first_token = roci_peek_token(state);
-
-# 417 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_debug_info(state, first_token);
-
-# 418 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  int num_args = 0;
-
-# 419 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  token_t* fn_name = roci_next_token(state);
-
-# 420 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_expect_token(state, "(");
-
-# 421 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  while (true)
-
-# 421 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  {
-
-# 422 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    token_t* token = roci_peek_token(state);
-
-# 423 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    if (token_matches(token, ")"))
-
-# 423 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    {
-
-# 424 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      roci_skip_token(state);
-
-# 425 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      break;
-    }
-
-# 427 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    roci_compile_expression(state);
-
-# 428 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    (num_args++);
-
-# 429 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    (token=roci_peek_token(state));
-
-# 430 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    if (token_matches(token, ","))
-
-# 430 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    {
-
-# 431 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      roci_skip_token(state);
-    }
-    else
-
-# 432 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    if ((!token_matches(token, ")")))
-
-# 432 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    {
-
-# 433 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      log_warn("Expected comma or close paren.");
-
-# 434 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
-    }
-  }
-
-# 438 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_get_var((state->current_bb), token_to_string(fn_name));
-
-# 440 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
-
-# 441 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_CALL);
-
-# 442 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  value_array_add(((state->current_bb)->data), i64_to_value(num_args));
-
-# 443 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  value_array_add(((state->current_bb)->data), str_to_value((return_bb->bblock_label)));
-
-# 445 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  ((state->current_bb)=return_bb);
-
-# 447 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_debug_info(state, first_token);
-}
-
-
-# 450 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_compile_closure(roci_compiler_state_t* state)
-# 450 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-{
 
 # 451 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  boolean_t rest_argument = false;
+  roci_emit_debug_info(state, first_token);
 
 # 452 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  token_t* first_token = roci_peek_token(state);
+  int num_args = 0;
 
 # 453 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_expect_token(state, "fn");
+  token_t* fn_name = roci_next_token(state);
 
 # 454 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "(");
 
-# 456 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  token_t* args[32];
+# 455 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  while (true)
 
-# 457 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  int64_t arg_count = roci_collect_fn_args(state, args, (&rest_argument));
-
-# 459 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_bb_builder_t* current_bb = (state->current_bb);
-
-# 460 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  int current_env_depth = (state->env_depth);
-
-# 462 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_bb_builder_t* fn_entry_bb = roci_new_bblock(state, "fn_header");
-
-# 463 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  ((state->env_depth)=1);
-
-# 464 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  ((state->current_bb)=fn_entry_bb);
-
-# 466 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_debug_info(state, first_token);
-
-# 467 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
-
-# 468 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  if (rest_argument)
-
-# 468 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 455 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 469 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 456 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    token_t* token = roci_peek_token(state);
+
+# 457 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    if (token_matches(token, ")"))
+
+# 457 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    {
+
+# 458 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      roci_skip_token(state);
+
+# 459 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      break;
+    }
+
+# 461 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    roci_compile_expression(state);
+
+# 462 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    (num_args++);
+
+# 463 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    (token=roci_peek_token(state));
+
+# 464 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    if (token_matches(token, ","))
+
+# 464 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    {
+
+# 465 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      roci_skip_token(state);
+    }
+    else
+
+# 466 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    if ((!token_matches(token, ")")))
+
+# 466 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+    {
+
+# 467 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      log_warn("Expected comma or close paren.");
+
+# 468 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
+    }
+  }
+
+# 472 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_emit_get_var((state->current_bb), token_to_string(fn_name));
+
+# 474 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
+
+# 475 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  buffer_append_byte(((state->current_bb)->opcodes), ROCI_OPCODE_CALL);
+
+# 476 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), i64_to_value(num_args));
+
+# 477 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  value_array_add(((state->current_bb)->data), str_to_value((return_bb->bblock_label)));
+
+# 479 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  ((state->current_bb)=return_bb);
+
+# 481 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_emit_debug_info(state, first_token);
+}
+
+
+# 484 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_compile_closure(roci_compiler_state_t* state)
+# 484 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 485 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  boolean_t rest_argument = false;
+
+# 486 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  token_t* first_token = roci_peek_token(state);
+
+# 487 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_expect_token(state, "fn");
+
+# 488 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_expect_token(state, "(");
+
+# 490 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  token_t* args[32];
+
+# 491 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  int64_t arg_count = roci_collect_fn_args(state, args, (&rest_argument));
+
+# 493 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_bb_builder_t* current_bb = (state->current_bb);
+
+# 494 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  int current_env_depth = (state->env_depth);
+
+# 496 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_bb_builder_t* fn_entry_bb = roci_new_bblock(state, "fn_header");
+
+# 497 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  ((state->env_depth)=1);
+
+# 498 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  ((state->current_bb)=fn_entry_bb);
+
+# 500 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_emit_debug_info(state, first_token);
+
+# 501 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_CHECK_ARGS);
+
+# 502 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  if (rest_argument)
+
+# 502 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  {
+
+# 503 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_int_datum(state, (-arg_count));
   }
   else
 
-# 470 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 504 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 471 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 505 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_int_datum(state, arg_count);
   }
 
-# 474 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 508 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_new_environment(state);
 
-# 475 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 509 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   while ((arg_count>0))
 
-# 475 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 509 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 476 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 510 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     token_t* varname = (args[(--arg_count)]);
 
-# 477 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 511 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_token_string_datum(state, token_to_string(varname));
 
-# 478 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 512 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
   }
 
-# 481 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 515 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_bb_builder_t* body_bb = roci_compile_block(state);
 
-# 482 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 516 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
 
-# 483 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 517 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_return(state);
 
-# 485 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 519 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_branch(fn_entry_bb, body_bb);
 
-# 487 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 521 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   ((state->env_depth)=current_env_depth);
 
-# 488 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 522 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   ((state->current_bb)=current_bb);
 
-# 489 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 523 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_token_string_datum(state, (fn_entry_bb->bblock_label));
 
-# 490 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 524 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_MAKE_CLOSURE);
 }
 
 
-# 495 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 529 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args, boolean_t* rest_argument)
-# 496 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 530 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 497 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 531 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   int64_t arg_count = 0;
 
-# 498 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 532 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   while (true)
 
-# 498 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 532 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 499 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 533 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     token_t* token = roci_next_token(state);
 
-# 500 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 534 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if (token_matches(token, ")"))
 
-# 500 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 534 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 501 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 535 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       break;
     }
 
-# 504 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 538 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if ((arg_count>0))
 
-# 504 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 538 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 505 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 539 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       if ((*rest_argument))
 
-# 505 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 539 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       {
 
-# 506 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 540 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_ARGUMENT_AFTER_REST);
 
-# 507 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 541 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
 
-# 509 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 543 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       if (token_matches(token, ","))
 
-# 509 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 543 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       {
 
-# 510 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 544 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         (token=roci_next_token(state));
       }
       else
 
-# 511 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 545 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       {
 
-# 512 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 546 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA);
 
-# 513 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 547 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
         fatal_error(ERROR_ILLEGAL_STATE);
       }
     }
 
-# 517 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 551 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if (token_matches(token, "..."))
 
-# 517 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 551 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 518 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 552 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       ((*rest_argument)=true);
 
-# 519 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 553 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       (token=roci_next_token(state));
     }
 
-# 524 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 558 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_verify_identifier(state, token);
 
-# 525 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 559 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     ((args[(arg_count++)])=token);
   }
 
-# 527 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 561 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   return arg_count;
 }
 
 
-# 543 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 577 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_compile_record(roci_compiler_state_t* state)
-# 543 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 577 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 544 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 578 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* first_token = roci_peek_token(state);
 
-# 545 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 579 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "record");
 
-# 546 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 580 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   char* record_name = token_to_string(roci_next_token(state));
 
-# 547 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 581 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_expect_token(state, "{");
 
-# 549 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 583 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   int num_fields = 0;
 
-# 550 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 584 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   char* fields[8] = {0};
 
-# 552 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 586 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   do
-# 552 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 586 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 553 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 587 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     token_t* field = roci_next_token(state);
 
-# 554 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 588 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if (token_matches(field, "}"))
 
-# 554 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 588 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 555 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 589 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       break;
     }
 
-# 557 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 591 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if ((num_fields==8))
 
-# 557 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 591 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 558 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 592 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS);
     }
 
-# 560 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 594 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_verify_identifier(state, field);
 
-# 561 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 595 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     ((fields[(num_fields++)])=token_to_string(field));
 
-# 562 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 596 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     token_t* punc = roci_peek_token(state);
 
-# 563 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 597 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if (token_matches(punc, ","))
 
-# 563 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 597 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 564 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 598 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       (punc=roci_next_token(state));
     }
     else
 
-# 565 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 599 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if ((!token_matches(punc, "}")))
 
-# 565 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 599 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 566 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 600 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
     }
   }
   while (true);
 
-# 570 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 604 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   buffer_t* buffer = make_buffer(256);
 
-# 574 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 608 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   buffer_printf(buffer, "let make_%s = fn(", record_name);
 
-# 575 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 609 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   for (
 
-# 575 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 609 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 
-# 575 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 609 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     int i = 0;
 
-# 575 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 609 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     (i<num_fields);
 
-# 575 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 609 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     (i++))
 
-# 575 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 609 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 576 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 610 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     if ((i!=0))
 
-# 576 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 610 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     {
 
-# 577 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 611 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
       buffer_printf(buffer, ",");
     }
 
-# 579 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 613 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     buffer_printf(buffer, "%s", (fields[i]));
   }
 
-# 581 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 615 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   buffer_printf(buffer, "){");
 
-# 582 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 616 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   buffer_printf(buffer, "let result = make_record(\"%s\");", record_name);
 
-# 583 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 617 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   for (
 
-# 583 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 617 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 
-# 583 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 617 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     int i = 0;
 
-# 583 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 617 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     (i<num_fields);
 
-# 583 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 617 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     (i++))
 
-# 583 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 617 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 584 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 618 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     buffer_printf(buffer, "record_set(result, %d, %s);", i, (fields[i]));
   }
 
-# 586 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 620 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   buffer_printf(buffer, "return result;};");
 
-# 590 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 624 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   buffer_printf(buffer, "let is_%s = " "fn(record){if(is_record(record)){if(string_equal(record_tag(" "record), \"%s\")){return true;}}return false;};", record_name, record_name);
 
-# 598 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 632 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   char* record_tag_check = string_printf("if(not(string_equal(record_tag(record),\"%s\"))){debug_error(\"\");}", record_name);
 
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 636 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   for (
 
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 636 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 636 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     int i = 0;
 
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 636 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     (i<num_fields);
 
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 636 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     (i++))
 
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 636 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 603 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 637 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     buffer_printf(buffer, "let %s_get_%s = fn(record){%sreturn record_get(record, %d);};", record_name, (fields[i]), record_tag_check, i);
 
-# 606 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 640 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     buffer_printf(buffer, "let %s_set_%s = fn(record, value){%sreturn " "record_set(record, %d, value);};", record_name, (fields[i]), record_tag_check, i);
   }
 
-# 612 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 646 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   value_array_t* tokens = roci_tokenize_file(state, string_printf("*compile-record*%s", record_name), buffer);
 
-# 614 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 648 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   int position = (state->position);
 
-# 615 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 649 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   for (
 
-# 615 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 649 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 
-# 615 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 649 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     int i = 0;
 
-# 615 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 649 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     (i<(tokens->length));
 
-# 615 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 649 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     (i++))
 
-# 615 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 649 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 616 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 650 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     value_array_insert_at((state->tokens), (position++), value_array_get(tokens, i));
   }
 }
 
 
-# 624 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 658 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_emit_opcode(roci_compiler_state_t* state, roci_opcode_t opcode)
-# 624 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 658 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 625 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 659 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   buffer_append_byte(((state->current_bb)->opcodes), opcode);
 }
 
 
-# 628 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 662 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_emit_token_string_datum(roci_compiler_state_t* state, char* str)
-# 628 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 662 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 629 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 663 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   value_array_add(((state->current_bb)->data), str_to_value(str));
 }
 
 
-# 632 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 666 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_emit_int_datum(roci_compiler_state_t* state, uint64_t val)
-# 632 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 666 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 633 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 667 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   value_array_add(((state->current_bb)->data), u64_to_value(val));
 }
 
 
-# 636 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 670 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_emit_new_environment(roci_compiler_state_t* state)
-# 636 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 670 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 637 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 671 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   ((state->env_depth)++);
 
-# 638 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 672 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_NEW_ENVIRONMENT);
 }
 
 
-# 641 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 675 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_emit_drop_environment(roci_compiler_state_t* state)
-# 641 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 675 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 642 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 676 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   ((state->env_depth)--);
 
-# 643 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 677 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_DROP_ENVIRONMENT);
 }
 
 
-# 646 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 680 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_emit_return(roci_compiler_state_t* state)
-# 646 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 680 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 647 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 681 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   roci_emit_opcode(state, ROCI_OPCODE_RETURN);
 }
 
 
-# 650 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 684 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_emit_get_var(roci_bb_builder_t* bb, char* fn_name)
-# 650 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 684 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 651 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 685 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   buffer_append_byte((bb->opcodes), ROCI_OPCODE_GET_VAR);
 
-# 652 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 686 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   value_array_add((bb->data), ptr_to_value(fn_name));
 }
 
 
-# 655 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 689 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_emit_comment(roci_bb_builder_t* bb, char* str)
-# 655 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-{
-
-# 656 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  buffer_append_byte((bb->opcodes), ROCI_OPCODE_COMMENT);
-
-# 657 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  value_array_add((bb->data), ptr_to_value(str));
-}
-
-
-# 660 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_emit_debug_info(roci_compiler_state_t* state, token_t* token)
-# 660 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-{
-
-# 661 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_opcode(state, ROCI_OPCODE_DEBUG_INFO);
-
-# 662 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_int_datum(state, token_to_roci_src_info((state->buffer_number), token));
-}
-
-
-# 676 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state, char* label_prefix)
-# 677 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-{
-
-# 678 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  if ((label_prefix==((void *)0)))
-
-# 678 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  {
-
-# 679 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-    (label_prefix="bb_");
-  }
-
-# 681 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_bb_builder_t* result = add_bblock((state->bblocks));
-
-# 682 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  ((result->bblock_label)=string_printf("%s%d", label_prefix, ((state->bb_label_count)++)));
-
-# 684 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_emit_comment(result, (result->bblock_label));
-
-# 685 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  return result;
-}
-
-
-# 688 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_emit_branch(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
 # 689 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
 # 690 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR);
+  buffer_append_byte((bb->opcodes), ROCI_OPCODE_COMMENT);
 
 # 691 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
+  value_array_add((bb->data), ptr_to_value(str));
 }
 
 
 # 694 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_emit_br_true(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
-# 695 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_emit_debug_info(roci_compiler_state_t* state, token_t* token)
+# 694 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
+
+# 695 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_emit_opcode(state, ROCI_OPCODE_DEBUG_INFO);
 
 # 696 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR_TRUE);
-
-# 697 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
+  roci_emit_int_datum(state, token_to_roci_src_info((state->buffer_number), token));
 }
 
-
-# 709 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-boolean_t roci_eof(roci_compiler_state_t* state)
-# 709 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-{
 
 # 710 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  return ((state->position)>=((state->tokens)->length));
-}
-
-
-# 713 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_skip_token(roci_compiler_state_t* state)
-# 713 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+roci_bb_builder_t* roci_new_bblock(roci_compiler_state_t* state, char* label_prefix)
+# 711 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
+# 712 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  if ((label_prefix==((void *)0)))
+
+# 712 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  {
+
 # 713 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  roci_next_token(state);
-}
-
+    (label_prefix="bb_");
+  }
 
 # 715 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-token_t* roci_peek_token(roci_compiler_state_t* state)
-# 715 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-{
+  roci_bb_builder_t* result = add_bblock((state->bblocks));
 
 # 716 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  return token_at((state->tokens), (state->position));
+  ((result->bblock_label)=string_printf("%s%d", label_prefix, ((state->bb_label_count)++)));
+
+# 718 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_emit_comment(result, (result->bblock_label));
+
+# 719 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  return result;
 }
 
 
-# 719 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-token_t* roci_next_token(roci_compiler_state_t* state)
-# 719 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-{
-
-# 720 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-  return token_at((state->tokens), ((state->position)++));
-}
-
-
-# 723 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
-void roci_expect_token(roci_compiler_state_t* state, char* token_string)
+# 722 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_emit_branch(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
 # 723 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
 # 724 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR);
+
+# 725 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
+}
+
+
+# 728 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_emit_br_true(roci_bb_builder_t* src_bblock, roci_bb_builder_t* tgt_bblock)
+# 729 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 730 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  buffer_append_byte((src_bblock->opcodes), ROCI_OPCODE_BR_TRUE);
+
+# 731 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  value_array_add((src_bblock->data), ptr_to_value((tgt_bblock->bblock_label)));
+}
+
+
+# 743 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+boolean_t roci_eof(roci_compiler_state_t* state)
+# 743 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 744 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  return ((state->position)>=((state->tokens)->length));
+}
+
+
+# 747 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_skip_token(roci_compiler_state_t* state)
+# 747 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 747 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  roci_next_token(state);
+}
+
+
+# 749 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+token_t* roci_peek_token(roci_compiler_state_t* state)
+# 749 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 750 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  return token_at((state->tokens), (state->position));
+}
+
+
+# 753 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+token_t* roci_next_token(roci_compiler_state_t* state)
+# 753 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 754 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+  return token_at((state->tokens), ((state->position)++));
+}
+
+
+# 757 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+void roci_expect_token(roci_compiler_state_t* state, char* token_string)
+# 757 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+{
+
+# 758 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   token_t* token = roci_next_token(state);
 
-# 725 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 759 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if ((!token_matches(token, token_string)))
 
-# 725 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 759 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 726 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 760 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     log_warn("roci expected %s as the next token but got %s at line %d col %d", token_string, token_to_string(token), (token->line_number), (token->column_number));
 
-# 729 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 763 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
   }
 }
 
 
-# 733 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 767 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 void roci_verify_identifier(roci_compiler_state_t* state, token_t* token)
-# 733 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 767 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
 {
 
-# 734 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 768 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   if (((token->type)!=TOKEN_TYPE_IDENTIFIER))
 
-# 734 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 768 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
   {
 
-# 735 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
+# 769 "/Users/jawilson/src/omni-c/src/roci/roci-compiler.c"
     roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
   }
 }
@@ -34333,2942 +34543,3056 @@ void roci_add_primitives_to_env(roci_env_t* env)
 # 107 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_not), "not");
 
-# 111 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 108 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_boolean_and), "boolean_and");
+
+# 109 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_boolean_or), "boolean_or");
+
+# 113 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_is_double), "is_double");
 
-# 114 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 116 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_is_buffer), "is_buffer");
 
-# 115 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 117 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_make_buffer), "make_buffer");
 
-# 116 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 118 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_buffer_get), "buffer_get");
 
-# 117 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 119 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_buffer_length), "buffer_length");
 
-# 118 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 120 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_buffer_append_string), "buffer_append_string");
 
-# 120 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 122 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_buffer_to_string), "buffer_to_string");
 
-# 128 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 130 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_is_record), "is_record");
 
-# 129 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 131 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_make_record), "make_record");
 
-# 130 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 132 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_record_tag), "record_tag");
 
-# 131 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 133 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_record_get), "record_get");
 
-# 132 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 134 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_record_set), "record_set");
 
-# 136 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 138 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_add_primitive(env, (&roci_primitive_draw_random_screen), "draw_random_screen");
+
+# 140 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_add_primitive(env, (&roci_primitive_fatal_error), "fatal_error");
 }
 
 
-# 146 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 149 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_add_primitive(roci_env_t* env, roci_c_primitive_t primitive, char* name)
-# 147 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 150 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 148 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 151 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_define_var(env, name, u64_to_value((/*CAST*/(uint64_t) primitive)), ROCI_TAG_C_PRIMITIVE);
 }
 
 
-# 165 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 168 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_debug_error(roci_vm_state_t* state)
-# 165 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 168 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 166 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 169 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_debug_error(state, roci_pop_string(state));
 
-# 167 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 170 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   fprintf(stderr, "Exiting after user signaled error (debug_error is not continuable.)");
 
-# 170 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 173 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   exit(1);
 }
 
 
-# 173 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 176 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_equal(roci_vm_state_t* state)
-# 173 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 176 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 174 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 177 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 174 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 177 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 175 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 178 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "equal expects 2 argument");
   }
 
-# 177 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 180 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t arg2 = roci_pop_value(state);
 
-# 178 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 181 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t arg1 = roci_pop_value(state);
 
-# 179 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 182 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_boolean(state, roci_values_equal(arg1, arg2));
 }
 
 
-# 182 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 185 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 boolean_t roci_values_equal(roci_value_t a, roci_value_t b)
-# 182 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 185 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 183 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if ((((a.tag)==(b.tag))&&((a.raw)==(b.raw))))
-
-# 183 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 184 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    return true;
-  }
-
 # 186 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if ((((a.tag)==ROCI_TAG_STRING)&&((b.tag)==ROCI_TAG_STRING)))
+  if ((((a.tag)==(b.tag))&&((a.raw)==(b.raw))))
 
 # 186 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
 # 187 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    return string_equal((/*CAST*/(char*) (a.raw)), (/*CAST*/(char*) (b.raw)));
+    return true;
   }
 
 # 189 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if ((((a.tag)==ROCI_TAG_RECORD)&&((b.tag)==ROCI_TAG_RECORD)))
+  if ((((a.tag)==ROCI_TAG_STRING)&&((b.tag)==ROCI_TAG_STRING)))
 
 # 189 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
 # 190 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_record_t* rec_a = (/*CAST*/(roci_record_t*) (a.raw));
-
-# 191 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_record_t* rec_b = (/*CAST*/(roci_record_t*) (b.raw));
+    return string_equal((/*CAST*/(char*) (a.raw)), (/*CAST*/(char*) (b.raw)));
+  }
 
 # 192 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    if ((!string_equal((rec_a->record_tag), (rec_b->record_tag))))
+  if ((((a.tag)==ROCI_TAG_RECORD)&&((b.tag)==ROCI_TAG_RECORD)))
 
 # 192 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    {
+  {
 
 # 193 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      return false;
-    }
+    roci_record_t* rec_a = (/*CAST*/(roci_record_t*) (a.raw));
+
+# 194 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_record_t* rec_b = (/*CAST*/(roci_record_t*) (b.raw));
 
 # 195 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    for (
-
-# 195 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-
-# 195 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      int i = 0;
-
-# 195 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      (i<8);
-
-# 195 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      (i++))
+    if ((!string_equal((rec_a->record_tag), (rec_b->record_tag))))
 
 # 195 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     {
 
 # 196 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      roci_value_t va = roci_record_get(rec_a, i);
-
-# 197 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      roci_value_t vb = roci_record_get(rec_b, i);
+      return false;
+    }
 
 # 198 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      if ((!roci_values_equal(va, vb)))
+    for (
 
 # 198 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      {
+
+# 198 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+      int i = 0;
+
+# 198 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+      (i<8);
+
+# 198 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+      (i++))
+
+# 198 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    {
 
 # 199 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+      roci_value_t va = roci_record_get(rec_a, i);
+
+# 200 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+      roci_value_t vb = roci_record_get(rec_b, i);
+
+# 201 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+      if ((!roci_values_equal(va, vb)))
+
+# 201 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+      {
+
+# 202 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
         return false;
       }
     }
 
-# 202 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 205 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     return true;
   }
 
-# 206 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 209 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   return false;
 }
 
 
-# 209 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 212 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_hash(roci_vm_state_t* state)
-# 209 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 212 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 210 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 213 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 210 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 213 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 211 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 214 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "hash expects 1 argument");
   }
 
-# 213 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 216 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t arg1 = roci_pop_value(state);
 
-# 214 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 217 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, roci_hash_value(state, arg1));
 }
 
 
-# 229 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 232 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value)
-# 229 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 232 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 230 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 233 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t mask = 0x7fffffffffffffffULL;
 
-# 231 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 234 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t tag_bits = ((/*CAST*/(uint64_t) (value.tag))<<56);
 
-# 233 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 236 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   switch ((value.tag))
 
-# 233 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 236 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 235 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 238 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_UNKNOWN:
 
-# 236 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 239 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     break;
 
-# 238 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 241 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_BOOLEAN:
 
-# 239 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 242 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     return (/*CAST*/(int64_t) (roci_mix64((tag_bits|((value.raw) ? 1 : 0)))&mask));
 
-# 241 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 244 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_INTEGER:
 
-# 242 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 245 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     return (/*CAST*/(int64_t) (roci_mix64((tag_bits^(value.raw)))&mask));
 
-# 244 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 247 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_DOUBLE:
 
-# 244 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 247 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     {
 
-# 250 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 253 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       uint64_t bits = double_as_uint64((value.raw));
 
-# 251 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 254 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       return (/*CAST*/(int64_t) (roci_mix64((tag_bits^bits))&mask));
     }
 
-# 254 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 257 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_STRING:
 
-# 254 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 257 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     {
 
-# 255 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 258 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       uint64_t str_hash = fasthash64((/*CAST*/(char*) (value.raw)), strlen((/*CAST*/(char*) (value.raw))), 0);
 
-# 257 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 260 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       return (/*CAST*/(int64_t) (roci_mix64((tag_bits^str_hash))&mask));
     }
 
-# 260 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 263 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_CLOSURE:
 
-# 261 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 264 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_C_PRIMITIVE:
 
-# 262 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 265 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_LIST:
 
-# 263 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 266 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_BUFFER:
 
-# 264 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 267 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     return (/*CAST*/(int64_t) (roci_mix64((tag_bits^(value.raw)))&mask));
 
-# 266 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 269 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_RECORD:
 
-# 266 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 269 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     {
 
-# 267 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 270 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       roci_record_t* rec = (/*CAST*/(roci_record_t*) (value.raw));
 
-# 268 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 271 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       int64_t hash = string_hash((rec->record_tag));
 
-# 269 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 272 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       for (
 
-# 269 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-
-# 269 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-        int i = 0;
-
-# 269 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-        (i<8);
-
-# 269 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-        (i++))
-
-# 269 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-      {
-
-# 270 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-        roci_value_t v = roci_record_get(rec, i);
-
-# 271 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-        (hash^=roci_hash_value(state, v));
+# 272 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
 # 272 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+        int i = 0;
+
+# 272 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+        (i<8);
+
+# 272 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+        (i++))
+
+# 272 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+      {
+
+# 273 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+        roci_value_t v = roci_record_get(rec, i);
+
+# 274 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+        (hash^=roci_hash_value(state, v));
+
+# 275 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
         (hash=roci_mix64(hash));
       }
 
-# 274 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 277 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       return hash;
     }
 
-# 277 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 280 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     case ROCI_TAG_STACK_MARKER:
 
-# 278 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 281 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     break;
   }
 
-# 281 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 284 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_debug_error(state, "unexpected roci value given to hash");
 
-# 283 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 286 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   return 0;
 }
 
 
-# 288 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 291 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_eval(roci_vm_state_t* state)
-# 288 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 291 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 289 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 292 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 289 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 292 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 290 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 293 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "eval expects 1 argument");
   }
 
-# 292 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 295 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg1 = roci_pop_string(state);
 
-# 294 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 297 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_eval_result_t result = roci_eval_buffer(get_root_env((state->env)), string_printf("*eval*%d", (eval_count++)), buffer_from_string(arg1), false);
 
-# 298 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 301 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if ((((result.compiler_state)->compiler_error)!=ROCI_COMPILE_TIME_ERROR_NONE))
 
-# 298 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 301 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 299 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 302 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "Compilation of a dynamically called eval failed");
   }
 
-# 302 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 305 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 305 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 308 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_apply(roci_vm_state_t* state)
-# 305 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 308 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 306 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 309 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 306 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 309 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 307 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 310 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "apply expects 2 argument");
   }
 
-# 309 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 312 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 310 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 313 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t proc = roci_pop_value(state);
 
-# 311 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 314 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   for (
 
-# 311 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 314 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
-# 311 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 314 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     int i = 0;
 
-# 311 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 314 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     (i<(list->length));
 
-# 311 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 314 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     (i++))
 
-# 311 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 314 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 312 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 315 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, i).ptr));
 
-# 313 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 316 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_value(state, (*element));
   }
 
-# 315 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 318 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   ((state->n_args)=(list->length));
 
-# 316 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 319 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_call(state, proc, (list->length));
 }
 
 
-# 324 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 327 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_exit(roci_vm_state_t* state)
-# 324 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 327 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 325 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 328 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 325 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 328 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 326 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 329 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "roci_exit expects 1 argument");
   }
 
-# 328 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 331 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t code = roci_pop_integer(state);
 
-# 329 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 332 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   exit(code);
 }
 
 
-# 338 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 341 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_load(roci_vm_state_t* state)
-# 338 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 341 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 339 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 342 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 339 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 342 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 340 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 343 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "roci_load expects 1 argument");
   }
 
-# 342 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 345 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* filename = roci_pop_string(state);
 
-# 343 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 346 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   file_t* file = read_file(filename);
 
-# 344 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 347 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_compiler_state_t* compiler_state = malloc_struct(roci_compiler_state_t);
 
-# 345 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 348 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   ((compiler_state->bblocks)=make_value_array(16));
 
-# 346 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 349 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_compile_buffer(compiler_state, (file->file_name), (file->data));
 
-# 347 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 350 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((compiler_state->compiler_error)!=ROCI_COMPILE_TIME_ERROR_NONE))
 
-# 347 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 350 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 348 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 351 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "roci_load experienced an error.");
 
-# 349 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 352 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
 
-# 350 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 353 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     return;
   }
 
-# 352 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 355 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* bblocks = build_bblocks((compiler_state->bblocks));
 
-# 353 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 356 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
 
-# 354 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_execute((state->env), entry_point);
+# 357 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_execute(roci_make_vm_state((state->env)), entry_point);
 
-# 355 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 358 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
-
-# 358 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_print_env(roci_vm_state_t* state)
-# 358 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 359 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  buffer_t* buffer = make_buffer(10);
-
-# 360 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_dump_env((state->env), buffer);
 
 # 361 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  fprintf(stdout, "%s", buffer_to_c_string(buffer));
+void roci_primitive_print_env(roci_vm_state_t* state)
+# 361 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
 
 # 362 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  buffer_t* buffer = make_buffer(10);
+
+# 363 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_dump_env((state->env), buffer);
+
+# 364 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  fprintf(stdout, "%s", buffer_to_c_string(buffer));
+
+# 365 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 365 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 368 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_print_string(roci_vm_state_t* state)
-# 365 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 368 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 366 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 369 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 366 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 369 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 367 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 370 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "print_string expects a single string argument");
   }
 
-# 369 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 372 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg = roci_pop_string(state);
 
-# 370 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 373 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   fprintf(stdout, "%s", arg);
 
-# 371 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 374 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 374 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 377 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_println(roci_vm_state_t* state)
-# 374 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 377 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 375 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 378 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 375 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 378 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 376 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 379 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "println_string expects 1 argument");
   }
 
-# 378 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 381 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t element = roci_pop_value(state);
 
-# 379 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 382 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((element.tag)==ROCI_TAG_STRING))
 
-# 379 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 382 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 380 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 383 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     fprintf(stdout, "%s\n", (/*CAST*/(char*) (element.raw)));
   }
   else
 
-# 381 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 384 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 382 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 385 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     fprintf(stdout, "%s\n", roci_value_to_c_string(element));
   }
 
-# 384 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 387 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 388 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 391 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_equal(roci_vm_state_t* state)
-# 388 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 391 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 389 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 392 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 389 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 392 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 390 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 393 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_equal expects two string arguments");
   }
 
-# 392 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 395 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg1 = roci_pop_string(state);
 
-# 393 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 396 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg0 = roci_pop_string(state);
 
-# 394 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 397 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (string_equal(arg0, arg1))
 
-# 394 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 397 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 395 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 398 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 396 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 399 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 397 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 400 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 401 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 404 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_starts_with(roci_vm_state_t* state)
-# 401 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 404 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 402 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 405 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 402 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 405 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 403 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 406 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_starts_with expects two string arguments");
   }
 
-# 405 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 408 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg1 = roci_pop_string(state);
 
-# 406 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 409 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg0 = roci_pop_string(state);
 
-# 407 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 410 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (string_starts_with(arg0, arg1))
 
-# 407 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 410 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 408 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 411 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 409 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 412 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 410 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 413 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 414 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 417 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_ends_with(roci_vm_state_t* state)
-# 414 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 417 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 415 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 418 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 415 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 418 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 416 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 419 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_ends_with expects two string arguments");
   }
 
-# 418 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 421 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg1 = roci_pop_string(state);
 
-# 419 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 422 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg0 = roci_pop_string(state);
 
-# 420 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 423 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (string_ends_with(arg0, arg1))
 
-# 420 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 423 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 421 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 424 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 422 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 425 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 423 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 426 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 427 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 430 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_index_of(roci_vm_state_t* state)
-# 427 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 430 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 428 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 431 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 428 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 431 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 429 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 432 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_index_of expects two string arguments");
   }
 
-# 431 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 434 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg1 = roci_pop_string(state);
 
-# 432 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 435 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg0 = roci_pop_string(state);
 
-# 433 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 436 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, string_index_of(arg0, arg1));
 }
 
 
-# 436 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 439 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_contains(roci_vm_state_t* state)
-# 436 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 439 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 437 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 440 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 437 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 440 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 438 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 441 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_contains expects two string arguments");
   }
 
-# 440 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 443 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg1 = roci_pop_string(state);
 
-# 441 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 444 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg0 = roci_pop_string(state);
 
-# 442 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 445 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (string_contains(arg0, arg1))
 
-# 442 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 445 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 443 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 446 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 444 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 447 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 445 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 448 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 449 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 452 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_replace_all(roci_vm_state_t* state)
-# 449 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 452 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 450 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 453 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=3))
 
-# 450 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 453 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 451 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 454 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_replace_all expects two three arguments");
   }
 
-# 453 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 456 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg2 = roci_pop_string(state);
 
-# 454 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 457 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg1 = roci_pop_string(state);
 
-# 455 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 458 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* arg0 = roci_pop_string(state);
 
-# 456 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 459 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_string(state, string_replace_all(arg0, arg1, arg2));
 }
 
 
-# 459 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 462 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_substring(roci_vm_state_t* state)
-# 459 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 462 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 460 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 463 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=3))
 
-# 460 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 463 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 461 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 464 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_substring expects 3 arguments");
   }
 
-# 463 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 466 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t end = roci_pop_integer(state);
 
-# 464 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 467 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t start = roci_pop_integer(state);
 
-# 465 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 468 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* str = roci_pop_string(state);
 
-# 466 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 469 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* result = string_substring(str, start, end);
 
-# 467 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 470 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_string(state, result);
 }
 
 
-# 475 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 478 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_append(roci_vm_state_t* state)
-# 475 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 478 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 476 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 479 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   buffer_t* buffer = make_buffer(10);
 
-# 477 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 480 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   for (
 
-# 477 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-
-# 477 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    int64_t arg_num = 0;
-
-# 477 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (arg_num<(state->n_args));
-
-# 477 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (arg_num++))
-
-# 477 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 478 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_value_t value = roci_debug_peek_value(state, ((state->n_args)-arg_num));
-
-# 479 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    if (((value.tag)!=ROCI_TAG_STRING))
-
-# 479 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    {
+# 480 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
 # 480 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 480 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 480 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (arg_num++))
+
+# 480 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 481 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_value_t value = roci_debug_peek_value(state, ((state->n_args)-arg_num));
+
+# 482 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    if (((value.tag)!=ROCI_TAG_STRING))
+
+# 482 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    {
+
+# 483 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       roci_debug_error(state, "string_append expects string arguments");
     }
 
-# 482 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 485 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     buffer_append_string(buffer, (/*CAST*/(char*) (value.raw)));
   }
 
-# 484 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 487 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   for (
 
-# 484 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 487 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
-# 484 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 487 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     int64_t arg_num = 0;
 
-# 484 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 487 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     (arg_num<(state->n_args));
 
-# 484 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 487 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     (arg_num++))
 
-# 484 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 487 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 485 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 488 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_pop_value(state);
   }
 
-# 487 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 490 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_string(state, buffer_to_c_string(buffer));
 }
 
 
-# 490 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 493 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_make_list(roci_vm_state_t* state)
-# 490 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 493 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 491 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 494 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* list = make_value_array((state->n_args));
 
-# 492 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 495 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   for (
 
-# 492 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-
-# 492 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    int64_t arg_num = 0;
-
-# 492 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (arg_num<(state->n_args));
-
-# 492 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (arg_num++))
-
-# 492 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 493 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_value_t* value = roci_value_to_heap(roci_debug_peek_value(state, ((state->n_args)-arg_num)));
+# 495 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
 # 495 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    int64_t arg_num = 0;
+
+# 495 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (arg_num<(state->n_args));
+
+# 495 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (arg_num++))
+
+# 495 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 496 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_value_t* value = roci_value_to_heap(roci_debug_peek_value(state, ((state->n_args)-arg_num)));
+
+# 498 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     value_array_add(list, ptr_to_value(value));
   }
 
-# 497 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 500 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   for (
 
-# 497 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 500 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
-# 497 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 500 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     int64_t arg_num = 0;
 
-# 497 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 500 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     (arg_num<(state->n_args));
 
-# 497 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 500 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     (arg_num++))
 
-# 497 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 500 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 498 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 501 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_pop_value(state);
   }
 
-# 500 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 503 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_list(state, list);
 }
 
 
-# 503 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 506 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_list_get(roci_vm_state_t* state)
-# 503 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 506 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 504 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 507 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 504 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 507 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 505 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 508 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "list_get expects 2 arguments");
   }
 
-# 507 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 510 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t position = roci_pop_integer(state);
 
-# 508 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 511 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 509 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 512 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, position).ptr));
 
-# 511 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 514 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_value(state, (*element));
 }
 
 
-# 514 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 517 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_list_set(roci_vm_state_t* state)
-# 514 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 517 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 515 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 518 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=3))
 
-# 515 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 518 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 516 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 519 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "list_set expects 3 arguments");
   }
 
-# 518 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 521 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t element = roci_pop_value(state);
 
-# 519 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 522 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t position = roci_pop_integer(state);
 
-# 520 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 523 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 521 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 524 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_replace(list, position, ptr_to_value(roci_value_to_heap(element)));
 
-# 523 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 526 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 526 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 529 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_list_push(roci_vm_state_t* state)
-# 526 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 529 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 527 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 530 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 527 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 530 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 528 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 531 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "list_push expects 2 arguments");
   }
 
-# 530 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 533 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t element = roci_pop_value(state);
 
-# 531 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 534 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 532 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 535 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_push(list, ptr_to_value(roci_value_to_heap(element)));
 
-# 533 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 536 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 536 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 539 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_list_delete_at(roci_vm_state_t* state)
-# 536 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 539 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 537 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 540 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 537 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 540 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 538 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 541 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "list_delete_at expects 2 arguments");
   }
 
-# 540 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 543 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t index = roci_pop_integer(state);
 
-# 541 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 544 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 542 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 545 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_delete_at(list, index);
 
-# 543 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 546 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 546 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 549 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_list_for_each(roci_vm_state_t* state)
-# 546 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 549 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 547 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 550 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 547 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 550 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 548 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 551 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "list_for_each requires two arguments");
   }
 
-# 550 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 553 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t proc = roci_pop_value(state);
 
-# 551 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 554 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 552 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 555 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   for (
 
-# 552 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-
-# 552 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    int i = 0;
-
-# 552 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (i<(list->length));
-
-# 552 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (i++))
-
-# 552 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 553 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, i).ptr));
-
-# 554 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_value(state, (*element));
+# 555 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
 # 555 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_call(state, proc, 1);
+    int i = 0;
+
+# 555 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (i<(list->length));
+
+# 555 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (i++))
+
+# 555 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
 
 # 556 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(list, i).ptr));
+
+# 557 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_value(state, (*element));
+
+# 558 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_call(state, proc, 1);
+
+# 559 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_pop_value(state);
   }
 
-# 558 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 561 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 561 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 564 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_list_length(roci_vm_state_t* state)
-# 561 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 564 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 562 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 565 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 562 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 565 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 563 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 566 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "list_length expects 1 arguments");
   }
 
-# 565 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 568 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* list = roci_pop_list(state);
 
-# 566 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 569 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (list->length));
 }
 
 
-# 569 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 572 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_to_string(roci_vm_state_t* state)
-# 569 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 572 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 570 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 573 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 570 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 573 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 571 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 574 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "to_string expects 1 argument");
   }
 
-# 573 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 576 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t element = roci_pop_value(state);
 
-# 574 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 577 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_string(state, roci_value_to_c_string(element));
 }
 
 
-# 577 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 580 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_timestamp(roci_vm_state_t* state)
-# 577 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 580 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 578 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 581 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 578 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 581 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 579 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 582 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "timestamp expects 1 argument");
   }
 
-# 581 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 584 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* filename = roci_pop_string(state);
 
-# 582 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 585 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t timestamp = get_file_modification_time(filename);
 
-# 583 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 586 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, timestamp);
 }
 
 
-# 595 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 598 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_shell(roci_vm_state_t* state)
-# 595 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 598 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 596 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 599 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 596 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 599 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 597 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 600 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "shell expects 1 argument");
   }
 
-# 599 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 602 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* lst = roci_pop_list(state);
 
-# 600 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 603 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t len = (lst->length);
 
-# 601 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 604 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* argv = make_value_array((lst->length));
 
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 605 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   for (
 
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    int i = 0;
-
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (i<len);
-
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (i++))
-
-# 602 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 603 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(lst, i).ptr));
-
-# 604 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    if (((element->tag)!=ROCI_TAG_STRING))
-
-# 604 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    {
+# 605 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
 # 605 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    int i = 0;
+
+# 605 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (i<len);
+
+# 605 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (i++))
+
+# 605 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 606 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_value_t* element = (/*CAST*/(roci_value_t*) (value_array_get(lst, i).ptr));
+
+# 607 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    if (((element->tag)!=ROCI_TAG_STRING))
+
+# 607 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    {
+
+# 608 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       roci_debug_error(state, "shell expects all list elements to be strings");
     }
 
-# 607 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 610 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     value_array_push(argv, str_to_value((/*CAST*/(char*) (element->raw))));
   }
 
-# 610 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 613 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   sub_process_t* sub_process = make_sub_process(argv);
 
-# 611 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 614 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   sub_process_launch(sub_process);
 
-# 613 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 616 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   buffer_t* stdout = make_buffer(1);
 
-# 614 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 617 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   buffer_t* stderr = stdout;
 
-# 615 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 618 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   do
-# 615 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 618 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 616 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 619 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     sub_process_read(sub_process, stdout, stderr);
 
-# 617 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 620 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     usleep(5);
   }
   while (is_sub_process_running(sub_process));
 
-# 619 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 622 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   sub_process_read(sub_process, stdout, stderr);
 
-# 620 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 623 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   sub_process_wait(sub_process);
 
-# 622 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 625 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (sub_process->exit_code));
 
-# 623 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 626 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_string(state, buffer_to_c_string(stdout));
 
-# 624 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 627 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   ((state->n_args)=2);
 
-# 625 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 628 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_primitive_make_list(state);
 }
 
 
-# 628 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 631 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_shell_exit_code(roci_vm_state_t* state)
-# 628 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 631 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 629 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 632 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 629 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 632 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 630 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 633 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "shell_exit_code expects 1 argument");
   }
 
-# 632 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 635 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, 0);
 
-# 633 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 636 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   ((state->n_args)=2);
 
-# 634 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 637 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_primitive_list_get(state);
 }
 
 
-# 637 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 640 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_shell_stdout(roci_vm_state_t* state)
-# 637 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 640 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 638 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 641 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 638 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 641 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 639 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 642 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "shell_stdout expects 1 argument");
   }
 
-# 641 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 644 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, 1);
 
-# 642 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 645 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   ((state->n_args)=2);
 
-# 643 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 646 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_primitive_list_get(state);
 }
 
 
-# 646 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 649 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void XXX_roci_primitive_platform(roci_vm_state_t* state)
-# 646 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 649 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 647 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 650 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=0))
 
-# 647 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 650 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 648 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 651 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "platform expects 0 argument");
   }
 
-# 650 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 653 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_string(state, "linux");
 }
 
 
-# 666 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 669 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_glob(roci_vm_state_t* state)
-# 666 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 669 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 667 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 670 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 667 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 670 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 668 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 671 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "glob expects 1 argument");
   }
 
-# 670 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 673 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* pattern = roci_pop_string(state);
 
-# 672 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 675 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   glob_t glob_result = ((glob_t) {0});
 
-# 675 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 678 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int return_value = glob(pattern, 0, NULL, (&glob_result));
 
-# 676 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 679 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   value_array_t* result = make_value_array((state->n_args));
 
-# 677 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 680 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if ((return_value==0))
 
-# 677 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 680 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 678 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 681 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     for (
 
-# 678 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 681 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
-# 678 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 681 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       int i = 0;
 
-# 678 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 681 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       (i<(glob_result.gl_pathc));
 
-# 678 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 681 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       (++i))
 
-# 678 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 681 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     {
 
-# 679 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 682 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
       value_array_push(result, ptr_to_value(string_to_roci_string(((glob_result.gl_pathv)[i]))));
     }
   }
   else
 
-# 682 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 685 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if ((return_value!=GLOB_NOMATCH))
 
-# 682 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 685 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 683 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 686 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "An error occurred during globbing.");
   }
 
-# 685 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 688 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_list(state, result);
 }
 
 
-# 688 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 691 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_path_is_directory(roci_vm_state_t* state)
-# 688 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 691 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 689 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 692 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 689 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 692 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 690 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 693 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "path_is_directory expects 1 argument");
   }
 
-# 692 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 695 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* path = roci_pop_string(state);
 
-# 693 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 696 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_boolean(state, path_is_directory(path));
 }
 
 
-# 696 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 699 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_path_is_file(roci_vm_state_t* state)
-# 696 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 699 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 697 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 700 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 697 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 700 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 698 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 701 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "path_is_file expects 1 argument");
   }
 
-# 700 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 703 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* path = roci_pop_string(state);
 
-# 701 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 704 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_boolean(state, path_is_file(path));
 }
 
 
-# 704 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 707 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_path_remove(roci_vm_state_t* state)
-# 704 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 707 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 705 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 708 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 705 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 708 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 706 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 709 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "path_remove expects 1 argument");
   }
 
-# 708 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 711 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* path = roci_pop_string(state);
 
-# 709 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 712 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if ((remove(path)!=0))
 
-# 709 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 712 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 710 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 713 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, string_append("File was not removed: ", path));
   }
 
-# 712 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 715 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 717 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 720 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_is_integer(roci_vm_state_t* state)
-# 717 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 720 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 718 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 721 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 718 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 721 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 719 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 722 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "is_integer expects 1 argument");
   }
 
-# 721 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 724 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t value = roci_pop_value(state);
 
-# 722 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 725 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((value.tag)==ROCI_TAG_INTEGER))
 
-# 722 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 725 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 723 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 726 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 724 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 727 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 725 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 728 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 729 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 732 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_neg(roci_vm_state_t* state)
-# 729 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 732 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 730 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 733 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 730 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 733 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 731 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 734 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "neg expects 1 argument");
   }
 
-# 733 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 736 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (-roci_pop_integer(state)));
 }
 
 
-# 736 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 739 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_iadd(roci_vm_state_t* state)
-# 736 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 739 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 737 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 740 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 737 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 740 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 738 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 741 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "iadd expects two integer arguments");
   }
 
-# 740 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 743 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 741 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 744 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 742 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 745 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0+arg1));
 }
 
 
-# 745 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 748 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_isub(roci_vm_state_t* state)
-# 745 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 748 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 746 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 749 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 746 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 749 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 747 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 750 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "isub expects two integer arguments");
   }
 
-# 749 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 752 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 750 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 753 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 751 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 754 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0-arg1));
 }
 
 
-# 754 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 757 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_imul(roci_vm_state_t* state)
-# 754 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 757 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 755 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 758 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 755 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 758 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 756 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 759 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "imul expects two integer arguments");
   }
 
-# 758 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 761 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 759 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 762 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 760 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 763 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0*arg1));
 }
 
 
-# 763 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 766 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_idiv(roci_vm_state_t* state)
-# 763 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 766 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 764 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 767 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 764 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 767 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 765 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 768 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "idiv expects two integer arguments");
   }
 
-# 767 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 770 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 768 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 771 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 769 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 772 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0/arg1));
 }
 
 
-# 772 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 775 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_irem(roci_vm_state_t* state)
-# 772 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 775 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 773 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 776 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 773 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 776 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 774 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 777 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "irem expects two integer arguments");
   }
 
-# 776 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 779 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 777 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 780 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 778 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 781 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0%arg1));
 }
 
 
-# 781 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 784 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_ilt(roci_vm_state_t* state)
-# 781 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 784 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 782 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 785 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 782 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 785 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 783 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 786 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "ilt expects two integer arguments");
   }
 
-# 785 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 788 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 786 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 789 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 787 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 790 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_boolean(state, (arg0<arg1));
 }
 
 
-# 790 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 793 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_ilte(roci_vm_state_t* state)
-# 790 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 793 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 791 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 794 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 791 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 794 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 792 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 795 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "ilte expects two integer arguments");
   }
 
-# 794 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 797 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 795 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 798 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 796 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 799 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_boolean(state, (arg0<=arg1));
 }
 
 
-# 799 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 802 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_iequal(roci_vm_state_t* state)
-# 799 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 802 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 800 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 803 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 800 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 803 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 801 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 804 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "iequal expects two integer arguments");
   }
 
-# 803 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 806 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 804 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 807 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 805 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 808 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if ((arg0==arg1))
 
-# 805 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 808 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 806 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 809 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 807 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 810 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 808 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 811 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 812 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 815 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_igte(roci_vm_state_t* state)
-# 812 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 815 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 813 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 816 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 813 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 816 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 814 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 817 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "igte expects two integer arguments");
   }
 
-# 816 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 819 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 817 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 820 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 818 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 821 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_boolean(state, (arg0>=arg1));
 }
 
 
-# 821 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 824 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_igt(roci_vm_state_t* state)
-# 821 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 824 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 822 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 825 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 822 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 825 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 823 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 826 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "igt expects two integer arguments");
   }
 
-# 825 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 828 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg1 = roci_pop_integer(state);
 
-# 826 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 829 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t arg0 = roci_pop_integer(state);
 
-# 827 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 830 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_boolean(state, (arg0>arg1));
 }
 
 
-# 832 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 835 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_bit_not(roci_vm_state_t* state)
-# 832 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 835 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 833 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 836 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 833 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 836 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 834 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 837 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "bit_not expects 1 argument");
   }
 
-# 836 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 839 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg1 = roci_pop_integer(state);
 
-# 837 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 840 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (~arg1));
 }
 
 
-# 840 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 843 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_bit_and(roci_vm_state_t* state)
-# 840 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 843 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 841 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 844 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 841 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 844 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 842 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 845 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "bit_and expects two integer arguments");
   }
 
-# 844 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 847 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg1 = roci_pop_integer(state);
 
-# 845 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 848 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg0 = roci_pop_integer(state);
 
-# 846 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 849 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0&arg1));
 }
 
 
-# 849 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 852 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_bit_or(roci_vm_state_t* state)
-# 849 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 852 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 850 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 853 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 850 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 853 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 851 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 854 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "bit_or expects two integer arguments");
   }
 
-# 853 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 856 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg1 = roci_pop_integer(state);
 
-# 854 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 857 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg0 = roci_pop_integer(state);
 
-# 855 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 858 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0|arg1));
 }
 
 
-# 858 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 861 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_bit_shl(roci_vm_state_t* state)
-# 858 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 861 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 859 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 862 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 859 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 862 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 860 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 863 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "bit_shl expects two integer arguments");
   }
 
-# 862 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 865 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg1 = roci_pop_integer(state);
 
-# 863 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 866 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg0 = roci_pop_integer(state);
 
-# 864 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 867 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0<<arg1));
 }
 
 
-# 867 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 870 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_bit_shr(roci_vm_state_t* state)
-# 867 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 870 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 868 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 871 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 868 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 871 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 869 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 872 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "bit_shr expects two integer arguments");
   }
 
-# 871 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 874 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg1 = roci_pop_integer(state);
 
-# 872 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 875 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   uint64_t arg0 = roci_pop_integer(state);
 
-# 873 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 876 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (arg0>>arg1));
 }
 
 
-# 877 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 880 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_not(roci_vm_state_t* state)
-# 877 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 880 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 878 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 881 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 878 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 881 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 879 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 882 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "roci_exit expects 1 argument");
   }
 
-# 881 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 884 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   boolean_t value = roci_pop_boolean(state);
 
-# 882 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 885 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (value)
 
-# 882 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 885 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 883 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 886 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
   else
 
-# 884 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 887 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 885 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 888 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
 }
 
 
-# 889 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_getenv(roci_vm_state_t* state)
-# 889 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 892 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_boolean_and(roci_vm_state_t* state)
+# 892 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
-
-# 890 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 890 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 891 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "getenv expects 1 argument");
-  }
 
 # 893 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  char* varname = roci_pop_string(state);
+  if (((state->n_args)!=2))
+
+# 893 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
 
 # 894 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  char* result = getenv(varname);
-
-# 895 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if ((result==((void *)0)))
-
-# 895 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
+    roci_debug_error(state, "boolean_and expects 2 argument");
+  }
 
 # 896 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_false(state);
-  }
-  else
+  boolean_t arg2 = roci_pop_boolean(state);
 
 # 897 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
+  boolean_t arg1 = roci_pop_boolean(state);
 
 # 898 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_string(state, result);
-  }
-}
+  if ((arg1&&arg2))
 
-
-# 902 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_is_boolean(roci_vm_state_t* state)
-# 902 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 903 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 903 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 898 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 904 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "is_boolean expects 1 argument");
-  }
-
-# 906 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 907 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_BOOLEAN))
-
-# 907 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 908 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 899 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 909 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 900 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 910 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 901 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 914 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_is_string(roci_vm_state_t* state)
-# 914 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 905 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_boolean_or(roci_vm_state_t* state)
+# 905 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 915 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+# 906 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=2))
 
-# 915 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 906 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 916 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "is_string expects 1 argument");
+# 907 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "boolean_or expects 2 argument");
   }
 
+# 909 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  boolean_t arg2 = roci_pop_boolean(state);
+
+# 910 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  boolean_t arg1 = roci_pop_boolean(state);
+
+# 911 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if ((arg1||arg2))
+
+# 911 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 912 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 913 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 914 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
 # 918 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
+void roci_primitive_getenv(roci_vm_state_t* state)
+# 918 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
 
 # 919 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_STRING))
+  if (((state->n_args)!=1))
 
 # 919 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
 # 920 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "getenv expects 1 argument");
+  }
+
+# 922 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  char* varname = roci_pop_string(state);
+
+# 923 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  char* result = getenv(varname);
+
+# 924 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if ((result==((void *)0)))
+
+# 924 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 925 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
+
+# 926 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 927 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_string(state, result);
+  }
+}
+
+
+# 931 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_is_boolean(roci_vm_state_t* state)
+# 931 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 932 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 932 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 933 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "is_boolean expects 1 argument");
+  }
+
+# 935 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 936 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_BOOLEAN))
+
+# 936 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 937 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 921 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 938 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 922 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 939 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 926 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_string_length_bytes(roci_vm_state_t* state)
-# 926 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 943 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_is_string(roci_vm_state_t* state)
+# 943 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 927 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 944 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 927 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 944 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 928 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 945 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "is_string expects 1 argument");
   }
 
-# 930 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 947 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 948 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_STRING))
+
+# 948 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 949 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 950 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 951 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 955 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_string_length_bytes(roci_vm_state_t* state)
+# 955 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 956 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 956 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 957 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "is_string expects 1 argument");
+  }
+
+# 959 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* str = roci_pop_string(state);
 
-# 931 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 960 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, strlen(str));
 }
 
 
-# 934 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 963 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_string_get_byte(roci_vm_state_t* state)
-# 934 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 963 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 935 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 964 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=2))
 
-# 935 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 964 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 936 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 965 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_get_byte expects 2 argument");
   }
 
-# 938 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 967 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t index = roci_pop_integer(state);
 
-# 939 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 968 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char* str = roci_pop_string(state);
 
-# 940 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 969 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t limit = strlen(str);
 
-# 941 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 970 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((index<0)||(index>=limit)))
 
-# 941 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 970 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 942 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 971 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "string_get_byte out of bounds");
   }
 
-# 944 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 973 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, ((str[index])&0xff));
 }
 
 
-# 948 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 977 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_is_list(roci_vm_state_t* state)
-# 948 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 977 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 949 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 978 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=1))
 
-# 949 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 978 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 950 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 979 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "is_list expects 1 argument");
   }
 
-# 952 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 981 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t value = roci_pop_value(state);
-
-# 953 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_LIST))
-
-# 953 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 954 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_true(state);
-  }
-  else
-
-# 955 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 956 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_false(state);
-  }
-}
-
-
-# 960 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_is_double(roci_vm_state_t* state)
-# 960 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 961 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 961 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 962 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "is_double expects 1 argument");
-  }
-
-# 964 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 965 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_DOUBLE))
-
-# 965 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 966 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_true(state);
-  }
-  else
-
-# 967 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 968 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_false(state);
-  }
-}
-
-
-# 972 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_current_time_millis(roci_vm_state_t* state)
-# 972 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 973 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=0))
-
-# 973 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 974 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "current_time_millis expects 0 argument");
-  }
-
-# 976 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_integer(state, current_time_millis());
-}
-
-
-# 979 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_random_int(roci_vm_state_t* state)
-# 979 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 980 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  random_state_t* rand_state = ((void *)0);
 
 # 982 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=0))
+  if (((value.tag)==ROCI_TAG_LIST))
 
 # 982 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
 # 983 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 984 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 985 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 989 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_is_double(roci_vm_state_t* state)
+# 989 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 990 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 990 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 991 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "is_double expects 1 argument");
+  }
+
+# 993 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 994 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_DOUBLE))
+
+# 994 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 995 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_true(state);
+  }
+  else
+
+# 996 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 997 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+}
+
+
+# 1001 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_current_time_millis(roci_vm_state_t* state)
+# 1001 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1002 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=0))
+
+# 1002 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1003 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "current_time_millis expects 0 argument");
+  }
+
+# 1005 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_integer(state, current_time_millis());
+}
+
+
+# 1008 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_random_int(roci_vm_state_t* state)
+# 1008 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1009 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  random_state_t* rand_state = ((void *)0);
+
+# 1011 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=0))
+
+# 1011 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1012 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "random expects 0 argument");
   }
 
-# 986 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1015 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if ((rand_state==((void *)0)))
 
-# 986 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1015 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 987 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1016 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     (rand_state=random_state());
   }
 
-# 990 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1019 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, random_next(rand_state));
 }
 
 
-# 994 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1023 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_pwd(roci_vm_state_t* state)
-# 994 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1023 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 995 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1024 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=0))
 
-# 995 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1024 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 996 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1025 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "pwd expects 0 argument");
   }
 
-# 998 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1027 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   char cwd[PATH_MAX];
 
-# 999 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1028 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if ((getcwd(cwd, (sizeof(cwd)))!=NULL))
 
-# 999 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1028 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 1000 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1029 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_string(state, string_duplicate(cwd));
   }
   else
 
-# 1001 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1030 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 1002 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1031 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "getcwd return NULL");
   }
 }
 
 
-# 1006 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_cd(roci_vm_state_t* state)
-# 1006 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1007 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 1007 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1008 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "cd expects 1 argument");
-  }
-
-# 1010 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (chdir(roci_pop_string(state)))
-
-# 1010 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1011 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_false(state);
-  }
-  else
-
-# 1012 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1013 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "chdir returned false");
-  }
-}
-
-
-# 1017 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_command_line_args(roci_vm_state_t* state)
-# 1017 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1018 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  value_array_t* list = make_value_array(8);
-
-# 1019 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_value_t value = ((roci_value_t) {0});
-
-# 1020 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  ((value.tag)=ROCI_TAG_STRING);
-
-# 1021 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  for (
-
-# 1021 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-
-# 1021 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    int i = 0;
-
-# 1021 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (i<(FLAG_files->length));
-
-# 1021 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (i++))
-
-# 1021 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1022 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    char* arg = (value_array_get(FLAG_files, i).str);
-
-# 1023 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    ((value.raw)=(/*CAST*/(uint64_t) arg));
-
-# 1024 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
-  }
-
-# 1026 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_list(state, list);
-}
-
-
-# 1031 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_is_buffer(roci_vm_state_t* state)
-# 1031 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1032 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 1032 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1033 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "is_buffer expects 1 argument");
-  }
-
 # 1035 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
+void roci_primitive_cd(roci_vm_state_t* state)
+# 1035 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
 
 # 1036 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((value.tag)==ROCI_TAG_BUFFER))
+  if (((state->n_args)!=1))
 
 # 1036 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
 # 1037 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "cd expects 1 argument");
+  }
+
+# 1039 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (chdir(roci_pop_string(state)))
+
+# 1039 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1040 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_push_false(state);
+  }
+  else
+
+# 1041 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1042 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "chdir returned false");
+  }
+}
+
+
+# 1046 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_command_line_args(roci_vm_state_t* state)
+# 1046 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1047 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  value_array_t* list = make_value_array(8);
+
+# 1048 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_value_t value = ((roci_value_t) {0});
+
+# 1049 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  ((value.tag)=ROCI_TAG_STRING);
+
+# 1050 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  for (
+
+# 1050 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+
+# 1050 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    int i = 0;
+
+# 1050 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (i<(FLAG_files->length));
+
+# 1050 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (i++))
+
+# 1050 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1051 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    char* arg = (value_array_get(FLAG_files, i).str);
+
+# 1052 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    ((value.raw)=(/*CAST*/(uint64_t) arg));
+
+# 1053 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    value_array_add(list, ptr_to_value(roci_value_to_heap(value)));
+  }
+
+# 1055 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_list(state, list);
+}
+
+
+# 1060 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_is_buffer(roci_vm_state_t* state)
+# 1060 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1061 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 1061 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1062 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "is_buffer expects 1 argument");
+  }
+
+# 1064 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 1065 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((value.tag)==ROCI_TAG_BUFFER))
+
+# 1065 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1066 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_true(state);
   }
   else
 
-# 1038 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1067 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 1039 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1068 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_push_false(state);
   }
 }
 
 
-# 1043 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1072 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_make_buffer(roci_vm_state_t* state)
-# 1043 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1072 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 1044 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1073 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=0))
 
-# 1044 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1073 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 1045 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1074 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "make_buffer expects 0 arguments");
   }
 
-# 1047 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1076 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_buffer(state, make_buffer(8));
 }
 
 
-# 1050 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1079 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_buffer_to_string(roci_vm_state_t* state)
-# 1050 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1051 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 1051 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1052 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "make_buffer expects 1 arguments");
-  }
-
-# 1054 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  buffer_t* buffer = roci_pop_buffer(state);
-
-# 1055 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_string(state, buffer_to_c_string(buffer));
-}
-
-
-# 1058 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_read_file(roci_vm_state_t* state)
-# 1058 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1059 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 1059 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1060 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "read_file expects 1 argument");
-  }
-
-# 1062 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  char* filename = roci_pop_string(state);
-
-# 1063 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  buffer_t* buffer = buffer_read_file(filename);
-
-# 1064 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_buffer(state, buffer);
-}
-
-
-# 1067 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_write_file(roci_vm_state_t* state)
-# 1067 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1068 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=2))
-
-# 1068 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1069 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "write_file expects 2 argument");
-  }
-
-# 1071 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  char* filename = roci_pop_string(state);
-
-# 1072 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  buffer_t* buffer = roci_pop_buffer(state);
-
-# 1073 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  buffer_write_file(buffer, filename);
-
-# 1074 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_false(state);
-}
-
-
-# 1078 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_buffer_get(roci_vm_state_t* state)
-# 1078 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
 # 1079 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=2))
-
-# 1079 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
+{
 
 # 1080 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "buffer_get expects 2 argument");
-  }
+  if (((state->n_args)!=1))
 
-# 1082 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  int64_t position = roci_pop_integer(state);
+# 1080 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1081 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "make_buffer expects 1 arguments");
+  }
 
 # 1083 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   buffer_t* buffer = roci_pop_buffer(state);
 
 # 1084 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_integer(state, (buffer_get(buffer, position)&0xff));
+  roci_push_string(state, buffer_to_c_string(buffer));
 }
 
 
 # 1087 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_buffer_append_string(roci_vm_state_t* state)
+void roci_primitive_read_file(roci_vm_state_t* state)
 # 1087 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
 # 1088 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=2))
+  if (((state->n_args)!=1))
 
 # 1088 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
 # 1089 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "buffer_append_string expects 2 argument");
+    roci_debug_error(state, "read_file expects 1 argument");
   }
 
 # 1091 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  char* str = roci_pop_string(state);
+  char* filename = roci_pop_string(state);
 
 # 1092 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  buffer_t* buffer = roci_pop_buffer(state);
+  buffer_t* buffer = buffer_read_file(filename);
 
 # 1093 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  buffer_append_string(buffer, str);
-
-# 1094 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_false(state);
+  roci_push_buffer(state, buffer);
 }
 
 
-# 1097 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_buffer_length(roci_vm_state_t* state)
-# 1097 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1096 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_write_file(roci_vm_state_t* state)
+# 1096 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 1098 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+# 1097 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=2))
 
-# 1098 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1097 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 1099 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "buffer_length expects 1 argument");
+# 1098 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "write_file expects 2 argument");
   }
+
+# 1100 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  char* filename = roci_pop_string(state);
 
 # 1101 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   buffer_t* buffer = roci_pop_buffer(state);
 
 # 1102 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  buffer_write_file(buffer, filename);
+
+# 1103 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 1107 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_buffer_get(roci_vm_state_t* state)
+# 1107 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1108 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 1108 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1109 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "buffer_get expects 2 argument");
+  }
+
+# 1111 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  int64_t position = roci_pop_integer(state);
+
+# 1112 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  buffer_t* buffer = roci_pop_buffer(state);
+
+# 1113 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_integer(state, (buffer_get(buffer, position)&0xff));
+}
+
+
+# 1116 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_buffer_append_string(roci_vm_state_t* state)
+# 1116 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1117 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 1117 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1118 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "buffer_append_string expects 2 argument");
+  }
+
+# 1120 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  char* str = roci_pop_string(state);
+
+# 1121 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  buffer_t* buffer = roci_pop_buffer(state);
+
+# 1122 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  buffer_append_string(buffer, str);
+
+# 1123 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 1126 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_buffer_length(roci_vm_state_t* state)
+# 1126 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1127 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 1127 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1128 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "buffer_length expects 1 argument");
+  }
+
+# 1130 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  buffer_t* buffer = roci_pop_buffer(state);
+
+# 1131 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_integer(state, (buffer->length));
 }
 
 
-# 1105 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1134 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 void roci_primitive_for_each_integer(roci_vm_state_t* state)
-# 1105 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1134 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
-# 1106 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1135 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   if (((state->n_args)!=3))
 
-# 1106 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1135 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
-# 1107 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1136 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
     roci_debug_error(state, "for_each_integer expects 3 arguments");
   }
 
-# 1109 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1138 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_value_t proc = roci_pop_value(state);
 
-# 1110 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1139 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t limit = roci_pop_integer(state);
 
-# 1111 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1140 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   int64_t start = roci_pop_integer(state);
 
-# 1112 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1141 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   for (
 
-# 1112 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-
-# 1112 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    int i = start;
-
-# 1112 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (i<limit);
-
-# 1112 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    (i++))
-
-# 1112 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1113 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_push_integer(state, i);
-
-# 1114 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_call(state, proc, 1);
-
-# 1115 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_pop_value(state);
-  }
-
-# 1117 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_false(state);
-}
-
-
-# 1120 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_ascii_to_string(roci_vm_state_t* state)
-# 1120 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1121 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 1121 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1122 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "ascii_to_string expects a single string argument");
-  }
-
-# 1124 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  uint64_t arg = roci_pop_integer(state);
-
-# 1125 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  char* result = (/*CAST*/(char*) malloc_bytes(2));
-
-# 1126 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  ((result[0])=(arg&0xff));
-
-# 1127 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  ((result[1])=0);
-
-# 1129 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_string(state, result);
-}
-
-
-# 1132 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_invoke_debugger(roci_vm_state_t* state)
-# 1132 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1133 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 1133 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1134 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "invoke_debugger expects a single string argument");
-  }
-
-# 1136 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_debug_error(state, roci_pop_string(state));
-
-# 1137 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_false(state);
-}
-
-
-# 1140 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_is_record(roci_vm_state_t* state)
-# 1140 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
+# 1141 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 
 # 1141 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
+    int i = start;
+
+# 1141 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (i<limit);
+
+# 1141 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    (i++))
 
 # 1141 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   {
 
 # 1142 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "is_record expects 1 argument");
-  }
+    roci_push_integer(state, i);
+
+# 1143 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_call(state, proc, 1);
 
 # 1144 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 1145 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_boolean(state, ((value.tag)==ROCI_TAG_RECORD));
-}
-
-
-# 1148 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_record_tag(roci_vm_state_t* state)
-# 1148 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1149 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 1149 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1150 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "record_tag expects 1 argument");
+    roci_pop_value(state);
   }
 
-# 1152 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_record_t* record = roci_pop_record(state);
-
-# 1153 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_string(state, (record->record_tag));
-}
-
-
-# 1156 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_make_record(roci_vm_state_t* state)
-# 1156 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1157 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=1))
-
-# 1157 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1158 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "make_record expects 1 argument");
-  }
-
-# 1160 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  char* record_tag = roci_pop_string(state);
-
-# 1161 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_value(state, roci_make_record(record_tag));
-}
-
-
-# 1164 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_record_get(roci_vm_state_t* state)
-# 1164 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1165 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=2))
-
-# 1165 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1166 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "record_get expects 2 argument");
-  }
-
-# 1168 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  int64_t index = roci_pop_integer(state);
-
-# 1169 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_record_t* record = roci_pop_record(state);
-
-# 1170 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_push_value(state, roci_record_get(record, index));
-}
-
-
-# 1173 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_record_set(roci_vm_state_t* state)
-# 1173 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-{
-
-# 1174 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  if (((state->n_args)!=3))
-
-# 1174 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  {
-
-# 1175 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-    roci_debug_error(state, "record_set expects 3 argument");
-  }
-
-# 1177 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_value_t value = roci_pop_value(state);
-
-# 1178 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  int64_t index = roci_pop_integer(state);
-
-# 1179 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_record_t* record = roci_pop_record(state);
-
-# 1180 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  roci_record_set(record, index, value);
-
-# 1181 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1146 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
 
-# 1184 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-void roci_primitive_draw_random_screen(roci_vm_state_t* state)
-# 1184 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+# 1149 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_ascii_to_string(roci_vm_state_t* state)
+# 1149 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
 {
 
+# 1150 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 1150 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1151 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "ascii_to_string expects a single string argument");
+  }
+
+# 1153 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  uint64_t arg = roci_pop_integer(state);
+
+# 1154 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  char* result = (/*CAST*/(char*) malloc_bytes(2));
+
+# 1155 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  ((result[0])=(arg&0xff));
+
+# 1156 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  ((result[1])=0);
+
+# 1158 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_string(state, result);
+}
+
+
+# 1161 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_invoke_debugger(roci_vm_state_t* state)
+# 1161 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1162 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 1162 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1163 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "invoke_debugger expects a single string argument");
+  }
+
+# 1165 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_debug_error(state, roci_pop_string(state));
+
+# 1166 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 1169 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_is_record(roci_vm_state_t* state)
+# 1169 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1170 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 1170 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1171 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "is_record expects 1 argument");
+  }
+
+# 1173 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 1174 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_boolean(state, ((value.tag)==ROCI_TAG_RECORD));
+}
+
+
+# 1177 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_record_tag(roci_vm_state_t* state)
+# 1177 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1178 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=1))
+
+# 1178 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1179 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "record_tag expects 1 argument");
+  }
+
+# 1181 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_record_t* record = roci_pop_record(state);
+
+# 1182 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_string(state, (record->record_tag));
+}
+
+
 # 1185 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  boolean_t draw = roci_pop_boolean(state);
+void roci_primitive_make_record(roci_vm_state_t* state)
+# 1185 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
 
 # 1186 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
-  draw_random_screen(draw);
+  if (((state->n_args)!=1))
+
+# 1186 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
 
 # 1187 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "make_record expects 1 argument");
+  }
+
+# 1189 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  char* record_tag = roci_pop_string(state);
+
+# 1190 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_value(state, roci_make_record(record_tag));
+}
+
+
+# 1193 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_record_get(roci_vm_state_t* state)
+# 1193 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1194 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=2))
+
+# 1194 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1195 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "record_get expects 2 argument");
+  }
+
+# 1197 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  int64_t index = roci_pop_integer(state);
+
+# 1198 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_record_t* record = roci_pop_record(state);
+
+# 1199 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_value(state, roci_record_get(record, index));
+}
+
+
+# 1202 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_record_set(roci_vm_state_t* state)
+# 1202 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1203 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=3))
+
+# 1203 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1204 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "record_set expects 3 argument");
+  }
+
+# 1206 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_value_t value = roci_pop_value(state);
+
+# 1207 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  int64_t index = roci_pop_integer(state);
+
+# 1208 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_record_t* record = roci_pop_record(state);
+
+# 1209 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_record_set(record, index, value);
+
+# 1210 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 1213 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_draw_random_screen(roci_vm_state_t* state)
+# 1213 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1214 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  boolean_t draw = roci_pop_boolean(state);
+
+# 1215 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  draw_random_screen(draw);
+
+# 1216 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  roci_push_false(state);
+}
+
+
+# 1219 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+void roci_primitive_fatal_error(roci_vm_state_t* state)
+# 1219 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+{
+
+# 1220 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  if (((state->n_args)!=0))
+
+# 1220 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  {
+
+# 1221 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+    roci_debug_error(state, "fatal_error expects zero arguments");
+  }
+
+# 1223 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
+  fatal_error(ERROR_FATAL);
+
+# 1224 "/Users/jawilson/src/omni-c/src/roci/roci-primitives.c"
   roci_push_false(state);
 }
 
@@ -37897,12 +38221,9 @@ roci_value_t* string_to_roci_string(char* str)
 
 
 # 115 "/Users/jawilson/src/omni-c/src/roci/roci.c"
-roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point)
-# 115 "/Users/jawilson/src/omni-c/src/roci/roci.c"
-{
-
+roci_runtime_error_t roci_execute(roci_vm_state_t* state, roci_bb_t* entry_point)
 # 116 "/Users/jawilson/src/omni-c/src/roci/roci.c"
-  roci_vm_state_t* state = roci_make_vm_state(env);
+{
 
 # 117 "/Users/jawilson/src/omni-c/src/roci/roci.c"
   return roci_execute_bblock(entry_point, state);
@@ -41025,6 +41346,214 @@ enum_metadata_t* output_file_type_metadata(){
     };
     return &enum_metadata_result;
 }
+char* flag_type_to_string(flag_type_t value){
+  switch (value) {
+    case flag_type_none:
+    return "flag_type_none";
+  case flag_type_boolean:
+    return "flag_type_boolean";
+  case flag_type_string:
+    return "flag_type_string";
+  case flag_type_uint64:
+    return "flag_type_uint64";
+  case flag_type_int64:
+    return "flag_type_int64";
+  case flag_type_double:
+    return "flag_type_double";
+  case flag_type_enum:
+    return "flag_type_enum";
+  case flag_type_custom:
+    return "flag_type_custom";
+  default:
+    return "<<unknown-flag_type>>";
+  }
+}
+flag_type_t string_to_flag_type(char* value){
+  if (strcmp(value, "flag_type_none") == 0) {
+    return flag_type_none;
+  }
+  if (strcmp(value, "flag_type_boolean") == 0) {
+    return flag_type_boolean;
+  }
+  if (strcmp(value, "flag_type_string") == 0) {
+    return flag_type_string;
+  }
+  if (strcmp(value, "flag_type_uint64") == 0) {
+    return flag_type_uint64;
+  }
+  if (strcmp(value, "flag_type_int64") == 0) {
+    return flag_type_int64;
+  }
+  if (strcmp(value, "flag_type_double") == 0) {
+    return flag_type_double;
+  }
+  if (strcmp(value, "flag_type_enum") == 0) {
+    return flag_type_enum;
+  }
+  if (strcmp(value, "flag_type_custom") == 0) {
+    return flag_type_custom;
+  }
+  return 0;
+}
+enum_metadata_t* flag_type_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "flag_type_none",
+        .value = flag_type_none
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "flag_type_boolean",
+        .value = flag_type_boolean
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "flag_type_string",
+        .value = flag_type_string
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "flag_type_uint64",
+        .value = flag_type_uint64
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "flag_type_int64",
+        .value = flag_type_int64
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "flag_type_double",
+        .value = flag_type_double
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "flag_type_enum",
+        .value = flag_type_enum
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "flag_type_custom",
+        .value = flag_type_custom
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "flag_type_t",
+        .elements = &var_7
+    };
+    return &enum_metadata_result;
+}
+char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
+  switch (value) {
+    case NF_OK:
+    return "NF_OK";
+  case NF_ERROR_NOT_FOUND:
+    return "NF_ERROR_NOT_FOUND";
+  case NF_ERROR_NOT_PARSED_AS_NUMBER:
+    return "NF_ERROR_NOT_PARSED_AS_NUMBER";
+  case NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM:
+    return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
+  default:
+    return "<<unknown-non_fatal_error_code>>";
+  }
+}
+non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
+  if (strcmp(value, "NF_OK") == 0) {
+    return NF_OK;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_FOUND") == 0) {
+    return NF_ERROR_NOT_FOUND;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_NUMBER") == 0) {
+    return NF_ERROR_NOT_PARSED_AS_NUMBER;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM") == 0) {
+    return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
+  }
+  return 0;
+}
+enum_metadata_t* non_fatal_error_code_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "NF_OK",
+        .value = NF_OK
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "NF_ERROR_NOT_FOUND",
+        .value = NF_ERROR_NOT_FOUND
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "NF_ERROR_NOT_PARSED_AS_NUMBER",
+        .value = NF_ERROR_NOT_PARSED_AS_NUMBER
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM",
+        .value = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "non_fatal_error_code_t",
+        .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
+char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
+  switch (value) {
+    case EXIT_STATUS_UNKNOWN:
+    return "EXIT_STATUS_UNKNOWN";
+  case EXIT_STATUS_NORMAL_EXIT:
+    return "EXIT_STATUS_NORMAL_EXIT";
+  case EXIT_STATUS_SIGNAL:
+    return "EXIT_STATUS_SIGNAL";
+  case EXIT_STATUS_ABNORMAL:
+    return "EXIT_STATUS_ABNORMAL";
+  default:
+    return "<<unknown-sub_process_exit_status>>";
+  }
+}
+sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
+  if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
+    return EXIT_STATUS_UNKNOWN;
+  }
+  if (strcmp(value, "EXIT_STATUS_NORMAL_EXIT") == 0) {
+    return EXIT_STATUS_NORMAL_EXIT;
+  }
+  if (strcmp(value, "EXIT_STATUS_SIGNAL") == 0) {
+    return EXIT_STATUS_SIGNAL;
+  }
+  if (strcmp(value, "EXIT_STATUS_ABNORMAL") == 0) {
+    return EXIT_STATUS_ABNORMAL;
+  }
+  return 0;
+}
+enum_metadata_t* sub_process_exit_status_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "EXIT_STATUS_UNKNOWN",
+        .value = EXIT_STATUS_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "EXIT_STATUS_NORMAL_EXIT",
+        .value = EXIT_STATUS_NORMAL_EXIT
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "EXIT_STATUS_SIGNAL",
+        .value = EXIT_STATUS_SIGNAL
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "EXIT_STATUS_ABNORMAL",
+        .value = EXIT_STATUS_ABNORMAL
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "sub_process_exit_status_t",
+        .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
@@ -41311,218 +41840,12 @@ enum_metadata_t* error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
-  switch (value) {
-    case NF_OK:
-    return "NF_OK";
-  case NF_ERROR_NOT_FOUND:
-    return "NF_ERROR_NOT_FOUND";
-  case NF_ERROR_NOT_PARSED_AS_NUMBER:
-    return "NF_ERROR_NOT_PARSED_AS_NUMBER";
-  case NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM:
-    return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
-  default:
-    return "<<unknown-non_fatal_error_code>>";
-  }
-}
-non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
-  if (strcmp(value, "NF_OK") == 0) {
-    return NF_OK;
-  }
-  if (strcmp(value, "NF_ERROR_NOT_FOUND") == 0) {
-    return NF_ERROR_NOT_FOUND;
-  }
-  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_NUMBER") == 0) {
-    return NF_ERROR_NOT_PARSED_AS_NUMBER;
-  }
-  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM") == 0) {
-    return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
-  }
-  return 0;
-}
-enum_metadata_t* non_fatal_error_code_metadata(){
-    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = ((void*)0),
-        .name = "NF_OK",
-        .value = NF_OK
-    };
-    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
-        .next = &var_0,
-        .name = "NF_ERROR_NOT_FOUND",
-        .value = NF_ERROR_NOT_FOUND
-    };
-    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
-        .next = &var_1,
-        .name = "NF_ERROR_NOT_PARSED_AS_NUMBER",
-        .value = NF_ERROR_NOT_PARSED_AS_NUMBER
-    };
-    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
-        .next = &var_2,
-        .name = "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM",
-        .value = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM
-    };
-    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
-        .name = "non_fatal_error_code_t",
-        .elements = &var_3
-    };
-    return &enum_metadata_result;
-}
-char* flag_type_to_string(flag_type_t value){
-  switch (value) {
-    case flag_type_none:
-    return "flag_type_none";
-  case flag_type_boolean:
-    return "flag_type_boolean";
-  case flag_type_string:
-    return "flag_type_string";
-  case flag_type_uint64:
-    return "flag_type_uint64";
-  case flag_type_int64:
-    return "flag_type_int64";
-  case flag_type_double:
-    return "flag_type_double";
-  case flag_type_enum:
-    return "flag_type_enum";
-  case flag_type_custom:
-    return "flag_type_custom";
-  default:
-    return "<<unknown-flag_type>>";
-  }
-}
-flag_type_t string_to_flag_type(char* value){
-  if (strcmp(value, "flag_type_none") == 0) {
-    return flag_type_none;
-  }
-  if (strcmp(value, "flag_type_boolean") == 0) {
-    return flag_type_boolean;
-  }
-  if (strcmp(value, "flag_type_string") == 0) {
-    return flag_type_string;
-  }
-  if (strcmp(value, "flag_type_uint64") == 0) {
-    return flag_type_uint64;
-  }
-  if (strcmp(value, "flag_type_int64") == 0) {
-    return flag_type_int64;
-  }
-  if (strcmp(value, "flag_type_double") == 0) {
-    return flag_type_double;
-  }
-  if (strcmp(value, "flag_type_enum") == 0) {
-    return flag_type_enum;
-  }
-  if (strcmp(value, "flag_type_custom") == 0) {
-    return flag_type_custom;
-  }
-  return 0;
-}
-enum_metadata_t* flag_type_metadata(){
-    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = ((void*)0),
-        .name = "flag_type_none",
-        .value = flag_type_none
-    };
-    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
-        .next = &var_0,
-        .name = "flag_type_boolean",
-        .value = flag_type_boolean
-    };
-    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
-        .next = &var_1,
-        .name = "flag_type_string",
-        .value = flag_type_string
-    };
-    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
-        .next = &var_2,
-        .name = "flag_type_uint64",
-        .value = flag_type_uint64
-    };
-    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
-        .next = &var_3,
-        .name = "flag_type_int64",
-        .value = flag_type_int64
-    };
-    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
-        .next = &var_4,
-        .name = "flag_type_double",
-        .value = flag_type_double
-    };
-    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
-        .next = &var_5,
-        .name = "flag_type_enum",
-        .value = flag_type_enum
-    };
-    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
-        .next = &var_6,
-        .name = "flag_type_custom",
-        .value = flag_type_custom
-    };
-    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
-        .name = "flag_type_t",
-        .elements = &var_7
-    };
-    return &enum_metadata_result;
-}
-char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
-  switch (value) {
-    case EXIT_STATUS_UNKNOWN:
-    return "EXIT_STATUS_UNKNOWN";
-  case EXIT_STATUS_NORMAL_EXIT:
-    return "EXIT_STATUS_NORMAL_EXIT";
-  case EXIT_STATUS_SIGNAL:
-    return "EXIT_STATUS_SIGNAL";
-  case EXIT_STATUS_ABNORMAL:
-    return "EXIT_STATUS_ABNORMAL";
-  default:
-    return "<<unknown-sub_process_exit_status>>";
-  }
-}
-sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
-  if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
-    return EXIT_STATUS_UNKNOWN;
-  }
-  if (strcmp(value, "EXIT_STATUS_NORMAL_EXIT") == 0) {
-    return EXIT_STATUS_NORMAL_EXIT;
-  }
-  if (strcmp(value, "EXIT_STATUS_SIGNAL") == 0) {
-    return EXIT_STATUS_SIGNAL;
-  }
-  if (strcmp(value, "EXIT_STATUS_ABNORMAL") == 0) {
-    return EXIT_STATUS_ABNORMAL;
-  }
-  return 0;
-}
-enum_metadata_t* sub_process_exit_status_metadata(){
-    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = ((void*)0),
-        .name = "EXIT_STATUS_UNKNOWN",
-        .value = EXIT_STATUS_UNKNOWN
-    };
-    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
-        .next = &var_0,
-        .name = "EXIT_STATUS_NORMAL_EXIT",
-        .value = EXIT_STATUS_NORMAL_EXIT
-    };
-    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
-        .next = &var_1,
-        .name = "EXIT_STATUS_SIGNAL",
-        .value = EXIT_STATUS_SIGNAL
-    };
-    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
-        .next = &var_2,
-        .name = "EXIT_STATUS_ABNORMAL",
-        .value = EXIT_STATUS_ABNORMAL
-    };
-    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
-        .name = "sub_process_exit_status_t",
-        .elements = &var_3
-    };
-    return &enum_metadata_result;
-}
 char* roci_compile_time_error_to_string(roci_compile_time_error_t value){
   switch (value) {
     case ROCI_COMPILE_TIME_ERROR_NONE:
     return "ROCI_COMPILE_TIME_ERROR_NONE";
+  case ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR:
+    return "ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR";
   case ROCI_COMPILE_TIME_ERROR:
     return "ROCI_COMPILE_TIME_ERROR";
   case ROCI_COMPILE_TIME_TOKENIZER_ERROR:
@@ -41544,6 +41867,9 @@ char* roci_compile_time_error_to_string(roci_compile_time_error_t value){
 roci_compile_time_error_t string_to_roci_compile_time_error(char* value){
   if (strcmp(value, "ROCI_COMPILE_TIME_ERROR_NONE") == 0) {
     return ROCI_COMPILE_TIME_ERROR_NONE;
+  }
+  if (strcmp(value, "ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR") == 0) {
+    return ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR;
   }
   if (strcmp(value, "ROCI_COMPILE_TIME_ERROR") == 0) {
     return ROCI_COMPILE_TIME_ERROR;
@@ -41576,42 +41902,47 @@ enum_metadata_t* roci_compile_time_error_metadata(){
     };
     static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
         .next = &var_0,
-        .name = "ROCI_COMPILE_TIME_ERROR",
-        .value = ROCI_COMPILE_TIME_ERROR
+        .name = "ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR",
+        .value = ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR
     };
     static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
         .next = &var_1,
-        .name = "ROCI_COMPILE_TIME_TOKENIZER_ERROR",
-        .value = ROCI_COMPILE_TIME_TOKENIZER_ERROR
+        .name = "ROCI_COMPILE_TIME_ERROR",
+        .value = ROCI_COMPILE_TIME_ERROR
     };
     static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
         .next = &var_2,
-        .name = "ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT",
-        .value = ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT
+        .name = "ROCI_COMPILE_TIME_TOKENIZER_ERROR",
+        .value = ROCI_COMPILE_TIME_TOKENIZER_ERROR
     };
     static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
         .next = &var_3,
-        .name = "ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION",
-        .value = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION
+        .name = "ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT",
+        .value = ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT
     };
     static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
         .next = &var_4,
-        .name = "ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS",
-        .value = ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS
+        .name = "ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION",
+        .value = ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION
     };
     static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
         .next = &var_5,
-        .name = "ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA",
-        .value = ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA
+        .name = "ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS",
+        .value = ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS
     };
     static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
         .next = &var_6,
+        .name = "ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA",
+        .value = ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA
+    };
+    static enum_element_metadata_t var_8 = (enum_element_metadata_t) {
+        .next = &var_7,
         .name = "ROCI_COMPILE_TIME_ERROR_ARGUMENT_AFTER_REST",
         .value = ROCI_COMPILE_TIME_ERROR_ARGUMENT_AFTER_REST
     };
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "roci_compile_time_error_t",
-        .elements = &var_7
+        .elements = &var_8
     };
     return &enum_metadata_result;
 }
@@ -42064,48 +42395,48 @@ enum_metadata_t* roci_runtime_error_metadata(){
 //    /Users/jawilson/src/omni-c/src/test-command.c
 //    /Users/jawilson/src/omni-c/src/test-assembler.c
 //    /Users/jawilson/src/omni-c/src/flags.c
-//    /Users/jawilson/src/omni-c/src/lib/platform-darwin.c
-//    /Users/jawilson/src/omni-c/src/lib/includes.c
-//    /Users/jawilson/src/omni-c/src/lib/omni-c.c
-//    /Users/jawilson/src/omni-c/src/lib/min-max.c
-//    /Users/jawilson/src/omni-c/src/lib/boolean.c
-//    /Users/jawilson/src/omni-c/src/lib/compound-literal.c
-//    /Users/jawilson/src/omni-c/src/lib/fn.c
-//    /Users/jawilson/src/omni-c/src/lib/leb128.c
-//    /Users/jawilson/src/omni-c/src/lib/fatal-error-darwin.c
-//    /Users/jawilson/src/omni-c/src/lib/fatal-error.c
-//    /Users/jawilson/src/omni-c/src/lib/time.c
-//    /Users/jawilson/src/omni-c/src/lib/value.c
-//    /Users/jawilson/src/omni-c/src/lib/gc-allocate.c
-//    /Users/jawilson/src/omni-c/src/lib/uint64.c
-//    /Users/jawilson/src/omni-c/src/lib/double.c
-//    /Users/jawilson/src/omni-c/src/lib/string-util.c
-//    /Users/jawilson/src/omni-c/src/lib/utf8-decoder.c
-//    /Users/jawilson/src/omni-c/src/lib/buffer.c
-//    /Users/jawilson/src/omni-c/src/lib/byte-stream.c
-//    /Users/jawilson/src/omni-c/src/lib/value-array.c
-//    /Users/jawilson/src/omni-c/src/lib/value-alist.c
-//    /Users/jawilson/src/omni-c/src/lib/string-alist.c
-//    /Users/jawilson/src/omni-c/src/lib/value-hashtable.c
-//    /Users/jawilson/src/omni-c/src/lib/string-hashtable.c
-//    /Users/jawilson/src/omni-c/src/lib/value-tree.c
-//    /Users/jawilson/src/omni-c/src/lib/string-tree.c
-//    /Users/jawilson/src/omni-c/src/lib/flag.c
-//    /Users/jawilson/src/omni-c/src/lib/tokenizer.c
-//    /Users/jawilson/src/omni-c/src/lib/random.c
-//    /Users/jawilson/src/omni-c/src/lib/cdl-printer.c
-//    /Users/jawilson/src/omni-c/src/lib/splitjoin.c
-//    /Users/jawilson/src/omni-c/src/lib/oarchive.c
-//    /Users/jawilson/src/omni-c/src/lib/quote-util.c
-//    /Users/jawilson/src/omni-c/src/lib/test.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/fn.c
+//    /Users/jawilson/src/omni-c/src/lib/runtime/fatal-error-darwin.c
+//    /Users/jawilson/src/omni-c/src/lib/io/byte-stream.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/boolean.c
+//    /Users/jawilson/src/omni-c/src/lib/runtime/flag.c
+//    /Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c
+//    /Users/jawilson/src/omni-c/src/lib/string/quote-util.c
+//    /Users/jawilson/src/omni-c/src/lib/string/tokenizer.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/omni-c.c
+//    /Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c
+//    /Users/jawilson/src/omni-c/src/lib/tui/style.c
 //    /Users/jawilson/src/omni-c/src/lib/io/logger.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/leb128.c
+//    /Users/jawilson/src/omni-c/src/lib/collections/value.c
+//    /Users/jawilson/src/omni-c/src/lib/runtime/platform-darwin.c
+//    /Users/jawilson/src/omni-c/src/lib/runtime/time.c
+//    /Users/jawilson/src/omni-c/src/lib/collections/string-tree.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/uint64.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/compound-literal.c
+//    /Users/jawilson/src/omni-c/src/lib/string/string-util.c
+//    /Users/jawilson/src/omni-c/src/lib/collections/value-tree.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/random.c
+//    /Users/jawilson/src/omni-c/src/lib/io/path.c
+//    /Users/jawilson/src/omni-c/src/lib/collections/value-alist.c
+//    /Users/jawilson/src/omni-c/src/lib/string/splitjoin.c
+//    /Users/jawilson/src/omni-c/src/lib/test-framework.c
+//    /Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c
+//    /Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c
+//    /Users/jawilson/src/omni-c/src/lib/string/buffer.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/double.c
+//    /Users/jawilson/src/omni-c/src/lib/includes.c
+//    /Users/jawilson/src/omni-c/src/lib/collections/string-alist.c
+//    /Users/jawilson/src/omni-c/src/lib/collections/value-array.c
 //    /Users/jawilson/src/omni-c/src/lib/io/io.c
 //    /Users/jawilson/src/omni-c/src/lib/tui/terminal.c
-//    /Users/jawilson/src/omni-c/src/lib/tui/style.c
-//    /Users/jawilson/src/omni-c/src/lib/io/sub-process.c
 //    /Users/jawilson/src/omni-c/src/lib/io/io-darwin.c
 //    /Users/jawilson/src/omni-c/src/lib/tui/screen.c
-//    /Users/jawilson/src/omni-c/src/lib/io/path.c
+//    /Users/jawilson/src/omni-c/src/lib/io/sub-process.c
+//    /Users/jawilson/src/omni-c/src/lib/io/oarchive.c
+//    /Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c
+//    /Users/jawilson/src/omni-c/src/lib/lang/min-max.c
+//    /Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c
 //    /Users/jawilson/src/omni-c/src/roci/roci-assembler.c
 //    /Users/jawilson/src/omni-c/src/roci/roci-bb-builder.c
 //    /Users/jawilson/src/omni-c/src/roci/roci-bb.c
@@ -42171,63 +42502,63 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p 4c16c4fbc2199b4849fda9307a32efe648882105 > /Users/jawilson/src/omni-c/src/test-command.c
 // git cat-file -p 924ee3779e046e6eaf0b380c17b57a0d8348573f > /Users/jawilson/src/omni-c/src/test-assembler.c
 // git cat-file -p 6633e464753e8682319969001882b8960442c217 > /Users/jawilson/src/omni-c/src/flags.c
-// git cat-file -p e8bdf95d91ff849ad2a59f7408a520e6a676032f > /Users/jawilson/src/omni-c/src/lib/platform-darwin.c
-// git cat-file -p dc4e61d2890a741a9a516742d1539c3c52735a13 > /Users/jawilson/src/omni-c/src/lib/includes.c
-// git cat-file -p fdeeb847cf945a6a55bcefc45bf55ec77e61accf > /Users/jawilson/src/omni-c/src/lib/omni-c.c
-// git cat-file -p e4fc0d0a5e8d03a538897ec0a0654970bb7f3edd > /Users/jawilson/src/omni-c/src/lib/min-max.c
-// git cat-file -p 34c0f39b6f480c7ce9cb93fd79586d8900323bdf > /Users/jawilson/src/omni-c/src/lib/boolean.c
-// git cat-file -p bafe73cf643ee7eaf31f00c45d2ba446e8eba75a > /Users/jawilson/src/omni-c/src/lib/compound-literal.c
-// git cat-file -p 23c18cf6c82a20325af75dc2f68c860d8a444703 > /Users/jawilson/src/omni-c/src/lib/fn.c
-// git cat-file -p 2cdffe97864a7e55c28fc6a3ae20c0354bd8ba18 > /Users/jawilson/src/omni-c/src/lib/leb128.c
-// git cat-file -p eee2fe01e22fa61a73cb9a08b037ee0eed1ef7c6 > /Users/jawilson/src/omni-c/src/lib/fatal-error-darwin.c
-// git cat-file -p 061aee20051816eb7d5f2689e4d7af62931af68d > /Users/jawilson/src/omni-c/src/lib/fatal-error.c
-// git cat-file -p 0aed1898a04091557a2edef2251870786bd60e8f > /Users/jawilson/src/omni-c/src/lib/time.c
-// git cat-file -p 02ced64df8d64d3253ade2fd065aa6f267cdfff2 > /Users/jawilson/src/omni-c/src/lib/value.c
-// git cat-file -p 7b810eaa3e91a9fcb7459c588fc588fc070cce1a > /Users/jawilson/src/omni-c/src/lib/gc-allocate.c
-// git cat-file -p 6e52f33c7760c7f20e6729e3c8a02ccf21dd4a00 > /Users/jawilson/src/omni-c/src/lib/uint64.c
-// git cat-file -p c25b527e6f0fbdeaf953acaa0d74c6758f50bdca > /Users/jawilson/src/omni-c/src/lib/double.c
-// git cat-file -p 56cd1026bb08c5f9cd12ff77ae73a0af02b4d0e3 > /Users/jawilson/src/omni-c/src/lib/string-util.c
-// git cat-file -p df23a997c6f15122baabb028967c934d455677b6 > /Users/jawilson/src/omni-c/src/lib/utf8-decoder.c
-// git cat-file -p 7f7e2ac8a1fbce3c3b374969c1be14b5ff3cfc13 > /Users/jawilson/src/omni-c/src/lib/buffer.c
-// git cat-file -p 79d38aecc73b2a55d285054e82a034e0c12e155e > /Users/jawilson/src/omni-c/src/lib/byte-stream.c
-// git cat-file -p 5026e96475343412185bdbdd0f7e16de1edd37d5 > /Users/jawilson/src/omni-c/src/lib/value-array.c
-// git cat-file -p d3de14eae821ed224cdb98f8dc83326e3186b1ec > /Users/jawilson/src/omni-c/src/lib/value-alist.c
-// git cat-file -p 3daa6916772a1c16f0a418ef26a26df6c99703ec > /Users/jawilson/src/omni-c/src/lib/string-alist.c
-// git cat-file -p e421c605ae63ec9921eb28be7fa07bf691eaf424 > /Users/jawilson/src/omni-c/src/lib/value-hashtable.c
-// git cat-file -p 578a71e2e4fe8a82b4cbb04356b57f15a5ef96c1 > /Users/jawilson/src/omni-c/src/lib/string-hashtable.c
-// git cat-file -p 33a442159ba8aa160fe01b254f3e4d0c2eb914f9 > /Users/jawilson/src/omni-c/src/lib/value-tree.c
-// git cat-file -p 8afe29e5e09aeb54a51dd3d667b0f4b590bb69e3 > /Users/jawilson/src/omni-c/src/lib/string-tree.c
-// git cat-file -p 9c7853def592e90f2aeff13914e5c3295915def1 > /Users/jawilson/src/omni-c/src/lib/flag.c
-// git cat-file -p cb57000057b2c51c44bd076322ab884c2d2f4fdb > /Users/jawilson/src/omni-c/src/lib/tokenizer.c
-// git cat-file -p d9cc1283b44a606474865a2c30a2a58bfbdb5163 > /Users/jawilson/src/omni-c/src/lib/random.c
-// git cat-file -p a705b9173e8f1927adbdfa6c6e23e65d8587bf67 > /Users/jawilson/src/omni-c/src/lib/cdl-printer.c
-// git cat-file -p 25f99931e9abce6b5994a32cd7a6d0c388b5c608 > /Users/jawilson/src/omni-c/src/lib/splitjoin.c
-// git cat-file -p 306eb57dbc5d8bc2cffd54be1059e1b7aa49164c > /Users/jawilson/src/omni-c/src/lib/oarchive.c
-// git cat-file -p ad14e433b3d68adf49dfaca6a0be405096673fcd > /Users/jawilson/src/omni-c/src/lib/quote-util.c
-// git cat-file -p 6a98294a0ed3069606bfa8a4bbb7f9e667b76555 > /Users/jawilson/src/omni-c/src/lib/test.c
+// git cat-file -p 23c18cf6c82a20325af75dc2f68c860d8a444703 > /Users/jawilson/src/omni-c/src/lib/lang/fn.c
+// git cat-file -p eee2fe01e22fa61a73cb9a08b037ee0eed1ef7c6 > /Users/jawilson/src/omni-c/src/lib/runtime/fatal-error-darwin.c
+// git cat-file -p 79d38aecc73b2a55d285054e82a034e0c12e155e > /Users/jawilson/src/omni-c/src/lib/io/byte-stream.c
+// git cat-file -p 34c0f39b6f480c7ce9cb93fd79586d8900323bdf > /Users/jawilson/src/omni-c/src/lib/lang/boolean.c
+// git cat-file -p a72d9704e03fd98b2ee12596a105556503db4745 > /Users/jawilson/src/omni-c/src/lib/runtime/flag.c
+// git cat-file -p a705b9173e8f1927adbdfa6c6e23e65d8587bf67 > /Users/jawilson/src/omni-c/src/lib/io/cdl-printer.c
+// git cat-file -p ebfc3c03ad90ffd3a1bc1002be3d772d7b8dab78 > /Users/jawilson/src/omni-c/src/lib/string/quote-util.c
+// git cat-file -p cb57000057b2c51c44bd076322ab884c2d2f4fdb > /Users/jawilson/src/omni-c/src/lib/string/tokenizer.c
+// git cat-file -p fdeeb847cf945a6a55bcefc45bf55ec77e61accf > /Users/jawilson/src/omni-c/src/lib/lang/omni-c.c
+// git cat-file -p e421c605ae63ec9921eb28be7fa07bf691eaf424 > /Users/jawilson/src/omni-c/src/lib/collections/value-hashtable.c
+// git cat-file -p 0d5d7372caf6c3a78cee3b1d53aeeaf143f5967d > /Users/jawilson/src/omni-c/src/lib/tui/style.c
 // git cat-file -p 6ef41027a6eafbe51a35cf74824f677e388b3d0a > /Users/jawilson/src/omni-c/src/lib/io/logger.c
+// git cat-file -p 2cdffe97864a7e55c28fc6a3ae20c0354bd8ba18 > /Users/jawilson/src/omni-c/src/lib/lang/leb128.c
+// git cat-file -p 02ced64df8d64d3253ade2fd065aa6f267cdfff2 > /Users/jawilson/src/omni-c/src/lib/collections/value.c
+// git cat-file -p e8bdf95d91ff849ad2a59f7408a520e6a676032f > /Users/jawilson/src/omni-c/src/lib/runtime/platform-darwin.c
+// git cat-file -p 0aed1898a04091557a2edef2251870786bd60e8f > /Users/jawilson/src/omni-c/src/lib/runtime/time.c
+// git cat-file -p 36a0d42d16751b02907317b5a4eaf2cdc7b7ab94 > /Users/jawilson/src/omni-c/src/lib/collections/string-tree.c
+// git cat-file -p 6e52f33c7760c7f20e6729e3c8a02ccf21dd4a00 > /Users/jawilson/src/omni-c/src/lib/lang/uint64.c
+// git cat-file -p bafe73cf643ee7eaf31f00c45d2ba446e8eba75a > /Users/jawilson/src/omni-c/src/lib/lang/compound-literal.c
+// git cat-file -p 56cd1026bb08c5f9cd12ff77ae73a0af02b4d0e3 > /Users/jawilson/src/omni-c/src/lib/string/string-util.c
+// git cat-file -p 33a442159ba8aa160fe01b254f3e4d0c2eb914f9 > /Users/jawilson/src/omni-c/src/lib/collections/value-tree.c
+// git cat-file -p d9cc1283b44a606474865a2c30a2a58bfbdb5163 > /Users/jawilson/src/omni-c/src/lib/lang/random.c
+// git cat-file -p 0faf2bda18ea5ff3af64d7c327d6c00b1c493f30 > /Users/jawilson/src/omni-c/src/lib/io/path.c
+// git cat-file -p d3de14eae821ed224cdb98f8dc83326e3186b1ec > /Users/jawilson/src/omni-c/src/lib/collections/value-alist.c
+// git cat-file -p 25f99931e9abce6b5994a32cd7a6d0c388b5c608 > /Users/jawilson/src/omni-c/src/lib/string/splitjoin.c
+// git cat-file -p 6a98294a0ed3069606bfa8a4bbb7f9e667b76555 > /Users/jawilson/src/omni-c/src/lib/test-framework.c
+// git cat-file -p 523ba76457db03ce8c6a28480ea8aeabbf0bdb2b > /Users/jawilson/src/omni-c/src/lib/collections/string-hashtable.c
+// git cat-file -p df23a997c6f15122baabb028967c934d455677b6 > /Users/jawilson/src/omni-c/src/lib/string/utf8-decoder.c
+// git cat-file -p 7f7e2ac8a1fbce3c3b374969c1be14b5ff3cfc13 > /Users/jawilson/src/omni-c/src/lib/string/buffer.c
+// git cat-file -p c25b527e6f0fbdeaf953acaa0d74c6758f50bdca > /Users/jawilson/src/omni-c/src/lib/lang/double.c
+// git cat-file -p dc4e61d2890a741a9a516742d1539c3c52735a13 > /Users/jawilson/src/omni-c/src/lib/includes.c
+// git cat-file -p 02abec232f4e0d2f0f7750bfcf64de2b0351220d > /Users/jawilson/src/omni-c/src/lib/collections/string-alist.c
+// git cat-file -p 5026e96475343412185bdbdd0f7e16de1edd37d5 > /Users/jawilson/src/omni-c/src/lib/collections/value-array.c
 // git cat-file -p 4d8c3ff1b676b66c5fad6f9e3b51231da9ab66eb > /Users/jawilson/src/omni-c/src/lib/io/io.c
 // git cat-file -p a8398b927d8918cc24c5580137a0692c3e706496 > /Users/jawilson/src/omni-c/src/lib/tui/terminal.c
-// git cat-file -p 0d5d7372caf6c3a78cee3b1d53aeeaf143f5967d > /Users/jawilson/src/omni-c/src/lib/tui/style.c
-// git cat-file -p 3dd9fe9e2756790e5a8e2e865f35fe53ca662732 > /Users/jawilson/src/omni-c/src/lib/io/sub-process.c
 // git cat-file -p 4d375e4e8b70d94c09477178dec91cfdb8b75263 > /Users/jawilson/src/omni-c/src/lib/io/io-darwin.c
 // git cat-file -p 0fd688e37ba07790d363754435dac17989d7c32b > /Users/jawilson/src/omni-c/src/lib/tui/screen.c
-// git cat-file -p 0faf2bda18ea5ff3af64d7c327d6c00b1c493f30 > /Users/jawilson/src/omni-c/src/lib/io/path.c
+// git cat-file -p 3dd9fe9e2756790e5a8e2e865f35fe53ca662732 > /Users/jawilson/src/omni-c/src/lib/io/sub-process.c
+// git cat-file -p 306eb57dbc5d8bc2cffd54be1059e1b7aa49164c > /Users/jawilson/src/omni-c/src/lib/io/oarchive.c
+// git cat-file -p 7b810eaa3e91a9fcb7459c588fc588fc070cce1a > /Users/jawilson/src/omni-c/src/lib/runtime/gc-allocate.c
+// git cat-file -p e4fc0d0a5e8d03a538897ec0a0654970bb7f3edd > /Users/jawilson/src/omni-c/src/lib/lang/min-max.c
+// git cat-file -p 5797faf6a654e129e911225b9607fac3ef25b7f1 > /Users/jawilson/src/omni-c/src/lib/runtime/fatal-error.c
 // git cat-file -p ce583389be4e293f41e3f1c61cf7e1ec7ef6e3c0 > /Users/jawilson/src/omni-c/src/roci/roci-assembler.c
 // git cat-file -p 21832eb37a0ce67d68af103d108233e9624e50af > /Users/jawilson/src/omni-c/src/roci/roci-bb-builder.c
 // git cat-file -p 425cbc84a114d3e46dc1c2e5add5cf5609504bab > /Users/jawilson/src/omni-c/src/roci/roci-bb.c
 // git cat-file -p 514987c2f576469cbe427ee5fd1e13363d4fc132 > /Users/jawilson/src/omni-c/src/roci/roci-buffer-registry.c
-// git cat-file -p ab7f2875b09442bbebc7d595440c57eea30bb9a7 > /Users/jawilson/src/omni-c/src/roci/roci-command.c
-// git cat-file -p 808ebfffdc3be1ccd4c1235fbe2aed7ca1a4eb32 > /Users/jawilson/src/omni-c/src/roci/roci-compiler.c
+// git cat-file -p 748e498e9e76147e732c73d146995342f524fd08 > /Users/jawilson/src/omni-c/src/roci/roci-command.c
+// git cat-file -p a5f69d003da95edaf15cb11a98c8b5190ebab7cc > /Users/jawilson/src/omni-c/src/roci/roci-compiler.c
 // git cat-file -p b066b095b901438f4188747b267b8b7f93ce1b7a > /Users/jawilson/src/omni-c/src/roci/roci-debugger.c
 // git cat-file -p ad779aea9e8423d72d82314f4137b4be15bc4ee5 > /Users/jawilson/src/omni-c/src/roci/roci-disassembler.c
 // git cat-file -p b25416ca924c336260f74d15be1f065daa750a21 > /Users/jawilson/src/omni-c/src/roci/roci-env.c
 // git cat-file -p cd6ff7f03fbea0a3de252db40139f90af1fd55b8 > /Users/jawilson/src/omni-c/src/roci/roci-primitives-darwin.c
-// git cat-file -p c66d1af25c0b481f47ed23c4af2d1a7fc687df43 > /Users/jawilson/src/omni-c/src/roci/roci-primitives.c
+// git cat-file -p f3d1644e94cd1d13de8422382dbde3157f61be51 > /Users/jawilson/src/omni-c/src/roci/roci-primitives.c
 // git cat-file -p b83de9f297426867a5c99b2fd30e60f906cbf225 > /Users/jawilson/src/omni-c/src/roci/roci-record.c
 // git cat-file -p 03ca9b02d66b784010f977fc84ebf1e0950f9a8e > /Users/jawilson/src/omni-c/src/roci/roci-repl.c
 // git cat-file -p 5b5f9576bd606cfe9ca6aa780b038ac5c84755b3 > /Users/jawilson/src/omni-c/src/roci/roci-stack.c
 // git cat-file -p 5ca05685729dc79a277ca53afea2a3e289b9dd94 > /Users/jawilson/src/omni-c/src/roci/roci-value.c
-// git cat-file -p 3333f6a38252b72fd3070df850948e3fbd1355dc > /Users/jawilson/src/omni-c/src/roci/roci.c
+// git cat-file -p b7c0d17a03a7439638ebc59b9331e679a25209e9 > /Users/jawilson/src/omni-c/src/roci/roci.c
 // git cat-file -p 3bc18365e0a473a9c19b0a71658a3028fa3b6a4d > /Users/jawilson/src/omni-c/build-dir/gen-files/reflection-header.c
 // git cat-file -p c58bdfe674ffe3143c7f2aa48916d7db4bdee08f > /Users/jawilson/src/omni-c/build-dir/gen-files/roci-lib.c
