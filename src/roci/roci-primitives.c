@@ -137,6 +137,7 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   // Random Testing Code
   roci_add_primitive(env, &roci_primitive_draw_random_screen,
                      "draw_random_screen");
+  roci_add_primitive(env, &roci_primitive_fatal_error, "fatal_error");
 }
 
 /**
@@ -353,7 +354,7 @@ void roci_primitive_load(roci_vm_state_t* state) {
   }
   value_array_t* bblocks = build_bblocks(compiler_state->bblocks);
   roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
-  roci_execute(state->env, entry_point);
+  roci_execute(roci_make_vm_state(state->env), entry_point);
   roci_push_false(state);
 }
 
@@ -1212,5 +1213,13 @@ void roci_primitive_record_set(roci_vm_state_t* state) {
 void roci_primitive_draw_random_screen(roci_vm_state_t* state) {
   boolean_t draw = roci_pop_boolean(state);
   draw_random_screen(draw);
+  roci_push_false(state);
+}
+
+void roci_primitive_fatal_error(roci_vm_state_t* state) {
+  if (state->n_args != 0) {
+    roci_debug_error(state, "fatal_error expects zero arguments");
+  }
+  fatal_error(ERROR_FATAL);
   roci_push_false(state);
 }

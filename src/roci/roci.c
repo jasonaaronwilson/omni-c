@@ -112,8 +112,8 @@ typedef fn_t(void, roci_vm_state_t*) roci_c_primitive_t;
  * Once a file is compiled into bblocks, this should be used to run
  * that program fragment.
  */
-roci_runtime_error_t roci_execute(roci_env_t* env, roci_bb_t* entry_point) {
-  roci_vm_state_t* state = roci_make_vm_state(env);
+roci_runtime_error_t roci_execute(roci_vm_state_t* state,
+                                  roci_bb_t* entry_point) {
   return roci_execute_bblock(entry_point, state);
 }
 
