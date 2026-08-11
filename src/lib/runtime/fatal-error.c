@@ -87,10 +87,6 @@ void set_fatal_error_callback(fatal_error_callback_t callback, void* data) {
   fatal_error_callback_data = data;
 }
 
-void print_fatal_error_banner();
-void print_backtrace();
-void print_error_code_name(int error_code);
-
 _Noreturn void fatal_error_impl(char* file, int line, int error_code) {
   if (fatal_error_callback != nullptr) {
     fatal_error_callback(file, line, error_code, fatal_error_callback_data);
@@ -121,21 +117,6 @@ void print_fatal_error_banner() {
   // As the first thing we print, also responsible for at least one
   // newline to start a new line if we may not be at one.
   fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
-}
-
-void print_backtrace() {
-#ifndef NO_VM_BACKTRACE_ON_FATAL_ERROR
-  do {
-    void* array[10];
-    int size = backtrace(array, 10);
-    char** strings = backtrace_symbols(array, size);
-
-    // Print the backtrace
-    for (int i = 0; i < size; i++) {
-      printf("#%d %s\n", i, strings[i]);
-    }
-  } while (0);
-#endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
 }
 
 void print_error_code_name(int error_code) {
