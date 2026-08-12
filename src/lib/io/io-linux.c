@@ -23,3 +23,17 @@ int64_t get_file_modification_time(const char* filename) {
 
   return total_microseconds;
 }
+
+/**
+ * @function make_file_read_only
+ *
+ * Changes permissions on a file to be "read-only".
+ */
+void make_file_read_only(char* file_name) {
+  // Set file permissions to read-only
+  if (chmod(file_name, S_IRUSR | S_IRGRP | S_IROTH) != 0) {
+    log_fatal("Failed to set file permissions: %s", file_name);
+    log_fatal("strerror(errno) = %s", strerror(errno));
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}

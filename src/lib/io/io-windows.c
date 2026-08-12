@@ -186,3 +186,16 @@ int usleep(uint32_t usec) {
     Sleep(ms);
     return 0;
 }
+
+void make_file_read_only(char* file_name) {
+    DWORD attributes = GetFileAttributesA(file_name);
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        log_fatal("Failed to get file attributes: %s", file_name);
+        fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+    if (!SetFileAttributesA(file_name, attributes | FILE_ATTRIBUTE_READONLY)) {
+        log_fatal("Failed to set file read-only attribute: %s", file_name);
+        fatal_error(ERROR_ILLEGAL_STATE);
+    }
+}

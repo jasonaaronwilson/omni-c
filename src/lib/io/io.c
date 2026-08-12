@@ -148,20 +148,6 @@ void buffer_write_all_chunked(FILE* output, buffer_t* buffer) {
 }
 
 /**
- * @function make_file_read_only
- *
- * Changes permissions on a file to be "read-only".
- */
-void make_file_read_only(char* file_name) {
-  // Set file permissions to read-only
-  if (chmod(file_name, S_IRUSR | S_IRGRP | S_IROTH) != 0) {
-    log_fatal("Failed to set file permissions: %s", file_name);
-    log_fatal("strerror(errno) = %s", strerror(errno));
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-/**
  * @function make_writable_if_exists
  *
  * Checks if a file exists and, if it does, adds write permissions for
