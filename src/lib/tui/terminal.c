@@ -46,7 +46,6 @@ typedef term_keypress_t = struct {
   uint8_t ctrl : 1;
   uint8_t meta : 1;
   uint8_t super : 1;
-  uint8_t hyper : 1;
 };
 
 // Names and descriptions are from ncurses but the values are
