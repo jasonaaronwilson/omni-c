@@ -199,3 +199,92 @@ void make_file_read_only(char* file_name) {
         fatal_error(ERROR_ILLEGAL_STATE);
     }
 }
+
+/**
+ * @function make_writable_if_exists
+ *
+ * Checks if a file exists and, if it does, adds write permissions for
+ * the owner.
+ */
+void make_writable_if_exists(const char* file_name) {
+    DWORD attributes = GetFileAttributesA(file_name);
+
+    /* File doesn't exist */
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        return;
+    }
+
+    /* Strip the READONLY attribute if it is set */
+    if (attributes & FILE_ATTRIBUTE_READONLY) {
+        DWORD new_attributes = attributes & ~cast(DWORD, FILE_ATTRIBUTE_READONLY);
+        if (!SetFileAttributesA(file_name, new_attributes)) {
+            log_fatal("Error setting permissions for %s\n", file_name);
+            fatal_error(ERROR_ILLEGAL_STATE);
+        }
+    }
+}
+
+/**
+ * @function buffer_read_ready_bytes_file_number
+ *
+ * Read from a file_number until either the end of file is reached,
+ * max_bytes has been read, or there are no ready bytes. This function
+ * should never block.
+ */
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer,
+                                                     int file_number,
+                                                     uint64_t max_bytes) {
+    uint64_t bytes_remaining = max_bytes - buffer_length(buffer);
+    char read_buffer[1024] = {0};
+
+    intptr_t os_handle = _get_osfhandle(file_number);
+    if (os_handle == -1) {
+        log_fatal("Invalid file descriptor %d", file_number);
+        fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+    HANDLE h_file = cast(HANDLE, os_handle);
+
+    while (bytes_remaining > 0) {
+        DWORD avail_bytes = 0;
+        BOOL peek_ok = PeekNamedPipe(h_file, NULL, 0, NULL, &avail_bytes, NULL);
+
+        if (!peek_ok) {
+            DWORD last_err = GetLastError();
+            /* ERROR_BROKEN_PIPE indicates the write end closed (EOF) */
+            if (last_err == ERROR_BROKEN_PIPE) {
+                break;
+            }
+            log_fatal("Error peeking pipe on descriptor %d (error %lu)", file_number, last_err);
+            fatal_error(ERROR_ILLEGAL_STATE);
+        }
+
+        /* No bytes ready to read without blocking */
+        if (avail_bytes == 0) {
+            break;
+        }
+
+        /* Determine chunk size to read without blocking */
+        uint32_t chunk_size = sizeof(read_buffer);
+        if (cast(uint64_t, chunk_size) > bytes_remaining) {
+            chunk_size = cast(uint32_t, bytes_remaining);
+        }
+        if (cast(uint64_t, chunk_size) > cast(uint64_t, avail_bytes)) {
+            chunk_size = cast(uint32_t, avail_bytes);
+        }
+
+        DWORD bytes_read = 0;
+        BOOL read_ok = ReadFile(h_file, read_buffer, chunk_size, &bytes_read, NULL);
+
+        if (!read_ok || bytes_read == 0) {
+            break;
+        }
+
+        for (uint32_t i = 0; i < bytes_read; i++) {
+            buffer = buffer_append_byte(buffer, cast(uint8_t, read_buffer[i]));
+            bytes_remaining--;
+        }
+    }
+
+    return buffer;
+}
