@@ -360,16 +360,6 @@ void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
   }
 }
 
-/**
- * @function term_echo_off
- *
- * Append a terminal escape sequence to turn on hardware echoing.
- */
-extern void term_echo_restore(struct termios oldt) {
-  // Restore the original terminal settings
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-}
-
 void term_disable_autowrap(buffer_t* buffer) {
   buffer_append_string(buffer, "\033[?7l");
 }

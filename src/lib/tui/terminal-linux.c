@@ -36,3 +36,12 @@ extern struct termios term_echo_off() {
   return oldt;
 }
 
+/**
+ * @function term_echo_off
+ *
+ * Append a terminal escape sequence to turn on hardware echoing.
+ */
+void term_echo_restore(struct termios oldt) {
+  // Restore the original terminal settings
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+}
