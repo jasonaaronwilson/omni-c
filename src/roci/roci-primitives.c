@@ -613,17 +613,17 @@ void roci_primitive_shell(roci_vm_state_t* state) {
   sub_process_t* sub_process = make_sub_process(argv);
   sub_process_launch(sub_process);
 
-  buffer_t* stdout = make_buffer(1);
-  buffer_t* stderr = stdout;
+  buffer_t* stdout_buf = make_buffer(1);
+  buffer_t* stderr_buf = stdout_buf;
   do {
-    sub_process_read(sub_process, stdout, stderr);
+    sub_process_read(sub_process, stdout_buf, stderr_buf);
     usleep(5);
   } while (is_sub_process_running(sub_process));
-  sub_process_read(sub_process, stdout, stderr);
+  sub_process_read(sub_process, stdout_buf, stderr_buf);
   sub_process_wait(sub_process);
 
   roci_push_integer(state, sub_process->exit_code);
-  roci_push_string(state, buffer_to_c_string(stdout));
+  roci_push_string(state, buffer_to_c_string(stdout_buf));
   state->n_args = 2;
   roci_primitive_make_list(state);
 }
