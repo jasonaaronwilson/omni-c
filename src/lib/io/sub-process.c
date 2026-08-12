@@ -24,9 +24,9 @@ typedef sub_process_t = struct {
 
   // child process information
   pid_t pid;
-  int stdin;
-  int stdout;
-  int stderr;
+  int stdin_fd;
+  int stdout_fd;
+  int stderr_fd;
 
   // exit info
   sub_process_exit_status_t exit_status;
@@ -155,9 +155,9 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
 
     // 7. Record the pid, stdout, and stderr.
     sub_process->pid = pid;
-    sub_process->stdin = stdin_pipe[1];
-    sub_process->stdout = stdout_pipe[0];
-    sub_process->stderr = stderr_pipe[0];
+    sub_process->stdin_fd = stdin_pipe[1];
+    sub_process->stdout_fd = stdout_pipe[0];
+    sub_process->stderr_fd = stderr_pipe[0];
 
     free_bytes(argv);
 
@@ -167,7 +167,7 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
 
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data,
                            uint64_t start_position) {
-  int stdin_fd = sub_process->stdin;
+  int stdin_fd = sub_process->stdin_fd;
 
   // Set the file descriptor to non-blocking mode
   int flags = fcntl(stdin_fd, F_GETFL, 0);
@@ -190,23 +190,23 @@ uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data,
 }
 
 void sub_process_close_stdin(sub_process_t* sub_process) {
-  if (sub_process->stdin != -1) { // Check if stdin is still open
-    if (close(sub_process->stdin) == -1) {
+  if (sub_process->stdin_fd != -1) { // Check if stdin is still open
+    if (close(sub_process->stdin_fd) == -1) {
       log_fatal("Error closing subprocess stdin: %s", strerror(errno));
       fatal_error(ERROR_ILLEGAL_STATE);
     }
-    sub_process->stdin = -1; // Mark stdin as closed
+    sub_process->stdin_fd = -1; // Mark stdin as closed
   }
 }
 
-void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,
-                      buffer_t* stderr) {
-  if (stdout != NULL) {
-    buffer_read_ready_bytes_file_number(stdout, sub_process->stdout,
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout_buffer,
+                      buffer_t* stderr_buffer) {
+  if (stdout_buffer != NULL) {
+    buffer_read_ready_bytes_file_number(stdout_buffer, sub_process->stdout_fd,
                                         0xffffffff);
   }
-  if (stderr != NULL) {
-    buffer_read_ready_bytes_file_number(stderr, sub_process->stderr,
+  if (stderr_buffer != NULL) {
+    buffer_read_ready_bytes_file_number(stderr_buffer, sub_process->stderr_fd,
                                         0xffffffff);
   }
 }
