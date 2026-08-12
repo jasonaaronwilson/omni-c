@@ -2,7 +2,7 @@ uint32_t term_width(void) {
   CONSOLE_SCREEN_BUFFER_INFO csbi = {0};
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hOut != INVALID_HANDLE_VALUE && GetConsoleScreenBufferInfo(hOut, &csbi)) {
-        return (uint32_t)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
+      return cast(uint32_t, (csbi.srWindow.Right - csbi.srWindow.Left + 1));
     }
     return 80; /* Fallback default width */
 }
@@ -11,7 +11,7 @@ uint32_t term_height(void) {
     CONSOLE_SCREEN_BUFFER_INFO csbi = {0};
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hOut != INVALID_HANDLE_VALUE && GetConsoleScreenBufferInfo(hOut, &csbi)) {
-        return (uint32_t)(csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
+      return cast(uint32_t, (csbi.srWindow.Bottom - csbi.srWindow.Top + 1));
     }
     return 24; /* Fallback default height */
 }

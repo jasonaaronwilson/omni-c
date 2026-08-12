@@ -172,7 +172,9 @@ unsigned int sleep(unsigned int seconds) {
 
 // CreateWaitableTimerEx
 
-static int usleep(useconds_t usec) {
+// Technically uint64_t would allow longer sleep times but Gemini
+// thinks most POSIX implementations define useconds_t as uint32_t
+int usleep(uint32_t usec) {
     if (usec == 0) {
         Sleep(0); /* Yield remainder of time slice */
         return 0;
@@ -180,7 +182,7 @@ static int usleep(useconds_t usec) {
 
     /* Convert microseconds to milliseconds, rounding up so non-zero
        durations less than 1000us still sleep for at least 1ms. */
-    DWORD ms = (DWORD)((usec + 999) / 1000);
+    DWORD ms = cast(DWORD, (usec + 999) / 1000);
     Sleep(ms);
     return 0;
 }

@@ -197,7 +197,7 @@ uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data,
   if (stdin_handle == NULL) return 0;
 
   DWORD bytes_written = 0;
-  DWORD bytes_to_write = (DWORD)(data->length - start_position);
+  DWORD bytes_to_write = cast(DWORD, data->length - start_position);
   
   // Note: Standard anonymous pipes in Windows are blocking.
   // To avoid deadlock, ensure buffer sizes don't exceed pipe capacity (typically 4KB)
@@ -293,7 +293,7 @@ boolean_t is_sub_process_running(sub_process_t* sub_process) {
   if (wait_result == WAIT_OBJECT_0) {
       GetExitCodeProcess(sub_process->hProcess, &exit_code);
   } else {
-      exit_code = (DWORD)-1; // Abnormal / failure to wait
+      exit_code = cast(DWORD, -1); // Abnormal / failure to wait
   }
 
   sub_process_record_exit_status(sub_process, exit_code);
