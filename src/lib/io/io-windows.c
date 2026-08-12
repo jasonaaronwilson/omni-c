@@ -85,3 +85,82 @@ int64_t get_file_modification_time(const char* filename) {
 
   return total_microseconds;
 }
+
+#define STACK_READ_BUFFER_SIZE 4096
+
+/**
+ * @function buffer_read_ready_bytes_handle
+ *
+ * Reads immediately available bytes from a Windows HANDLE into the buffer.
+ * Designed to work with anonymous pipes (from subprocesses), but can be 
+ * extended for files and sockets.
+ */
+void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t max_bytes) {
+  if (handle == NULL || buffer == NULL) {
+    return;
+  }
+
+  DWORD bytes_available = 0;
+  DWORD file_type = GetFileType(handle) & ~FILE_TYPE_REMOTE;
+
+  if (file_type == FILE_TYPE_PIPE) {
+    // For pipes, ask Windows how many bytes are sitting in the buffer
+    BOOL peek_success = PeekNamedPipe(handle, NULL, 0, NULL, &bytes_available, NULL);
+    
+    if (!peek_success) {
+      DWORD err = GetLastError();
+      if (err == ERROR_BROKEN_PIPE) {
+        // The child process closed its end of the pipe. Normal exit condition.
+        return;
+      }
+      log_fatal("PeekNamedPipe failed with error %d", err);
+      fatal_error(ERROR_ILLEGAL_STATE);
+      return;
+    }
+  } else {
+    // Fallback for standard files
+    bytes_available = STACK_READ_BUFFER_SIZE; 
+  }
+
+  // If there's nothing to read, return immediately to avoid blocking
+  if (bytes_available == 0) {
+    return;
+  }
+
+  DWORD bytes_to_read = bytes_available;
+  
+  // Cap the read at our stack buffer size
+  if (bytes_to_read > STACK_READ_BUFFER_SIZE) {
+    bytes_to_read = STACK_READ_BUFFER_SIZE;
+  }
+  
+  // Cap the read at the requested max limit
+  if (bytes_to_read > max_bytes) {
+    bytes_to_read = max_bytes;
+  }
+
+  uint8_t read_buffer[STACK_READ_BUFFER_SIZE] = {0};
+  DWORD bytes_read = 0;
+  
+  BOOL read_success = ReadFile(
+      handle, 
+      read_buffer, 
+      bytes_to_read, 
+      &bytes_read, 
+      NULL
+  );
+
+  if (read_success && bytes_read > 0) {
+    // Safely copy into the opaque buffer abstraction byte-by-byte
+    for (DWORD i = 0; i < bytes_read; i++) {
+      buffer_append_byte(buffer, cast(uint8_t, read_buffer[i]));
+    }
+  } else if (!read_success) {
+    DWORD err = GetLastError();
+    // ERROR_BROKEN_PIPE is expected when the pipe closes cleanly during a read
+    if (err != ERROR_BROKEN_PIPE && err != ERROR_MORE_DATA) {
+      log_fatal("ReadFile failed with error %d", err);
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+}
