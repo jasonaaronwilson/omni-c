@@ -212,7 +212,7 @@ pstatus_t pratt_parse_expression(pstate_t* pstate, int precedence) {
   }
 
   if (!pratt_handle_instruction(pstate, prefix_instruction, nullptr)) {
-    log_debug("(RETURNING ERROR) handle instruction\n", token_to_string(token));
+    log_debug("(RETURNING ERROR) handle instruction %s\n", token_to_string(token));
     return pstate_propagate_error(pstate, saved_position);
   }
 
