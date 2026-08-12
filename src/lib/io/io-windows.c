@@ -92,7 +92,7 @@ int64_t get_file_modification_time(const char* filename) {
  * @function buffer_read_ready_bytes_handle
  *
  * Reads immediately available bytes from a Windows HANDLE into the buffer.
- * Designed to work with anonymous pipes (from subprocesses), but can be 
+ * Designed to work with anonymous pipes (from subprocesses), but can be
  * extended for files and sockets.
  */
 void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t max_bytes) {
@@ -106,7 +106,7 @@ void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t ma
   if (file_type == FILE_TYPE_PIPE) {
     // For pipes, ask Windows how many bytes are sitting in the buffer
     BOOL peek_success = PeekNamedPipe(handle, NULL, 0, NULL, &bytes_available, NULL);
-    
+
     if (!peek_success) {
       DWORD err = GetLastError();
       if (err == ERROR_BROKEN_PIPE) {
@@ -119,7 +119,7 @@ void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t ma
     }
   } else {
     // Fallback for standard files
-    bytes_available = STACK_READ_BUFFER_SIZE; 
+    bytes_available = STACK_READ_BUFFER_SIZE;
   }
 
   // If there's nothing to read, return immediately to avoid blocking
@@ -128,12 +128,12 @@ void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t ma
   }
 
   DWORD bytes_to_read = bytes_available;
-  
+
   // Cap the read at our stack buffer size
   if (bytes_to_read > STACK_READ_BUFFER_SIZE) {
     bytes_to_read = STACK_READ_BUFFER_SIZE;
   }
-  
+
   // Cap the read at the requested max limit
   if (bytes_to_read > max_bytes) {
     bytes_to_read = max_bytes;
@@ -141,12 +141,12 @@ void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t ma
 
   uint8_t read_buffer[STACK_READ_BUFFER_SIZE] = {0};
   DWORD bytes_read = 0;
-  
+
   BOOL read_success = ReadFile(
-      handle, 
-      read_buffer, 
-      bytes_to_read, 
-      &bytes_read, 
+      handle,
+      read_buffer,
+      bytes_to_read,
+      &bytes_read,
       NULL
   );
 
@@ -163,4 +163,24 @@ void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t ma
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
+}
+
+unsigned int sleep(unsigned int seconds) {
+    Sleep(seconds * 1000);
+    return 0;
+}
+
+// CreateWaitableTimerEx
+
+static int usleep(useconds_t usec) {
+    if (usec == 0) {
+        Sleep(0); /* Yield remainder of time slice */
+        return 0;
+    }
+
+    /* Convert microseconds to milliseconds, rounding up so non-zero
+       durations less than 1000us still sleep for at least 1ms. */
+    DWORD ms = (DWORD)((usec + 999) / 1000);
+    Sleep(ms);
+    return 0;
 }
