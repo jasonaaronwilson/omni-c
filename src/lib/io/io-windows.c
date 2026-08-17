@@ -288,3 +288,53 @@ extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer,
 
     return buffer;
 }
+
+// Return nullptr when an error occurs and an empty array if no error.
+value_array_t* file_glob(const char* pattern) {
+    if (pattern == NULL) {
+        return nullptr;
+    }
+
+    value_array_t* result_array = make_value_array(10);
+
+    WIN32_FIND_DATAA find_data = {0};
+    HANDLE h_find = FindFirstFileA(pattern, &find_data);
+
+    if (h_find == INVALID_HANDLE_VALUE) {
+        DWORD err = GetLastError();
+        if (err == ERROR_FILE_NOT_FOUND || err == ERROR_PATH_NOT_FOUND) {
+            return result_array;
+        }
+        return nullptr;
+    }
+
+    /* Extract directory prefix if pattern contained a path (e.g. "dir/*.txt") */
+    char dir_prefix[1024] = {0};
+    char* last_slash = strrchr(pattern, '/');
+    if (last_slash == NULL) {
+        last_slash = strrchr(pattern, '\\');
+    }
+
+    if (last_slash != NULL) {
+        size_t prefix_len = cast(size_t, (last_slash - pattern) + 1);
+        if (prefix_len < sizeof(dir_prefix)) {
+            strncpy(dir_prefix, pattern, prefix_len);
+            dir_prefix[prefix_len] = '\0';
+        }
+    }
+
+    int keep_searching = 1;
+    while (keep_searching) {
+        /* Skip '.' and '..' pseudo-directories */
+        if (strcmp(find_data.cFileName, ".") != 0 && strcmp(find_data.cFileName, "..") != 0) {
+            char full_path[2048] = {0};
+            snprintf(full_path, sizeof(full_path), "%s%s", dir_prefix, find_data.cFileName);
+
+            value_array_push(result_array, ptr_to_value(string_duplicate(full_path)));
+        }
+        keep_searching = FindNextFileA(h_find, &find_data);
+    }
+
+    FindClose(h_find);
+    return result_array;
+}
