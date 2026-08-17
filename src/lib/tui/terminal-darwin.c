@@ -1,1 +1,1 @@
-src/lib/tui/terminal-linux.c
+terminal-linux.c
