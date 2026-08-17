@@ -76,6 +76,7 @@
 uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
 
   if (amount == 0 || amount > ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT) {
+    log_fatal("Unexpected amount %lld", amount);
     fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
 
