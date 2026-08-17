@@ -44,3 +44,25 @@ char* from_platform_path(char* platform_path) {
 
     return internal_path;
 }
+
+boolean_t path_is_directory(const char* path) {
+  if (!path) {
+    return false;
+  }
+  DWORD attrs = GetFileAttributesA(path);
+  if (attrs == INVALID_FILE_ATTRIBUTES) {
+    return false;
+  }
+  return cast(boolean_t, (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0);
+}
+
+boolean_t path_is_file(const char* path) {
+  if (!path) {
+    return false;
+  }
+  DWORD attrs = GetFileAttributesA(path);
+  if (attrs == INVALID_FILE_ATTRIBUTES) {
+    return false;
+  }
+  return cast(boolean_t, (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
+}

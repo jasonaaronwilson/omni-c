@@ -1025,7 +1025,7 @@ void roci_primitive_pwd(roci_vm_state_t* state) {
   if (state->n_args != 0) {
     roci_debug_error(state, "pwd expects 0 argument");
   }
-  char cwd[PATH_MAX];
+  char cwd[4096]; // PATH_MAX isn't define in windows?
   if (getcwd(cwd, sizeof(cwd)) != NULL) {
     roci_push_string(state, string_duplicate(cwd));
   } else {
