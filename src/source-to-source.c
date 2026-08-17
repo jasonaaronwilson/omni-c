@@ -248,14 +248,21 @@ symbol_table_binding_t*
       if (struct_node->name != nullptr) {
         char* key_name = token_to_string(struct_node->name);
         symbol_table_binding_t* binding
-            = symbol_table_map_get(symbol_table->structures, key_name);
-        buffer_t* buffer = make_buffer(10);
-        buffer_append_dgb_binding(make_cdl_printer(buffer), binding);
-        char* dbg_binding = buffer_to_c_string(buffer);
-        log_debug(
-            "resolve_typename_to_structure_binding -- returning binding %p %s",
-            binding, dbg_binding);
-        return binding;
+	  = symbol_table_map_get(symbol_table->structures, key_name);
+	if (binding != nullptr) {
+	  buffer_t* buffer = make_buffer(10);
+	  buffer_append_dgb_binding(make_cdl_printer(buffer), binding);
+	  char* dbg_binding = buffer_to_c_string(buffer);
+	  log_debug(
+		    "resolve_typename_to_structure_binding -- returning binding %p %s",
+		    binding, dbg_binding);
+	  return binding;
+	} else {
+	  log_debug(
+		    "resolve_typename_to_structure_binding -- returning binding %p %s",
+		    binding, "nullptr");
+	  
+	}
       }
     }
     // ignore enums, they are already processed...
