@@ -61,7 +61,7 @@
 // uint64_t number_of_malloc_calls = 0;
 // uint64_t number_of_free_calls = 0;
 
-#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
+#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1ULL << 48)
 
 /**
  * @function checked_malloc
