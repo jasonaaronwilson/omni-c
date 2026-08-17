@@ -1,3 +1,7 @@
+typedef term_echo_restore_t = struct {
+  // FIXME struct termios state;
+};
+
 uint32_t term_width(void) {
   struct winsize w;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
@@ -16,7 +20,7 @@ uint32_t term_height(void) {
  * Turn off canonical input mode and echo and return the original
  * terminal settings so they can be restored.
  */
-extern struct termios term_echo_off() {
+term_echo_restore_t term_echo_off() {
   struct termios oldt;
   struct termios newt;
   tcgetattr(STDIN_FILENO, &oldt);
@@ -33,7 +37,7 @@ extern struct termios term_echo_off() {
   // newt.c_cc[VTIME] = 0; // No timeout
   tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-  return oldt;
+  return compound_literal(term_echo_restore_t, {}); // FIXME {.state = oldt});
 }
 
 /**
@@ -41,7 +45,7 @@ extern struct termios term_echo_off() {
  *
  * Append a terminal escape sequence to turn on hardware echoing.
  */
-void term_echo_restore(struct termios oldt) {
+void term_echo_restore(term_echo_restore_t restore) {
   // Restore the original terminal settings
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  // FIXME tcsetattr(STDIN_FILENO, TCSANOW, &(restore.state));
 }

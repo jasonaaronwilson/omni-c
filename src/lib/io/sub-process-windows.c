@@ -169,7 +169,7 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   );
 
   if (!success) {
-    log_fatal("CreateProcessA failed (%d).", GetLastError());
+    log_fatal("CreateProcessA failed (%ld).", GetLastError());
     fatal_error(ERROR_ILLEGAL_STATE);
     return false;
   }

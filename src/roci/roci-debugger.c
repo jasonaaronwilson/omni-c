@@ -88,7 +88,7 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
   if (is_tty) {
     buffer_t* input_buffer = make_buffer(10);
 
-    struct termios oldt = term_echo_off();
+    term_echo_restore_t oldt = term_echo_off();
 
     while (true) {
       buffer_clear(buffer);

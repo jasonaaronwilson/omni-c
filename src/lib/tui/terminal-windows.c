@@ -1,3 +1,7 @@
+typedef term_echo_restore_t = struct {
+  DWORD mode;
+};
+
 uint32_t term_width(void) {
   CONSOLE_SCREEN_BUFFER_INFO csbi = {0};
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -20,7 +24,7 @@ uint32_t term_height(void) {
  * Turn off canonical input mode and echo and return the original
  * terminal settings so they can be restored.
  */
-DWORD term_echo_off(void) {
+term_echo_restore_t term_echo_off(void) {
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
     DWORD old_mode = 0;
 
@@ -30,15 +34,15 @@ DWORD term_echo_off(void) {
         SetConsoleMode(hIn, new_mode);
     }
 
-    return old_mode;
+    return compound_literal(term_echo_restore_t, {.mode = old_mode});
 }
 
 /**
  * Restore original terminal input settings.
  */
-void term_echo_restore(DWORD old_mode) {
+void term_echo_restore(term_echo_restore_t restore) {
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
     if (hIn != INVALID_HANDLE_VALUE) {
-        SetConsoleMode(hIn, old_mode);
+        SetConsoleMode(hIn, restore.mode);
     }
 }
