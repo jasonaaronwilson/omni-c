@@ -43,7 +43,10 @@ buffer_t* roci_repl_read(roci_env_t* env) {
     }
 
     buffer_read_ready_bytes(buffer, stdin, 0xffffffff);
-    if ((buffer_ends_with(buffer, ";\n") || buffer_ends_with(buffer, "}\n"))
+    if ((buffer_ends_with(buffer, ";\n")
+	 || buffer_ends_with(buffer, ";\r\n")
+	 || buffer_ends_with(buffer, "}\n")
+	 || buffer_ends_with(buffer, "}\r\n"))
         && roci_is_balanced(buffer)) {
       return buffer;
     } else if (buffer_equal(buffer, "#exit\n")) {
