@@ -49,9 +49,11 @@ buffer_t* roci_repl_read(roci_env_t* env) {
 	 || buffer_ends_with(buffer, "}\r\n"))
         && roci_is_balanced(buffer)) {
       return buffer;
-    } else if (buffer_equal(buffer, "#exit\n")) {
+    } else if (buffer_equal(buffer, "#exit\n")
+	       || buffer_equal(buffer, "#exit\r\n")) {
       return nullptr;
-    } else if (buffer_equal(buffer, "#env\n")) {
+    } else if (buffer_equal(buffer, "#env\n")
+	       || buffer_equal(buffer, "#env\r\n")) {
       buffer_t* env_buffer = make_buffer(10);
       roci_dump_env(env, env_buffer);
       fprintf(stdout, "----- Environment -----\n");
@@ -59,7 +61,8 @@ buffer_t* roci_repl_read(roci_env_t* env) {
       buffer_clear(buffer);
       last_length = 0xffffffff;
     } else {
-      if (buffer_index_of(buffer, "\n\n") >= 0) {
+      if (buffer_index_of(buffer, "\n\n") >= 0
+	  || buffer_index_of(buffer, "\r\n\r\n") >= 0) {
         return buffer;
       }
     }
