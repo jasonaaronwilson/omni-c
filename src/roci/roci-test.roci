@@ -298,7 +298,7 @@ add_test("ht growth",
 
 add_test("getenv_test",
   fn() {
-  let value = getenv("USER");
+  let value = getenv("PATH");
   println(value);
   if (is_string(value)) {
     pass_test();
