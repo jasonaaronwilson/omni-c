@@ -35,8 +35,12 @@ let PLATFORM = platform();
  */
 let check_shell_command = fn(shell_result) {
   if (not(iequal(shell_exit_code(shell_result), 0))) {
+    println("--------------------------------------------------------");
+    println("  ERROR: a shell command returned a non-zero exit code.");
+    println("--------------------------------------------------------");
+    println(shell_command_line(shell_result));
+    println("");
     println(shell_stdout(shell_result));
-    println("A shell command returned a non-zero exit code.");
     exit_compilation();
   }
 };
