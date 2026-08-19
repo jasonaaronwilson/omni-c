@@ -126,14 +126,14 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   // Windows requires a single flat string, unlike execvp's array.
   buffer_t* buffer = make_buffer(10);
   for (int i = offset + 1; i < length; i++) {
-      if (i != offset) {
-	buffer_append(cmd_line, " ");
+      if (i != offset + 1) {
+	buffer_append(buffer, " ");
       }
       char* arg = value_array_get_ptr(sub_process->argv, i, typeof(char*));
       // TODO(jawilson): better windows argument quoting
-      buffer_append(cmd_line, "\"");
-      buffer_append(cmd_line, arg);
-      buffer_append(cmd_line, "\"");
+      buffer_append(buffer, "\"");
+      buffer_append(buffer, arg);
+      buffer_append(buffer, "\"");
   }
 
   char* cmd_line = buffer_to_c_string(buffer);
