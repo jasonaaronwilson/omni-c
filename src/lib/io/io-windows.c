@@ -1,10 +1,5 @@
 // Moves these for consistency (omni-c deduplicates so not harmful).
 
-#include <windows.h>
-#include <io.h>
-#include <direct.h>
-#include <process.h>
-
 /* ====================================================================== */
 /* File Access & Low-Level I/O                                            */
 /* ====================================================================== */
