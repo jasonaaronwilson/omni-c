@@ -133,6 +133,116 @@ typedef struct {
     pos = token_or_error.token.end;                                            \
   } while (0)
 
+#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
+
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
+  do {                                                                         \
+    value_alist_t* head = alist;                                               \
+    while (head) {                                                             \
+      value_t key_var = head->key;                                             \
+      value_t value_var = head->value;                                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
+
+#define string_ht_foreach(ht, key_var, value_var, statements)                  \
+  do {                                                                         \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
+    });                                                                        \
+  } while (0)
+
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+
+#define test_fail(format, ...)                                                 \
+  do {                                                                         \
+    test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
+  } while (0)
+
+#define test_assert(condition)                                                 \
+  do {                                                                         \
+    if (!(condition))                                                          \
+      test_fail("A test assertion failed. Condition expression was: %s",       \
+                #condition);                                                   \
+  } while (0)
+
+#define test_assert_integer_equal(a, b)                                        \
+  do {                                                                         \
+    unsigned long long casted_a = (unsigned long long) (a);                    \
+    unsigned long long casted_b = (unsigned long long) (b);                    \
+    if (a != b) {                                                              \
+      test_fail(                                                               \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "         \
+          "But was:\n    ⟦%llu⟧\n",                                            \
+          casted_a, casted_b);                                                 \
+    }                                                                          \
+  } while (0)
+
+#define test_assert_string_equal(a, b)                                         \
+  do {                                                                         \
+    if (!b) {                                                                  \
+      test_fail(                                                               \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
+          "But was:\n    nullptr\n",                                           \
+          a);                                                                  \
+    }                                                                          \
+    if (!string_equal(a, b)) {                                                 \
+      test_fail(                                                               \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
+          "But was:\n    ⟦%s⟧\n",                                              \
+          a, b);                                                               \
+    }                                                                          \
+  } while (0)
+
+#define cast(type, expr) ((type) (expr))
+
+#define block_expr(block) block
+
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
+
+#define value_tree_foreach(tree, key_var, value_var, statements)               \
+  do {                                                                         \
+    int stack_n_elements = 0;                                                  \
+    value_tree_t* stack[64];                                                   \
+    value_tree_t* current = tree;                                              \
+    while (current != NULL || stack_n_elements > 0) {                          \
+      while (current != NULL) {                                                \
+        stack[stack_n_elements++] = current;                                   \
+        current = current->left;                                               \
+      }                                                                        \
+      current = stack[--stack_n_elements];                                     \
+      value_t key_var = current->key;                                          \
+      value_t value_var = current->value;                                      \
+      statements;                                                              \
+      current = current->right;                                                \
+    }                                                                          \
+  } while (0)
+
+#define string_tree_foreach(tree, key_var, value_var, statements)              \
+  do {                                                                         \
+    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
+                       {                                                       \
+                         char* key_var = (key_var##_value).str;                \
+                         statements;                                           \
+                       });                                                     \
+  } while (0)
+
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
+
 #define LOGGER_OFF 0
 
 #define LOGGER_TRACE 1
@@ -207,43 +317,53 @@ typedef struct {
                 ##__VA_ARGS__);                                                \
   } while (0)
 
-#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
+#define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
 
-#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+#define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
 
-#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+#define malloc_struct(struct_name)                                             \
+  ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
 
-#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+#define malloc_copy_of(source, number_of_bytes)                                \
+  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
 
-#define str_to_value(x) compound_literal(value_t, {.str = x})
+#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1ULL << 48)
 
-#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
-
-#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
-
-#define value_alist_foreach(alist, key_var, value_var, statements)             \
+#define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
-    value_alist_t* head = alist;                                               \
-    while (head) {                                                             \
-      value_t key_var = head->key;                                             \
-      value_t value_var = head->value;                                         \
-      statements;                                                              \
-      head = head->next;                                                       \
+    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
+                        value_var, {                                           \
+                          char* key_var = (key_var##_value).str;               \
+                          statements;                                          \
+                        });                                                    \
+  } while (0)
+
+#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
+
+#define AK_HT_UPSCALE_MULTIPLIER 1.75
+
+#define value_ht_foreach(ht, key_var, value_var, statements)                   \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      value_alist_t* alist = ht->buckets[ht_index];                            \
+      if (alist != NULL) {                                                     \
+        value_alist_foreach(alist, key_var, value_var, statements);            \
+      }                                                                        \
     }                                                                          \
   } while (0)
 
+#define value_array_get_ptr(array, index_expression, cast_type)                \
+  (cast(cast_type, value_array_get(array, index_expression).ptr))
+
+#define ERROR_INSUFFICIENT_INPUT -1
+
+#define ERROR_TOO_BIG -2
+
 #define FILE_COPY_STREAM_BUFFER_SIZE 1024
 
-#define string_tree_foreach(tree, key_var, value_var, statements)              \
-  do {                                                                         \
-    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
-                       {                                                       \
-                         char* key_var = (key_var##_value).str;                \
-                         statements;                                           \
-                       });                                                     \
-  } while (0)
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 
-#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+#define STACK_READ_BUFFER_SIZE 4096
 
 #define KEY_DOWN 1      /* down-arrow key */
 
@@ -459,126 +579,6 @@ typedef struct {
   (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
 
 #define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
-
-#define cast(type, expr) ((type) (expr))
-
-#define block_expr(block) block
-
-#define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
-
-#define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
-
-#define malloc_struct(struct_name)                                             \
-  ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
-
-#define malloc_copy_of(source, number_of_bytes)                                \
-  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
-
-#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1ULL << 48)
-
-#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
-
-#define AK_HT_UPSCALE_MULTIPLIER 1.75
-
-#define value_ht_foreach(ht, key_var, value_var, statements)                   \
-  do {                                                                         \
-    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
-      value_alist_t* alist = ht->buckets[ht_index];                            \
-      if (alist != NULL) {                                                     \
-        value_alist_foreach(alist, key_var, value_var, statements);            \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
-#define value_array_get_ptr(array, index_expression, cast_type)                \
-  (cast(cast_type, value_array_get(array, index_expression).ptr))
-
-#define compound_literal(type, ...) ((type) __VA_ARGS__)
-
-#define STACK_READ_BUFFER_SIZE 4096
-
-#define string_ht_foreach(ht, key_var, value_var, statements)                  \
-  do {                                                                         \
-    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
-      char* key_var = (key_var##_value).str;                                   \
-      statements;                                                              \
-    });                                                                        \
-  } while (0)
-
-#define string_alist_foreach(alist, key_var, value_var, statements)            \
-  do {                                                                         \
-    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
-                        value_var, {                                           \
-                          char* key_var = (key_var##_value).str;               \
-                          statements;                                          \
-                        });                                                    \
-  } while (0)
-
-#define ERROR_INSUFFICIENT_INPUT -1
-
-#define ERROR_TOO_BIG -2
-
-#define value_tree_foreach(tree, key_var, value_var, statements)               \
-  do {                                                                         \
-    int stack_n_elements = 0;                                                  \
-    value_tree_t* stack[64];                                                   \
-    value_tree_t* current = tree;                                              \
-    while (current != NULL || stack_n_elements > 0) {                          \
-      while (current != NULL) {                                                \
-        stack[stack_n_elements++] = current;                                   \
-        current = current->left;                                               \
-      }                                                                        \
-      current = stack[--stack_n_elements];                                     \
-      value_t key_var = current->key;                                          \
-      value_t value_var = current->value;                                      \
-      statements;                                                              \
-      current = current->right;                                                \
-    }                                                                          \
-  } while (0)
-
-#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
-
-#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-#define test_fail(format, ...)                                                 \
-  do {                                                                         \
-    test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
-  } while (0)
-
-#define test_assert(condition)                                                 \
-  do {                                                                         \
-    if (!(condition))                                                          \
-      test_fail("A test assertion failed. Condition expression was: %s",       \
-                #condition);                                                   \
-  } while (0)
-
-#define test_assert_integer_equal(a, b)                                        \
-  do {                                                                         \
-    unsigned long long casted_a = (unsigned long long) (a);                    \
-    unsigned long long casted_b = (unsigned long long) (b);                    \
-    if (a != b) {                                                              \
-      test_fail(                                                               \
-          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "         \
-          "But was:\n    ⟦%llu⟧\n",                                            \
-          casted_a, casted_b);                                                 \
-    }                                                                          \
-  } while (0)
-
-#define test_assert_string_equal(a, b)                                         \
-  do {                                                                         \
-    if (!b) {                                                                  \
-      test_fail(                                                               \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
-          "But was:\n    nullptr\n",                                           \
-          a);                                                                  \
-    }                                                                          \
-    if (!string_equal(a, b)) {                                                 \
-      test_fail(                                                               \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "    \
-          "But was:\n    ⟦%s⟧\n",                                              \
-          a, b);                                                               \
-    }                                                                          \
-  } while (0)
 
 // ========== enums ==========
 
@@ -890,15 +890,65 @@ typedef enum {
   OUTPUT_TYPE_C_UNIT_TEST_FILE,
 } output_file_type_t;
 
-typedef struct logger_state_t__generated_S logger_state_t;
-
-typedef struct utf8_decode_result_t__generated_S utf8_decode_result_t;
-
 typedef struct buffer_t__generated_S buffer_t;
 
 typedef struct line_and_column_t__generated_S line_and_column_t;
 
 typedef struct buffer_region_t__generated_S buffer_region_t;
+
+typedef enum {
+  EXIT_STATUS_UNKNOWN,
+  EXIT_STATUS_NORMAL_EXIT,
+  EXIT_STATUS_SIGNAL,
+  EXIT_STATUS_ABNORMAL,
+} sub_process_exit_status_t;
+
+typedef struct sub_process_t__generated_S sub_process_t;
+
+typedef struct env_override_t__generated_S env_override_t;
+
+typedef struct term_echo_restore_t__generated_S term_echo_restore_t;
+
+typedef struct value_alist_t__generated_S value_alist_t;
+
+typedef struct screen_t__generated_S screen_t;
+
+typedef struct screen_window_t__generated_S screen_window_t;
+
+typedef enum {
+  flag_type_none,
+  flag_type_boolean,
+  flag_type_string,
+  flag_type_uint64,
+  flag_type_int64,
+  flag_type_double,
+  flag_type_enum,
+  flag_type_custom,
+} flag_type_t;
+
+typedef struct program_descriptor_t__generated_S program_descriptor_t;
+
+typedef struct command_descriptor_t__generated_S command_descriptor_t;
+
+typedef struct flag_descriptor_t__generated_S flag_descriptor_t;
+
+typedef struct flag_key_value_S flag_key_value_t;
+
+typedef struct value_hashtable_t__generated_S value_hashtable_t;
+
+typedef value_hashtable_t string_hashtable_t;
+
+typedef struct value_tree_t__generated_S value_tree_t;
+
+typedef value_tree_t string_tree_t;
+
+typedef fn_t(boolean_t, FILE*, string_tree_t*, int64_t, void*) oarchive_stream_headers_callback_t;
+
+typedef uint64_t style_t;
+
+typedef struct cdl_printer_t__generated_S cdl_printer_t;
+
+typedef struct utf8_decode_result_t__generated_S utf8_decode_result_t;
 
 typedef union  {
   uint64_t u64;
@@ -921,63 +971,23 @@ typedef fn_t(int, value_t, value_t) value_comparison_fn;
 
 typedef fn_t(uint64_t, value_t) value_hash_fn;
 
-typedef struct value_alist_t__generated_S value_alist_t;
-
-typedef struct random_state_t__generated_S random_state_t;
-
-typedef struct value_tree_t__generated_S value_tree_t;
-
-typedef value_tree_t string_tree_t;
-
-typedef enum {
-  EXIT_STATUS_UNKNOWN,
-  EXIT_STATUS_NORMAL_EXIT,
-  EXIT_STATUS_SIGNAL,
-  EXIT_STATUS_ABNORMAL,
-} sub_process_exit_status_t;
-
-typedef struct sub_process_t__generated_S sub_process_t;
-
-typedef struct env_override_t__generated_S env_override_t;
-
-typedef struct box_drawing_t__generated_S box_drawing_t;
-
-typedef struct term_keypress_t__generated_S term_keypress_t;
-
-typedef struct value_hashtable_t__generated_S value_hashtable_t;
-
-typedef struct term_echo_restore_t__generated_S term_echo_restore_t;
-
-typedef enum {
-  flag_type_none,
-  flag_type_boolean,
-  flag_type_string,
-  flag_type_uint64,
-  flag_type_int64,
-  flag_type_double,
-  flag_type_enum,
-  flag_type_custom,
-} flag_type_t;
-
-typedef struct program_descriptor_t__generated_S program_descriptor_t;
-
-typedef struct command_descriptor_t__generated_S command_descriptor_t;
-
-typedef struct flag_descriptor_t__generated_S flag_descriptor_t;
-
-typedef struct flag_key_value_S flag_key_value_t;
-
-typedef struct value_array_t__generated_S value_array_t;
-
-typedef value_hashtable_t string_hashtable_t;
+typedef struct logger_state_t__generated_S logger_state_t;
 
 typedef value_alist_t string_alist_t;
+
+typedef struct value_array_t__generated_S value_array_t;
 
 typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
 
 typedef struct signed_decode_result__generated_S signed_decode_result;
 
-typedef struct cdl_printer_t__generated_S cdl_printer_t;
+typedef struct byte_stream_source_t__generated_S byte_stream_source_t;
+
+typedef struct byte_stream_target_t__generated_S byte_stream_target_t;
+
+typedef struct buffer_byte_stream_source_data_t__generated_S buffer_byte_stream_source_data_t;
+
+typedef struct cstring_byte_stream_source_data_t__generated_S cstring_byte_stream_source_data_t;
 
 typedef struct fatal_error_config_t__generated_S fatal_error_config_t;
 
@@ -1013,21 +1023,11 @@ typedef enum {
 
 typedef fn_t(void, char*, int, int, void*) fatal_error_callback_t;
 
-typedef struct byte_stream_source_t__generated_S byte_stream_source_t;
+typedef struct random_state_t__generated_S random_state_t;
 
-typedef struct byte_stream_target_t__generated_S byte_stream_target_t;
+typedef struct box_drawing_t__generated_S box_drawing_t;
 
-typedef struct buffer_byte_stream_source_data_t__generated_S buffer_byte_stream_source_data_t;
-
-typedef struct cstring_byte_stream_source_data_t__generated_S cstring_byte_stream_source_data_t;
-
-typedef struct screen_t__generated_S screen_t;
-
-typedef struct screen_window_t__generated_S screen_window_t;
-
-typedef fn_t(boolean_t, FILE*, string_tree_t*, int64_t, void*) oarchive_stream_headers_callback_t;
-
-typedef uint64_t style_t;
+typedef struct term_keypress_t__generated_S term_keypress_t;
 
 typedef struct roci_bb_builder_t__generated_S roci_bb_builder_t;
 
@@ -1503,19 +1503,6 @@ struct tmp_provider_t__generated_S {
   uint32_t count;
 };
 
-struct logger_state_t__generated_S {
-  boolean_t initialized;
-  int level;
-  char* logger_output_filename;
-  FILE* output;
-};
-
-struct utf8_decode_result_t__generated_S {
-  uint32_t code_point;
-  uint8_t num_bytes;
-  boolean_t error;
-};
-
 struct buffer_t__generated_S {
   uint32_t length;
   uint32_t capacity;
@@ -1530,29 +1517,6 @@ struct line_and_column_t__generated_S {
 struct buffer_region_t__generated_S {
   uint64_t start_position;
   uint64_t end_position;
-};
-
-struct value_result_t__generated_S {
-  union  {
-    uint64_t u64;
-    int64_t i64;
-    double dbl;
-    char* str;
-    void* ptr;
-    value_t val;
-} ;
-  non_fatal_error_code_t nf_error;
-};
-
-struct value_alist_t__generated_S {
-  value_alist_t* next;
-  value_t key;
-  value_t value;
-};
-
-struct random_state_t__generated_S {
-  uint64_t a;
-  uint64_t b;
 };
 
 struct sub_process_t__generated_S {
@@ -1575,35 +1539,33 @@ struct env_override_t__generated_S {
   boolean_t applied;
 };
 
-struct box_drawing_t__generated_S {
-  uint32_t upper_left_corner;
-  uint32_t upper_right_corner;
-  uint32_t lower_left_corner;
-  uint32_t lower_right_corner;
-  uint32_t top_edge;
-  uint32_t left_edge;
-  uint32_t right_edge;
-  uint32_t bottom_edge;
-};
-
-struct term_keypress_t__generated_S {
-  uint32_t code_point;
-  uint8_t key_code;
-  uint8_t n_bytes_consumed;
-  uint8_t shift;
-  uint8_t ctrl;
-  uint8_t meta;
-  uint8_t super;
-};
-
-struct value_hashtable_t__generated_S {
-  uint64_t n_buckets;
-  uint64_t n_entries;
-  value_alist_t** buckets;
-};
-
 struct term_echo_restore_t__generated_S {
   DWORD mode;
+};
+
+struct value_alist_t__generated_S {
+  value_alist_t* next;
+  value_t key;
+  value_t value;
+};
+
+struct screen_t__generated_S {
+  uint32_t width;
+  uint32_t height;
+  style_t* styles;
+  uint32_t* chars;
+  uint32_t top_offset;
+  uint32_t bottom_offset;
+  uint32_t left_offset;
+  uint32_t right_offset;
+};
+
+struct screen_window_t__generated_S {
+  screen_t* screen;
+  uint32_t x_offset;
+  uint32_t y_offset;
+  uint32_t width;
+  uint32_t height;
 };
 
 struct program_descriptor_t__generated_S {
@@ -1638,22 +1600,6 @@ struct flag_key_value_S {
   char* value;
 };
 
-struct value_array_t__generated_S {
-  uint32_t length;
-  uint32_t capacity;
-  value_t* elements;
-};
-
-struct unsigned_decode_result__generated_S {
-  uint64_t number;
-  int size;
-};
-
-struct signed_decode_result__generated_S {
-  uint64_t number;
-  int size;
-};
-
 struct cdl_printer_t__generated_S {
   buffer_t* buffer;
   char* key_token;
@@ -1668,8 +1614,51 @@ struct value_tree_t__generated_S {
   value_tree_t* right;
 };
 
-struct fatal_error_config_t__generated_S {
-  boolean_t catch_sigsegv;
+struct utf8_decode_result_t__generated_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+struct value_result_t__generated_S {
+  union  {
+    uint64_t u64;
+    int64_t i64;
+    double dbl;
+    char* str;
+    void* ptr;
+    value_t val;
+} ;
+  non_fatal_error_code_t nf_error;
+};
+
+struct logger_state_t__generated_S {
+  boolean_t initialized;
+  int level;
+  char* logger_output_filename;
+  FILE* output;
+};
+
+struct value_hashtable_t__generated_S {
+  uint64_t n_buckets;
+  uint64_t n_entries;
+  value_alist_t** buckets;
+};
+
+struct value_array_t__generated_S {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
+
+struct unsigned_decode_result__generated_S {
+  uint64_t number;
+  int size;
+};
+
+struct signed_decode_result__generated_S {
+  uint64_t number;
+  int size;
 };
 
 struct byte_stream_source_t__generated_S {
@@ -1693,23 +1682,34 @@ struct cstring_byte_stream_source_data_t__generated_S {
   uint64_t position;
 };
 
-struct screen_t__generated_S {
-  uint32_t width;
-  uint32_t height;
-  style_t* styles;
-  uint32_t* chars;
-  uint32_t top_offset;
-  uint32_t bottom_offset;
-  uint32_t left_offset;
-  uint32_t right_offset;
+struct fatal_error_config_t__generated_S {
+  boolean_t catch_sigsegv;
 };
 
-struct screen_window_t__generated_S {
-  screen_t* screen;
-  uint32_t x_offset;
-  uint32_t y_offset;
-  uint32_t width;
-  uint32_t height;
+struct random_state_t__generated_S {
+  uint64_t a;
+  uint64_t b;
+};
+
+struct box_drawing_t__generated_S {
+  uint32_t upper_left_corner;
+  uint32_t upper_right_corner;
+  uint32_t lower_left_corner;
+  uint32_t lower_right_corner;
+  uint32_t top_edge;
+  uint32_t left_edge;
+  uint32_t right_edge;
+  uint32_t bottom_edge;
+};
+
+struct term_keypress_t__generated_S {
+  uint32_t code_point;
+  uint8_t key_code;
+  uint8_t n_bytes_consumed;
+  uint8_t shift;
+  uint8_t ctrl;
+  uint8_t meta;
+  uint8_t super;
 };
 
 struct roci_bb_builder_t__generated_S {
@@ -2123,12 +2123,16 @@ boolean_t FLAG_roci_print_bbs = false;
 boolean_t FLAG_roci_repl_on_error = false;
 
 
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-logger_state_t global_logger_state = {.level = LOGGER_DEFAULT_LEVEL};
+#line 337 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+screen_t* _test_screen = ((void *)0);
 
 
-#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-random_state_t shared_random_state = {0};
+#line 338 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+random_state_t* _random = ((void *)0);
+
+
+#line 357 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+char* sample_source_code = "one\ntwo\nthree\nfour\nfive\nThis is line six...\nline 7\n\nline 9";
 
 
 #line 145 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/flag.c"
@@ -2143,6 +2147,10 @@ command_descriptor_t* current_command;
 flag_descriptor_t* current_flag;
 
 
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+logger_state_t global_logger_state = {.level = LOGGER_DEFAULT_LEVEL};
+
+
 #line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
 fatal_error_config_t fatal_error_config = {0};
 
@@ -2155,16 +2163,8 @@ fatal_error_callback_t fatal_error_callback = ((void *)0);
 void* fatal_error_callback_data = ((void *)0);
 
 
-#line 337 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-screen_t* _test_screen = ((void *)0);
-
-
-#line 338 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-random_state_t* _random = ((void *)0);
-
-
-#line 357 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-char* sample_source_code = "one\ntwo\nthree\nfour\nfive\nThis is line six...\nline 7\n\nline 9";
+#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+random_state_t shared_random_state = {0};
 
 
 #line 18 "/home/jasonaaronwilson/src/omni-c/src/roci/roci-buffer-registry.c"
@@ -2470,11 +2470,6 @@ void configure_parse_statement(void);
 void configure_test_assembler_command(void);
 void configure_print_tokens_command(void);
 void configure_regular_commands(void);
-value_result_t parse_log_level_enum(char* str);
-void logger_init(void);
-char* logger_level_to_string(int level);
-__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
-utf8_decode_result_t utf8_decode(const uint8_t* array);
 buffer_t* make_buffer(uint64_t initial_capacity);
 uint64_t buffer_length(buffer_t* array);
 void buffer_clear(buffer_t* buffer);
@@ -2508,33 +2503,6 @@ boolean_t buffer_equal(buffer_t* buffer, char* str);
 void ensure_legal_region(buffer_region_t region);
 buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line, uint64_t end_line);
 void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer, buffer_region_t region);
-int cmp_string_values(value_t value1, value_t value2);
-uint64_t hash_string_value(value_t value1);
-value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
-value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
-buffer_t* buffer_read_file(char* file_name);
-buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
-__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input);
-void buffer_write_file(buffer_t* bytes, char* file_name);
-void buffer_write_all(FILE* output, buffer_t* buffer);
-void buffer_write_all_chunked(FILE* output, buffer_t* buffer);
-buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
-extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
-int file_peek_byte(FILE* input);
-boolean_t file_eof(FILE* input);
-void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
-void file_skip_bytes(FILE* input, uint64_t n_bytes);
-random_state_t random_state_for_test(void);
-random_state_t* random_state(void);
-uint64_t random_next(random_state_t* state);
-uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
-value_result_t string_tree_find(string_tree_t* t, char* key);
-string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value);
-string_tree_t* string_tree_delete(string_tree_t* t, char* key);
-uint64_t double_as_uint64(double d);
-uint64_t uint64_as_double(uint64_t u);
 sub_process_t* make_sub_process(value_array_t* argv);
 boolean_t sub_process_launch(sub_process_t* sub_process);
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
@@ -2545,40 +2513,34 @@ boolean_t is_sub_process_running(sub_process_t* sub_process);
 void sub_process_wait(sub_process_t* sub_process);
 void sub_process_launch_and_wait(sub_process_t* sub_process, buffer_t* child_stdin, buffer_t* child_stdout, buffer_t* child_stderr);
 char* build_child_environment_block(value_array_t* argv, int* out_offset);
-void term_set_foreground_color(buffer_t* buffer, uint32_t color);
-void term_set_background_color(buffer_t* buffer, uint32_t color);
-void term_move_cursor_absolute(buffer_t* buffer, int x, int y);
-void term_move_cursor_relative(buffer_t* buffer, int x, int y);
-void term_bold(buffer_t* buffer);
-void term_dim(buffer_t* buffer);
-void term_italic(buffer_t* buffer);
-void term_underline(buffer_t* buffer);
-void term_strikethrough(buffer_t* buffer);
-void term_overline(buffer_t* buffer);
-void term_superscript(buffer_t* buffer);
-void term_subscript(buffer_t* buffer);
-void term_slow_blink(buffer_t* buffer);
-void term_fast_blink(buffer_t* buffer);
-void term_reset_formatting(buffer_t* buffer);
-void term_clear_screen(buffer_t* buffer);
-void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
-void term_disable_autowrap(buffer_t* buffer);
-void term_enable_autowrap(buffer_t* buffer);
-void term_alt_buffer(buffer_t* buffer);
-void term_main_buffer(buffer_t* buffer);
-void term_home(buffer_t* buffer);
-uint8_t* checked_malloc(char* file, int line, uint64_t amount);
-uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
-void checked_free(char* file, int line, void* pointer);
-value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
-value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
-value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
 uint32_t term_width(void);
 uint32_t term_height(void);
 term_echo_restore_t term_echo_off(void);
 void term_echo_restore(term_echo_restore_t restore);
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
+screen_t* get_initial_screen(void);
+screen_t* get_initial_screen_with_limits(uint32_t top_offset, uint32_t bottom_offset, uint32_t left_offset, uint32_t right_offset);
+void screen_fill(screen_t* screen, uint32_t ch, style_t style);
+void window_fill(screen_window_t* window, uint32_t ch, style_t style);
+screen_window_t* make_root_screen_window(screen_t* screen);
+screen_window_t* screen_window_clone(screen_window_t* window);
+void hidden_screen_set_char(screen_t* screen, uint32_t ch, style_t style, uint32_t row, uint32_t column);
+void screen_window_set_char(screen_window_t* window, uint32_t ch, style_t style, uint32_t row, uint32_t column);
+void screen_window_split_vertically(screen_window_t* window, double fraction, screen_window_t** top_out, screen_window_t** bottom_out);
+void screen_window_split_horizontally(screen_window_t* window, double fraction, screen_window_t** left_out, screen_window_t** right_out);
+box_drawing_t* get_default_window_border_box(void);
+screen_window_t* screen_window_draw_border(screen_window_t* window, box_drawing_t* box, style_t style);
+void screenline_to_ansi_buffer(screen_t* screen, buffer_t* buffer, int row);
+void term_write_screen(screen_t* screen);
+void window_put_string(screen_window_t* window, style_t style, uint32_t row, uint32_t column, char* str);
+void style_to_buffer(buffer_t* buffer, style_t style);
+void buffer_to_screen_window(screen_window_t* window, style_t style, style_t gutter_style, buffer_t* buffer, uint32_t buffer_start_line, uint32_t line_number_gutter_width);
+void overlay_dimensions(screen_window_t* window, style_t style);
+void draw_random_chars_in_window(screen_window_t* window, style_t style);
+void draw_random_screen(boolean_t output_dimensions);
 void flag_program_name(char* name);
 void flag_command(char* name, char** write_back_ptr);
 void flag_description(char* description);
@@ -2603,82 +2565,12 @@ char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags);
 void flag_print_help(FILE* out, char* message);
-value_array_t* make_value_array(uint64_t initial_capacity);
-void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
-value_t value_array_get(value_array_t* array, uint32_t index);
-void value_array_replace(value_array_t* array, uint32_t index, value_t element);
-void value_array_add(value_array_t* array, value_t element);
-void value_array_push(value_array_t* array, value_t element);
-value_t value_array_pop(value_array_t* array);
-void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
-value_t value_array_delete_at(value_array_t* array, uint32_t position);
-int access(const char* path, int mode);
-int read(int fd, void* buffer, unsigned int count);
-int write(int fd, const void* buffer, unsigned int count);
-int close(int fd);
-int isatty(int fd);
-int getpid(void);
-char* getcwd(char* buffer, int maxlen);
-int chdir(const char* dirname);
-int64_t get_file_modification_time(const char* filename);
-void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t max_bytes);
-unsigned int sleep(unsigned int seconds);
-int usleep(uint32_t usec);
-void make_file_read_only(char* file_name);
-void make_writable_if_exists(const char* file_name);
-extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
-value_array_t* file_glob(const char* pattern);
 value_hashtable_t* to_value_hashtable(string_hashtable_t* ht);
 string_hashtable_t* make_string_hashtable(uint64_t n_buckets);
 string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value);
 string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
 value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 uint64_t string_ht_num_entries(string_hashtable_t* ht);
-char* get_command_line(void);
-char* get_program_path(void);
-void print_backtrace(void);
-char* quote_c_string(char* input);
-char* string_unquote_c_string(char* input);
-char* platform(void);
-unsigned encode_sleb_128(int64_t Value, uint8_t* p);
-unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
-unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end);
-signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end);
-cdl_printer_t* make_cdl_printer(buffer_t* buffer);
-void cdl_indent(cdl_printer_t* printer);
-boolean_t is_safe_string(char* string);
-void cdl_output_token(cdl_printer_t* printer, char* string);
-void cdl_boolean(cdl_printer_t* printer, boolean_t boolean);
-void cdl_string(cdl_printer_t* printer, char* string);
-void cdl_int64(cdl_printer_t* printer, int64_t number);
-void cdl_uint64(cdl_printer_t* printer, uint64_t number);
-void cdl_double(cdl_printer_t* printer, double number);
-void cdl_start_array(cdl_printer_t* printer);
-void cdl_end_array(cdl_printer_t* printer);
-void cdl_start_table(cdl_printer_t* printer);
-void cdl_key(cdl_printer_t* printer, char* key);
-void cdl_end_table(cdl_printer_t* printer);
-void add_duplicate(value_array_t* token_array, const char* data);
-value_array_t* string_tokenize(const char* str, const char* delimiters);
-value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
-value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters);
-char* to_platform_path(char* internal_path);
-char* from_platform_path(char* platform_path);
-boolean_t path_is_directory(const char* path);
-boolean_t path_is_file(const char* path);
-boolean_t has_file_extension(char* path);
-char* resolve_executable_path(char* name);
-buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
-int uint64_highest_bit_set(uint64_t n);
-value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-value_tree_t* value_tree_skew(value_tree_t* t);
-value_tree_t* value_tree_split(value_tree_t* t);
-value_tree_t* make_value_tree_leaf(value_t key, value_t value);
-value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
-value_tree_t* value_tree_decrease_level(value_tree_t* t);
-value_tree_t* value_tree_predecessor(value_tree_t* t);
-value_tree_t* value_tree_successor(value_tree_t* t);
-value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 int string_is_null_or_empty(const char* str);
 int string_equal(const char* str1, const char* str2);
@@ -2704,43 +2596,151 @@ char* string_right_pad(const char* str, int n, char ch);
 char* string_truncate(char* str, int limit, char* at_limit_suffix);
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...);
 double string_parse_double(char* str);
-void segmentation_fault_handler(int signal_number);
-void configure_fatal_errors(fatal_error_config_t config);
-void set_fatal_error_callback(fatal_error_callback_t callback, void* data);
-_Noreturn void fatal_error_impl(char* file, int line, int error_code);
-void print_fatal_error_banner();
-void print_error_code_name(int error_code);
+void oarchive_append_header_and_file_contents(FILE* out, char* filename);
+string_tree_t* oarchive_read_header(FILE* in);
+void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data);
+__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
+cdl_printer_t* make_cdl_printer(buffer_t* buffer);
+void cdl_indent(cdl_printer_t* printer);
+boolean_t is_safe_string(char* string);
+void cdl_output_token(cdl_printer_t* printer, char* string);
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean);
+void cdl_string(cdl_printer_t* printer, char* string);
+void cdl_int64(cdl_printer_t* printer, int64_t number);
+void cdl_uint64(cdl_printer_t* printer, uint64_t number);
+void cdl_double(cdl_printer_t* printer, double number);
+void cdl_start_array(cdl_printer_t* printer);
+void cdl_end_array(cdl_printer_t* printer);
+void cdl_start_table(cdl_printer_t* printer);
+void cdl_key(cdl_printer_t* printer, char* key);
+void cdl_end_table(cdl_printer_t* printer);
+uint64_t current_time_millis(void);
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+value_tree_t* value_tree_skew(value_tree_t* t);
+value_tree_t* value_tree_split(value_tree_t* t);
+value_tree_t* make_value_tree_leaf(value_t key, value_t value);
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_tree_t* value_tree_decrease_level(value_tree_t* t);
+value_tree_t* value_tree_predecessor(value_tree_t* t);
+value_tree_t* value_tree_successor(value_tree_t* t);
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+utf8_decode_result_t utf8_decode(const uint8_t* array);
+buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
+value_result_t string_tree_find(string_tree_t* t, char* key);
+string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value);
+string_tree_t* string_tree_delete(string_tree_t* t, char* key);
+uint64_t double_as_uint64(double d);
+uint64_t uint64_as_double(uint64_t u);
+int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
+value_result_t parse_log_level_enum(char* str);
+void logger_init(void);
+char* logger_level_to_string(int level);
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
+char* get_command_line(void);
+char* get_program_path(void);
+void print_backtrace(void);
+int uint64_highest_bit_set(uint64_t n);
+char* quote_c_string(char* input);
+char* string_unquote_c_string(char* input);
+char* to_platform_path(char* internal_path);
+char* from_platform_path(char* platform_path);
+boolean_t path_is_directory(const char* path);
+boolean_t path_is_file(const char* path);
+boolean_t has_file_extension(char* path);
+char* resolve_executable_path(char* name);
+uint8_t* checked_malloc(char* file, int line, uint64_t amount);
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
+void checked_free(char* file, int line, void* pointer);
+char* platform(void);
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
+value_array_t* make_value_array(uint64_t initial_capacity);
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
+value_t value_array_get(value_array_t* array, uint32_t index);
+void value_array_replace(value_array_t* array, uint32_t index, value_t element);
+void value_array_add(value_array_t* array, value_t element);
+void value_array_push(value_array_t* array, value_t element);
+value_t value_array_pop(value_array_t* array);
+void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
+value_t value_array_delete_at(value_array_t* array, uint32_t position);
+unsigned encode_sleb_128(int64_t Value, uint8_t* p);
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end);
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end);
 byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer);
 uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
 byte_stream_source_t* cstring_to_byte_source(char* string);
 uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte);
 byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer);
 byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte);
-screen_t* get_initial_screen(void);
-screen_t* get_initial_screen_with_limits(uint32_t top_offset, uint32_t bottom_offset, uint32_t left_offset, uint32_t right_offset);
-void screen_fill(screen_t* screen, uint32_t ch, style_t style);
-void window_fill(screen_window_t* window, uint32_t ch, style_t style);
-screen_window_t* make_root_screen_window(screen_t* screen);
-screen_window_t* screen_window_clone(screen_window_t* window);
-void hidden_screen_set_char(screen_t* screen, uint32_t ch, style_t style, uint32_t row, uint32_t column);
-void screen_window_set_char(screen_window_t* window, uint32_t ch, style_t style, uint32_t row, uint32_t column);
-void screen_window_split_vertically(screen_window_t* window, double fraction, screen_window_t** top_out, screen_window_t** bottom_out);
-void screen_window_split_horizontally(screen_window_t* window, double fraction, screen_window_t** left_out, screen_window_t** right_out);
-box_drawing_t* get_default_window_border_box(void);
-screen_window_t* screen_window_draw_border(screen_window_t* window, box_drawing_t* box, style_t style);
-void screenline_to_ansi_buffer(screen_t* screen, buffer_t* buffer, int row);
-void term_write_screen(screen_t* screen);
-void window_put_string(screen_window_t* window, style_t style, uint32_t row, uint32_t column, char* str);
-void style_to_buffer(buffer_t* buffer, style_t style);
-void buffer_to_screen_window(screen_window_t* window, style_t style, style_t gutter_style, buffer_t* buffer, uint32_t buffer_start_line, uint32_t line_number_gutter_width);
-void overlay_dimensions(screen_window_t* window, style_t style);
-void draw_random_chars_in_window(screen_window_t* window, style_t style);
-void draw_random_screen(boolean_t output_dimensions);
-void oarchive_append_header_and_file_contents(FILE* out, char* filename);
-string_tree_t* oarchive_read_header(FILE* in);
-void oarchive_stream_members(FILE* in, oarchive_stream_headers_callback_t callback, void* callback_data);
-__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
-uint64_t current_time_millis(void);
+void add_duplicate(value_array_t* token_array, const char* data);
+value_array_t* string_tokenize(const char* str, const char* delimiters);
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters);
+buffer_t* buffer_read_file(char* file_name);
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
+__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input);
+void buffer_write_file(buffer_t* bytes, char* file_name);
+void buffer_write_all(FILE* output, buffer_t* buffer);
+void buffer_write_all_chunked(FILE* output, buffer_t* buffer);
+buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
+int file_peek_byte(FILE* input);
+boolean_t file_eof(FILE* input);
+void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
+void file_skip_bytes(FILE* input, uint64_t n_bytes);
+void segmentation_fault_handler(int signal_number);
+void configure_fatal_errors(fatal_error_config_t config);
+void set_fatal_error_callback(fatal_error_callback_t callback, void* data);
+_Noreturn void fatal_error_impl(char* file, int line, int error_code);
+void print_fatal_error_banner();
+void print_error_code_name(int error_code);
+random_state_t random_state_for_test(void);
+random_state_t* random_state(void);
+uint64_t random_next(random_state_t* state);
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
+int access(const char* path, int mode);
+int read(int fd, void* buffer, unsigned int count);
+int write(int fd, const void* buffer, unsigned int count);
+int close(int fd);
+int isatty(int fd);
+int getpid(void);
+char* getcwd(char* buffer, int maxlen);
+int chdir(const char* dirname);
+int64_t get_file_modification_time(const char* filename);
+void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t max_bytes);
+unsigned int sleep(unsigned int seconds);
+int usleep(uint32_t usec);
+void make_file_read_only(char* file_name);
+void make_writable_if_exists(const char* file_name);
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
+value_array_t* file_glob(const char* pattern);
+void term_set_foreground_color(buffer_t* buffer, uint32_t color);
+void term_set_background_color(buffer_t* buffer, uint32_t color);
+void term_move_cursor_absolute(buffer_t* buffer, int x, int y);
+void term_move_cursor_relative(buffer_t* buffer, int x, int y);
+void term_bold(buffer_t* buffer);
+void term_dim(buffer_t* buffer);
+void term_italic(buffer_t* buffer);
+void term_underline(buffer_t* buffer);
+void term_strikethrough(buffer_t* buffer);
+void term_overline(buffer_t* buffer);
+void term_superscript(buffer_t* buffer);
+void term_subscript(buffer_t* buffer);
+void term_slow_blink(buffer_t* buffer);
+void term_fast_blink(buffer_t* buffer);
+void term_reset_formatting(buffer_t* buffer);
+void term_clear_screen(buffer_t* buffer);
+void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
+void term_disable_autowrap(buffer_t* buffer);
+void term_enable_autowrap(buffer_t* buffer);
+void term_alt_buffer(buffer_t* buffer);
+void term_main_buffer(buffer_t* buffer);
+void term_home(buffer_t* buffer);
 uint64_t skip_whitespace_and_comments(buffer_t* buffer, uint64_t position);
 uint64_t read_roci_token(buffer_t* buffer, uint64_t position, buffer_t* token);
 boolean_t token_is_double(buffer_t* token);
@@ -2964,15 +2964,15 @@ enum_metadata_t* type_node_kind_metadata();
 char* output_file_type_to_string(output_file_type_t value);
 output_file_type_t string_to_output_file_type(char* value);
 enum_metadata_t* output_file_type_metadata();
-char* non_fatal_error_code_to_string(non_fatal_error_code_t value);
-non_fatal_error_code_t string_to_non_fatal_error_code(char* value);
-enum_metadata_t* non_fatal_error_code_metadata();
 char* sub_process_exit_status_to_string(sub_process_exit_status_t value);
 sub_process_exit_status_t string_to_sub_process_exit_status(char* value);
 enum_metadata_t* sub_process_exit_status_metadata();
 char* flag_type_to_string(flag_type_t value);
 flag_type_t string_to_flag_type(char* value);
 enum_metadata_t* flag_type_metadata();
+char* non_fatal_error_code_to_string(non_fatal_error_code_t value);
+non_fatal_error_code_t string_to_non_fatal_error_code(char* value);
+enum_metadata_t* non_fatal_error_code_metadata();
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
 enum_metadata_t* error_code_metadata();
@@ -4211,116 +4211,6 @@ static inline balanced_construct_node_t* make_balanced_construct_node()
 }
 
 
-#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-static inline boolean_t should_log_info()
-#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-{
-
-#line 159 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  return ((global_logger_state.level)<=LOGGER_INFO);
-}
-
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-static inline boolean_t is_ok(value_result_t value)
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-{
-
-#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-  return ((value.nf_error)==NF_OK);
-}
-
-
-#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-static inline boolean_t is_not_ok(value_result_t value)
-#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-{
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-  return ((value.nf_error)!=NF_OK);
-}
-
-
-#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-static inline uint64_t rotl(uint64_t x, int k)
-#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-{
-
-#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  return ((x<<k)|(x>>(64-k)));
-}
-
-
-#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-static inline uint64_t value_ht_num_entries(value_hashtable_t* ht)
-#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-{
-
-#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  return (ht->n_entries);
-}
-
-
-#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-static inline value_result_t alist_find(string_alist_t* list, char* key)
-#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-{
-
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-  return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
-}
-
-
-#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-__attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value)
-#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-{
-
-#line 30 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-  return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
-}
-
-
-#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-__attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key)
-#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-{
-
-#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-  return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
-}
-
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-__attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list)
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-{
-
-#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
-  return value_alist_length((/*CAST*/(value_alist_t*) list));
-}
-
-
-#line 164 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b)
-#line 164 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return ((a<b) ? a : b);
-}
-
-
-#line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-static inline boolean_t value_tree_is_leaf(value_tree_t* t)
-#line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 199 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return (((t->left)==NULL)&&((t->right)==NULL));
-}
-
-
 #line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/string/string-util.c"
 static inline boolean_t is_hex_digit(char ch)
 #line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/string/string-util.c"
@@ -4732,6 +4622,116 @@ static inline style_t set_fast_blink(style_t style, boolean_t x)
 
 #line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/style.c"
   return ((style&(~(1ULL<<59)))|((/*CAST*/(uint64_t) x)<<59));
+}
+
+
+#line 164 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b)
+#line 164 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return ((a<b) ? a : b);
+}
+
+
+#line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+static inline boolean_t value_tree_is_leaf(value_tree_t* t)
+#line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 199 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return (((t->left)==NULL)&&((t->right)==NULL));
+}
+
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+static inline boolean_t is_ok(value_result_t value)
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+{
+
+#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+  return ((value.nf_error)==NF_OK);
+}
+
+
+#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+static inline boolean_t is_not_ok(value_result_t value)
+#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+{
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+  return ((value.nf_error)!=NF_OK);
+}
+
+
+#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+static inline boolean_t should_log_info()
+#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+{
+
+#line 159 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  return ((global_logger_state.level)<=LOGGER_INFO);
+}
+
+
+#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+static inline value_result_t alist_find(string_alist_t* list, char* key)
+#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+{
+
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+  return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
+}
+
+
+#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+__attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value)
+#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+{
+
+#line 30 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+  return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
+}
+
+
+#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+__attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key)
+#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+{
+
+#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+  return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
+}
+
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+__attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list)
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+{
+
+#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c"
+  return value_alist_length((/*CAST*/(value_alist_t*) list));
+}
+
+
+#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+static inline uint64_t value_ht_num_entries(value_hashtable_t* ht)
+#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return (ht->n_entries);
+}
+
+
+#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+static inline uint64_t rotl(uint64_t x, int k)
+#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+{
+
+#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  return ((x<<k)|(x>>(64-k)));
 }
 
 
@@ -12480,7 +12480,7 @@ printer_t* append_line_directive(printer_t* printer, token_t* token)
   {
 
 #line 1042 "/home/jasonaaronwilson/src/omni-c/src/c-file-printer.c"
-    buffer_printf((printer->buffer), "\n#line %d \"%s\"\n", (token->line_number), ((file==((void *)0)) ? "fixme.c" : (file->file_name)));
+    buffer_printf((printer->buffer), "\n#line %d %s\n", (token->line_number), ((file==((void *)0)) ? "fixme.c" : quote_c_string((file->file_name))));
   }
 
 #line 1045 "/home/jasonaaronwilson/src/omni-c/src/c-file-printer.c"
@@ -21274,353 +21274,6 @@ void configure_regular_commands(void)
 }
 
 
-#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-value_result_t parse_log_level_enum(char* str)
-#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-{
-
-#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if (((strcmp("FATAL", str)==0)||(strcmp("fatal", str)==0)))
-
-#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 210 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_FATAL});
-  }
-  else
-
-#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if (((strcmp("WARN", str)==0)||(strcmp("warn", str)==0)))
-
-#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 212 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_WARN});
-  }
-  else
-
-#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if (((strcmp("INFO", str)==0)||(strcmp("info", str)==0)))
-
-#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 214 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_INFO});
-  }
-  else
-
-#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if (((strcmp("DEBUG", str)==0)||(strcmp("debug", str)==0)))
-
-#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 216 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_DEBUG});
-  }
-  else
-
-#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if (((strcmp("TRACE", str)==0)||(strcmp("trace", str)==0)))
-
-#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 218 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_TRACE});
-  }
-  else
-
-#line 219 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if (((strcmp("OFF", str)==0)||(strcmp("off", str)==0)))
-
-#line 219 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 220 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return ((value_result_t) {.u64 = LOGGER_OFF});
-  }
-  else
-
-#line 221 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 222 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return ((value_result_t) {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
-  }
-}
-
-
-#line 239 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-void logger_init(void)
-#line 239 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-{
-
-#line 240 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if ((level_string!=NULL))
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 242 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    value_result_t parsed = string_parse_uint64(level_string);
-
-#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    if (is_ok(parsed))
-
-#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    {
-
-#line 244 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-      ((global_logger_state.level)=(parsed.u64));
-    }
-    else
-
-#line 245 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    {
-
-#line 246 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-      value_result_t parsed = parse_log_level_enum(level_string);
-
-#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-      if (is_ok(parsed))
-
-#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-      {
-
-#line 248 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-        ((global_logger_state.level)=(parsed.u64));
-      }
-      else
-
-#line 249 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-      {
-
-#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-        log_warn("%s could not be converted to a log level.", level_string);
-      }
-    }
-  }
-
-#line 255 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
-
-#line 259 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
-
-#line 266 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if ((output_file_name!=NULL))
-
-#line 266 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    ((global_logger_state.output)=fopen(output_file_name, "w"));
-
-#line 268 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    if ((!(global_logger_state.output)))
-
-#line 268 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    {
-
-#line 269 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-      fatal_error(ERROR_OPEN_LOG_FILE);
-    }
-
-#line 276 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    ((global_logger_state.logger_output_filename)=output_file_name);
-  }
-  else
-
-#line 277 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    ((global_logger_state.output)=stderr);
-
-#line 279 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    ((global_logger_state.initialized)=true);
-  }
-}
-
-
-#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-char* logger_level_to_string(int level)
-#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-{
-
-#line 286 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  switch (level)
-
-#line 286 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 287 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    case LOGGER_OFF:
-
-#line 288 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return "LOGGER_OFF";
-
-#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    case LOGGER_TRACE:
-
-#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return "TRACE";
-
-#line 291 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    case LOGGER_DEBUG:
-
-#line 292 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return "DEBUG";
-
-#line 293 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    case LOGGER_INFO:
-
-#line 294 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return "INFO";
-
-#line 295 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    case LOGGER_WARN:
-
-#line 296 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return "WARN";
-
-#line 297 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    case LOGGER_FATAL:
-
-#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return "FATAL";
-
-#line 299 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    default:
-
-#line 300 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    return "LEVEL_UNKNOWN";
-  }
-}
-
-
-#line 312 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...)
-#line 313 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-{
-
-#line 315 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  FILE* output = (global_logger_state.output);
-
-#line 319 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if ((output==NULL))
-
-#line 319 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 320 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    (output=stderr);
-  }
-
-#line 323 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  if ((level>=(global_logger_state.level)))
-
-#line 323 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-  {
-
-#line 324 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    fprintf(output, "%s ", logger_level_to_string(level));
-
-#line 325 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    va_list args;
-
-#line 326 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    fprintf(output, "%s:%d %s | ", file, line_number, function);
-
-#line 328 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    va_start(args, format);
-
-#line 329 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    vfprintf(output, format, args);
-
-#line 330 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    va_end(args);
-
-#line 332 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
-    fprintf(output, "\n");
-  }
-}
-
-
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-utf8_decode_result_t utf8_decode(const uint8_t* array)
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-{
-
-#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  uint8_t firstByte = (array[0]);
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  if (((firstByte&0x80)==0))
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  {
-
-#line 26 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.code_point = firstByte, .num_bytes = 1});
-  }
-  else
-
-#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  if (((firstByte&0xE0)==0xC0))
-
-#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  {
-
-#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
-         .num_bytes = 2});
-  }
-  else
-
-#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  if (((firstByte&0xF0)==0xE0))
-
-#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  {
-
-#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x0F) << 12)
-                                           | ((array[1] & 0x3F) << 6)
-                                           | (array[2] & 0x3F),
-                             .num_bytes = 3});
-  }
-  else
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  if (((firstByte&0xF8)==0xF0))
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  {
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
-                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
-         .num_bytes = 4});
-  }
-  else
-
-#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-  {
-
-#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
-    return ((utf8_decode_result_t) {.error = true});
-  }
-}
-
-
 #line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/string/buffer.c"
 buffer_t* make_buffer(uint64_t initial_capacity)
 #line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/string/buffer.c"
@@ -22837,790 +22490,6 @@ void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer, buffer_regio
 }
 
 
-#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-int cmp_string_values(value_t value1, value_t value2)
-#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-{
-
-#line 183 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-  return strcmp((value1.str), (value2.str));
-}
-
-
-#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-uint64_t hash_string_value(value_t value1)
-#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-{
-
-#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
-  return string_hash((value1.str));
-}
-
-
-#line 35 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value)
-#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-{
-
-#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  value_alist_t* result = malloc_struct(value_alist_t);
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  ((result->next)=value_alist_delete(list, cmp_fn, key));
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  ((result->key)=key);
-
-#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  ((result->value)=value);
-
-#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  return result;
-}
-
-
-#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-{
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  if ((list==NULL))
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  {
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    return list;
-  }
-
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  if (((*cmp_fn)(key, (list->key))==0))
-
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  {
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    value_alist_t* result = (list->next);
-
-#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    free_bytes(list);
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    return result;
-  }
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  ((list->next)=value_alist_delete((list->next), cmp_fn, key));
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  return list;
-}
-
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-{
-
-#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  while (list)
-
-#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  {
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    if ((cmp_fn(key, (list->key))==0))
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    {
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-      return ((value_result_t) {.val = list->value});
-    }
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    (list=(list->next));
-  }
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
-}
-
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list)
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-{
-
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  uint64_t result = 0;
-
-#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  while (list)
-
-#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  {
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    (result++);
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-    (list=(list->next));
-  }
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
-  return result;
-}
-
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-buffer_t* buffer_read_file(char* file_name)
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  buffer_t* result = make_buffer(1);
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  return buffer_append_file_contents(result, file_name);
-}
-
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 27 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  uint64_t capacity = (bytes->capacity);
-
-#line 30 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    struct stat st;
-
-#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if ((stat(file_name, (&st))<0))
-
-#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      log_fatal("file does not exist: %s", file_name);
-
-#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-
-#line 36 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (capacity=(st.st_size));
-  }
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  (bytes=buffer_increase_capacity(bytes, capacity));
-
-#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  FILE* file = fopen(file_name, "r");
-
-#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  (bytes=buffer_append_all(bytes, file));
-
-#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  fclose(file);
-
-#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  return bytes;
-}
-
-
-#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input)
-#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  uint8_t buffer[1024];
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  while (1)
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    uint64_t n_read = fread(buffer, 1, (sizeof(buffer)), input);
-
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if ((n_read==0))
-
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      break;
-    }
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (bytes=buffer_append_bytes(bytes, buffer, n_read));
-  }
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  return bytes;
-}
-
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-void buffer_write_file(buffer_t* bytes, char* file_name)
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  FILE* file = fopen(file_name, "w");
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  if ((file==NULL))
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    log_fatal("Failed to open file for writing: %s", file_name);
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    log_fatal("strerror(errno) = %s", strerror(errno));
-
-#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  size_t bytes_written = fwrite((bytes->elements), 1, (bytes->length), file);
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  if ((bytes_written!=(bytes->length)))
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    log_fatal("Failed to write %d bytes to %s", (bytes->length), file_name);
-
-#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    log_fatal("strerror(errno) = %s", strerror(errno));
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  if ((fclose(file)!=0))
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    log_fatal("Failed to close file: %s", file_name);
-
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    log_fatal("strerror(errno) = %s", strerror(errno));
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-void buffer_write_all(FILE* output, buffer_t* buffer)
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  size_t total_written = 0;
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  while ((total_written<(buffer->length)))
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (errno=0);
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    size_t written = fwrite(((buffer->elements)+total_written), 1, ((buffer->length)-total_written), output);
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if ((written==0))
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      if ((errno==EINTR))
-
-#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      {
-
-#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-        continue;
-      }
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      if (ferror(output))
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      {
-
-#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-        log_fatal("strerror(errno) = %s", strerror(errno));
-
-#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-        fatal_error(ERROR_ILLEGAL_STATE);
-      }
-
-#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      break;
-    }
-
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (total_written+=written);
-  }
-}
-
-
-#line 119 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-void buffer_write_all_chunked(FILE* output, buffer_t* buffer)
-#line 119 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  int PTY_CHUNK_SIZE = 1024;
-
-#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  size_t total_written = 0;
-
-#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  while ((total_written<(buffer->length)))
-
-#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    usleep(5);
-
-#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    fflush(output);
-
-#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    size_t remaining = ((buffer->length)-total_written);
-
-#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    size_t chunk = ((remaining>PTY_CHUNK_SIZE) ? PTY_CHUNK_SIZE : remaining);
-
-#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (errno=0);
-
-#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    size_t written = fwrite(((buffer->elements)+total_written), 1, chunk, output);
-
-#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if ((written==0))
-
-#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 134 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      if ((errno==EINTR))
-
-#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      continue;
-
-#line 136 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      if (ferror(output))
-
-#line 136 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      {
-
-#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-        log_fatal("fwrite failed: %s", strerror(errno));
-
-#line 138 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-        fatal_error(ERROR_ILLEGAL_STATE);
-      }
-
-#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      break;
-    }
-
-#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (total_written+=written);
-  }
-
-#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  fflush(output);
-}
-
-
-#line 167 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line)
-#line 167 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  while ((!feof(input)))
-
-#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    int ch = fgetc(input);
-
-#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if ((ch<0))
-
-#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 171 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      return buffer;
-    }
-
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if ((ch==end_of_line))
-
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      return buffer;
-    }
-
-#line 176 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (buffer=buffer_append_byte(buffer, ch));
-  }
-
-#line 178 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  return buffer;
-}
-
-
-#line 188 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes)
-#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  int file_number = fileno(input);
-
-#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
-}
-
-
-#line 203 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-int file_peek_byte(FILE* input)
-#line 203 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  if (feof(input))
-
-#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    return (-1);
-  }
-
-#line 207 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  int result = fgetc(input);
-
-#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  if ((result>=0))
-
-#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 212 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    ungetc(result, input);
-  }
-
-#line 214 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  return result;
-}
-
-
-#line 223 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-boolean_t file_eof(FILE* input)
-#line 223 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 224 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  return (feof(input)||(file_peek_byte(input)<0));
-}
-
-
-#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size)
-#line 235 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  if (until_eof)
-
-#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 237 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (size=ULLONG_MAX);
-  }
-
-#line 240 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  uint8_t buffer[FILE_COPY_STREAM_BUFFER_SIZE];
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  while ((size>0))
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 242 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    int minimum = ((size<FILE_COPY_STREAM_BUFFER_SIZE) ? size : FILE_COPY_STREAM_BUFFER_SIZE);
-
-#line 245 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    uint64_t n_read = fread(buffer, 1, minimum, input);
-
-#line 246 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if ((n_read==0))
-
-#line 246 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      break;
-    }
-
-#line 249 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    fwrite(buffer, 1, n_read, output);
-
-#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (size-=n_read);
-  }
-}
-
-
-#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-void file_skip_bytes(FILE* input, uint64_t n_bytes)
-#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-{
-
-#line 271 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  while (1)
-
-#line 271 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-  {
-
-#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if (((n_bytes==0)||feof(input)))
-
-#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 273 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      return;
-    }
-
-#line 275 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    int ch = fgetc(input);
-
-#line 276 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    if ((ch<0))
-
-#line 276 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    {
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-      return;
-    }
-
-#line 280 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
-    (n_bytes--);
-  }
-}
-
-
-#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-random_state_t random_state_for_test(void)
-#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-{
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  return ((random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
-}
-
-
-#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-random_state_t* random_state(void)
-#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-{
-
-#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  if (((shared_random_state.a)==0))
-
-#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  {
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-    ((shared_random_state.a)=(0x1E1D43C2CA44B1F5^(/*CAST*/(uint64_t) time(NULL))));
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-    ((shared_random_state.b)=(0x4FDD267452CEDBAC^(/*CAST*/(uint64_t) time(NULL))));
-  }
-
-#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  return (&shared_random_state);
-}
-
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-uint64_t random_next(random_state_t* state)
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-{
-
-#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  uint64_t s0 = (state->a);
-
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  uint64_t s1 = (state->b);
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  uint64_t result = (rotl((s0*5), 7)*9);
-
-#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  (s1^=s0);
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  ((state->a)=((rotl(s0, 24)^s1)^(s1<<16)));
-
-#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  ((state->b)=rotl(s1, 37));
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  return result;
-}
-
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-{
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  if ((maximum==0))
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  {
-
-#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-    fatal_error(ERROR_ILLEGAL_ARGUMENT);
-  }
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  return (random_next(state)%maximum);
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
-
-#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  while (1)
-
-#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-  {
-
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-    uint64_t n = random_next(state);
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-    (n&=mask);
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-    if ((n<maximum))
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-    {
-
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
-      return n;
-    }
-  }
-}
-
-
-#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-value_result_t string_tree_find(string_tree_t* t, char* key)
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-{
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-  return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
-}
-
-
-#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value)
-#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-{
-
-#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-  return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
-}
-
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-string_tree_t* string_tree_delete(string_tree_t* t, char* key)
-#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-{
-
-#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
-  return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
-}
-
-
-#line 4 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-uint64_t double_as_uint64(double d)
-#line 4 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-{
-
-#line 5 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-  uint64_t u;
-
-#line 6 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-  memcpy((&u), (&d), (sizeof(d)));
-
-#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-  return u;
-}
-
-
-#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-uint64_t uint64_as_double(uint64_t u)
-#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-{
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-  double d;
-
-#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-  memcpy((&d), (&u), (sizeof(u)));
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
-  return d;
-}
-
-
 #line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/io/sub-process-windows.c"
 sub_process_t* make_sub_process(value_array_t* argv)
 #line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/io/sub-process-windows.c"
@@ -24456,641 +23325,6 @@ char* build_child_environment_block(value_array_t* argv, int* out_offset)
 }
 
 
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_set_foreground_color(buffer_t* buffer, uint32_t color)
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t blue = (color&0xff);
-
-#line 175 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t green = ((color>>8)&0xff);
-
-#line 176 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t red = ((color>>16)&0xff);
-
-#line 179 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
-}
-
-
-#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_set_background_color(buffer_t* buffer, uint32_t color)
-#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t blue = (color&0xff);
-
-#line 194 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t green = ((color>>8)&0xff);
-
-#line 195 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  uint8_t red = ((color>>16)&0xff);
-
-#line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
-}
-
-
-#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_move_cursor_absolute(buffer_t* buffer, int x, int y)
-#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
-}
-
-
-#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_move_cursor_relative(buffer_t* buffer, int x, int y)
-#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  if ((x>0))
-
-#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-#line 230 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
-  }
-  else
-
-#line 231 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  if ((x<0))
-
-#line 231 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-#line 232 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), (-x));
-  }
-
-#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  if ((y>0))
-
-#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-#line 235 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
-  }
-  else
-
-#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  if ((y<0))
-
-#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-#line 237 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), (-y));
-  }
-}
-
-
-#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_bold(buffer_t* buffer)
-#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 248 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
-}
-
-
-#line 257 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_dim(buffer_t* buffer)
-#line 257 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 258 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
-}
-
-
-#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_italic(buffer_t* buffer)
-#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 268 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
-}
-
-
-#line 277 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_underline(buffer_t* buffer)
-#line 277 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
-}
-
-
-#line 281 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_strikethrough(buffer_t* buffer)
-#line 281 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 282 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("9m"));
-}
-
-
-#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_overline(buffer_t* buffer)
-#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 286 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("53m"));
-}
-
-
-#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_superscript(buffer_t* buffer)
-#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("73m"));
-}
-
-
-#line 293 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_subscript(buffer_t* buffer)
-#line 293 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 294 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("74m"));
-}
-
-
-#line 297 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_slow_blink(buffer_t* buffer)
-#line 297 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("5m"));
-}
-
-
-#line 301 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_fast_blink(buffer_t* buffer)
-#line 301 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 302 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("6m"));
-}
-
-
-#line 312 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_reset_formatting(buffer_t* buffer)
-#line 312 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 313 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
-}
-
-
-#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_clear_screen(buffer_t* buffer)
-#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 323 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
-}
-
-
-#line 331 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box)
-#line 332 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 334 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  term_move_cursor_absolute(buffer, x0, y0);
-
-#line 335 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_code_point(buffer, (box->upper_left_corner));
-
-#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  for (
-
-#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-
-#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    uint64_t x = (x0+1);
-
-#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    (x<x1);
-
-#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    (x++))
-
-#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-#line 337 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_append_code_point(buffer, (box->top_edge));
-  }
-
-#line 339 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_code_point(buffer, (box->upper_right_corner));
-
-#line 342 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  term_move_cursor_absolute(buffer, x0, y1);
-
-#line 343 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_code_point(buffer, (box->lower_left_corner));
-
-#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  for (
-
-#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-
-#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    uint64_t x = (x0+1);
-
-#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    (x<x1);
-
-#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    (x++))
-
-#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-#line 345 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_append_code_point(buffer, (box->bottom_edge));
-  }
-
-#line 347 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_code_point(buffer, (box->lower_right_corner));
-
-#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  for (
-
-#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-
-#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    int y = (y0+1);
-
-#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    (y<y1);
-
-#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    (y++))
-
-#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  {
-
-#line 351 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    term_move_cursor_absolute(buffer, x0, y);
-
-#line 352 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_append_code_point(buffer, (box->left_edge));
-
-#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    for (
-
-#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-
-#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-      int x = (x0+1);
-
-#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-      (x<x1);
-
-#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-      (x++))
-
-#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    {
-
-#line 355 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-      buffer_append_code_point(buffer, ' ');
-    }
-
-#line 359 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-    buffer_append_code_point(buffer, (box->right_edge));
-  }
-}
-
-
-#line 363 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_disable_autowrap(buffer_t* buffer)
-#line 363 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 364 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_string(buffer, "\033[?7l");
-}
-
-
-#line 367 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_enable_autowrap(buffer_t* buffer)
-#line 367 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 368 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_append_string(buffer, "\033[?7h");
-}
-
-
-#line 382 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_alt_buffer(buffer_t* buffer)
-#line 382 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 382 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, "\033[?1049h");
-}
-
-
-#line 390 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_main_buffer(buffer_t* buffer)
-#line 390 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 391 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, "\033[?1049l");
-}
-
-
-#line 394 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-void term_home(buffer_t* buffer)
-#line 394 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-{
-
-#line 394 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
-  buffer_printf(buffer, "\033[H");
-}
-
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-uint8_t* checked_malloc(char* file, int line, uint64_t amount)
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-{
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  if (((amount==0)||(amount>ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT)))
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  {
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-    log_fatal("Unexpected amount %lld", amount);
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-    fatal_error(ERROR_BAD_ALLOCATION_SIZE);
-  }
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  uint8_t* result = GC_malloc(amount);
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  if ((result==((void *)0)))
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  {
-
-#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-    fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
-  }
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  return result;
-}
-
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount)
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-{
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  uint8_t* result = checked_malloc(file, line, amount);
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  memcpy(result, source, amount);
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  return result;
-}
-
-
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-void checked_free(char* file, int line, void* pointer)
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-{
-
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
-  return;
-}
-
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-value_hashtable_t* make_value_hashtable(uint64_t n_buckets)
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-{
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  if ((n_buckets<2))
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  {
-
-#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-    (n_buckets=2);
-  }
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  value_hashtable_t* result = malloc_struct(value_hashtable_t);
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  ((result->n_buckets)=n_buckets);
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  ((result->buckets)=(/*CAST*/(value_alist_t**) malloc_bytes(((sizeof(typeof(value_alist_t*)))*n_buckets))));
-
-#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  return result;
-}
-
-
-#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value)
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-{
-
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  uint64_t hashcode = hash_fn(key);
-
-#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  int bucket = (hashcode%(ht->n_buckets));
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  value_alist_t* list = ((ht->buckets)[bucket]);
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  uint64_t len = value_alist_length(list);
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  (list=value_alist_insert(list, cmp_fn, key, value));
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  (((ht->buckets)[bucket])=list);
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  uint64_t len_after = value_alist_length(list);
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  if ((len_after>len))
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  {
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-    ((ht->n_entries)++);
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-    if (((ht->n_entries)>=((ht->n_buckets)*ARMYKNIFE_HT_LOAD_FACTOR)))
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-    {
-
-#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
-    }
-  }
-
-#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  return ht;
-}
-
-
-#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-{
-
-#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  uint64_t hashcode = hash_fn(key);
-
-#line 124 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  int bucket = (hashcode%(ht->n_buckets));
-
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  value_alist_t* list = ((ht->buckets)[bucket]);
-
-#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  uint64_t len = value_alist_length(list);
-
-#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  (list=value_alist_delete(list, cmp_fn, key));
-
-#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  (((ht->buckets)[bucket])=list);
-
-#line 129 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  uint64_t len_after = value_alist_length(list);
-
-#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  if ((len_after<len))
-
-#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  {
-
-#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-    ((ht->n_entries)--);
-  }
-
-#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  return ht;
-}
-
-
-#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
-#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-{
-
-#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  uint64_t hashcode = hash_fn(key);
-
-#line 144 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  int bucket = (hashcode%(ht->n_buckets));
-
-#line 145 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  value_alist_t* list = ((ht->buckets)[bucket]);
-
-#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  return value_alist_find(list, cmp_fn, key);
-}
-
-
-#line 163 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn)
-#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-{
-
-#line 166 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
-
-#line 167 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
-
-#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  value_ht_foreach(ht, key, value, 
-#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  {
-
-#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-    value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
-
-#line 176 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-    if ((new_ht!=should_be_result))
-
-#line 176 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-    {
-
-#line 177 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-  }
-);
-
-#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  value_alist_t** old_buckets = (ht->buckets);
-
-#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  ((ht->buckets)=(new_ht->buckets));
-
-#line 183 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  ((ht->n_buckets)=(new_ht->n_buckets));
-
-#line 184 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  ((ht->n_entries)=(new_ht->n_entries));
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  free_bytes(old_buckets);
-
-#line 186 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
-  free_bytes(new_ht);
-}
-
-
 #line 5 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal-windows.c"
 uint32_t term_width(void)
 #line 5 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal-windows.c"
@@ -25188,6 +23422,1072 @@ void term_echo_restore(term_echo_restore_t restore)
 
 #line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal-windows.c"
     SetConsoleMode(hIn, (restore.mode));
+  }
+}
+
+
+#line 35 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value)
+#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+{
+
+#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  value_alist_t* result = malloc_struct(value_alist_t);
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  ((result->next)=value_alist_delete(list, cmp_fn, key));
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  ((result->key)=key);
+
+#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  ((result->value)=value);
+
+#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  return result;
+}
+
+
+#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+{
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  if ((list==NULL))
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  {
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    return list;
+  }
+
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  if (((*cmp_fn)(key, (list->key))==0))
+
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  {
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    value_alist_t* result = (list->next);
+
+#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    free_bytes(list);
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    return result;
+  }
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  ((list->next)=value_alist_delete((list->next), cmp_fn, key));
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  return list;
+}
+
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key)
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+{
+
+#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  while (list)
+
+#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  {
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    if ((cmp_fn(key, (list->key))==0))
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    {
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+      return ((value_result_t) {.val = list->value});
+    }
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    (list=(list->next));
+  }
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
+}
+
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list)
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+{
+
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  uint64_t result = 0;
+
+#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  while (list)
+
+#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  {
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    (result++);
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+    (list=(list->next));
+  }
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c"
+  return result;
+}
+
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+screen_t* get_initial_screen(void)
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  return get_initial_screen_with_limits(0, 0, 0, 0);
+}
+
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+screen_t* get_initial_screen_with_limits(uint32_t top_offset, uint32_t bottom_offset, uint32_t left_offset, uint32_t right_offset)
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  uint32_t real_width = term_width();
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  uint32_t real_height = term_height();
+
+#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_t* screen = malloc_struct(screen_t);
+
+#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((screen->width)=((real_width-left_offset)-right_offset));
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((screen->height)=((real_height-top_offset)-bottom_offset));
+
+#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  uint32_t num = ((screen->width)*(screen->height));
+
+#line 70 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((screen->styles)=(/*CAST*/(style_t*) malloc_bytes(((sizeof(style_t))*num))));
+
+#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((screen->chars)=(/*CAST*/(uint32_t*) malloc_bytes(((sizeof(uint32_t))*num))));
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((screen->top_offset)=top_offset);
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((screen->bottom_offset)=bottom_offset);
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((screen->left_offset)=left_offset);
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((screen->right_offset)=right_offset);
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  return screen;
+}
+
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void screen_fill(screen_t* screen, uint32_t ch, style_t style)
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  uint32_t limit = ((screen->width)*(screen->height));
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int i = 0;
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i<limit);
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i++))
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (((screen->chars)[i])=ch);
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (((screen->styles)[i])=style);
+  }
+}
+
+
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void window_fill(screen_window_t* window, uint32_t ch, style_t style)
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int row = 0;
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (row<(window->height));
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (row++))
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    for (
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      int column = 0;
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      (column<(window->width));
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      (column++))
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    {
+
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      screen_window_set_char(window, ch, style, row, column);
+    }
+  }
+}
+
+
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+screen_window_t* make_root_screen_window(screen_t* screen)
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* window = malloc_struct(screen_window_t);
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((window->screen)=screen);
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((window->width)=(screen->width));
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((window->height)=(screen->height));
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  return window;
+}
+
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+screen_window_t* screen_window_clone(screen_window_t* window)
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if ((window==((void *)0)))
+
+#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    return ((void *)0);
+  }
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* result = malloc_struct(screen_window_t);
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  memcpy(result, window, (sizeof((*window))));
+
+#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  return result;
+}
+
+
+#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void hidden_screen_set_char(screen_t* screen, uint32_t ch, style_t style, uint32_t row, uint32_t column)
+#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  int offset = ((row*(screen->width))+column);
+
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  (((screen->chars)[offset])=ch);
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  (((screen->styles)[offset])=style);
+}
+
+
+#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void screen_window_set_char(screen_window_t* window, uint32_t ch, style_t style, uint32_t row, uint32_t column)
+#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (((row<0)||(row>=(window->height))))
+
+#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 129 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    return;
+  }
+
+#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (((column<0)||(column>=(window->width))))
+
+#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 132 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    return;
+  }
+
+#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  hidden_screen_set_char((window->screen), ch, style, (row+(window->y_offset)), (column+(window->x_offset)));
+}
+
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void screen_window_split_vertically(screen_window_t* window, double fraction, screen_window_t** top_out, screen_window_t** bottom_out)
+#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* top = screen_window_clone(window);
+
+#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* bottom = screen_window_clone(window);
+
+#line 144 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  uint32_t new_top_height = ((window->height)*fraction);
+
+#line 145 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((top->height)=new_top_height);
+
+#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((bottom->height)=((window->height)-(top->height)));
+
+#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((bottom->y_offset)+=new_top_height);
+
+#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((*top_out)=top);
+
+#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((*bottom_out)=bottom);
+}
+
+
+#line 152 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void screen_window_split_horizontally(screen_window_t* window, double fraction, screen_window_t** left_out, screen_window_t** right_out)
+#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 155 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* left = screen_window_clone(window);
+
+#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* right = screen_window_clone(window);
+
+#line 157 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  uint32_t new_left_width = ((window->width)*fraction);
+
+#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((left->width)=new_left_width);
+
+#line 159 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((right->width)=((window->width)-new_left_width));
+
+#line 160 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((right->x_offset)+=new_left_width);
+
+#line 161 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((*left_out)=left);
+
+#line 162 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((*right_out)=right);
+}
+
+
+#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+box_drawing_t* get_default_window_border_box(void)
+#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 166 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  box_drawing_t* box = malloc_struct(box_drawing_t);
+
+#line 167 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((box->upper_left_corner)=0x250c);
+
+#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((box->upper_right_corner)=0x2510);
+
+#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((box->top_edge)=0x2500);
+
+#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((box->bottom_edge)=0x2500);
+
+#line 171 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((box->lower_left_corner)=0x2514);
+
+#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((box->lower_right_corner)=0x2518);
+
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((box->left_edge)=0x2502);
+
+#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((box->right_edge)=0x2502);
+
+#line 175 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  return box;
+}
+
+
+#line 178 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+screen_window_t* screen_window_draw_border(screen_window_t* window, box_drawing_t* box, style_t style)
+#line 179 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int i = 0;
+
+#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i<(window->width));
+
+#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i++))
+
+#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    screen_window_set_char(window, (box->top_edge), style, 0, i);
+  }
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int i = 0;
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i<(window->width));
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i++))
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 186 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    screen_window_set_char(window, (box->top_edge), style, ((window->height)-1), i);
+  }
+
+#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int i = 0;
+
+#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i<(window->height));
+
+#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i++))
+
+#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    screen_window_set_char(window, (box->left_edge), style, i, 0);
+  }
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int i = 0;
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i<(window->height));
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i++))
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 194 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    screen_window_set_char(window, (box->left_edge), style, i, ((window->width)-1));
+  }
+
+#line 197 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_set_char(window, (box->upper_left_corner), style, 0, 0);
+
+#line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_set_char(window, (box->upper_right_corner), style, 0, ((window->width)-1));
+
+#line 200 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_set_char(window, (box->lower_left_corner), style, ((window->height)-1), 0);
+
+#line 202 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_set_char(window, (box->lower_right_corner), style, ((window->height)-1), ((window->width)-1));
+
+#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* result = screen_window_clone(window);
+
+#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((result->x_offset)+=1);
+
+#line 210 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((result->y_offset)+=1);
+
+#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((result->width)-=2);
+
+#line 212 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  ((result->height)-=2);
+
+#line 214 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  return result;
+}
+
+
+#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void screenline_to_ansi_buffer(screen_t* screen, buffer_t* buffer, int row)
+#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 218 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  style_t prev_style = (-1);
+
+#line 221 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  term_move_cursor_absolute(buffer, (screen->left_offset), ((screen->top_offset)+row));
+
+#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int c = 0;
+
+#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (c<(screen->width));
+
+#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (c++))
+
+#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    uint32_t index = ((row*(screen->width))+c);
+
+#line 228 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    style_t style = ((screen->styles)[index]);
+
+#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    if (((style!=prev_style)||(c==0)))
+
+#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    {
+
+#line 230 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      style_to_buffer(buffer, style);
+
+#line 231 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      (prev_style=style);
+    }
+
+#line 233 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    uint32_t cp = ((screen->chars)[index]);
+
+#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    buffer_append_code_point(buffer, (cp ? cp : '-'));
+  }
+}
+
+
+#line 239 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void term_write_screen(screen_t* screen)
+#line 239 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 240 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  buffer_t* buffer = make_buffer(1000);
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int row = 0;
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (row<(screen->height));
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (row++))
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 242 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    buffer_clear(buffer);
+
+#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    screenline_to_ansi_buffer(screen, buffer, row);
+
+#line 244 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    buffer_write_all_chunked(stdout, buffer);
+
+#line 245 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    fflush(stdout);
+
+#line 246 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    usleep(5);
+  }
+}
+
+
+#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void window_put_string(screen_window_t* window, style_t style, uint32_t row, uint32_t column, char* str)
+#line 251 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 252 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  int len = strlen(str);
+
+#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int i = 0;
+
+#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i<len);
+
+#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i++))
+
+#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 255 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    screen_window_set_char(window, (str[i]), style, row, (column+i));
+  }
+}
+
+
+#line 259 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void style_to_buffer(buffer_t* buffer, style_t style)
+#line 259 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 260 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  term_reset_formatting(buffer);
+
+#line 261 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  term_set_foreground_color(buffer, get_foreground(style));
+
+#line 262 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  term_set_background_color(buffer, get_background(style));
+
+#line 263 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_bold(style))
+
+#line 263 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_bold(buffer);
+  }
+
+#line 266 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_dim(style))
+
+#line 266 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_dim(buffer);
+  }
+
+#line 269 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_italic(style))
+
+#line 269 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 270 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_italic(buffer);
+  }
+
+#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_underline(style))
+
+#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 273 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_underline(buffer);
+  }
+
+#line 275 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_strikethrough(style))
+
+#line 275 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 276 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_strikethrough(buffer);
+  }
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_overline(style))
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 279 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_overline(buffer);
+  }
+
+#line 281 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_superscript(style))
+
+#line 281 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 282 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_superscript(buffer);
+  }
+
+#line 284 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_subscript(style))
+
+#line 284 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_subscript(buffer);
+  }
+
+#line 287 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_slow_blink(style))
+
+#line 287 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 288 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_slow_blink(buffer);
+  }
+
+#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (get_fast_blink(style))
+
+#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 291 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_fast_blink(buffer);
+  }
+}
+
+
+#line 295 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void buffer_to_screen_window(screen_window_t* window, style_t style, style_t gutter_style, buffer_t* buffer, uint32_t buffer_start_line, uint32_t line_number_gutter_width)
+#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 299 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  buffer_region_t region = buffer_line_region(buffer, buffer_start_line, (buffer_start_line+1));
+
+#line 302 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  int current_line_number = buffer_start_line;
+
+#line 303 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  int window_line_number = 0;
+
+#line 304 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  int window_column_number = 0;
+
+#line 306 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  int index = (region.start_position);
+
+#line 307 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  while (((index<(buffer->length))&&((current_line_number-buffer_start_line)<(window->height))))
+
+#line 308 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 309 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    if (((window_column_number==0)&&(line_number_gutter_width>0)))
+
+#line 309 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    {
+
+#line 310 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      char* num_string = string_printf("%d", (current_line_number+1));
+
+#line 311 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      (num_string=string_left_pad(num_string, line_number_gutter_width, ' '));
+
+#line 312 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      window_put_string(window, gutter_style, window_line_number, window_column_number, num_string);
+
+#line 314 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      (window_column_number=(line_number_gutter_width+1));
+    }
+
+#line 316 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    while (((index<(buffer->length))&&(buffer_get(buffer, index)!='\n')))
+
+#line 316 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    {
+
+#line 317 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      screen_window_set_char(window, buffer_get(buffer, index), style, window_line_number, (window_column_number++));
+
+#line 319 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+      (index++);
+    }
+
+#line 321 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (index++);
+
+#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (window_column_number=0);
+
+#line 323 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (current_line_number++);
+
+#line 324 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (window_line_number++);
+  }
+}
+
+
+#line 342 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void overlay_dimensions(screen_window_t* window, style_t style)
+#line 342 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 343 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  char* str = string_printf(" [width = %d, height = %d] ", (window->width), (window->height));
+
+#line 345 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  window_put_string(window, style, 2, 5, str);
+}
+
+
+#line 348 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void draw_random_chars_in_window(screen_window_t* window, style_t style)
+#line 348 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  for (
+
+#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+
+#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    int i = 0;
+
+#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i<26);
+
+#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (i++))
+
+#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 351 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    uint32_t x = random_next_uint64_below(_random, ((window->width)*2));
+
+#line 352 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    uint32_t y = random_next_uint64_below(_random, ((window->height)*2));
+
+#line 353 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    screen_window_set_char(window, ('A'+i), style, y, x);
+  }
+}
+
+
+#line 360 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+void draw_random_screen(boolean_t output_dimensions)
+#line 360 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+{
+
+#line 362 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  style_t default_style = 0;
+
+#line 363 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  (default_style=set_foreground_green(default_style, 0xff));
+
+#line 365 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if ((_test_screen==((void *)0)))
+
+#line 365 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 366 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (_test_screen=get_initial_screen_with_limits(5, 5, 5, 5));
+
+#line 367 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (_random=random_state());
+  }
+
+#line 370 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* root = make_root_screen_window(_test_screen);
+
+#line 373 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* top = ((void *)0);
+
+#line 374 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* bottom = ((void *)0);
+
+#line 375 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_split_vertically(root, 0.8, (&top), (&bottom));
+
+#line 377 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* top_left = ((void *)0);
+
+#line 378 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_t* top_right = ((void *)0);
+
+#line 379 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  screen_window_split_horizontally(top, 0.5, (&top_left), (&top_right));
+
+#line 381 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  window_fill(top_right, ' ', set_background(0, 0x808080));
+
+#line 383 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  box_drawing_t* box = get_default_window_border_box();
+
+#line 385 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  (top_left=screen_window_draw_border(top_left, box, default_style));
+
+#line 386 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  (top_right=screen_window_draw_border(top_right, box, default_style));
+
+#line 387 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  (bottom=screen_window_draw_border(bottom, box, default_style));
+
+#line 389 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  style_t top_left_random_style = set_underline(set_foreground_red(0, 0xff), true);
+
+#line 391 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  draw_random_chars_in_window(top_left, top_left_random_style);
+
+#line 393 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  style_t top_right_random_style = set_bold(set_background(set_foreground_blue(0, 0xff), 0x808080), true);
+
+#line 395 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  draw_random_chars_in_window(top_right, top_right_random_style);
+
+#line 397 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  style_t bottom_random_style = set_foreground_green(0, 0xff);
+
+#line 398 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  draw_random_chars_in_window(bottom, bottom_random_style);
+
+#line 400 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  buffer_to_screen_window(top_left, top_left_random_style, top_left_random_style, buffer_from_string(sample_source_code), 0, 4);
+
+#line 404 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if ((output_dimensions||true))
+
+#line 404 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 405 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    style_t style = 0;
+
+#line 406 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (style=set_background(style, 0x5c80bc));
+
+#line 407 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    (style=set_foreground(style, 0xe8c547));
+
+#line 408 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    overlay_dimensions(top_left, style);
+
+#line 409 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    overlay_dimensions(top_right, style);
+
+#line 410 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    overlay_dimensions(bottom, style);
+  }
+
+#line 413 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  term_write_screen(_test_screen);
+
+#line 415 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  if (output_dimensions)
+
+#line 415 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+  {
+
+#line 416 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    sleep(2);
+
+#line 417 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    buffer_t* buffer = make_buffer(100);
+
+#line 418 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    style_to_buffer(buffer, set_foreground(0LL, 0xff00ULL));
+
+#line 419 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    term_move_cursor_absolute(buffer, 0, ((_test_screen->height)-5));
+
+#line 420 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
+    buffer_write_all_chunked(stdout, buffer);
   }
 }
 
@@ -26119,979 +25419,6 @@ void flag_print_help(FILE* out, char* message)
 }
 
 
-#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-value_array_t* make_value_array(uint64_t initial_capacity)
-#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  if ((initial_capacity==0))
-
-#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    (initial_capacity=1);
-  }
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  value_array_t* result = malloc_struct(value_array_t);
-
-#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  ((result->capacity)=initial_capacity);
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  ((result->elements)=(/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*initial_capacity))));
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  return result;
-}
-
-
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity)
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  if (((array->capacity)<required_capacity))
-
-#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    uint32_t new_capacity = ((array->capacity)*2);
-
-#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    if ((new_capacity<required_capacity))
-
-#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    {
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-      (new_capacity=required_capacity);
-    }
-
-#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    for (
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-      int i = 0;
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-      (i<(array->length));
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-      (i++))
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    {
-
-#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-      ((new_elements[i])=((array->elements)[i]));
-    }
-
-#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    ((array->capacity)=new_capacity);
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    free_bytes((array->elements));
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    ((array->elements)=new_elements);
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    return;
-  }
-}
-
-
-#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-value_t value_array_get(value_array_t* array, uint32_t index)
-#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  if ((index<(array->length)))
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    return ((array->elements)[index]);
-  }
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  return ((value_t) {0});
-}
-
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-void value_array_replace(value_array_t* array, uint32_t index, value_t element)
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  if ((index<(array->length)))
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    (((array->elements)[index])=element);
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    return;
-  }
-
-#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-}
-
-
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-void value_array_add(value_array_t* array, value_t element)
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  value_array_ensure_capacity(array, ((array->length)+1));
-
-#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  (((array->elements)[((array->length)++)])=element);
-}
-
-
-#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-void value_array_push(value_array_t* array, value_t element)
-#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  value_array_add(array, element);
-}
-
-
-#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-value_t value_array_pop(value_array_t* array)
-#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  if (((array->length)==0))
-
-#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 144 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-  }
-
-#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  uint32_t last_index = ((array->length)-1);
-
-#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  value_t result = value_array_get(array, last_index);
-
-#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  (((array->elements)[last_index])=u64_to_value(0));
-
-#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  ((array->length)--);
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  return result;
-}
-
-
-#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-void value_array_insert_at(value_array_t* array, uint32_t position, value_t element)
-#line 171 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  if ((position==(array->length)))
-
-#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    value_array_add(array, element);
-
-#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    return;
-  }
-
-#line 177 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  if ((position>(array->length)))
-
-#line 177 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 178 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-
-#line 179 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    return;
-  }
-
-#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  value_array_ensure_capacity(array, ((array->length)+1));
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  for (
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    int64_t i = ((array->length)-1);
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    (i>=position);
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    (i--))
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 188 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    (((array->elements)[(i+1)])=((array->elements)[i]));
-  }
-
-#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  ((array->length)++);
-
-#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  (((array->elements)[position])=element);
-}
-
-
-#line 203 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-value_t value_array_delete_at(value_array_t* array, uint32_t position)
-#line 203 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-{
-
-#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  value_t result = value_array_get(array, position);
-
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  for (
-
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    int i = position;
-
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    (i<((array->length)-1));
-
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    (i++))
-
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  {
-
-#line 206 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-    (((array->elements)[i])=((array->elements)[(i+1)]));
-  }
-
-#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  ((array->length)--);
-
-#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
-  return result;
-}
-
-
-#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int access(const char* path, int mode)
-#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 8 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return _access(path, mode);
-}
-
-
-#line 11 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int read(int fd, void* buffer, unsigned int count)
-#line 11 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return _read(fd, buffer, count);
-}
-
-
-#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int write(int fd, const void* buffer, unsigned int count)
-#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return _write(fd, buffer, count);
-}
-
-
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int close(int fd)
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return _close(fd);
-}
-
-
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int isatty(int fd)
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return _isatty(fd);
-}
-
-
-#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int getpid(void)
-#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return _getpid();
-}
-
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-char* getcwd(char* buffer, int maxlen)
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return _getcwd(buffer, maxlen);
-}
-
-
-#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int chdir(const char* dirname)
-#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return _chdir(dirname);
-}
-
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int64_t get_file_modification_time(const char* filename)
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  WIN32_FILE_ATTRIBUTE_DATA file_info;
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((!GetFileAttributesExA(filename, GetFileExInfoStandard, (&file_info))))
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    return (-1);
-  }
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  FILETIME ft = (file_info.ftLastWriteTime);
-
-#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  uint64_t intervals = (((/*CAST*/(uint64_t) (ft.dwHighDateTime))<<32)|(ft.dwLowDateTime));
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  const uint64_t epoch_offset_intervals = 116444736000000000ULL;
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((intervals<epoch_offset_intervals))
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    return (-1);
-  }
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  int64_t total_microseconds = (/*CAST*/(int64_t) ((intervals-epoch_offset_intervals)/10ULL));
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return total_microseconds;
-}
-
-
-#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t max_bytes)
-#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if (((handle==NULL)||(buffer==NULL)))
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    return;
-  }
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  DWORD bytes_available = 0;
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  DWORD file_type = (GetFileType(handle)&(~FILE_TYPE_REMOTE));
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((file_type==FILE_TYPE_PIPE))
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    BOOL peek_success = PeekNamedPipe(handle, NULL, 0, NULL, (&bytes_available), NULL);
-
-#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if ((!peek_success))
-
-#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      DWORD err = GetLastError();
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      if ((err==ERROR_BROKEN_PIPE))
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      {
-
-#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-        return;
-      }
-
-#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      log_fatal("PeekNamedPipe failed with error %d", err);
-
-#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-
-#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      return;
-    }
-  }
-  else
-
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    (bytes_available=STACK_READ_BUFFER_SIZE);
-  }
-
-#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((bytes_available==0))
-
-#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    return;
-  }
-
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  DWORD bytes_to_read = bytes_available;
-
-#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((bytes_to_read>STACK_READ_BUFFER_SIZE))
-
-#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 129 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    (bytes_to_read=STACK_READ_BUFFER_SIZE);
-  }
-
-#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((bytes_to_read>max_bytes))
-
-#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 134 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    (bytes_to_read=max_bytes);
-  }
-
-#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  uint8_t read_buffer[STACK_READ_BUFFER_SIZE] = {0};
-
-#line 138 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  DWORD bytes_read = 0;
-
-#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  BOOL read_success = ReadFile(handle, read_buffer, bytes_to_read, (&bytes_read), NULL);
-
-#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((read_success&&(bytes_read>0)))
-
-#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    for (
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      DWORD i = 0;
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      (i<bytes_read);
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      (i++))
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 151 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      buffer_append_byte(buffer, (/*CAST*/(uint8_t) (read_buffer[i])));
-    }
-  }
-  else
-
-#line 153 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((!read_success))
-
-#line 153 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    DWORD err = GetLastError();
-
-#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if (((err!=ERROR_BROKEN_PIPE)&&(err!=ERROR_MORE_DATA)))
-
-#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 157 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      log_fatal("ReadFile failed with error %d", err);
-
-#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-  }
-}
-
-
-#line 163 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-unsigned int sleep(unsigned int seconds)
-#line 163 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 164 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  Sleep((seconds*1000));
-
-#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return 0;
-}
-
-
-#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-int usleep(uint32_t usec)
-#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((usec==0))
-
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    Sleep(0);
-
-#line 175 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    return 0;
-  }
-
-#line 180 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  DWORD ms = (/*CAST*/(DWORD) ((usec+999)/1000));
-
-#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  Sleep(ms);
-
-#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return 0;
-}
-
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-void make_file_read_only(char* file_name)
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 186 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  DWORD attributes = GetFileAttributesA(file_name);
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((attributes==INVALID_FILE_ATTRIBUTES))
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 188 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    log_fatal("Failed to get file attributes: %s", file_name);
-
-#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((!SetFileAttributesA(file_name, (attributes|FILE_ATTRIBUTE_READONLY))))
-
-#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    log_fatal("Failed to set file read-only attribute: %s", file_name);
-
-#line 194 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-}
-
-
-#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-void make_writable_if_exists(const char* file_name)
-#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  DWORD attributes = GetFileAttributesA(file_name);
-
-#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((attributes==INVALID_FILE_ATTRIBUTES))
-
-#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    return;
-  }
-
-#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((attributes&FILE_ATTRIBUTE_READONLY))
-
-#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 214 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    DWORD new_attributes = (attributes&(~(/*CAST*/(DWORD) FILE_ATTRIBUTE_READONLY)));
-
-#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if ((!SetFileAttributesA(file_name, new_attributes)))
-
-#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 216 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      log_fatal("Error setting permissions for %s\n", file_name);
-
-#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-  }
-}
-
-
-#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes)
-#line 231 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 232 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
-
-#line 233 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  char read_buffer[1024] = {0};
-
-#line 235 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  intptr_t os_handle = _get_osfhandle(file_number);
-
-#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((os_handle==(-1)))
-
-#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 237 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    log_fatal("Invalid file descriptor %d", file_number);
-
-#line 238 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  HANDLE h_file = (/*CAST*/(HANDLE) os_handle);
-
-#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  while ((bytes_remaining>0))
-
-#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 244 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    DWORD avail_bytes = 0;
-
-#line 245 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    BOOL peek_ok = PeekNamedPipe(h_file, NULL, 0, NULL, (&avail_bytes), NULL);
-
-#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if ((!peek_ok))
-
-#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 248 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      DWORD last_err = GetLastError();
-
-#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      if ((last_err==ERROR_BROKEN_PIPE))
-
-#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      {
-
-#line 251 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-        break;
-      }
-
-#line 253 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      log_fatal("Error peeking pipe on descriptor %d (error %lu)", file_number, last_err);
-
-#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      fatal_error(ERROR_ILLEGAL_STATE);
-    }
-
-#line 258 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if ((avail_bytes==0))
-
-#line 258 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 259 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      break;
-    }
-
-#line 263 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    uint32_t chunk_size = (sizeof(read_buffer));
-
-#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if (((/*CAST*/(uint64_t) chunk_size)>bytes_remaining))
-
-#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 265 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      (chunk_size=(/*CAST*/(uint32_t) bytes_remaining));
-    }
-
-#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if (((/*CAST*/(uint64_t) chunk_size)>(/*CAST*/(uint64_t) avail_bytes)))
-
-#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 268 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      (chunk_size=(/*CAST*/(uint32_t) avail_bytes));
-    }
-
-#line 271 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    DWORD bytes_read = 0;
-
-#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    BOOL read_ok = ReadFile(h_file, read_buffer, chunk_size, (&bytes_read), NULL);
-
-#line 274 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if (((!read_ok)||(bytes_read==0)))
-
-#line 274 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 275 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      break;
-    }
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    for (
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      uint32_t i = 0;
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      (i<bytes_read);
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      (i++))
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 279 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      (buffer=buffer_append_byte(buffer, (/*CAST*/(uint8_t) (read_buffer[i]))));
-
-#line 280 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      (bytes_remaining--);
-    }
-  }
-
-#line 284 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return buffer;
-}
-
-
-#line 288 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-value_array_t* file_glob(const char* pattern)
-#line 288 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-{
-
-#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((pattern==NULL))
-
-#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    return ((void *)0);
-  }
-
-#line 293 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  value_array_t* result_array = make_value_array(10);
-
-#line 295 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  WIN32_FIND_DATAA find_data = {0};
-
-#line 296 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  HANDLE h_find = FindFirstFileA(pattern, (&find_data));
-
-#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((h_find==INVALID_HANDLE_VALUE))
-
-#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 299 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    DWORD err = GetLastError();
-
-#line 300 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if (((err==ERROR_FILE_NOT_FOUND)||(err==ERROR_PATH_NOT_FOUND)))
-
-#line 300 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 301 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      return result_array;
-    }
-
-#line 303 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    return ((void *)0);
-  }
-
-#line 307 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  char dir_prefix[1024] = {0};
-
-#line 308 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  char* last_slash = strrchr(pattern, '/');
-
-#line 309 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((last_slash==NULL))
-
-#line 309 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 310 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    (last_slash=strrchr(pattern, '\\'));
-  }
-
-#line 313 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  if ((last_slash!=NULL))
-
-#line 313 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 314 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    size_t prefix_len = (/*CAST*/(size_t) ((last_slash-pattern)+1));
-
-#line 315 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if ((prefix_len<(sizeof(dir_prefix))))
-
-#line 315 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 316 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      strncpy(dir_prefix, pattern, prefix_len);
-
-#line 317 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      ((dir_prefix[prefix_len])='\0');
-    }
-  }
-
-#line 321 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  int keep_searching = 1;
-
-#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  while (keep_searching)
-
-#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  {
-
-#line 324 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    if (((strcmp((find_data.cFileName), ".")!=0)&&(strcmp((find_data.cFileName), "..")!=0)))
-
-#line 324 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    {
-
-#line 325 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      char full_path[2048] = {0};
-
-#line 326 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      snprintf(full_path, (sizeof(full_path)), "%s%s", dir_prefix, (find_data.cFileName));
-
-#line 328 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-      value_array_push(result_array, ptr_to_value(string_duplicate(full_path)));
-    }
-
-#line 330 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-    (keep_searching=FindNextFileA(h_find, (&find_data)));
-  }
-
-#line 333 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  FindClose(h_find);
-
-#line 334 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
-  return result_array;
-}
-
-
 #line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-hashtable.c"
 value_hashtable_t* to_value_hashtable(string_hashtable_t* ht)
 #line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-hashtable.c"
@@ -27149,2048 +25476,6 @@ uint64_t string_ht_num_entries(string_hashtable_t* ht)
 
 #line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-hashtable.c"
   return value_ht_num_entries(to_value_hashtable(ht));
-}
-
-
-#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-char* get_command_line(void)
-#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-{
-
-#line 2 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  return "command line not available under windows right now";
-}
-
-
-#line 5 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-char* get_program_path(void)
-#line 5 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-{
-
-#line 6 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  return "<program-path-unknown>";
-}
-
-
-#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-void print_backtrace(void)
-#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-{
-
-#line 10 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  HANDLE process = GetCurrentProcess();
-
-#line 11 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  bool sym_initialized = SymInitialize(process, NULL, TRUE);
-
-#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  const ULONG max_frames = 64;
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  void* stack[64] = {0};
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  USHORT frames = CaptureStackBackTrace(1, max_frames, stack, NULL);
-
-#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  size_t symbol_buffer_size = ((sizeof(SYMBOL_INFO))+(MAX_SYM_NAME*(sizeof(char))));
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  SYMBOL_INFO* symbol = (/*CAST*/(SYMBOL_INFO*) malloc_bytes(symbol_buffer_size));
-
-#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  ((symbol->MaxNameLen)=MAX_SYM_NAME);
-
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  ((symbol->SizeOfStruct)=(sizeof(SYMBOL_INFO)));
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  for (
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    USHORT i = 0;
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    (i<frames);
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    (i=(i+1)))
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  {
-
-#line 26 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    DWORD64 address = (/*CAST*/(DWORD64) (stack[i]));
-
-#line 27 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    DWORD64 displacement = 0;
-
-#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    if (SymFromAddr(process, address, (&displacement), symbol))
-
-#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    {
-
-#line 30 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-      printf("#%u 0x%016llX %s + 0x%llX\n", (/*CAST*/(unsigned int) i), address, (symbol->Name), displacement);
-    }
-    else
-
-#line 35 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    {
-
-#line 36 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-      printf("#%u 0x%016llX [Unknown Symbol]\n", (/*CAST*/(unsigned int) i), address);
-    }
-  }
-
-#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  if (sym_initialized)
-
-#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-  {
-
-#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
-    SymCleanup(process);
-  }
-}
-
-
-#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-char* quote_c_string(char* input)
-#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-{
-
-#line 8 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  if ((input==((void *)0)))
-
-#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  return ((void *)0);
-
-#line 11 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  buffer_t* buf = make_buffer((strlen(input)+10));
-
-#line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  buffer_append_byte(buf, '"');
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  for (
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    size_t i = 0;
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    ((input[i])!=0);
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    (i++))
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  {
-
-#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    uint8_t c = (/*CAST*/(uint8_t) (input[i]));
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    switch (c)
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    {
-
-#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      case '"':
-
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, '\\');
-
-#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, '"');
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      break;
-
-#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      case '\\':
-
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, '\\');
-
-#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, '\\');
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      break;
-
-#line 26 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      case '\n':
-
-#line 27 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, '\\');
-
-#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, 'n');
-
-#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      break;
-
-#line 30 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      case '\t':
-
-#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, '\\');
-
-#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, 't');
-
-#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      break;
-
-#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      case '\r':
-
-#line 35 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, '\\');
-
-#line 36 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, 'r');
-
-#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      break;
-
-#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      default:
-
-#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      if (((c>=32)&&(c<126)))
-
-#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      {
-
-#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        buffer_append_byte(buf, c);
-      }
-      else
-
-#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      {
-
-#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        buffer_printf(buf, "\\x%02x", c);
-      }
-
-#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      break;
-    }
-  }
-
-#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  buffer_append_byte(buf, '"');
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  return buffer_to_c_string(buf);
-}
-
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-char* string_unquote_c_string(char* input)
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-{
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  if ((input==((void *)0)))
-
-#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  return ((void *)0);
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  int limit = (strlen(input)-1);
-
-#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  buffer_t* buf = make_buffer((limit+10));
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  for (
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    size_t i = 1;
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    (i<limit);
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    )
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  {
-
-#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    uint8_t c = (/*CAST*/(uint8_t) (input[(i++)]));
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    if ((c=='\\'))
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    {
-
-#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      uint8_t c2 = (/*CAST*/(uint8_t) (input[(i++)]));
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      switch (c2)
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      {
-
-#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        case '"':
-
-#line 70 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        buffer_append_byte(buf, '\"');
-
-#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        break;
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        case '\\':
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        ;
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        buffer_append_byte(buf, '\\');
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        break;
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        case 'n':
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        buffer_append_byte(buf, '\n');
-
-#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        break;
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        case 't':
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        buffer_append_byte(buf, '\t');
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        break;
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        case 'r':
-
-#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        buffer_append_byte(buf, '\r');
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        break;
-
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        case 'x':
-
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        {
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_t* hex = make_buffer(3);
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_append_byte(hex, (input[(i++)]));
-
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_append_byte(hex, (input[(i++)]));
-
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          value_result_t result = string_parse_uint64_hex(buffer_to_c_string(hex));
-
-#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          if ((!is_ok(result)))
-
-#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          {
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-            fatal_error(ERROR_ILLEGAL_INPUT);
-          }
-
-#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_append_byte(buf, (result.u64));
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          break;
-        }
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        case 'u':
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        {
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_t* hex = make_buffer(5);
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_append_byte(hex, (input[(i++)]));
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_append_byte(hex, (input[(i++)]));
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_append_byte(hex, (input[(i++)]));
-
-#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_append_byte(hex, (input[(i++)]));
-
-#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          value_result_t result = string_parse_uint64_hex(buffer_to_c_string(hex));
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          if ((!is_ok(result)))
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          {
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-            fatal_error(ERROR_ILLEGAL_INPUT);
-          }
-
-#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          buffer_append_code_point(buf, (result.u64));
-
-#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-          break;
-        }
-
-#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        default:
-
-#line 114 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        fatal_error(ERROR_ILLEGAL_INPUT);
-
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-        break;
-      }
-    }
-    else
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-    {
-
-#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-      buffer_append_byte(buf, c);
-    }
-  }
-
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
-  return buffer_to_c_string(buf);
-}
-
-
-#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c"
-char* platform(void)
-#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c"
-{
-
-#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c"
-  return "windows";
-}
-
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-unsigned encode_sleb_128(int64_t Value, uint8_t* p)
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-{
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  uint8_t* orig_p = p;
-
-#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  int More;
-
-#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  do
-#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  {
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    uint8_t Byte = (Value&0x7f);
-
-#line 70 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Value>>=7);
-
-#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (More=(!(((Value==0)&&((Byte&0x40)==0))||((Value==(-1))&&((Byte&0x40)!=0)))));
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    if (More)
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Byte|=0x80);
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    ((*(p++))=Byte);
-  }
-  while (More);
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  return (/*CAST*/(unsigned) (p-orig_p));
-}
-
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-unsigned encode_uleb_128(uint64_t Value, uint8_t* p)
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-{
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  uint8_t* orig_p = p;
-
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  do
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  {
-
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    uint8_t Byte = (Value&0x7f);
-
-#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Value>>=7);
-
-#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    if ((Value!=0))
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Byte|=0x80);
-
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    ((*(p++))=Byte);
-  }
-  while ((Value!=0));
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  return (/*CAST*/(unsigned) (p-orig_p));
-}
-
-
-#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
-#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-{
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  const uint8_t* orig_p = p;
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  uint64_t Value = 0;
-
-#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  unsigned Shift = 0;
-
-#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  do
-#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  {
-
-#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    if ((p==end))
-
-#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    {
-
-#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
-
-#line 114 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-      return result;
-    }
-
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    uint64_t Slice = ((*p)&0x7f);
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    if ((((Shift>=64)&&(Slice!=0))||(((Slice<<Shift)>>Shift)!=Slice)))
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    {
-
-#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_TOO_BIG});
-
-#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-      return result;
-    }
-
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Value+=(Slice<<Shift));
-
-#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Shift+=7);
-  }
-  while (((*(p++))>=128));
-
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  unsigned_decode_result result = ((unsigned_decode_result) {Value, cast(unsigned, p - orig_p)});
-
-#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  return result;
-}
-
-
-#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
-#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-{
-
-#line 136 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  const uint8_t* orig_p = p;
-
-#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  int64_t Value = 0;
-
-#line 138 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  unsigned Shift = 0;
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  uint8_t Byte;
-
-#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  do
-#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  {
-
-#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    if ((p==end))
-
-#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    {
-
-#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-      signed_decode_result result = ((signed_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
-
-#line 144 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-      return result;
-    }
-
-#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Byte=(*p));
-
-#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    uint64_t Slice = (Byte&0x7f);
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    if ((((Shift>=64)&&(Slice!=((Value<0) ? 0x7f : 0x00)))||(((Shift==63)&&(Slice!=0))&&(Slice!=0x7f))))
-
-#line 151 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    {
-
-#line 152 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-      signed_decode_result result = ((signed_decode_result) {0, ERROR_TOO_BIG});
-
-#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-      return result;
-    }
-
-#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Value|=(Slice<<Shift));
-
-#line 157 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (Shift+=7);
-
-#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-    (++p);
-  }
-  while ((Byte>=128));
-
-#line 161 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  if (((Shift<64)&&(Byte&0x40)))
-
-#line 162 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  (Value|=((-1ULL)<<Shift));
-
-#line 163 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  signed_decode_result result = ((signed_decode_result) {Value, (p - orig_p)});
-
-#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
-  return result;
-}
-
-
-#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-cdl_printer_t* make_cdl_printer(buffer_t* buffer)
-#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_printer_t* result = malloc_struct(cdl_printer_t);
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  ((result->buffer)=buffer);
-
-#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  return result;
-}
-
-
-#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_indent(cdl_printer_t* printer)
-#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  buffer_append_repeated_byte((printer->buffer), ' ', (4*(printer->indention_level)));
-}
-
-
-#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-boolean_t is_safe_string(char* string)
-#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 50 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  buffer_t* buffer = buffer_from_string(string);
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  for (
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    int pos = 0;
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    (pos<buffer_length(buffer));
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    )
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  {
-
-#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    if ((decode_result.error))
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    {
-
-#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
-    }
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    uint32_t code_point = (decode_result.code_point);
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    if ((code_point<=32))
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    {
-
-#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      return false;
-    }
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    switch (code_point)
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    {
-
-#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '"':
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '#':
-
-#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '(':
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case ')':
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case ',':
-
-#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case ':':
-
-#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '=':
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '[':
-
-#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '\'':
-
-#line 70 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case ']':
-
-#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '`':
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '{':
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      case '}':
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-      return false;
-    }
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    (pos+=(decode_result.num_bytes));
-  }
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  return true;
-}
-
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_output_token(cdl_printer_t* printer, char* string)
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_indent(printer);
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  if (((printer->key_token)!=NULL))
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  {
-
-#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    buffer_printf((printer->buffer), "%s = %s\n", (printer->key_token), string);
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    ((printer->key_token)=NULL);
-  }
-  else
-
-#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  {
-
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    buffer_printf((printer->buffer), "%s\n", string);
-  }
-}
-
-
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_boolean(cdl_printer_t* printer, boolean_t boolean)
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_output_token(printer, (boolean ? "true" : "false"));
-}
-
-
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_string(cdl_printer_t* printer, char* string)
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  if ((!is_safe_string(string)))
-
-#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  {
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    cdl_output_token(printer, string_printf("\"%s\"", string));
-  }
-  else
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  {
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-    cdl_output_token(printer, string);
-  }
-}
-
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_int64(cdl_printer_t* printer, int64_t number)
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_output_token(printer, string_printf("%ld", number));
-}
-
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_uint64(cdl_printer_t* printer, uint64_t number)
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_output_token(printer, uint64_to_string(number));
-}
-
-
-#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_double(cdl_printer_t* printer, double number)
-#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_output_token(printer, string_printf("%lf", number));
-}
-
-
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_start_array(cdl_printer_t* printer)
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_output_token(printer, "[");
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  ((printer->indention_level)+=1);
-}
-
-
-#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_end_array(cdl_printer_t* printer)
-#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  ((printer->indention_level)-=1);
-
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_output_token(printer, "]");
-}
-
-
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_start_table(cdl_printer_t* printer)
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_output_token(printer, "{");
-
-#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  ((printer->indention_level)+=1);
-}
-
-
-#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_key(cdl_printer_t* printer, char* key)
-#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  ((printer->key_token)=key);
-}
-
-
-#line 132 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-void cdl_end_table(cdl_printer_t* printer)
-#line 132 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-{
-
-#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  ((printer->indention_level)-=1);
-
-#line 134 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
-  cdl_output_token(printer, "}");
-}
-
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-void add_duplicate(value_array_t* token_array, const char* data)
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-{
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  value_array_add(token_array, str_to_value(string_duplicate(data)));
-}
-
-
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-value_array_t* string_tokenize(const char* str, const char* delimiters)
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-{
-
-#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
-}
-
-
-#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters)
-#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-{
-
-#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
-}
-
-
-#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters)
-#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-{
-
-#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  value_array_t* result = make_value_array(1);
-
-#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  char token_data[1024];
-
-#line 50 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  int cpos = 0;
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  for (
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-    int i = 0;
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-    (i<length);
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-    (i++))
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  {
-
-#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-    uint8_t ch = (str[i]);
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-    if (((ch==0)||string_contains_char(delimiters, ch)))
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-    {
-
-#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-      ((token_data[(cpos++)])='\0');
-
-#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-      if ((strlen(token_data)>0))
-
-#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-      {
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-        add_duplicate(result, token_data);
-      }
-
-#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-      (cpos=0);
-    }
-    else
-
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-    {
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-      ((token_data[(cpos++)])=ch);
-    }
-  }
-
-#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  ((token_data[(cpos++)])='\0');
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  if ((strlen(token_data)>0))
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  {
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-    add_duplicate(result, token_data);
-  }
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
-  return result;
-}
-
-
-#line 8 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-char* to_platform_path(char* internal_path)
-#line 8 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-{
-
-#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((internal_path==NULL))
-
-#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 10 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return ((void *)0);
-  }
-
-#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  char* platform_path = string_duplicate(internal_path);
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  size_t len = strlen(platform_path);
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  for (
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    size_t i = 0;
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    (i<len);
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    (++i))
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    if (((platform_path[i])=='/'))
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    {
-
-#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      ((platform_path[i])='\\');
-    }
-  }
-
-#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  return platform_path;
-}
-
-
-#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-char* from_platform_path(char* platform_path)
-#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-{
-
-#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((platform_path==NULL))
-
-#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return ((void *)0);
-  }
-
-#line 36 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  char* internal_path = string_duplicate(platform_path);
-
-#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  size_t len = strlen(internal_path);
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  for (
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    size_t i = 0;
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    (i<len);
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    (++i))
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    if (((internal_path[i])=='\\'))
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    {
-
-#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      ((internal_path[i])='/');
-    }
-  }
-
-#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  return internal_path;
-}
-
-
-#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-boolean_t path_is_directory(const char* path)
-#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-{
-
-#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((!path))
-
-#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 50 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return false;
-  }
-
-#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  DWORD attrs = GetFileAttributesA(path);
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((attrs==INVALID_FILE_ATTRIBUTES))
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return false;
-  }
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  return (/*CAST*/(boolean_t) ((attrs&FILE_ATTRIBUTE_DIRECTORY)!=0));
-}
-
-
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-boolean_t path_is_file(const char* path)
-#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-{
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((!path))
-
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return false;
-  }
-
-#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  DWORD attrs = GetFileAttributesA(path);
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((attrs==INVALID_FILE_ATTRIBUTES))
-
-#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return false;
-  }
-
-#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  return (/*CAST*/(boolean_t) ((attrs&FILE_ATTRIBUTE_DIRECTORY)==0));
-}
-
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-boolean_t has_file_extension(char* path)
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-{
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  char* dot = strrchr(path, '.');
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  char* slash = strrchr(path, '/');
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  char* backslash = strrchr(path, '\\');
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((dot!=NULL))
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    if ((((slash==NULL)||(dot>slash))&&((backslash==NULL)||(dot>backslash))))
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    {
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      return true;
-    }
-  }
-
-#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  return false;
-}
-
-
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-char* resolve_executable_path(char* name)
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-{
-
-#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if (((name==NULL)||((*name)=='\0')))
-
-#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return NULL;
-  }
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if (((strchr(name, '/')!=NULL)||(strchr(name, '\\')!=NULL)))
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    DWORD len = GetFullPathNameA(name, 0, NULL, NULL);
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    if ((len==0))
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return NULL;
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    char* resolved = (/*CAST*/(char*) malloc_bytes(len));
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    if ((GetFullPathNameA(name, len, resolved, NULL)==0))
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    {
-
-#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      return NULL;
-    }
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    DWORD attrs = GetFileAttributesA(resolved);
-
-#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    if (((attrs!=INVALID_FILE_ATTRIBUTES)&&(!(attrs&FILE_ATTRIBUTE_DIRECTORY))))
-
-#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    {
-
-#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      return resolved;
-    }
-
-#line 114 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    if ((!has_file_extension(resolved)))
-
-#line 114 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    {
-
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      char with_ext[MAX_PATH];
-
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      snprintf(with_ext, (sizeof(with_ext)), "%s.exe", resolved);
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      (attrs=GetFileAttributesA(with_ext));
-
-#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      if (((attrs!=INVALID_FILE_ATTRIBUTES)&&(!(attrs&FILE_ATTRIBUTE_DIRECTORY))))
-
-#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      {
-
-#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        size_t ext_len = (strlen(with_ext)+1);
-
-#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        char* result = (/*CAST*/(char*) malloc_bytes(ext_len));
-
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        memcpy(result, with_ext, ext_len);
-
-#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        return result;
-      }
-    }
-
-#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return NULL;
-  }
-
-#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  char* default_ext = (has_file_extension(name) ? NULL : ".exe");
-
-#line 134 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  DWORD len = SearchPathA(NULL, name, default_ext, 0, NULL, NULL);
-
-#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((len==0))
-
-#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    if ((default_ext!=NULL))
-
-#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    {
-
-#line 138 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      char* fallback_exts[] = { ".cmd", ".bat", ".com", NULL };
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      for (
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        int i = 0;
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        ((fallback_exts[i])!=NULL);
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        (i++))
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-      {
-
-#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        (len=SearchPathA(NULL, name, (fallback_exts[i]), 0, NULL, NULL));
-
-#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        if ((len>0))
-
-#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-        {
-
-#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-          (default_ext=(fallback_exts[i]));
-
-#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-          break;
-        }
-      }
-    }
-  }
-
-#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if ((len==0))
-
-#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return NULL;
-  }
-
-#line 153 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  char* resolved = (/*CAST*/(char*) malloc_bytes((len+1)));
-
-#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  char* file_part = NULL;
-
-#line 155 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  DWORD res = SearchPathA(NULL, name, default_ext, (len+1), resolved, (&file_part));
-
-#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  if (((res==0)||(res>len)))
-
-#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  {
-
-#line 157 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-    return NULL;
-  }
-
-#line 160 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
-  return resolved;
-}
-
-
-#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator)
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-{
-
-#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-  buffer_t* result = make_buffer(1);
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-  for (
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-    int i = 0;
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-    (i<(array_of_strings->length));
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-    (i++))
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-  {
-
-#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-    if ((i>0))
-
-#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-    {
-
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-      buffer_append_string(result, separator);
-    }
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-    buffer_append_string(result, (value_array_get(array_of_strings, i).str));
-  }
-
-#line 27 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
-  return result;
-}
-
-
-#line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-int uint64_highest_bit_set(uint64_t n)
-#line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-{
-
-#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  if ((n>=(1ULL<<32)))
-
-#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  {
-
-#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-    return (uint64_highest_bit_set((n>>32))+32);
-  }
-  else
-
-#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  if ((n>=(1ULL<<16)))
-
-#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  {
-
-#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-    return (uint64_highest_bit_set((n>>16))+16);
-  }
-  else
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  if ((n>=(1ULL<<8)))
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  {
-
-#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-    return (uint64_highest_bit_set((n>>8))+8);
-  }
-  else
-
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  if ((n>=(1ULL<<4)))
-
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  {
-
-#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-    return (uint64_highest_bit_set((n>>4))+4);
-  }
-  else
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  if ((n>=(1ULL<<2)))
-
-#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  {
-
-#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-    return (uint64_highest_bit_set((n>>2))+2);
-  }
-  else
-
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  if ((n>=(1ULL<<1)))
-
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  {
-
-#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-    return (uint64_highest_bit_set((n>>1))+1);
-  }
-  else
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-  {
-
-#line 26 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
-    return 0;
-  }
-}
-
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((t==NULL))
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
-  }
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  int cmp_result = cmp_fn(key, (t->key));
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((cmp_result<0))
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return value_tree_find((t->left), cmp_fn, key);
-  }
-  else
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((cmp_result>0))
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return value_tree_find((t->right), cmp_fn, key);
-  }
-  else
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return ((value_result_t) {
-                                                .val = t->value,
-                                            });
-  }
-}
-
-
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_tree_t* value_tree_skew(value_tree_t* t)
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((t==NULL))
-
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return NULL;
-  }
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if (((t->left)==NULL))
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return t;
-  }
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((((t->left)->level)==(t->level)))
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    value_tree_t* L = (t->left);
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((t->left)=(L->right));
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((L->right)=t);
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return L;
-  }
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return t;
-}
-
-
-#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_tree_t* value_tree_split(value_tree_t* t)
-#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((t==NULL))
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return NULL;
-  }
-
-#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((((t->right)==NULL)||(((t->right)->right)==NULL)))
-
-#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return t;
-  }
-
-#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if (((t->level)==(((t->right)->right)->level)))
-
-#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    value_tree_t* R = (t->right);
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((t->right)=(R->left));
-
-#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((R->left)=t);
-
-#line 119 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((R->level)++);
-
-#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return R;
-  }
-
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return t;
-}
-
-
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_tree_t* make_value_tree_leaf(value_t key, value_t value)
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  value_tree_t* result = malloc_struct(value_tree_t);
-
-#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  ((result->level)=1);
-
-#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  ((result->key)=key);
-
-#line 129 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  ((result->value)=value);
-
-#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return result;
-}
-
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value)
-#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((t==NULL))
-
-#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return make_value_tree_leaf(key, value);
-  }
-
-#line 145 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  int cmp_result = cmp_fn(key, (t->key));
-
-#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((cmp_result<0))
-
-#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((t->left)=value_tree_insert((t->left), cmp_fn, key, value));
-  }
-  else
-
-#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((cmp_result>0))
-
-#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((t->right)=value_tree_insert((t->right), cmp_fn, key, value));
-  }
-  else
-
-#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((t->value)=value);
-
-#line 155 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return t;
-  }
-
-#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  (t=value_tree_skew(t));
-
-#line 159 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  (t=value_tree_split(t));
-
-#line 161 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return t;
-}
-
-
-#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_tree_t* value_tree_decrease_level(value_tree_t* t)
-#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if (((t->left)&&(t->right)))
-
-#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    uint32_t should_be = (value_tree_min_level(((t->left)->level), ((t->right)->level))+1);
-
-#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    if ((should_be<(t->level)))
-
-#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    {
-
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      ((t->level)=should_be);
-
-#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      if ((should_be<((t->right)->level)))
-
-#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      {
-
-#line 175 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-        (((t->right)->level)=should_be);
-      }
-    }
-  }
-
-#line 179 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return t;
-}
-
-
-#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_tree_t* value_tree_predecessor(value_tree_t* t)
-#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 183 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  (t=(t->left));
-
-#line 184 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  while (((t->right)!=NULL))
-
-#line 184 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    (t=(t->right));
-  }
-
-#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return t;
-}
-
-
-#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_tree_t* value_tree_successor(value_tree_t* t)
-#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  (t=(t->right));
-
-#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  while (((t->left)!=NULL))
-
-#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    (t=(t->left));
-  }
-
-#line 195 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return t;
-}
-
-
-#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
-#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-{
-
-#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((t==NULL))
-
-#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 212 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    return t;
-  }
-
-#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  int cmp_result = cmp_fn(key, (t->key));
-
-#line 216 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((cmp_result<0))
-
-#line 216 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((t->left)=value_tree_delete((t->left), cmp_fn, key));
-  }
-  else
-
-#line 218 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if ((cmp_result>0))
-
-#line 218 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 219 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    ((t->right)=value_tree_delete((t->right), cmp_fn, key));
-  }
-  else
-
-#line 220 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 221 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    if (value_tree_is_leaf(t))
-
-#line 221 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    {
-
-#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      return NULL;
-    }
-    else
-
-#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    if (((t->left)==NULL))
-
-#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    {
-
-#line 228 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      value_tree_t* L = value_tree_successor(t);
-
-#line 232 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      ((t->key)=(L->key));
-
-#line 233 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      ((t->value)=(L->value));
-
-#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      ((t->right)=value_tree_delete((t->right), cmp_fn, (L->key)));
-    }
-    else
-
-#line 235 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    {
-
-#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      value_tree_t* L = value_tree_predecessor(t);
-
-#line 240 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      ((t->key)=(L->key));
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      ((t->value)=(L->value));
-
-#line 242 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-      ((t->left)=value_tree_delete((t->left), cmp_fn, (L->key)));
-    }
-  }
-
-#line 249 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  (t=value_tree_decrease_level(t));
-
-#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  (t=value_tree_skew(t));
-
-#line 251 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  ((t->right)=value_tree_skew((t->right)));
-
-#line 252 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  if (((t->right)!=NULL))
-
-#line 252 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  {
-
-#line 253 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-    (((t->right)->right)=value_tree_skew(((t->right)->right)));
-  }
-
-#line 255 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  (t=value_tree_split(t));
-
-#line 256 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  ((t->right)=value_tree_split((t->right)));
-
-#line 257 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
-  return t;
 }
 
 
@@ -30164,1270 +26449,6 @@ double string_parse_double(char* str)
 }
 
 
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-void segmentation_fault_handler(int signal_number)
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-{
-
-#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fatal_error(ERROR_SIGSEGV);
-}
-
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-void configure_fatal_errors(fatal_error_config_t config)
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-{
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  (fatal_error_config=config);
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  if ((config.catch_sigsegv))
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  {
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-    signal(SIGSEGV, segmentation_fault_handler);
-  }
-}
-
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-void set_fatal_error_callback(fatal_error_callback_t callback, void* data)
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-{
-
-#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  (fatal_error_callback=callback);
-
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  (fatal_error_callback_data=data);
-}
-
-
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-_Noreturn void fatal_error_impl(char* file, int line, int error_code)
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-{
-
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  if ((fatal_error_callback!=((void *)0)))
-
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  {
-
-#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-    fatal_error_callback(file, line, error_code, fatal_error_callback_data);
-  }
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  print_fatal_error_banner();
-
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  print_backtrace();
-
-#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  print_error_code_name(error_code);
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  if ((sleep_str!=NULL))
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  {
-
-#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-    value_result_t sleep_time = string_parse_uint64(sleep_str);
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-    if (is_ok(sleep_time))
-
-#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-    {
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-      fprintf(stderr, "Sleeping for %lu seconds so you can attach a debugger.\n", (sleep_time.u64));
-
-#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-      sleep((sleep_time.u64));
-    }
-  }
-  else
-
-#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  {
-
-#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
-  }
-
-#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fprintf(stderr, "Necessaria Morte Mori...\n");
-
-#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  exit((-(error_code+100)));
-}
-
-
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-void print_fatal_error_banner()
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-{
-
-#line 119 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
-}
-
-
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-void print_error_code_name(int error_code)
-#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-{
-
-#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fprintf(stderr, " ");
-
-#line 124 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fprintf(stderr, "*** ");
-
-#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fprintf(stderr, "%s", error_code_to_string(error_code));
-
-#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
-  fprintf(stderr, " ***\n");
-}
-
-
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer)
-#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-{
-
-#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
-
-#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((result->read_byte)=(&buffer_stream_source_read));
-
-#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  buffer_byte_stream_source_data_t* data = malloc_struct(buffer_byte_stream_source_data_t);
-
-#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((data->buffer)=buffer);
-
-#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((data->position)=0);
-
-#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((result->data)=(/*CAST*/(void*) data));
-
-#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  return result;
-}
-
-
-#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
-#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-{
-
-#line 35 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  buffer_byte_stream_source_data_t* data = (/*CAST*/(buffer_byte_stream_source_data_t*) (source->data));
-
-#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  uint8_t result = 0;
-
-#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  if (((data->position)<buffer_length((data->buffer))))
-
-#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  {
-
-#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-    (result=buffer_get((data->buffer), ((data->position)++)));
-
-#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-    ((*has_byte)=true);
-  }
-  else
-
-#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  {
-
-#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-    ((*has_byte)=false);
-  }
-
-#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  return result;
-}
-
-
-#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-byte_stream_source_t* cstring_to_byte_source(char* string)
-#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-{
-
-#line 50 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
-
-#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((result->read_byte)=(&cstring_stream_source_read));
-
-#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  cstring_byte_stream_source_data_t* data = malloc_struct(cstring_byte_stream_source_data_t);
-
-#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((data->string)=string);
-
-#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((data->length)=strlen(string));
-
-#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((data->position)=0);
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((result->data)=(/*CAST*/(void*) data));
-
-#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  return result;
-}
-
-
-#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-{
-
-#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  cstring_byte_stream_source_data_t* data = (/*CAST*/(cstring_byte_stream_source_data_t*) (source->data));
-
-#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  uint8_t result = 0;
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  if (((data->position)<(data->length)))
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  {
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-    (result=((data->string)[((data->position)++)]));
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-    ((*has_byte)=true);
-  }
-  else
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  {
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-    ((*has_byte)=false);
-  }
-
-#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  return result;
-}
-
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer)
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-{
-
-#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  byte_stream_target_t* result = malloc_struct(byte_stream_target_t);
-
-#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((result->write_byte)=(&buffer_stream_target_write));
-
-#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  ((result->data)=(/*CAST*/(void*) buffer));
-
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  return result;
-}
-
-
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte)
-#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-{
-
-#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  buffer_t* buffer = (/*CAST*/(buffer_t*) (target->data));
-
-#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  buffer_append_byte(buffer, byte);
-
-#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
-  return target;
-}
-
-
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-screen_t* get_initial_screen(void)
-#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  return get_initial_screen_with_limits(0, 0, 0, 0);
-}
-
-
-#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-screen_t* get_initial_screen_with_limits(uint32_t top_offset, uint32_t bottom_offset, uint32_t left_offset, uint32_t right_offset)
-#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  uint32_t real_width = term_width();
-
-#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  uint32_t real_height = term_height();
-
-#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_t* screen = malloc_struct(screen_t);
-
-#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((screen->width)=((real_width-left_offset)-right_offset));
-
-#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((screen->height)=((real_height-top_offset)-bottom_offset));
-
-#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  uint32_t num = ((screen->width)*(screen->height));
-
-#line 70 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((screen->styles)=(/*CAST*/(style_t*) malloc_bytes(((sizeof(style_t))*num))));
-
-#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((screen->chars)=(/*CAST*/(uint32_t*) malloc_bytes(((sizeof(uint32_t))*num))));
-
-#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((screen->top_offset)=top_offset);
-
-#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((screen->bottom_offset)=bottom_offset);
-
-#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((screen->left_offset)=left_offset);
-
-#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((screen->right_offset)=right_offset);
-
-#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  return screen;
-}
-
-
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void screen_fill(screen_t* screen, uint32_t ch, style_t style)
-#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  uint32_t limit = ((screen->width)*(screen->height));
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int i = 0;
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i<limit);
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i++))
-
-#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (((screen->chars)[i])=ch);
-
-#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (((screen->styles)[i])=style);
-  }
-}
-
-
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void window_fill(screen_window_t* window, uint32_t ch, style_t style)
-#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int row = 0;
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (row<(window->height));
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (row++))
-
-#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    for (
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      int column = 0;
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      (column<(window->width));
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      (column++))
-
-#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    {
-
-#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      screen_window_set_char(window, ch, style, row, column);
-    }
-  }
-}
-
-
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-screen_window_t* make_root_screen_window(screen_t* screen)
-#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* window = malloc_struct(screen_window_t);
-
-#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((window->screen)=screen);
-
-#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((window->width)=(screen->width));
-
-#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((window->height)=(screen->height));
-
-#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  return window;
-}
-
-
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-screen_window_t* screen_window_clone(screen_window_t* window)
-#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if ((window==((void *)0)))
-
-#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    return ((void *)0);
-  }
-
-#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* result = malloc_struct(screen_window_t);
-
-#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  memcpy(result, window, (sizeof((*window))));
-
-#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  return result;
-}
-
-
-#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void hidden_screen_set_char(screen_t* screen, uint32_t ch, style_t style, uint32_t row, uint32_t column)
-#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  int offset = ((row*(screen->width))+column);
-
-#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  (((screen->chars)[offset])=ch);
-
-#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  (((screen->styles)[offset])=style);
-}
-
-
-#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void screen_window_set_char(screen_window_t* window, uint32_t ch, style_t style, uint32_t row, uint32_t column)
-#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (((row<0)||(row>=(window->height))))
-
-#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 129 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    return;
-  }
-
-#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (((column<0)||(column>=(window->width))))
-
-#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 132 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    return;
-  }
-
-#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  hidden_screen_set_char((window->screen), ch, style, (row+(window->y_offset)), (column+(window->x_offset)));
-}
-
-
-#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void screen_window_split_vertically(screen_window_t* window, double fraction, screen_window_t** top_out, screen_window_t** bottom_out)
-#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* top = screen_window_clone(window);
-
-#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* bottom = screen_window_clone(window);
-
-#line 144 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  uint32_t new_top_height = ((window->height)*fraction);
-
-#line 145 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((top->height)=new_top_height);
-
-#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((bottom->height)=((window->height)-(top->height)));
-
-#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((bottom->y_offset)+=new_top_height);
-
-#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((*top_out)=top);
-
-#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((*bottom_out)=bottom);
-}
-
-
-#line 152 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void screen_window_split_horizontally(screen_window_t* window, double fraction, screen_window_t** left_out, screen_window_t** right_out)
-#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 155 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* left = screen_window_clone(window);
-
-#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* right = screen_window_clone(window);
-
-#line 157 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  uint32_t new_left_width = ((window->width)*fraction);
-
-#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((left->width)=new_left_width);
-
-#line 159 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((right->width)=((window->width)-new_left_width));
-
-#line 160 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((right->x_offset)+=new_left_width);
-
-#line 161 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((*left_out)=left);
-
-#line 162 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((*right_out)=right);
-}
-
-
-#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-box_drawing_t* get_default_window_border_box(void)
-#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 166 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  box_drawing_t* box = malloc_struct(box_drawing_t);
-
-#line 167 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((box->upper_left_corner)=0x250c);
-
-#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((box->upper_right_corner)=0x2510);
-
-#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((box->top_edge)=0x2500);
-
-#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((box->bottom_edge)=0x2500);
-
-#line 171 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((box->lower_left_corner)=0x2514);
-
-#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((box->lower_right_corner)=0x2518);
-
-#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((box->left_edge)=0x2502);
-
-#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((box->right_edge)=0x2502);
-
-#line 175 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  return box;
-}
-
-
-#line 178 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-screen_window_t* screen_window_draw_border(screen_window_t* window, box_drawing_t* box, style_t style)
-#line 179 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int i = 0;
-
-#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i<(window->width));
-
-#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i++))
-
-#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    screen_window_set_char(window, (box->top_edge), style, 0, i);
-  }
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int i = 0;
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i<(window->width));
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i++))
-
-#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 186 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    screen_window_set_char(window, (box->top_edge), style, ((window->height)-1), i);
-  }
-
-#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int i = 0;
-
-#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i<(window->height));
-
-#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i++))
-
-#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    screen_window_set_char(window, (box->left_edge), style, i, 0);
-  }
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int i = 0;
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i<(window->height));
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i++))
-
-#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 194 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    screen_window_set_char(window, (box->left_edge), style, i, ((window->width)-1));
-  }
-
-#line 197 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_set_char(window, (box->upper_left_corner), style, 0, 0);
-
-#line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_set_char(window, (box->upper_right_corner), style, 0, ((window->width)-1));
-
-#line 200 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_set_char(window, (box->lower_left_corner), style, ((window->height)-1), 0);
-
-#line 202 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_set_char(window, (box->lower_right_corner), style, ((window->height)-1), ((window->width)-1));
-
-#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* result = screen_window_clone(window);
-
-#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((result->x_offset)+=1);
-
-#line 210 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((result->y_offset)+=1);
-
-#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((result->width)-=2);
-
-#line 212 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  ((result->height)-=2);
-
-#line 214 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  return result;
-}
-
-
-#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void screenline_to_ansi_buffer(screen_t* screen, buffer_t* buffer, int row)
-#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 218 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  style_t prev_style = (-1);
-
-#line 221 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  term_move_cursor_absolute(buffer, (screen->left_offset), ((screen->top_offset)+row));
-
-#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int c = 0;
-
-#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (c<(screen->width));
-
-#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (c++))
-
-#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    uint32_t index = ((row*(screen->width))+c);
-
-#line 228 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    style_t style = ((screen->styles)[index]);
-
-#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    if (((style!=prev_style)||(c==0)))
-
-#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    {
-
-#line 230 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      style_to_buffer(buffer, style);
-
-#line 231 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      (prev_style=style);
-    }
-
-#line 233 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    uint32_t cp = ((screen->chars)[index]);
-
-#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    buffer_append_code_point(buffer, (cp ? cp : '-'));
-  }
-}
-
-
-#line 239 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void term_write_screen(screen_t* screen)
-#line 239 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 240 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  buffer_t* buffer = make_buffer(1000);
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int row = 0;
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (row<(screen->height));
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (row++))
-
-#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 242 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    buffer_clear(buffer);
-
-#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    screenline_to_ansi_buffer(screen, buffer, row);
-
-#line 244 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    buffer_write_all_chunked(stdout, buffer);
-
-#line 245 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    fflush(stdout);
-
-#line 246 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    usleep(5);
-  }
-}
-
-
-#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void window_put_string(screen_window_t* window, style_t style, uint32_t row, uint32_t column, char* str)
-#line 251 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 252 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  int len = strlen(str);
-
-#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int i = 0;
-
-#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i<len);
-
-#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i++))
-
-#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 255 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    screen_window_set_char(window, (str[i]), style, row, (column+i));
-  }
-}
-
-
-#line 259 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void style_to_buffer(buffer_t* buffer, style_t style)
-#line 259 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 260 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  term_reset_formatting(buffer);
-
-#line 261 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  term_set_foreground_color(buffer, get_foreground(style));
-
-#line 262 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  term_set_background_color(buffer, get_background(style));
-
-#line 263 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_bold(style))
-
-#line 263 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_bold(buffer);
-  }
-
-#line 266 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_dim(style))
-
-#line 266 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_dim(buffer);
-  }
-
-#line 269 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_italic(style))
-
-#line 269 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 270 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_italic(buffer);
-  }
-
-#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_underline(style))
-
-#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 273 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_underline(buffer);
-  }
-
-#line 275 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_strikethrough(style))
-
-#line 275 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 276 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_strikethrough(buffer);
-  }
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_overline(style))
-
-#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 279 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_overline(buffer);
-  }
-
-#line 281 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_superscript(style))
-
-#line 281 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 282 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_superscript(buffer);
-  }
-
-#line 284 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_subscript(style))
-
-#line 284 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_subscript(buffer);
-  }
-
-#line 287 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_slow_blink(style))
-
-#line 287 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 288 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_slow_blink(buffer);
-  }
-
-#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (get_fast_blink(style))
-
-#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 291 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_fast_blink(buffer);
-  }
-}
-
-
-#line 295 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void buffer_to_screen_window(screen_window_t* window, style_t style, style_t gutter_style, buffer_t* buffer, uint32_t buffer_start_line, uint32_t line_number_gutter_width)
-#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 299 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  buffer_region_t region = buffer_line_region(buffer, buffer_start_line, (buffer_start_line+1));
-
-#line 302 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  int current_line_number = buffer_start_line;
-
-#line 303 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  int window_line_number = 0;
-
-#line 304 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  int window_column_number = 0;
-
-#line 306 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  int index = (region.start_position);
-
-#line 307 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  while (((index<(buffer->length))&&((current_line_number-buffer_start_line)<(window->height))))
-
-#line 308 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 309 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    if (((window_column_number==0)&&(line_number_gutter_width>0)))
-
-#line 309 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    {
-
-#line 310 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      char* num_string = string_printf("%d", (current_line_number+1));
-
-#line 311 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      (num_string=string_left_pad(num_string, line_number_gutter_width, ' '));
-
-#line 312 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      window_put_string(window, gutter_style, window_line_number, window_column_number, num_string);
-
-#line 314 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      (window_column_number=(line_number_gutter_width+1));
-    }
-
-#line 316 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    while (((index<(buffer->length))&&(buffer_get(buffer, index)!='\n')))
-
-#line 316 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    {
-
-#line 317 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      screen_window_set_char(window, buffer_get(buffer, index), style, window_line_number, (window_column_number++));
-
-#line 319 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-      (index++);
-    }
-
-#line 321 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (index++);
-
-#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (window_column_number=0);
-
-#line 323 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (current_line_number++);
-
-#line 324 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (window_line_number++);
-  }
-}
-
-
-#line 342 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void overlay_dimensions(screen_window_t* window, style_t style)
-#line 342 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 343 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  char* str = string_printf(" [width = %d, height = %d] ", (window->width), (window->height));
-
-#line 345 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  window_put_string(window, style, 2, 5, str);
-}
-
-
-#line 348 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void draw_random_chars_in_window(screen_window_t* window, style_t style)
-#line 348 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  for (
-
-#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-
-#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    int i = 0;
-
-#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i<26);
-
-#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (i++))
-
-#line 349 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 351 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    uint32_t x = random_next_uint64_below(_random, ((window->width)*2));
-
-#line 352 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    uint32_t y = random_next_uint64_below(_random, ((window->height)*2));
-
-#line 353 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    screen_window_set_char(window, ('A'+i), style, y, x);
-  }
-}
-
-
-#line 360 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-void draw_random_screen(boolean_t output_dimensions)
-#line 360 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-{
-
-#line 362 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  style_t default_style = 0;
-
-#line 363 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  (default_style=set_foreground_green(default_style, 0xff));
-
-#line 365 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if ((_test_screen==((void *)0)))
-
-#line 365 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 366 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (_test_screen=get_initial_screen_with_limits(5, 5, 5, 5));
-
-#line 367 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (_random=random_state());
-  }
-
-#line 370 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* root = make_root_screen_window(_test_screen);
-
-#line 373 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* top = ((void *)0);
-
-#line 374 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* bottom = ((void *)0);
-
-#line 375 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_split_vertically(root, 0.8, (&top), (&bottom));
-
-#line 377 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* top_left = ((void *)0);
-
-#line 378 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_t* top_right = ((void *)0);
-
-#line 379 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  screen_window_split_horizontally(top, 0.5, (&top_left), (&top_right));
-
-#line 381 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  window_fill(top_right, ' ', set_background(0, 0x808080));
-
-#line 383 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  box_drawing_t* box = get_default_window_border_box();
-
-#line 385 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  (top_left=screen_window_draw_border(top_left, box, default_style));
-
-#line 386 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  (top_right=screen_window_draw_border(top_right, box, default_style));
-
-#line 387 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  (bottom=screen_window_draw_border(bottom, box, default_style));
-
-#line 389 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  style_t top_left_random_style = set_underline(set_foreground_red(0, 0xff), true);
-
-#line 391 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  draw_random_chars_in_window(top_left, top_left_random_style);
-
-#line 393 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  style_t top_right_random_style = set_bold(set_background(set_foreground_blue(0, 0xff), 0x808080), true);
-
-#line 395 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  draw_random_chars_in_window(top_right, top_right_random_style);
-
-#line 397 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  style_t bottom_random_style = set_foreground_green(0, 0xff);
-
-#line 398 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  draw_random_chars_in_window(bottom, bottom_random_style);
-
-#line 400 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  buffer_to_screen_window(top_left, top_left_random_style, top_left_random_style, buffer_from_string(sample_source_code), 0, 4);
-
-#line 404 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if ((output_dimensions||true))
-
-#line 404 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 405 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    style_t style = 0;
-
-#line 406 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (style=set_background(style, 0x5c80bc));
-
-#line 407 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    (style=set_foreground(style, 0xe8c547));
-
-#line 408 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    overlay_dimensions(top_left, style);
-
-#line 409 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    overlay_dimensions(top_right, style);
-
-#line 410 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    overlay_dimensions(bottom, style);
-  }
-
-#line 413 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  term_write_screen(_test_screen);
-
-#line 415 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  if (output_dimensions)
-
-#line 415 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-  {
-
-#line 416 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    sleep(2);
-
-#line 417 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    buffer_t* buffer = make_buffer(100);
-
-#line 418 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    style_to_buffer(buffer, set_foreground(0LL, 0xff00ULL));
-
-#line 419 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    term_move_cursor_absolute(buffer, 0, ((_test_screen->height)-5));
-
-#line 420 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c"
-    buffer_write_all_chunked(stdout, buffer);
-  }
-}
-
-
 #line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/oarchive.c"
 void oarchive_append_header_and_file_contents(FILE* out, char* filename)
 #line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/oarchive.c"
@@ -31641,6 +26662,299 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
 }
 
 
+#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+cdl_printer_t* make_cdl_printer(buffer_t* buffer)
+#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_printer_t* result = malloc_struct(cdl_printer_t);
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  ((result->buffer)=buffer);
+
+#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  return result;
+}
+
+
+#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_indent(cdl_printer_t* printer)
+#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  buffer_append_repeated_byte((printer->buffer), ' ', (4*(printer->indention_level)));
+}
+
+
+#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+boolean_t is_safe_string(char* string)
+#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 50 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  buffer_t* buffer = buffer_from_string(string);
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  for (
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    int pos = 0;
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    (pos<buffer_length(buffer));
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    )
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  {
+
+#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    utf8_decode_result_t decode_result = buffer_utf8_decode(buffer, pos);
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    if ((decode_result.error))
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    {
+
+#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
+    }
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    uint32_t code_point = (decode_result.code_point);
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    if ((code_point<=32))
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    {
+
+#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      return false;
+    }
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    switch (code_point)
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    {
+
+#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '"':
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '#':
+
+#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '(':
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case ')':
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case ',':
+
+#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case ':':
+
+#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '=':
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '[':
+
+#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '\'':
+
+#line 70 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case ']':
+
+#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '`':
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '{':
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      case '}':
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+      return false;
+    }
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    (pos+=(decode_result.num_bytes));
+  }
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  return true;
+}
+
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_output_token(cdl_printer_t* printer, char* string)
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_indent(printer);
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  if (((printer->key_token)!=NULL))
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  {
+
+#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    buffer_printf((printer->buffer), "%s = %s\n", (printer->key_token), string);
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    ((printer->key_token)=NULL);
+  }
+  else
+
+#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  {
+
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    buffer_printf((printer->buffer), "%s\n", string);
+  }
+}
+
+
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean)
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_output_token(printer, (boolean ? "true" : "false"));
+}
+
+
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_string(cdl_printer_t* printer, char* string)
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  if ((!is_safe_string(string)))
+
+#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  {
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    cdl_output_token(printer, string_printf("\"%s\"", string));
+  }
+  else
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  {
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+    cdl_output_token(printer, string);
+  }
+}
+
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_int64(cdl_printer_t* printer, int64_t number)
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_output_token(printer, string_printf("%ld", number));
+}
+
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_uint64(cdl_printer_t* printer, uint64_t number)
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_output_token(printer, uint64_to_string(number));
+}
+
+
+#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_double(cdl_printer_t* printer, double number)
+#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_output_token(printer, string_printf("%lf", number));
+}
+
+
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_start_array(cdl_printer_t* printer)
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_output_token(printer, "[");
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  ((printer->indention_level)+=1);
+}
+
+
+#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_end_array(cdl_printer_t* printer)
+#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  ((printer->indention_level)-=1);
+
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_output_token(printer, "]");
+}
+
+
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_start_table(cdl_printer_t* printer)
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_output_token(printer, "{");
+
+#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  ((printer->indention_level)+=1);
+}
+
+
+#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_key(cdl_printer_t* printer, char* key)
+#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  ((printer->key_token)=key);
+}
+
+
+#line 132 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+void cdl_end_table(cdl_printer_t* printer)
+#line 132 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+{
+
+#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  ((printer->indention_level)-=1);
+
+#line 134 "/home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c"
+  cdl_output_token(printer, "}");
+}
+
+
 #line 6 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/time-windows.c"
 uint64_t current_time_millis(void)
 #line 6 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/time-windows.c"
@@ -31679,6 +26993,4692 @@ uint64_t current_time_millis(void)
 
 #line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/time-windows.c"
   return (intervals/10000ULL);
+}
+
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
+  }
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result<0))
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return value_tree_find((t->left), cmp_fn, key);
+  }
+  else
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result>0))
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return value_tree_find((t->right), cmp_fn, key);
+  }
+  else
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return ((value_result_t) {
+                                                .val = t->value,
+                                            });
+  }
+}
+
+
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_skew(value_tree_t* t)
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return NULL;
+  }
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if (((t->left)==NULL))
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return t;
+  }
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((((t->left)->level)==(t->level)))
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    value_tree_t* L = (t->left);
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->left)=(L->right));
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((L->right)=t);
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return L;
+  }
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_split(value_tree_t* t)
+#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return NULL;
+  }
+
+#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((((t->right)==NULL)||(((t->right)->right)==NULL)))
+
+#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return t;
+  }
+
+#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if (((t->level)==(((t->right)->right)->level)))
+
+#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    value_tree_t* R = (t->right);
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->right)=(R->left));
+
+#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((R->left)=t);
+
+#line 119 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((R->level)++);
+
+#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return R;
+  }
+
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* make_value_tree_leaf(value_t key, value_t value)
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  value_tree_t* result = malloc_struct(value_tree_t);
+
+#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((result->level)=1);
+
+#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((result->key)=key);
+
+#line 129 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((result->value)=value);
+
+#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return result;
+}
+
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value)
+#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return make_value_tree_leaf(key, value);
+  }
+
+#line 145 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result<0))
+
+#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->left)=value_tree_insert((t->left), cmp_fn, key, value));
+  }
+  else
+
+#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result>0))
+
+#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->right)=value_tree_insert((t->right), cmp_fn, key, value));
+  }
+  else
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->value)=value);
+
+#line 155 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return t;
+  }
+
+#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_skew(t));
+
+#line 159 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_split(t));
+
+#line 161 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_decrease_level(value_tree_t* t)
+#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if (((t->left)&&(t->right)))
+
+#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    uint32_t should_be = (value_tree_min_level(((t->left)->level), ((t->right)->level))+1);
+
+#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    if ((should_be<(t->level)))
+
+#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    {
+
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->level)=should_be);
+
+#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      if ((should_be<((t->right)->level)))
+
+#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      {
+
+#line 175 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+        (((t->right)->level)=should_be);
+      }
+    }
+  }
+
+#line 179 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_predecessor(value_tree_t* t)
+#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 183 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=(t->left));
+
+#line 184 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  while (((t->right)!=NULL))
+
+#line 184 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    (t=(t->right));
+  }
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_successor(value_tree_t* t)
+#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=(t->right));
+
+#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  while (((t->left)!=NULL))
+
+#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    (t=(t->left));
+  }
+
+#line 195 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key)
+#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+{
+
+#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((t==NULL))
+
+#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 212 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    return t;
+  }
+
+#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  int cmp_result = cmp_fn(key, (t->key));
+
+#line 216 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result<0))
+
+#line 216 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->left)=value_tree_delete((t->left), cmp_fn, key));
+  }
+  else
+
+#line 218 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if ((cmp_result>0))
+
+#line 218 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 219 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    ((t->right)=value_tree_delete((t->right), cmp_fn, key));
+  }
+  else
+
+#line 220 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 221 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    if (value_tree_is_leaf(t))
+
+#line 221 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    {
+
+#line 226 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      return NULL;
+    }
+    else
+
+#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    if (((t->left)==NULL))
+
+#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    {
+
+#line 228 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      value_tree_t* L = value_tree_successor(t);
+
+#line 232 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->key)=(L->key));
+
+#line 233 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->value)=(L->value));
+
+#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->right)=value_tree_delete((t->right), cmp_fn, (L->key)));
+    }
+    else
+
+#line 235 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    {
+
+#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      value_tree_t* L = value_tree_predecessor(t);
+
+#line 240 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->key)=(L->key));
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->value)=(L->value));
+
+#line 242 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+      ((t->left)=value_tree_delete((t->left), cmp_fn, (L->key)));
+    }
+  }
+
+#line 249 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_decrease_level(t));
+
+#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_skew(t));
+
+#line 251 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((t->right)=value_tree_skew((t->right)));
+
+#line 252 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  if (((t->right)!=NULL))
+
+#line 252 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  {
+
+#line 253 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+    (((t->right)->right)=value_tree_skew(((t->right)->right)));
+  }
+
+#line 255 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  (t=value_tree_split(t));
+
+#line 256 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  ((t->right)=value_tree_split((t->right)));
+
+#line 257 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c"
+  return t;
+}
+
+
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+utf8_decode_result_t utf8_decode(const uint8_t* array)
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+{
+
+#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  uint8_t firstByte = (array[0]);
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  if (((firstByte&0x80)==0))
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+#line 26 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = firstByte, .num_bytes = 1});
+  }
+  else
+
+#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  if (((firstByte&0xE0)==0xC0))
+
+#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
+         .num_bytes = 2});
+  }
+  else
+
+#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  if (((firstByte&0xF0)==0xE0))
+
+#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x0F) << 12)
+                                           | ((array[1] & 0x3F) << 6)
+                                           | (array[2] & 0x3F),
+                             .num_bytes = 3});
+  }
+  else
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  if (((firstByte&0xF8)==0xF0))
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+         .num_bytes = 4});
+  }
+  else
+
+#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+  {
+
+#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c"
+    return ((utf8_decode_result_t) {.error = true});
+  }
+}
+
+
+#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator)
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+{
+
+#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+  buffer_t* result = make_buffer(1);
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+  for (
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+    int i = 0;
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+    (i<(array_of_strings->length));
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+    (i++))
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+  {
+
+#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+    if ((i>0))
+
+#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+    {
+
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+      buffer_append_string(result, separator);
+    }
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+    buffer_append_string(result, (value_array_get(array_of_strings, i).str));
+  }
+
+#line 27 "/home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c"
+  return result;
+}
+
+
+#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+value_result_t string_tree_find(string_tree_t* t, char* key)
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+{
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+  return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
+}
+
+
+#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value)
+#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+{
+
+#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+  return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
+}
+
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+string_tree_t* string_tree_delete(string_tree_t* t, char* key)
+#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+{
+
+#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c"
+  return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
+}
+
+
+#line 4 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+uint64_t double_as_uint64(double d)
+#line 4 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+{
+
+#line 5 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+  uint64_t u;
+
+#line 6 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+  memcpy((&u), (&d), (sizeof(d)));
+
+#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+  return u;
+}
+
+
+#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+uint64_t uint64_as_double(uint64_t u)
+#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+{
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+  double d;
+
+#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+  memcpy((&d), (&u), (sizeof(u)));
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c"
+  return d;
+}
+
+
+#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+int cmp_string_values(value_t value1, value_t value2)
+#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+{
+
+#line 183 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+  return strcmp((value1.str), (value2.str));
+}
+
+
+#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+uint64_t hash_string_value(value_t value1)
+#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+{
+
+#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c"
+  return string_hash((value1.str));
+}
+
+
+#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+value_result_t parse_log_level_enum(char* str)
+#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+{
+
+#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("FATAL", str)==0)||(strcmp("fatal", str)==0)))
+
+#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 210 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_FATAL});
+  }
+  else
+
+#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("WARN", str)==0)||(strcmp("warn", str)==0)))
+
+#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 212 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_WARN});
+  }
+  else
+
+#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("INFO", str)==0)||(strcmp("info", str)==0)))
+
+#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 214 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_INFO});
+  }
+  else
+
+#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("DEBUG", str)==0)||(strcmp("debug", str)==0)))
+
+#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 216 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_DEBUG});
+  }
+  else
+
+#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("TRACE", str)==0)||(strcmp("trace", str)==0)))
+
+#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 218 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_TRACE});
+  }
+  else
+
+#line 219 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if (((strcmp("OFF", str)==0)||(strcmp("off", str)==0)))
+
+#line 219 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 220 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.u64 = LOGGER_OFF});
+  }
+  else
+
+#line 221 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 222 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return ((value_result_t) {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
+  }
+}
+
+
+#line 239 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+void logger_init(void)
+#line 239 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+{
+
+#line 240 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if ((level_string!=NULL))
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 242 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    value_result_t parsed = string_parse_uint64(level_string);
+
+#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    if (is_ok(parsed))
+
+#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    {
+
+#line 244 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+      ((global_logger_state.level)=(parsed.u64));
+    }
+    else
+
+#line 245 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    {
+
+#line 246 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+      value_result_t parsed = parse_log_level_enum(level_string);
+
+#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+      if (is_ok(parsed))
+
+#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+      {
+
+#line 248 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+        ((global_logger_state.level)=(parsed.u64));
+      }
+      else
+
+#line 249 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+      {
+
+#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+        log_warn("%s could not be converted to a log level.", level_string);
+      }
+    }
+  }
+
+#line 255 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
+
+#line 259 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
+
+#line 266 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if ((output_file_name!=NULL))
+
+#line 266 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    ((global_logger_state.output)=fopen(output_file_name, "w"));
+
+#line 268 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    if ((!(global_logger_state.output)))
+
+#line 268 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    {
+
+#line 269 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+      fatal_error(ERROR_OPEN_LOG_FILE);
+    }
+
+#line 276 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    ((global_logger_state.logger_output_filename)=output_file_name);
+  }
+  else
+
+#line 277 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    ((global_logger_state.output)=stderr);
+
+#line 279 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    ((global_logger_state.initialized)=true);
+  }
+}
+
+
+#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+char* logger_level_to_string(int level)
+#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+{
+
+#line 286 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  switch (level)
+
+#line 286 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 287 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_OFF:
+
+#line 288 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return "LOGGER_OFF";
+
+#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_TRACE:
+
+#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return "TRACE";
+
+#line 291 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_DEBUG:
+
+#line 292 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return "DEBUG";
+
+#line 293 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_INFO:
+
+#line 294 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return "INFO";
+
+#line 295 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_WARN:
+
+#line 296 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return "WARN";
+
+#line 297 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    case LOGGER_FATAL:
+
+#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return "FATAL";
+
+#line 299 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    default:
+
+#line 300 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    return "LEVEL_UNKNOWN";
+  }
+}
+
+
+#line 312 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...)
+#line 313 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+{
+
+#line 315 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  FILE* output = (global_logger_state.output);
+
+#line 319 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if ((output==NULL))
+
+#line 319 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 320 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    (output=stderr);
+  }
+
+#line 323 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  if ((level>=(global_logger_state.level)))
+
+#line 323 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+  {
+
+#line 324 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    fprintf(output, "%s ", logger_level_to_string(level));
+
+#line 325 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    va_list args;
+
+#line 326 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    fprintf(output, "%s:%d %s | ", file, line_number, function);
+
+#line 328 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    va_start(args, format);
+
+#line 329 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    vfprintf(output, format, args);
+
+#line 330 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    va_end(args);
+
+#line 332 "/home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c"
+    fprintf(output, "\n");
+  }
+}
+
+
+#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+char* get_command_line(void)
+#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+{
+
+#line 2 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  return "command line not available under windows right now";
+}
+
+
+#line 5 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+char* get_program_path(void)
+#line 5 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+{
+
+#line 6 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  return "<program-path-unknown>";
+}
+
+
+#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+void print_backtrace(void)
+#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+{
+
+#line 10 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  HANDLE process = GetCurrentProcess();
+
+#line 11 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  bool sym_initialized = SymInitialize(process, NULL, TRUE);
+
+#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  const ULONG max_frames = 64;
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  void* stack[64] = {0};
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  USHORT frames = CaptureStackBackTrace(1, max_frames, stack, NULL);
+
+#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  size_t symbol_buffer_size = ((sizeof(SYMBOL_INFO))+(MAX_SYM_NAME*(sizeof(char))));
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  SYMBOL_INFO* symbol = (/*CAST*/(SYMBOL_INFO*) malloc_bytes(symbol_buffer_size));
+
+#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  ((symbol->MaxNameLen)=MAX_SYM_NAME);
+
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  ((symbol->SizeOfStruct)=(sizeof(SYMBOL_INFO)));
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  for (
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    USHORT i = 0;
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    (i<frames);
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    (i=(i+1)))
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  {
+
+#line 26 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    DWORD64 address = (/*CAST*/(DWORD64) (stack[i]));
+
+#line 27 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    DWORD64 displacement = 0;
+
+#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    if (SymFromAddr(process, address, (&displacement), symbol))
+
+#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    {
+
+#line 30 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+      printf("#%u 0x%016llX %s + 0x%llX\n", (/*CAST*/(unsigned int) i), address, (symbol->Name), displacement);
+    }
+    else
+
+#line 35 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    {
+
+#line 36 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+      printf("#%u 0x%016llX [Unknown Symbol]\n", (/*CAST*/(unsigned int) i), address);
+    }
+  }
+
+#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  if (sym_initialized)
+
+#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+  {
+
+#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c"
+    SymCleanup(process);
+  }
+}
+
+
+#line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+int uint64_highest_bit_set(uint64_t n)
+#line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+{
+
+#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<32)))
+
+#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>32))+32);
+  }
+  else
+
+#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<16)))
+
+#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>16))+16);
+  }
+  else
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<8)))
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>8))+8);
+  }
+  else
+
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<4)))
+
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>4))+4);
+  }
+  else
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<2)))
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>2))+2);
+  }
+  else
+
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  if ((n>=(1ULL<<1)))
+
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+    return (uint64_highest_bit_set((n>>1))+1);
+  }
+  else
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+  {
+
+#line 26 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c"
+    return 0;
+  }
+}
+
+
+#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+char* quote_c_string(char* input)
+#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+{
+
+#line 8 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  if ((input==((void *)0)))
+
+#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  return ((void *)0);
+
+#line 11 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  buffer_t* buf = make_buffer((strlen(input)+10));
+
+#line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  buffer_append_byte(buf, '"');
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  for (
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    size_t i = 0;
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    ((input[i])!=0);
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    (i++))
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  {
+
+#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    uint8_t c = (/*CAST*/(uint8_t) (input[i]));
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    switch (c)
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    {
+
+#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      case '"':
+
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, '"');
+
+#line 21 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      break;
+
+#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      case '\\':
+
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      break;
+
+#line 26 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      case '\n':
+
+#line 27 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+#line 28 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, 'n');
+
+#line 29 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      break;
+
+#line 30 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      case '\t':
+
+#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, 't');
+
+#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      break;
+
+#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      case '\r':
+
+#line 35 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, '\\');
+
+#line 36 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, 'r');
+
+#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      break;
+
+#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      default:
+
+#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      if (((c>=32)&&(c<126)))
+
+#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      {
+
+#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        buffer_append_byte(buf, c);
+      }
+      else
+
+#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      {
+
+#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        buffer_printf(buf, "\\x%02x", c);
+      }
+
+#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      break;
+    }
+  }
+
+#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  buffer_append_byte(buf, '"');
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  return buffer_to_c_string(buf);
+}
+
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+char* string_unquote_c_string(char* input)
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+{
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  if ((input==((void *)0)))
+
+#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  return ((void *)0);
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  int limit = (strlen(input)-1);
+
+#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  buffer_t* buf = make_buffer((limit+10));
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  for (
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    size_t i = 1;
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    (i<limit);
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    )
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  {
+
+#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    uint8_t c = (/*CAST*/(uint8_t) (input[(i++)]));
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    if ((c=='\\'))
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    {
+
+#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      uint8_t c2 = (/*CAST*/(uint8_t) (input[(i++)]));
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      switch (c2)
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      {
+
+#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        case '"':
+
+#line 70 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        buffer_append_byte(buf, '\"');
+
+#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        break;
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        case '\\':
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        ;
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        buffer_append_byte(buf, '\\');
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        break;
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        case 'n':
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        buffer_append_byte(buf, '\n');
+
+#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        break;
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        case 't':
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        buffer_append_byte(buf, '\t');
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        break;
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        case 'r':
+
+#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        buffer_append_byte(buf, '\r');
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        break;
+
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        case 'x':
+
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        {
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_t* hex = make_buffer(3);
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          value_result_t result = string_parse_uint64_hex(buffer_to_c_string(hex));
+
+#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          if ((!is_ok(result)))
+
+#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          {
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+            fatal_error(ERROR_ILLEGAL_INPUT);
+          }
+
+#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(buf, (result.u64));
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          break;
+        }
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        case 'u':
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        {
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_t* hex = make_buffer(5);
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_byte(hex, (input[(i++)]));
+
+#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          value_result_t result = string_parse_uint64_hex(buffer_to_c_string(hex));
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          if ((!is_ok(result)))
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          {
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+            fatal_error(ERROR_ILLEGAL_INPUT);
+          }
+
+#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          buffer_append_code_point(buf, (result.u64));
+
+#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+          break;
+        }
+
+#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        default:
+
+#line 114 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        fatal_error(ERROR_ILLEGAL_INPUT);
+
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+        break;
+      }
+    }
+    else
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+    {
+
+#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+      buffer_append_byte(buf, c);
+    }
+  }
+
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c"
+  return buffer_to_c_string(buf);
+}
+
+
+#line 8 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+char* to_platform_path(char* internal_path)
+#line 8 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+{
+
+#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((internal_path==NULL))
+
+#line 9 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 10 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return ((void *)0);
+  }
+
+#line 13 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  char* platform_path = string_duplicate(internal_path);
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  size_t len = strlen(platform_path);
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  for (
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    size_t i = 0;
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    (i<len);
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    (++i))
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    if (((platform_path[i])=='/'))
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    {
+
+#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      ((platform_path[i])='\\');
+    }
+  }
+
+#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  return platform_path;
+}
+
+
+#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+char* from_platform_path(char* platform_path)
+#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+{
+
+#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((platform_path==NULL))
+
+#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return ((void *)0);
+  }
+
+#line 36 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  char* internal_path = string_duplicate(platform_path);
+
+#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  size_t len = strlen(internal_path);
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  for (
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    size_t i = 0;
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    (i<len);
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    (++i))
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    if (((internal_path[i])=='\\'))
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    {
+
+#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      ((internal_path[i])='/');
+    }
+  }
+
+#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  return internal_path;
+}
+
+
+#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+boolean_t path_is_directory(const char* path)
+#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+{
+
+#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((!path))
+
+#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 50 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return false;
+  }
+
+#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  DWORD attrs = GetFileAttributesA(path);
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((attrs==INVALID_FILE_ATTRIBUTES))
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return false;
+  }
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  return (/*CAST*/(boolean_t) ((attrs&FILE_ATTRIBUTE_DIRECTORY)!=0));
+}
+
+
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+boolean_t path_is_file(const char* path)
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+{
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((!path))
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return false;
+  }
+
+#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  DWORD attrs = GetFileAttributesA(path);
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((attrs==INVALID_FILE_ATTRIBUTES))
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return false;
+  }
+
+#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  return (/*CAST*/(boolean_t) ((attrs&FILE_ATTRIBUTE_DIRECTORY)==0));
+}
+
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+boolean_t has_file_extension(char* path)
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+{
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  char* dot = strrchr(path, '.');
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  char* slash = strrchr(path, '/');
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  char* backslash = strrchr(path, '\\');
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((dot!=NULL))
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    if ((((slash==NULL)||(dot>slash))&&((backslash==NULL)||(dot>backslash))))
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    {
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      return true;
+    }
+  }
+
+#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  return false;
+}
+
+
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+char* resolve_executable_path(char* name)
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+{
+
+#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if (((name==NULL)||((*name)=='\0')))
+
+#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return NULL;
+  }
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if (((strchr(name, '/')!=NULL)||(strchr(name, '\\')!=NULL)))
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    DWORD len = GetFullPathNameA(name, 0, NULL, NULL);
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    if ((len==0))
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return NULL;
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    char* resolved = (/*CAST*/(char*) malloc_bytes(len));
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    if ((GetFullPathNameA(name, len, resolved, NULL)==0))
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    {
+
+#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      return NULL;
+    }
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    DWORD attrs = GetFileAttributesA(resolved);
+
+#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    if (((attrs!=INVALID_FILE_ATTRIBUTES)&&(!(attrs&FILE_ATTRIBUTE_DIRECTORY))))
+
+#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    {
+
+#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      return resolved;
+    }
+
+#line 114 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    if ((!has_file_extension(resolved)))
+
+#line 114 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    {
+
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      char with_ext[MAX_PATH];
+
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      snprintf(with_ext, (sizeof(with_ext)), "%s.exe", resolved);
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      (attrs=GetFileAttributesA(with_ext));
+
+#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      if (((attrs!=INVALID_FILE_ATTRIBUTES)&&(!(attrs&FILE_ATTRIBUTE_DIRECTORY))))
+
+#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      {
+
+#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        size_t ext_len = (strlen(with_ext)+1);
+
+#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        char* result = (/*CAST*/(char*) malloc_bytes(ext_len));
+
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        memcpy(result, with_ext, ext_len);
+
+#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        return result;
+      }
+    }
+
+#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return NULL;
+  }
+
+#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  char* default_ext = (has_file_extension(name) ? NULL : ".exe");
+
+#line 134 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  DWORD len = SearchPathA(NULL, name, default_ext, 0, NULL, NULL);
+
+#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((len==0))
+
+#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    if ((default_ext!=NULL))
+
+#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    {
+
+#line 138 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      char* fallback_exts[] = { ".cmd", ".bat", ".com", NULL };
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      for (
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        int i = 0;
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        ((fallback_exts[i])!=NULL);
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        (i++))
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+      {
+
+#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        (len=SearchPathA(NULL, name, (fallback_exts[i]), 0, NULL, NULL));
+
+#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        if ((len>0))
+
+#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+        {
+
+#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+          (default_ext=(fallback_exts[i]));
+
+#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+          break;
+        }
+      }
+    }
+  }
+
+#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if ((len==0))
+
+#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return NULL;
+  }
+
+#line 153 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  char* resolved = (/*CAST*/(char*) malloc_bytes((len+1)));
+
+#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  char* file_part = NULL;
+
+#line 155 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  DWORD res = SearchPathA(NULL, name, default_ext, (len+1), resolved, (&file_part));
+
+#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  if (((res==0)||(res>len)))
+
+#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  {
+
+#line 157 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+    return NULL;
+  }
+
+#line 160 "/home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c"
+  return resolved;
+}
+
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+uint8_t* checked_malloc(char* file, int line, uint64_t amount)
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+{
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  if (((amount==0)||(amount>ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT)))
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  {
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+    log_fatal("Unexpected amount %lld", amount);
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+    fatal_error(ERROR_BAD_ALLOCATION_SIZE);
+  }
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  uint8_t* result = GC_malloc(amount);
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  if ((result==((void *)0)))
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  {
+
+#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+    fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
+  }
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  return result;
+}
+
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount)
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+{
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  uint8_t* result = checked_malloc(file, line, amount);
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  memcpy(result, source, amount);
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  return result;
+}
+
+
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+void checked_free(char* file, int line, void* pointer)
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+{
+
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c"
+  return;
+}
+
+
+#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c"
+char* platform(void)
+#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c"
+{
+
+#line 1 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c"
+  return "windows";
+}
+
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets)
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  if ((n_buckets<2))
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  {
+
+#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    (n_buckets=2);
+  }
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_hashtable_t* result = malloc_struct(value_hashtable_t);
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((result->n_buckets)=n_buckets);
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((result->buckets)=(/*CAST*/(value_alist_t**) malloc_bytes(((sizeof(typeof(value_alist_t*)))*n_buckets))));
+
+#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return result;
+}
+
+
+#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value)
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t len = value_alist_length(list);
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  (list=value_alist_insert(list, cmp_fn, key, value));
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  (((ht->buckets)[bucket])=list);
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t len_after = value_alist_length(list);
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  if ((len_after>len))
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  {
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    ((ht->n_entries)++);
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    if (((ht->n_entries)>=((ht->n_buckets)*ARMYKNIFE_HT_LOAD_FACTOR)))
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    {
+
+#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
+    }
+  }
+
+#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return ht;
+}
+
+
+#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+#line 124 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t len = value_alist_length(list);
+
+#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  (list=value_alist_delete(list, cmp_fn, key));
+
+#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  (((ht->buckets)[bucket])=list);
+
+#line 129 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t len_after = value_alist_length(list);
+
+#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  if ((len_after<len))
+
+#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  {
+
+#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    ((ht->n_entries)--);
+  }
+
+#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return ht;
+}
+
+
+#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key)
+#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t hashcode = hash_fn(key);
+
+#line 144 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  int bucket = (hashcode%(ht->n_buckets));
+
+#line 145 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_alist_t* list = ((ht->buckets)[bucket]);
+
+#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  return value_alist_find(list, cmp_fn, key);
+}
+
+
+#line 163 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn)
+#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+{
+
+#line 166 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
+
+#line 167 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
+
+#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_ht_foreach(ht, key, value, 
+#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  {
+
+#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
+
+#line 176 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    if ((new_ht!=should_be_result))
+
+#line 176 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+    {
+
+#line 177 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+);
+
+#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  value_alist_t** old_buckets = (ht->buckets);
+
+#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((ht->buckets)=(new_ht->buckets));
+
+#line 183 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((ht->n_buckets)=(new_ht->n_buckets));
+
+#line 184 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  ((ht->n_entries)=(new_ht->n_entries));
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  free_bytes(old_buckets);
+
+#line 186 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c"
+  free_bytes(new_ht);
+}
+
+
+#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+value_array_t* make_value_array(uint64_t initial_capacity)
+#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((initial_capacity==0))
+
+#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    (initial_capacity=1);
+  }
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  value_array_t* result = malloc_struct(value_array_t);
+
+#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  ((result->capacity)=initial_capacity);
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  ((result->elements)=(/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*initial_capacity))));
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  return result;
+}
+
+
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity)
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  if (((array->capacity)<required_capacity))
+
+#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    uint32_t new_capacity = ((array->capacity)*2);
+
+#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    if ((new_capacity<required_capacity))
+
+#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    {
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+      (new_capacity=required_capacity);
+    }
+
+#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    for (
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+      int i = 0;
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+      (i<(array->length));
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+      (i++))
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    {
+
+#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+      ((new_elements[i])=((array->elements)[i]));
+    }
+
+#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    ((array->capacity)=new_capacity);
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    free_bytes((array->elements));
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    ((array->elements)=new_elements);
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    return;
+  }
+}
+
+
+#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+value_t value_array_get(value_array_t* array, uint32_t index)
+#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((index<(array->length)))
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    return ((array->elements)[index]);
+  }
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  return ((value_t) {0});
+}
+
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_replace(value_array_t* array, uint32_t index, value_t element)
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((index<(array->length)))
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    (((array->elements)[index])=element);
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    return;
+  }
+
+#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_add(value_array_t* array, value_t element)
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  value_array_ensure_capacity(array, ((array->length)+1));
+
+#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  (((array->elements)[((array->length)++)])=element);
+}
+
+
+#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_push(value_array_t* array, value_t element)
+#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  value_array_add(array, element);
+}
+
+
+#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+value_t value_array_pop(value_array_t* array)
+#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  if (((array->length)==0))
+
+#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 144 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+  }
+
+#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  uint32_t last_index = ((array->length)-1);
+
+#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  value_t result = value_array_get(array, last_index);
+
+#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  (((array->elements)[last_index])=u64_to_value(0));
+
+#line 149 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  ((array->length)--);
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  return result;
+}
+
+
+#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+void value_array_insert_at(value_array_t* array, uint32_t position, value_t element)
+#line 171 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((position==(array->length)))
+
+#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    value_array_add(array, element);
+
+#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    return;
+  }
+
+#line 177 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  if ((position>(array->length)))
+
+#line 177 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 178 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+
+#line 179 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    return;
+  }
+
+#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  value_array_ensure_capacity(array, ((array->length)+1));
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  for (
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    int64_t i = ((array->length)-1);
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    (i>=position);
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    (i--))
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 188 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    (((array->elements)[(i+1)])=((array->elements)[i]));
+  }
+
+#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  ((array->length)++);
+
+#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  (((array->elements)[position])=element);
+}
+
+
+#line 203 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+value_t value_array_delete_at(value_array_t* array, uint32_t position)
+#line 203 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+{
+
+#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  value_t result = value_array_get(array, position);
+
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  for (
+
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    int i = position;
+
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    (i<((array->length)-1));
+
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    (i++))
+
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  {
+
+#line 206 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+    (((array->elements)[i])=((array->elements)[(i+1)]));
+  }
+
+#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  ((array->length)--);
+
+#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c"
+  return result;
+}
+
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+unsigned encode_sleb_128(int64_t Value, uint8_t* p)
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+{
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  uint8_t* orig_p = p;
+
+#line 66 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  int More;
+
+#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  do
+#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  {
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    uint8_t Byte = (Value&0x7f);
+
+#line 70 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Value>>=7);
+
+#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (More=(!(((Value==0)&&((Byte&0x40)==0))||((Value==(-1))&&((Byte&0x40)!=0)))));
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    if (More)
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Byte|=0x80);
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    ((*(p++))=Byte);
+  }
+  while (More);
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  return (/*CAST*/(unsigned) (p-orig_p));
+}
+
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p)
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+{
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  uint8_t* orig_p = p;
+
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  do
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  {
+
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    uint8_t Byte = (Value&0x7f);
+
+#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Value>>=7);
+
+#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((Value!=0))
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Byte|=0x80);
+
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    ((*(p++))=Byte);
+  }
+  while ((Value!=0));
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  return (/*CAST*/(unsigned) (p-orig_p));
+}
+
+
+#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end)
+#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+{
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  const uint8_t* orig_p = p;
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  uint64_t Value = 0;
+
+#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  unsigned Shift = 0;
+
+#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  do
+#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  {
+
+#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((p==end))
+
+#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    {
+
+#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
+
+#line 114 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+      return result;
+    }
+
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    uint64_t Slice = ((*p)&0x7f);
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((((Shift>=64)&&(Slice!=0))||(((Slice<<Shift)>>Shift)!=Slice)))
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    {
+
+#line 118 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_TOO_BIG});
+
+#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+      return result;
+    }
+
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Value+=(Slice<<Shift));
+
+#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Shift+=7);
+  }
+  while (((*(p++))>=128));
+
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  unsigned_decode_result result = ((unsigned_decode_result) {Value, cast(unsigned, p - orig_p)});
+
+#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  return result;
+}
+
+
+#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end)
+#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+{
+
+#line 136 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  const uint8_t* orig_p = p;
+
+#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  int64_t Value = 0;
+
+#line 138 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  unsigned Shift = 0;
+
+#line 139 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  uint8_t Byte;
+
+#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  do
+#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  {
+
+#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((p==end))
+
+#line 141 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    {
+
+#line 142 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+      signed_decode_result result = ((signed_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
+
+#line 144 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+      return result;
+    }
+
+#line 146 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Byte=(*p));
+
+#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    uint64_t Slice = (Byte&0x7f);
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    if ((((Shift>=64)&&(Slice!=((Value<0) ? 0x7f : 0x00)))||(((Shift==63)&&(Slice!=0))&&(Slice!=0x7f))))
+
+#line 151 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    {
+
+#line 152 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+      signed_decode_result result = ((signed_decode_result) {0, ERROR_TOO_BIG});
+
+#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+      return result;
+    }
+
+#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Value|=(Slice<<Shift));
+
+#line 157 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (Shift+=7);
+
+#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+    (++p);
+  }
+  while ((Byte>=128));
+
+#line 161 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  if (((Shift<64)&&(Byte&0x40)))
+
+#line 162 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  (Value|=((-1ULL)<<Shift));
+
+#line 163 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  signed_decode_result result = ((signed_decode_result) {Value, (p - orig_p)});
+
+#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c"
+  return result;
+}
+
+
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+byte_stream_source_t* buffer_to_byte_source(buffer_t* buffer)
+#line 17 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+{
+
+#line 18 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
+
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((result->read_byte)=(&buffer_stream_source_read));
+
+#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  buffer_byte_stream_source_data_t* data = malloc_struct(buffer_byte_stream_source_data_t);
+
+#line 22 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((data->buffer)=buffer);
+
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((data->position)=0);
+
+#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((result->data)=(/*CAST*/(void*) data));
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  return result;
+}
+
+
+#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+uint8_t buffer_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
+#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+{
+
+#line 35 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  buffer_byte_stream_source_data_t* data = (/*CAST*/(buffer_byte_stream_source_data_t*) (source->data));
+
+#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  uint8_t result = 0;
+
+#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  if (((data->position)<buffer_length((data->buffer))))
+
+#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  {
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+    (result=buffer_get((data->buffer), ((data->position)++)));
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+    ((*has_byte)=true);
+  }
+  else
+
+#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  {
+
+#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+    ((*has_byte)=false);
+  }
+
+#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  return result;
+}
+
+
+#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+byte_stream_source_t* cstring_to_byte_source(char* string)
+#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+{
+
+#line 50 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  byte_stream_source_t* result = malloc_struct(byte_stream_source_t);
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((result->read_byte)=(&cstring_stream_source_read));
+
+#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  cstring_byte_stream_source_data_t* data = malloc_struct(cstring_byte_stream_source_data_t);
+
+#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((data->string)=string);
+
+#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((data->length)=strlen(string));
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((data->position)=0);
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((result->data)=(/*CAST*/(void*) data));
+
+#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  return result;
+}
+
+
+#line 67 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+uint8_t cstring_stream_source_read(byte_stream_source_t* source, boolean_t* has_byte)
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+{
+
+#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  cstring_byte_stream_source_data_t* data = (/*CAST*/(cstring_byte_stream_source_data_t*) (source->data));
+
+#line 71 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  uint8_t result = 0;
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  if (((data->position)<(data->length)))
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  {
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+    (result=((data->string)[((data->position)++)]));
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+    ((*has_byte)=true);
+  }
+  else
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  {
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+    ((*has_byte)=false);
+  }
+
+#line 78 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  return result;
+}
+
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+byte_stream_target_t* buffer_to_byte_target(buffer_t* buffer)
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+{
+
+#line 84 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  byte_stream_target_t* result = malloc_struct(byte_stream_target_t);
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((result->write_byte)=(&buffer_stream_target_write));
+
+#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  ((result->data)=(/*CAST*/(void*) buffer));
+
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  return result;
+}
+
+
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+byte_stream_target_t* buffer_stream_target_write(byte_stream_target_t* target, uint8_t byte)
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+{
+
+#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  buffer_t* buffer = (/*CAST*/(buffer_t*) (target->data));
+
+#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  buffer_append_byte(buffer, byte);
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c"
+  return target;
+}
+
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+void add_duplicate(value_array_t* token_array, const char* data)
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+{
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  value_array_add(token_array, str_to_value(string_duplicate(data)));
+}
+
+
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+value_array_t* string_tokenize(const char* str, const char* delimiters)
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+{
+
+#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
+}
+
+
+#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters)
+#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+{
+
+#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
+}
+
+
+#line 46 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters)
+#line 47 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+{
+
+#line 48 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  value_array_t* result = make_value_array(1);
+
+#line 49 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  char token_data[1024];
+
+#line 50 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  int cpos = 0;
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  for (
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+    int i = 0;
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+    (i<length);
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+    (i++))
+
+#line 51 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  {
+
+#line 52 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+    uint8_t ch = (str[i]);
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+    if (((ch==0)||string_contains_char(delimiters, ch)))
+
+#line 53 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+    {
+
+#line 54 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+      ((token_data[(cpos++)])='\0');
+
+#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+      if ((strlen(token_data)>0))
+
+#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+      {
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+        add_duplicate(result, token_data);
+      }
+
+#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+      (cpos=0);
+    }
+    else
+
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+    {
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+      ((token_data[(cpos++)])=ch);
+    }
+  }
+
+#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  ((token_data[(cpos++)])='\0');
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  if ((strlen(token_data)>0))
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  {
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+    add_duplicate(result, token_data);
+  }
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c"
+  return result;
+}
+
+
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+buffer_t* buffer_read_file(char* file_name)
+#line 14 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  buffer_t* result = make_buffer(1);
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  return buffer_append_file_contents(result, file_name);
+}
+
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name)
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 27 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  uint64_t capacity = (bytes->capacity);
+
+#line 30 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    struct stat st;
+
+#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if ((stat(file_name, (&st))<0))
+
+#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 33 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      log_fatal("file does not exist: %s", file_name);
+
+#line 34 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+#line 36 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (capacity=(st.st_size));
+  }
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  (bytes=buffer_increase_capacity(bytes, capacity));
+
+#line 41 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  FILE* file = fopen(file_name, "r");
+
+#line 42 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  (bytes=buffer_append_all(bytes, file));
+
+#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  fclose(file);
+
+#line 45 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  return bytes;
+}
+
+
+#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+__attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input)
+#line 55 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 56 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  uint8_t buffer[1024];
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  while (1)
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    uint64_t n_read = fread(buffer, 1, (sizeof(buffer)), input);
+
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if ((n_read==0))
+
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      break;
+    }
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (bytes=buffer_append_bytes(bytes, buffer, n_read));
+  }
+
+#line 64 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  return bytes;
+}
+
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+void buffer_write_file(buffer_t* bytes, char* file_name)
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  FILE* file = fopen(file_name, "w");
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  if ((file==NULL))
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    log_fatal("Failed to open file for writing: %s", file_name);
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  size_t bytes_written = fwrite((bytes->elements), 1, (bytes->length), file);
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  if ((bytes_written!=(bytes->length)))
+
+#line 80 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    log_fatal("Failed to write %d bytes to %s", (bytes->length), file_name);
+
+#line 82 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+#line 83 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  if ((fclose(file)!=0))
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    log_fatal("Failed to close file: %s", file_name);
+
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    log_fatal("strerror(errno) = %s", strerror(errno));
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+void buffer_write_all(FILE* output, buffer_t* buffer)
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  size_t total_written = 0;
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  while ((total_written<(buffer->length)))
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (errno=0);
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    size_t written = fwrite(((buffer->elements)+total_written), 1, ((buffer->length)-total_written), output);
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if ((written==0))
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      if ((errno==EINTR))
+
+#line 104 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      {
+
+#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+        continue;
+      }
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      if (ferror(output))
+
+#line 108 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      {
+
+#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+        log_fatal("strerror(errno) = %s", strerror(errno));
+
+#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      break;
+    }
+
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (total_written+=written);
+  }
+}
+
+
+#line 119 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+void buffer_write_all_chunked(FILE* output, buffer_t* buffer)
+#line 119 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 120 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  int PTY_CHUNK_SIZE = 1024;
+
+#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  size_t total_written = 0;
+
+#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  while ((total_written<(buffer->length)))
+
+#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    usleep(5);
+
+#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    fflush(output);
+
+#line 127 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    size_t remaining = ((buffer->length)-total_written);
+
+#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    size_t chunk = ((remaining>PTY_CHUNK_SIZE) ? PTY_CHUNK_SIZE : remaining);
+
+#line 130 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (errno=0);
+
+#line 131 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    size_t written = fwrite(((buffer->elements)+total_written), 1, chunk, output);
+
+#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if ((written==0))
+
+#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 134 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      if ((errno==EINTR))
+
+#line 135 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      continue;
+
+#line 136 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      if (ferror(output))
+
+#line 136 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      {
+
+#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+        log_fatal("fwrite failed: %s", strerror(errno));
+
+#line 138 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+
+#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      break;
+    }
+
+#line 143 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (total_written+=written);
+  }
+
+#line 147 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  fflush(output);
+}
+
+
+#line 167 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line)
+#line 167 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  while ((!feof(input)))
+
+#line 168 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 169 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    int ch = fgetc(input);
+
+#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if ((ch<0))
+
+#line 170 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 171 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      return buffer;
+    }
+
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if ((ch==end_of_line))
+
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      return buffer;
+    }
+
+#line 176 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (buffer=buffer_append_byte(buffer, ch));
+  }
+
+#line 178 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  return buffer;
+}
+
+
+#line 188 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes)
+#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 190 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  int file_number = fileno(input);
+
+#line 191 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
+}
+
+
+#line 203 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+int file_peek_byte(FILE* input)
+#line 203 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  if (feof(input))
+
+#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    return (-1);
+  }
+
+#line 207 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  int result = fgetc(input);
+
+#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  if ((result>=0))
+
+#line 211 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 212 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    ungetc(result, input);
+  }
+
+#line 214 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  return result;
+}
+
+
+#line 223 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+boolean_t file_eof(FILE* input)
+#line 223 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 224 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  return (feof(input)||(file_peek_byte(input)<0));
+}
+
+
+#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size)
+#line 235 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  if (until_eof)
+
+#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 237 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (size=ULLONG_MAX);
+  }
+
+#line 240 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  uint8_t buffer[FILE_COPY_STREAM_BUFFER_SIZE];
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  while ((size>0))
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 242 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    int minimum = ((size<FILE_COPY_STREAM_BUFFER_SIZE) ? size : FILE_COPY_STREAM_BUFFER_SIZE);
+
+#line 245 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    uint64_t n_read = fread(buffer, 1, minimum, input);
+
+#line 246 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if ((n_read==0))
+
+#line 246 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      break;
+    }
+
+#line 249 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    fwrite(buffer, 1, n_read, output);
+
+#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (size-=n_read);
+  }
+}
+
+
+#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+void file_skip_bytes(FILE* input, uint64_t n_bytes)
+#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+{
+
+#line 271 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  while (1)
+
+#line 271 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+  {
+
+#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if (((n_bytes==0)||feof(input)))
+
+#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 273 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      return;
+    }
+
+#line 275 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    int ch = fgetc(input);
+
+#line 276 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    if ((ch<0))
+
+#line 276 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    {
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+      return;
+    }
+
+#line 280 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io.c"
+    (n_bytes--);
+  }
+}
+
+
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void segmentation_fault_handler(int signal_number)
+#line 68 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fatal_error(ERROR_SIGSEGV);
+}
+
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void configure_fatal_errors(fatal_error_config_t config)
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+#line 73 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  (fatal_error_config=config);
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  if ((config.catch_sigsegv))
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    signal(SIGSEGV, segmentation_fault_handler);
+  }
+}
+
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void set_fatal_error_callback(fatal_error_callback_t callback, void* data)
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  (fatal_error_callback=callback);
+
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  (fatal_error_callback_data=data);
+}
+
+
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+_Noreturn void fatal_error_impl(char* file, int line, int error_code)
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  if ((fatal_error_callback!=((void *)0)))
+
+#line 91 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+#line 92 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    fatal_error_callback(file, line, error_code, fatal_error_callback_data);
+  }
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  print_fatal_error_banner();
+
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  print_backtrace();
+
+#line 96 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
+
+#line 97 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  print_error_code_name(error_code);
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  if ((sleep_str!=NULL))
+
+#line 100 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    value_result_t sleep_time = string_parse_uint64(sleep_str);
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    if (is_ok(sleep_time))
+
+#line 102 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    {
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      fprintf(stderr, "Sleeping for %lu seconds so you can attach a debugger.\n", (sleep_time.u64));
+
+#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+      sleep((sleep_time.u64));
+    }
+  }
+  else
+
+#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  {
+
+#line 110 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
+  }
+
+#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "Necessaria Morte Mori...\n");
+
+#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  exit((-(error_code+100)));
+}
+
+
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void print_fatal_error_banner()
+#line 116 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+#line 119 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
+}
+
+
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+void print_error_code_name(int error_code)
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+{
+
+#line 123 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, " ");
+
+#line 124 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "*** ");
+
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, "%s", error_code_to_string(error_code));
+
+#line 126 "/home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c"
+  fprintf(stderr, " ***\n");
+}
+
+
+#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+random_state_t random_state_for_test(void)
+#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+{
+
+#line 25 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  return ((random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
+}
+
+
+#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+random_state_t* random_state(void)
+#line 37 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+{
+
+#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  if (((shared_random_state.a)==0))
+
+#line 38 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  {
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+    ((shared_random_state.a)=(0x1E1D43C2CA44B1F5^(/*CAST*/(uint64_t) time(NULL))));
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+    ((shared_random_state.b)=(0x4FDD267452CEDBAC^(/*CAST*/(uint64_t) time(NULL))));
+  }
+
+#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  return (&shared_random_state);
+}
+
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+uint64_t random_next(random_state_t* state)
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+{
+
+#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  uint64_t s0 = (state->a);
+
+#line 59 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  uint64_t s1 = (state->b);
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  uint64_t result = (rotl((s0*5), 7)*9);
+
+#line 61 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  (s1^=s0);
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  ((state->a)=((rotl(s0, 24)^s1)^(s1<<16)));
+
+#line 63 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  ((state->b)=rotl(s1, 37));
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  return result;
+}
+
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum)
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+{
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  if ((maximum==0))
+
+#line 76 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  {
+
+#line 77 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  return (random_next(state)%maximum);
+
+#line 85 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
+
+#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  while (1)
+
+#line 86 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+  {
+
+#line 87 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+    uint64_t n = random_next(state);
+
+#line 88 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+    (n&=mask);
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+    if ((n<maximum))
+
+#line 89 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+    {
+
+#line 90 "/home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c"
+      return n;
+    }
+  }
+}
+
+
+#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int access(const char* path, int mode)
+#line 7 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 8 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return _access(path, mode);
+}
+
+
+#line 11 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int read(int fd, void* buffer, unsigned int count)
+#line 11 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 12 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return _read(fd, buffer, count);
+}
+
+
+#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int write(int fd, const void* buffer, unsigned int count)
+#line 15 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 16 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return _write(fd, buffer, count);
+}
+
+
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int close(int fd)
+#line 19 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 20 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return _close(fd);
+}
+
+
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int isatty(int fd)
+#line 23 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 24 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return _isatty(fd);
+}
+
+
+#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int getpid(void)
+#line 31 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 32 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return _getpid();
+}
+
+
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+char* getcwd(char* buffer, int maxlen)
+#line 39 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 40 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return _getcwd(buffer, maxlen);
+}
+
+
+#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int chdir(const char* dirname)
+#line 43 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 44 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return _chdir(dirname);
+}
+
+
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int64_t get_file_modification_time(const char* filename)
+#line 57 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 58 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  WIN32_FILE_ATTRIBUTE_DATA file_info;
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((!GetFileAttributesExA(filename, GetFileExInfoStandard, (&file_info))))
+
+#line 60 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 62 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    return (-1);
+  }
+
+#line 65 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  FILETIME ft = (file_info.ftLastWriteTime);
+
+#line 69 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  uint64_t intervals = (((/*CAST*/(uint64_t) (ft.dwHighDateTime))<<32)|(ft.dwLowDateTime));
+
+#line 72 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  const uint64_t epoch_offset_intervals = 116444736000000000ULL;
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((intervals<epoch_offset_intervals))
+
+#line 74 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 75 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    return (-1);
+  }
+
+#line 79 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  int64_t total_microseconds = (/*CAST*/(int64_t) ((intervals-epoch_offset_intervals)/10ULL));
+
+#line 81 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return total_microseconds;
+}
+
+
+#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t max_bytes)
+#line 93 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if (((handle==NULL)||(buffer==NULL)))
+
+#line 94 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 95 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    return;
+  }
+
+#line 98 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  DWORD bytes_available = 0;
+
+#line 99 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  DWORD file_type = (GetFileType(handle)&(~FILE_TYPE_REMOTE));
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((file_type==FILE_TYPE_PIPE))
+
+#line 101 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 103 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    BOOL peek_success = PeekNamedPipe(handle, NULL, 0, NULL, (&bytes_available), NULL);
+
+#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if ((!peek_success))
+
+#line 105 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 106 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      DWORD err = GetLastError();
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      if ((err==ERROR_BROKEN_PIPE))
+
+#line 107 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      {
+
+#line 109 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+        return;
+      }
+
+#line 111 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      log_fatal("PeekNamedPipe failed with error %d", err);
+
+#line 112 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+
+#line 113 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      return;
+    }
+  }
+  else
+
+#line 115 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 117 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    (bytes_available=STACK_READ_BUFFER_SIZE);
+  }
+
+#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((bytes_available==0))
+
+#line 121 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 122 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    return;
+  }
+
+#line 125 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  DWORD bytes_to_read = bytes_available;
+
+#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((bytes_to_read>STACK_READ_BUFFER_SIZE))
+
+#line 128 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 129 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    (bytes_to_read=STACK_READ_BUFFER_SIZE);
+  }
+
+#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((bytes_to_read>max_bytes))
+
+#line 133 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 134 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    (bytes_to_read=max_bytes);
+  }
+
+#line 137 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  uint8_t read_buffer[STACK_READ_BUFFER_SIZE] = {0};
+
+#line 138 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  DWORD bytes_read = 0;
+
+#line 140 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  BOOL read_success = ReadFile(handle, read_buffer, bytes_to_read, (&bytes_read), NULL);
+
+#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((read_success&&(bytes_read>0)))
+
+#line 148 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    for (
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      DWORD i = 0;
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      (i<bytes_read);
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      (i++))
+
+#line 150 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 151 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      buffer_append_byte(buffer, (/*CAST*/(uint8_t) (read_buffer[i])));
+    }
+  }
+  else
+
+#line 153 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((!read_success))
+
+#line 153 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 154 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    DWORD err = GetLastError();
+
+#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if (((err!=ERROR_BROKEN_PIPE)&&(err!=ERROR_MORE_DATA)))
+
+#line 156 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 157 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      log_fatal("ReadFile failed with error %d", err);
+
+#line 158 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+}
+
+
+#line 163 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+unsigned int sleep(unsigned int seconds)
+#line 163 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 164 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  Sleep((seconds*1000));
+
+#line 165 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return 0;
+}
+
+
+#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+int usleep(uint32_t usec)
+#line 172 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((usec==0))
+
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    Sleep(0);
+
+#line 175 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    return 0;
+  }
+
+#line 180 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  DWORD ms = (/*CAST*/(DWORD) ((usec+999)/1000));
+
+#line 181 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  Sleep(ms);
+
+#line 182 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return 0;
+}
+
+
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+void make_file_read_only(char* file_name)
+#line 185 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 186 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  DWORD attributes = GetFileAttributesA(file_name);
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((attributes==INVALID_FILE_ATTRIBUTES))
+
+#line 187 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 188 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    log_fatal("Failed to get file attributes: %s", file_name);
+
+#line 189 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((!SetFileAttributesA(file_name, (attributes|FILE_ATTRIBUTE_READONLY))))
+
+#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    log_fatal("Failed to set file read-only attribute: %s", file_name);
+
+#line 194 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+
+#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+void make_writable_if_exists(const char* file_name)
+#line 204 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 205 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  DWORD attributes = GetFileAttributesA(file_name);
+
+#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((attributes==INVALID_FILE_ATTRIBUTES))
+
+#line 208 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 209 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    return;
+  }
+
+#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((attributes&FILE_ATTRIBUTE_READONLY))
+
+#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 214 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    DWORD new_attributes = (attributes&(~(/*CAST*/(DWORD) FILE_ATTRIBUTE_READONLY)));
+
+#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if ((!SetFileAttributesA(file_name, new_attributes)))
+
+#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 216 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      log_fatal("Error setting permissions for %s\n", file_name);
+
+#line 217 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+}
+
+
+#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes)
+#line 231 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 232 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
+
+#line 233 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  char read_buffer[1024] = {0};
+
+#line 235 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  intptr_t os_handle = _get_osfhandle(file_number);
+
+#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((os_handle==(-1)))
+
+#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 237 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    log_fatal("Invalid file descriptor %d", file_number);
+
+#line 238 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+#line 241 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  HANDLE h_file = (/*CAST*/(HANDLE) os_handle);
+
+#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  while ((bytes_remaining>0))
+
+#line 243 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 244 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    DWORD avail_bytes = 0;
+
+#line 245 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    BOOL peek_ok = PeekNamedPipe(h_file, NULL, 0, NULL, (&avail_bytes), NULL);
+
+#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if ((!peek_ok))
+
+#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 248 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      DWORD last_err = GetLastError();
+
+#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      if ((last_err==ERROR_BROKEN_PIPE))
+
+#line 250 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      {
+
+#line 251 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+        break;
+      }
+
+#line 253 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      log_fatal("Error peeking pipe on descriptor %d (error %lu)", file_number, last_err);
+
+#line 254 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+
+#line 258 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if ((avail_bytes==0))
+
+#line 258 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 259 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      break;
+    }
+
+#line 263 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    uint32_t chunk_size = (sizeof(read_buffer));
+
+#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if (((/*CAST*/(uint64_t) chunk_size)>bytes_remaining))
+
+#line 264 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 265 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      (chunk_size=(/*CAST*/(uint32_t) bytes_remaining));
+    }
+
+#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if (((/*CAST*/(uint64_t) chunk_size)>(/*CAST*/(uint64_t) avail_bytes)))
+
+#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 268 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      (chunk_size=(/*CAST*/(uint32_t) avail_bytes));
+    }
+
+#line 271 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    DWORD bytes_read = 0;
+
+#line 272 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    BOOL read_ok = ReadFile(h_file, read_buffer, chunk_size, (&bytes_read), NULL);
+
+#line 274 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if (((!read_ok)||(bytes_read==0)))
+
+#line 274 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 275 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      break;
+    }
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    for (
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      uint32_t i = 0;
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      (i<bytes_read);
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      (i++))
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 279 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      (buffer=buffer_append_byte(buffer, (/*CAST*/(uint8_t) (read_buffer[i]))));
+
+#line 280 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      (bytes_remaining--);
+    }
+  }
+
+#line 284 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return buffer;
+}
+
+
+#line 288 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+value_array_t* file_glob(const char* pattern)
+#line 288 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+{
+
+#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((pattern==NULL))
+
+#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    return ((void *)0);
+  }
+
+#line 293 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  value_array_t* result_array = make_value_array(10);
+
+#line 295 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  WIN32_FIND_DATAA find_data = {0};
+
+#line 296 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  HANDLE h_find = FindFirstFileA(pattern, (&find_data));
+
+#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((h_find==INVALID_HANDLE_VALUE))
+
+#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 299 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    DWORD err = GetLastError();
+
+#line 300 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if (((err==ERROR_FILE_NOT_FOUND)||(err==ERROR_PATH_NOT_FOUND)))
+
+#line 300 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 301 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      return result_array;
+    }
+
+#line 303 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    return ((void *)0);
+  }
+
+#line 307 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  char dir_prefix[1024] = {0};
+
+#line 308 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  char* last_slash = strrchr(pattern, '/');
+
+#line 309 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((last_slash==NULL))
+
+#line 309 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 310 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    (last_slash=strrchr(pattern, '\\'));
+  }
+
+#line 313 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  if ((last_slash!=NULL))
+
+#line 313 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 314 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    size_t prefix_len = (/*CAST*/(size_t) ((last_slash-pattern)+1));
+
+#line 315 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if ((prefix_len<(sizeof(dir_prefix))))
+
+#line 315 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 316 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      strncpy(dir_prefix, pattern, prefix_len);
+
+#line 317 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      ((dir_prefix[prefix_len])='\0');
+    }
+  }
+
+#line 321 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  int keep_searching = 1;
+
+#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  while (keep_searching)
+
+#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  {
+
+#line 324 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    if (((strcmp((find_data.cFileName), ".")!=0)&&(strcmp((find_data.cFileName), "..")!=0)))
+
+#line 324 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    {
+
+#line 325 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      char full_path[2048] = {0};
+
+#line 326 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      snprintf(full_path, (sizeof(full_path)), "%s%s", dir_prefix, (find_data.cFileName));
+
+#line 328 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+      value_array_push(result_array, ptr_to_value(string_duplicate(full_path)));
+    }
+
+#line 330 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+    (keep_searching=FindNextFileA(h_find, (&find_data)));
+  }
+
+#line 333 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  FindClose(h_find);
+
+#line 334 "/home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c"
+  return result_array;
+}
+
+
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_set_foreground_color(buffer_t* buffer, uint32_t color)
+#line 173 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 174 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t blue = (color&0xff);
+
+#line 175 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t green = ((color>>8)&0xff);
+
+#line 176 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t red = ((color>>16)&0xff);
+
+#line 179 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
+}
+
+
+#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_set_background_color(buffer_t* buffer, uint32_t color)
+#line 192 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 193 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t blue = (color&0xff);
+
+#line 194 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t green = ((color>>8)&0xff);
+
+#line 195 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  uint8_t red = ((color>>16)&0xff);
+
+#line 198 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
+}
+
+
+#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_move_cursor_absolute(buffer_t* buffer, int x, int y)
+#line 213 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 215 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
+}
+
+
+#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_move_cursor_relative(buffer_t* buffer, int x, int y)
+#line 227 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  if ((x>0))
+
+#line 229 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+#line 230 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
+  }
+  else
+
+#line 231 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  if ((x<0))
+
+#line 231 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+#line 232 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), (-x));
+  }
+
+#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  if ((y>0))
+
+#line 234 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+#line 235 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
+  }
+  else
+
+#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  if ((y<0))
+
+#line 236 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+#line 237 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), (-y));
+  }
+}
+
+
+#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_bold(buffer_t* buffer)
+#line 247 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 248 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
+}
+
+
+#line 257 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_dim(buffer_t* buffer)
+#line 257 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 258 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
+}
+
+
+#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_italic(buffer_t* buffer)
+#line 267 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 268 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
+}
+
+
+#line 277 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_underline(buffer_t* buffer)
+#line 277 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 278 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
+}
+
+
+#line 281 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_strikethrough(buffer_t* buffer)
+#line 281 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 282 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("9m"));
+}
+
+
+#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_overline(buffer_t* buffer)
+#line 285 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 286 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("53m"));
+}
+
+
+#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_superscript(buffer_t* buffer)
+#line 289 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 290 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("73m"));
+}
+
+
+#line 293 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_subscript(buffer_t* buffer)
+#line 293 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 294 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("74m"));
+}
+
+
+#line 297 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_slow_blink(buffer_t* buffer)
+#line 297 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 298 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("5m"));
+}
+
+
+#line 301 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_fast_blink(buffer_t* buffer)
+#line 301 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 302 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("6m"));
+}
+
+
+#line 312 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_reset_formatting(buffer_t* buffer)
+#line 312 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 313 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
+}
+
+
+#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_clear_screen(buffer_t* buffer)
+#line 322 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 323 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
+}
+
+
+#line 331 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box)
+#line 332 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 334 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  term_move_cursor_absolute(buffer, x0, y0);
+
+#line 335 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_code_point(buffer, (box->upper_left_corner));
+
+#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  for (
+
+#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+
+#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    uint64_t x = (x0+1);
+
+#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    (x<x1);
+
+#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    (x++))
+
+#line 336 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+#line 337 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_append_code_point(buffer, (box->top_edge));
+  }
+
+#line 339 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_code_point(buffer, (box->upper_right_corner));
+
+#line 342 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  term_move_cursor_absolute(buffer, x0, y1);
+
+#line 343 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_code_point(buffer, (box->lower_left_corner));
+
+#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  for (
+
+#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+
+#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    uint64_t x = (x0+1);
+
+#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    (x<x1);
+
+#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    (x++))
+
+#line 344 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+#line 345 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_append_code_point(buffer, (box->bottom_edge));
+  }
+
+#line 347 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_code_point(buffer, (box->lower_right_corner));
+
+#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  for (
+
+#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+
+#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    int y = (y0+1);
+
+#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    (y<y1);
+
+#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    (y++))
+
+#line 350 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  {
+
+#line 351 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    term_move_cursor_absolute(buffer, x0, y);
+
+#line 352 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_append_code_point(buffer, (box->left_edge));
+
+#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    for (
+
+#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+
+#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+      int x = (x0+1);
+
+#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+      (x<x1);
+
+#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+      (x++))
+
+#line 354 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    {
+
+#line 355 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+      buffer_append_code_point(buffer, ' ');
+    }
+
+#line 359 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+    buffer_append_code_point(buffer, (box->right_edge));
+  }
+}
+
+
+#line 363 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_disable_autowrap(buffer_t* buffer)
+#line 363 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 364 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_string(buffer, "\033[?7l");
+}
+
+
+#line 367 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_enable_autowrap(buffer_t* buffer)
+#line 367 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 368 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_append_string(buffer, "\033[?7h");
+}
+
+
+#line 382 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_alt_buffer(buffer_t* buffer)
+#line 382 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 382 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, "\033[?1049h");
+}
+
+
+#line 390 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_main_buffer(buffer_t* buffer)
+#line 390 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 391 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, "\033[?1049l");
+}
+
+
+#line 394 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+void term_home(buffer_t* buffer)
+#line 394 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+{
+
+#line 394 "/home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c"
+  buffer_printf(buffer, "\033[H");
 }
 
 
@@ -42643,62 +42643,6 @@ enum_metadata_t* output_file_type_metadata(){
     };
     return &enum_metadata_result;
 }
-char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
-  switch (value) {
-    case NF_OK:
-    return "NF_OK";
-  case NF_ERROR_NOT_FOUND:
-    return "NF_ERROR_NOT_FOUND";
-  case NF_ERROR_NOT_PARSED_AS_NUMBER:
-    return "NF_ERROR_NOT_PARSED_AS_NUMBER";
-  case NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM:
-    return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
-  default:
-    return "<<unknown-non_fatal_error_code>>";
-  }
-}
-non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
-  if (strcmp(value, "NF_OK") == 0) {
-    return NF_OK;
-  }
-  if (strcmp(value, "NF_ERROR_NOT_FOUND") == 0) {
-    return NF_ERROR_NOT_FOUND;
-  }
-  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_NUMBER") == 0) {
-    return NF_ERROR_NOT_PARSED_AS_NUMBER;
-  }
-  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM") == 0) {
-    return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
-  }
-  return 0;
-}
-enum_metadata_t* non_fatal_error_code_metadata(){
-    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = ((void*)0),
-        .name = "NF_OK",
-        .value = NF_OK
-    };
-    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
-        .next = &var_0,
-        .name = "NF_ERROR_NOT_FOUND",
-        .value = NF_ERROR_NOT_FOUND
-    };
-    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
-        .next = &var_1,
-        .name = "NF_ERROR_NOT_PARSED_AS_NUMBER",
-        .value = NF_ERROR_NOT_PARSED_AS_NUMBER
-    };
-    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
-        .next = &var_2,
-        .name = "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM",
-        .value = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM
-    };
-    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
-        .name = "non_fatal_error_code_t",
-        .elements = &var_3
-    };
-    return &enum_metadata_result;
-}
 char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
   switch (value) {
     case EXIT_STATUS_UNKNOWN:
@@ -42848,6 +42792,62 @@ enum_metadata_t* flag_type_metadata(){
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "flag_type_t",
         .elements = &var_7
+    };
+    return &enum_metadata_result;
+}
+char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
+  switch (value) {
+    case NF_OK:
+    return "NF_OK";
+  case NF_ERROR_NOT_FOUND:
+    return "NF_ERROR_NOT_FOUND";
+  case NF_ERROR_NOT_PARSED_AS_NUMBER:
+    return "NF_ERROR_NOT_PARSED_AS_NUMBER";
+  case NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM:
+    return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
+  default:
+    return "<<unknown-non_fatal_error_code>>";
+  }
+}
+non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
+  if (strcmp(value, "NF_OK") == 0) {
+    return NF_OK;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_FOUND") == 0) {
+    return NF_ERROR_NOT_FOUND;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_NUMBER") == 0) {
+    return NF_ERROR_NOT_PARSED_AS_NUMBER;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM") == 0) {
+    return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
+  }
+  return 0;
+}
+enum_metadata_t* non_fatal_error_code_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = ((void*)0),
+        .name = "NF_OK",
+        .value = NF_OK
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "NF_ERROR_NOT_FOUND",
+        .value = NF_ERROR_NOT_FOUND
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "NF_ERROR_NOT_PARSED_AS_NUMBER",
+        .value = NF_ERROR_NOT_PARSED_AS_NUMBER
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM",
+        .value = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "non_fatal_error_code_t",
+        .elements = &var_3
     };
     return &enum_metadata_result;
 }
@@ -43692,49 +43692,49 @@ enum_metadata_t* roci_runtime_error_metadata(){
 //    /home/jasonaaronwilson/src/omni-c/src/test-command.c
 //    /home/jasonaaronwilson/src/omni-c/src/test-assembler.c
 //    /home/jasonaaronwilson/src/omni-c/src/flags.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/includes-windows.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c
 //    /home/jasonaaronwilson/src/omni-c/src/lib/string/buffer.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/includes-windows.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/io/sub-process-windows.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal-windows.c
 //    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/io/io.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/flag.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-hashtable.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/string/string-util.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/io/oarchive.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/boolean.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/tui/style.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/test-framework.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/omni-c.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/compound-literal.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/time-windows.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/includes.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c
 //    /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c
 //    /home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c
 //    /home/jasonaaronwilson/src/omni-c/src/lib/lang/fn.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/io/sub-process-windows.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/omni-c.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal-windows.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/flag.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/compound-literal.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-hashtable.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c
 //    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/includes.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c
 //    /home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/boolean.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/string/string-util.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c
 //    /home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/io/oarchive.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/tui/style.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/test-framework.c
-//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/time-windows.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/io/io.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c
+//    /home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c
 //    /home/jasonaaronwilson/src/omni-c/src/roci/roci-assembler.c
 //    /home/jasonaaronwilson/src/omni-c/src/roci/roci-bb-builder.c
 //    /home/jasonaaronwilson/src/omni-c/src/roci/roci-bb.c
@@ -43770,7 +43770,7 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p 59daca2b0aa6f77689756a49fef16a9c7a125a6b > /home/jasonaaronwilson/src/omni-c/src/declaration-parser.c
 // git cat-file -p 9cadd0ec68236e71c10e779c1e4dd373420c1bde > /home/jasonaaronwilson/src/omni-c/src/node-list.c
 // git cat-file -p f339474879a81de7a5bbb77feb2ba22664c9aeb6 > /home/jasonaaronwilson/src/omni-c/src/debug-printer.c
-// git cat-file -p b1f0c2a2fe92978e505a067e0e265c0bc04adf81 > /home/jasonaaronwilson/src/omni-c/src/c-file-printer.c
+// git cat-file -p f04913d48904ce6d8512ff774c77dac830033828 > /home/jasonaaronwilson/src/omni-c/src/c-file-printer.c
 // git cat-file -p 47fe4a94a6ba151764cfb98f6d995a8c47fb3e01 > /home/jasonaaronwilson/src/omni-c/src/symbol-table.c
 // git cat-file -p 07cc45f1d6f530d54d7551343b066ef43ba54c7a > /home/jasonaaronwilson/src/omni-c/src/source-to-source.c
 // git cat-file -p 583e41810c41fd6e774db2e3c295301eb2f30523 > /home/jasonaaronwilson/src/omni-c/src/preprocessor.c
@@ -43800,49 +43800,49 @@ enum_metadata_t* roci_runtime_error_metadata(){
 // git cat-file -p 4c16c4fbc2199b4849fda9307a32efe648882105 > /home/jasonaaronwilson/src/omni-c/src/test-command.c
 // git cat-file -p 924ee3779e046e6eaf0b380c17b57a0d8348573f > /home/jasonaaronwilson/src/omni-c/src/test-assembler.c
 // git cat-file -p 6633e464753e8682319969001882b8960442c217 > /home/jasonaaronwilson/src/omni-c/src/flags.c
-// git cat-file -p 779945cef397d2035bc21073130535a335af7620 > /home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c
-// git cat-file -p 0a6c02edc4333b8bf60ac47fab187cf575b48dc9 > /home/jasonaaronwilson/src/omni-c/src/lib/includes-windows.c
-// git cat-file -p df23a997c6f15122baabb028967c934d455677b6 > /home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c
 // git cat-file -p 7f7e2ac8a1fbce3c3b374969c1be14b5ff3cfc13 > /home/jasonaaronwilson/src/omni-c/src/lib/string/buffer.c
-// git cat-file -p 02ced64df8d64d3253ade2fd065aa6f267cdfff2 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c
+// git cat-file -p 0a6c02edc4333b8bf60ac47fab187cf575b48dc9 > /home/jasonaaronwilson/src/omni-c/src/lib/includes-windows.c
+// git cat-file -p 96f3c9757aecac34b26668a7f9f809a335fa7212 > /home/jasonaaronwilson/src/omni-c/src/lib/io/sub-process-windows.c
+// git cat-file -p 7ca29b94e7cd29e3baa0f5aee0c268ac1a4c8599 > /home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal-windows.c
 // git cat-file -p d3de14eae821ed224cdb98f8dc83326e3186b1ec > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-alist.c
-// git cat-file -p 946d6844ac25fe852d7e752c035e1d2b1c626edc > /home/jasonaaronwilson/src/omni-c/src/lib/io/io.c
-// git cat-file -p d9cc1283b44a606474865a2c30a2a58bfbdb5163 > /home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c
+// git cat-file -p 0fd688e37ba07790d363754435dac17989d7c32b > /home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c
+// git cat-file -p a72d9704e03fd98b2ee12596a105556503db4745 > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/flag.c
+// git cat-file -p 523ba76457db03ce8c6a28480ea8aeabbf0bdb2b > /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-hashtable.c
+// git cat-file -p af52c52757aeb8e10459868c862d3b229f01bc41 > /home/jasonaaronwilson/src/omni-c/src/lib/string/string-util.c
+// git cat-file -p 306eb57dbc5d8bc2cffd54be1059e1b7aa49164c > /home/jasonaaronwilson/src/omni-c/src/lib/io/oarchive.c
+// git cat-file -p 34c0f39b6f480c7ce9cb93fd79586d8900323bdf > /home/jasonaaronwilson/src/omni-c/src/lib/lang/boolean.c
+// git cat-file -p 0d5d7372caf6c3a78cee3b1d53aeeaf143f5967d > /home/jasonaaronwilson/src/omni-c/src/lib/tui/style.c
+// git cat-file -p 6a98294a0ed3069606bfa8a4bbb7f9e667b76555 > /home/jasonaaronwilson/src/omni-c/src/lib/test-framework.c
+// git cat-file -p fdeeb847cf945a6a55bcefc45bf55ec77e61accf > /home/jasonaaronwilson/src/omni-c/src/lib/lang/omni-c.c
+// git cat-file -p a705b9173e8f1927adbdfa6c6e23e65d8587bf67 > /home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c
+// git cat-file -p bafe73cf643ee7eaf31f00c45d2ba446e8eba75a > /home/jasonaaronwilson/src/omni-c/src/lib/lang/compound-literal.c
+// git cat-file -p d8dc5dda78438e843c4f6f2f7fdd5a6a1b1b8c90 > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/time-windows.c
+// git cat-file -p 8a250f0b24a24973b33e4990f6fcebda7bf244e8 > /home/jasonaaronwilson/src/omni-c/src/lib/includes.c
+// git cat-file -p 33a442159ba8aa160fe01b254f3e4d0c2eb914f9 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c
+// git cat-file -p df23a997c6f15122baabb028967c934d455677b6 > /home/jasonaaronwilson/src/omni-c/src/lib/string/utf8-decoder.c
+// git cat-file -p 25f99931e9abce6b5994a32cd7a6d0c388b5c608 > /home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c
 // git cat-file -p 36a0d42d16751b02907317b5a4eaf2cdc7b7ab94 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-tree.c
 // git cat-file -p c25b527e6f0fbdeaf953acaa0d74c6758f50bdca > /home/jasonaaronwilson/src/omni-c/src/lib/lang/double.c
 // git cat-file -p 23c18cf6c82a20325af75dc2f68c860d8a444703 > /home/jasonaaronwilson/src/omni-c/src/lib/lang/fn.c
-// git cat-file -p 96f3c9757aecac34b26668a7f9f809a335fa7212 > /home/jasonaaronwilson/src/omni-c/src/lib/io/sub-process-windows.c
-// git cat-file -p 9fc700a03ce257d54275398c8d3a64b10205fb08 > /home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c
-// git cat-file -p fdeeb847cf945a6a55bcefc45bf55ec77e61accf > /home/jasonaaronwilson/src/omni-c/src/lib/lang/omni-c.c
-// git cat-file -p cb767242bc3361d02ff805db44f5fb17df0d4bcd > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c
-// git cat-file -p e421c605ae63ec9921eb28be7fa07bf691eaf424 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c
-// git cat-file -p 7ca29b94e7cd29e3baa0f5aee0c268ac1a4c8599 > /home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal-windows.c
-// git cat-file -p a72d9704e03fd98b2ee12596a105556503db4745 > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/flag.c
-// git cat-file -p 5026e96475343412185bdbdd0f7e16de1edd37d5 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c
-// git cat-file -p bafe73cf643ee7eaf31f00c45d2ba446e8eba75a > /home/jasonaaronwilson/src/omni-c/src/lib/lang/compound-literal.c
-// git cat-file -p 36473e74a543fec543d5a3fed3f362f5ca1be545 > /home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c
-// git cat-file -p 523ba76457db03ce8c6a28480ea8aeabbf0bdb2b > /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-hashtable.c
+// git cat-file -p 02ced64df8d64d3253ade2fd065aa6f267cdfff2 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value.c
+// git cat-file -p 779945cef397d2035bc21073130535a335af7620 > /home/jasonaaronwilson/src/omni-c/src/lib/io/logger.c
 // git cat-file -p 9b24c22ccedc462fdb847afdae45ce88d63b6ff4 > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error-windows.c
-// git cat-file -p ebfc3c03ad90ffd3a1bc1002be3d772d7b8dab78 > /home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c
-// git cat-file -p 02abec232f4e0d2f0f7750bfcf64de2b0351220d > /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c
-// git cat-file -p 4263548877038c30d8a5efeff16f328d07dce126 > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c
-// git cat-file -p 2cdffe97864a7e55c28fc6a3ae20c0354bd8ba18 > /home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c
-// git cat-file -p 8a250f0b24a24973b33e4990f6fcebda7bf244e8 > /home/jasonaaronwilson/src/omni-c/src/lib/includes.c
-// git cat-file -p a705b9173e8f1927adbdfa6c6e23e65d8587bf67 > /home/jasonaaronwilson/src/omni-c/src/lib/io/cdl-printer.c
-// git cat-file -p cb57000057b2c51c44bd076322ab884c2d2f4fdb > /home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c
-// git cat-file -p 42a581453b085e9aef80ebc1db19d6abf8a0f419 > /home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c
-// git cat-file -p 25f99931e9abce6b5994a32cd7a6d0c388b5c608 > /home/jasonaaronwilson/src/omni-c/src/lib/string/splitjoin.c
 // git cat-file -p 6e52f33c7760c7f20e6729e3c8a02ccf21dd4a00 > /home/jasonaaronwilson/src/omni-c/src/lib/lang/uint64.c
-// git cat-file -p 34c0f39b6f480c7ce9cb93fd79586d8900323bdf > /home/jasonaaronwilson/src/omni-c/src/lib/lang/boolean.c
-// git cat-file -p 33a442159ba8aa160fe01b254f3e4d0c2eb914f9 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-tree.c
-// git cat-file -p af52c52757aeb8e10459868c862d3b229f01bc41 > /home/jasonaaronwilson/src/omni-c/src/lib/string/string-util.c
-// git cat-file -p 269c17f817acfe9ff21bf7f08c551b50006daa5a > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c
+// git cat-file -p ebfc3c03ad90ffd3a1bc1002be3d772d7b8dab78 > /home/jasonaaronwilson/src/omni-c/src/lib/string/quote-util.c
+// git cat-file -p 42a581453b085e9aef80ebc1db19d6abf8a0f419 > /home/jasonaaronwilson/src/omni-c/src/lib/io/path-windows.c
+// git cat-file -p cb767242bc3361d02ff805db44f5fb17df0d4bcd > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/gc-allocate.c
+// git cat-file -p 4263548877038c30d8a5efeff16f328d07dce126 > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/platform-windows.c
+// git cat-file -p 02abec232f4e0d2f0f7750bfcf64de2b0351220d > /home/jasonaaronwilson/src/omni-c/src/lib/collections/string-alist.c
+// git cat-file -p e421c605ae63ec9921eb28be7fa07bf691eaf424 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-hashtable.c
+// git cat-file -p 5026e96475343412185bdbdd0f7e16de1edd37d5 > /home/jasonaaronwilson/src/omni-c/src/lib/collections/value-array.c
+// git cat-file -p 2cdffe97864a7e55c28fc6a3ae20c0354bd8ba18 > /home/jasonaaronwilson/src/omni-c/src/lib/lang/leb128.c
 // git cat-file -p 79d38aecc73b2a55d285054e82a034e0c12e155e > /home/jasonaaronwilson/src/omni-c/src/lib/io/byte-stream.c
-// git cat-file -p 0fd688e37ba07790d363754435dac17989d7c32b > /home/jasonaaronwilson/src/omni-c/src/lib/tui/screen.c
-// git cat-file -p 306eb57dbc5d8bc2cffd54be1059e1b7aa49164c > /home/jasonaaronwilson/src/omni-c/src/lib/io/oarchive.c
-// git cat-file -p 0d5d7372caf6c3a78cee3b1d53aeeaf143f5967d > /home/jasonaaronwilson/src/omni-c/src/lib/tui/style.c
-// git cat-file -p 6a98294a0ed3069606bfa8a4bbb7f9e667b76555 > /home/jasonaaronwilson/src/omni-c/src/lib/test-framework.c
-// git cat-file -p d8dc5dda78438e843c4f6f2f7fdd5a6a1b1b8c90 > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/time-windows.c
+// git cat-file -p cb57000057b2c51c44bd076322ab884c2d2f4fdb > /home/jasonaaronwilson/src/omni-c/src/lib/string/tokenizer.c
+// git cat-file -p 946d6844ac25fe852d7e752c035e1d2b1c626edc > /home/jasonaaronwilson/src/omni-c/src/lib/io/io.c
+// git cat-file -p 269c17f817acfe9ff21bf7f08c551b50006daa5a > /home/jasonaaronwilson/src/omni-c/src/lib/runtime/fatal-error.c
+// git cat-file -p d9cc1283b44a606474865a2c30a2a58bfbdb5163 > /home/jasonaaronwilson/src/omni-c/src/lib/lang/random.c
+// git cat-file -p 36473e74a543fec543d5a3fed3f362f5ca1be545 > /home/jasonaaronwilson/src/omni-c/src/lib/io/io-windows.c
+// git cat-file -p 9fc700a03ce257d54275398c8d3a64b10205fb08 > /home/jasonaaronwilson/src/omni-c/src/lib/tui/terminal.c
 // git cat-file -p ce583389be4e293f41e3f1c61cf7e1ec7ef6e3c0 > /home/jasonaaronwilson/src/omni-c/src/roci/roci-assembler.c
 // git cat-file -p 21832eb37a0ce67d68af103d108233e9624e50af > /home/jasonaaronwilson/src/omni-c/src/roci/roci-bb-builder.c
 // git cat-file -p 425cbc84a114d3e46dc1c2e5add5cf5609504bab > /home/jasonaaronwilson/src/omni-c/src/roci/roci-bb.c
