@@ -94,6 +94,8 @@ let noisy_shell = fn(command_line) {
 let get_c_compiler = fn() {
 
   let probe_c_compiler = fn(cc) {
+    // TODO(jawilson): while I have which on windows, other users may
+    // not
     let command_line = make_list("which", cc);
     let result = shell(command_line);
     if (iequal(shell_exit_code(result), 0)) {
@@ -195,9 +197,15 @@ let add_extra_flags = fn(cc) {
 /* ====================================================================== */
 
 let CC = get_c_compiler();
-let CC_FLAGS = make_list("-g", "-rdynamic");
 let WARN_FLAGS = get_warn_flags(CC);
 let OPT_FLAGS = get_opt_flags(CC);
+
+let CC_FLAGS = make_list("-g");
+if (string_equal(PLATFORM, "windows")) {
+  list_push(CC_FLAGS, "-gcodeview");
+} else {
+  list_push(CC_FLAGS, "-rdynamic");
+}
 
 /* ====================================================================== */
 
@@ -364,6 +372,9 @@ let build_roci_embedded_lib = fn() {
   generate_embedded_file("roci_lib", input, ROCI_LIB);
 };
 
+// TODO(jawilson): handle -posix.c as a root suffix and handle
+// -linux.c and -darwin.c to be only when posix doesn't quite
+// work. This will get rid of symlinks in our source tree.
 let is_platform_file = fn(src) {
   if (string_ends_with(src, "-linux.c")) {
     return true;
@@ -441,10 +452,21 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
     list_push(CC_COMMAND_LINE, "-I/opt/homebrew/opt/bdw-gc/include");
     list_push(CC_COMMAND_LINE, "-L/opt/homebrew/opt/bdw-gc/lib");
   }
+  if (string_equal(PLATFORM, "windows")) {
+    list_push(CC_COMMAND_LINE, "-Ic:/Users/jason/vcpkg/installed/x64-windows-static/include");
+    list_push(CC_COMMAND_LINE, "c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib");
+    list_push(CC_COMMAND_LINE, "-ldbghelp");
+    list_push(CC_COMMAND_LINE, "-Wl,-debug");
+  }
+
   list_push(CC_COMMAND_LINE, "-o");
   list_push(CC_COMMAND_LINE, target_name);
+  // the output from omni-c is the input to CC
   list_push(CC_COMMAND_LINE, c_target_name);
-  list_push(CC_COMMAND_LINE, "-lgc");
+
+  if (not(string_equal(PLATFORM, "windows"))) {
+    list_push(CC_COMMAND_LINE, "-lgc");
+  }
 
   let cc_result = shell(CC_COMMAND_LINE);
   check_shell_command(cc_result);
