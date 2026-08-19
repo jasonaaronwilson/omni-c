@@ -124,12 +124,13 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
 
   // 4. Build a single command line string for Windows CreateProcess
   // Windows requires a single flat string, unlike execvp's array.
-  buffer_t buffer = make_buffer(10);
+  buffer_t* buffer = make_buffer(10);
   for (int i = offset + 1; i < length; i++) {
       if (i != offset) {
 	buffer_append(cmd_line, " ");
       }
       char* arg = value_array_get_ptr(sub_process->argv, i, typeof(char*));
+      // TODO(jawilson): better windows argument quoting
       buffer_append(cmd_line, "\"");
       buffer_append(cmd_line, arg);
       buffer_append(cmd_line, "\"");
