@@ -124,20 +124,18 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
 
   // 4. Build a single command line string for Windows CreateProcess
   // Windows requires a single flat string, unlike execvp's array.
-  size_t cmd_len = 0;
-  for (int i = offset; i < length; i++) {
+  buffer_t buffer = make_buffer(10);
+  for (int i = offset + 1; i < length; i++) {
+      if (i != offset) {
+	buffer_append(cmd_line, " ");
+      }
       char* arg = value_array_get_ptr(sub_process->argv, i, typeof(char*));
-      cmd_len += strlen(arg) + 3; // +3 for quotes and space
+      buffer_append(cmd_line, "\"");
+      buffer_append(cmd_line, arg);
+      buffer_append(cmd_line, "\"");
   }
 
-  char* cmd_line = cast(typeof(char*), malloc_bytes(cmd_len + 1));
-  cmd_line[0] = '\0';
-  for (int i = offset; i < length; i++) {
-      char* arg = value_array_get_ptr(sub_process->argv, i, typeof(char*));
-      strcat(cmd_line, "\"");
-      strcat(cmd_line, arg);
-      strcat(cmd_line, "\" ");
-  }
+  char* cmd_line = buffer_to_c_string(buffer);
 
   // 5. Setup STARTUPINFO and PROCESS_INFORMATION
   STARTUPINFOA si = {0};
@@ -152,11 +150,18 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   PROCESS_INFORMATION pi = {0};
   ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 
-  char* executable = value_array_get_ptr(sub_process->argv, offset, typeof(char*));
+  char* executable_name = value_array_get_ptr(sub_process->argv, offset, typeof(char*));
+  char* executable = resolve_executable_path(executable_name);
+
+  if (executable == NULL) {
+    log_fatal("Command not found in PATH: %s", original_exe);
+    fatal_error(ERROR_FILE_NOT_FOUND);
+    return false;
+  }
 
   // 6. Launch the process
   BOOL success = CreateProcessA(
-      NULL,           // Application name (can be null if passed in cmd line)
+      executable,     // Application name (can be null if passed in cmd line)
       cmd_line,       // Command line
       NULL,           // Process security attributes
       NULL,           // Primary thread security attributes
