@@ -127,13 +127,13 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   buffer_t* buffer = make_buffer(10);
   for (int i = offset + 1; i < length; i++) {
       if (i != offset + 1) {
-	buffer_append(buffer, " ");
+	buffer_append_string(buffer, " ");
       }
       char* arg = value_array_get_ptr(sub_process->argv, i, typeof(char*));
       // TODO(jawilson): better windows argument quoting
-      buffer_append(buffer, "\"");
-      buffer_append(buffer, arg);
-      buffer_append(buffer, "\"");
+      buffer_append_string(buffer, "\"");
+      buffer_append_string(buffer, arg);
+      buffer_append_string(buffer, "\"");
   }
 
   char* cmd_line = buffer_to_c_string(buffer);
@@ -155,7 +155,7 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   char* executable = resolve_executable_path(executable_name);
 
   if (executable == NULL) {
-    log_fatal("Command not found in PATH: %s", original_exe);
+    log_fatal("Command not found in PATH: %s", executable_name);
     fatal_error(ERROR_FILE_NOT_FOUND);
     return false;
   }
