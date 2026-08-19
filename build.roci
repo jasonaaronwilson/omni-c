@@ -417,6 +417,10 @@ ALL_OMNI_C_SRC = filter_files_by_platform(ALL_OMNI_C_SRC);
  */
 let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
 
+  if (string_equal(PLATFORM, "windows")) {
+    target_name = string_append(target_name, ".exe");
+  }
+
   build_reflection_header();
   build_roci_embedded_lib();
 
@@ -453,6 +457,8 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
     list_push(CC_COMMAND_LINE, "-L/opt/homebrew/opt/bdw-gc/lib");
   }
   if (string_equal(PLATFORM, "windows")) {
+    list_push(CC_COMMAND_LINE, "-W-no-deprecated-declarations");
+    list_push(CC_COMMAND_LINE, "-W-no-pointer-sign");
     list_push(CC_COMMAND_LINE, "-Ic:/Users/jason/vcpkg/installed/x64-windows-static/include");
     list_push(CC_COMMAND_LINE, "c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib");
     list_push(CC_COMMAND_LINE, "-ldbghelp");
@@ -461,7 +467,8 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
 
   list_push(CC_COMMAND_LINE, "-o");
   list_push(CC_COMMAND_LINE, target_name);
-  // the output from omni-c is the input to CC
+
+  // the output from omni-c is now the input to CC
   list_push(CC_COMMAND_LINE, c_target_name);
 
   if (not(string_equal(PLATFORM, "windows"))) {
