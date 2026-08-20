@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
                                                  .catch_sigsegv = true,
                                              }));
   logger_init();
+  enable_utf8_console();
 
   configure_flags();
 

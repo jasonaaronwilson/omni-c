@@ -96,53 +96,46 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   SetHandleInformation(hChildStd_ERR_Rd, HANDLE_FLAG_INHERIT, 0);
   SetHandleInformation(hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0);
 
-  // 3. Process environment variables off the front of argv
+  // 3. Build child environment block without modifying parent environment
   int offset = 0;
-  while (offset < length) {
-    char* env_str = value_array_get_ptr(sub_process->argv, offset, typeof(char*));
-    if (strchr(env_str, '=') == NULL) {
-        break; // Reached the actual executable
-    }
-
-    // TODO(jawilson): this is gross!
-    char* equals = strchr(env_str, '=');
-    if (*(equals + 1) == '\0') {
-      *equals = '\0';
-      SetEnvironmentVariableA(env_str, NULL); // e.g., "FOO=" unsets FOO
-    } else {
-      *equals = '\0';
-      SetEnvironmentVariableA(env_str, equals + 1); // e.g., "FOO=bar" sets FOO
-      *equals = '='; // restore string
-    }
-    offset++;
-  }
+  char* child_env = build_child_environment_block(sub_process->argv, &offset);
 
   if (offset >= length) {
     log_fatal("No executable specified after environment variables");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-  // 4. Build a single command line string for Windows CreateProcess
-  // Windows requires a single flat string, unlike execvp's array.
-  size_t cmd_len = 0;
-  for (int i = offset; i < length; i++) {
-      char* arg = value_array_get_ptr(sub_process->argv, i, typeof(char*));
-      cmd_len += strlen(arg) + 3; // +3 for quotes and space
+  // 4. Figure out absolute path of the executable
+  char* executable_name = value_array_get_ptr(sub_process->argv, offset, typeof(char*));
+  char* executable = resolve_executable_path(executable_name);
+
+  if (executable == NULL) {
+    log_fatal("Command not found in PATH: %s", executable_name);
+    fatal_error(ERROR_FILE_NOT_FOUND);
+    return false;
   }
 
-  char* cmd_line = cast(typeof(char*), malloc_bytes(cmd_len + 1));
-  cmd_line[0] = '\0';
+  // 5. Build a single command line string for Windows CreateProcess
+  // Windows requires a single flat string, unlike execvp's
+  // array. Even though we pass in the executable to CreateProcessA,
+  // we still need to put it in the command line (but we can use the
+  // original executable_name).
+  buffer_t* buffer = make_buffer(10);
   for (int i = offset; i < length; i++) {
-      char* arg = value_array_get_ptr(sub_process->argv, i, typeof(char*));
-      strcat(cmd_line, "\"");
-      strcat(cmd_line, arg);
-      strcat(cmd_line, "\" ");
+    if (i > offset) {
+      buffer_append_string(buffer, " ");
+    }
+    char* arg = value_array_get_ptr(sub_process->argv, i, typeof(char*));
+    // TODO(jawilson): better windows argument quoting
+    buffer_append_string(buffer, "\"");
+    buffer_append_string(buffer, arg);
+    buffer_append_string(buffer, "\"");
   }
+
+  char* cmd_line = buffer_to_c_string(buffer);
 
   // 5. Setup STARTUPINFO and PROCESS_INFORMATION
   STARTUPINFOA si = {0};
-  // TODO(jawilson): do we still need this?
-  ZeroMemory(&si, sizeof(STARTUPINFOA));
   si.cb = sizeof(STARTUPINFOA);
   si.hStdError = hChildStd_ERR_Wr;
   si.hStdOutput = hChildStd_OUT_Wr;
@@ -152,17 +145,15 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   PROCESS_INFORMATION pi = {0};
   ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 
-  char* executable = value_array_get_ptr(sub_process->argv, offset, typeof(char*));
-
   // 6. Launch the process
   BOOL success = CreateProcessA(
-      NULL,           // Application name (can be null if passed in cmd line)
+      executable,     // Application name (can be null if passed in cmd line)
       cmd_line,       // Command line
       NULL,           // Process security attributes
       NULL,           // Primary thread security attributes
       TRUE,           // Handles are inherited
       0,              // Creation flags
-      NULL,           // Use parent's environment block
+      child_env,      // Use parent's environment block
       NULL,           // Use parent's starting directory 
       &si,            // Pointer to STARTUPINFO pointer
       &pi             // Pointer to PROCESS_INFORMATION
@@ -338,4 +329,119 @@ void sub_process_launch_and_wait(sub_process_t* sub_process,
   
   sub_process_read(sub_process, child_stdout, child_stderr);
   sub_process_wait(sub_process);
+}
+
+typedef env_override_t = struct {
+  const char* key;
+  size_t key_len;
+  const char* val; // NULL or empty if unsetting
+  boolean_t applied;
+};
+
+/**
+ * Parses the environment prefix strings from argv (e.g. "FOO=bar", "BAZ="),
+ * merges them with the parent's environment block, and produces a single
+ * contiguous double-null-terminated block for CreateProcessA.
+ *
+ * Updates *out_offset to point to the index of the first non-env argument (the executable).
+ */
+char* build_child_environment_block(value_array_t* argv, int* out_offset) {
+    uint64_t length = argv->length;
+    int offset = 0;
+
+    // 1. Identify how many env vars are at the front of argv
+    while (offset < length) {
+        char* str = value_array_get_ptr(argv, offset, typeof(char*));
+        if (strchr(str, '=') == NULL) {
+            break; // Reached executable
+        }
+        offset++;
+    }
+    *out_offset = offset;
+
+    // Fast path: No overrides requested -> let CreateProcess inherit parent block directly
+    if (offset == 0) {
+        return NULL; // NULL tells CreateProcessA to use parent's environment as-is
+    }
+
+    // 2. Grab the parent's environment block
+    LPCH parent_env = GetEnvironmentStringsA();
+    if (parent_env == NULL) {
+      // TODO(jawilson): this isn't correct (but probably also not
+      // likely! We need to still have our new envs show up.
+        return NULL;
+    }
+
+    // 3. Build a map or list of our overrides
+    // An override with an empty value (e.g., "FOO=") means "unset"
+    env_override_t* overrides = cast(env_override_t*, malloc_bytes(sizeof(env_override_t) * offset));
+    for (int i = 0; i < offset; i++) {
+        char* raw = value_array_get_ptr(argv, i, typeof(char*));
+        char* eq = strchr(raw, '=');
+        
+        overrides[i].key = raw;
+        overrides[i].key_len = cast(size_t, (eq - raw));
+        overrides[i].val = (*(eq + 1) != '\0') ? (eq + 1) : NULL;
+        overrides[i].applied = false;
+    }
+
+    // 4. Construct the new block using your buffer_t
+    buffer_t* block = make_buffer(4096);
+
+    // Copy parent variables, applying overrides/deletions as we encounter them
+    LPCH current = parent_env;
+    while (*current != '\0') {
+        size_t entry_len = strlen(current);
+        char* eq = strchr(current, '=');
+
+        if (eq != NULL) {
+	  size_t key_len = cast(size_t, (eq - current));
+            boolean_t overridden = false;
+
+            for (int i = 0; i < offset; i++) {
+                // Windows environment variables are case-insensitive
+                if (overrides[i].key_len == key_len &&
+                    _strnicmp(current, overrides[i].key, key_len) == 0) {
+                    
+                    overridden = true;
+                    overrides[i].applied = true;
+
+                    // If there's a replacement value, append "KEY=val\0"
+                    if (overrides[i].val != NULL) {
+                        buffer_append_bytes(block, overrides[i].key, overrides[i].key_len);
+                        buffer_append_string(block, "=");
+                        buffer_append_string(block, overrides[i].val);
+                        buffer_append_byte(block, '\0');
+                    }
+                    // If val is NULL (unset), we simply omit it from the block
+                    break;
+                }
+            }
+
+            if (!overridden) {
+                // Keep existing parent variable
+                buffer_append_bytes(block, current, entry_len + 1); // includes '\0'
+            }
+        }
+
+        current += entry_len + 1;
+    }
+
+    // Free the snapshot acquired from the OS
+    FreeEnvironmentStringsA(parent_env);
+
+    // 5. Append any new overrides that weren't already present in the parent
+    for (int i = 0; i < offset; i++) {
+        if (!overrides[i].applied && overrides[i].val != NULL) {
+            buffer_append_bytes(block, overrides[i].key, overrides[i].key_len);
+            buffer_append_string(block, "=");
+            buffer_append_string(block, overrides[i].val);
+            buffer_append_byte(block, '\0');
+        }
+    }
+
+    // 6. Terminate the entire block with an extra '\0' (double null terminator)
+    buffer_append_byte(block, '\0');
+
+    return cast(char*, block->elements);
 }

@@ -1040,7 +1040,7 @@ printer_t* append_line_directive(printer_t* printer, token_t* token) {
   file_t* file = symbol_table_token_to_file(printer->symbol_table, token);
   if (file != nullptr) {
     buffer_printf(printer->buffer, "\n#line %d \"%s\"\n", token->line_number,
-                  file == nullptr ? "fixme.c" : file->file_name);
+                  file == nullptr ? "fixme.c" : from_platform_path(file->file_name));
   }
   return printer;
 }

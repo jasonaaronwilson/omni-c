@@ -49,3 +49,13 @@ void term_echo_restore(term_echo_restore_t restore) {
   // Restore the original terminal settings
   // FIXME tcsetattr(STDIN_FILENO, TCSANOW, &(restore.state));
 }
+
+/**
+ * Unix consoles either support it or they don't. I suppose we could
+ * check if the terminal actually supports utf-8. Gemini suggested
+ * some locale stuff and a call to nl_langinfo OR to probe the
+ * terminal by printing a multi-byte code-point and seeing by how much
+ * the cursor position changes...
+ */
+void enable_utf8_console(void) {
+}

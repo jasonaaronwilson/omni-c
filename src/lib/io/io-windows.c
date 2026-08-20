@@ -1,10 +1,5 @@
 // Moves these for consistency (omni-c deduplicates so not harmful).
 
-#include <windows.h>
-#include <io.h>
-#include <direct.h>
-#include <process.h>
-
 /* ====================================================================== */
 /* File Access & Low-Level I/O                                            */
 /* ====================================================================== */
@@ -165,26 +160,61 @@ void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t ma
   }
 }
 
+boolean_t already_changed_timeslice = false;
+
+void shorten_process_timeslice(void) {
+  if (already_changed_timeslice) {
+    return;
+  }
+  timeBeginPeriod(1);
+  atexit(reset_process_timeslice);
+  already_changed_timeslice = true;
+}
+
+void reset_process_timeslice(void) {
+  timeEndPeriod(1);
+}
+
 unsigned int sleep(unsigned int seconds) {
+  shorten_process_timeslice();
     Sleep(seconds * 1000);
     return 0;
 }
 
-// CreateWaitableTimerEx
-
 // Technically uint64_t would allow longer sleep times but Gemini
 // thinks most POSIX implementations define useconds_t as uint32_t
 int usleep(uint32_t usec) {
-    if (usec == 0) {
-        Sleep(0); /* Yield remainder of time slice */
-        return 0;
-    }
+  shorten_process_timeslice();
 
+  if (usec == 0) {
+    Sleep(0); /* Yield remainder of time slice */
+    return 0;
+  }
+
+  if (usec < 1000) {
+    // Just busy wait. There is a better way of course but we are
+    // going for simple right now.
+    LARGE_INTEGER freq = {0};
+    LARGE_INTEGER start = {0};
+    LARGE_INTEGER current = {0};
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+
+    long long ticks = (usec * freq.QuadPart) / 1000000;
+
+    do {
+      _mm_pause(); // Yields pipeline execution resources
+      QueryPerformanceCounter(&current);
+    } while ((current.QuadPart - start.QuadPart) < ticks);
+
+    return 0;
+  } else {
     /* Convert microseconds to milliseconds, rounding up so non-zero
        durations less than 1000us still sleep for at least 1ms. */
     DWORD ms = cast(DWORD, (usec + 999) / 1000);
     Sleep(ms);
     return 0;
+  }
 }
 
 void make_file_read_only(char* file_name) {
