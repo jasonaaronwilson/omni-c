@@ -46,3 +46,19 @@ void term_echo_restore(term_echo_restore_t restore) {
         SetConsoleMode(hIn, restore.mode);
     }
 }
+
+void enable_utf8_console(void) {
+    // Set active code pages to UTF-8 (65001)
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+
+    // Enable Virtual Terminal processing so ANSI escape codes work properly
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut != INVALID_HANDLE_VALUE) {
+        DWORD mode = 0;
+        if (GetConsoleMode(hOut, &mode)) {
+            mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+            SetConsoleMode(hOut, mode);
+        }
+    }
+}
