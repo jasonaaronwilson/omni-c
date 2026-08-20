@@ -457,8 +457,8 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
     list_push(CC_COMMAND_LINE, "-L/opt/homebrew/opt/bdw-gc/lib");
   }
   if (string_equal(PLATFORM, "windows")) {
-    list_push(CC_COMMAND_LINE, "-W-no-deprecated-declarations");
-    list_push(CC_COMMAND_LINE, "-W-no-pointer-sign");
+    list_push(CC_COMMAND_LINE, "-Wno-deprecated-declarations");
+    list_push(CC_COMMAND_LINE, "-Wno-pointer-sign");
     list_push(CC_COMMAND_LINE, "-Ic:/Users/jason/vcpkg/installed/x64-windows-static/include");
     list_push(CC_COMMAND_LINE, "c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib");
     list_push(CC_COMMAND_LINE, "-ldbghelp");
