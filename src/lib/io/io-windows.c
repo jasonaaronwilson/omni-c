@@ -160,16 +160,32 @@ void buffer_read_ready_bytes_handle(buffer_t* buffer, HANDLE handle, uint32_t ma
   }
 }
 
+boolean_t already_changed_timeslice = false;
+
+void shorten_process_timeslice(void) {
+  if (already_changed_timeslice) {
+    return;
+  }
+  timeBeginPeriod(1);
+  atexit(reset_process_timeslice);
+  already_changed_timeslice = true;
+}
+
+void reset_process_timeslice(void) {
+  timeEndPeriod(1);
+}
+
 unsigned int sleep(unsigned int seconds) {
+  shorten_process_timeslice();
     Sleep(seconds * 1000);
     return 0;
 }
 
-// CreateWaitableTimerEx
-
 // Technically uint64_t would allow longer sleep times but Gemini
 // thinks most POSIX implementations define useconds_t as uint32_t
 int usleep(uint32_t usec) {
+  shorten_process_timeslice();
+
   if (usec == 0) {
     Sleep(0); /* Yield remainder of time slice */
     return 0;
@@ -184,7 +200,7 @@ int usleep(uint32_t usec) {
     QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&start);
 
-    long long ticks = (microseconds * freq.QuadPart) / 1000000;
+    long long ticks = (usec * freq.QuadPart) / 1000000;
 
     do {
       _mm_pause(); // Yields pipeline execution resources
