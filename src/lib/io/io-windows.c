@@ -170,16 +170,35 @@ unsigned int sleep(unsigned int seconds) {
 // Technically uint64_t would allow longer sleep times but Gemini
 // thinks most POSIX implementations define useconds_t as uint32_t
 int usleep(uint32_t usec) {
-    if (usec == 0) {
-        Sleep(0); /* Yield remainder of time slice */
-        return 0;
-    }
+  if (usec == 0) {
+    Sleep(0); /* Yield remainder of time slice */
+    return 0;
+  }
 
+  if (usec < 1000) {
+    // Just busy wait. There is a better way of course but we are
+    // going for simple right now.
+    LARGE_INTEGER freq = {0};
+    LARGE_INTEGER start = {0};
+    LARGE_INTEGER current = {0};
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+
+    long long ticks = (microseconds * freq.QuadPart) / 1000000;
+
+    do {
+      _mm_pause(); // Yields pipeline execution resources
+      QueryPerformanceCounter(&current);
+    } while ((current.QuadPart - start.QuadPart) < ticks);
+
+    return 0;
+  } else {
     /* Convert microseconds to milliseconds, rounding up so non-zero
        durations less than 1000us still sleep for at least 1ms. */
     DWORD ms = cast(DWORD, (usec + 999) / 1000);
     Sleep(ms);
     return 0;
+  }
 }
 
 void make_file_read_only(char* file_name) {
