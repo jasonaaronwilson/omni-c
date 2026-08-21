@@ -34,10 +34,12 @@ Original from LLM...
 Though something 
 */
 
-typedef generic_function_key_t = struct {
-  char* function_name;
-  int arity;
-};
+
+// The associate value is an array of function nodes with the same
+// function_name and arity.
+value_hashtable_t* find_generic_functions(symbol_table_t* symbol_table) {
+  
+}
 
 void lower_generic_functions(symbol_table_t* symbol_table) {
   value_hashtable_t* by_name_and_arity = find_generic_functions(symbol_table);
@@ -54,12 +56,6 @@ void lower_generic_functions_array(value_array_t* array) {
 void lower_generic_function(function_node_t* fn_node) {
   // Qencode the argument types into the functions name.
   // Remove generic from the declaration
-}
-
-// The associate value is an array of function nodes with the same
-// function_name and arity.
-value_hashtable_t* find_generic_functions(symbol_table_t* symbol_table) {
-  return nullptr;
 }
 
 // Must be called after lower_generic_functions
