@@ -12,6 +12,22 @@ void handle_sigint(int sig) {
     running = false;
 }
 
+char* term_modifiers_to_string(term_modifier_t modifiers) {
+  if (modifiers == 0) {
+    return TERM_MOD_NONE;
+  }
+  buffer_t* result = make_buffer(0);
+
+  if (modifiers & TERM_MOD_SHIFT) buffer_append_string(result, "TERM_MOD_SHIFT");
+  if (modifiers & TERM_MOD_ALT) buffer_append_string(result, "TERM_MOD_ALT");
+  if (modifiers & TERM_MOD_CTRL) buffer_append_string(result, "TERM_MOD_CTRL");
+  if (modifiers & TERM_MOD_SUPER) buffer_append_string(result, "TERM_MOD_SUPER");
+  if (modifiers & TERM_MOD_CAPS_LOCK) buffer_append_string(result, "TERM_MOD_CAPS_LOCK");
+  if (modifiers & TERM_MOD_NUM_LOCK) buffer_append_string(result, "TERM_MOD_NUM_LOCK");
+
+  return buffer_to_c_string(result);
+}
+
 int main(void) {
     signal(SIGINT, handle_sigint);
 
@@ -32,11 +48,12 @@ int main(void) {
 	last_event_time = current_time_millis();
 	printed_separator = false;
 	if (ev.type == TERM_EVENT_KEY) {
-	  printf("[KEY] action=%-7s keycode=%-16s codepoint=%3u ('%c') mods=0x%02x loc=%s (%d)\r\n",
+	  printf("[KEY] action=%-7s keycode=%-16s codepoint=%3u ('%c') mods=%s 0x%02x loc=%s (%d)\r\n",
 		 term_key_action_to_string(ev.key.action),
 		 term_keycode_to_string(ev.key.keycode),
 		 ev.key.codepoint,
 		 (ev.key.codepoint >= 32 && ev.key.codepoint < 127) ? cast(char, ev.key.codepoint) : ' ',
+		 term_modifiers_to_string(ev.key.modifiers),
 		 ev.key.modifiers,
 		 term_key_location_to_string(ev.key.location),
 		 ev.key.location);

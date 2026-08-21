@@ -143,6 +143,7 @@ static void map_kitty_pua_key(uint32_t codepoint, term_keypress_t *k) {
         case 57369: k->keycode = TERM_KEY_NUM_LOCK; break;
 
         default:
+	  printf("Unmapped PUA code-point: %u 0x%X", codepoint, codepoint);
             // Unmapped PUA
             k->keycode = TERM_KEY_NONE;
             break;
@@ -324,6 +325,13 @@ static int parse_csi_key(const char *buf, size_t len, term_input_event_t *ev) {
             case 'H': ev->key.keycode = TERM_KEY_HOME; break;
             case 'F': ev->key.keycode = TERM_KEY_END; break;
             case 'Z': ev->key.keycode = TERM_KEY_TAB; ev->key.modifiers |= TERM_MOD_SHIFT; break;
+
+	      // F1 - F4 CSI letter variants (\x1b[P, \x1b[1;2Q, etc.)
+            case 'P': ev->key.keycode = TERM_KEY_F1; break;
+            case 'Q': ev->key.keycode = TERM_KEY_F2; break;
+            case 'R': ev->key.keycode = TERM_KEY_F3; break;
+            case 'S': ev->key.keycode = TERM_KEY_F4; break;
+
             default:  ev->key.keycode = TERM_KEY_NONE; break;
         }
     }
