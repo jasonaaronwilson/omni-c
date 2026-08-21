@@ -602,6 +602,7 @@ add_target("clean", fn() {
     can_remove = boolean_and(can_remove, not(string_ends_with(name, "omni-c-stable")));
     can_remove = boolean_and(can_remove, not(string_ends_with(name, "build-dir/bin")));
     can_remove = boolean_and(can_remove, not(string_ends_with(name, "build-dir/gen-files")));
+    can_remove = boolean_and(can_remove, not(string_ends_with(name, "build-dir/tmp")));
     if (can_remove) {
       path_remove(name);
     }
