@@ -149,56 +149,30 @@ static void map_kitty_pua_key(uint32_t codepoint, term_keypress_t *k) {
     }
 }
 
-static int parse_kitty_key(const char *buf, size_t len, term_input_event_t *ev) {
-    uint32_t codepoint = 0;
-    int mods = 1;
-    int action = 1;
-    char tail = 0;
-    int n = 0;
-
-    if (sscanf(buf, "\x1b[%u;%d:%d%c%n", &codepoint, &mods, &action, &tail, &n) >= 4 && tail == 'u') {
-        // Complete form: codepoint;modifiers:action u
-    } else if (sscanf(buf, "\x1b[%u;%d%c%n", &codepoint, &mods, &tail, &n) >= 3 && tail == 'u') {
-        action = 1; // Default press
-    } else if (sscanf(buf, "\x1b[%u%c%n", &codepoint, &tail, &n) >= 2 && tail == 'u') {
-        mods = 1;
-        action = 1;
-    } else {
-        return 0; // Not a valid Kitty CSI u sequence
+static void map_tilde_code(int code, term_keypress_t *k) {
+    switch (code) {
+        case 1:  k->keycode = TERM_KEY_HOME; break;
+        case 2:  k->keycode = TERM_KEY_INSERT; break;
+        case 3:  k->keycode = TERM_KEY_DELETE; break;
+        case 4:  k->keycode = TERM_KEY_END; break;
+        case 5:  k->keycode = TERM_KEY_PAGE_UP; break;
+        case 6:  k->keycode = TERM_KEY_PAGE_DOWN; break;
+        case 7:  k->keycode = TERM_KEY_HOME; break;
+        case 8:  k->keycode = TERM_KEY_END; break;
+        case 11: k->keycode = TERM_KEY_F1; break;
+        case 12: k->keycode = TERM_KEY_F2; break;
+        case 13: k->keycode = TERM_KEY_F3; break;
+        case 14: k->keycode = TERM_KEY_F4; break;
+        case 15: k->keycode = TERM_KEY_F5; break;
+        case 17: k->keycode = TERM_KEY_F6; break;
+        case 18: k->keycode = TERM_KEY_F7; break;
+        case 19: k->keycode = TERM_KEY_F8; break;
+        case 20: k->keycode = TERM_KEY_F9; break;
+        case 21: k->keycode = TERM_KEY_F10; break;
+        case 23: k->keycode = TERM_KEY_F11; break;
+        case 24: k->keycode = TERM_KEY_F12; break;
+        default: k->keycode = TERM_KEY_NONE; break;
     }
-
-    ev->type = TERM_EVENT_KEY;
-    memset(&ev->key, 0, sizeof(ev->key));
-
-    // Action: 1 = Press, 2 = Repeat, 3 = Release
-    if (action == 1)      ev->key.action = TERM_KEY_ACTION_PRESS;
-    else if (action == 2) ev->key.action = TERM_KEY_ACTION_REPEAT;
-    else if (action == 3) ev->key.action = TERM_KEY_ACTION_RELEASE;
-    else                  ev->key.action = TERM_KEY_ACTION_PRESS;
-
-    // Modifiers: Kitty encodes (mods + 1)
-    ev->key.modifiers = parse_modifiers(mods - 1);
-
-    if (codepoint >= 57344) {
-        map_kitty_pua_key(codepoint, &ev->key);
-    } else if (codepoint == 13) {
-        ev->key.keycode = TERM_KEY_ENTER;
-        ev->key.codepoint = 0;
-    } else if (codepoint == 27) {
-        ev->key.keycode = TERM_KEY_ESCAPE;
-        ev->key.codepoint = 0;
-    } else if (codepoint == 9) {
-        ev->key.keycode = TERM_KEY_TAB;
-        ev->key.codepoint = 0;
-    } else if (codepoint == 127 || codepoint == 8) {
-        ev->key.keycode = TERM_KEY_BACKSPACE;
-        ev->key.codepoint = 0;
-    } else {
-        ev->key.codepoint = codepoint;
-        ev->key.keycode = TERM_KEY_NONE;
-    }
-
-    return n; // Return exact bytes consumed
 }
 
 // There is probably a minimum size for this buffer (what-ever the
@@ -242,8 +216,123 @@ static int decode_utf8(const char *s, size_t len, uint32_t *out_cp) {
     return 1; // Invalid byte, consume 1
 }
 
+static int parse_csi_key(const char *buf, size_t len, term_input_event_t *ev) {
+    if (len < 3 || buf[0] != '\x1b' || buf[1] != '[') return 0;
+
+    // Find terminator: 'u', '~', or letters 'A'-'Z'/'a'-'z'
+    size_t term_idx = 2;
+    while (term_idx < len) {
+        char c = buf[term_idx];
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '~' || c == '@') {
+            break;
+        }
+        term_idx++;
+    }
+
+    if (term_idx >= len) return 0; // Sequence incomplete, wait for more data
+
+    char final_char = buf[term_idx];
+    const char *p = buf + 2;
+    const char *end = buf + term_idx;
+
+    uint32_t key_code = 0;
+    uint32_t shifted_code = 0;
+    int mods = 1;
+    int action = 1;
+
+    // 1. Primary keycode (e.g. 47 for '/')
+    while (p < end && *p >= '0' && *p <= '9') {
+        key_code = key_code * 10 + (*p - '0');
+        p++;
+    }
+
+    // Capture :shifted_code (e.g. 63 for '?')
+    if (p < end && *p == ':') {
+        p++;
+        while (p < end && *p >= '0' && *p <= '9') {
+            shifted_code = shifted_code * 10 + (*p - '0');
+            p++;
+        }
+        // Skip any subsequent subfields (e.g. :base_layout)
+        while (p < end && *p == ':') {
+            p++;
+            while (p < end && *p >= '0' && *p <= '9') p++;
+        }
+    }
+
+    // 2. Modifiers & action (;mods or ;mods:action)
+    if (p < end && *p == ';') {
+        p++;
+        int m = 0;
+        while (p < end && *p >= '0' && *p <= '9') {
+            m = m * 10 + (*p - '0');
+            p++;
+        }
+        if (m > 0) mods = m;
+
+        if (p < end && *p == ':') {
+            p++;
+            int a = 0;
+            while (p < end && *p >= '0' && *p <= '9') {
+                a = a * 10 + (*p - '0');
+                p++;
+            }
+            if (a > 0) action = a;
+        }
+    }
+
+    ev->type = TERM_EVENT_KEY;
+    memset(&ev->key, 0, sizeof(ev->key));
+
+    if (action == 1)      ev->key.action = TERM_KEY_ACTION_PRESS;
+    else if (action == 2) ev->key.action = TERM_KEY_ACTION_REPEAT;
+    else if (action == 3) ev->key.action = TERM_KEY_ACTION_RELEASE;
+    else                  ev->key.action = TERM_KEY_ACTION_PRESS;
+
+    ev->key.modifiers = parse_modifiers(mods - 1);
+    ev->key.location = TERM_KEY_LOC_STANDARD;
+
+    if (final_char == 'u') {
+        if (key_code >= 57344) {
+            map_kitty_pua_key(key_code, &ev->key);
+        } else if (key_code == 13) {
+            ev->key.keycode = TERM_KEY_ENTER;
+        } else if (key_code == 27) {
+            ev->key.keycode = TERM_KEY_ESCAPE;
+        } else if (key_code == 9) {
+            ev->key.keycode = TERM_KEY_TAB;
+        } else if (key_code == 127 || key_code == 8) {
+            ev->key.keycode = TERM_KEY_BACKSPACE;
+        } else {
+            // Prefer shifted codepoint when Shift is active and subfield is provided
+            if (shifted_code != 0 && (ev->key.modifiers & TERM_MOD_SHIFT)) {
+                ev->key.codepoint = shifted_code;
+            } else {
+                ev->key.codepoint = key_code;
+            }
+            ev->key.keycode = TERM_KEY_NONE;
+        }
+    } else if (final_char == '~') {
+        map_tilde_code(key_code, &ev->key);
+    } else {
+        // Letter terminators (e.g. \x1b[A, \x1b[1;5A)
+        switch (final_char) {
+            case 'A': ev->key.keycode = TERM_KEY_UP; break;
+            case 'B': ev->key.keycode = TERM_KEY_DOWN; break;
+            case 'C': ev->key.keycode = TERM_KEY_RIGHT; break;
+            case 'D': ev->key.keycode = TERM_KEY_LEFT; break;
+            case 'H': ev->key.keycode = TERM_KEY_HOME; break;
+            case 'F': ev->key.keycode = TERM_KEY_END; break;
+            case 'Z': ev->key.keycode = TERM_KEY_TAB; ev->key.modifiers |= TERM_MOD_SHIFT; break;
+            default:  ev->key.keycode = TERM_KEY_NONE; break;
+        }
+    }
+
+    return cast(int, (term_idx + 1)); // Exact bytes consumed
+}
+
 int term_poll_event(term_input_event_t *ev) {
-    // Read new bytes into accumulator
+    // 1. Ingest any pending bytes from stdin into accumulator
     if (in_len < sizeof(in_buf) - 1) {
         ssize_t n = read(STDIN_FILENO, in_buf + in_len, sizeof(in_buf) - 1 - in_len);
         if (n > 0) {
@@ -256,17 +345,37 @@ int term_poll_event(term_input_event_t *ev) {
 
     int consumed = 0;
 
+    // 2. Escape Sequence Handling (SGR Mouse, CSI, SS3, Escape)
     if (in_buf[0] == '\x1b') {
+        // SGR Mouse: \x1b[<...
         if (in_len >= 3 && in_buf[1] == '[' && in_buf[2] == '<') {
             consumed = parse_sgr_mouse(in_buf, in_len, ev);
+            if (consumed > 0) goto event_ready;
+            if (in_len < 32) return 0; // Wait for terminating M/m
+        }
+
+        // CSI Key (Kitty 'u', Tilde '~', or letters 'A'-'Z')
+        if (in_len >= 2 && in_buf[1] == '[') {
+            consumed = parse_csi_key(in_buf, in_len, ev);
             if (consumed > 0) goto event_ready;
             if (in_len < 32) return 0; // Wait for full sequence
         }
 
-        if (in_len >= 2 && in_buf[1] == '[') {
-            consumed = parse_kitty_key(in_buf, in_len, ev);
-            if (consumed > 0) goto event_ready;
-            if (in_len < 32) return 0; // Wait for full sequence
+        // SS3 sequences: \x1bO... (F1-F4)
+        if (in_len >= 3 && in_buf[1] == 'O') {
+            ev->type = TERM_EVENT_KEY;
+            memset(&ev->key, 0, sizeof(ev->key));
+            ev->key.action = TERM_KEY_ACTION_PRESS;
+            ev->key.location = TERM_KEY_LOC_STANDARD;
+            switch (in_buf[2]) {
+                case 'P': ev->key.keycode = TERM_KEY_F1; break;
+                case 'Q': ev->key.keycode = TERM_KEY_F2; break;
+                case 'R': ev->key.keycode = TERM_KEY_F3; break;
+                case 'S': ev->key.keycode = TERM_KEY_F4; break;
+                default:  ev->key.keycode = TERM_KEY_NONE; break;
+            }
+            consumed = 3;
+            goto event_ready;
         }
 
         // Standalone Escape
@@ -275,22 +384,29 @@ int term_poll_event(term_input_event_t *ev) {
             memset(&ev->key, 0, sizeof(ev->key));
             ev->key.keycode = TERM_KEY_ESCAPE;
             ev->key.action = TERM_KEY_ACTION_PRESS;
+            ev->key.location = TERM_KEY_LOC_STANDARD;
             consumed = 1;
             goto event_ready;
         }
     }
 
-    // Text / UTF-8 fallback
+    // 3. UTF-8 / Standard ASCII Fallback
     {
         uint32_t cp = 0;
         consumed = decode_utf8(in_buf, in_len, &cp);
-        if (consumed == 0) return 0;
+        if (consumed == 0) return 0; // Partial UTF-8 multibyte sequence, wait for next tick
 
         ev->type = TERM_EVENT_KEY;
         memset(&ev->key, 0, sizeof(ev->key));
         ev->key.action = TERM_KEY_ACTION_PRESS;
+        ev->key.location = TERM_KEY_LOC_STANDARD;
 
-        if (cp == 13 || cp == 10) {
+        // Legacy Control Characters: Ctrl+A (1) to Ctrl+Z (26), excluding Tab (9) & Enter (10/13)
+        if (cp >= 1 && cp <= 26 && cp != 9 && cp != 10 && cp != 13) {
+            ev->key.codepoint = 'a' + (cp - 1);
+            ev->key.keycode = TERM_KEY_NONE;
+            ev->key.modifiers |= TERM_MOD_CTRL;
+        } else if (cp == 13 || cp == 10) {
             ev->key.keycode = TERM_KEY_ENTER;
         } else if (cp == 9) {
             ev->key.keycode = TERM_KEY_TAB;
@@ -303,6 +419,7 @@ int term_poll_event(term_input_event_t *ev) {
     }
 
 event_ready:
+    // 4. Slide consumed bytes out of the accumulator buffer
     if (consumed > 0) {
         memmove(in_buf, in_buf + consumed, in_len - consumed);
         in_len -= consumed;
