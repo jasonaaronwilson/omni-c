@@ -14,7 +14,7 @@ void handle_sigint(int sig) {
 
 char* term_modifiers_to_string(term_modifier_t modifiers) {
   if (modifiers == 0) {
-    return TERM_MOD_NONE;
+    return "TERM_MOD_NONE";
   }
   buffer_t* result = make_buffer(0);
 
@@ -79,7 +79,7 @@ int main(void) {
             printf("--- [ idle ] -------------------------------------\r\n");
             fflush(stdout);
             printed_separator = true;
-        }	
+        }
       }
 
       // Sleep poll loop for now (1ms)

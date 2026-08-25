@@ -195,19 +195,19 @@ static int decode_utf8(const char *s, size_t len, uint32_t *out_cp) {
         return 1;
     } else if ((c0 & 0xE0) == 0xC0) {
         if (len < 2) return 0; // Incomplete
-        *out_cp = ((c0 & 0x1F) << 6) 
+        *out_cp = ((c0 & 0x1F) << 6)
 	  | cast(unsigned char, s[1] & 0x3F);
         return 2;
     } else if ((c0 & 0xF0) == 0xE0) {
         if (len < 3) return 0;
-        *out_cp = ((c0 & 0x0F) << 12) 
-	  | (cast(unsigned char, s[1] & 0x3F) << 6) 
+        *out_cp = ((c0 & 0x0F) << 12)
+	  | (cast(unsigned char, s[1] & 0x3F) << 6)
 	  | (cast(unsigned char, s[2] & 0x3F));
         return 3;
     } else if ((c0 & 0xF8) == 0xF0) {
       if (len < 4) return 0;
       *out_cp = ((c0 & 0x07) << 18)
-	| (cast(unsigned char, s[1] & 0x3F) << 12) 
+	| (cast(unsigned char, s[1] & 0x3F) << 12)
 	| (cast(unsigned char, s[2] & 0x3F) << 6)
 	| (cast(unsigned char, s[3] & 0x3F));
         return 4;
@@ -384,6 +384,19 @@ int term_poll_event(term_input_event_t *ev) {
             }
             consumed = 3;
             goto event_ready;
+        }
+
+	// Legacy Alt + Key (e.g. \x1ba for Alt+A)
+        if (in_len == 2 && in_buf[1] >= 32 && in_buf[1] < 127) {
+	  ev->type = TERM_EVENT_KEY;
+	  memset(&ev->key, 0, sizeof(ev->key));
+	  ev->key.action = TERM_KEY_ACTION_PRESS;
+	  ev->key.location = TERM_KEY_LOC_STANDARD;
+	  ev->key.modifiers = TERM_MOD_ALT;
+	  ev->key.codepoint = cast(uint32_t, in_buf[1]);
+	  ev->key.keycode = TERM_KEY_NONE;
+	  consumed = 2;
+	  goto event_ready;
         }
 
         // Standalone Escape
