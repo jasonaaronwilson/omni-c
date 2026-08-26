@@ -53,39 +53,40 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message) {
 }
 
 void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
-  boolean_t is_tty = roci_is_tty();
+  boolean_t is_output_tty = is_tty_output();
+  boolean_t is_input_tty = is_tty_output();
 
   buffer_clear(buffer);
 
-  if (!is_tty) {
+  if (!is_output_tty) {
     buffer_printf(
         buffer,
         "--------------------------------------------------------------"
         "--------\n");
-  } else {
+  } else if (is_input_tty) {
     term_home(buffer);
-    term_alt_buffer(buffer);
+    // term_alt_buffer(buffer);
     term_clear_screen(buffer);
   }
 
-  if (is_tty) {
+  if (is_output_tty) {
     roci_debugger_banner(buffer, "*** Disassembly ***");
   }
   bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
 
-  if (is_tty) {
+  if (is_output_tty) {
     roci_debugger_banner(buffer, "*** Source ***");
   }
   roci_source_code_to_buffer(buffer, state->debug_info);
 
-  if (is_tty) {
+  if (is_output_tty) {
     roci_debugger_instructions(buffer);
   }
 
   buffer_write_all(stderr, buffer);
   fflush(stderr);
 
-  if (is_tty) {
+  if (is_input_tty) {
     buffer_t* input_buffer = make_buffer(10);
 
     term_echo_restore_t oldt = term_echo_off();
@@ -125,7 +126,7 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
           break;
         } else if (byte == 'e') {
           buffer_t* buffer = make_buffer(10);
-          if (is_tty) {
+          if (is_output_tty) {
             roci_debugger_banner(buffer, "*** Environment ***");
           }
           roci_dump_env(state->env, buffer);
@@ -133,7 +134,7 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
           fflush(stdout);
         } else if (byte == 'k') {
           buffer_t* buffer = make_buffer(10);
-          if (is_tty) {
+          if (is_output_tty) {
             roci_debugger_banner(buffer, "*** Stack ***");
           }
           roci_dump_stack(state, buffer);
@@ -144,6 +145,7 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
       usleep(1000);
     }
     term_main_buffer(buffer);
+    term_echo_restore(oldt);
   }
 }
 
@@ -204,10 +206,6 @@ roci_src_info_t bblock_to_src_info(roci_bb_t* bb) {
     data_ptr += roci_instruction_data_length(opcode);
   }
   return -1;
-}
-
-boolean_t roci_is_tty(void) {
-  return isatty(fileno(stdout)) && !string_equal("dumb", getenv("TERM"));
 }
 
 void roci_debugger_banner(buffer_t* buffer, char* text) {

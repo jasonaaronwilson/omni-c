@@ -1,5 +1,5 @@
 typedef term_echo_restore_t = struct {
-  // FIXME struct termios state;
+  struct termios state;
 };
 
 uint32_t term_width(void) {
@@ -37,17 +37,17 @@ term_echo_restore_t term_echo_off() {
   // newt.c_cc[VTIME] = 0; // No timeout
   tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-  return compound_literal(term_echo_restore_t, {}); // FIXME {.state = oldt});
+  return compound_literal(term_echo_restore_t, {.state = oldt});
 }
 
 /**
- * @function term_echo_off
+ * @function term_echo_restore
  *
  * Append a terminal escape sequence to turn on hardware echoing.
  */
 void term_echo_restore(term_echo_restore_t restore) {
   // Restore the original terminal settings
-  // FIXME tcsetattr(STDIN_FILENO, TCSANOW, &(restore.state));
+  tcsetattr(STDIN_FILENO, TCSANOW, &(restore.state));
 }
 
 /**
