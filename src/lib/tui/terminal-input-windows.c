@@ -161,11 +161,11 @@ static int handle_key_record(const KEY_EVENT_RECORD *k, term_input_event_t *ev) 
     } else {
         ev->key.keycode = TERM_KEY_NONE;
 
-        // Decode UTF-16 Low Surrogate (0xDC00 - 0xDFFF) if preceded by a high surrogate
+	// Decode UTF-16 Low Surrogate (0xDC00 - 0xDFFF) if preceded by a high surrogate
         if (pending_high_surrogate != 0 && (ch >= 0xDC00 && ch <= 0xDFFF)) {
-            ev->key.codepoint = 0x10000 +
-                                (((uint32_t)(pending_high_surrogate - 0xD800) << 10) |
-                                 ((uint32_t)(ch - 0xDC00)));
+            uint32_t hi = (cast(uint32_t, pending_high_surrogate) - 0xD800) << 10;
+            uint32_t lo = cast(uint32_t, ch) - 0xDC00;
+            ev->key.codepoint = 0x10000 + hi + lo;
             pending_high_surrogate = 0;
         } else {
             pending_high_surrogate = 0;
