@@ -270,7 +270,7 @@ let announce_no_build = fn(target) {
 };
 
 let announce_dependency = fn(dep, target) {
-  let icon = "\u2716 "; // Heavy multiplication symbol (aka an X).
+  let icon = "\u2500 ";
   println(string_append(icon, target, " is stale"));
   println(string_append("  \u2514\u2500\u2500 ", dep, " is newer"));
 };
