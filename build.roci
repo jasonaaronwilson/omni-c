@@ -462,6 +462,7 @@ let build_omni_c = fn(target_name, c_target_name, omni_c_binary, optimize) {
     list_push(CC_COMMAND_LINE, "-Ic:/Users/jason/vcpkg/installed/x64-windows-static/include");
     list_push(CC_COMMAND_LINE, "c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib");
     list_push(CC_COMMAND_LINE, "-ldbghelp");
+    list_push(CC_COMMAND_LINE, "-lwinmm");
     list_push(CC_COMMAND_LINE, "-Wl,-debug");
   }
 
