@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <signal.h>
 
 static /* volatile */ boolean_t running = true;
