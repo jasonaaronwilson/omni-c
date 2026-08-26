@@ -35,14 +35,26 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file) {
       value_array_add(argv, str_to_value("-I/opt/homebrew/opt/bdw-gc/include"));
       value_array_add(argv, str_to_value("-L/opt/homebrew/opt/bdw-gc/lib"));
     }
+    if (string_equal(platform(), "windows")) {
+      value_array_add(argv, str_to_value("-Ic:/Users/jason/vcpkg/installed/x64-windows-static/include"));
+    }
     value_array_add(argv, str_to_value("-g"));
-    value_array_add(argv, str_to_value("-rdynamic"));
+    if (!string_equal(platform(), "windows")) {
+      value_array_add(argv, str_to_value("-rdynamic"));
+    }
     value_array_add(argv, str_to_value("-O3"));
     value_array_add(argv, str_to_value("-std=gnu99"));
     value_array_add(argv, str_to_value("-o"));
     value_array_add(argv, str_to_value(output_file));
     value_array_add(argv, str_to_value(input_file));
-    value_array_add(argv, str_to_value("-lgc"));
+    if (string_equal(platform(), "windows")) {
+      value_array_add(argv, 
+		      str_to_value("c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib"));
+      value_array_add(argv, str_to_value("-lwinmm"));
+      value_array_add(argv, str_to_value("-Wl,-debug"));
+    } else {
+      value_array_add(argv, str_to_value("-lgc"));
+    }
     return argv;
   } else {
     log_fatal("Unknown C compiler %s\n", FLAG_c_compiler);

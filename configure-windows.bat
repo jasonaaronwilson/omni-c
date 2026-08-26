@@ -6,7 +6,7 @@ if not exist "build-dir\gen-files" mkdir "build-dir\gen-files"
 
 rem cl /std:clatest /Ic:\Users\jason\vcpkg\installed\x64-windows-static\include /Fo:build-dir\ /Fe:build-dir\bin\omni-c-stable.exe src\omni-c-stable-windows.c /link c:\Users\jason\vcpkg\installed\x64-windows-static\lib\gc.lib
 
-clang -g -gcodeview -Wno-format-security -Wno-parentheses-equality -Wno-deprecated-declarations -Ic:/Users/jason/vcpkg/installed/x64-windows-static/include src/omni-c-stable-windows.c c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib -ldbghelp -Wl,-debug -o build-dir/bin/omni-c-stable.exe
+clang -g -gcodeview -Wno-format-security -Wno-parentheses-equality -Wno-deprecated-declarations -Ic:/Users/jason/vcpkg/installed/x64-windows-static/include src/omni-c-stable-windows.c c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib -ldbghelp -lwinmm -Wl,-debug -o build-dir/bin/omni-c-stable.exe
 
 
 
