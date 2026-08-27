@@ -10,65 +10,100 @@
  * movement, delete) falling back to just reading a line from stdin if
  * we aren't inside a terminal.
  */
-
 buffer_t* readline(char* prompt, boolean_t init_and_restore) {
   fprintf(stdout, "%s", prompt);
   fflush(stdout);
 
   if (!is_full_tty()) {
-    char buffer[1024];
-    fgets(buffer, sizeof(buffer), stdin);
-    buffer_t* result = make_buffer(strlen(buffer));
-    buffer_append_string(result, buffer);
-    // Remove the newline that fgets returns
-    result->length--;
-    return result;
-  }
-
-  if (init_and_restore) {
-    if (term_init() != 0) {
-      log_fatal("Failed to init the terminl for input.");
-      fatal_error(ERROR_ILLEGAL_STATE);
+    char raw[1024];
+    if (!fgets(raw, sizeof(raw), stdin)) {
+      return NULL;
     }
+    size_t len = strlen(raw);
+    if (len > 0 && (raw[len - 1] == '\n' || raw[len - 1] == '\r')) {
+      raw[--len] = '\0';
+      if (len > 0 && raw[len - 1] == '\r') {
+        raw[--len] = '\0';
+      }
+    }
+    buffer_t* res = make_buffer(len + 1);
+    buffer_append_string(res, raw);
+    return res;
   }
 
-  buffer_t* result = make_buffer(80);
-  buffer_t* tmp = make_buffer(5);
-  uint32_t column = 0;
+  if (init_and_restore && term_init() != 0) {
+    log_fatal("Failed to init the terminal for input.");
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+  codepoint_array_t* line = cp_array_make();
+  buffer_t* tmp = make_buffer(256);
+  size_t column = 0;
 
   while (true) {
     term_input_event_t ev = {0};
     if (term_poll_event(&ev)) {
       if (ev.type == TERM_EVENT_KEY && ev.key.action == TERM_KEY_ACTION_PRESS) {
-	if (ev.key.keycode == 0) {
-	  buffer_append_code_point(result, ev.key.codepoint);
-	  column += 1;
-	  buffer_clear(tmp);
-	  term_move_cursor_to_start_of_line(tmp);
-	  buffer_append_string(tmp, prompt);
-	  buffer_append_buffer(tmp, result);
-	  buffer_write_all(stdout, tmp);
-	  fflush(stdout);
-	} else if (ev.key.action == TERM_KEY_ACTION_PRESS) {
-	  // TODO(jawilson): handle modifiers
-	  // TODO(jawilson): handle cursor left/right and backspace/delete
-	  switch (ev.key.keycode) {
-	  case TERM_KEY_ENTER:
-	    fprintf(stdout, "\r\n");
-	    goto finish;
-	    break;
-	  case TERM_KEY_BACKSPACE:
-	    if (result->length > 0) {
-	      result->length--;
-	    }
-	    break;
-	  default:
-	    break;
-	  }
-	}
+        if (ev.key.keycode == 0) {
+          // Printable codepoint insertion
+          cp_array_insert(line, column, ev.key.codepoint);
+          column++;
+          readline_repaint(prompt, line, tmp, column);
+        } else {
+          switch (ev.key.keycode) {
+            case TERM_KEY_ENTER:
+              fprintf(stdout, "\r\n");
+              goto finish;
+
+            case TERM_KEY_BACKSPACE:
+              if (column > 0) {
+                column--;
+                cp_array_delete(line, column);
+                readline_repaint(prompt, line, tmp, column);
+              }
+              break;
+
+            case TERM_KEY_DELETE:
+              if (column < line->length) {
+                cp_array_delete(line, column);
+                readline_repaint(prompt, line, tmp, column);
+              }
+              break;
+
+            case TERM_KEY_LEFT:
+              if (column > 0) {
+                column--;
+                readline_repaint(prompt, line, tmp, column);
+              }
+              break;
+
+            case TERM_KEY_RIGHT:
+              if (column < line->length) {
+                column++;
+                readline_repaint(prompt, line, tmp, column);
+              }
+              break;
+
+            case TERM_KEY_HOME:
+              if (column > 0) {
+                column = 0;
+                readline_repaint(prompt, line, tmp, column);
+              }
+              break;
+
+            case TERM_KEY_END:
+              if (column != line->length) {
+                column = line->length;
+                readline_repaint(prompt, line, tmp, column);
+              }
+              break;
+
+            default:
+              break;
+          }
+        }
       }
     } else {
-      // Sleep 1ms
       usleep(1000);
     }
   }
@@ -78,5 +113,24 @@ buffer_t* readline(char* prompt, boolean_t init_and_restore) {
     term_restore();
   }
 
+  buffer_t* result = cp_array_to_buffer(line);
+
   return result;
+}
+
+void readline_repaint(const char* prompt, const codepoint_array_t* line, buffer_t* tmp, size_t column) {
+  buffer_clear(tmp);
+  term_move_cursor_to_start_of_line(tmp);
+  term_clear_entire_line(tmp);
+  buffer_append_string(tmp, cast(char*, prompt));
+
+  // Render line as UTF-8 into terminal output buffer
+  for (size_t i = 0; i < line->length; i++) {
+    buffer_append_code_point(tmp, line->chars[i]);
+  }
+
+  // Adjust cursor position (assuming 1 display col per codepoint / ASCII prompt)
+  term_move_cursor_to_column(tmp, column + 1 + strlen(prompt));
+  buffer_write_all(stdout, tmp);
+  fflush(stdout);
 }

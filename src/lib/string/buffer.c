@@ -86,6 +86,22 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
 }
 
 /**
+ * @function buffer_set
+ *
+ * Set a single byte from a byte array.
+ */
+buffer_t* buffer_set(buffer_t* buffer, uint64_t position, uint8_t byte) {
+  if (position < buffer->length) {
+    buffer->elements[position] = byte;
+    return buffer;
+  } else {
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+    /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
+    return buffer;
+  }
+}
+
+/**
  * @function buffer_c_substring
  *
  * Extract a newly allocated string that contains the bytes from start
@@ -300,6 +316,28 @@ extern buffer_t* buffer_append_code_point(buffer_t* buffer,
     return 0; // Not Reached.
   }
 }
+
+/*
+
+Not tested yet - there may be bugs in this...
+
+buffer_t* buffer_insert_code_point(buffer_t* buffer, int64_t position, uint32_t code_point) {
+  buffer_t* tmp = make_buffer(4);
+  buffer_append_code_point(tmp, code_point);
+  if (position+1 >= buffer->capacity) {
+      buffer_increase_capacity(buffer, buffer->capacity * 2);
+  }
+  buffer_adjust_region(buffer, position, position+1, tmp->length);
+  for (int i = 0; i < tmp->length; i++) {
+    if (position+i == buffer->length) {
+      buffer->length++;
+    }
+    buffer_set(buffer, position+i, buffer_get(tmp, i));
+  }
+  return buffer;
+}
+*/
+
 /**
  * @function buffer_match_string_at
  *

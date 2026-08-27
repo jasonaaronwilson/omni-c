@@ -143,6 +143,12 @@ void test_buffer_adjust_region(void) {
   buffer = buffer_adjust_region(buffer, 1, 3, 1);
   test_assert_string_equal("01345", buffer_to_c_string(buffer));
 
+  // Partial deletion
+  buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "012345");
+  buffer = buffer_adjust_region(buffer, 1, 3, 0);
+  test_assert_string_equal("0345", buffer_to_c_string(buffer));
+
   // "Insertion"
   buffer = make_buffer(1);
   // POS 012345

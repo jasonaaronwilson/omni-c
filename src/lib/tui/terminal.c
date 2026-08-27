@@ -123,6 +123,10 @@ void term_move_cursor_to_start_of_line(buffer_t* buffer) {
   buffer_append_string(buffer, "\x1b[1G");
 }
 
+void term_move_cursor_to_column(buffer_t* buffer, uint32_t column) {
+  buffer_printf(buffer, "\x1b[%dG", column);
+}
+
 /**
  * @function term_bold
  *
@@ -277,3 +281,15 @@ void term_main_buffer(buffer_t* buffer) {
 }
 
 void term_home(buffer_t* buffer) { buffer_printf(buffer, "\033[H"); }
+
+void term_clear_entire_line(buffer_t* buffer) {
+  buffer_append_string(buffer, "\x1b[2K");
+}
+
+void term_clear_line_to_position(buffer_t* buffer) {
+  buffer_append_string(buffer, "\x1b[1K");
+}
+
+void term_clear_line_from_position(buffer_t* buffer) {
+  buffer_append_string(buffer, "\x1b[0K");
+}
