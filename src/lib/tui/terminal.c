@@ -119,6 +119,10 @@ void term_move_cursor_relative(buffer_t* buffer, int x, int y) {
   }
 }
 
+void term_move_cursor_to_start_of_line(buffer_t* buffer) {
+  buffer_append_string(buffer, "\x1b[1G");
+}
+
 /**
  * @function term_bold
  *

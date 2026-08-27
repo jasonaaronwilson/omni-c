@@ -28,21 +28,17 @@ void roci_repl(roci_env_t* env) {
 }
 
 buffer_t* roci_repl_read(roci_env_t* env) {
-  uint64_t last_length = 0xffffffff;
+  // uint64_t last_length = 0xffffffff;
   buffer_t* buffer = make_buffer(10);
   while (true) {
-
-    if (last_length != buffer->length) {
-      if (last_length == 0xffffffff) {
-        fprintf(stdout, "roci> ");
-      } else {
-        fprintf(stdout, "....> ");
-      }
-      fflush(stdout);
-      last_length = buffer->length;
+    char* prompt = "roci> ";
+    if (buffer->length > 0) {
+      prompt = "    > ";
     }
+    buffer_t* line = readline(prompt, true);
+    buffer_append_buffer(buffer, line);
+    buffer_append_code_point(buffer, '\n');
 
-    buffer_read_ready_bytes(buffer, stdin, 0xffffffff);
     if ((buffer_ends_with(buffer, ";\n")
 	 || buffer_ends_with(buffer, ";\r\n")
 	 || buffer_ends_with(buffer, "}\n")
@@ -59,7 +55,7 @@ buffer_t* roci_repl_read(roci_env_t* env) {
       fprintf(stdout, "----- Environment -----\n");
       fprintf(stdout, "%s", buffer_to_c_string(env_buffer));
       buffer_clear(buffer);
-      last_length = 0xffffffff;
+      // last_length = 0xffffffff;
     } else {
       if (buffer_index_of(buffer, "\n\n") >= 0
 	  || buffer_index_of(buffer, "\r\n\r\n") >= 0) {
