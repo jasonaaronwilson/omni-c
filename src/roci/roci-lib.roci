@@ -13,6 +13,11 @@ let list_map = fn(lst, func) {
   return result;
 };
 
+let list_copy = fn(lst) {
+  let id = fn(x) { return x; };
+  return list_map(lst, id);
+};
+
 let list_push_all = fn(lst0, lst1) {
   list_for_each(lst1, fn(x) {
     list_push(lst0, x);
