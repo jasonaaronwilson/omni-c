@@ -4,19 +4,7 @@
 // don't don't topologically sort correctly (hopefully just inlined
 // functions).
 
-//
-// This is a copy of list_shuffle from roci-lib.roci. It won't be
-// needed once that file is in stable.
-//
-
-/*
-let _LIB_SRC_ = make_list(
-   "includes.c",
-   "test.c",
-);
-*/
-
-let __start_time = current_time_millis();
+// let __start_time = current_time_millis();
 
 let _PERMUTABLE_ = make_list();
 
@@ -32,11 +20,10 @@ list_push_all(_PERMUTABLE_, glob("src/lib/runtime/*.c"));
 // ordering problem any worse though this is not a good long term
 // strategy.
 
-let _LIB_SRC_ = list_shuffle(_PERMUTABLE_);
+let _LIB_SRC_ = list_maybe_shuffle(_PERMUTABLE_);
 
-let __end_time = current_time_millis();
-
-printf("Total millis was %s\n", isub(__end_time, __start_time));
+// let __end_time = current_time_millis();
+// printf("Total millis was %s\n", isub(__end_time, __start_time));
 
 let SOURCE_LIB = list_map(_LIB_SRC_, fn(x) {
     return string_append(TOP_DIR, x);

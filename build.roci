@@ -13,6 +13,10 @@
  * need to get added here such as globabl clang-formatting).
  */
 
+let PLATFORM = platform();
+
+let list_maybe_shuffle = list_shuffle;
+
 /**
  * @function exit_compilation
  *
@@ -23,8 +27,6 @@ let exit_compilation = fn() {
   println("The build was aborted!");
   exit(1);
 };
-
-let PLATFORM = platform();
 
 /**
  * @function check_shell_command
