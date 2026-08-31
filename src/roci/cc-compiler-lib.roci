@@ -1,0 +1,49 @@
+/**
+ * @file cc-compiler-lib.roci
+ *
+ * This is a utility for making command lines that can gracefully
+ * handle different C compilers on various platforms.
+ */
+
+record _cc_builder {
+    cc_compiler_name,
+    cc_target_name,
+    c_src_files,
+    lib_files,
+    lib_flags,
+    include_directories,
+    debug_flags,
+    warn_flags,
+    opt_flags,
+    opt_level,
+}
+
+let make_cc_builder = fn(cc_compiler_name) {
+    return make__cc_builder(
+	false,
+	false,
+	make_list(),
+	make_list(),
+	make_list(),
+	make_list(),
+	make_list(),
+	make_list(),
+	make_list());
+};
+
+let cc_builder_add_source_files = fn(cc_builder, source_files) {
+    _cc_builder_set_c_src_files(
+	cc_builder,
+	list_add_all(_cc_builder_c_src_files(cc_builder), source_files));
+    return cc_builder;
+};
+
+let cc_builder_set_opt_level = fn(cc_builder, level) {
+    if (string_equal(_cc_builder_cc_compiler_name, "cl.exe")) {
+    } else {
+	_cc_builder_set_opt_flags(make_list(string_append(sprintf("-O%s", level))));
+    }
+    return cc_builder;
+};
+
+// TODO(jawilson): finish writing...
