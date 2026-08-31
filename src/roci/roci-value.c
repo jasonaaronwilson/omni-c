@@ -74,12 +74,12 @@ void roci_append_value(buffer_t* buffer, roci_value_t value) {
   case ROCI_TAG_RECORD: {
     roci_record_t* record = cast(roci_record_t*, value.raw);
     buffer_printf(buffer, "record<%s>[", record->record_tag);
-    for (int i = 0; i < 8; i++) {
-      roci_value_t slot = roci_record_get(record, i);
-      roci_append_value(buffer, slot);
-      if (i != 7) {
+    for (uint64_t i = 0; i < record->length; i++) {
+      if (i != 0) {
         buffer_printf(buffer, ", ");
       }
+      roci_value_t slot = roci_record_get(record, i);
+      roci_append_value(buffer, slot);
     }
     buffer_printf(buffer, "]");
     break;

@@ -196,7 +196,10 @@ boolean_t roci_values_equal(roci_value_t a, roci_value_t b) {
     if (!string_equal(rec_a->record_tag, rec_b->record_tag)) {
       return false;
     }
-    for (int i = 0; i < 8; i++) {
+    if (rec_a->length != rec_b->length) {
+      return false;
+    }
+    for (int i = 0; i < rec_a->length; i++) {
       roci_value_t va = roci_record_get(rec_a, i);
       roci_value_t vb = roci_record_get(rec_b, i);
       if (!roci_values_equal(va, vb)) {
@@ -270,7 +273,7 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
   case ROCI_TAG_RECORD: {
     roci_record_t* rec = cast(roci_record_t*, value.raw);
     int64_t hash = string_hash(rec->record_tag);
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < rec->length; i++) {
       roci_value_t v = roci_record_get(rec, i);
       hash ^= roci_hash_value(state, v);
       hash = roci_mix64(hash);
@@ -1196,11 +1199,12 @@ void roci_primitive_record_tag(roci_vm_state_t* state) {
 }
 
 void roci_primitive_make_record(roci_vm_state_t* state) {
-  if (state->n_args != 1) {
-    roci_debug_error(state, "make_record expects 1 argument");
+  if (state->n_args != 2) {
+    roci_debug_error(state, "make_record expects 2 argument");
   }
+  uint64_t length = cast(uint64_t, roci_pop_integer(state));
   char* record_tag = roci_pop_string(state);
-  roci_push_value(state, roci_make_record(record_tag));
+  roci_push_value(state, roci_make_record(record_tag, length));
 }
 
 void roci_primitive_record_get(roci_vm_state_t* state) {

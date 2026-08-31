@@ -613,7 +613,7 @@ void roci_compile_record(roci_compiler_state_t* state) {
     buffer_printf(buffer, "%s", fields[i]);
   }
   buffer_printf(buffer, "){");
-  buffer_printf(buffer, "let result = make_record(\"%s\");", record_name);
+  buffer_printf(buffer, "let result = make_record(\"%s\", %d);", record_name, num_fields);
   for (int i = 0; i < num_fields; i++) {
     buffer_printf(buffer, "record_set(result, %d, %s);", i, fields[i]);
   }

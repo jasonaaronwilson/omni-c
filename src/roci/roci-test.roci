@@ -470,19 +470,19 @@ add_test("string_printf_list",
 
 add_test("low_level_record_test",
   fn() {
-  let rec = make_record("test_record");
+  let rec = make_record("test_record", 2);
   record_set(rec, 0, "a");
   record_set(rec, 1, "b");
 
   let str = to_string(rec);
   let expected =
-    "record<test_record>[\"a\", \"b\", false, false, false, false, false, false]";
+    "record<test_record>[\"a\", \"b\"]";
 
   string_equal_or_fail(expected, str);
 
   let h = hash(rec);
 
-  let rec2 = make_record("test_record");
+  let rec2 = make_record("test_record", 2);
   record_set(rec2, 0, "a");
   record_set(rec2, 1, "b");
 
@@ -491,7 +491,7 @@ add_test("low_level_record_test",
   expect_true(equal(rec, rec2));
   expect_true(equal(h, h2));
 
-  let rec3 = make_record("not_test_record");
+  let rec3 = make_record("not_test_record", 2);
   record_set(rec3, 0, "a");
   record_set(rec3, 1, "b");
   let h3 = hash(rec3);
