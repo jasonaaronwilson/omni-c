@@ -28,6 +28,12 @@ void roci_add_primitives_to_env(roci_env_t* env) {
 
   roci_add_primitive(env, &roci_primitive_platform, "platform");
 
+  // Built-in Operators
+  roci_add_primitive(env, &roci_primitive_operator_infix_plus, "operator_infix+");
+  roci_add_primitive(env, &roci_primitive_operator_infix_mult, "operator_infix*");
+  roci_add_primitive(env, &roci_primitive_operator_infix_equal, "operator_infix==");
+  roci_add_primitive(env, &roci_primitive_operator_infix_not_equal, "operator_infix!=");
+
   // System
   roci_add_primitive(env, &roci_primitive_exit, "exit");
   roci_add_primitive(env, &roci_primitive_getenv, "getenv");
@@ -1239,4 +1245,44 @@ void roci_primitive_fatal_error(roci_vm_state_t* state) {
   }
   fatal_error(ERROR_FATAL);
   roci_push_false(state);
+}
+
+void roci_primitive_operator_infix_plus(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'+' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 + arg1);
+}
+
+void roci_primitive_operator_infix_mult(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'*' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 * arg1);
+}
+
+void roci_primitive_operator_infix_equal(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'==' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 == arg1);
+}
+
+void roci_primitive_operator_infix_not_equal(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'!=' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 != arg1);
 }

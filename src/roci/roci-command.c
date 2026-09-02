@@ -6,9 +6,15 @@
 void roci_command(void) {
   log_info("roci_command()");
 
+  // Don't try to use full expressions for the roci library yet.
+  boolean_t saved_use_full_expression = FLAG_roci_use_full_expressions;
+  FLAG_roci_use_full_expressions = false;
+
   roci_env_t* env = roci_new_env(nullptr);
   roci_add_primitives_to_env(env);
   roci_eval_buffer(env, "src/roci/roci-lib.roci", get_roci_lib_buffer(), true);
+
+  FLAG_roci_use_full_expressions = saved_use_full_expression;
 
   if (FLAG_roci_script == nullptr) {
     roci_repl(env);

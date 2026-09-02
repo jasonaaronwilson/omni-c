@@ -2,6 +2,15 @@
 //// OLD VERSION OF EXPRESSION COMPILER
 ////
 
+assignment_cont_t roci_compile_expression(roci_compiler_state_t* state, boolean_t assignment_ok) {
+  if (FLAG_roci_use_full_expressions) {
+    return roci_compile_expression_full(state, assignment_ok);
+  } else {
+    roci_compile_expression_no_operators(state, assignment_ok);
+    return ASSIGNMENT_CONTINUE_NONE;
+  }
+}
+
 /**
  * @function roci_compile_expression
  *
@@ -9,7 +18,7 @@
  * limited unlike C hence zero effort to port/reuse the pratt parser
  * we already had for omni-c.
  */
-void roci_compile_expression(roci_compiler_state_t* state, boolean_t assignment_ok) {
+void roci_compile_expression_no_operators(roci_compiler_state_t* state, boolean_t assignment_ok) {
   token_t* token = roci_peek_token(state);
   if (token_matches(token, "fn")) {
     roci_compile_closure(state);
@@ -256,7 +265,7 @@ static inline boolean_t return_for_assignment(assignment_cont_t cont) {
 
 void roci_compile_call_or_assignment_statement(roci_compiler_state_t* state) {
   boolean_t assignment_ok = true;
-  assignment_cont_t cont = roci_compile_expression2(state, assignment_ok);
+  assignment_cont_t cont = roci_compile_expression_full(state, assignment_ok);
   if (cont == ASSIGNMENT_CONTINUE_NONE) {
     // error. we put something on the stack without anything to
     // consuming it. You won't be able to do "foo() && bar();" like in C...
@@ -283,7 +292,7 @@ void roci_compile_call_or_assignment_statement(roci_compiler_state_t* state) {
 ///
 ///
 
-assignment_cont_t roci_compile_expression2(roci_compiler_state_t* state, boolean_t assignment_ok) {
+assignment_cont_t roci_compile_expression_full(roci_compiler_state_t* state, boolean_t assignment_ok) {
   return roci_compile_logical_or(state, assignment_ok);
 }
 
@@ -479,7 +488,7 @@ assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state, boolean_t
 
   if (string_equal(token_string, "(")) {
     roci_next_token(state); 
-    assignment_cont_t cont = roci_compile_expression2(state, false);
+    assignment_cont_t cont = roci_compile_expression_full(state, false);
     roci_expect_token(state, ")");
     goto handle_postfix;
   }
@@ -494,7 +503,7 @@ assignment_cont_t roci_compile_postfix(roci_compiler_state_t* state, boolean_t a
   
   if (string_equal(token_string, "[")) {
     roci_next_token(state);
-    assignment_cont_t cont = roci_compile_expression2(state, false);
+    assignment_cont_t cont = roci_compile_expression_full(state, false);
     token_t* close = roci_peek_token(state);
     roci_expect_token(state, "]");
     if (token_matches(roci_peek_token(state), "=")) {
@@ -541,7 +550,7 @@ void finish_variable_assignment_statement(roci_compiler_state_t* state) {
   // TODO(jawilson): verify identifier
   roci_emit_debug_info(state, varname_token);
   roci_expect_token(state, "=");
-  roci_compile_expression2(state, false);
+  roci_compile_expression_full(state, false);
   roci_expect_token(state, ";");
   roci_emit_token_string_datum(state, token_to_string(varname_token));
   roci_emit_opcode(state, ROCI_OPCODE_SET_VAR);
