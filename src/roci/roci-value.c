@@ -31,8 +31,13 @@ void roci_append_value(buffer_t* buffer, roci_value_t value) {
     buffer_printf(buffer, "%s", quote_c_string(cast(char*, value.raw)));
     break;
   case ROCI_TAG_INTEGER:
-    // FIXME: it's an integer (not unsigned) stupid!
-    buffer_printf(buffer, "%s", uint64_to_string(value.raw));
+    int64_t signed_value = cast(int64_t, value.raw);
+    if (signed_value < 0) {
+      buffer_append_string(buffer, "-");
+      buffer_append_string(buffer, uint64_to_string(-signed_value));
+    } else {
+      buffer_append_string(buffer, uint64_to_string(value.raw));
+    }
     break;
   case ROCI_TAG_C_PRIMITIVE:
     buffer_printf(buffer, "primitive<%s>", uint64_to_string(value.raw));
