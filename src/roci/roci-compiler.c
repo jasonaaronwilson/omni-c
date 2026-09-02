@@ -47,6 +47,7 @@ typedef roci_compile_time_error_t = enum {
   ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS,
   ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA,
   ROCI_COMPILE_TIME_ERROR_ARGUMENT_AFTER_REST,
+  ROCI_COMPILE_TIME_ERROR_UNEXPECTED_ASSIGNMENT,
 };
 
 typedef roci_compiler_state_t = struct {
@@ -581,14 +582,14 @@ void roci_compile_record(roci_compiler_state_t* state) {
   roci_expect_token(state, "{");
 
   int num_fields = 0;
-  char* fields[8] = {0};
+  char* fields[128] = {0};
 
   do {
     token_t* field = roci_next_token(state);
     if (token_matches(field, "}")) {
       break;
     }
-    if (num_fields == 8) {
+    if (num_fields == 128) {
       roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS);
     }
     roci_verify_identifier(state, field);

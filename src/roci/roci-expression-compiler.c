@@ -242,12 +242,22 @@ assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state, boolean_t
       token_t* next_token = roci_peek_over_tokens(state, 1);
       char* next_token_string = token_to_string(next_token);
       if (string_equal(next_token_string, "=")) {
+	if (!assignment_ok) {
+	  log_warn("multiple assignments or a bad assignment seen");
+	  roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_UNEXPECTED_ASSIGNMENT);
+	  /* NOT-REACHED */
+	  return ASSIGNMENT_CONTINUE_NONE;
+	}
 	return ASSIGNMENT_CONTINUE_VARIABLE_SET;
       }
-      roci_next_token(state);
-      roci_emit_get_var(state->current_bb, token_string);
+      if (string_equal(next_token_string, "(")) {
+	roci_compile_function_call(state);
+      } else {
+	roci_next_token(state);
+	roci_emit_get_var(state->current_bb, token_string);
+	goto handle_postfix;
+      }
     }
-    return ASSIGNMENT_CONTINUE_NONE;
   }
 
   if (token->type == TOKEN_TYPE_STRING_LITERAL) {
@@ -255,7 +265,7 @@ assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state, boolean_t
     char* str = string_unquote_c_string(token_to_string(token));
     buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_STRING);
     value_array_add(state->current_bb->data, str_to_value(str));
-    return ASSIGNMENT_CONTINUE_NONE;
+    goto handle_postfix;
   }
 
   if (token->type == TOKEN_TYPE_INTEGER_LITERAL) {
@@ -267,7 +277,7 @@ assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state, boolean_t
     }
     buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
     value_array_add(state->current_bb->data, parsed.val);
-    return ASSIGNMENT_CONTINUE_NONE;
+    goto handle_postfix;
   }
 
   if (token->type == TOKEN_TYPE_FLOAT_LITERAL) {
@@ -275,34 +285,40 @@ assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state, boolean_t
     double dbl = string_parse_double(token_to_string(token));
     buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_DOUBLE);
     value_array_add(state->current_bb->data, dbl_to_value(dbl));
-    return ASSIGNMENT_CONTINUE_NONE;
-  }
-
-  if (string_equal(token_string, "[")) {
-    roci_next_token(state);
-    assignment_cont_t cont = roci_compile_expression2(state, false);
-    token_t* close = roci_peek_token(state);
-    roci_expect_token(state, "]");
-    if (token_matches(roci_peek_token(state), "=")) {
-      return ASSIGNMENT_CONTINUE_INDEX_SET;
-    }
-    roci_emit_binary_operator(state, "operator[]", close);
-    return ASSIGNMENT_CONTINUE_NONE;
+    goto handle_postfix;
   }
 
   if (string_equal(token_string, "(")) {
     roci_next_token(state); 
     assignment_cont_t cont = roci_compile_expression2(state, false);
     roci_expect_token(state, ")");
+    goto handle_postfix;
+  }
+
+ handle_postfix:
+  return roci_compile_postfix(state, assignment_ok);
+}
+
+assignment_cont_t roci_compile_postfix(roci_compiler_state_t* state, boolean_t assignment_ok) {
+  token_t* token = roci_peek_token(state);
+  char* token_string = token_to_string(token);
+  
+  if (string_equal(token_string, "[")) {
+    roci_next_token(state);
+    assignment_cont_t cont = roci_compile_expression2(state, false);
+    token_t* close = roci_peek_token(state);
+    roci_expect_token(state, "]");
+    if (token_matches(roci_peek_token(state), "=")) {
+      // FIXME HERE
+      return ASSIGNMENT_CONTINUE_INDEX_SET;
+    }
+    roci_emit_binary_operator(state, "operator[]", close);
     return ASSIGNMENT_CONTINUE_NONE;
   }
 
   // Then handle postfix operators
 
-  return ASSIGNMENT_CONTINUE_NONE;
-}
 
-assignment_cont_t roci_compile_postfix(roci_compiler_state_t* state, boolean_t assignment_ok) {
   //
   // Handle calls
   // Handle index operations
