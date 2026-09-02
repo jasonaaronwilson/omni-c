@@ -436,6 +436,8 @@ assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state, boolean_t
     } else if (string_equal(token_string, "false")) {
       roci_next_token(state);
       roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+    } else if (string_equal(token_string, "fn")) {
+      roci_compile_closure(state);
     } else {
       token_t* next_token = roci_peek_over_tokens(state, 1);
       char* next_token_string = token_to_string(next_token);
