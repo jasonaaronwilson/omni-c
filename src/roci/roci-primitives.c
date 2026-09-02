@@ -101,6 +101,9 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_list_push, "list_push");
   roci_add_primitive(env, &roci_primitive_list_delete_at, "list_delete_at");
   roci_add_primitive(env, &roci_primitive_list_for_each, "list_for_each");
+  // TODO(jawilson): once we use records for hashtables and alists,
+  // etc., we need to support them too
+  roci_add_primitive(env, &roci_primitive_list_get, "operator[]");
 
   // Integer Operations
   roci_add_primitive(env, &roci_primitive_is_integer, "is_integer");
