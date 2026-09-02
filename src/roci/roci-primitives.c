@@ -30,9 +30,25 @@ void roci_add_primitives_to_env(roci_env_t* env) {
 
   // Built-in Operators
   roci_add_primitive(env, &roci_primitive_operator_infix_plus, "operator_infix+");
+  roci_add_primitive(env, &roci_primitive_operator_infix_minus, "operator_infix-");
+
   roci_add_primitive(env, &roci_primitive_operator_infix_mult, "operator_infix*");
+  roci_add_primitive(env, &roci_primitive_operator_infix_div, "operator_infix/");
+  roci_add_primitive(env, &roci_primitive_operator_infix_rem, "operator_infix%");
+
+  roci_add_primitive(env, &roci_primitive_operator_infix_or, "operator_infix|");
+  roci_add_primitive(env, &roci_primitive_operator_infix_xor, "operator_infix^");
+  roci_add_primitive(env, &roci_primitive_operator_infix_and, "operator_infix&");
+
   roci_add_primitive(env, &roci_primitive_operator_infix_equal, "operator_infix==");
   roci_add_primitive(env, &roci_primitive_operator_infix_not_equal, "operator_infix!=");
+  roci_add_primitive(env, &roci_primitive_operator_infix_lt, "operator_infix<");
+  roci_add_primitive(env, &roci_primitive_operator_infix_lte, "operator_infix<=");
+  roci_add_primitive(env, &roci_primitive_operator_infix_gte, "operator_infix>=");
+  roci_add_primitive(env, &roci_primitive_operator_infix_gt, "operator_infix>");
+
+  roci_add_primitive(env, &roci_primitive_operator_unary_minus, "operator_unary-");
+  roci_add_primitive(env, &roci_primitive_operator_unary_not, "operator_unary~");
 
   // System
   roci_add_primitive(env, &roci_primitive_exit, "exit");
@@ -1257,6 +1273,16 @@ void roci_primitive_operator_infix_plus(roci_vm_state_t* state) {
   roci_push_integer(state, arg0 + arg1);
 }
 
+void roci_primitive_operator_infix_minus(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'-' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 - arg1);
+}
+
 void roci_primitive_operator_infix_mult(roci_vm_state_t* state) {
   // Handle doubles and conversion
   if (state->n_args != 2) {
@@ -1265,6 +1291,26 @@ void roci_primitive_operator_infix_mult(roci_vm_state_t* state) {
   int64_t arg1 = roci_pop_integer(state);
   int64_t arg0 = roci_pop_integer(state);
   roci_push_integer(state, arg0 * arg1);
+}
+
+void roci_primitive_operator_infix_div(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'/' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 / arg1);
+}
+
+void roci_primitive_operator_infix_rem(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'%' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, arg0 % arg1);
 }
 
 void roci_primitive_operator_infix_equal(roci_vm_state_t* state) {
@@ -1285,4 +1331,87 @@ void roci_primitive_operator_infix_not_equal(roci_vm_state_t* state) {
   int64_t arg1 = roci_pop_integer(state);
   int64_t arg0 = roci_pop_integer(state);
   roci_push_boolean(state, arg0 != arg1);
+}
+
+void roci_primitive_operator_infix_lt(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'<' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 < arg1);
+}
+
+void roci_primitive_operator_infix_lte(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'<=' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 <= arg1);
+}
+
+void roci_primitive_operator_infix_gte(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'>=' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 >= arg1);
+}
+
+void roci_primitive_operator_infix_gt(roci_vm_state_t* state) {
+  // Handle doubles and conversion
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'>' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 > arg1);
+}
+
+void roci_primitive_operator_infix_or(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'|' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 | arg1);
+}
+
+void roci_primitive_operator_infix_xor(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'^' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 ^ arg1);
+}
+
+void roci_primitive_operator_infix_and(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "'&' expects two integer arguments");
+  }
+  int64_t arg1 = roci_pop_integer(state);
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_boolean(state, arg0 & arg1);
+}
+
+void roci_primitive_operator_unary_not(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "'~' expects two integer arguments");
+  }
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, ~arg0);
+}
+
+void roci_primitive_operator_unary_minus(roci_vm_state_t* state) {
+  if (state->n_args != 1) {
+    roci_debug_error(state, "'-' expects two integer arguments");
+  }
+  int64_t arg0 = roci_pop_integer(state);
+  roci_push_integer(state, -arg0);
 }

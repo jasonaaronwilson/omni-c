@@ -336,17 +336,58 @@ assignment_cont_t roci_compile_logical_and(roci_compiler_state_t* state, boolean
 }
 
 assignment_cont_t roci_compile_bitwise_or(roci_compiler_state_t* state, boolean_t assignment_ok) {
-  return roci_compile_bitwise_xor(state, assignment_ok);
+  assignment_cont_t cont = roci_compile_bitwise_xor(state, assignment_ok);
+  if (return_for_assignment(cont)) {
+    return cont;
+  }
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    char* token_string = token_to_string(token);
+    if (!string_equal(token_string, "|")) {
+      return cont;
+    }
+    roci_expect_token(state, token_string);
+    cont = roci_compile_bitwise_xor(state, false);
+    roci_emit_binary_operator(state, "operator_infix|", token);
+  }
+  return cont;
 }
 
 assignment_cont_t roci_compile_bitwise_xor(roci_compiler_state_t* state, boolean_t assignment_ok) {
-  return roci_compile_bitwise_and(state, assignment_ok);
+  assignment_cont_t cont = roci_compile_bitwise_and(state, assignment_ok);
+  if (return_for_assignment(cont)) {
+    return cont;
+  }
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    char* token_string = token_to_string(token);
+    if (!string_equal(token_string, "^")) {
+      return cont;
+    }
+    roci_expect_token(state, token_string);
+    cont = roci_compile_bitwise_and(state, false);
+    roci_emit_binary_operator(state, "operator_infix^", token);
+  }
+  return cont;
 }
 
 assignment_cont_t roci_compile_bitwise_and(roci_compiler_state_t* state, boolean_t assignment_ok) {
-  return roci_compile_equality(state, assignment_ok);
+  assignment_cont_t cont = roci_compile_equality(state, assignment_ok);
+  if (return_for_assignment(cont)) {
+    return cont;
+  }
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    char* token_string = token_to_string(token);
+    if (!string_equal(token_string, "^")) {
+      return cont;
+    }
+    roci_expect_token(state, token_string);
+    cont = roci_compile_equality(state, false);
+    roci_emit_binary_operator(state, "operator_infix&", token);
+  }
+  return cont;
 }
-
 
 boolean_t is_equality_operator(char* token_str) {
   return string_equal(token_str, "==") || string_equal(token_str, "!=");
@@ -370,8 +411,29 @@ assignment_cont_t roci_compile_equality(roci_compiler_state_t* state, boolean_t 
   return cont;
 }
 
+boolean_t is_relational_operator(char* token_str) {
+  return string_equal(token_str, "<")
+    || string_equal(token_str, "<=")
+    || string_equal(token_str, ">=")
+    || string_equal(token_str, ">");
+}
+
 assignment_cont_t roci_compile_relational(roci_compiler_state_t* state, boolean_t assignment_ok) {
-  return roci_compile_additive(state, assignment_ok);
+  assignment_cont_t cont = roci_compile_additive(state, assignment_ok);
+  if (return_for_assignment(cont)) {
+    return cont;
+  }
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    char* token_string = token_to_string(token);
+    if (!is_relational_operator(token_string)) {
+      return cont;
+    }
+    roci_expect_token(state, token_string);
+    cont = roci_compile_additive(state, false);
+    roci_emit_binary_operator(state, string_append("operator_infix", token_string), token);
+  }
+  return cont;
 }
 
 boolean_t is_additive_operator(char* token_str) {
@@ -418,9 +480,23 @@ assignment_cont_t roci_compile_multiplicative(roci_compiler_state_t* state, bool
   return cont;
 }
 
+boolean_t is_prefix_operator(char* token_str) {
+  return string_equal(token_str, "-") || string_equal(token_str, "~");
+}
+
 assignment_cont_t roci_compile_unary(roci_compiler_state_t* state, boolean_t assignment_ok) {
-  // prefix + or -
-  return roci_compile_primitive(state, assignment_ok);
+  token_t* token = roci_peek_token(state);
+  char* token_string = token_to_string(token);
+  if (is_prefix_operator(token_string)) {
+    roci_expect_token(state, token_string);
+    // Recursion
+    assignment_cont_t cont = roci_compile_unary(state, false);
+    // TODO(jawilson): make sure cont isn't weird
+    roci_emit_unary_operator(state, string_append("operator_unary", token_string), token);
+    return ASSIGNMENT_CONTINUE_NONE;
+  } else {
+    return roci_compile_primitive(state, assignment_ok);
+  }
 }
 
 assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state, boolean_t assignment_ok) {
@@ -540,6 +616,17 @@ void roci_emit_binary_operator(roci_compiler_state_t* state, char* name, token_t
   roci_emit_debug_info(state, debug_token);
 }
 
+void roci_emit_unary_operator(roci_compiler_state_t* state, char* name, token_t* debug_token) {
+  roci_emit_get_var(state->current_bb, name);
+
+  roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL);
+  value_array_add(state->current_bb->data, i64_to_value(1));
+  value_array_add(state->current_bb->data,
+                  str_to_value(return_bb->bblock_label));
+  state->current_bb = return_bb;
+  roci_emit_debug_info(state, debug_token);
+}
 
 // Why do we need this? Seems misplaced...
 void finish_call_statement(roci_compiler_state_t* state) {
