@@ -251,7 +251,6 @@ void XXX_roci_compile_statement(roci_compiler_state_t* state) {
 
 typedef assignment_cont_t = enum {
   ASSIGNMENT_CONTINUE_NONE,
-  ASSIGNMENT_CONTINUE_DID_CALL,
   ASSIGNMENT_CONTINUE_VARIABLE_SET,
   ASSIGNMENT_CONTINUE_FIELD_SET,
   ASSIGNMENT_CONTINUE_INDEX_SET,
@@ -269,9 +268,6 @@ void roci_compile_call_or_assignment_statement(roci_compiler_state_t* state) {
   if (cont == ASSIGNMENT_CONTINUE_NONE) {
     // error. we put something on the stack without anything to
     // consuming it. You won't be able to do "foo() && bar();" like in C...
-  } else if (cont == ASSIGNMENT_CONTINUE_DID_CALL) {
-    // check for semi colon and return after dropping the result
-    finish_call_statement(state);
   } else if (cont == ASSIGNMENT_CONTINUE_VARIABLE_SET) {
     // figure out variable name before recursing on RHS
     finish_variable_assignment_statement(state);
@@ -628,15 +624,9 @@ void roci_emit_unary_operator(roci_compiler_state_t* state, char* name, token_t*
   roci_emit_debug_info(state, debug_token);
 }
 
-// Why do we need this? Seems misplaced...
-void finish_call_statement(roci_compiler_state_t* state) {
-  roci_expect_token(state, ";");
-  roci_emit_opcode(state, ROCI_OPCODE_DROP);
-}
-
 void finish_variable_assignment_statement(roci_compiler_state_t* state) {
   token_t* varname_token = roci_next_token(state);
-  // TODO(jawilson): verify identifier
+  roci_verify_identifier(state, varname_token);
   roci_emit_debug_info(state, varname_token);
   roci_expect_token(state, "=");
   roci_compile_expression_full(state, false);
