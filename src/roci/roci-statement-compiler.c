@@ -54,7 +54,7 @@ void roci_compile_return(roci_compiler_state_t* state) {
     roci_skip_token(state);
     roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
   } else {
-    roci_compile_expression(state);
+    roci_compile_expression(state, false);
     roci_expect_token(state, ";");
   }
   roci_emit_return(state);
@@ -79,7 +79,7 @@ void roci_compile_let(roci_compiler_state_t* state) {
   token_t* varname = roci_next_token(state);
   roci_verify_identifier(state, varname);
   roci_expect_token(state, "=");
-  roci_compile_expression(state);
+  roci_compile_expression(state, false);
   roci_expect_token(state, ";");
   roci_emit_token_string_datum(state, token_to_string(varname));
   roci_emit_opcode(state, ROCI_OPCODE_DEFINE_VAR);
@@ -97,7 +97,7 @@ void roci_compile_assignment(roci_compiler_state_t* state) {
   token_t* varname = roci_next_token(state);
   // verify identifier
   roci_expect_token(state, "=");
-  roci_compile_expression(state);
+  roci_compile_expression(state, false);
   roci_expect_token(state, ";");
   roci_emit_token_string_datum(state, token_to_string(varname));
   roci_emit_opcode(state, ROCI_OPCODE_SET_VAR);
@@ -112,7 +112,7 @@ void roci_compile_if(roci_compiler_state_t* state) {
   roci_emit_debug_info(state, roci_peek_token(state));
   roci_expect_token(state, "if");
   roci_expect_token(state, "(");
-  roci_compile_expression(state);
+  roci_compile_expression(state, false);
   roci_expect_token(state, ")");
 
   roci_bb_builder_t* if_bb = state->current_bb;
@@ -183,7 +183,7 @@ void roci_compile_while(roci_compiler_state_t* state) {
   state->current_bb = cond_bb;
 
   // 2. Compile the condition expression
-  roci_compile_expression(state);
+  roci_compile_expression(state, false);
   roci_expect_token(state, ")");
 
   // 3. Compile the body
