@@ -167,7 +167,7 @@ assignment_cont_t roci_compile_equality(roci_compiler_state_t* state, boolean_t 
     }
     roci_expect_token(state, token_string);
     cont = roci_compile_relational(state, false);
-    roci_emit_binary_operator(state, string_append("operator_infix", token_string));
+    roci_emit_binary_operator(state, string_append("operator_infix", token_string), token);
   }
   return cont;
 }
@@ -176,25 +176,129 @@ assignment_cont_t roci_compile_relational(roci_compiler_state_t* state, boolean_
   return roci_compile_additive(state, assignment_ok);
 }
 
+boolean_t is_additive_operator(char* token_str) {
+  return string_equal(token_str, "+") || string_equal(token_str, "-");
+}
+
 assignment_cont_t roci_compile_additive(roci_compiler_state_t* state, boolean_t assignment_ok) {
-  return roci_compile_multiplicative(state, assignment_ok);
+  assignment_cont_t cont = roci_compile_multiplicative(state, assignment_ok);
+  if (return_for_assignment(cont)) {
+    return cont;
+  }
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    char* token_string = token_to_string(token);
+    if (!is_additive_operator(token_string)) {
+      return cont;
+    }
+    roci_expect_token(state, token_string);
+    cont = roci_compile_multiplicative(state, false);
+    roci_emit_binary_operator(state, string_append("operator_infix", token_string), token);
+  }
+  return cont;
+}
+
+boolean_t is_multiplicative_operator(char* token_str) {
+  return string_equal(token_str, "*") || string_equal(token_str, "/") || string_equal(token_str, "%");
 }
 
 assignment_cont_t roci_compile_multiplicative(roci_compiler_state_t* state, boolean_t assignment_ok) {
-  return roci_compile_unary(state, assignment_ok);
+  assignment_cont_t cont = roci_compile_unary(state, assignment_ok);
+  if (return_for_assignment(cont)) {
+    return cont;
+  }
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    char* token_string = token_to_string(token);
+    if (!is_multiplicative_operator(token_string)) {
+      return cont;
+    }
+    roci_expect_token(state, token_string);
+    cont = roci_compile_unary(state, false);
+    roci_emit_binary_operator(state, string_append("operator_infix", token_string), token);
+  }
+  return cont;
 }
 
 assignment_cont_t roci_compile_unary(roci_compiler_state_t* state, boolean_t assignment_ok) {
+  // prefix + or -
   return roci_compile_primitive(state, assignment_ok);
 }
 
 assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state, boolean_t assignment_ok) {
-  // see if number, or string, ...
-  // See if () expression
+  token_t* token = roci_peek_token(state);
+  char* token_string = token_to_string(token);
 
-  // In some sense these are the same
-  // if variable, see if next symbol is =
+  // TODO(jawilson): peek ahead for = or not (or call).
+
+  if (token->type == TOKEN_TYPE_IDENTIFIER) {
+    if (string_equal(token_string, "true")) {
+      roci_next_token(state);
+      roci_emit_opcode(state, ROCI_OPCODE_PUSH_TRUE);
+    } else if (string_equal(token_string, "false")) {
+      roci_next_token(state);
+      roci_emit_opcode(state, ROCI_OPCODE_PUSH_FALSE);
+    } else {
+      token_t* next_token = roci_peek_over_tokens(state, 1);
+      char* next_token_string = token_to_string(next_token);
+      if (string_equal(next_token_string, "=")) {
+	return ASSIGNMENT_CONTINUE_VARIABLE_SET;
+      }
+      roci_next_token(state);
+      roci_emit_get_var(state->current_bb, token_string);
+    }
+    return ASSIGNMENT_CONTINUE_NONE;
+  }
+
+  if (token->type == TOKEN_TYPE_STRING_LITERAL) {
+    roci_next_token(state);
+    char* str = string_unquote_c_string(token_to_string(token));
+    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_STRING);
+    value_array_add(state->current_bb->data, str_to_value(str));
+    return ASSIGNMENT_CONTINUE_NONE;
+  }
+
+  if (token->type == TOKEN_TYPE_INTEGER_LITERAL) {
+    roci_next_token(state);
+    value_result_t parsed = string_parse_uint64(token_to_string(token));
+    if (parsed.nf_error != NF_OK) {
+      log_warn("Failed to parse integer token %s", token_to_string(token));
+      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR);
+    }
+    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
+    value_array_add(state->current_bb->data, parsed.val);
+    return ASSIGNMENT_CONTINUE_NONE;
+  }
+
+  if (token->type == TOKEN_TYPE_FLOAT_LITERAL) {
+    roci_next_token(state);
+    double dbl = string_parse_double(token_to_string(token));
+    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_DOUBLE);
+    value_array_add(state->current_bb->data, dbl_to_value(dbl));
+    return ASSIGNMENT_CONTINUE_NONE;
+  }
+
+  if (string_equal(token_string, "[")) {
+    roci_next_token(state);
+    assignment_cont_t cont = roci_compile_expression2(state, false);
+    token_t* close = roci_peek_token(state);
+    roci_expect_token(state, "]");
+    if (token_matches(roci_peek_token(state), "=")) {
+      return ASSIGNMENT_CONTINUE_INDEX_SET;
+    }
+    roci_emit_binary_operator(state, "operator[]", close);
+    return ASSIGNMENT_CONTINUE_NONE;
+  }
+
+  if (string_equal(token_string, "(")) {
+    roci_next_token(state); 
+    assignment_cont_t cont = roci_compile_expression2(state, false);
+    roci_expect_token(state, ")");
+    return ASSIGNMENT_CONTINUE_NONE;
+  }
+
   // Then handle postfix operators
+
   return ASSIGNMENT_CONTINUE_NONE;
 }
 
@@ -208,7 +312,7 @@ assignment_cont_t roci_compile_postfix(roci_compiler_state_t* state, boolean_t a
   return ASSIGNMENT_CONTINUE_NONE;
 }
 
-void roci_emit_binary_operator(roci_compiler_state_t* state, char* name) {
+void roci_emit_binary_operator(roci_compiler_state_t* state, char* name, token_t* debug_token) {
   roci_emit_get_var(state->current_bb, name);
 
   roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
@@ -217,18 +321,25 @@ void roci_emit_binary_operator(roci_compiler_state_t* state, char* name) {
   value_array_add(state->current_bb->data,
                   str_to_value(return_bb->bblock_label));
   state->current_bb = return_bb;
-
-  // roci_emit_debug_info(state, debug_token);
+  roci_emit_debug_info(state, debug_token);
 }
 
 
+// Why do we need this? Seems misplaced...
 void finish_call_statement(roci_compiler_state_t* state) {
   roci_expect_token(state, ";");
   roci_emit_opcode(state, ROCI_OPCODE_DROP);
 }
 
 void finish_variable_assignment_statement(roci_compiler_state_t* state) {
-  // figure out variable name before recursing on RHS
+  token_t* varname_token = roci_next_token(state);
+  // TODO(jawilson): verify identifier
+  roci_emit_debug_info(state, varname_token);
+  roci_expect_token(state, "=");
+  roci_compile_expression2(state, false);
+  roci_expect_token(state, ";");
+  roci_emit_token_string_datum(state, token_to_string(varname_token));
+  roci_emit_opcode(state, ROCI_OPCODE_SET_VAR);
 }
 
 void finish_field_assignment_statement(roci_compiler_state_t* state) {

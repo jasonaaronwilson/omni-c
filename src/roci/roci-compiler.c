@@ -750,6 +750,10 @@ token_t* roci_peek_token(roci_compiler_state_t* state) {
   return token_at(state->tokens, state->position);
 }
 
+token_t* roci_peek_over_tokens(roci_compiler_state_t* state, uint64_t n) {
+  return token_at(state->tokens, state->position + n);
+}
+
 token_t* roci_next_token(roci_compiler_state_t* state) {
   return token_at(state->tokens, state->position++);
 }
