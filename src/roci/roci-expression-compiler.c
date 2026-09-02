@@ -149,6 +149,11 @@ assignment_cont_t roci_compile_bitwise_and(roci_compiler_state_t* state, boolean
   return roci_compile_equality(state, assignment_ok);
 }
 
+
+boolean_t is_equality_operator(char* token_str) {
+  return string_equal(token_str, "==") || string_equal(token_str, "!=");
+}
+
 assignment_cont_t roci_compile_equality(roci_compiler_state_t* state, boolean_t assignment_ok) {
   assignment_cont_t cont = roci_compile_relational(state, assignment_ok);
   if (return_for_assignment(cont)) {
@@ -156,12 +161,13 @@ assignment_cont_t roci_compile_equality(roci_compiler_state_t* state, boolean_t 
   }
   while (true) {
     token_t* token = roci_peek_token(state);
-    if (!token_matches(token, "==")) {
+    char* token_string = token_to_string(token);
+    if (!is_equality_operator(token_string)) {
       return cont;
     }
-    roci_expect_token(state, "==");
+    roci_expect_token(state, token_string);
     cont = roci_compile_relational(state, false);
-    roci_emit_binary_operator(state, "operator_infix_==");
+    roci_emit_binary_operator(state, string_append("operator_infix", token_string));
   }
   return cont;
 }
