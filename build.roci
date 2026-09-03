@@ -573,6 +573,7 @@ list_push(TESTS, "tests/lib/value-array-test.c");
 list_push(TESTS, "tests/lib/value-tree-test.c");
 
 list_push(TESTS, "tests/roci/roci-symbol-table-test.c");
+list_push(TESTS, "tests/roci/roci-record-fields-test.c");
 
 let run_roci_tests = fn(omni_c) {
   let command_line =

@@ -10,3 +10,4 @@ let SOURCE_ROCI = list_map(_SOURCE_ROCI_, fn(x) {
 // the roci "package" to make it work.
 let SOURCE_ROCI_LIB = make_list();
 list_push(SOURCE_ROCI_LIB, string_append(TOP_DIR, "src/roci/roci-symbol-table.c"));
+list_push(SOURCE_ROCI_LIB, string_append(TOP_DIR, "src/roci/roci-record-fields.c"));
