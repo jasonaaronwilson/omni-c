@@ -229,26 +229,6 @@ decent expression parser.
 
 */
 
-/*
-void XXX_roci_compile_statement(roci_compiler_state_t* state) {
-  token_t* token = roci_peek_token(state);
-  log_info("CURRENT TOKEN IS %s", token_to_string(token));
-  if (token_matches(token, "return")) {
-    roci_compile_return(state);
-  } else if (token_matches(token, "if")) {
-    roci_compile_if(state);
-  } else if (token_matches(token, "let")) {
-    roci_compile_let(state);
-  } else if (token_matches(token, "while")) {
-    roci_compile_while(state);
-  } else if (token_matches(token, "record")) {
-    roci_compile_record(state);
-  } else {
-    roci_compile_call_or_assignment(state);
-  }
-}
-*/
-
 typedef assignment_cont_t = enum {
   ASSIGNMENT_CONTINUE_NONE,
   ASSIGNMENT_CONTINUE_VARIABLE_SET,
@@ -587,16 +567,7 @@ assignment_cont_t roci_compile_postfix(roci_compiler_state_t* state, boolean_t a
     roci_emit_binary_operator(state, "operator[]", close);
     return ASSIGNMENT_CONTINUE_NONE;
   }
-
-  // Then handle postfix operators
-
-
-  //
-  // Handle calls
-  // Handle index operations
-  // Handle field reference operation
-  //
-  // Otherwise an error.
+  // TODO(jawilson): handle field reference operations
   return ASSIGNMENT_CONTINUE_NONE;
 }
 
