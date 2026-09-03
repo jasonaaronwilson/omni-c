@@ -1,0 +1,30 @@
+ Performance counter stats for './build-dir/bin/omni-c roci --use-full-expressions=true --script /home/jawilson/src/omni-c/tests/roci-parse-speed-test.roci' (30 runs):
+
+             60.48 msec task-clock                       #    0.979 CPUs utilized               ( +-  0.35% )
+                 1      context-switches                 #   16.535 /sec                        ( +- 16.42% )
+                 1      cpu-migrations                   #   16.535 /sec                        ( +- 15.46% )
+             1,825      page-faults                      #   30.176 K/sec                       ( +-  0.01% )
+       268,085,636      cycles                           #    4.433 GHz                         ( +-  0.27% )
+        38,152,732      stalled-cycles-frontend          #   14.23% frontend cycles idle        ( +-  2.35% )
+       494,444,494      instructions                     #    1.84  insn per cycle            
+                                                  #    0.08  stalled cycles per insn     ( +-  0.01% )
+       128,698,294      branches                         #    2.128 G/sec                       ( +-  0.01% )
+         3,248,285      branch-misses                    #    2.52% of all branches             ( +-  0.18% )
+
+          0.061774 +- 0.000238 seconds time elapsed  ( +-  0.39% )
+
+
+ Performance counter stats for './build-dir/bin/omni-c roci --use-full-expressions=false --script /home/jawilson/src/omni-c/tests/roci-parse-speed-test.roci' (30 runs):
+
+             53.12 msec task-clock                       #    0.979 CPUs utilized               ( +-  0.43% )
+                 1      context-switches                 #   18.826 /sec                        ( +- 23.82% )
+                 1      cpu-migrations                   #   18.826 /sec                        ( +- 21.16% )
+             1,575      page-faults                      #   29.651 K/sec                       ( +-  0.02% )
+       234,402,262      cycles                           #    4.413 GHz                         ( +-  0.35% )
+        32,231,227      stalled-cycles-frontend          #   13.75% frontend cycles idle        ( +-  3.10% )
+       484,274,154      instructions                     #    2.07  insn per cycle            
+                                                  #    0.07  stalled cycles per insn     ( +-  0.01% )
+       125,985,015      branches                         #    2.372 G/sec                       ( +-  0.01% )
+         2,209,072      branch-misses                    #    1.75% of all branches             ( +-  0.14% )
+
+          0.054281 +- 0.000245 seconds time elapsed  ( +-  0.45% )
