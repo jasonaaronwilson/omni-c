@@ -526,6 +526,27 @@ let build_lib_oar = fn() {
 
 add_target(build_dir_path("bin/lib.oar"), build_lib_oar);
 
+let build_lib_roci = fn() {
+  let target = build_dir_path("bin/lib-roci.oar");
+  let sources = filter_files_by_platform(SOURCE_ROCI_LIB);
+
+  if (all_older_than(target, sources)) {
+    announce_no_build(target);
+    return;
+  } else {
+    announce_build(target);
+  }
+
+  let command = make_list(build_dir_path("bin/omni-c-stable"),
+    "archive", "--archive-output-file", target);
+  list_push_all(command, sources);
+  let result = shell(command);
+  check_shell_command(result);
+};
+
+add_target(build_dir_path("bin/lib-roci.oar"), build_lib_roci);
+add_target("lib-roci", build_lib_roci);
+
 let TESTS = make_list();
 let STATEMENT_TESTS = glob("tests/statements/*.stmt");
 let EXPRESSION_TESTS = glob("tests/expressions/*.expr");
@@ -550,6 +571,8 @@ list_push(TESTS, "tests/lib/uint64-test.c");
 list_push(TESTS, "tests/lib/value-alist-test.c");
 list_push(TESTS, "tests/lib/value-array-test.c");
 list_push(TESTS, "tests/lib/value-tree-test.c");
+
+list_push(TESTS, "tests/roci/roci-symbol-table-test.c");
 
 let run_roci_tests = fn(omni_c) {
   let command_line =
@@ -578,6 +601,7 @@ let run_tests = fn(omni_c) {
 add_target("test", fn() {
   build_target(build_dir_path("bin/omni-c"));
   build_target(build_dir_path("bin/lib.oar"));
+  build_target(build_dir_path("bin/lib-roci.oar"));
   run_tests(build_dir_path("bin/omni-c"));
 });
 

@@ -5,3 +5,8 @@ let _SOURCE_ROCI_ = glob("src/roci/*.c");
 let SOURCE_ROCI = list_map(_SOURCE_ROCI_, fn(x) {
   return string_append(TOP_DIR, x);
 });
+
+// Eventually just use everything. Maybe have to move some flags into
+// the roci "package" to make it work.
+let SOURCE_ROCI_LIB = make_list();
+list_push(SOURCE_ROCI_LIB, string_append(TOP_DIR, "src/roci/roci-symbol-table.c"));

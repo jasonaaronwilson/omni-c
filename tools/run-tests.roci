@@ -80,8 +80,10 @@ let get_test_executor = fn(filename) {
   if (string_ends_with(filename, ".sh")) {
     return script_test_executor;
   }
-  // TODO(jawilson): be more specific
   if (string_contains(filename, "lib/")) {
+    return lib_unit_test_executor;
+  }
+  if (string_contains(filename, "roci/")) {
     return lib_unit_test_executor;
   }
   if (string_ends_with(filename, ".expr")) {
@@ -90,6 +92,7 @@ let get_test_executor = fn(filename) {
   if (string_ends_with(filename, ".stmt")) {
     return stmt_test_executor;
   }
+  // I think this is dead since buffer_contains isn't even wired up..
   let contents = read_file(filename);
   if (buffer_contains(contents, "main(")) {
     return execute_test_executor;
@@ -116,7 +119,8 @@ let script_test_executor = fn(filename) {
 
 let lib_unit_test_executor = fn(filename) {
   let lib_archive = string_append(build_dir, "/bin/lib.oar");
-  let command_line = make_list(omni_c_exec, "test", lib_archive, filename);
+  let lib_roci = string_append(build_dir, "/bin/lib-roci.oar");
+  let command_line = make_list(omni_c_exec, "test", lib_archive, lib_roci, filename);
   let shell_result = shell(command_line);
   check_shell_command(shell_result, filename);
 };
