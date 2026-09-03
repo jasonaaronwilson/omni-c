@@ -7,6 +7,16 @@
 
 typedef roci_symid_t = uint32_t;
 
+char* roci_intern_as_string(char* symbol) {
+  return roci_intern_symbol(symbol, nullptr);
+}
+
+roci_symid_t roci_intern_as_symid(char* symbol) {
+  roci_symid_t result = 0;
+  roci_intern_symbol(symbol, &result);
+  return result;
+}
+
 // We should use a lock for multithreading
 string_hashtable_t* the_roci_symbol_table = nullptr;
 value_array_t* symid_to_interned_string = nullptr;
