@@ -32,7 +32,7 @@ char* FLAG_roci_script = nullptr;
 boolean_t FLAG_roci_debug = false;
 boolean_t FLAG_roci_print_bbs = false;
 boolean_t FLAG_roci_repl_on_error = false;
-boolean_t FLAG_roci_use_full_expressions = false;
+boolean_t FLAG_roci_use_full_expressions = true;
 
 void configure_flags(void) {
   flag_program_name("omni-c");
