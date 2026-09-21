@@ -29,26 +29,39 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_platform, "platform");
 
   // Built-in Operators
-  roci_add_primitive(env, &roci_primitive_operator_infix_plus, "operator_infix+");
-  roci_add_primitive(env, &roci_primitive_operator_infix_minus, "operator_infix-");
+  roci_add_primitive(env, &roci_primitive_operator_infix_plus,
+                     "operator_infix+");
+  roci_add_primitive(env, &roci_primitive_operator_infix_minus,
+                     "operator_infix-");
 
-  roci_add_primitive(env, &roci_primitive_operator_infix_mult, "operator_infix*");
-  roci_add_primitive(env, &roci_primitive_operator_infix_div, "operator_infix/");
-  roci_add_primitive(env, &roci_primitive_operator_infix_rem, "operator_infix%");
+  roci_add_primitive(env, &roci_primitive_operator_infix_mult,
+                     "operator_infix*");
+  roci_add_primitive(env, &roci_primitive_operator_infix_div,
+                     "operator_infix/");
+  roci_add_primitive(env, &roci_primitive_operator_infix_rem,
+                     "operator_infix%");
 
   roci_add_primitive(env, &roci_primitive_operator_infix_or, "operator_infix|");
-  roci_add_primitive(env, &roci_primitive_operator_infix_xor, "operator_infix^");
-  roci_add_primitive(env, &roci_primitive_operator_infix_and, "operator_infix&");
+  roci_add_primitive(env, &roci_primitive_operator_infix_xor,
+                     "operator_infix^");
+  roci_add_primitive(env, &roci_primitive_operator_infix_and,
+                     "operator_infix&");
 
-  roci_add_primitive(env, &roci_primitive_operator_infix_equal, "operator_infix==");
-  roci_add_primitive(env, &roci_primitive_operator_infix_not_equal, "operator_infix!=");
+  roci_add_primitive(env, &roci_primitive_operator_infix_equal,
+                     "operator_infix==");
+  roci_add_primitive(env, &roci_primitive_operator_infix_not_equal,
+                     "operator_infix!=");
   roci_add_primitive(env, &roci_primitive_operator_infix_lt, "operator_infix<");
-  roci_add_primitive(env, &roci_primitive_operator_infix_lte, "operator_infix<=");
-  roci_add_primitive(env, &roci_primitive_operator_infix_gte, "operator_infix>=");
+  roci_add_primitive(env, &roci_primitive_operator_infix_lte,
+                     "operator_infix<=");
+  roci_add_primitive(env, &roci_primitive_operator_infix_gte,
+                     "operator_infix>=");
   roci_add_primitive(env, &roci_primitive_operator_infix_gt, "operator_infix>");
 
-  roci_add_primitive(env, &roci_primitive_operator_unary_minus, "operator_unary-");
-  roci_add_primitive(env, &roci_primitive_operator_unary_not, "operator_unary~");
+  roci_add_primitive(env, &roci_primitive_operator_unary_minus,
+                     "operator_unary-");
+  roci_add_primitive(env, &roci_primitive_operator_unary_not,
+                     "operator_unary~");
 
   // System
   roci_add_primitive(env, &roci_primitive_exit, "exit");
@@ -65,7 +78,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_write_file, "write_file");
   roci_add_primitive(env, &roci_primitive_glob, "glob");
   roci_add_primitive(env, &roci_primitive_shell, "shell");
-  roci_add_primitive(env, &roci_primitive_shell_command_line, "shell_command_line");
+  roci_add_primitive(env, &roci_primitive_shell_command_line,
+                     "shell_command_line");
   roci_add_primitive(env, &roci_primitive_shell_exit_code, "shell_exit_code");
   roci_add_primitive(env, &roci_primitive_shell_stdout, "shell_stdout");
   roci_add_primitive(env, &roci_primitive_timestamp, "timestamp");
@@ -154,11 +168,12 @@ void roci_add_primitives_to_env(roci_env_t* env) {
 
   // Records
   roci_add_primitive(env, &roci_primitive_is_record, "is_record");
+  roci_add_primitive(env, &roci_primitive_match_record_metadata,
+                     "_match_record_metadata");
   roci_add_primitive(env, &roci_primitive_make_record, "make_record");
   roci_add_primitive(env, &roci_primitive_record_tag, "record_tag");
   roci_add_primitive(env, &roci_primitive_record_get, "record_get");
   roci_add_primitive(env, &roci_primitive_record_set, "record_set");
-
 
   // Random Testing Code
   roci_add_primitive(env, &roci_primitive_draw_random_screen,
@@ -218,13 +233,13 @@ boolean_t roci_values_equal(roci_value_t a, roci_value_t b) {
   if (a.tag == ROCI_TAG_RECORD && b.tag == ROCI_TAG_RECORD) {
     roci_record_t* rec_a = cast(roci_record_t*, a.raw);
     roci_record_t* rec_b = cast(roci_record_t*, b.raw);
-    if (!string_equal(rec_a->record_tag, rec_b->record_tag)) {
+    if (!rec_a->metadata->record_symid != rec_b->metadata->record_symid) {
       return false;
     }
-    if (rec_a->length != rec_b->length) {
+    if (rec_a->metadata->length != rec_b->metadata->length) {
       return false;
     }
-    for (int i = 0; i < rec_a->length; i++) {
+    for (int i = 0; i < rec_a->metadata->length; i++) {
       roci_value_t va = roci_record_get(rec_a, i);
       roci_value_t vb = roci_record_get(rec_b, i);
       if (!roci_values_equal(va, vb)) {
@@ -297,8 +312,8 @@ int64_t roci_hash_value(roci_vm_state_t* state, roci_value_t value) {
 
   case ROCI_TAG_RECORD: {
     roci_record_t* rec = cast(roci_record_t*, value.raw);
-    int64_t hash = string_hash(rec->record_tag);
-    for (int i = 0; i < rec->length; i++) {
+    int64_t hash = rec->metadata->record_symid;
+    for (int i = 0; i < rec->metadata->length; i++) {
       roci_value_t v = roci_record_get(rec, i);
       hash ^= roci_hash_value(state, v);
       hash = roci_mix64(hash);
@@ -708,25 +723,25 @@ roci_push_string(state, "linux");
 
 // AI rewrite now that we have file_glob
 void roci_primitive_glob(roci_vm_state_t* state) {
-    if (state->n_args != 1) {
-        roci_debug_error(state, "glob expects 1 argument");
-    }
-    char* pattern = roci_pop_string(state);
+  if (state->n_args != 1) {
+    roci_debug_error(state, "glob expects 1 argument");
+  }
+  char* pattern = roci_pop_string(state);
 
-    value_array_t* file_paths = file_glob(pattern);
-    if (file_paths == NULL) {
-        roci_debug_error(state, "An error occurred during globbing.");
-    }
+  value_array_t* file_paths = file_glob(pattern);
+  if (file_paths == NULL) {
+    roci_debug_error(state, "An error occurred during globbing.");
+  }
 
-    size_t count = file_paths->length;
-    value_array_t* result = make_value_array(count);
+  size_t count = file_paths->length;
+  value_array_t* result = make_value_array(count);
 
-    for (size_t i = 0; i < count; ++i) {
-      char* path = value_array_get(file_paths, i).str;
-      value_array_push(result, ptr_to_value(string_to_roci_string(path)));
-    }
+  for (size_t i = 0; i < count; ++i) {
+    char* path = value_array_get(file_paths, i).str;
+    value_array_push(result, ptr_to_value(string_to_roci_string(path)));
+  }
 
-    roci_push_list(state, result);
+  roci_push_list(state, result);
 }
 
 void roci_primitive_path_is_directory(roci_vm_state_t* state) {
@@ -1220,16 +1235,15 @@ void roci_primitive_record_tag(roci_vm_state_t* state) {
     roci_debug_error(state, "record_tag expects 1 argument");
   }
   roci_record_t* record = roci_pop_record(state);
-  roci_push_string(state, record->record_tag);
+  roci_push_string(state, roci_symid_to_string(record->metadata->record_symid));
 }
 
 void roci_primitive_make_record(roci_vm_state_t* state) {
-  if (state->n_args != 2) {
-    roci_debug_error(state, "make_record expects 2 argument");
+  if (state->n_args != 1) {
+    roci_debug_error(state, "make_record expects 1 argument");
   }
-  uint64_t length = cast(uint64_t, roci_pop_integer(state));
-  char* record_tag = roci_pop_string(state);
-  roci_push_value(state, roci_make_record(record_tag, length));
+  int64_t record_metadata_num = roci_pop_integer(state);
+  roci_push_value(state, roci_make_record(record_metadata_num));
 }
 
 void roci_primitive_record_get(roci_vm_state_t* state) {
@@ -1250,6 +1264,15 @@ void roci_primitive_record_set(roci_vm_state_t* state) {
   roci_record_t* record = roci_pop_record(state);
   roci_record_set(record, index, value);
   roci_push_false(state);
+}
+
+void roci_primitive_match_record_metadata(roci_vm_state_t* state) {
+  if (state->n_args != 2) {
+    roci_debug_error(state, "match_record_metadata");
+  }
+  int64_t index = roci_pop_integer(state);
+  roci_record_t* record = roci_pop_record(state);
+  roci_push_boolean(state, match_record_metadata(record, index));
 }
 
 void roci_primitive_draw_random_screen(roci_vm_state_t* state) {

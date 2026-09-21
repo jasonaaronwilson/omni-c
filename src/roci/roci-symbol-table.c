@@ -35,7 +35,8 @@ char* roci_intern_symbol(char* symbol, roci_symid_t* symid_out) {
     if (symid_out != nullptr) {
       *symid_out = symid;
     }
-    return value_array_get(symid_to_interned_string, symid - symid_offset()).str;
+    return value_array_get(symid_to_interned_string, symid - symid_offset())
+        .str;
   }
 
   roci_symid_t symid = symid_to_interned_string->length + symid_offset();
@@ -48,10 +49,10 @@ char* roci_intern_symbol(char* symbol, roci_symid_t* symid_out) {
 }
 
 char* roci_symid_to_string(roci_symid_t symid) {
-  if ((symid_to_interned_string != nullptr)
-      && (symid >= symid_offset())
+  if ((symid_to_interned_string != nullptr) && (symid >= symid_offset())
       && (symid - symid_offset() < symid_to_interned_string->length)) {
-    return value_array_get(symid_to_interned_string, symid - symid_offset()).str;
+    return value_array_get(symid_to_interned_string, symid - symid_offset())
+        .str;
   }
   return nullptr;
 }
@@ -59,6 +60,4 @@ char* roci_symid_to_string(roci_symid_t symid) {
 // We'll probably avoid bugs by avoiding zero... I also have strange
 // ideas about maybe reserving more so direct slot access can be
 // specified (perhaps a terrible idea).
-static inline uint32_t symid_offset(void) {
-  return 1;
-}
+static inline uint32_t symid_offset(void) { return 1; }

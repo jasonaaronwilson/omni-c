@@ -140,6 +140,6 @@ void configure_regular_commands(void) {
   flag_boolean("--print-bbs", &FLAG_roci_print_bbs);
   flag_boolean("--repl-on-error", &FLAG_roci_repl_on_error);
   flag_boolean("--use-full-expressions", &FLAG_roci_use_full_expressions);
-  
+
   flag_file_args(&FLAG_files);
 }

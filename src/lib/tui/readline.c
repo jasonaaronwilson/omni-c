@@ -51,55 +51,55 @@ buffer_t* readline(char* prompt, boolean_t init_and_restore) {
           readline_repaint(prompt, line, tmp, column);
         } else {
           switch (ev.key.keycode) {
-            case TERM_KEY_ENTER:
-              fprintf(stdout, "\r\n");
-              goto finish;
+          case TERM_KEY_ENTER:
+            fprintf(stdout, "\r\n");
+            goto finish;
 
-            case TERM_KEY_BACKSPACE:
-              if (column > 0) {
-                column--;
-                cp_array_delete(line, column);
-                readline_repaint(prompt, line, tmp, column);
-              }
-              break;
+          case TERM_KEY_BACKSPACE:
+            if (column > 0) {
+              column--;
+              cp_array_delete(line, column);
+              readline_repaint(prompt, line, tmp, column);
+            }
+            break;
 
-            case TERM_KEY_DELETE:
-              if (column < line->length) {
-                cp_array_delete(line, column);
-                readline_repaint(prompt, line, tmp, column);
-              }
-              break;
+          case TERM_KEY_DELETE:
+            if (column < line->length) {
+              cp_array_delete(line, column);
+              readline_repaint(prompt, line, tmp, column);
+            }
+            break;
 
-            case TERM_KEY_LEFT:
-              if (column > 0) {
-                column--;
-                readline_repaint(prompt, line, tmp, column);
-              }
-              break;
+          case TERM_KEY_LEFT:
+            if (column > 0) {
+              column--;
+              readline_repaint(prompt, line, tmp, column);
+            }
+            break;
 
-            case TERM_KEY_RIGHT:
-              if (column < line->length) {
-                column++;
-                readline_repaint(prompt, line, tmp, column);
-              }
-              break;
+          case TERM_KEY_RIGHT:
+            if (column < line->length) {
+              column++;
+              readline_repaint(prompt, line, tmp, column);
+            }
+            break;
 
-            case TERM_KEY_HOME:
-              if (column > 0) {
-                column = 0;
-                readline_repaint(prompt, line, tmp, column);
-              }
-              break;
+          case TERM_KEY_HOME:
+            if (column > 0) {
+              column = 0;
+              readline_repaint(prompt, line, tmp, column);
+            }
+            break;
 
-            case TERM_KEY_END:
-              if (column != line->length) {
-                column = line->length;
-                readline_repaint(prompt, line, tmp, column);
-              }
-              break;
+          case TERM_KEY_END:
+            if (column != line->length) {
+              column = line->length;
+              readline_repaint(prompt, line, tmp, column);
+            }
+            break;
 
-            default:
-              break;
+          default:
+            break;
           }
         }
       }
@@ -108,7 +108,7 @@ buffer_t* readline(char* prompt, boolean_t init_and_restore) {
     }
   }
 
- finish:
+finish:
   if (init_and_restore) {
     term_restore();
   }
@@ -118,7 +118,8 @@ buffer_t* readline(char* prompt, boolean_t init_and_restore) {
   return result;
 }
 
-void readline_repaint(const char* prompt, const codepoint_array_t* line, buffer_t* tmp, size_t column) {
+void readline_repaint(const char* prompt, const codepoint_array_t* line,
+                      buffer_t* tmp, size_t column) {
   buffer_clear(tmp);
   term_move_cursor_to_start_of_line(tmp);
   term_clear_entire_line(tmp);
@@ -129,7 +130,8 @@ void readline_repaint(const char* prompt, const codepoint_array_t* line, buffer_
     buffer_append_code_point(tmp, line->chars[i]);
   }
 
-  // Adjust cursor position (assuming 1 display col per codepoint / ASCII prompt)
+  // Adjust cursor position (assuming 1 display col per codepoint / ASCII
+  // prompt)
   term_move_cursor_to_column(tmp, column + 1 + strlen(prompt));
   buffer_write_all(stdout, tmp);
   fflush(stdout);

@@ -7,9 +7,7 @@
  *
  * This may or may not return a copy in future versions.
  */
-char* to_platform_path(char* internal_path) {
-  return internal_path;
-}
+char* to_platform_path(char* internal_path) { return internal_path; }
 
 /**
  * @function from_platform_path
@@ -20,9 +18,7 @@ char* to_platform_path(char* internal_path) {
  *
  * This may or may not return a copy in future versions.
  */
-char* from_platform_path(char* platform_path) {
-  return platform_path;
-}
+char* from_platform_path(char* platform_path) { return platform_path; }
 
 /**
  * @file path.c

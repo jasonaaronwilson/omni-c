@@ -39,6 +39,15 @@ void roci_compile_record(roci_compiler_state_t* state) {
     }
   } while (true);
 
+  // TODO(jawilson): Obviously we should have already cached this
+  // object so only one copy even if we make 100 records. I think this
+  // would be easier if we had handles or something like that... I
+  // guess we could smuggle the pointer into an integer...
+
+  roci_record_fields_t* metadata
+      = make_roci_record_fields_from_names("myrecord", num_fields, fields);
+  int record_metadata_num = save_record_metadata(metadata);
+
   buffer_t* buffer = make_buffer(256);
 
   // First emit the consructor
@@ -50,36 +59,47 @@ void roci_compile_record(roci_compiler_state_t* state) {
     }
     buffer_printf(buffer, "%s", fields[i]);
   }
-  buffer_printf(buffer, "){");
-  buffer_printf(buffer, "let result = make_record(\"%s\", %d);", record_name, num_fields);
+  buffer_printf(buffer, ") {\n");
+  buffer_printf(buffer, "  let result = make_record(%d);\n",
+                record_metadata_num);
   for (int i = 0; i < num_fields; i++) {
-    buffer_printf(buffer, "record_set(result, %d, %s);", i, fields[i]);
+    buffer_printf(buffer, "  record_set(result, %d, %s);\n", i, fields[i]);
   }
-  buffer_printf(buffer, "return result;};");
+  buffer_printf(buffer, "  return result;\n};\n");
 
   // Now the predicate
 
-  buffer_printf(buffer,
-                "let is_%s = "
-                "fn(record){if(is_record(record)){if(string_equal(record_tag("
-                "record), \"%s\")){return true;}}return false;};",
-                record_name, record_name);
+  buffer_printf(buffer, "\nlet is_%s = fn(record) {\n", record_name);
+  buffer_printf(buffer, "  if (not(is_record(record))) {\n");
+  buffer_printf(buffer, "    return false;\n");
+  buffer_printf(buffer, "  }\n");
+  buffer_printf(buffer, "  return _match_record_metadata(record, %d);\n",
+                record_metadata_num);
+  buffer_printf(buffer, "};\n");
 
-  // Finally the getters/setters
+  // Finally the getters/setters. We can remove these once we modify
+  // the compiler to understand "."
 
   char* record_tag_check = string_printf(
-      "if(not(string_equal(record_tag(record),\"%s\"))){debug_error(\"\");}",
-      record_name);
+      "\n  if (not(_match_record_metadata(record, %d))) { debug_error(\"Wrong "
+      "record type\"); }",
+      record_metadata_num);
 
   for (int i = 0; i < num_fields; i++) {
-    buffer_printf(
-        buffer, "let %s_get_%s = fn(record){%sreturn record_get(record, %d);};",
-        record_name, fields[i], record_tag_check, i);
     buffer_printf(buffer,
-                  "let %s_set_%s = fn(record, value){%sreturn "
-                  "record_set(record, %d, value);};",
+                  "\nlet %s_get_%s = fn(record){%s\n  return "
+                  "record_get(record, %d);\n};\n",
+                  record_name, fields[i], record_tag_check, i);
+    buffer_printf(buffer,
+                  "\nlet %s_set_%s = fn(record, value){%s\n  return "
+                  "record_set(record, %d, value);\n};\n",
                   record_name, fields[i], record_tag_check, i);
   }
+
+  buffer_printf(buffer, "\n// Done %s\n", record_name);
+
+  // debug generated code...
+  // buffer_write_all(stderr, buffer);
 
   value_array_t* tokens = roci_tokenize_file(
       state, string_printf("*compile-record*%s", record_name), buffer);

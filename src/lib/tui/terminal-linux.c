@@ -57,5 +57,4 @@ void term_echo_restore(term_echo_restore_t restore) {
  * terminal by printing a multi-byte code-point and seeing by how much
  * the cursor position changes...
  */
-void enable_utf8_console(void) {
-}
+void enable_utf8_console(void) {}

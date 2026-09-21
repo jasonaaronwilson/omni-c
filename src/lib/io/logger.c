@@ -202,8 +202,7 @@ static inline boolean_t should_log_info() {
                 ##__VA_ARGS__);                                                \
   } while (0)
 
-logger_state_t global_logger_state
-    = {.level = LOGGER_DEFAULT_LEVEL};
+logger_state_t global_logger_state = {.level = LOGGER_DEFAULT_LEVEL};
 
 value_result_t parse_log_level_enum(char* str) {
   if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {

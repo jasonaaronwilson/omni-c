@@ -1,18 +1,20 @@
 typedef roci_record_t = struct {
-  char* record_tag;
-  uint64_t length;
+  roci_record_fields_t* metadata;
   uint8_t* value_tags;
   uint64_t* values;
 };
 
-roci_value_t roci_make_record(char* record_tag, uint64_t length) {
+roci_value_t roci_make_record(int record_metadata_num) {
   roci_value_t result = {0};
 
+  roci_record_fields_t* metadata
+      = get_record_metadata_by_number(record_metadata_num);
+
   roci_record_t* record = malloc_struct(roci_record_t);
-  record->record_tag = record_tag;
-  record->length = length;
-  record->value_tags = malloc_bytes(length);
-  record->values = cast(uint64_t*, malloc_bytes(length * sizeof(uint64_t)));
+  record->metadata = metadata;
+  record->value_tags = malloc_bytes(metadata->length);
+  record->values
+      = cast(uint64_t*, malloc_bytes(metadata->length * sizeof(uint64_t)));
   for (int i = 0; i < 8; i++) {
     record->value_tags[i] = ROCI_TAG_BOOLEAN;
   }

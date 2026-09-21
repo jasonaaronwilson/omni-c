@@ -6,9 +6,7 @@ boolean_t is_tty_output(void) {
   return isatty(fileno(stdout)) && !string_equal("dumb", getenv("TERM"));
 }
 
-boolean_t is_full_tty(void) {
-  return is_tty_input() && is_tty_output();
-}
+boolean_t is_full_tty(void) { return is_tty_input() && is_tty_output(); }
 
 boolean_t use_tty_colors_and_faces(void) {
   // We should probably validate the value of INSIDE_EMACS in case

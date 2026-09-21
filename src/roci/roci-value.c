@@ -78,11 +78,14 @@ void roci_append_value(buffer_t* buffer, roci_value_t value) {
 
   case ROCI_TAG_RECORD: {
     roci_record_t* record = cast(roci_record_t*, value.raw);
-    buffer_printf(buffer, "record<%s>[", record->record_tag);
-    for (uint64_t i = 0; i < record->length; i++) {
+    buffer_printf(buffer, "record<%s>[",
+                  roci_symid_to_string(record->metadata->record_symid));
+    for (uint64_t i = 0; i < record->metadata->length; i++) {
       if (i != 0) {
         buffer_printf(buffer, ", ");
       }
+      buffer_printf(buffer,
+                    "%s = ", find_record_field_name(record->metadata, i));
       roci_value_t slot = roci_record_get(record, i);
       roci_append_value(buffer, slot);
     }

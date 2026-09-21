@@ -321,10 +321,9 @@ extern buffer_t* buffer_append_code_point(buffer_t* buffer,
 
 Not tested yet - there may be bugs in this...
 
-buffer_t* buffer_insert_code_point(buffer_t* buffer, int64_t position, uint32_t code_point) {
-  buffer_t* tmp = make_buffer(4);
-  buffer_append_code_point(tmp, code_point);
-  if (position+1 >= buffer->capacity) {
+buffer_t* buffer_insert_code_point(buffer_t* buffer, int64_t position, uint32_t
+code_point) { buffer_t* tmp = make_buffer(4); buffer_append_code_point(tmp,
+code_point); if (position+1 >= buffer->capacity) {
       buffer_increase_capacity(buffer, buffer->capacity * 2);
   }
   buffer_adjust_region(buffer, position, position+1, tmp->length);

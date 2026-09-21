@@ -36,7 +36,10 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file) {
       value_array_add(argv, str_to_value("-L/opt/homebrew/opt/bdw-gc/lib"));
     }
     if (string_equal(platform(), "windows")) {
-      value_array_add(argv, str_to_value("-Ic:/Users/jason/vcpkg/installed/x64-windows-static/include"));
+      value_array_add(
+          argv,
+          str_to_value(
+              "-Ic:/Users/jason/vcpkg/installed/x64-windows-static/include"));
     }
     value_array_add(argv, str_to_value("-g"));
     if (!string_equal(platform(), "windows")) {
@@ -48,8 +51,10 @@ value_array_t* c_compiler_command_line(char* input_file, char* output_file) {
     value_array_add(argv, str_to_value(output_file));
     value_array_add(argv, str_to_value(input_file));
     if (string_equal(platform(), "windows")) {
-      value_array_add(argv, 
-		      str_to_value("c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib"));
+      value_array_add(
+          argv,
+          str_to_value(
+              "c:/Users/jason/vcpkg/installed/x64-windows-static/lib/gc.lib"));
       value_array_add(argv, str_to_value("-ldbghelp"));
       value_array_add(argv, str_to_value("-lwinmm"));
       value_array_add(argv, str_to_value("-Wl,-debug"));

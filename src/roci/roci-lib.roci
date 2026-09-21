@@ -14,7 +14,9 @@ let list_map = fn(lst, func) {
 };
 
 let list_copy = fn(lst) {
-  let id = fn(x) { return x; };
+  let id = fn(x) {
+    return x;
+  };
   return list_map(lst, id);
 };
 

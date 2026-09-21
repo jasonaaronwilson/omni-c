@@ -89,24 +89,25 @@ extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer,
 value_array_t* file_glob(const char* pattern) {
   value_array_t* result_array = make_value_array(10);
 
-    if (result_array == NULL || pattern == NULL) {
-      return nullptr;
-    }
+  if (result_array == NULL || pattern == NULL) {
+    return nullptr;
+  }
 
-    glob_t sys_glob = {0};
-    int status = glob(pattern, 0, NULL, &sys_glob);
+  glob_t sys_glob = {0};
+  int status = glob(pattern, 0, NULL, &sys_glob);
 
-    if (status == GLOB_NOMATCH) {
-      return result_array;
-    }
-    if (status != 0) {
-      return nullptr;
-    }
-
-    for (size_t i = 0; i < sys_glob.gl_pathc; ++i) {
-      value_array_push(result_array, ptr_to_value(string_duplicate(sys_glob.gl_pathv[i])));
-    }
-
-    globfree(&sys_glob);
+  if (status == GLOB_NOMATCH) {
     return result_array;
+  }
+  if (status != 0) {
+    return nullptr;
+  }
+
+  for (size_t i = 0; i < sys_glob.gl_pathc; ++i) {
+    value_array_push(result_array,
+                     ptr_to_value(string_duplicate(sys_glob.gl_pathv[i])));
+  }
+
+  globfree(&sys_glob);
+  return result_array;
 }
