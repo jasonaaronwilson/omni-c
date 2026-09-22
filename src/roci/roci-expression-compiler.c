@@ -1,6 +1,9 @@
-////
-//// OLD VERSION OF EXPRESSION COMPILER
-////
+///
+/// This file contains both a recursive decsent expression compiler
+/// that understandds operators with precdence and a much more limited
+/// (though faster) initial version that did a minimal Scheme style
+/// compiler (which was pretty useful!).
+///
 
 assignment_cont_t roci_compile_expression(roci_compiler_state_t* state,
                                           boolean_t assignment_ok) {
