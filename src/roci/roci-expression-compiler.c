@@ -128,7 +128,7 @@ void roci_compile_closure(roci_compiler_state_t* state) {
   roci_expect_token(state, "(");
 
   token_t* args[32];
-  int64_t arg_count = roci_collect_fn_args(state, args, &rest_argument);
+  int64_t arg_count = roci_parse_fn_args(state, args, &rest_argument);
 
   roci_bb_builder_t* current_bb = state->current_bb;
   int current_env_depth = state->env_depth;
@@ -164,10 +164,16 @@ void roci_compile_closure(roci_compiler_state_t* state) {
   roci_emit_opcode(state, ROCI_OPCODE_MAKE_CLOSURE);
 }
 
-// For a negative number means abs(x) -1 is the number of required
-// arguments.
-int64_t roci_collect_fn_args(roci_compiler_state_t* state, token_t** args,
-                             boolean_t* rest_argument) {
+// Parses parameter tokens into args[] and returns total arguments parsed.
+// Sets *rest_argument if a trailing "..." variadic parameter was encountered.
+//
+// Caller arity encoding convention:
+//   >= 0 : Exact argument count required (fixed arity: N).
+//    < 0 : Variadic function. Encoded as -(required + 1),
+//          meaning required fixed arguments = abs(n) - 1.
+//          (e.g., -1 => 0+ required, -2 => 1+ required).
+int64_t roci_parse_fn_args(roci_compiler_state_t* state, token_t** args,
+			   boolean_t* rest_argument) {
   int64_t arg_count = 0;
   while (true) {
     token_t* token = roci_next_token(state);
