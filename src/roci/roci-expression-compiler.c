@@ -1,5 +1,5 @@
 ///
-/// This file contains both a recursive decsent expression compiler
+/// This file contains both a recursive descent expression compiler
 /// that understandds operators with precdence and a much more limited
 /// (though faster) initial version that did a minimal Scheme style
 /// compiler (which was pretty useful!).
