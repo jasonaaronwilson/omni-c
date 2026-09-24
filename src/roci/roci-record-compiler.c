@@ -45,7 +45,7 @@ void roci_compile_record(roci_compiler_state_t* state) {
   // guess we could smuggle the pointer into an integer...
 
   roci_record_fields_t* metadata
-      = make_roci_record_fields_from_names("myrecord", num_fields, fields);
+      = make_roci_record_fields_from_names(record_name, num_fields, fields);
   int record_metadata_num = save_record_metadata(metadata);
 
   buffer_t* buffer = make_buffer(256);
