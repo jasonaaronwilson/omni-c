@@ -519,6 +519,9 @@ add_test("high_level_record_test",
   string_equal_or_fail("1", pair_get_car(p));
   string_equal_or_fail("2", pair_get_cdr(p));
 
+  string_equal_or_fail("1", p.car);
+  string_equal_or_fail("2", p.cdr);
+
   pass_test();
 });
 

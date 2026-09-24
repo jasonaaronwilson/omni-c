@@ -173,7 +173,8 @@ void roci_compile_closure(roci_compiler_state_t* state) {
 //          meaning required fixed arguments = abs(n) - 1.
 //          (e.g., -1 => 0+ required, -2 => 1+ required).
 int64_t roci_parse_fn_args(roci_compiler_state_t* state, token_t** args,
-			   boolean_t* rest_argument) {
+                           boolean_t* rest_argument) {
+  *rest_argument = false;
   int64_t arg_count = 0;
   while (true) {
     token_t* token = roci_next_token(state);
@@ -198,8 +199,6 @@ int64_t roci_parse_fn_args(roci_compiler_state_t* state, token_t** args,
       *rest_argument = true;
       token = roci_next_token(state);
     }
-
-    // Look for rest argument
 
     roci_verify_identifier(state, token);
     args[arg_count++] = token;
@@ -594,6 +593,16 @@ assignment_cont_t roci_compile_postfix(roci_compiler_state_t* state,
       return ASSIGNMENT_CONTINUE_INDEX_SET;
     }
     roci_emit_binary_operator(state, "operator[]", close);
+    return ASSIGNMENT_CONTINUE_NONE;
+  }
+  if (string_equal(token_string, ".")) {
+    roci_next_token(state);
+    token_t* field_name = roci_next_token(state);
+    roci_verify_identifier(state, field_name);
+    uint32_t symid = roci_intern_as_symid(token_to_string(field_name));
+    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
+    value_array_add(state->current_bb->data, i64_to_value(symid));
+    roci_emit_binary_operator(state, "operator.", field_name);
     return ASSIGNMENT_CONTINUE_NONE;
   }
   // TODO(jawilson): handle field reference operations
