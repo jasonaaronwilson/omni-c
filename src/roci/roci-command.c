@@ -60,7 +60,7 @@ roci_eval_result_t roci_eval_buffer(roci_env_t* env, char* file_name,
   if (FLAG_roci_print_bbs) {
     buffer_t* buffer = make_buffer(1);
     disassemble_bblocks(bblocks, buffer);
-    fprintf(stderr, buffer_to_c_string(buffer));
+    fprintf(stderr, "%s", buffer_to_c_string(buffer));
   }
 
   roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
