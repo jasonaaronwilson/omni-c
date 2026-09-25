@@ -522,6 +522,14 @@ add_test("high_level_record_test",
   string_equal_or_fail("1", p.car);
   string_equal_or_fail("2", p.cdr);
 
+  p.car = "11";
+  string_equal_or_fail("11", p.car);
+
+  p.car = make_pair("a", "b");
+  string_equal_or_fail("a", p.car.car);
+  p.car.car = "A";
+  string_equal_or_fail("A", p.car.car);
+
   pass_test();
 });
 
@@ -560,6 +568,16 @@ add_test("boolean and/or",
   expect_true(boolean_or(false, true));
   expect_false(boolean_or(false, false));
   pass_test();
+});
+
+add_test("precedence",
+  fn() {
+  expect_true(15 == 3 * 5);
+  expect_true(16 == 1 + 3 * 5);
+  expect_false(16 < 0);
+  expect_true(16 > 0);
+  expect_true(16 >= 16);
+  expect_false(16 != 16);
 });
 
 run_tests();

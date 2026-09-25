@@ -174,8 +174,10 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_record_tag, "record_tag");
   roci_add_primitive(env, &roci_primitive_record_get, "record_get");
   roci_add_primitive(env, &roci_primitive_record_set, "record_set");
-  roci_add_primitive(env, &roci_primitive_record_operator_field_get,
-                     "operator.");
+  roci_add_primitive(env, &roci_primitive_record_field_get,
+                     "operator-field-get");
+  roci_add_primitive(env, &roci_primitive_record_field_set,
+                     "operator-field-set");
 
   // Random Testing Code
   roci_add_primitive(env, &roci_primitive_draw_random_screen,
@@ -1257,7 +1259,7 @@ void roci_primitive_record_get(roci_vm_state_t* state) {
   roci_push_value(state, roci_record_get(record, index));
 }
 
-void roci_primitive_record_operator_field_get(roci_vm_state_t* state) {
+void roci_primitive_record_field_get(roci_vm_state_t* state) {
   if (state->n_args != 2) {
     roci_debug_error(state, "operator. expects 2 argument");
   }
@@ -1276,6 +1278,19 @@ void roci_primitive_record_set(roci_vm_state_t* state) {
   int64_t index = roci_pop_integer(state);
   roci_record_t* record = roci_pop_record(state);
   roci_record_set(record, index, value);
+  roci_push_false(state);
+}
+
+void roci_primitive_record_field_set(roci_vm_state_t* state) {
+  if (state->n_args != 3) {
+    roci_debug_error(state, "record_field_set expects 3 argument");
+  }
+  roci_value_t value = roci_pop_value(state);
+  int64_t symid = roci_pop_integer(state);
+  roci_record_t* record = roci_pop_record(state);
+  uint32_t field_index
+      = find_record_field_number(record->metadata, cast(roci_symid_t, symid));
+  roci_record_set(record, field_index, value);
   roci_push_false(state);
 }
 

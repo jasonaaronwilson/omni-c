@@ -270,6 +270,7 @@ void roci_compile_call_or_assignment_statement(roci_compiler_state_t* state) {
     // = bar ===> operator_index_set(obj, index, value)
     finish_index_assignment_statement(state);
   }
+  roci_expect_token(state, ";");
 }
 
 ///
@@ -580,32 +581,38 @@ handle_postfix:
 
 assignment_cont_t roci_compile_postfix(roci_compiler_state_t* state,
                                        boolean_t assignment_ok) {
-  token_t* token = roci_peek_token(state);
-  char* token_string = token_to_string(token);
+  while (true) {
+    token_t* token = roci_peek_token(state);
+    char* token_string = token_to_string(token);
 
-  if (string_equal(token_string, "[")) {
-    roci_next_token(state);
-    assignment_cont_t cont = roci_compile_expression_full(state, false);
-    token_t* close = roci_peek_token(state);
-    roci_expect_token(state, "]");
-    if (token_matches(roci_peek_token(state), "=")) {
-      // FIXME HERE
-      return ASSIGNMENT_CONTINUE_INDEX_SET;
+    if (string_equal(token_string, "[")) {
+      roci_next_token(state);
+      assignment_cont_t cont = roci_compile_expression_full(state, false);
+      token_t* close = roci_peek_token(state);
+      roci_expect_token(state, "]");
+      if (token_matches(roci_peek_token(state), "=")) {
+        return ASSIGNMENT_CONTINUE_INDEX_SET;
+      }
+      roci_emit_binary_operator(state, "operator[]", close);
+    } else if (string_equal(token_string, ".")) {
+      roci_next_token(state);
+      token_t* field_name = roci_next_token(state);
+      roci_verify_identifier(state, field_name);
+      uint32_t symid = roci_intern_as_symid(token_to_string(field_name));
+      buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
+      value_array_add(state->current_bb->data, i64_to_value(symid));
+      if (assignment_ok) {
+        token_t* next = roci_peek_token(state);
+        if (token_matches(next, "=")) {
+          return ASSIGNMENT_CONTINUE_FIELD_SET;
+        }
+      }
+      roci_emit_binary_operator(state, "operator-field-get", field_name);
+    } else {
+      return ASSIGNMENT_CONTINUE_NONE;
     }
-    roci_emit_binary_operator(state, "operator[]", close);
-    return ASSIGNMENT_CONTINUE_NONE;
   }
-  if (string_equal(token_string, ".")) {
-    roci_next_token(state);
-    token_t* field_name = roci_next_token(state);
-    roci_verify_identifier(state, field_name);
-    uint32_t symid = roci_intern_as_symid(token_to_string(field_name));
-    buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_PUSH_INTEGER);
-    value_array_add(state->current_bb->data, i64_to_value(symid));
-    roci_emit_binary_operator(state, "operator.", field_name);
-    return ASSIGNMENT_CONTINUE_NONE;
-  }
-  // TODO(jawilson): handle field reference operations
+  // NOT REACHED...
   return ASSIGNMENT_CONTINUE_NONE;
 }
 
@@ -641,19 +648,32 @@ void finish_variable_assignment_statement(roci_compiler_state_t* state) {
   roci_emit_debug_info(state, varname_token);
   roci_expect_token(state, "=");
   roci_compile_expression_full(state, false);
-  roci_expect_token(state, ";");
   roci_emit_token_string_datum(state, token_to_string(varname_token));
   roci_emit_opcode(state, ROCI_OPCODE_SET_VAR);
 }
 
 void finish_field_assignment_statement(roci_compiler_state_t* state) {
-  // parse RHS and do an assignment (in reverse order?)
+  // parse RHS and call the field assignment
+  token_t* token = roci_peek_token(state);
+  roci_expect_token(state, "=");
+  roci_compile_expression_full(state, false);
+  roci_emit_get_var(state->current_bb, "operator-field-set");
+
+  roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL);
+  value_array_add(state->current_bb->data, i64_to_value(3));
+  value_array_add(state->current_bb->data,
+                  str_to_value(return_bb->bblock_label));
+  state->current_bb = return_bb;
+  roci_emit_debug_info(state, token);
+  roci_emit_opcode(state, ROCI_OPCODE_DROP);
 }
 
 void finish_index_assignment_statement(roci_compiler_state_t* state) {
   // parse RHS and emit call to operator_index_set function which
   // can either hard-code "methods" on the first argument foo[index]
   // = bar ===> operator_index_set(obj, index, value)
+  // roci_emit_opcode(state, ROCI_OPCODE_DROP);
 }
 
 /*

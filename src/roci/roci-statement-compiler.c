@@ -17,7 +17,8 @@ void roci_compile_statement(roci_compiler_state_t* state) {
   } else if (token_matches(token, "record")) {
     roci_compile_record(state);
   } else {
-    token = token_at(state->tokens, state->position + 1);
+    /*
+    token = roci_peek_over_tokens(state, 1);
     if (token_matches(token, "=")) {
       roci_compile_assignment(state);
     } else if (token_matches(token, "(")) {
@@ -25,12 +26,10 @@ void roci_compile_statement(roci_compiler_state_t* state) {
       roci_expect_token(state, ";");
       roci_emit_opcode(state, ROCI_OPCODE_DROP);
     } else {
-      buffer_t* buffer = make_buffer(5);
-      append_token_debug_string(buffer, *token);
-      log_warn("roci_compile_statement is unhappy! %s",
-               buffer_to_c_string(buffer));
-      roci_compiler_error(state, ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT);
+      roci_compile_assignment(state);
     }
+    */
+    roci_compile_call_or_assignment_statement(state);
   }
 }
 
