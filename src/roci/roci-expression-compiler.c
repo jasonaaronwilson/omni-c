@@ -1,8 +1,7 @@
 ///
-/// This file contains both a recursive descent expression compiler
-/// that understandds operators with precdence and a much more limited
-/// (though faster) initial version that did a minimal Scheme style
-/// compiler (which was pretty useful!).
+/// This file contains a recursive descent expression compiler that
+/// understandds operators with precdence. It may still contain
+/// vestiges of a more limited initial version.
 ///
 
 assignment_cont_t roci_compile_expression(roci_compiler_state_t* state,

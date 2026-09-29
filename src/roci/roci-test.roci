@@ -580,6 +580,15 @@ add_test("precedence",
   expect_false(16 != 16);
 });
 
+add_test("indexing",
+  fn() {
+    let lst = make_list("A", make_list(0, 1, 2), "B");
+    string_equal_or_fail(lst[0], "A");
+    lst[0] = "Z";
+    string_equal_or_fail(lst[0], "Z");
+    int_equal_or_fail(lst[1][0], 0);
+});
+
 run_tests();
 
 if (iequal(ROCI_NUM_FAIL, 0)) {
