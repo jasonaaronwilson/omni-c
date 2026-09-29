@@ -593,7 +593,7 @@ assignment_cont_t roci_compile_postfix(roci_compiler_state_t* state,
       if (token_matches(roci_peek_token(state), "=")) {
         return ASSIGNMENT_CONTINUE_INDEX_SET;
       }
-      roci_emit_binary_operator(state, "operator[]", close);
+      roci_emit_binary_operator(state, "operator-index-get", close);
     } else if (string_equal(token_string, ".")) {
       roci_next_token(state);
       token_t* field_name = roci_next_token(state);
@@ -670,10 +670,20 @@ void finish_field_assignment_statement(roci_compiler_state_t* state) {
 }
 
 void finish_index_assignment_statement(roci_compiler_state_t* state) {
-  // parse RHS and emit call to operator_index_set function which
-  // can either hard-code "methods" on the first argument foo[index]
-  // = bar ===> operator_index_set(obj, index, value)
-  // roci_emit_opcode(state, ROCI_OPCODE_DROP);
+  // parse RHS and call the index assignment function
+  token_t* token = roci_peek_token(state);
+  roci_expect_token(state, "=");
+  roci_compile_expression_full(state, false);
+  roci_emit_get_var(state->current_bb, "operator-index-set");
+
+  roci_bb_builder_t* return_bb = roci_new_bblock(state, "return_bb");
+  buffer_append_byte(state->current_bb->opcodes, ROCI_OPCODE_CALL);
+  value_array_add(state->current_bb->data, i64_to_value(3));
+  value_array_add(state->current_bb->data,
+                  str_to_value(return_bb->bblock_label));
+  state->current_bb = return_bb;
+  roci_emit_debug_info(state, token);
+  roci_emit_opcode(state, ROCI_OPCODE_DROP);
 }
 
 /*
