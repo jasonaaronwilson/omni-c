@@ -1,9 +1,7 @@
-/**
- * @file cc-compiler-lib.roci
- *
- * This is a utility for making command lines that can gracefully
- * handle different C compilers on various platforms.
- */
+///
+/// This is a utility for making command lines that can gracefully
+/// handle different C compilers on various platforms.
+///
 
 record _cc_builder {
   cc_compiler_name,

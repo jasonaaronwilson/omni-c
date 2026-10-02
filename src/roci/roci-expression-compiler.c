@@ -505,8 +505,6 @@ assignment_cont_t roci_compile_primitive(roci_compiler_state_t* state,
   token_t* token = roci_peek_token(state);
   char* token_string = token_to_string(token);
 
-  // TODO(jawilson): peek ahead for = or not (or call).
-
   if (token->type == TOKEN_TYPE_IDENTIFIER) {
     if (string_equal(token_string, "true")) {
       roci_next_token(state);
