@@ -143,36 +143,28 @@ let printf = fn(... lst) {
 /* alists (association lists)                                             */
 /* ====================================================================== */
 
-let make_alist = fn(equal_fn) {
-  return make_list("record-tag:alist", equal_fn, make_list(), make_list());
-};
+record alist {
+  equal_fn,
+  keys,
+  values,
+}
 
-let is_alist = fn(x) {
-  if (not(is_list(x))) {
-    return false;
-  }
-  return string_equal("record-tag:alist", list_get(x, 0));
+let make_alist_full = make_alist;
+
+make_alist = fn(equal_fn) {
+  return make_alist_full(equal_fn, make_list(), make_list());
 };
 
 let alist_equal_fn = fn(alist) {
-  if (not(is_alist(alist))) {
-    debug_error("alist_keys expects an alist as the first argument");
-  }
-  return list_get(alist, 1);
+  return alist.equal_fn;
 };
 
 let alist_keys = fn(alist) {
-  if (not(is_alist(alist))) {
-    debug_error("alist_keys expects an alist as the first argument");
-  }
-  return list_get(alist, 2);
+  return alist.keys;
 };
 
 let alist_values = fn(alist) {
-  if (not(is_alist(alist))) {
-    debug_error("alist_values expects an alist as the first argument");
-  }
-  return list_get(alist, 3);
+  return alist.values;
 };
 
 let alist_length = fn(alist) {
@@ -180,7 +172,7 @@ let alist_length = fn(alist) {
 };
 
 let alist_for_each = fn(alist, func) {
-  for_each_integer(0, list_length(alist_keys(alist)),
+  for_each_integer(0, list_length(alist.keys),
     fn(index) {
     let key = list_get(alist_keys(alist), index);
     let value = list_get(alist_values(alist), index);
@@ -193,19 +185,19 @@ let alist_find_position = fn(alist, search_key) {
   let first_match = neg(1);
   let eq_fn = alist_equal_fn(alist);
   alist_for_each(alist, fn(key, value) {
-    if (ilt(first_match, 0)) {
+    if (first_match < 0) {
       if (eq_fn(search_key, key)) {
         first_match = position;
       }
     }
-    position = iadd(position, 1);
+    position = position + 1;
   });
   return first_match;
 };
 
 let alist_find = fn(alist, key, not_found_value) {
   let position = alist_find_position(alist, key);
-  if (igte(position, 0)) {
+  if (position >= 0) {
     return list_get(alist_values(alist), position);
   }
   return not_found_value;
@@ -213,7 +205,7 @@ let alist_find = fn(alist, key, not_found_value) {
 
 let alist_insert = fn(alist, key, value) {
   let position = alist_find_position(alist, key);
-  if (igte(position, 0)) {
+  if (position >= 0) {
     list_set(alist_values(alist), position, value);
     return;
   }
@@ -223,7 +215,7 @@ let alist_insert = fn(alist, key, value) {
 
 let alist_delete = fn(alist, key) {
   let position = alist_find_position(alist, key);
-  if (igte(position, 0)) {
+  if (position >= 0) {
     list_delete_at(alist_keys(alist), position);
     list_delete_at(alist_values(alist), position);
   }
@@ -244,60 +236,28 @@ let _make_array_of_empty_alists = fn(equal_fn, length) {
 // This is not tuned in anyway except asking for
 // NOT USED YET -- let ROCI_HT_LOAD_FACTOR = 1.0;
 
-let make_ht = fn(hash_fn, equal_fn) {
+record ht {
+  hash_fn, equal_fn, length, buckets,
+}
+
+let make_ht_full = make_ht;
+
+make_ht = fn(hash_fn, equal_fn) {
   let buckets = _make_array_of_empty_alists(equal_fn, 4);
-  let result = make_list("record-tag:ht", hash_fn, equal_fn, 0, buckets);
+  let result = make_ht_full(hash_fn, equal_fn, 0, buckets);
   return result;
 };
 
-let is_ht = fn(x) {
-  if (not(is_list(x))) {
-    return false;
-  }
-  return string_equal("record-tag:ht", list_get(x, 0));
-};
-
 let ht_hash_fn = fn(ht) {
-  if (not(is_ht(ht))) {
-    debug_error("ht_hash_fn expects an ht as the first argument");
-  }
-  return list_get(ht, 1);
+  return ht.hash_fn;
 };
 
 let ht_equal_fn = fn(ht) {
-  if (not(is_ht(ht))) {
-    debug_error("ht_equal_fn expects an ht as the first argument");
-  }
-  return list_get(ht, 2);
+  return ht.equal_fn;
 };
 
 let ht_length = fn(ht) {
-  if (not(is_ht(ht))) {
-    debug_error("ht_get_num_entries expects an ht as the first argument");
-  }
-  return list_get(ht, 3);
-};
-
-let ht_set_length = fn(ht, length) {
-  if (not(is_ht(ht))) {
-    debug_error("ht_get_num_entries expects an ht as the first argument");
-  }
-  list_set(ht, 3, length);
-  return;
-};
-
-let ht_get_buckets = fn(ht) {
-  if (not(is_ht(ht))) {
-    debug_error("ht_get_buckets expects an ht as the first argument");
-  }
-  return list_get(ht, 4);
-};
-
-let ht_set_buckets = fn(ht, buckets) {
-  if (not(is_ht(ht))) {
-    debug_error("ht_get_buckets expects an ht as the first argument");
-  }
-  return list_set(ht, 4, buckets);
+  return ht.length;
 };
 
 let ht_for_each = fn(ht, func) {
@@ -319,14 +279,14 @@ let _ht_mutate = fn(ht, alist, thunk) {
   thunk();
   let length_after = alist_length(alist);
   ht_set_length(ht, iadd(ht_length(ht), isub(length_after, length_before)));
-  let new_length = imul(2, list_length(ht_get_buckets(ht)));
-  if (igt(length_after, new_length)) {
+  let new_length = list_length(ht_get_buckets(ht)) * 2;
+  if (length_after > new_length) {
     let new_ht = make_ht(ht_hash_fn(ht), ht_equal_fn(ht));
     ht_set_buckets(ht, _make_array_of_empty_alists(ht_equal_fn(ht), new_length));
     ht_for_each(ht, fn(key, value) {
       ht_insert(new_ht, key, value);
     });
-    ht_set_buckets(ht, ht_get_buckets(new_ht));
+    ht.buckets = new_ht.buckets;
   }
 };
 

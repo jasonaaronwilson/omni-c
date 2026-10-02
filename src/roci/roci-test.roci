@@ -229,6 +229,7 @@ add_test("list_map_test",
 add_test("make_alist_test",
   fn() {
   let alist = make_alist(equal);
+  expect_true(is_alist(alist));
   int_equal_or_fail(0, alist_length(alist));
 });
 
@@ -257,6 +258,7 @@ add_test("alist_insert/find/delete",
 add_test("make_ht_test",
   fn() {
   let ht = make_ht(hash, equal);
+  expect_true(is_ht(ht));
   int_equal_or_fail(0, ht_length(ht));
 });
 
@@ -582,11 +584,11 @@ add_test("precedence",
 
 add_test("indexing",
   fn() {
-    let lst = make_list("A", make_list(0, 1, 2), "B");
-    string_equal_or_fail(lst[0], "A");
-    lst[0] = "Z";
-    string_equal_or_fail(lst[0], "Z");
-    int_equal_or_fail(lst[1][0], 0);
+  let lst = make_list("A", make_list(0, 1, 2), "B");
+  string_equal_or_fail(lst[0], "A");
+  lst[0] = "Z";
+  string_equal_or_fail(lst[0], "Z");
+  int_equal_or_fail(lst[1][0], 0);
 });
 
 run_tests();

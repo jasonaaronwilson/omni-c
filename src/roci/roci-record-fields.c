@@ -40,6 +40,8 @@ static inline uint32_t find_record_field_number(roci_record_fields_t* fields,
       return i;
     }
   }
+  log_fatal("field with id=%d (name %s) not found", field_symid,
+            roci_symid_to_string(field_symid));
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
