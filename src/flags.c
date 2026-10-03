@@ -29,6 +29,8 @@ boolean_t FLAG_omit_c_armyknife_include = false;
 char* FLAG_c_compiler = "clang";
 
 char* FLAG_roci_script = nullptr;
+boolean_t FLAG_roci_statement_trace = false;
+boolean_t FLAG_roci_instruction_trace = false;
 boolean_t FLAG_roci_debug = false;
 boolean_t FLAG_roci_print_bbs = false;
 boolean_t FLAG_roci_repl_on_error = false;
@@ -136,6 +138,8 @@ void configure_regular_commands(void) {
   flag_command("roci", &FLAG_command);
   flag_description("run the roci interpreter on the files in order");
   flag_string("--script", &FLAG_roci_script);
+  flag_boolean("--statement-trace", &FLAG_roci_statement_trace);
+  flag_boolean("--instruction-trace", &FLAG_roci_instruction_trace);
   flag_boolean("--debug", &FLAG_roci_debug);
   flag_boolean("--print-bbs", &FLAG_roci_print_bbs);
   flag_boolean("--repl-on-error", &FLAG_roci_repl_on_error);

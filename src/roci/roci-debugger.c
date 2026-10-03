@@ -52,32 +52,40 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message) {
   fatal_error(ERROR_ILLEGAL_STATE);
 }
 
-void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
+void roci_debug_trace_statement(roci_vm_state_t* state, buffer_t* buffer) {
+  buffer_clear(buffer);
+  roci_source_code_to_buffer(buffer, state->debug_info);
+  buffer_write_all(stderr, buffer);
+  fflush(stderr);
+}
+
+void roci_debug_trace_instruction(roci_vm_state_t* state, buffer_t* buffer) {
+  buffer_clear(buffer);
+  bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
+  buffer_write_all(stderr, buffer);
+  fflush(stderr);
+}
+
+void roci_debug_trace_old(roci_vm_state_t* state, buffer_t* buffer) {
+  /*
   boolean_t is_output_tty = is_tty_output();
   boolean_t is_input_tty = is_tty_output();
 
   buffer_clear(buffer);
 
-  if (!is_output_tty) {
-    buffer_printf(
-        buffer,
-        "--------------------------------------------------------------"
-        "--------\n");
-  } else if (is_input_tty) {
-    term_home(buffer);
-    // term_alt_buffer(buffer);
-    term_clear_screen(buffer);
+  if (!is_statement) {
+    if (is_output_tty) {
+      roci_debugger_banner(buffer, "*** Disassembly ***");
+    }
+    bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
   }
 
-  if (is_output_tty) {
-    roci_debugger_banner(buffer, "*** Disassembly ***");
+  if (is_statement) {
+    if (is_output_tty) {
+      roci_debugger_banner(buffer, "*** Source ***");
+    }
+    roci_source_code_to_buffer(buffer, state->debug_info);
   }
-  bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
-
-  if (is_output_tty) {
-    roci_debugger_banner(buffer, "*** Source ***");
-  }
-  roci_source_code_to_buffer(buffer, state->debug_info);
 
   if (is_output_tty) {
     roci_debugger_instructions(buffer);
@@ -110,7 +118,6 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
           state->debug->break_on_call_target = false;
           state->debug->break_on_return = false;
           state->debug->break_on_next_statement = false;
-          state->debug->trace = false;
           state->debug->current_line_info = state->debug_info;
           break;
         } else if (byte == 'n') {
@@ -119,7 +126,6 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
           state->debug->break_on_call_target = false;
           state->debug->break_on_return = false;
           state->debug->break_on_next_statement = false;
-          state->debug->trace = false;
           state->debug->current_line_info = 0;
           state->debug->next_line_info
               = roci_next_source_line(state->debug_info);
@@ -147,6 +153,7 @@ void roci_debug_trace(roci_vm_state_t* state, buffer_t* buffer) {
     term_main_buffer(buffer);
     term_echo_restore(oldt);
   }
+  */
 }
 
 void roci_debug_breakpoint(void) {}

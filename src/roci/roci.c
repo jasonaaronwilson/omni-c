@@ -81,7 +81,8 @@ typedef roci_debug_state_t = struct {
   boolean_t break_on_call_target;
   boolean_t break_on_return;
   boolean_t break_on_next_statement;
-  boolean_t trace;
+  boolean_t statement_trace;
+  boolean_t instruction_trace;
 };
 
 typedef roci_vm_state_t = struct {
@@ -123,10 +124,12 @@ roci_vm_state_t* roci_make_vm_state(roci_env_t* env) {
   state->stack_tags = cast(uint8_t*, malloc_bytes(1024));
   state->continuations = cast(roci_cont_t**, malloc_bytes(1024 * 8));
   roci_set_env(state, env);
-  if (FLAG_roci_debug) {
-    state->debug = malloc_struct(roci_debug_state_t);
-    state->debug->trace = true;
-  }
+
+  state->debug = malloc_struct(roci_debug_state_t);
+  // TODO(jawilson): what does debug even mean anymore?
+  state->debug->statement_trace = FLAG_roci_statement_trace;
+  state->debug->instruction_trace = FLAG_roci_instruction_trace;
+
   // This is a hack so that we can print all of the value of the stack
   // while debugging.
   roci_push_value_parts(state, 0xCAFEBABE, ROCI_TAG_STACK_MARKER);
@@ -166,8 +169,8 @@ start_bblock:
   state->data_ptr = bblock_data_pointer(bb);
 
   while (true) {
-    if (state->debug != nullptr && state->debug->trace) {
-      roci_debug_trace(state, buffer);
+    if (state->debug->instruction_trace) {
+      roci_debug_trace_instruction(state, buffer);
     }
     roci_opcode_t opcode = *(state->opcode_ptr++);
     switch (opcode) {
@@ -302,14 +305,8 @@ start_bblock:
 
     case ROCI_OPCODE_DEBUG_INFO:
       state->debug_info = *(state->data_ptr++);
-      if (state->debug != nullptr && state->debug->current_line_info != 0
-          && state->debug->current_line_info != state->debug_info) {
-        state->debug->current_line_info = state->debug_info;
-        roci_debug_trace(state, buffer);
-      }
-      if (state->debug != nullptr && state->debug->next_line_info != 0
-          && state->debug->next_line_info == state->debug_info) {
-        roci_debug_trace(state, buffer);
+      if (state->debug->statement_trace) {
+        roci_debug_trace_statement(state, buffer);
       }
       break;
 
