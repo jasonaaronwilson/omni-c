@@ -174,8 +174,8 @@ let alist_length = fn(alist) {
 let alist_for_each = fn(alist, func) {
   for_each_integer(0, list_length(alist.keys),
     fn(index) {
-    let key = list_get(alist_keys(alist), index);
-    let value = list_get(alist_values(alist), index);
+    let key = list_get(alist.keys, index);
+    let value = list_get(alist.values, index);
     func(key, value);
   });
 };
@@ -248,16 +248,17 @@ make_ht = fn(hash_fn, equal_fn) {
   return result;
 };
 
-let ht_hash_fn = fn(ht) {
-  return ht.hash_fn;
+let ht_hash = fn(ht, key) {
+  let hash_fn = ht.hash_fn;
+  return hash_fn(key);
 };
 
-let ht_equal_fn = fn(ht) {
-  return ht.equal_fn;
-};
-
-let ht_length = fn(ht) {
-  return ht.length;
+let ht_alist = fn(ht, key) {
+  let hash_fn = ht.hash_fn;
+  let hash = hash_fn(key);
+  let buckets = ht.buckets;
+  let bucket_number = irem(hash, list_length(buckets));
+  return list_get(buckets, bucket_number);
 };
 
 let ht_for_each = fn(ht, func) {
@@ -269,50 +270,38 @@ let ht_for_each = fn(ht, func) {
   });
 };
 
-let _ht_hash_value = fn(ht, key) {
-  let hash_fn = ht_hash_fn(ht);
-  return hash_fn(key);
-};
-
 let _ht_mutate = fn(ht, alist, thunk) {
   let length_before = alist_length(alist);
   thunk();
   let length_after = alist_length(alist);
-  ht_set_length(ht, iadd(ht_length(ht), isub(length_after, length_before)));
-  let new_length = list_length(ht_get_buckets(ht)) * 2;
-  if (length_after > new_length) {
-    let new_ht = make_ht(ht_hash_fn(ht), ht_equal_fn(ht));
-    ht_set_buckets(ht, _make_array_of_empty_alists(ht_equal_fn(ht), new_length));
+  ht.length = ht.length + (length_after - length_before);
+  if (length_after >= 3) {
+    // println(string_append("Resizing ht = ", to_string(ht)));
+    let new_num_buckets = list_length(ht_get_buckets(ht)) * 2;
+    let new_ht = make_ht(ht.hash_fn, ht.equal_fn);
+    new_ht.buckets = _make_array_of_empty_alists(ht.equal_fn, new_num_buckets);
     ht_for_each(ht, fn(key, value) {
       ht_insert(new_ht, key, value);
     });
     ht.buckets = new_ht.buckets;
+    // Make sure new_ht.length is the same as ht.length
   }
 };
 
 let ht_find = fn(ht, key, not_found_value) {
-  let buckets = ht_get_buckets(ht);
-  let hash = _ht_hash_value(ht, key);
-  let bucket_number = irem(hash, list_length(buckets));
-  return alist_find(list_get(buckets, bucket_number), key, not_found_value);
+  let alist = ht_alist(ht, key);
+  return alist_find(alist, key, not_found_value);
 };
 
 let ht_insert = fn(ht, key, value) {
-  // TODO(jawilson): resize at the end if the load factor is exceeded.
-  let hash = _ht_hash_value(ht, key);
-  let buckets = ht_get_buckets(ht);
-  let bucket_number = irem(hash, list_length(buckets));
-  let alist = list_get(buckets, bucket_number);
+  let alist = ht_alist(ht, key);
   _ht_mutate(ht, alist, fn() {
     alist_insert(alist, key, value);
   });
 };
 
 let ht_delete = fn(ht, key) {
-  let hash = _ht_hash_value(ht, key);
-  let buckets = ht_get_buckets(ht);
-  let bucket_number = irem(hash, list_length(buckets));
-  let alist = list_get(buckets, bucket_number);
+  let alist = ht_alist(ht, key);
   _ht_mutate(ht, alist, fn() {
     alist_delete(alist, key);
   });

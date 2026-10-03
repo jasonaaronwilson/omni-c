@@ -259,44 +259,51 @@ add_test("make_ht_test",
   fn() {
   let ht = make_ht(hash, equal);
   expect_true(is_ht(ht));
-  int_equal_or_fail(0, ht_length(ht));
+  int_equal_or_fail(0, ht.length);
 });
 
 add_test("ht_insert/find/delete",
   fn() {
   let ht = make_ht(hash, equal);
-  int_equal_or_fail(0, ht_length(ht));
+  int_equal_or_fail(0, ht.length);
   ht_insert(ht, "a", 1);
-  int_equal_or_fail(1, ht_length(ht));
+  int_equal_or_fail(1, ht.length);
   int_equal_or_fail(1, ht_find(ht, "a", 1000));
   // Reinsertion should act like a nop
   ht_insert(ht, "a", 1);
-  int_equal_or_fail(1, ht_length(ht));
+  int_equal_or_fail(1, ht.length);
   int_equal_or_fail(1, ht_find(ht, "a", 1000));
 
   ht_insert(ht, "b", 2);
-  int_equal_or_fail(2, ht_length(ht));
+  int_equal_or_fail(2, ht.length);
   int_equal_or_fail(1, ht_find(ht, "a", 1000));
   int_equal_or_fail(2, ht_find(ht, "b", 1000));
 
   ht_delete(ht, "a");
-  int_equal_or_fail(1, ht_length(ht));
+  int_equal_or_fail(1, ht.length);
   int_equal_or_fail(1000, ht_find(ht, "a", 1000));
   int_equal_or_fail(2, ht_find(ht, "b", 1000));
 
   ht_insert(ht, "b", "hello");
-  int_equal_or_fail(1, ht_length(ht));
+  int_equal_or_fail(1, ht.length);
   string_equal_or_fail("hello", ht_find(ht, "b", 1000));
 });
 
 add_test("ht growth",
   fn() {
   let ht = make_ht(hash, equal);
-  int_equal_or_fail(0, ht_length(ht));
+  int_equal_or_fail(0, ht.length);
   for_each_integer(10, 200, fn(key) {
-    ht_insert(ht, key, iadd(key, 1000));
+    ht_insert(ht, key, key + 1000);
   });
-  int_equal_or_fail(190, ht_length(ht));
+  int_equal_or_fail(190, ht.length);
+  for_each_integer(10, 200, fn(key) {
+    let result = ht_find(ht, key, false);
+    if (is_boolean(result)) {
+      println(string_append("result was false for key: ", to_string(key)));
+    }
+    int_equal_or_fail(result, key + 1000);
+  });
 });
 
 add_test("getenv_test",
