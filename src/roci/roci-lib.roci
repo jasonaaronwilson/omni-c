@@ -1,9 +1,9 @@
-/**
- * @file roci-lib.roci
- *
- * These are built-in roci functions which can be written in roci
- * instead of the lowest level primitives that are written in C.
- */
+///
+/// @file roci-lib.roci
+///
+/// These are built-in roci functions which can be written in roci
+/// instead of the lowest level primitives that are written in C.
+///
 
 let list_map = fn(lst, func) {
   let result = make_list();
@@ -261,6 +261,10 @@ let ht_alist = fn(ht, key) {
   return list_get(buckets, bucket_number);
 };
 
+let ht_should_resize = fn(ht) {
+  return ht.length > list_length(ht.buckets);
+};
+
 let ht_for_each = fn(ht, func) {
   let buckets = ht_get_buckets(ht);
   for_each_integer(0, list_length(buckets),
@@ -275,7 +279,7 @@ let _ht_mutate = fn(ht, alist, thunk) {
   thunk();
   let length_after = alist_length(alist);
   ht.length = ht.length + (length_after - length_before);
-  if (length_after >= 3) {
+  if (ht_should_resize(ht)) {
     // println(string_append("Resizing ht = ", to_string(ht)));
     let new_num_buckets = list_length(ht_get_buckets(ht)) * 2;
     let new_ht = make_ht(ht.hash_fn, ht.equal_fn);
