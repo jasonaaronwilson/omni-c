@@ -54,16 +54,35 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message) {
 
 void roci_debug_trace_statement(roci_vm_state_t* state, buffer_t* buffer) {
   buffer_clear(buffer);
+  roci_maybe_overlay_start(buffer);
+  buffer_printf(buffer, "Step %ul\n", state->step_number);
   roci_source_code_to_buffer(buffer, state->debug_info);
+  roci_maybe_overlay_end(buffer);
   buffer_write_all(stderr, buffer);
   fflush(stderr);
 }
 
 void roci_debug_trace_instruction(roci_vm_state_t* state, buffer_t* buffer) {
   buffer_clear(buffer);
+  roci_maybe_overlay_start(buffer);
   bblock_to_buffer(buffer, state->current_bb, state->opcode_ptr);
+  roci_maybe_overlay_end(buffer);
   buffer_write_all(stderr, buffer);
   fflush(stderr);
+}
+
+void roci_maybe_overlay_start(buffer_t* buffer) {
+  if (is_tty_output()) {
+    term_save_cursor(buffer);
+    term_clear_box(buffer, 0, 0, 10, term_width());
+    term_home(buffer);
+  }
+}
+
+void roci_maybe_overlay_end(buffer_t* buffer) {
+  if (is_tty_output()) {
+    term_restore_cursor(buffer);
+  }
 }
 
 void roci_debug_trace_old(roci_vm_state_t* state, buffer_t* buffer) {

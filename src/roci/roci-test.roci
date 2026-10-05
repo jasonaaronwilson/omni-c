@@ -598,6 +598,11 @@ add_test("indexing",
   int_equal_or_fail(lst[1][0], 0);
 });
 
+add_test("always-fail",
+  fn() {
+    expect_true(false + 0);
+});
+
 run_tests();
 
 if (iequal(ROCI_NUM_FAIL, 0)) {

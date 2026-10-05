@@ -97,6 +97,7 @@ typedef roci_vm_state_t = struct {
   roci_debug_state_t* debug;
   int64_t n_args;
   roci_src_info_t debug_info;
+  int64_t step_number;
 };
 
 /**
@@ -169,6 +170,7 @@ start_bblock:
   state->data_ptr = bblock_data_pointer(bb);
 
   while (true) {
+    state->step_number++;
     if (state->debug->instruction_trace) {
       roci_debug_trace_instruction(state, buffer);
     }
