@@ -47,7 +47,7 @@ let pass_test = fn() {
 
 let fail_test = fn() {
   ROCI_LAST_TEST_PASSED = false;
-  ROCI_NUM_FAIL = iadd(ROCI_NUM_FAIL, 1);
+  ROCI_NUM_FAIL = ROCI_NUM_FAIL + 1;
   // We don't have call/cc, exceptions, or threads. So instead we fail
   // fast. All of the above was dumb.
   print_string(string_append("TEST FAILED: ", test_name(CURRENT_TEST), "\n"));
@@ -587,6 +587,7 @@ add_test("precedence",
   expect_true(16 > 0);
   expect_true(16 >= 16);
   expect_false(16 != 16);
+  pass_test();
 });
 
 add_test("indexing",
@@ -596,6 +597,7 @@ add_test("indexing",
   lst[0] = "Z";
   string_equal_or_fail(lst[0], "Z");
   int_equal_or_fail(lst[1][0], 0);
+  pass_test();
 });
 
 /*

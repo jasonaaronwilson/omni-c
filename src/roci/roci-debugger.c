@@ -55,7 +55,7 @@ void roci_debug_error(roci_vm_state_t* state, char* error_message) {
 void roci_debug_trace_statement(roci_vm_state_t* state, buffer_t* buffer) {
   buffer_clear(buffer);
   roci_maybe_overlay_start(buffer);
-  buffer_printf(buffer, "Step %ul\n", state->step_number);
+  buffer_printf(buffer, "Step %d\n", state->step_number);
   roci_source_code_to_buffer(buffer, state->debug_info);
   roci_maybe_overlay_end(buffer);
 
