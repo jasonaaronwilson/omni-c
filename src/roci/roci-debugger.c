@@ -58,6 +58,19 @@ void roci_debug_trace_statement(roci_vm_state_t* state, buffer_t* buffer) {
   buffer_printf(buffer, "Step %ul\n", state->step_number);
   roci_source_code_to_buffer(buffer, state->debug_info);
   roci_maybe_overlay_end(buffer);
+
+  if (false) {
+    buffer_t* scratch = make_buffer(100);
+    roci_source_code_to_buffer(scratch, state->debug_info);
+    int number_of_lines = buffer_count_newlines(scratch);
+    if (number_of_lines > 15) {
+      int64_t line_number = roci_src_line_number(state->debug_info);
+      log_fatal("too many lines in the output buffer %d (line number %d)\n%s",
+		number_of_lines, line_number, buffer_to_c_string(scratch));
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
   buffer_write_all(stderr, buffer);
   fflush(stderr);
 }
@@ -74,7 +87,7 @@ void roci_debug_trace_instruction(roci_vm_state_t* state, buffer_t* buffer) {
 void roci_maybe_overlay_start(buffer_t* buffer) {
   if (is_tty_output()) {
     term_save_cursor(buffer);
-    term_clear_box(buffer, 0, 0, 10, term_width());
+    term_clear_box(buffer, 0, 0, 16, term_width());
     term_home(buffer);
   }
 }
@@ -273,9 +286,12 @@ void roci_source_code_to_buffer(buffer_t* buffer, roci_src_info_t src_info) {
   roci_buffer_info_t* buffer_info = get_buffer_info_by_number(buffer_number);
 
   // Before lines
-  buffer_region_t region
-      = buffer_line_region(buffer_info->buffer, start_line_number, line_number);
-  buffer_copy_region(buffer, buffer_info->buffer, region);
+  buffer_region_t region = {0};
+  if (start_line_number != line_number) {
+    region = buffer_line_region(buffer_info->buffer, start_line_number,
+                                line_number);
+    buffer_copy_region(buffer, buffer_info->buffer, region);
+  }
 
   // The actual line
   region

@@ -628,6 +628,10 @@ void ensure_legal_region(buffer_region_t region) {
 
 buffer_region_t buffer_line_region(buffer_t* buffer, uint64_t start_line,
                                    uint64_t end_line) {
+  if (start_line >= end_line) {
+    log_fatal("buffer_line_region start=%d >= end=%d", start_line, end_line);
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
 
   uint64_t line = 1;
   uint64_t start_position = 0;
@@ -659,4 +663,14 @@ void buffer_copy_region(buffer_t* dst_buffer, buffer_t* src_buffer,
        position < region.end_position; position++) {
     buffer_append_byte(dst_buffer, buffer_get(src_buffer, position));
   }
+}
+
+int64_t buffer_count_newlines(buffer_t* buffer) {
+  int64_t count = 0;
+  for (int64_t position = 0; position < buffer->length; position++) {
+    if (buffer->elements[position] == '\n') {
+      count++;
+    }
+  }
+  return count;
 }

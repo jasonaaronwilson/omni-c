@@ -291,3 +291,13 @@ void test_buffer_byte_target(void) {
   target->write_byte(target, 'i');
   test_assert_string_equal("Hi", buffer_to_c_string(buffer));
 }
+
+void test_buffer_count_newlines(void) {
+  buffer_t* buffer = make_buffer(1);
+  buffer_printf(buffer, "Hello World!");
+  test_assert_integer_equal(0, buffer_count_newlines(buffer));
+  buffer_printf(buffer, "\nHello World!");
+  test_assert_integer_equal(1, buffer_count_newlines(buffer));
+  buffer_printf(buffer, "\nHello World!");
+  test_assert_integer_equal(2, buffer_count_newlines(buffer));
+}

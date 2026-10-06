@@ -301,9 +301,7 @@ void term_clear_line_from_position(buffer_t* buffer) {
  *
  * (This is LLM code following the above patterns.)
  */
-void term_save_cursor(buffer_t* buffer) {
-  buffer_printf(buffer, "\0337");
-}
+void term_save_cursor(buffer_t* buffer) { buffer_printf(buffer, "\0337"); }
 
 /**
  * @function term_restore_cursor
@@ -312,20 +310,21 @@ void term_save_cursor(buffer_t* buffer) {
  *
  * (This is LLM code following the above patterns.)
  */
-void term_restore_cursor(buffer_t* buffer) {
-  buffer_printf(buffer, "\0338");
-}
+void term_restore_cursor(buffer_t* buffer) { buffer_printf(buffer, "\0338"); }
 
 /**
  * @function term_clear_box
- * Clears an N x M box starting at row, col using pure ECMA-48 standard sequences:
+ * Clears an N x M box starting at row, col using pure ECMA-48 standard
+ * sequences:
  * - CUP (Cursor Position): \033[{row};{col}H
  * - ECH (Erase Character): \033[{count}X
  *
  * (This is LLM code following the above patterns.)
  */
-void term_clear_box(buffer_t* buffer, int start_row, int start_col, int rows, int cols) {
+void term_clear_box(buffer_t* buffer, int start_row, int start_col, int rows,
+                    int cols) {
   for (int r = 0; r < rows; r++) {
-    buffer_printf(buffer, "\033[%d;%dH\033[%dX", start_row + r, start_col, cols);
+    buffer_printf(buffer, "\033[%d;%dH\033[%dX", start_row + r, start_col,
+                  cols);
   }
 }
