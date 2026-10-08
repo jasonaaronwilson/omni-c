@@ -71,7 +71,9 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   token_t* storage_class_specifier = nullptr;
 
   while (pstate_expect_token_string(pstate, "static")
-         || pstate_expect_token_string(pstate_ignore_error(pstate), "extern")) {
+         || pstate_expect_token_string(pstate_ignore_error(pstate), "extern")
+	 || pstate_expect_token_string(pstate_ignore_error(pstate), "_Thread_local")
+	 || pstate_expect_token_string(pstate_ignore_error(pstate), "volatile")) {
     if (storage_class_specifier != nullptr) {
       return pstate_error(pstate, saved_position,
                           PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);
@@ -92,6 +94,7 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   variable_definition_node_t* result = make_variable_definition_node();
   result->type = type_node;
   result->name = name;
+  result->storage_class_specifier = storage_class_specifier;
 
   while (pstate_match_token_string(pstate, "[")) {
     if (!parse_balanced_construct(pstate)) {

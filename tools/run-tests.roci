@@ -135,6 +135,7 @@ let stmt_test_executor = fn(filename) {
   let command_line = make_list(omni_c_exec, "test", filename);
   let shell_result = shell(command_line);
   check_shell_command(shell_result, filename);
+  // println(shell_stdout(shell_result));
 };
 
 // TODO(jawilson): execute_test_executor? or delete code above?
