@@ -615,6 +615,20 @@ boolean_t buffer_equal(buffer_t* buffer, char* str) {
   return string_equal(cstring, str);
 }
 
+boolean_t buffer_compare_equal(buffer_t* buffer1, buffer_t* buffer2) {
+  if (buffer1->length != buffer2->length) {
+    log_fatal("Length mismatch %d != %d", buffer1->length, buffer2->length);
+    return false;
+  }
+  for (int64_t i = 0; i < buffer1->length; i++) {
+    if (buffer_get(buffer1, i) != buffer_get(buffer2, i)) {
+      log_fatal("Mismatch at position %d", i);
+      return false;
+    }
+  }
+  return true;
+}
+
 typedef buffer_region_t = struct {
   uint64_t start_position;
   uint64_t end_position;

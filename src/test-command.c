@@ -85,13 +85,29 @@ void handle_if_internal_test(void) {
 }
 
 void handle_statement_test(char* file_name) {
-  parse_statement_string_and_print_parse_tree_from_buffer(
+  buffer_t* output = parse_statement_string_and_print_parse_tree_from_buffer(
       buffer_read_file(file_name));
+  buffer_append_byte(output, '\n');
+  char* golden_file_name = string_printf("%s.golden", file_name);
+  buffer_t* golden = buffer_read_file(golden_file_name);
+  if (!buffer_compare_equal(golden, output)) {
+    fprintf(stderr, "output does not match golden file %s\n\n%s\n\n%s", golden_file_name,
+	    buffer_to_c_string(output), buffer_to_c_string(golden));
+    exit(1);
+  }
   exit(0);
 }
 
 void handle_expression_test(char* file_name) {
-  parse_expression_string_and_print_parse_tree_from_buffer(
+  buffer_t* output = parse_expression_string_and_print_parse_tree_from_buffer(
       buffer_read_file(file_name));
+  buffer_append_byte(output, '\n');
+  char* golden_file_name = string_printf("%s.golden", file_name);
+  buffer_t* golden = buffer_read_file(golden_file_name);
+  if (!buffer_compare_equal(golden, output)) {
+    fprintf(stderr, "output does not match golden file %s\n\n%s\n\n%s", golden_file_name,
+	    buffer_to_c_string(output), buffer_to_c_string(golden));
+    exit(1);
+  }
   exit(0);
 }

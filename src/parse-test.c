@@ -3,7 +3,7 @@
 // bits of deltas?) Probably easier to just make more top-down
 // functions.
 
-void parse_expression_string_and_print_parse_tree_from_buffer(
+buffer_t* parse_expression_string_and_print_parse_tree_from_buffer(
     buffer_t* input_buffer) {
   tokenizer_result_t tokenizer_result = tokenize(input_buffer);
   if (tokenizer_result.tokenizer_error_code) {
@@ -40,9 +40,10 @@ void parse_expression_string_and_print_parse_tree_from_buffer(
     append_parse_node(printer, node);
   }
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
+  return output;
 }
 
-void parse_statement_string_and_print_parse_tree_from_buffer(
+buffer_t* parse_statement_string_and_print_parse_tree_from_buffer(
     buffer_t* input_buffer) {
   tokenizer_result_t tokenizer_result = tokenize(input_buffer);
   if (tokenizer_result.tokenizer_error_code) {
@@ -72,4 +73,5 @@ void parse_statement_string_and_print_parse_tree_from_buffer(
   printer_t* printer = make_printer(output, make_symbol_table(), 2);
   append_parse_node(printer, node);
   fprintf(stdout, "%s\n", buffer_to_c_string(output));
+  return output;
 }
