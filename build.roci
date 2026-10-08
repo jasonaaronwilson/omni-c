@@ -555,6 +555,7 @@ list_push_all(TESTS, STATEMENT_TESTS);
 list_push_all(TESTS, EXPRESSION_TESTS);
 
 list_push(TESTS, "tests/always-passing-test.sh");
+list_push(TESTS, "tests/lib/error-system-test.c");
 list_push(TESTS, "tests/lib/buffer-test.c");
 list_push(TESTS, "tests/lib/cdl-printer-test.c");
 list_push(TESTS, "tests/lib/random-test.c");
