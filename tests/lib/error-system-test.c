@@ -70,6 +70,24 @@ void test_rethrow(void) {
   }
 }
 
+void full_details_thrower(void) {
+  error_t* error = make_error(ERROR_ILLEGAL_STATE);
+  error->message = "Full message";
+  throw_error(error);
+}
+
+void test_error_details(void) {
+  error_t* error = try_call(full_details_thrower());
+  if (error == nullptr) {
+    test_fail("Should have caught rethrow error");
+  }
+  test_assert_string_equal("Full message", error->message);
+  test_assert_string_equal("tests/lib/error-system-test.c", error->filename);
+  if (error->line < 70 || error->line > 80) {
+    test_fail("Line number doesn't seem to be in range.");
+  }
+}
+
 // void test_fail_right_away(void) {
 //  test_fail("foo");
 // }
