@@ -70,10 +70,12 @@ pstatus_t parse_variable_definition_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
   token_t* storage_class_specifier = nullptr;
 
-  while (pstate_expect_token_string(pstate, "static")
-         || pstate_expect_token_string(pstate_ignore_error(pstate), "extern")
-	 || pstate_expect_token_string(pstate_ignore_error(pstate), "_Thread_local")
-	 || pstate_expect_token_string(pstate_ignore_error(pstate), "volatile")) {
+  while (
+      pstate_expect_token_string(pstate, "static")
+      || pstate_expect_token_string(pstate_ignore_error(pstate), "extern")
+      || pstate_expect_token_string(pstate_ignore_error(pstate),
+                                    "_Thread_local")
+      || pstate_expect_token_string(pstate_ignore_error(pstate), "volatile")) {
     if (storage_class_specifier != nullptr) {
       return pstate_error(pstate, saved_position,
                           PARSE_ERROR_CONFLICTING_STORAGE_CLASS_SPECIFIER);

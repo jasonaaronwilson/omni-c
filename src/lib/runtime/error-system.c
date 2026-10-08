@@ -8,18 +8,19 @@
 ///
 
 typedef error_t = struct {
-    char *message;
-    void *extra;
-    char* filename;
-    error_code_t error_code;
-    int line;
+  char* message;
+  void* extra;
+  char* file_name;
+  char* function_name;
+  error_code_t error_code;
+  int line;
 };
 
 // volatile?
 typedef error_frame_t = struct {
-    jmp_buf env;
-    error_t *error;
-    error_frame_t *prev;
+  jmp_buf env;
+  error_t* error;
+  error_frame_t* prev;
 };
 
 /* _Thread_local */ error_frame_t* active_error_frame = nullptr;
@@ -30,20 +31,21 @@ typedef error_frame_t = struct {
 ///    ...;
 /// }
 ///
-#define try_call(expr) ({                                               \
-    volatile error_frame_t _frame = {0};		                \
-    volatile error_t *_caught = NULL;                                   \
-    _frame.error = NULL;                                                \
-    _frame.prev = cast(error_frame_t*, active_error_frame);		\
-    active_error_frame = cast(error_frame_t *, &_frame);		\
-    if (setjmp(*(cast(jmp_buf*, &_frame.env))) == 0) {			\
-        expr;                                                           \
-    } else {                                                            \
-        _caught = _frame.error;                                         \
-    }                                                                   \
-    active_error_frame = _frame.prev;                                   \
-    cast(error_t *, _caught);						\
-})
+#define try_call(expr)                                                         \
+  ({                                                                           \
+    volatile error_frame_t _frame = {0};                                       \
+    volatile error_t* _caught = NULL;                                          \
+    _frame.error = NULL;                                                       \
+    _frame.prev = cast(error_frame_t*, active_error_frame);                    \
+    active_error_frame = cast(error_frame_t*, &_frame);                        \
+    if (setjmp(*(cast(jmp_buf*, &_frame.env))) == 0) {                         \
+      expr;                                                                    \
+    } else {                                                                   \
+      _caught = _frame.error;                                                  \
+    }                                                                          \
+    active_error_frame = _frame.prev;                                          \
+    cast(error_t*, _caught);                                                   \
+  })
 
 ///
 /// error_t* error = make_error(ERROR_ILLEGAL_STATE);
@@ -51,10 +53,11 @@ typedef error_frame_t = struct {
 /// throw(error);
 ///
 
-_Noreturn void throw_error(error_t *error) {
+_Noreturn void throw_error(error_t* error) {
   if (!active_error_frame) {
-    fprintf(stderr, "Unhandled throw code %d, %s:%d", error->error_code, 
-	    error->filename, error->line);
+    fprintf(stderr, "%s:%d: unhandled error code %s (%d)", error->file_name,
+            error->line, error_code_to_string(error->error_code),
+            error->error_code);
     fprintf(stderr, "Exiting...");
     exit(1);
   }
@@ -62,12 +65,15 @@ _Noreturn void throw_error(error_t *error) {
   longjmp(*(cast(jmp_buf*, &active_error_frame->env)), 1);
 }
 
-error_t* make_error_impl(error_code_t error_code, char* filename, int line) {
+error_t* make_error_impl(error_code_t error_code, char* filename, int line,
+                         char* function_name) {
   error_t* result = malloc_struct(error_t);
   result->error_code = error_code;
-  result->filename = filename;
+  result->file_name = filename;
   result->line = line;
+  result->function_name = function_name;
   return result;
 }
 
-#define make_error(error_code) make_error_impl(error_code, __FILE__, __LINE__)
+#define make_error(error_code)                                                 \
+  make_error_impl(error_code, __FILE__, __LINE__, __func__)

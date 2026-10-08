@@ -66,7 +66,7 @@ void roci_debug_trace_statement(roci_vm_state_t* state, buffer_t* buffer) {
     if (number_of_lines > 15) {
       int64_t line_number = roci_src_line_number(state->debug_info);
       log_fatal("too many lines in the output buffer %d (line number %d)\n%s",
-		number_of_lines, line_number, buffer_to_c_string(scratch));
+                number_of_lines, line_number, buffer_to_c_string(scratch));
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }

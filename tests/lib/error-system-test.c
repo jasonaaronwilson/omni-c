@@ -82,7 +82,8 @@ void test_error_details(void) {
     test_fail("Should have caught rethrow error");
   }
   test_assert_string_equal("Full message", error->message);
-  test_assert_string_equal("tests/lib/error-system-test.c", error->filename);
+  test_assert_string_equal("tests/lib/error-system-test.c", error->file_name);
+  test_assert_string_equal("full_details_thrower", error->function_name);
   if (error->line < 70 || error->line > 80) {
     test_fail("Line number doesn't seem to be in range.");
   }

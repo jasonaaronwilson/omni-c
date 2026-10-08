@@ -91,8 +91,9 @@ void handle_statement_test(char* file_name) {
   char* golden_file_name = string_printf("%s.golden", file_name);
   buffer_t* golden = buffer_read_file(golden_file_name);
   if (!buffer_compare_equal(golden, output)) {
-    fprintf(stderr, "output does not match golden file %s\n\n%s\n\n%s", golden_file_name,
-	    buffer_to_c_string(output), buffer_to_c_string(golden));
+    fprintf(stderr, "output does not match golden file %s\n\n%s\n\n%s",
+            golden_file_name, buffer_to_c_string(output),
+            buffer_to_c_string(golden));
     exit(1);
   }
   exit(0);
@@ -105,8 +106,9 @@ void handle_expression_test(char* file_name) {
   char* golden_file_name = string_printf("%s.golden", file_name);
   buffer_t* golden = buffer_read_file(golden_file_name);
   if (!buffer_compare_equal(golden, output)) {
-    fprintf(stderr, "output does not match golden file %s\n\n%s\n\n%s", golden_file_name,
-	    buffer_to_c_string(output), buffer_to_c_string(golden));
+    fprintf(stderr, "output does not match golden file %s\n\n%s\n\n%s",
+            golden_file_name, buffer_to_c_string(output),
+            buffer_to_c_string(golden));
     exit(1);
   }
   exit(0);
