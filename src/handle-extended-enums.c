@@ -7,7 +7,6 @@ void handle_extended_enums(symbol_table_t* symbol_table) {
       enum_node_t* enum_node = to_enum_node(value_array_get_ptr(
           binding->definition_nodes, k, typeof(parse_node_t*)));
       if (token_matches(enum_node->keyword, "extend_enum")) {
-        log_warn("extend_enum node found!");
         char* enum_node_name = token_to_string(enum_node->name);
         enum_node_t* base_enum_node
             = find_enum_node(symbol_table, enum_node_name);
@@ -20,22 +19,14 @@ void handle_extended_enums(symbol_table_t* symbol_table) {
           log_fatal("No elements in extend_enum node %s",
                     token_to_string(enum_node->name));
           exit(1);
-        } else {
-          log_warn("enum_node has %d elements", len);
         }
         for (int j = 0; j < node_list_length(enum_node->elements); j++) {
-          log_warn("Index j = %d", j);
           parse_node_t* jth = node_list_get(enum_node->elements, j);
-          log_warn("jth is found.");
           enum_element_t* element
               = to_enum_element_node(node_list_get(enum_node->elements, j));
-          log_warn("HERE #1");
           node_list_add_node(&base_enum_node->elements, to_node(element));
-          log_warn("HERE #5");
         }
-        log_warn("HERE #6");
         value_array_delete_at(binding->definition_nodes, k);
-        log_warn("HERE #7");
         k -= 1;
       }
     }
