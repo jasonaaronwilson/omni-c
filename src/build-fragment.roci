@@ -49,7 +49,8 @@ let _SOURCE_OMNI_C_ = make_list(
     "parse-test.c",
     "test-command.c",
     "test-assembler.c",
-    "flags.c");
+    "flags.c",
+    "handle-extended-enums.c");
 
 let SOURCE_OMNI_C = list_map(_SOURCE_OMNI_C_, fn(x) {
     let prefix = string_append(TOP_DIR, "src/");

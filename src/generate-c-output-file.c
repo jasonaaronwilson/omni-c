@@ -28,6 +28,9 @@ void generate_c_output_file(output_file_type_t output_type,
   parse_and_add_top_level_definitions(symbol_table, FLAG_files,
                                       FLAG_use_statement_parser);
   dump_symbol_table("initial parse", symbol_table);
+
+  handle_extended_enums(symbol_table);
+
   if (FLAG_generate_enum_convertors) {
     srcgen_enum_to_string_converters(symbol_table);
     dump_symbol_table("enum to string generation", symbol_table);
@@ -90,6 +93,9 @@ void generate_c_output_file(output_file_type_t output_type,
     symbol_table_binding_t* binding
         = value_array_get_ptr(symbol_table->enums->ordered_bindings, i,
                               typeof(symbol_table_binding_t*));
+    if (binding->definition_nodes->length == 0) {
+      continue;
+    }
     enum_node_t* enum_node = to_enum_node(value_array_get_ptr(
         binding->definition_nodes, 0, typeof(parse_node_t*)));
     append_enum_node(printer, enum_node);

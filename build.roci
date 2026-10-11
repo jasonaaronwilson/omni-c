@@ -576,6 +576,8 @@ list_push(TESTS, "tests/lib/value-tree-test.c");
 list_push(TESTS, "tests/roci/roci-symbol-table-test.c");
 list_push(TESTS, "tests/roci/roci-record-fields-test.c");
 
+list_push(TESTS, "tests/compiler/extend-enum-test.c");
+
 let run_roci_tests = fn(omni_c) {
   let command_line =
     make_list(omni_c, "roci", "--script", "src/roci/roci-test.roci");
