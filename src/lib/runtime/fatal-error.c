@@ -61,7 +61,7 @@ typedef enum {
  *
  * Terminates the program with a fatal error.
  */
-#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
+#define fatal_error(code) (throw_error(make_error(code)))
 
 fatal_error_config_t fatal_error_config = {0};
 

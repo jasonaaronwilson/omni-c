@@ -1,4 +1,5 @@
 void handle_extended_enums(symbol_table_t* symbol_table) {
+
   for (int i = 0; i < symbol_table->enums->ordered_bindings->length; i++) {
     symbol_table_binding_t* binding
         = value_array_get_ptr(symbol_table->enums->ordered_bindings, i,

@@ -18,6 +18,17 @@ int main(int argc, char** argv) {
                                                  .catch_sigsegv = true,
                                              }));
   logger_init();
+
+  error_t* error = try_call(begin_omni_c(argc, argv));
+  if (error != nullptr) {
+    handle_top_level_error(error);
+    exit(1);
+  }
+
+  exit(0);
+}
+
+int begin_omni_c(int argc, char** argv) {
   enable_utf8_console();
 
   configure_flags();
@@ -104,4 +115,18 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv) {
   }
 
   return output;
+}
+
+void handle_top_level_error(error_t* error) {
+  fprintf(stderr, "================================================================================\n");
+  fprintf(stderr, "omni-c has encounterd an internal error.\n");
+  fprintf(stderr, "================================================================================\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "%s:%d: Error: %s (%d) [%s]\n",
+	  error->file_name,
+	  error->line,
+	  error_code_to_string(error->error_code),
+	  error->error_code,
+	  error->function_name);
+  exit(1);
 }

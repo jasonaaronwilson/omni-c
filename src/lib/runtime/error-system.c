@@ -76,4 +76,4 @@ error_t* make_error_impl(error_code_t error_code, char* filename, int line,
 }
 
 #define make_error(error_code)                                                 \
-  make_error_impl(error_code, __FILE__, __LINE__, __func__)
+  make_error_impl(error_code, __FILE__, __LINE__, (char*)__func__)
