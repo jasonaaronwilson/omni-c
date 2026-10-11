@@ -33,6 +33,28 @@ let check_environment_variables = fn() {
 
 check_environment_variables();
 
+let check_shell_result = fn(shell_result) {
+  if (not(shell_exit_code(shell_result) == 0)) {
+    println(shell_stdout(shell_result));
+    println("A shell command returned a non-zero exit code.");
+    exit(1);
+  }
+};
+
+let make_build_dirs = fn() {
+  let shell_result = false;
+
+  shell_result = shell(make_list("mkdir", "-p", "build-dir/tests/lib/"));
+  check_shell_result(shell_result);
+
+  shell_result = shell(make_list("mkdir", "-p", "build-dir/tests/compiler/"));
+  check_shell_result(shell_result);
+
+  shell_result = shell(make_list("mkdir", "-p", "build-dir/tests/roci/"));
+  check_shell_result(shell_result);
+};
+make_build_dirs();
+
 // ======================================================================
 
 let success = 0;
@@ -41,11 +63,11 @@ let failed_tests = make_list();
 let no_golden_tests = make_list();
 
 let test_success = fn(filename) {
-  success = iadd(success, 1);
+  success = success + 1;
 };
 
 let test_fail = fn(filename) {
-  failure = iadd(failure, 1);
+  failure = failure + 1;
   list_push(failed_tests, filename);
 };
 
@@ -86,6 +108,9 @@ let get_test_executor = fn(filename) {
   if (string_contains(filename, "roci/")) {
     return lib_unit_test_executor;
   }
+  if (string_contains(filename, "compiler/")) {
+    return lib_unit_test_executor;
+  }
   if (string_ends_with(filename, ".expr")) {
     return expr_test_executor;
   }
@@ -120,7 +145,10 @@ let script_test_executor = fn(filename) {
 let lib_unit_test_executor = fn(filename) {
   let lib_archive = string_append(build_dir, "/bin/lib.oar");
   let lib_roci = string_append(build_dir, "/bin/lib-roci.oar");
-  let command_line = make_list(omni_c_exec, "test", lib_archive, lib_roci, filename);
+  let command_line = make_list(omni_c_exec, "test",
+    "--c-output-file", string_append(build_dir, filename, ".xpiled.c"),
+    "--binary-output-file", string_append(build_dir, filename, ".xpiled.binary"),
+    lib_archive, lib_roci, filename);
   let shell_result = shell(command_line);
   check_shell_command(shell_result, filename);
 };

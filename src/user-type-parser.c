@@ -44,12 +44,13 @@ typedef struct field_node_S {
  *
  * Represents an enum reference or definition.
  */
-typedef struct enum_node_S {
+typedef enum_node_t = struct {
   parse_node_type_t tag;
+  token_t* keyword;
   token_t* name;
   node_list_t elements;
   boolean_t partial_definition;
-} enum_node_t;
+};
 
 /**
  * @structure enum_element_t
@@ -319,10 +320,16 @@ pstatus_t parse_user_type_node(pstate_t* pstate) {
  */
 pstatus_t parse_enum_node(pstate_t* pstate) {
   uint64_t saved_position = pstate->position;
-  if (!pstate_expect_token_string(pstate, "enum")) {
+
+  token_t* keyword = nullptr;
+  if (pstate_expect_token_string(pstate, "extend_enum")
+      || pstate_expect_token_string(pstate, "enum")) {
+    keyword = pstate->result_token;
+  } else {
     return pstate_propagate_error(pstate, saved_position);
   }
   enum_node_t* result = make_enum_node();
+  result->keyword = keyword;
 
   if (pstate_expect_token_type(pstate, TOKEN_TYPE_IDENTIFIER)) {
     result->name = pstate_get_result_token(pstate);

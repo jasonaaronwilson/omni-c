@@ -1,20 +1,61 @@
 char* c_keywords_array[] = {
     /* C89/C90 Keywords */
-    "auto", "break", "case", "char", "const", "continue", "default", "do",
-    "double", "else", "enum", "extern", "float", "for", "goto", "if", "int",
-    "long", "register", "return", "short", "signed", "sizeof", "static",
-    "struct", "switch", "typedef", "union", "unsigned", "void", "volatile",
+    "auto",
+    "break",
+    "case",
+    "char",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extern",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "int",
+    "long",
+    "register",
+    "return",
+    "short",
+    "signed",
+    "sizeof",
+    "static",
+    "struct",
+    "switch",
+    "typedef",
+    "union",
+    "unsigned",
+    "void",
+    "volatile",
     "while",
 
     /* C99 Keywords */
-    "_Bool", "_Complex", "_Imaginary", "inline", "restrict",
+    "_Bool",
+    "_Complex",
+    "_Imaginary",
+    "inline",
+    "restrict",
 
     /* C11 Keywords */
-    "_Alignas", "_Atomic", "_Generic", "_Noreturn", "_Static_assert",
+    "_Alignas",
+    "_Atomic",
+    "_Generic",
+    "_Noreturn",
+    "_Static_assert",
     "_Thread_local",
 
     /* C23 Keywords */
-    "true", "false", "nullptr"};
+    "true",
+    "false",
+    "nullptr",
+
+    /* Omni C Keywords */
+    "extend_enum",
+};
 
 char* c_builtin_types_array[] = {
     "char",   // Single character

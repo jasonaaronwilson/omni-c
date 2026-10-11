@@ -32,6 +32,9 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
     symbol_table_binding_t* binding
         = value_array_get_ptr(symbol_table->typedefs->ordered_bindings, i,
                               typeof(symbol_table_binding_t*));
+    if (binding->definition_nodes->length == 0) {
+      continue;
+    }
     typedef_node_t* typedef_node = to_typedef_node(value_array_get_ptr(
         binding->definition_nodes, 0, typeof(parse_node_t*)));
     if (is_enum_node(typedef_node->type_node->user_type)) {
@@ -56,6 +59,9 @@ void srcgen_enum_to_string_converters(symbol_table_t* symbol_table) {
     symbol_table_binding_t* binding
         = value_array_get_ptr(symbol_table->enums->ordered_bindings, i,
                               typeof(symbol_table_binding_t*));
+    if (binding->definition_nodes->length == 0) {
+      continue;
+    }
     enum_node_t* enum_node = to_enum_node(value_array_get_ptr(
         binding->definition_nodes, 0, typeof(parse_node_t*)));
     char* enum_node_name = token_to_string(enum_node->name);
