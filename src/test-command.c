@@ -17,11 +17,9 @@ void test_command(buffer_t* command_line_comment) {
     exit(1);
   }
 
-  // FIXME(jawilson):
-  char* rand_binary_file_name = "/tmp/foo";
-
   if (string_is_null_or_empty(FLAG_binary_output_file)) {
-    FLAG_binary_output_file = rand_binary_file_name;
+    log_fatal("--binary-output-file is required!");
+    exit(1);
   }
   if (string_is_null_or_empty(FLAG_c_output_file)) {
     FLAG_c_output_file = string_printf("%s.test.c", FLAG_binary_output_file);
@@ -43,7 +41,7 @@ void test_command(buffer_t* command_line_comment) {
     exit(error_status);
   }
 
-  run_test_binary(rand_binary_file_name);
+  run_test_binary(FLAG_binary_output_file);
 }
 
 void run_test_binary(char* binary_file_name) {
@@ -64,11 +62,15 @@ void run_test_binary(char* binary_file_name) {
     log_warn("The test binary was NOT happy.");
     log_warn("   Child stdout was %s\n", buffer_to_c_string(child_stdin));
     log_warn("   Child stderr was %s\n", buffer_to_c_string(child_stderr));
+    exit(1);
   } else {
     log_warn("The test binary was happy. :)");
+    if (FLAG_always_output_test_output) {
+      log_warn("   Child stdout was %s\n", buffer_to_c_string(child_stdin));
+      log_warn("   Child stderr was %s\n", buffer_to_c_string(child_stderr));
+    }
+    exit(0);
   }
-
-  exit(sub_process->exit_code);
 }
 
 void handle_if_internal_test(void) {

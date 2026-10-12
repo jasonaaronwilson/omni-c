@@ -1,5 +1,5 @@
 /**
- * @file sub-process.c
+ * @file sub-process-linux.c
  *
  * Utility to launch a sub-processes and interfact with them.
  *
@@ -261,7 +261,7 @@ boolean_t is_sub_process_running(sub_process_t* sub_process) {
  * function is idempotent once we reach the exit state.
  */
 void sub_process_wait(sub_process_t* sub_process) {
-  if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
+  if (sub_process->exit_status == EXIT_STATUS_UNKNOWN) {
     int status = 0;
     pid_t result = waitpid(sub_process->pid, &status, 0);
     sub_process_record_exit_status(sub_process, result, status);

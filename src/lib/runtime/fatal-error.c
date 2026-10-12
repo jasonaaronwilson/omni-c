@@ -65,13 +65,24 @@ typedef enum {
 
 fatal_error_config_t fatal_error_config = {0};
 
+static error_t fatal_sigsegv_error = {
+  .message = "Segmentation fault (SIGSEGV)",
+  .error_code = ERROR_SIGSEGV,
+  .file_name = "<signal_handler>",
+  .function_name = "segmentation_fault_handler",
+  .line = 0
+};
+
 void segmentation_fault_handler(int signal_number) {
-  fatal_error(ERROR_SIGSEGV);
+  // log_warn("Caught sigsegv. Throwing an error.");
+  write(STDERR_FILENO, "Caught sigsegv.\n", 16);
+  throw_error(&fatal_sigsegv_error);
 }
 
 void configure_fatal_errors(fatal_error_config_t config) {
   fatal_error_config = config;
   if (config.catch_sigsegv) {
+    log_warn("Registering SIGSEGV handler.");
     signal(SIGSEGV, segmentation_fault_handler);
   }
 }

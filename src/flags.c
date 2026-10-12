@@ -36,6 +36,8 @@ boolean_t FLAG_roci_print_bbs = false;
 boolean_t FLAG_roci_repl_on_error = false;
 boolean_t FLAG_roci_use_full_expressions = true;
 
+boolean_t FLAG_always_output_test_output = false;
+
 void configure_flags(void) {
   flag_program_name("omni-c");
   flag_description(
@@ -133,6 +135,7 @@ void configure_regular_commands(void) {
   flag_description("compile and run all unit tests in the input files");
   flag_string("--c-output-file", &FLAG_c_output_file);
   flag_string("--binary-output-file", &FLAG_binary_output_file);
+  flag_boolean("--always-output-test-output", &FLAG_always_output_test_output);
   flag_file_args(&FLAG_files);
 
   flag_command("roci", &FLAG_command);

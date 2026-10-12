@@ -16,9 +16,8 @@ typedef error_t = struct {
   int line;
 };
 
-// volatile?
 typedef error_frame_t = struct {
-  jmp_buf env;
+  sigjmp_buf env;
   error_t* error;
   error_frame_t* prev;
 };
@@ -38,7 +37,7 @@ typedef error_frame_t = struct {
     _frame.error = NULL;                                                       \
     _frame.prev = cast(error_frame_t*, active_error_frame);                    \
     active_error_frame = cast(error_frame_t*, &_frame);                        \
-    if (setjmp(*(cast(jmp_buf*, &_frame.env))) == 0) {                         \
+    if (sigsetjmp(cast(void*, _frame.env), 1) == 0) {			       \
       expr;                                                                    \
     } else {                                                                   \
       _caught = _frame.error;                                                  \
@@ -62,7 +61,17 @@ _Noreturn void throw_error(error_t* error) {
     exit(1);
   }
   active_error_frame->error = error;
-  longjmp(*(cast(jmp_buf*, &active_error_frame->env)), 1);
+
+  // Sanity check: Ensure we aren't jumping to an obviously dead stack address
+  // (Assuming stack grows down)
+  int dummy;
+  if (cast(void*, active_error_frame) < cast(void*, &dummy)) {
+    log_fatal("active_error_frame points to a dead stack frame!\n");
+    exit(1);
+  }
+
+  siglongjmp(active_error_frame->env, 1);
+  // siglongjmp(*(cast(sigjmp_buf*, &active_error_frame->env)), 1);
 }
 
 error_t* make_error_impl(error_code_t error_code, char* filename, int line,

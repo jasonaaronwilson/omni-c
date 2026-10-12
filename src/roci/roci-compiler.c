@@ -109,24 +109,21 @@ void roci_compile_buffer_error_callback(char* file, int line, int error_code,
 void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
                          buffer_t* buffer) {
 
-  set_fatal_error_callback(
-      &roci_compile_buffer_error_callback,
-      make_compile_error_callback_data(state, file_name, buffer));
-
-  int jump_result = setjmp(roci_compiler_jmp_buf);
-  if (jump_result == 0) {
-    state->position = 0;
-    state->current_bb = roci_new_bblock(state, "bb_file_start");
-    state->tokens = roci_tokenize_file(state, file_name, buffer);
-    roci_compile_tokens(state);
-  } else {
+  error_t* error = try_call(roci_compile_buffer_impl(state, file_name, buffer));
+  if (error != nullptr) {
     log_warn("roci compiler exited abnormally.");
     if (state->compiler_error == ROCI_COMPILE_TIME_ERROR_NONE) {
       state->compiler_error = ROCI_COMPILE_TIME_ERROR;
     }
   }
+}
 
-  set_fatal_error_callback(nullptr, nullptr);
+void roci_compile_buffer_impl(roci_compiler_state_t* state, char* file_name,
+			      buffer_t* buffer) {
+  state->position = 0;
+  state->current_bb = roci_new_bblock(state, "bb_file_start");
+  state->tokens = roci_tokenize_file(state, file_name, buffer);
+  roci_compile_tokens(state);
 }
 
 /**

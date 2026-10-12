@@ -89,6 +89,24 @@ void test_error_details(void) {
   }
 }
 
-// void test_fail_right_away(void) {
-//  test_fail("foo");
-// }
+void sigsegv(void) {
+  // Making the pointer variable itself 'volatile' prevents the compiler 
+  // from statically analyzing it or optimizing it away, suppressing 
+  // warnings about the obvious null dereference.
+  // volatile int* crash_ptr = (int*)0;
+  int* crash_ptr = cast(int*, 0);
+  *crash_ptr = 0xDEAD;
+}
+
+void test_sigsegv(void) {
+  configure_fatal_errors(
+      compound_literal(fatal_error_config_t, {
+                                                 .catch_sigsegv = true,
+                                             }));
+  error_t* error = try_call(sigsegv());
+  if (error == nullptr) {
+    test_fail("Should have caught rethrow error");
+  } else {
+    log_warn("We did get an error!");
+  }
+}
