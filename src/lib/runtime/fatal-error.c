@@ -1,18 +1,9 @@
 /**
  * @file fatal-error.c
  *
- * The intent is that everything but a normal program exit will end up
- * here. (To catch SIGSIGV errors you may call
- * configure_fatal_errors() first with catch_sigsegv set.)
- *
- * Note that you can use fatal_error's to your advantage by setting
- * the environment variable ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS to
- * some value to give yourself enough time to attach a debugger.
- *
- * In this case C's macros are paying off as the file and line number
- * are easy to obtain.
- *
- * TODO(jawilson): environment variable to be quieter...
+ * This is for compatibility with older code. fatal_error's aren't
+ * necessarily fatal anymore though care must still be taken if error
+ * are caught and execution attempts to continue.
  */
 
 // ======================================================================
@@ -22,39 +13,6 @@
 typedef fatal_error_config_t = struct {
   boolean_t catch_sigsegv;
 };
-
-/**
- * @constants error_code_t
- */
-typedef enum {
-  ERROR_NONE,
-  ERROR_SIGSEGV,
-  ERROR_ACCESS_OUT_OF_BOUNDS,
-  ERROR_BAD_COMMAND_LINE,
-  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
-  ERROR_ILLEGAL_ENUM_VALUE,
-  ERROR_ILLEGAL_INITIAL_CAPACITY,
-  ERROR_ILLEGAL_NULL_ARGUMENT,
-  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
-  ERROR_ILLEGAL_RANGE,
-  ERROR_MEMORY_ALLOCATION,
-  ERROR_MEMORY_FREE_NULL,
-  ERROR_NOT_REACHED,
-  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
-  ERROR_UNIMPLEMENTED,
-  ERROR_OPEN_LOG_FILE,
-  ERROR_TEST,
-  ERROR_INTERNAL_ASSERTION_FAILURE,
-  ERROR_BAD_ALLOCATION_SIZE,
-  ERROR_ILLEGAL_ARGUMENT,
-  ERROR_MEMORY_START_PADDING_ERROR,
-  ERROR_MEMORY_END_PADDING_ERROR,
-  ERROR_FATAL,
-  ERROR_ILLEGAL_STATE,
-  ERROR_ILLEGAL_INPUT,
-  ERROR_ILLEGAL_UTF_8_CODE_POINT,
-  ERROR_ILLEGAL_TERMINAL_COORDINATES,
-} error_code_t;
 
 /**
  * @macro fatal_error
@@ -85,54 +43,4 @@ void configure_fatal_errors(fatal_error_config_t config) {
     log_warn("Registering SIGSEGV handler.");
     signal(SIGSEGV, segmentation_fault_handler);
   }
-}
-
-typedef fatal_error_callback_t
-    = fn_t(void, char* file, int line, int error_code, void* data);
-
-fatal_error_callback_t fatal_error_callback = nullptr;
-void* fatal_error_callback_data = nullptr;
-
-void set_fatal_error_callback(fatal_error_callback_t callback, void* data) {
-  fatal_error_callback = callback;
-  fatal_error_callback_data = data;
-}
-
-_Noreturn void fatal_error_impl(char* file, int line, int error_code) {
-  if (fatal_error_callback != nullptr) {
-    fatal_error_callback(file, line, error_code, fatal_error_callback_data);
-  }
-  print_fatal_error_banner();
-  print_backtrace();
-  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
-  print_error_code_name(error_code);
-  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
-  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
-  if (sleep_str != NULL) {
-    value_result_t sleep_time = string_parse_uint64(sleep_str);
-    if (is_ok(sleep_time)) {
-      fprintf(stderr,
-              "Sleeping for %lu seconds so you can attach a debugger.\n",
-              sleep_time.u64);
-      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
-      sleep(sleep_time.u64);
-    }
-  } else {
-    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
-  }
-  fprintf(stderr, "Necessaria Morte Mori...\n");
-  exit(-(error_code + 100));
-}
-
-void print_fatal_error_banner() {
-  // As the first thing we print, also responsible for at least one
-  // newline to start a new line if we may not be at one.
-  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
-}
-
-void print_error_code_name(int error_code) {
-  fprintf(stderr, " ");
-  fprintf(stderr, "*** ");
-  fprintf(stderr, "%s", error_code_to_string(error_code));
-  fprintf(stderr, " ***\n");
 }
