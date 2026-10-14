@@ -184,6 +184,8 @@ void roci_add_primitives_to_env(roci_env_t* env) {
   roci_add_primitive(env, &roci_primitive_draw_random_screen,
                      "draw_random_screen");
   roci_add_primitive(env, &roci_primitive_fatal_error, "fatal_error");
+
+  roci_add_primitive(env, &roci_primitive_sigsegv, "sigsegv");
 }
 
 /**
@@ -1469,4 +1471,10 @@ void roci_primitive_operator_unary_minus(roci_vm_state_t* state) {
   }
   int64_t arg0 = roci_pop_integer(state);
   roci_push_integer(state, -arg0);
+}
+
+volatile void* crash_ptr = 0;
+
+void roci_primitive_sigsegv(roci_vm_state_t* state) {
+  *(cast(int*, crash_ptr)) = 0xDEAD;
 }

@@ -25,26 +25,24 @@ typedef error_frame_t = struct {
 /* _Thread_local */ error_frame_t* active_error_frame = nullptr;
 
 ///
-/// error_t* error = try_call(foo(10, blah, blah));
+/// error_t* error = nullptr;
+/// try_call(foo(10, blah, blah), error);
 /// if (error != nullptr) {
 ///    ...;
 /// }
 ///
-#define try_call(expr)                                                         \
-  ({                                                                           \
+#define try_call(expr, out_err)                                                \
+  do {                                                                         \
     volatile error_frame_t _frame = {0};                                       \
-    volatile error_t* _caught = NULL;                                          \
-    _frame.error = NULL;                                                       \
     _frame.prev = cast(error_frame_t*, active_error_frame);                    \
     active_error_frame = cast(error_frame_t*, &_frame);                        \
-    if (sigsetjmp(cast(void*, _frame.env), 1) == 0) {			       \
+    if (sigsetjmp(cast(void*, _frame.env), 1) == 0) {                          \
       expr;                                                                    \
     } else {                                                                   \
-      _caught = _frame.error;                                                  \
+      out_err = _frame.error;                                                  \
     }                                                                          \
     active_error_frame = _frame.prev;                                          \
-    cast(error_t*, _caught);                                                   \
-  })
+  } while(0)
 
 ///
 /// error_t* error = make_error(ERROR_ILLEGAL_STATE);

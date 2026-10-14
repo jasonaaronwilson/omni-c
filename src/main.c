@@ -13,13 +13,16 @@
  * This is the main entry point to the omni-c compiler.
  */
 int main(int argc, char** argv) {
+  GC_INIT();
+  log_warn("GC initialized.");
   configure_fatal_errors(
       compound_literal(fatal_error_config_t, {
                                                  .catch_sigsegv = true,
                                              }));
   logger_init();
 
-  error_t* error = try_call(begin_omni_c(argc, argv));
+  error_t* error = nullptr;
+  try_call(begin_omni_c(argc, argv), error);
   if (error != nullptr) {
     handle_top_level_error(error);
     exit(1);

@@ -37,22 +37,27 @@ roci_eval_result_t roci_eval_buffer(roci_env_t* env, char* file_name,
                                     buffer_t* buffer,
                                     boolean_t exit_on_failure) {
   roci_eval_result_t result = {0};
+  error_t* error = nullptr;
+  try_call(roci_eval_buffer_impl(env, file_name, buffer, &result), error);
+  if (error != nullptr) {
+    log_warn("An internal error was encountered evaluating the buffer.");
+    return result;
+  }
+  return result;
+}
+
+void roci_eval_buffer_impl(roci_env_t* env, char* file_name,
+			   buffer_t* buffer,
+			   roci_eval_result_t* result) {
 
   roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
   state->bblocks = make_value_array(16);
   state->buffer_number = roci_register_buffer(buffer, file_name);
-  result.compiler_state = state;
+  result->compiler_state = state;
 
   roci_compile_buffer(state, file_name, buffer);
   if (state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
-    if (exit_on_failure) {
-      fatal_error(ERROR_ILLEGAL_STATE);
-      // NOT REACHED.
-      return result;
-    } else {
-      log_warn("A compilation error occurred!");
-      return result;
-    }
+    return;
   }
 
   value_array_t* bblocks = build_bblocks(state->bblocks);
@@ -65,44 +70,5 @@ roci_eval_result_t roci_eval_buffer(roci_env_t* env, char* file_name,
 
   roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
   roci_vm_state_t* vm_state = roci_make_vm_state(env);
-  set_fatal_error_callback(&roci_eval_error_callback,
-                           make_eval_error_callback_data(
-                               vm_state, file_name, buffer, exit_on_failure));
   roci_execute(vm_state, entry_point);
-  set_fatal_error_callback(nullptr, nullptr);
-
-  return result;
-}
-
-typedef roci_eval_error_callback_data_t = struct {
-  roci_vm_state_t* state;
-  char* file_name;
-  buffer_t* buffer;
-  boolean_t exit_on_failure;
-};
-
-roci_eval_error_callback_data_t*
-    make_eval_error_callback_data(roci_vm_state_t* state, char* file_name,
-                                  buffer_t* buffer, boolean_t exit_on_failure) {
-  roci_eval_error_callback_data_t* result
-      = malloc_struct(roci_eval_error_callback_data_t);
-  result->state = state;
-  result->file_name = file_name;
-  result->buffer = buffer;
-  result->exit_on_failure = exit_on_failure;
-  return result;
-}
-
-void roci_eval_error_callback(char* file, int line, int error_code,
-                              void* data_in) {
-  roci_eval_error_callback_data_t* data
-      = cast(roci_eval_error_callback_data_t*, data_in);
-  log_fatal("An internal error occurred evaluating %s", data->file_name);
-  if (!data->exit_on_failure) {
-    // Prevent recursive entry though we might want to clear this...
-    data->exit_on_failure = true;
-    roci_debug_error(
-        data->state,
-        "Entering roci debugger after a fatal error was signaled.");
-  }
 }
