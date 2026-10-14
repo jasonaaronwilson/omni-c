@@ -37,8 +37,7 @@
  * ```
  */
 
-typedef roci_compile_time_error_t = enum {
-  ROCI_COMPILE_TIME_ERROR_NONE,
+extend_enum error_code_t {
   ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR,
   ROCI_COMPILE_TIME_ERROR,
   ROCI_COMPILE_TIME_TOKENIZER_ERROR,
@@ -51,7 +50,7 @@ typedef roci_compile_time_error_t = enum {
 };
 
 typedef roci_compiler_state_t = struct {
-  roci_compile_time_error_t compiler_error;
+  error_code_t compiler_error;
   long bb_label_count;
   roci_bb_builder_array_t* bblocks;
   roci_bb_builder_t* current_bb;
@@ -61,8 +60,7 @@ typedef roci_compiler_state_t = struct {
   uint32_t buffer_number;
 };
 
-void roci_compiler_error(roci_compiler_state_t* state,
-                         roci_compile_time_error_t error) {
+void roci_compiler_error(roci_compiler_state_t* state, error_code_t error) {
   state->compiler_error = error;
   error_t* err = make_error(ERROR_ILLEGAL_STATE);
   throw_error(err);
@@ -86,7 +84,7 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
   try_call(roci_compile_buffer_impl(state, file_name, buffer), error);
   if (error != nullptr) {
     log_warn("roci compiler exited abnormally.");
-    if (state->compiler_error == ROCI_COMPILE_TIME_ERROR_NONE) {
+    if (state->compiler_error == ERROR_NONE) {
       state->compiler_error = ROCI_COMPILE_TIME_ERROR;
     }
   }

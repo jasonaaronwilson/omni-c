@@ -27,7 +27,7 @@ typedef fatal_error_config_t = struct {
  * @constants error_code_t
  */
 typedef enum {
-  ERROR_UKNOWN,
+  ERROR_NONE,
   ERROR_SIGSEGV,
   ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_BAD_COMMAND_LINE,

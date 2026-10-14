@@ -56,7 +56,7 @@ void roci_eval_buffer_impl(roci_env_t* env, char* file_name,
   result->compiler_state = state;
 
   roci_compile_buffer(state, file_name, buffer);
-  if (state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
+  if (state->compiler_error != ERROR_NONE) {
     return;
   }
 

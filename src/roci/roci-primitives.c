@@ -349,7 +349,7 @@ void roci_primitive_eval(roci_vm_state_t* state) {
       get_root_env(state->env), string_printf("*eval*%d", eval_count++),
       buffer_from_string(arg1), false);
 
-  if (result.compiler_state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
+  if (result.compiler_state->compiler_error != ERROR_NONE) {
     roci_debug_error(state, "Compilation of a dynamically called eval failed");
   }
 
@@ -398,7 +398,7 @@ void roci_primitive_load(roci_vm_state_t* state) {
   roci_compiler_state_t* compiler_state = malloc_struct(roci_compiler_state_t);
   compiler_state->bblocks = make_value_array(16);
   roci_compile_buffer(compiler_state, file->file_name, file->data);
-  if (compiler_state->compiler_error != ROCI_COMPILE_TIME_ERROR_NONE) {
+  if (compiler_state->compiler_error != ERROR_NONE) {
     roci_debug_error(state, "roci_load experienced an error.");
     roci_push_false(state);
     return;
