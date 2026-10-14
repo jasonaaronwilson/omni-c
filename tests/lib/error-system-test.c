@@ -109,10 +109,7 @@ void sigsegv(void) {
 }
 
 void test_sigsegv(void) {
-  configure_fatal_errors(
-      compound_literal(fatal_error_config_t, {
-                                                 .catch_sigsegv = true,
-                                             }));
+  install_signal_handlers();
   error_t* error = nullptr;
   try_call(sigsegv(), error);
   if (error == nullptr) {

@@ -6,14 +6,6 @@
  * are caught and execution attempts to continue.
  */
 
-// ======================================================================
-// This is block is extraced to fatal-error.h
-// ======================================================================
-
-typedef fatal_error_config_t = struct {
-  boolean_t catch_sigsegv;
-};
-
 /**
  * @macro fatal_error
  *
@@ -21,7 +13,22 @@ typedef fatal_error_config_t = struct {
  */
 #define fatal_error(code) (throw_error(make_error(code)))
 
-fatal_error_config_t fatal_error_config = {0};
+/**
+ * @function install_signal_handlers
+ *
+ * Install standard signal handlers that turn things like SIGSEGV into
+ * thrown errors.
+ */
+void install_signal_handlers(void) {
+  log_info("Registering SIGSEGV handler.");
+  signal(SIGSEGV, segmentation_fault_handler);
+}
+
+void segmentation_fault_handler(int signal_number) {
+  // log_warn("Caught sigsegv. Throwing an error.");
+  write(STDERR_FILENO, "Caught sigsegv.\n", 16);
+  throw_error(&fatal_sigsegv_error);
+}
 
 static error_t fatal_sigsegv_error = {
   .message = "Segmentation fault (SIGSEGV)",
@@ -30,17 +37,3 @@ static error_t fatal_sigsegv_error = {
   .function_name = "segmentation_fault_handler",
   .line = 0
 };
-
-void segmentation_fault_handler(int signal_number) {
-  // log_warn("Caught sigsegv. Throwing an error.");
-  write(STDERR_FILENO, "Caught sigsegv.\n", 16);
-  throw_error(&fatal_sigsegv_error);
-}
-
-void configure_fatal_errors(fatal_error_config_t config) {
-  fatal_error_config = config;
-  if (config.catch_sigsegv) {
-    log_warn("Registering SIGSEGV handler.");
-    signal(SIGSEGV, segmentation_fault_handler);
-  }
-}

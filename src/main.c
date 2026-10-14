@@ -15,10 +15,7 @@
 int main(int argc, char** argv) {
   GC_INIT();
   log_warn("GC initialized.");
-  configure_fatal_errors(
-      compound_literal(fatal_error_config_t, {
-                                                 .catch_sigsegv = true,
-                                             }));
+  install_signal_handlers();
   logger_init();
 
   error_t* error = nullptr;
