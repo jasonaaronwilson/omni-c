@@ -93,7 +93,7 @@ void test_error_details(void) {
   test_assert_string_equal("tests/lib/error-system-test.c", error->file_name);
   test_assert_string_equal("full_details_thrower", error->function_name);
   if (error->line < 75 || error->line > 85) {
-    log_warn("Line number if incorrect %d", error->line);
+    log_warn("Line number is incorrect %d", error->line);
     test_fail("Line number doesn't seem to be in range.");
   }
 }
