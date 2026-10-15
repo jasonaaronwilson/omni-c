@@ -42,7 +42,7 @@ typedef error_frame_t = struct {
       out_err = _frame.error;                                                  \
     }                                                                          \
     active_error_frame = _frame.prev;                                          \
-  } while(0)
+  } while (0)
 
 ///
 /// error_t* error = make_error(ERROR_ILLEGAL_STATE);
@@ -83,4 +83,4 @@ error_t* make_error_impl(error_code_t error_code, char* filename, int line,
 }
 
 #define make_error(error_code)                                                 \
-  make_error_impl(error_code, __FILE__, __LINE__, (char*)__func__)
+  make_error_impl(error_code, __FILE__, __LINE__, (char*) __func__)

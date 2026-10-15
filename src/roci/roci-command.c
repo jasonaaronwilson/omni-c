@@ -36,19 +36,25 @@ typedef roci_eval_result_t = struct {
 roci_eval_result_t roci_eval_buffer(roci_env_t* env, char* file_name,
                                     buffer_t* buffer,
                                     boolean_t exit_on_failure) {
+  roci_vm_state_t* vm_state = roci_make_vm_state(env);
   roci_eval_result_t result = {0};
   error_t* error = nullptr;
-  try_call(roci_eval_buffer_impl(env, file_name, buffer, &result), error);
+  try_call(roci_eval_buffer_impl(vm_state, env, file_name, buffer, &result),
+           error);
   if (error != nullptr) {
     log_warn("An internal error was encountered evaluating the buffer.");
+    if (!exit_on_failure) {
+      roci_source_backtrace(vm_state);
+      roci_repl(env);
+    }
     return result;
   }
   return result;
 }
 
-void roci_eval_buffer_impl(roci_env_t* env, char* file_name,
-			   buffer_t* buffer,
-			   roci_eval_result_t* result) {
+void roci_eval_buffer_impl(roci_vm_state_t* vm_state, roci_env_t* env,
+                           char* file_name, buffer_t* buffer,
+                           roci_eval_result_t* result) {
 
   roci_compiler_state_t* state = malloc_struct(roci_compiler_state_t);
   state->bblocks = make_value_array(16);
@@ -69,6 +75,5 @@ void roci_eval_buffer_impl(roci_env_t* env, char* file_name,
   }
 
   roci_bb_t* entry_point = value_array_get_ptr(bblocks, 0, typeof(roci_bb_t*));
-  roci_vm_state_t* vm_state = roci_make_vm_state(env);
   roci_execute(vm_state, entry_point);
 }

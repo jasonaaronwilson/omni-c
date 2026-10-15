@@ -186,16 +186,16 @@ let get_opt_flags = fn(cc) {
 
 // I don't think this much matters...
 let add_extra_flags = fn(cc) {
-    /*
-  if (string_equal(cc, "gcc")) {
-    list_push(CC_FLAGS, "-std=gnu99");
-    return;
-  }
-  if (string_equal(cc, "clang")) {
-    list_push(CC_FLAGS, "-std=gnu99");
-    return;
-  }
-*/
+  /*
+     if (string_equal(cc, "gcc")) {
+     list_push(CC_FLAGS, "-std=gnu99");
+     return;
+     }
+     if (string_equal(cc, "clang")) {
+     list_push(CC_FLAGS, "-std=gnu99");
+     return;
+     }
+   */
   return false;
 };
 

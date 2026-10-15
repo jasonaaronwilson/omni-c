@@ -118,15 +118,16 @@ buffer_t* command_line_args_to_buffer(int argc, char** argv) {
 }
 
 void handle_top_level_error(error_t* error) {
-  fprintf(stderr, "================================================================================\n");
+  fprintf(stderr,
+          "===================================================================="
+          "============\n");
   fprintf(stderr, "omni-c has encounterd an internal error.\n");
-  fprintf(stderr, "================================================================================\n");
+  fprintf(stderr,
+          "===================================================================="
+          "============\n");
   fprintf(stderr, "\n");
-  fprintf(stderr, "%s:%d: Error: %s (%d) [%s]\n",
-	  error->file_name,
-	  error->line,
-	  error_code_to_string(error->error_code),
-	  error->error_code,
-	  error->function_name);
+  fprintf(stderr, "%s:%d: Error: %s (%d) [%s]\n", error->file_name, error->line,
+          error_code_to_string(error->error_code), error->error_code,
+          error->function_name);
   exit(1);
 }

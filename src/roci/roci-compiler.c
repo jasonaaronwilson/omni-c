@@ -37,16 +37,16 @@
  * ```
  */
 
-extend_enum error_code_t {
-  ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR,
-  ROCI_COMPILE_TIME_ERROR,
-  ROCI_COMPILE_TIME_TOKENIZER_ERROR,
-  ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
-  ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
-  ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS,
-  ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA,
-  ROCI_COMPILE_TIME_ERROR_ARGUMENT_AFTER_REST,
-  ROCI_COMPILE_TIME_ERROR_UNEXPECTED_ASSIGNMENT,
+extend_enum error_code_t{
+    ROCI_COMPILE_TIME_ERROR_INTERNAL_ERROR,
+    ROCI_COMPILE_TIME_ERROR,
+    ROCI_COMPILE_TIME_TOKENIZER_ERROR,
+    ROCI_COMPILE_TIME_ERROR_BAD_STATEMENT,
+    ROCI_COMPILE_TIME_ERROR_BAD_EXPRESSION,
+    ROCI_COMPILE_TIME_ERROR_TOO_MANY_FIELDS,
+    ROCI_COMPILE_TIME_ERROR_EXPECTED_COMMA,
+    ROCI_COMPILE_TIME_ERROR_ARGUMENT_AFTER_REST,
+    ROCI_COMPILE_TIME_ERROR_UNEXPECTED_ASSIGNMENT,
 };
 
 typedef roci_compiler_state_t = struct {
@@ -91,7 +91,7 @@ void roci_compile_buffer(roci_compiler_state_t* state, char* file_name,
 }
 
 void roci_compile_buffer_impl(roci_compiler_state_t* state, char* file_name,
-			      buffer_t* buffer) {
+                              buffer_t* buffer) {
   state->position = 0;
   state->current_bb = roci_new_bblock(state, "bb_file_start");
   state->tokens = roci_tokenize_file(state, file_name, buffer);

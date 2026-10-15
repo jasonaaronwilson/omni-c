@@ -38,6 +38,15 @@ roci_src_info_t roci_next_source_line(roci_src_info_t info) {
 
 /** ================================================================ */
 
+void roci_source_backtrace(roci_vm_state_t* state) {
+  buffer_t* buffer = make_buffer(100);
+  if (state->debug_info) {
+    roci_source_code_to_buffer(buffer, state->debug_info);
+  }
+  roci_backtrace(state, buffer);
+  fprintf(stderr, "%s", buffer_to_c_string(buffer));
+}
+
 void roci_debug_error(roci_vm_state_t* state, char* error_message) {
   buffer_t* buffer = make_buffer(100);
   if (state->debug_info) {
